@@ -1,0 +1,29 @@
+Credits:
+
+
+FTT methodology: Jean-Francois Mercure
+FTT:Power v1.0: Jean-Francois Mercure
+FTT:Power v2.0: Ari Ball-Burack, Jean-Francois Mercure, Pablo Salas, Femke Nijsse, Yeliz Simsek, Rosie Hayward, Pim Vercoulen
+FTT:Transport v1.0: Aileen Lam, Jean-Francois Mercure
+FTT:Transport v2.0: Aileen Lam 
+FTT:Heat: Florian Knobloch, Jean-Francois Mercure
+FTT:Steel: Pim Vercoulen, Jean-Francois Mercure
+Cost-supply curves: Jean-Francois Mercure & Pablo Salas
+Building stock model: Finn-Henrik Barton
+Front-end development: Jamie Pirie
+Code development: Ari Ball-Burack, Rosie Hayward, Pim Vercoulen
+
+(Future developments)
+FTT:Agri: Pim Vercoulen, Rosie Hayward, Michael McGovern, Soeren Lindner, Jean-Francois Mercure
+FTT:Chemicals: Rosie Hayward
+FTT:Flex: Femke Nijsse, Jean-Francois Mercure
+FTT:NET: Kiane de Kleijne
+FTT:Freight: Aileen Lam
+
+DISCLAIMER:
+The FTT stand-alone package can be used for educational and research purposes, but not for commercial purposes.
+We ask academics to submit their draft paper for Quality Assurance before submitting to a journal.
+
+For any mistakes, potential bugs, or questions, please send an email to xxx@camecon.com.
+
+(More legal stuff etc.)

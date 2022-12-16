@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ftt_p_lcoe module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ftt_p_rldc module" href="ftt_p_rldc.html" />
+    <link rel="prev" title="ftt_p_dspch module" href="ftt_p_dspch.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ftt_p_lcoe">
+<span id="ftt-p-lcoe-module"></span><h1>ftt_p_lcoe module<a class="headerlink" href="#module-ftt_p_lcoe" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ftt-p-lcoe-py">
+<h2>ftt_p_lcoe.py<a class="headerlink" href="#ftt-p-lcoe-py" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="power-lcoe-ftt-module">
+<h3>Power LCOE FTT module.<a class="headerlink" href="#power-lcoe-ftt-module" title="Permalink to this headline">¶</a></h3>
+<p>Local library imports:</p>
+<blockquote>
+<div><p>Support functions:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="divide.html">divide</a></dt><dd><p>Bespoke element-wise divide which replaces divide-by-zeros with zeros</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>get_lcoe</dt><dd><p>Calculate levelized costs</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="function">
+<dt id="ftt_p_lcoe.get_lcoe">
+<code class="sig-prename descclassname">ftt_p_lcoe.</code><code class="sig-name descname">get_lcoe</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">titles</em><span class="sig-paren">)</span><a class="headerlink" href="#ftt_p_lcoe.get_lcoe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate levelized costs.</p>
+<p>The function calculates the levelised cost of electricity in $2013/MWh. It includes
+intangible costs (gamma values) and determines the investor preferences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>dictionary</em>) – Data is a container that holds all cross-sectional (of time) for all
+variables. Variable names are keys and the values are 3D NumPy arrays.</p></li>
+<li><p><strong>titles</strong> (<em>dictionary</em>) – Titles is a container of all permissible dimension titles of the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – Data is a container that holds all cross-sectional (of time) data for
+all variables.
+Variable names are keys and the values are 3D NumPy arrays.
+The values inside the container are updated and returned to the main
+routine.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Additional notes if required.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="sourcemodules.html">Source Code</a><ul>
+  <li><a href="FTT Power.html">FTT: Power</a><ul>
+      <li>Previous: <a href="ftt_p_dspch.html" title="previous chapter">ftt_p_dspch module</a></li>
+      <li>Next: <a href="ftt_p_rldc.html" title="next chapter">ftt_p_rldc module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/ftt_p_lcoe.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

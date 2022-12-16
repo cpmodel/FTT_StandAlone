@@ -1,0 +1,948 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Libraries used in FTT Stand Alone &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="titles_functions module" href="titles_functions.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="libraries-used-in-ftt-stand-alone">
+<h1>Libraries used in FTT Stand Alone<a class="headerlink" href="#libraries-used-in-ftt-stand-alone" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="standard-and-third-party-imports-used-in-ftt-stand-alone">
+<h2>Standard and third party imports used in FTT Stand Alone<a class="headerlink" href="#standard-and-third-party-imports-used-in-ftt-stand-alone" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Standard library imports</span>
+<span class="kn">import</span> <span class="nn">configparser</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="c1"># Third party imports</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ftt-stand-alone-s-development-environment">
+<h2>FTT Stand Alone’s development environment<a class="headerlink" href="#ftt-stand-alone-s-development-environment" title="Permalink to this headline">¶</a></h2>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">Pip List</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 99%" />
+<col style="width: 1%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Package</p></th>
+<th class="head"><p>Version</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>alabaster</p></td>
+<td><p>0.7.12</p></td>
+</tr>
+<tr class="row-odd"><td><p>anaconda-client</p></td>
+<td><p>1.8.0</p></td>
+</tr>
+<tr class="row-even"><td><p>anaconda-navigator</p></td>
+<td><p>1.8.7</p></td>
+</tr>
+<tr class="row-odd"><td><p>anaconda-project</p></td>
+<td><p>0.10.2</p></td>
+</tr>
+<tr class="row-even"><td><p>appdirs</p></td>
+<td><p>1.4.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>asn1crypto</p></td>
+<td><p>1.2.0</p></td>
+</tr>
+<tr class="row-even"><td><p>astroid</p></td>
+<td><p>2.3.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>astropy</p></td>
+<td><p>4.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>atomicwrites</p></td>
+<td><p>1.4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>attrs</p></td>
+<td><p>19.3.0</p></td>
+</tr>
+<tr class="row-even"><td><p>Automat</p></td>
+<td><p>20.2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Babel</p></td>
+<td><p>2.7.0</p></td>
+</tr>
+<tr class="row-even"><td><p>backcall</p></td>
+<td><p>0.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>backports.functools-lru-cache</p></td>
+<td><p>1.6.4</p></td>
+</tr>
+<tr class="row-even"><td><p>backports.shutil-get-terminal-size</p></td>
+<td><p>1.0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>backports.tempfile</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>backports.weakref</p></td>
+<td><p>1.0.post1</p></td>
+</tr>
+<tr class="row-odd"><td><p>bcrypt</p></td>
+<td><p>3.2.0</p></td>
+</tr>
+<tr class="row-even"><td><p>beautifulsoup4</p></td>
+<td><p>4.10.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>bitarray</p></td>
+<td><p>2.3.0</p></td>
+</tr>
+<tr class="row-even"><td><p>bkcharts</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>black</p></td>
+<td><p>19.10b0</p></td>
+</tr>
+<tr class="row-even"><td><p>blaze</p></td>
+<td><p>0.11.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>bleach</p></td>
+<td><p>3.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>bokeh</p></td>
+<td><p>2.1.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>boto</p></td>
+<td><p>2.49.0</p></td>
+</tr>
+<tr class="row-even"><td><p>bottle</p></td>
+<td><p>0.12.19</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bottleneck</p></td>
+<td><p>1.3.2</p></td>
+</tr>
+<tr class="row-even"><td><p>celib</p></td>
+<td><p>0.4.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>certifi</p></td>
+<td><p>2021.5.30</p></td>
+</tr>
+<tr class="row-even"><td><p>cffi</p></td>
+<td><p>1.13.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>chardet</p></td>
+<td><p>3.0.4</p></td>
+</tr>
+<tr class="row-even"><td><p>Click</p></td>
+<td><p>7.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>cloudpickle</p></td>
+<td><p>1.2.2</p></td>
+</tr>
+<tr class="row-even"><td><p>clyent</p></td>
+<td><p>1.2.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>colorama</p></td>
+<td><p>0.4.1</p></td>
+</tr>
+<tr class="row-even"><td><p>comtypes</p></td>
+<td><p>1.1.10</p></td>
+</tr>
+<tr class="row-odd"><td><p>conda</p></td>
+<td><p>4.10.3</p></td>
+</tr>
+<tr class="row-even"><td><p>conda-build</p></td>
+<td><p>3.10.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>conda-pack</p></td>
+<td><p>0.6.0</p></td>
+</tr>
+<tr class="row-even"><td><p>conda-package-handling</p></td>
+<td><p>1.7.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>conda-verify</p></td>
+<td><p>3.4.2</p></td>
+</tr>
+<tr class="row-even"><td><p>constantly</p></td>
+<td><p>15.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>contextlib2</p></td>
+<td><p>0.6.0.post1</p></td>
+</tr>
+<tr class="row-even"><td><p>contextvars</p></td>
+<td><p>2.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>coverage</p></td>
+<td><p>4.5.4</p></td>
+</tr>
+<tr class="row-even"><td><p>cryptography</p></td>
+<td><p>2.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>cycler</p></td>
+<td><p>0.10.0</p></td>
+</tr>
+<tr class="row-even"><td><p>Cython</p></td>
+<td><p>0.29.24</p></td>
+</tr>
+<tr class="row-odd"><td><p>cytoolz</p></td>
+<td><p>0.11.0</p></td>
+</tr>
+<tr class="row-even"><td><p>dash</p></td>
+<td><p>1.4.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>dash-core-components</p></td>
+<td><p>1.3.1</p></td>
+</tr>
+<tr class="row-even"><td><p>dash-html-components</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>dash-renderer</p></td>
+<td><p>1.1.2</p></td>
+</tr>
+<tr class="row-even"><td><p>dash-table</p></td>
+<td><p>4.4.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>dask</p></td>
+<td><p>2.16.0</p></td>
+</tr>
+<tr class="row-even"><td><p>datashape</p></td>
+<td><p>0.5.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>decorator</p></td>
+<td><p>4.4.1</p></td>
+</tr>
+<tr class="row-even"><td><p>defusedxml</p></td>
+<td><p>0.6.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>distributed</p></td>
+<td><p>2.16.0</p></td>
+</tr>
+<tr class="row-even"><td><p>docutils</p></td>
+<td><p>0.15.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>entrypoints</p></td>
+<td><p>0.3</p></td>
+</tr>
+<tr class="row-even"><td><p>et-xmlfile</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>fastcache</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>filelock</p></td>
+<td><p>3.4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Flask</p></td>
+<td><p>1.1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>Flask-Compress</p></td>
+<td><p>1.4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Flask-Cors</p></td>
+<td><p>3.0.10</p></td>
+</tr>
+<tr class="row-even"><td><p>fsspec</p></td>
+<td><p>2022.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>future</p></td>
+<td><p>0.18.2</p></td>
+</tr>
+<tr class="row-even"><td><p>gevent</p></td>
+<td><p>21.8.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>glob2</p></td>
+<td><p>0.7</p></td>
+</tr>
+<tr class="row-even"><td><p>greenlet</p></td>
+<td><p>1.1.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>h5py</p></td>
+<td><p>2.10.0</p></td>
+</tr>
+<tr class="row-even"><td><p>HeapDict</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>html5lib</p></td>
+<td><p>1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>hyperlink</p></td>
+<td><p>21.0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>hypothesis</p></td>
+<td><p>6.29.3</p></td>
+</tr>
+<tr class="row-even"><td><p>idna</p></td>
+<td><p>2.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>imageio</p></td>
+<td><p>2.6.1</p></td>
+</tr>
+<tr class="row-even"><td><p>imagesize</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>immutables</p></td>
+<td><p>0.16</p></td>
+</tr>
+<tr class="row-even"><td><p>importlib-metadata</p></td>
+<td><p>4.8.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>incremental</p></td>
+<td><p>21.3.0</p></td>
+</tr>
+<tr class="row-even"><td><p>iniconfig</p></td>
+<td><p>1.1.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ipykernel</p></td>
+<td><p>5.1.3</p></td>
+</tr>
+<tr class="row-even"><td><p>ipython</p></td>
+<td><p>7.9.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>ipython-genutils</p></td>
+<td><p>0.2.0</p></td>
+</tr>
+<tr class="row-even"><td><p>ipywidgets</p></td>
+<td><p>7.5.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>isort</p></td>
+<td><p>4.3.21</p></td>
+</tr>
+<tr class="row-even"><td><p>itsdangerous</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>jdcal</p></td>
+<td><p>1.4.1</p></td>
+</tr>
+<tr class="row-even"><td><p>jedi</p></td>
+<td><p>0.15.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Jinja2</p></td>
+<td><p>2.10.3</p></td>
+</tr>
+<tr class="row-even"><td><p>joblib</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>json5</p></td>
+<td><p>0.9.6</p></td>
+</tr>
+<tr class="row-even"><td><p>jsonschema</p></td>
+<td><p>3.1.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>jupyter</p></td>
+<td><p>1.0.0</p></td>
+</tr>
+<tr class="row-even"><td><p>jupyter-client</p></td>
+<td><p>5.3.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>jupyter-console</p></td>
+<td><p>6.0.0</p></td>
+</tr>
+<tr class="row-even"><td><p>jupyter-core</p></td>
+<td><p>4.6.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>jupyterlab</p></td>
+<td><p>1.2.6</p></td>
+</tr>
+<tr class="row-even"><td><p>jupyterlab-launcher</p></td>
+<td><p>0.13.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>jupyterlab-server</p></td>
+<td><p>1.1.4</p></td>
+</tr>
+<tr class="row-even"><td><p>keyring</p></td>
+<td><p>18.0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>kiwisolver</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>lazy-object-proxy</p></td>
+<td><p>1.4.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>llvmlite</p></td>
+<td><p>0.36.0</p></td>
+</tr>
+<tr class="row-even"><td><p>locket</p></td>
+<td><p>0.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>lxml</p></td>
+<td><p>4.6.3</p></td>
+</tr>
+<tr class="row-even"><td><p>MarkupSafe</p></td>
+<td><p>1.1.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>matplotlib</p></td>
+<td><p>3.2.2</p></td>
+</tr>
+<tr class="row-even"><td><p>mccabe</p></td>
+<td><p>0.6.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>menuinst</p></td>
+<td><p>1.4.18</p></td>
+</tr>
+<tr class="row-even"><td><p>mistune</p></td>
+<td><p>0.8.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>mkl-fft</p></td>
+<td><p>1.0.15</p></td>
+</tr>
+<tr class="row-even"><td><p>mkl-random</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>mkl-service</p></td>
+<td><p>2.3.0</p></td>
+</tr>
+<tr class="row-even"><td><p>mock</p></td>
+<td><p>4.0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>more-itertools</p></td>
+<td><p>7.2.0</p></td>
+</tr>
+<tr class="row-even"><td><p>mpmath</p></td>
+<td><p>1.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>msgpack</p></td>
+<td><p>1.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>multipledispatch</p></td>
+<td><p>0.6.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>mypy-extensions</p></td>
+<td><p>0.4.3</p></td>
+</tr>
+<tr class="row-even"><td><p>navigator-updater</p></td>
+<td><p>0.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>nbconvert</p></td>
+<td><p>5.6.1</p></td>
+</tr>
+<tr class="row-even"><td><p>nbformat</p></td>
+<td><p>4.4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>networkx</p></td>
+<td><p>2.5.1</p></td>
+</tr>
+<tr class="row-even"><td><p>nltk</p></td>
+<td><p>3.6.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>nose</p></td>
+<td><p>1.3.7</p></td>
+</tr>
+<tr class="row-even"><td><p>notebook</p></td>
+<td><p>6.0.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>numba</p></td>
+<td><p>0.53.0</p></td>
+</tr>
+<tr class="row-even"><td><p>numexpr</p></td>
+<td><p>2.7.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>numpy</p></td>
+<td><p>1.17.3</p></td>
+</tr>
+<tr class="row-even"><td><p>numpydoc</p></td>
+<td><p>0.9.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>odo</p></td>
+<td><p>0.5.1</p></td>
+</tr>
+<tr class="row-even"><td><p>olefile</p></td>
+<td><p>0.46</p></td>
+</tr>
+<tr class="row-odd"><td><p>openpyxl</p></td>
+<td><p>3.0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>packaging</p></td>
+<td><p>19.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>pandas</p></td>
+<td><p>1.0.3</p></td>
+</tr>
+<tr class="row-even"><td><p>pandocfilters</p></td>
+<td><p>1.4.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>parso</p></td>
+<td><p>0.5.1</p></td>
+</tr>
+<tr class="row-even"><td><p>partd</p></td>
+<td><p>1.2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Paste</p></td>
+<td><p>3.5.0</p></td>
+</tr>
+<tr class="row-even"><td><p>path</p></td>
+<td><p>16.2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>pathlib2</p></td>
+<td><p>2.3.6</p></td>
+</tr>
+<tr class="row-even"><td><p>pathspec</p></td>
+<td><p>0.7.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>patsy</p></td>
+<td><p>0.5.1</p></td>
+</tr>
+<tr class="row-even"><td><p>pep8</p></td>
+<td><p>1.7.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>pickleshare</p></td>
+<td><p>0.7.5</p></td>
+</tr>
+<tr class="row-even"><td><p>Pillow</p></td>
+<td><p>6.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>pip</p></td>
+<td><p>21.2.2</p></td>
+</tr>
+<tr class="row-even"><td><p>pkginfo</p></td>
+<td><p>1.8.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>plotly</p></td>
+<td><p>4.2.1</p></td>
+</tr>
+<tr class="row-even"><td><p>pluggy</p></td>
+<td><p>0.13.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ply</p></td>
+<td><p>3.11</p></td>
+</tr>
+<tr class="row-even"><td><p>prometheus-client</p></td>
+<td><p>0.7.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>prompt-toolkit</p></td>
+<td><p>2.0.10</p></td>
+</tr>
+<tr class="row-even"><td><p>psutil</p></td>
+<td><p>5.6.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>py</p></td>
+<td><p>1.11.0</p></td>
+</tr>
+<tr class="row-even"><td><p>pyasn1</p></td>
+<td><p>0.4.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyasn1-modules</p></td>
+<td><p>0.2.8</p></td>
+</tr>
+<tr class="row-even"><td><p>pycodestyle</p></td>
+<td><p>2.5.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>pycosat</p></td>
+<td><p>0.6.3</p></td>
+</tr>
+<tr class="row-even"><td><p>pycparser</p></td>
+<td><p>2.19</p></td>
+</tr>
+<tr class="row-odd"><td><p>pycrypto</p></td>
+<td><p>2.6.1</p></td>
+</tr>
+<tr class="row-even"><td><p>pycurl</p></td>
+<td><p>7.44.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyflakes</p></td>
+<td><p>2.1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>Pygments</p></td>
+<td><p>2.4.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>PyHamcrest</p></td>
+<td><p>2.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>pylint</p></td>
+<td><p>2.4.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyodbc</p></td>
+<td><p>4.0.0-unsupported</p></td>
+</tr>
+<tr class="row-even"><td><p>pyOpenSSL</p></td>
+<td><p>19.0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyparsing</p></td>
+<td><p>2.4.5</p></td>
+</tr>
+<tr class="row-even"><td><p>pyreadline</p></td>
+<td><p>2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyrsistent</p></td>
+<td><p>0.15.5</p></td>
+</tr>
+<tr class="row-even"><td><p>PySocks</p></td>
+<td><p>1.7.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>pytest</p></td>
+<td><p>6.2.4</p></td>
+</tr>
+<tr class="row-even"><td><p>pytest-arraydiff</p></td>
+<td><p>0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>pytest-astropy</p></td>
+<td><p>0.8.0</p></td>
+</tr>
+<tr class="row-even"><td><p>pytest-astropy-header</p></td>
+<td><p>0.1.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>pytest-cov</p></td>
+<td><p>2.11.0</p></td>
+</tr>
+<tr class="row-even"><td><p>pytest-doctestplus</p></td>
+<td><p>0.0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>pytest-filter-subpackage</p></td>
+<td><p>0.1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>pytest-mock</p></td>
+<td><p>3.6.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>pytest-openfiles</p></td>
+<td><p>0.5.0</p></td>
+</tr>
+<tr class="row-even"><td><p>pytest-remotedata</p></td>
+<td><p>0.3.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>python-dateutil</p></td>
+<td><p>2.8.1</p></td>
+</tr>
+<tr class="row-even"><td><p>pytz</p></td>
+<td><p>2019.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>PyWavelets</p></td>
+<td><p>1.1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>pywin32</p></td>
+<td><p>223</p></td>
+</tr>
+<tr class="row-odd"><td><p>pywinpty</p></td>
+<td><p>0.5.5</p></td>
+</tr>
+<tr class="row-even"><td><p>PyYAML</p></td>
+<td><p>5.1.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>pyzmq</p></td>
+<td><p>18.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>QtAwesome</p></td>
+<td><p>0.6.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>qtconsole</p></td>
+<td><p>4.5.5</p></td>
+</tr>
+<tr class="row-even"><td><p>QtPy</p></td>
+<td><p>1.9.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>regex</p></td>
+<td><p>2021.8.3</p></td>
+</tr>
+<tr class="row-even"><td><p>requests</p></td>
+<td><p>2.22.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>retrying</p></td>
+<td><p>1.3.3</p></td>
+</tr>
+<tr class="row-even"><td><p>rope</p></td>
+<td><p>0.14.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>ruamel_yaml</p></td>
+<td><p>0.15.87</p></td>
+</tr>
+<tr class="row-even"><td><p>scikit-image</p></td>
+<td><p>0.17.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>scikit-learn</p></td>
+<td><p>0.24.2</p></td>
+</tr>
+<tr class="row-even"><td><p>scipy</p></td>
+<td><p>1.3.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>seaborn</p></td>
+<td><p>0.11.2</p></td>
+</tr>
+<tr class="row-even"><td><p>Send2Trash</p></td>
+<td><p>1.5.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>service-identity</p></td>
+<td><p>18.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>setuptools</p></td>
+<td><p>41.6.0.post20191030</p></td>
+</tr>
+<tr class="row-odd"><td><p>simplegeneric</p></td>
+<td><p>0.8.1</p></td>
+</tr>
+<tr class="row-even"><td><p>singledispatch</p></td>
+<td><p>3.7.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>six</p></td>
+<td><p>1.13.0</p></td>
+</tr>
+<tr class="row-even"><td><p>snowballstemmer</p></td>
+<td><p>2.0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>sortedcollections</p></td>
+<td><p>2.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>sortedcontainers</p></td>
+<td><p>2.4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>soupsieve</p></td>
+<td><p>2.3.1</p></td>
+</tr>
+<tr class="row-even"><td><p>Sphinx</p></td>
+<td><p>2.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>sphinxcontrib-applehelp</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>sphinxcontrib-devhelp</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>sphinxcontrib-htmlhelp</p></td>
+<td><p>1.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>sphinxcontrib-jsmath</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>sphinxcontrib-qthelp</p></td>
+<td><p>1.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>sphinxcontrib-serializinghtml</p></td>
+<td><p>1.1.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>sphinxcontrib-websupport</p></td>
+<td><p>1.2.4</p></td>
+</tr>
+<tr class="row-even"><td><p>spyder</p></td>
+<td><p>3.3.6</p></td>
+</tr>
+<tr class="row-odd"><td><p>spyder-kernels</p></td>
+<td><p>0.5.2</p></td>
+</tr>
+<tr class="row-even"><td><p>SQLAlchemy</p></td>
+<td><p>1.4.22</p></td>
+</tr>
+<tr class="row-odd"><td><p>statsmodels</p></td>
+<td><p>0.10.1</p></td>
+</tr>
+<tr class="row-even"><td><p>sympy</p></td>
+<td><p>1.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>tables</p></td>
+<td><p>3.6.1</p></td>
+</tr>
+<tr class="row-even"><td><p>tblib</p></td>
+<td><p>1.7.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>terminado</p></td>
+<td><p>0.8.2</p></td>
+</tr>
+<tr class="row-even"><td><p>testpath</p></td>
+<td><p>0.4.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>threadpoolctl</p></td>
+<td><p>2.2.0</p></td>
+</tr>
+<tr class="row-even"><td><p>tifffile</p></td>
+<td><p>2020.10.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>toml</p></td>
+<td><p>0.10.2</p></td>
+</tr>
+<tr class="row-even"><td><p>toolz</p></td>
+<td><p>0.11.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>tornado</p></td>
+<td><p>6.0.3</p></td>
+</tr>
+<tr class="row-even"><td><p>tqdm</p></td>
+<td><p>4.63.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>traitlets</p></td>
+<td><p>4.3.3</p></td>
+</tr>
+<tr class="row-even"><td><p>Twisted</p></td>
+<td><p>21.2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>twisted-iocpsupport</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>typed-ast</p></td>
+<td><p>1.4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>typing_extensions</p></td>
+<td><p>4.1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>unicodecsv</p></td>
+<td><p>0.14.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>urllib3</p></td>
+<td><p>1.24.2</p></td>
+</tr>
+<tr class="row-even"><td><p>wcwidth</p></td>
+<td><p>0.1.7</p></td>
+</tr>
+<tr class="row-odd"><td><p>webencodings</p></td>
+<td><p>0.5.1</p></td>
+</tr>
+<tr class="row-even"><td><p>Werkzeug</p></td>
+<td><p>0.16.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>wheel</p></td>
+<td><p>0.33.6</p></td>
+</tr>
+<tr class="row-even"><td><p>widgetsnbextension</p></td>
+<td><p>3.5.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>win-inet-pton</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>win-unicode-console</p></td>
+<td><p>0.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>wincertstore</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>wrapt</p></td>
+<td><p>1.11.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>xlrd</p></td>
+<td><p>1.2.0</p></td>
+</tr>
+<tr class="row-even"><td><p>XlsxWriter</p></td>
+<td><p>1.2.6</p></td>
+</tr>
+<tr class="row-odd"><td><p>xlwings</p></td>
+<td><p>0.24.7</p></td>
+</tr>
+<tr class="row-even"><td><p>xlwt</p></td>
+<td><p>1.3.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>zict</p></td>
+<td><p>2.0.0</p></td>
+</tr>
+<tr class="row-even"><td><p>zipp</p></td>
+<td><p>0.6.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>zope.event</p></td>
+<td><p>4.5.0</p></td>
+</tr>
+<tr class="row-even"><td><p>zope.interface</p></td>
+<td><p>5.4.0</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html#table-of-contents-for-the-model-code">Table of contents for the model code</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="run_file.html">run_file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sourcemodules.html">Source Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="suppmodules.html">Support functions</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Libraries used in FTT Stand Alone</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#standard-and-third-party-imports-used-in-ftt-stand-alone">Standard and third party imports used in FTT Stand Alone</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ftt-stand-alone-s-development-environment">FTT Stand Alone’s development environment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+      <li>Previous: <a href="titles_functions.html" title="previous chapter">titles_functions module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/libraries.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ftt_p_costc module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ftt_p_dspch module" href="ftt_p_dspch.html" />
+    <link rel="prev" title="ftt_p_main module" href="ftt_p_main.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ftt_p_costc">
+<span id="ftt-p-costc-module"></span><h1>ftt_p_costc module<a class="headerlink" href="#module-ftt_p_costc" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ftt-p-costc-py">
+<h2>ftt_p_costc.py<a class="headerlink" href="#ftt-p-costc-py" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="power-cost-supply-curves-module">
+<h3>Power cost-supply curves module.<a class="headerlink" href="#power-cost-supply-curves-module" title="Permalink to this headline">¶</a></h3>
+<p>Cost-supply curves give the cost of a resource as a function of its quantity, and
+hence provide the <strong>marginal cost</strong> of each resource. For example, if a fossil fuel
+resource is running out, the fuel cost increases. For e.g. hydropower, if there are
+less accessible places to build, then the investment cost goes up. For variable
+renewables, the load factor (the number of hours it delivers to the grid, divide by the
+number of hours in a year).</p>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>interp</dt><dd><p>Iterpolation function</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>marginal_function</dt><dd><p>Calculates marginal cost of production of non renewable resources</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>cost_curves</dt><dd><p>Calculates cost-supply curves for the power sector</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For correspondance with E3ME:
+NR is rti, NT2 is t2ti, NJ is jti, NER is erti, NM is mti, NC2 is c2ti</p>
+</div>
+<dl class="function">
+<dt id="ftt_p_costc.cost_curves">
+<code class="sig-prename descclassname">ftt_p_costc.</code><code class="sig-name descname">cost_curves</code><span class="sig-paren">(</span><em class="sig-param">BCET</em>, <em class="sig-param">BCTL</em>, <em class="sig-param">BCSC</em>, <em class="sig-param">MEWD</em>, <em class="sig-param">MEWG</em>, <em class="sig-param">MEWL</em>, <em class="sig-param">MEPD</em>, <em class="sig-param">MERC</em>, <em class="sig-param">MRCL</em>, <em class="sig-param">RERY</em>, <em class="sig-param">MPTR</em>, <em class="sig-param">PMF</em>, <em class="sig-param">MRED</em>, <em class="sig-param">MRES</em>, <em class="sig-param">mti</em>, <em class="sig-param">rti</em>, <em class="sig-param">t2ti</em>, <em class="sig-param">c2ti</em>, <em class="sig-param">jti</em>, <em class="sig-param">erti</em>, <em class="sig-param">year</em>, <em class="sig-param">dt</em>, <em class="sig-param">MERCX</em><span class="sig-paren">)</span><a class="headerlink" href="#ftt_p_costc.cost_curves" title="Permalink to this definition">¶</a></dt>
+<dd><p>FTT: Power cost-supply curves routine. This calculates the cost of resources given
+the available supply.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftt_p_costc.interp">
+<code class="sig-prename descclassname">ftt_p_costc.</code><code class="sig-name descname">interp</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">X0</em>, <em class="sig-param">L</em><span class="sig-paren">)</span><a class="headerlink" href="#ftt_p_costc.interp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear interpolation function which estimates data points between start points
+and end points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>List</em>) – X vector for interpolation</p></li>
+<li><p><strong>Y</strong> (<em>List</em>) – Y vector for interpolation</p></li>
+<li><p><strong>X0</strong> (<em>float</em>) – Value at which to interpolate</p></li>
+<li><p><strong>L</strong> (<em>int</em>) – Length of data set</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>Y0</strong> (<em>float</em>) – Interpolated value</p></li>
+<li><p><strong>I</strong> (<em>int</em>) – Index of the position of the interpolated value</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftt_p_costc.marginal_function">
+<code class="sig-prename descclassname">ftt_p_costc.</code><code class="sig-name descname">marginal_function</code><span class="sig-paren">(</span><em class="sig-param">MEPD</em>, <em class="sig-param">RERY</em>, <em class="sig-param">MPTR</em>, <em class="sig-param">BCSC</em>, <em class="sig-param">HistC</em>, <em class="sig-param">MRCL</em>, <em class="sig-param">MERC</em>, <em class="sig-param">MRED</em>, <em class="sig-param">MRES</em>, <em class="sig-param">rti</em>, <em class="sig-param">erti</em>, <em class="sig-param">year</em>, <em class="sig-param">dt</em>, <em class="sig-param">MERCX</em><span class="sig-paren">)</span><a class="headerlink" href="#ftt_p_costc.marginal_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Marginal cost of production of non renewable resources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>MPTR</strong> (<em>NumPy array</em>) – Values of nu by region (Production to reserve ratio) See paper Mercure &amp; Salas arXiv:1209.0708 for data</p></li>
+<li><p><strong>HistC</strong> (<em>NumPy array</em>) – Cost axis C</p></li>
+<li><p><strong>MRCL</strong> (<em>NumPy array</em>) – Previous marginal cost value</p></li>
+<li><p><strong>MEPD</strong> (<em>NumPy array</em>) – Total resource demand</p></li>
+<li><p><strong>MERC</strong> (<em>NumPy array</em>) – Current (new) marginal cost value</p></li>
+<li><p><strong>MRED</strong> (<em>NumPy array</em>) – Resources left</p></li>
+<li><p><strong>MRES</strong> (<em>NumPy array</em>) – reserves</p></li>
+<li><p><strong>RERY</strong> (<em>NumPy array</em>) – supply in GJ of fossil fuel resource (only I = 2 to 4 used)</p></li>
+<li><p><strong>BCSC</strong> (<em>NumPy array</em>) – Dataset for natural resources</p></li>
+<li><p><strong>rti</strong> (<em>int</em>) – Length of regional titles</p></li>
+<li><p><strong>t2ti</strong> (<em>int</em>) – Length of technology titles</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>RERY</em></p></li>
+<li><p><em>BCSC</em></p></li>
+<li><p><em>HistC</em></p></li>
+<li><p><em>MERC</em></p></li>
+<li><p><em>MRED</em></p></li>
+<li><p><em>MRES</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="sourcemodules.html">Source Code</a><ul>
+  <li><a href="FTT Power.html">FTT: Power</a><ul>
+      <li>Previous: <a href="ftt_p_main.html" title="previous chapter">ftt_p_main module</a></li>
+      <li>Next: <a href="ftt_p_dspch.html" title="next chapter">ftt_p_dspch module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/ftt_p_costc.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

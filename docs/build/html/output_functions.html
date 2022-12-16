@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>output_functions module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="read_support module" href="read_support.html" />
+    <link rel="prev" title="input_functions module" href="input_functions.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-output_functions">
+<span id="output-functions-module"></span><h1>output_functions module<a class="headerlink" href="#module-output_functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="output-functions-py">
+<h2>output_functions.py<a class="headerlink" href="#output-functions-py" title="Permalink to this headline">¶</a></h2>
+<p>Functions written for model outputs.</p>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>save_results</dt><dd><p>Save model results to csvs</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="function">
+<dt id="output_functions.save_results">
+<code class="sig-prename descclassname">output_functions.</code><code class="sig-name descname">save_results</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">years</em>, <em class="sig-param">results_list</em>, <em class="sig-param">results</em><span class="sig-paren">)</span><a class="headerlink" href="#output_functions.save_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save model results.</p>
+<p>Model results are saved in a series of structure csv files. The backend of
+the model frontend will read these csvs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of model run, and specification file read</p></li>
+<li><p><strong>years</strong> (<em>tuple</em><em> (</em><em>int</em><em>, </em><em>int</em><em>)</em>) – Bookend years of solution</p></li>
+<li><p><strong>results_list</strong> (<em>list of str</em>) – List of variable names, specifying results to print</p></li>
+<li><p><strong>results</strong> (<em>dictionary of numpy arrays</em>) – Dictionary containing all model results</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Detailed description</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function is under construction.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html#table-of-contents-for-the-model-code">Table of contents for the model code</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="run_file.html">run_file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sourcemodules.html">Source Code</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="suppmodules.html">Support functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cross_section.html">cross_section module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dimensions_functions.html">dimensions_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="divide.html">divide module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="econometrics_functions.html">econometrics_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="input_functions.html">input_functions module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">output_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="read_support.html">read_support module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="specification_functions.html">specification_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="titles_functions.html">titles_functions module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="suppmodules.html">Support functions</a><ul>
+      <li>Previous: <a href="input_functions.html" title="previous chapter">input_functions module</a></li>
+      <li>Next: <a href="read_support.html" title="next chapter">read_support module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/output_functions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

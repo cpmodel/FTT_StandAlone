@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>econometrics_functions module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="input_functions module" href="input_functions.html" />
+    <link rel="prev" title="divide module" href="divide.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-econometrics_functions">
+<span id="econometrics-functions-module"></span><h1>econometrics_functions module<a class="headerlink" href="#module-econometrics_functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="econometrics-functions-py">
+<h2>econometrics_functions.py<a class="headerlink" href="#econometrics-functions-py" title="Permalink to this headline">¶</a></h2>
+<p>Functions to read estimated coefficients, names of the variable needed for
+econometrics, and solve the econometrics specification.</p>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>load_coefficients</dt><dd><p>Load estimated coefficients and variable names.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>estimation</dt><dd><p>Solve the econometric specification.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="function">
+<dt id="econometrics_functions.estimation">
+<code class="sig-prename descclassname">econometrics_functions.</code><code class="sig-name descname">estimation</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">data_lag</em>, <em class="sig-param">region</em>, <em class="sig-param">module</em>, <em class="sig-param">fuel</em>, <em class="sig-param">coefficients</em>, <em class="sig-param">sector_index</em>, <em class="sig-param">converter</em><span class="sig-paren">)</span><a class="headerlink" href="#econometrics_functions.estimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict future values according to the estimated coefficients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>dictionary of numpy arrays</em>) – Dictionary containing the cross section of data.</p></li>
+<li><p><strong>data_lag</strong> (<em>dictionary of numpy arrays</em>) – Dictionary containing the lags of cross section of data</p></li>
+<li><p><strong>region</strong> (<em>int</em>) – The index of the region</p></li>
+<li><p><strong>module</strong> (<em>string</em>) – The name of the sector</p></li>
+<li><p><strong>fuel</strong> (<em>int</em>) – The number of the fuel</p></li>
+<li><p><strong>coefficients</strong> (<em>dictionary of dataframes</em>) – Coefficients to use to forecast future values</p></li>
+<li><p><strong>sector_index</strong> (<em>int</em>) – The index of the sector</p></li>
+<li><p><strong>converter</strong> (<em>dictionary of dataframes</em>) – Used to go from detailed to broad fuels</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>new_value</strong> – The forecast value for the next period.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="econometrics_functions.load_coefficients">
+<code class="sig-prename descclassname">econometrics_functions.</code><code class="sig-name descname">load_coefficients</code><span class="sig-paren">(</span><em class="sig-param">converter</em><span class="sig-paren">)</span><a class="headerlink" href="#econometrics_functions.load_coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read estimated coefficients from excel spreadsheet, and names of the variables
+needed for the econometric specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>converter</strong> (<em>dictionary of dataframes.</em>) – Spreadsheet used to convert individual fuels into
+broad fuels categories.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>coeff_dict</strong> (<em>dictionary of dataframes</em>) – Dictionary of estimated coefficients.</p></li>
+<li><p><strong>exog_var</strong> (<em>Dataframe</em>) – Dataframe of variables needed for the econometric
+specification and relative lags.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html#table-of-contents-for-the-model-code">Table of contents for the model code</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="run_file.html">run_file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sourcemodules.html">Source Code</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="suppmodules.html">Support functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cross_section.html">cross_section module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dimensions_functions.html">dimensions_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="divide.html">divide module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">econometrics_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="input_functions.html">input_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="output_functions.html">output_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="read_support.html">read_support module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="specification_functions.html">specification_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="titles_functions.html">titles_functions module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="suppmodules.html">Support functions</a><ul>
+      <li>Previous: <a href="divide.html" title="previous chapter">divide module</a></li>
+      <li>Next: <a href="input_functions.html" title="next chapter">input_functions module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/econometrics_functions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ftt_p_main module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ftt_p_costc module" href="ftt_p_costc.html" />
+    <link rel="prev" title="FTT: Power" href="FTT Power.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ftt_p_main">
+<span id="ftt-p-main-module"></span><h1>ftt_p_main module<a class="headerlink" href="#module-ftt_p_main" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ftt-p-main-py">
+<h2>ftt_p_main.py<a class="headerlink" href="#ftt-p-main-py" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="power-generation-ftt-module">
+<h3>Power generation FTT module.<a class="headerlink" href="#power-generation-ftt-module" title="Permalink to this headline">¶</a></h3>
+<p>This is the main file for the power module, FTT: Power. The power
+module models technological replacement of electricity generation technologies due
+to simulated investor decision making. Investors compare the <strong>levelised cost of
+electricity</strong>, which leads to changes in the market shares of different technologies.</p>
+<p>After market shares are determined, the rldc function is called, which calculates
+<strong>residual load duration curves</strong>. This function estimates how much power needs to be
+supplied by flexible or baseload technologies to meet electricity demand at all times.
+This function also returns load band heights, curtailment, and storage information,
+including storage costs and marginal costs for wind and solar.</p>
+<p>FTT: Power also includes <strong>dispatchers decisions</strong>; dispatchers decide when different technologies
+supply the power grid. Investor decisions and dispatcher decisions are matched up, which is an
+example of a stable marraige problem.</p>
+<p>Costs in the model change due to endogenous learning curves, costs for electricity
+storage, as well as increasing marginal costs of resources calculated using cost-supply
+curves. <strong>Cost-supply curves</strong> are recalculated at the end of the routine.</p>
+<p>Local library imports:</p>
+<blockquote>
+<div><p>FTT: Power functions:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_rldc.html">rldc</a></dt><dd><p>Residual load duration curves</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_dspch.html">dspch</a></dt><dd><p>Dispatch of capcity</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_lcoe.html">get_lcoe</a></dt><dd><p>Levelised cost calculation</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_surv.html">survival_function</a></dt><dd><p>Calculation of scrappage, sales, tracking of age, and average efficiency.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_shares.html">shares</a></dt><dd><p>Market shares simulation (core of the model)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_costc.html">cost_curves</a></dt><dd><p>Calculates increasing marginal costs of resources</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Support functions:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="divide.html">divide</a></dt><dd><p>Bespoke element-wise divide which replaces divide-by-zeros with zeros</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>solve</dt><dd><p>Main solution function for the module</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="function">
+<dt id="ftt_p_main.solve">
+<code class="sig-prename descclassname">ftt_p_main.</code><code class="sig-name descname">solve</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">time_lag</em>, <em class="sig-param">iter_lag</em>, <em class="sig-param">titles</em>, <em class="sig-param">histend</em>, <em class="sig-param">year</em>, <em class="sig-param">domain</em><span class="sig-paren">)</span><a class="headerlink" href="#ftt_p_main.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main solution function for the module.</p>
+<p>Add an extended description in the future.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>dictionary of NumPy arrays</em>) – Model variables for the given year of solution</p></li>
+<li><p><strong>time_lag</strong> (<em>type</em>) – Description</p></li>
+<li><p><strong>iter_lag</strong> (<em>type</em>) – Description</p></li>
+<li><p><strong>titles</strong> (<em>dictionary of lists</em>) – Dictionary containing all title classification</p></li>
+<li><p><strong>histend</strong> (<em>dict of integers</em>) – Final year of histrorical data by variable</p></li>
+<li><p><strong>year</strong> (<em>int</em>) – Curernt/active year of solution</p></li>
+<li><p><strong>Domain</strong> (<em>dictionary of lists</em>) – Pairs variables to domains</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – Model variables for the given year of solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary of NumPy arrays</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>survival_function is currently unused.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="sourcemodules.html">Source Code</a><ul>
+  <li><a href="FTT Power.html">FTT: Power</a><ul>
+      <li>Previous: <a href="FTT Power.html" title="previous chapter">FTT: Power</a></li>
+      <li>Next: <a href="ftt_p_costc.html" title="next chapter">ftt_p_costc module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/ftt_p_main.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

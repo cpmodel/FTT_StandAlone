@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ftt_p_dspch module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ftt_p_lcoe module" href="ftt_p_lcoe.html" />
+    <link rel="prev" title="ftt_p_costc module" href="ftt_p_costc.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ftt_p_dspch">
+<span id="ftt-p-dspch-module"></span><h1>ftt_p_dspch module<a class="headerlink" href="#module-ftt_p_dspch" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ftt-p-dspch-py">
+<h2>ftt_p_dspch.py<a class="headerlink" href="#ftt-p-dspch-py" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="power-generation-dispatching-ftt-module">
+<h3>Power generation dispatching FTT module.<a class="headerlink" href="#power-generation-dispatching-ftt-module" title="Permalink to this headline">¶</a></h3>
+<p>Local library imports:</p>
+<blockquote>
+<div><p>Support functions:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="divide.html">divide</a></dt><dd><p>Bespoke element-wise divide which replaces divide-by-zeros with zeros</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>dspch</dt><dd><p>Calculate dispatching</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="ftt_p_dspch.dspch">
+<code class="sig-prename descclassname">ftt_p_dspch.</code><code class="sig-name descname">dspch</code><a class="headerlink" href="#ftt_p_dspch.dspch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates dispatch of capacity.</p>
+<p>The function estimates an allocation of power production between
+technologies and load bands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>MWDD</strong> (<em>NumPy array</em>) – Matrix of load band tech suitability</p></li>
+<li><p><strong>MEWS</strong> (<em>NumPy array</em>) – Market shares for the current year</p></li>
+<li><p><strong>MKLB</strong> (<em>NumPy array</em>) – Capacity by load band</p></li>
+<li><p><strong>MCRT</strong> (<em>NumPy array</em>) – Curtailment of VRE (% of generation)</p></li>
+<li><p><strong>MEWL</strong> (<em>NumPy array</em>) – Load factors (%)</p></li>
+<li><p><strong>MWMC_lag</strong> (<em>NumPy array</em>) – Lagged marginal costs</p></li>
+<li><p><strong>MMCD_lag</strong> (<em>NumPy array</em>) – Lagged standard deviation of marginal costs</p></li>
+<li><p><strong>rti</strong> (<em>int</em>) – Length of regional titles</p></li>
+<li><p><strong>t2ti</strong> (<em>int</em>) – Length of technology titles</p></li>
+<li><p><strong>lbti</strong> (<em>int</em>) – Length of</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>MSLB</strong> (<em>NumPy array</em>) – Shares of capacity by tech x load band</p></li>
+<li><p><strong>MLLB</strong> (<em>NumPy array</em>) – Load factors (%) by tech x load band</p></li>
+<li><p><strong>MES1</strong> (<em>NumPy array</em>) – Market share limitation 1</p></li>
+<li><p><strong>MES2</strong> (<em>NumPy array</em>) – Market share limitation 2</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>None.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="sourcemodules.html">Source Code</a><ul>
+  <li><a href="FTT Power.html">FTT: Power</a><ul>
+      <li>Previous: <a href="ftt_p_costc.html" title="previous chapter">ftt_p_costc module</a></li>
+      <li>Next: <a href="ftt_p_lcoe.html" title="next chapter">ftt_p_lcoe module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/ftt_p_dspch.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

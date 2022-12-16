@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>specification_functions module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="titles_functions module" href="titles_functions.html" />
+    <link rel="prev" title="read_support module" href="read_support.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-specification_functions">
+<span id="specification-functions-module"></span><h1>specification_functions module<a class="headerlink" href="#module-specification_functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="specification-functions-py">
+<h2>specification_functions.py<a class="headerlink" href="#specification-functions-py" title="Permalink to this headline">¶</a></h2>
+<p>Set of functions to load specifications for model solution.</p>
+<dl class="simple">
+<dt>Functions included:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>load_specs</dt><dd><p>Load specifications from the specifications workbook</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>spec_settings</dt><dd><p>Adjust specifications given settings.ini instructions</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>check_specs</dt><dd><p>Check that the workbook specifications are all valid</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="function">
+<dt id="specification_functions.check_specs">
+<code class="sig-prename descclassname">specification_functions.</code><code class="sig-name descname">check_specs</code><span class="sig-paren">(</span><em class="sig-param">spec_dict</em>, <em class="sig-param">titles_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#specification_functions.check_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the workbook specifications are all valid.</p>
+<p>A subset of specifications are available for each sector. These are given
+in the specifications workbook, but not enforced. This function corrects
+any N/A specifications, and sets to exogenous. Also any random error values
+need to be corrected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec_dict</strong> (<em>dictionary of numpy arrays</em>) – Dictionary of specification switches by sector, unadjusted</p></li>
+<li><p><strong>titles_dict</strong> (<em>dictionary of classification title lists</em>) – Dictionary containing all title classifications</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>spec_dict_adj</strong> – Specification dictionary, with adjustments for N/A specifications</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary of numpy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="specification_functions.load_specs">
+<code class="sig-prename descclassname">specification_functions.</code><code class="sig-name descname">load_specs</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">titles_dict</em>, <em class="sig-param">fd_sectors</em>, <em class="sig-param">st_sectors</em>, <em class="sig-param">scenarios</em><span class="sig-paren">)</span><a class="headerlink" href="#specification_functions.load_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load specifications from the specifications workbook.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of model run, and specification file to read</p></li>
+<li><p><strong>titles</strong> (<em>dictionary of classification title lists</em>) – Dictionary containing all title classifications</p></li>
+<li><p><strong>fd_sectors</strong> (<em>list of str</em>) – Final demand sectors to solve endogenously (otherwise spec set to
+exogenous)</p></li>
+<li><p><strong>st_sectors</strong> (<em>list of str</em>) – Supply and transformation sectors to solve endogenously (otherwise spec
+set to exogenous)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>spec_dict</strong> – Dictionary of specification switches by sector</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary of numpy arrays</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If the parameter ‘fd_sectors’ is set to ‘all’, then all final demand
+sectors will be solved endogenously. This saves listing all modules to give
+a complete endogenous solution. Similar for ‘st_sectors’ for supply and
+transformation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="specification_functions.spec_settings">
+<code class="sig-prename descclassname">specification_functions.</code><code class="sig-name descname">spec_settings</code><span class="sig-paren">(</span><em class="sig-param">spec_dict</em>, <em class="sig-param">titles_dict</em>, <em class="sig-param">fd_sectors</em>, <em class="sig-param">st_sectors</em>, <em class="sig-param">sheet_names</em><span class="sig-paren">)</span><a class="headerlink" href="#specification_functions.spec_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjust specifications given settings.ini instructions.</p>
+<p>If the parameter ‘fd_sectors’ is set to ‘all’, then all final demand
+sectors will be solved endogenously. This saves listing all modules to give
+a complete endogenous solution. Similar for ‘st_sectors’ for supply and
+transformation.
+If only a subset of sectors are specified, then those sectors not
+included will have all switches set to exogenous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec_dict</strong> (<em>dictionary of numpy arrays</em>) – Dictionary of specification switches by sector, unadjusted</p></li>
+<li><p><strong>titles_dict</strong> (<em>dictionary of classification title lists</em>) – Dictionary containing all title classifications</p></li>
+<li><p><strong>fd_sectors</strong> (<em>list of str</em>) – Final demand sectors to solve endogenously (otherwise spec set to
+exogenous)</p></li>
+<li><p><strong>st_sectors</strong> (<em>list of str</em>) – Supply and transformation sectors to solve endogenously (otherwise spec
+set to exogenous)</p></li>
+<li><p><strong>sheet_names</strong> (<em>list of str</em>) – Sheetnames of the specifications workbook</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>spec_dict_adj</strong> – Specification dictionary, with adjustments for sectors not identified
+in settings.ini.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary of numpy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html#table-of-contents-for-the-model-code">Table of contents for the model code</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="run_file.html">run_file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sourcemodules.html">Source Code</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="suppmodules.html">Support functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="cross_section.html">cross_section module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dimensions_functions.html">dimensions_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="divide.html">divide module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="econometrics_functions.html">econometrics_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="input_functions.html">input_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="output_functions.html">output_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="read_support.html">read_support module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">specification_functions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="titles_functions.html">titles_functions module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="suppmodules.html">Support functions</a><ul>
+      <li>Previous: <a href="read_support.html" title="previous chapter">read_support module</a></li>
+      <li>Next: <a href="titles_functions.html" title="next chapter">titles_functions module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/specification_functions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Running FTT Stand Alone &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FTT_Stand_Alone" href="modules.html" />
+    <link rel="prev" title="Welcome to FTT Stand Alone" href="readme.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="running-ftt-stand-alone">
+<h1>Running FTT Stand Alone<a class="headerlink" href="#running-ftt-stand-alone" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="running-ftt-stand-alone-from-the-command-line">
+<h2>Running FTT Stand Alone from the command line<a class="headerlink" href="#running-ftt-stand-alone-from-the-command-line" title="Permalink to this headline">¶</a></h2>
+<p><strong>FTT Stand Alone</strong> can be run from the command line or terminal by calling the run file, run_file.py,
+which is located in the main project folder <strong>FTT_Stand_Alone</strong>. In order for the model to run correctly,
+the correct initialisation settings must be input into settings.ini, which is also in the main project
+folder:</p>
+<a class="reference internal image-reference" href="_images/settings.jpg"><img alt="settings.ini" class="align-center" src="_images/settings.jpg" style="width: 400px;" /></a>
+<p>The different modules in FTT Stand Alone can be enabled in settings.ini, and it is possible to enable
+multiple different modules at the same time by using commas to separate, e.g.</p>
+<blockquote>
+<div><p>enable_modules = FTT-IH-CHI, FTT-Fr</p>
+</div></blockquote>
+<p>S0 is FTT Stand Alone’s baseline scenario, which encorporates all current policies and projections
+into the model’s simulation. Scenarios which differ from the baseline due to changes in policy inputs
+can be run alongside the baseline. Two additional scenarios for FTT: Power already exist, S1 and S2.</p>
+<p>It is recommended that <strong>model_start</strong> and <strong>simulation_start</strong> are left unchanged, as the model will be
+unable to run if there is a gap between the start year of the simulation and the last year of historical data.
+However, <strong>model_end</strong> and <strong>simulation_end</strong> can be changed to any date after the start date. This allows the
+model to be run for shorter periods of time when necessary. 2050 is currently the maximum end year of the
+simulation period.</p>
+<p>The model will tell you which module is running. If an incorrect selection of modules is made, this will be printed
+in the command window.</p>
+<a class="reference internal image-reference" href="_images/command.jpg"><img alt="frontend" class="align-center" src="_images/command.jpg" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="_images/command2.jpg"><img alt="frontend" class="align-center" src="_images/command2.jpg" style="width: 600px;" /></a>
+<p>Running the model this way will allow it to easily be tested, with errors or warnings appearing in the command window.
+However, the results of the model cannot be viewed when running this way.</p>
+</div>
+<div class="section" id="running-ftt-stand-alone-from-the-front-end">
+<h2>Running FTT Stand Alone from the front end<a class="headerlink" href="#running-ftt-stand-alone-from-the-front-end" title="Permalink to this headline">¶</a></h2>
+<p>The model’s front end environment can be launched by clicking on FTT_Stand_Alone_Launcher.cmd, or running
+FTT_Stand_Alone_Launcher.cmd from the command line. The front end will allow you to visulise the results of
+the simulation.</p>
+<a class="reference internal image-reference" href="_images/frontend.jpg"><img alt="frontend" class="align-center" src="_images/frontend.jpg" style="width: 600px;" /></a>
+<p>To run the model, go to the <strong>RUN</strong> tab and select the desired settings:</p>
+<a class="reference internal image-reference" href="_images/frontend2.jpg"><img alt="frontend" class="align-center" src="_images/frontend2.jpg" style="width: 600px;" /></a>
+<p>To run a standard baseline scenario for any module, select scenario S0 and set the start year to 2000, and the
+end year to 2050. Click <strong>RUN</strong>. The status will display a green light with <strong>Run finished</strong> next to it. The
+results of the run can then be viewed in the <strong>RESULTS</strong> tab:</p>
+<a class="reference internal image-reference" href="_images/frontend3.jpg"><img alt="frontend" class="align-center" src="_images/frontend3.jpg" style="width: 600px;" /></a>
+<p>To view the results of a particular module, navigate to the <strong>Indicator</strong> box and select the relevant module. A list
+of variables will appear under it, from which you can select the variable to view in results visuliser. In the example
+above, I have selected FTT-IH-CHI, the industrial heat module for the chemical sector, and then selected market shares
+for Germany  and all technologies. It is clear from the chart that <em>Indirect Heating Gas</em> is being substituted for the
+cheaper alternative <em>Indirect Heating Oil</em>.</p>
+<p>The results can be downloaded by navigating to the <strong>EXTRACT</strong> heading:</p>
+<a class="reference internal image-reference" href="_images/frontend4.jpg"><img alt="frontend" class="align-center" src="_images/frontend4.jpg" style="width: 600px;" /></a>
+<p>Here, the results can be filtered by scenario, module, and variable, and downloaded as absolute values, their absolute
+or relative difference from the baseline, or their year-on-year change.</p>
+<p>The <strong>CLASSIFICATIONS</strong> tab can be used to check variable names, decriptions, units, dimensions, and timelines:</p>
+<a class="reference internal image-reference" href="_images/frontend5.jpg"><img alt="frontend" class="align-center" src="_images/frontend5.jpg" style="width: 600px;" /></a>
+<p>The <strong>GAMMA</strong> tab contains a calibration tool for model developers, and should be avoided when simply running the model.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This project is under active development.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running FTT Stand Alone</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#running-ftt-stand-alone-from-the-command-line">Running FTT Stand Alone from the command line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-ftt-stand-alone-from-the-front-end">Running FTT Stand Alone from the front end</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="readme.html" title="previous chapter">Welcome to FTT Stand Alone</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">FTT_Stand_Alone</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/readme2.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

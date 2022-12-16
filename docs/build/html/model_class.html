@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>model_class module &#8212; FTT Stand Alone 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FTT: Power" href="FTT Power.html" />
+    <link rel="prev" title="Model Class" href="Model Class 1.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-model_class">
+<span id="model-class-module"></span><h1>model_class module<a class="headerlink" href="#module-model_class" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="model-class-py">
+<h2>model_class.py<a class="headerlink" href="#model-class-py" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="model-class-file-for-ftt-stand-alone">
+<h3>Model Class file for FTT Stand alone.<a class="headerlink" href="#model-class-file-for-ftt-stand-alone" title="Permalink to this headline">¶</a></h3>
+<p>ModelRun class: main class for operation of model.</p>
+<dl class="class">
+<dt id="model_class.ModelRun">
+<em class="property">class </em><code class="sig-prename descclassname">model_class.</code><code class="sig-name descname">ModelRun</code><a class="headerlink" href="#model_class.ModelRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to run the FTT model.</p>
+<p>Class object is a single run of the model.</p>
+<p>Local library imports:</p>
+<blockquote>
+<div><p>FTT modules:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_p_main.html">FTT: Power</a></dt><dd><p>Power generation FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_tr_main.html">FTT: Transport</a></dt><dd><p>Transport FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_fr_main.html">FTT: Freight</a></dt><dd><p>Freight FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_h_main.html">FTT: Heat</a></dt><dd><p>Heat FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_chi_main.html">FTT: IndHe CHI</a></dt><dd><p>Industrial heat - chemicals FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_fbt_main.html">FTT: IndHe FBT</a></dt><dd><p>Industrial heat - food, beverages, and tobacco FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_mtm_main.html">FTT: IndHe MTM</a></dt><dd><p>Industrial heat - non-ferrous metals, machinery, and transport equipment FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_nmm_main.html">FTT: IndHe NMM</a></dt><dd><p>Industrial heat - non-metallic minerals FTT module</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="ftt_ois_main.html">FTT: IndHe OIS</a></dt><dd><p>Industrial heat - other sectors FTT module</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Support functions:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="paths_append.html">paths_append</a></dt><dd><p>Appends file path to sys path to enable import</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="divide.html">divide</a></dt><dd><p>Bespoke element-wise divide which replaces divide-by-zeros with zeros</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="attribute">
+<dt id="model_class.ModelRun.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#model_class.ModelRun.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of model run, and specification file read</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.hist_start">
+<code class="sig-name descname">hist_start</code><a class="headerlink" href="#model_class.ModelRun.hist_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starting year of the historical data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.model_start">
+<code class="sig-name descname">model_start</code><a class="headerlink" href="#model_class.ModelRun.model_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>First year of model timeline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.model_end">
+<code class="sig-name descname">model_end</code><a class="headerlink" href="#model_class.ModelRun.model_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Final year of model timeline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.current">
+<code class="sig-name descname">current</code><a class="headerlink" href="#model_class.ModelRun.current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Curernt/active year of solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.years">
+<code class="sig-name descname">years</code><a class="headerlink" href="#model_class.ModelRun.years" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bookend years of model_timeline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>tuple of (int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.timeline">
+<code class="sig-name descname">timeline</code><a class="headerlink" href="#model_class.ModelRun.timeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Years of the model timeline</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.titles">
+<code class="sig-name descname">titles</code><a class="headerlink" href="#model_class.ModelRun.titles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing all title classifications</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dictionary of lists</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.dims">
+<code class="sig-name descname">dims</code><a class="headerlink" href="#model_class.ModelRun.dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Variable classifications by dimension</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict of tuples (str, str, str, str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.histend">
+<code class="sig-name descname">histend</code><a class="headerlink" href="#model_class.ModelRun.histend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Final year of histrorical data by variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict of integers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.specs">
+<code class="sig-name descname">specs</code><a class="headerlink" href="#model_class.ModelRun.specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function specifications for each region and module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dictionary of NumPy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.input">
+<code class="sig-name descname">input</code><a class="headerlink" href="#model_class.ModelRun.input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing all model input variables</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dictionary of NumPy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.variables">
+<code class="sig-name descname">variables</code><a class="headerlink" href="#model_class.ModelRun.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing all model variables for a given year of solution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dictionary of NumPy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.lags">
+<code class="sig-name descname">lags</code><a class="headerlink" href="#model_class.ModelRun.lags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing lag variables</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dictionary of NumPy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="model_class.ModelRun.output">
+<code class="sig-name descname">output</code><a class="headerlink" href="#model_class.ModelRun.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing all model variables for output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dictionary of NumPy arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="model_class.ModelRun.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_class.ModelRun.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve model run and save results</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="model_class.ModelRun.solve_all">
+<code class="sig-name descname">solve_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#model_class.ModelRun.solve_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve model for each year of the simulation period</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="model_class.ModelRun.solve_year">
+<code class="sig-name descname">solve_year</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">y</em>, <em class="sig-param">scenario</em>, <em class="sig-param">max_iter=1</em><span class="sig-paren">)</span><a class="headerlink" href="#model_class.ModelRun.solve_year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve model for a specific year</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="model_class.ModelRun.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">year</em>, <em class="sig-param">y</em>, <em class="sig-param">scenario</em><span class="sig-paren">)</span><a class="headerlink" href="#model_class.ModelRun.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update model variables for a new year of solution</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">FTT Stand Alone</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Welcome to FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme2.html">Running FTT Stand Alone</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">FTT_Stand_Alone</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">FTT_Stand_Alone</a><ul>
+  <li><a href="sourcemodules.html">Source Code</a><ul>
+  <li><a href="Model Class 1.html">Model Class</a><ul>
+      <li>Previous: <a href="Model Class 1.html" title="previous chapter">Model Class</a></li>
+      <li>Next: <a href="FTT Power.html" title="next chapter">FTT: Power</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Rosie Hayward.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/model_class.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
