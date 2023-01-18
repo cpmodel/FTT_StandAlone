@@ -4,9 +4,9 @@
 ftt_p_main.py
 =========================================
 Power generation FTT module.
-############################
 
-This is the main file for the power module, FTT: Power. The power
+
+This is the main file for the power module, FTT:Power. The power
 module models technological replacement of electricity generation technologies due
 to simulated investor decision making. Investors compare the **levelised cost of
 electricity**, which leads to changes in the market shares of different technologies.
@@ -17,7 +17,7 @@ supplied by flexible or baseload technologies to meet electricity demand at all 
 This function also returns load band heights, curtailment, and storage information,
 including storage costs and marginal costs for wind and solar.
 
-FTT: Power also includes **dispatchers decisions**; dispatchers decide when different technologies
+FTT:Power also includes **dispatchers decisions**; dispatchers decide when different technologies
 supply the power grid. Investor decisions and dispatcher decisions are matched up, which is an
 example of a stable marraige problem.
 
@@ -423,7 +423,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative global learning
             # Using a technological spill-over matrix (MEWB) together with capacity
             # additions (MEWI) we can estimate total global spillover of similar
-            # techicals
+            # technologies
             bi = np.zeros((len(titles['RTI']),len(titles['T2TI'])))
             for r in range(len(titles['RTI'])):
                 bi[r,:] = np.matmul(data['MEWB'][0, :, :],data['MEWI'][r, :, 0])
@@ -487,7 +487,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Stock based solutions first
     elif year > histend['MEWG']:
         # TODO: Implement survival function to get a more accurate depiction of
-        # techicles being phased out and to be able to track the age of the fleet.
+        # technologies being phased out and to be able to track the age of the fleet.
         # This means that a new variable will need to be implemented which is
         # basically PG_VFLT with a third dimension (techicle age in years- up to 23y)
         # Reduced efficiences can then be tracked properly as well.
@@ -749,13 +749,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['4 std ($/MWh)']] * \
                                                                           (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
 
-            # Investment in terms of car purchases:
+            # Investment in power sector technologies
             for r in range(len(titles['RTI'])):
 
                 data['MWIY'][r, :, 0] = data_dt['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*dt*data['BCET'][r, :, c2ti['3 Investment ($/kW)']]/1.33
 
             # =================================================================
-            # Cost-Supply curves
+            # Cost-supply curves
             # =================================================================
             if t == no_it:
                #                print("Did we pass this point?")
@@ -778,7 +778,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             data = get_lcoe(data, titles)
-            bidon = 0
 
             # =================================================================
             # Update the time-loop variables
