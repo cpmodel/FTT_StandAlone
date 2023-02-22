@@ -37,7 +37,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Local library imports
-import SourceCode.paths_append
+import SourceCode.support.paths_append
 from SourceCode.model_class import ModelRun
 from SourceCode.support.divide import divide
 
