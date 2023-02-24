@@ -47,7 +47,7 @@ import numpy as np
 
 # Local library imports
 from support.divide import divide
-from ftt_fr_lcof import get_lcof
+from SourceCode.ftt_fr_lcof import get_lcof
 
 #Main function
 

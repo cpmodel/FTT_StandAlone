@@ -66,13 +66,12 @@ from numba import njit
 
 # Local library imports
 from support.divide import divide
-from ftt_p_rldc import rldc
-from ftt_p_dspch import dspch
-from ftt_p_lcoe import get_lcoe
-from ftt_p_surv import survival_function
-from ftt_p_shares import shares
-from ftt_p_costc import cost_curves
-
+from SourceCode.ftt_p_rldc import rldc
+from SourceCode.ftt_p_dspch import dspch
+from SourceCode.ftt_p_lcoe import get_lcoe
+from SourceCode.ftt_p_surv import survival_function
+from SourceCode.ftt_p_shares import shares
+from SourceCode.ftt_p_costc import cost_curves
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -784,6 +783,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             # Update time loop variables:
+            
             print(year)
             print(f'MEWS: {data["MEWS"][40, 16, 0]:.7f}\n'
              f'MWSLt: {data_dt["MEWS"][40, 16, 0]:.7f}\n' \

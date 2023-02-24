@@ -24,18 +24,18 @@ from tqdm import tqdm
 
 # Local library imports
 # Separate FTT modules
-import ftt_p_main as ftt_p
-import ftt_tr_main as ftt_tr
-import ftt_h_main as ftt_h
+import SourceCode.ftt_p_main as ftt_p
+import SourceCode.ftt_tr_main as ftt_tr
+import SourceCode.ftt_h_main as ftt_h
 #import ftt_s_main as ftt_s
 #import ftt_agri_main as ftt_agri
-import ftt_fr_main as ftt_fr
+import SourceCode.ftt_fr_main as ftt_fr
 #import ftt_flex_main as ftt_flex
-import ftt_chi_main as ftt_indhe_chi
-import ftt_fbt_main as ftt_indhe_fbt
-import ftt_mtm_main as ftt_indhe_mtm
-import ftt_nmm_main as ftt_indhe_nmm
-import ftt_ois_main as ftt_indhe_ois2
+import SourceCode.ftt_chi_main as ftt_indhe_chi
+import SourceCode.ftt_fbt_main as ftt_indhe_fbt
+import SourceCode.ftt_mtm_main as ftt_indhe_mtm
+import SourceCode.ftt_nmm_main as ftt_indhe_nmm
+import SourceCode.ftt_ois_main as ftt_indhe_ois2
 
 
 # Support modules
