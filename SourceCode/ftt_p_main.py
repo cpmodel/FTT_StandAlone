@@ -785,16 +785,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             # Update time loop variables:
-            
-            print(year)
-            print(f'MEWS: {data["MEWS"][40, 16, 0]:.7f}\n'
-             f'MWSLt: {data_dt["MEWS"][40, 16, 0]:.7f}\n' \
-             f'MEWG: {data["MEWG"][40, 16, 0]:.0f}\n' \
-             f'MEWK: {data["MEWK"][40, 16, 0]:.4f}\n' \
-             f'MEWL: {data["MEWL"][40, 16, 0]:.7f}\n' \
-             f'METC: {data["METC"][40, 16, 0]:.7f}\n'\
-             f'MWMC: {data_dt["MWMC"][40, 2, 0]:.7f}\n' \
-             f'MMCD: {data_dt["MMCD"][40, 16, 0]:.5f}\n')
+            if print_debugging:
+                print(year)
+                print(f'MEWS: {data["MEWS"][40, 16, 0]:.7f}\n'
+                 f'MWSLt: {data_dt["MEWS"][40, 16, 0]:.7f}\n' \
+                 f'MEWG: {data["MEWG"][40, 16, 0]:.0f}\n' \
+                 f'MEWK: {data["MEWK"][40, 16, 0]:.4f}\n' \
+                 f'MEWL: {data["MEWL"][40, 16, 0]:.7f}\n' \
+                 f'METC: {data["METC"][40, 16, 0]:.7f}\n'\
+                 f'MWMC: {data_dt["MWMC"][40, 2, 0]:.7f}\n' \
+                 f'MMCD: {data_dt["MMCD"][40, 16, 0]:.5f}\n')
             for var in data_dt.keys():
 
                 if domain[var] == 'FTT-P':
