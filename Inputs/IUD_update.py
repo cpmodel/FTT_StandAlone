@@ -30,12 +30,12 @@ if __name__ == '__main__':
         regions_short = dbu['RSHORTTI']
         industries = dbu['YTI']
         cti = dbu['CTI']
-        fuel_users = dbu['FUTI'] #titles of fuel users
-        fuel_types = dbu['JTI'] #titles of fuel types
-        erti = dbu['ERTI'] # titles of FTT resources classification
-        mti = dbu['MTI'] # titles of import groups
-        t2ti = dbu['T2TI'] #titles of FTT energy technologies
-        c2ti = dbu['C2TI'] #titles of cost catagories
+        fuel_users = dbu['FUTI'] # titles of fuel users
+        fuel_types = dbu['JTI']  # titles of fuel types
+        erti = dbu['ERTI']       # titles of FTT resources classification
+        mti = dbu['MTI']         # titles of import groups
+        t2ti = dbu['T2TI']       # titles of FTT energy technologies
+        c2ti = dbu['C2TI']       # titles of cost catagories
         
     years = range(2010, 2061)
 

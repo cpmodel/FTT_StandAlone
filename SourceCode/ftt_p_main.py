@@ -73,6 +73,8 @@ from SourceCode.ftt_p_surv import survival_function
 from SourceCode.ftt_p_shares import shares
 from SourceCode.ftt_p_costc import cost_curves
 
+print_debugging = False
+
 # %% main function
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -282,7 +284,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
         # Call RLDC function for capacity and load factor by LB, and storage costs
-        if year >= 2013:
+        if (year >= 2013 and print_debugging):
             print(f'MEWS: {data["MEWS"][40, 15, 0]:.7f}\n'
             f'MWSLt: {data["MEWS"][40, 15, 0]:.7f}\n' \
             f'MEWG: {data["MEWG"][40, 15, 0]:.0f}\n' \
