@@ -65,7 +65,7 @@ import numpy as np
 from numba import njit
 
 # Local library imports
-from support.divide import divide
+from SourceCode.support.divide import divide
 from SourceCode.ftt_p_rldc import rldc
 from SourceCode.ftt_p_dspch import dspch
 from SourceCode.ftt_p_lcoe import get_lcoe

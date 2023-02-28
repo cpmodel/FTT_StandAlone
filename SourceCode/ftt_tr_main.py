@@ -41,7 +41,7 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from support.divide import divide
+from SourceCode.support.divide import divide
 
 
 # %% lcot

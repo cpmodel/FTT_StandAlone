@@ -29,8 +29,6 @@ import warnings
 import pandas as pd
 import numpy as np
 
-# Local library imports
-from support.divide import divide
 
 # %% rldc function
 # -----------------------------------------------------------------------------

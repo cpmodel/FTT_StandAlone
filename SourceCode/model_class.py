@@ -39,10 +39,10 @@ import SourceCode.ftt_ois_main as ftt_indhe_ois2
 
 
 # Support modules
-import support.input_functions as in_f
-import support.titles_functions as titles_f
-import support.dimensions_functions as dims_f
-from support.cross_section import cross_section as cs
+import SourceCode.support.input_functions as in_f
+import SourceCode.support.titles_functions as titles_f
+import SourceCode.support.dimensions_functions as dims_f
+from SourceCode.support.cross_section import cross_section as cs
 
 
 class ModelRun:
