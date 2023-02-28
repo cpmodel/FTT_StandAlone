@@ -65,13 +65,13 @@ import numpy as np
 from numba import njit
 
 # Local library imports
-from support.divide import divide
-from SourceCode.ftt_p_rldc import rldc
-from SourceCode.ftt_p_dspch import dspch
-from SourceCode.ftt_p_lcoe import get_lcoe
-from SourceCode.ftt_p_surv import survival_function
-from SourceCode.ftt_p_shares import shares
-from SourceCode.ftt_p_costc import cost_curves
+from SourceCode.support.divide import divide
+from SourceCode.Power.ftt_p_rldc import rldc
+from SourceCode.Power.ftt_p_dspch import dspch
+from SourceCode.Power.ftt_p_lcoe import get_lcoe
+from SourceCode.Power.ftt_p_surv import survival_function
+from SourceCode.Power.ftt_p_shares import shares
+from SourceCode.Power.ftt_p_costc import cost_curves
 
 # %% main function
 # -----------------------------------------------------------------------------

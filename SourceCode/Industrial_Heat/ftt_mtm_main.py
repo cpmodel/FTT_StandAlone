@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 =========================================
-ftt_ois_main.py
+ftt_mtm_main.py
 =========================================
-Industrial other sectors FTT module.
-###################################################
+Industrial non-ferrous metals, machinery, and transport equipment sector FTT module.
+####################################################################################
 
 
-This is the main file for FTT: Industrial Heat - OIS, which models technological
-diffusion of industrial heat processes within the other sectors due
-to simulated investor decision making. Investors compare the **levelised cost of
-industrial heat**, which leads to changes in the market shares of different technologies.
+This is the main file for FTT: Industrial Heat - MTM, which models technological
+diffusion of industrial heat processes within the non-ferrous metals, machinery, and
+transport equipment sector due to simulated investor decision making. Investors compare
+the **levelised cost of industrial heat**, which leads to changes in the market shares of
+different technologies.
 
 The outputs of this module include changes in final energy demand and emissions due
 chemical heat processes for the EU28.
@@ -43,7 +44,7 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from support.divide import divide
+from SourceCode.support.divide import divide
 #from support.econometrics_functions import estimation
 
 # %% lcoh
@@ -80,18 +81,17 @@ def get_lcoih(data, titles, year):
     Additional notes if required.
     """
 
-    # Categories for the cost matrix (BIC5)
+    # Categories for the cost matrix (BIC3)
     ctti = {category: index for index, category in enumerate(titles['CTTI'])}
 
     for r in range(len(titles['RTI'])):
-        if data['IUD5'][r, :, 0].sum(axis=0)==0:
+        if data['IUD3'][r, :, 0].sum(axis=0)==0:
             continue
 
         # Cost matrix
-        #BIC5 = data['BIC5'][r, :, :]
+        #BIC3 = data['BIC3'][r, :, :]
 
-        lt = data['BIC5'][r,:, ctti['5 Lifetime (years)']]
-
+        lt = data['BIC3'][r,:, ctti['5 Lifetime (years)']]
         max_lt = int(np.max(lt))
         lt_mat = np.linspace(np.zeros(len(titles['ITTI'])), max_lt-1,
                              num=max_lt, axis=1, endpoint=True)
@@ -99,12 +99,11 @@ def get_lcoih(data, titles, year):
         mask = lt_mat < lt_max_mat
         lt_mat = np.where(mask, lt_mat, 0)
 
-
         # Capacity factor used in decisions (constant), not actual capacity factor #TODO ask about this
-        cf = data['BIC5'][r,:, ctti['13 Capacity factor mean'], np.newaxis]
+        cf = data['BIC3'][r,:, ctti['13 Capacity factor mean'], np.newaxis]
 
         #conversion efficiency
-        ce = data['BIC5'][r,:, ctti['9 Conversion efficiency'], np.newaxis]
+        ce = data['BIC3'][r,:, ctti['9 Conversion efficiency'], np.newaxis]
 
         # Trap for very low CF
         cf[cf<0.000001] = 0.000001
@@ -114,34 +113,34 @@ def get_lcoih(data, titles, year):
         conv = 1/(cf)/8766 #number of hours in a year
 
         # Discount rate
-        # dr = data['BIC5'][r,6]
-        dr = data['BIC5'][r,:, ctti['8 Discount rate'], np.newaxis]
+        # dr = data['BIC3'][r,6]
+        dr = data['BIC3'][r,:, ctti['8 Discount rate'], np.newaxis]
 
         # Initialse the levelised cost components
         # Average investment cost
         it = np.zeros([len(titles['ITTI']), int(max_lt)])
-        it[:, 0, np.newaxis] =  data['BIC5'][r,:, ctti['1 Investment cost mean (MEuro per MW)'], np.newaxis] * conv*(1*10^6)
+        it[:, 0, np.newaxis] =  data['BIC3'][r,:, ctti['1 Investment cost mean (MEuro per MW)'], np.newaxis] * conv*(1*10^6)
 
 
         # Standard deviation of investment cost
         dit = np.zeros([len(titles['ITTI']), int(max_lt)])
-        dit[:, 0, np.newaxis] =  data['BIC5'][r,:, ctti['2 Investment cost SD'], np.newaxis] * conv*(1*10^6)
+        dit[:, 0, np.newaxis] =  data['BIC3'][r,:, ctti['2 Investment cost SD'], np.newaxis] * conv*(1*10^6)
 
 
         # Subsidies as a percentage of investment cost
         st = np.zeros([len(titles['ITTI']), int(max_lt)])
-        st[:, 0, np.newaxis] = (data['BIC5'][r,:, ctti['1 Investment cost mean (MEuro per MW)'], np.newaxis]
-             * data['ISB5'][r, :, 0,np.newaxis] * conv)*(1*10^6)
+        st[:, 0, np.newaxis] = (data['BIC3'][r,:, ctti['1 Investment cost mean (MEuro per MW)'], np.newaxis]
+             * data['ISB3'][r, :, 0,np.newaxis] * conv)*(1*10^6)
 
 
         # Average fuel costs 2010Euros/toe to euros/MWh 1 toe = 11.63 MWh
         ft = np.ones([len(titles['ITTI']), int(max_lt)])
-        ft = ft * data['BIC5'][r,:, ctti['10 Fuel cost mean'], np.newaxis]/11.63/ce
+        ft = ft * data['BIC3'][r,:, ctti['10 Fuel cost mean'], np.newaxis]/11.63/ce
         ft = np.where(mask, ft, 0)
 
         # Standard deviation of fuel costs
         dft = np.ones([len(titles['ITTI']), int(max_lt)])
-        dft = dft * data['BIC5'][r,:, ctti['11 Fuel cost SD'], np.newaxis]/11.63/ce
+        dft = dft * data['BIC3'][r,:, ctti['11 Fuel cost SD'], np.newaxis]/11.63/ce
         dft = np.where(mask, dft, 0)
 
         #fuel tax/subsidies
@@ -151,12 +150,12 @@ def get_lcoih(data, titles, year):
 
         # Fixed operation & maintenance cost - variable O&M available but not included
         omt = np.ones([len(titles['ITTI']), int(max_lt)])
-        omt = omt * data['BIC5'][r,:, ctti['3 O&M cost mean (Euros/MJ/s/year)'], np.newaxis]*conv #(euros per MW) in a year
+        omt = omt * data['BIC3'][r,:, ctti['3 O&M cost mean (Euros/MJ/s/year)'], np.newaxis]*conv #(euros per MW) in a year
         omt = np.where(mask, omt, 0)
 
         # Standard deviation of operation & maintenance cost
         domt = np.ones([len(titles['ITTI']), int(max_lt)])
-        domt = domt * data['BIC5'][r,:, ctti['4 O&M cost SD'], np.newaxis]*conv
+        domt = domt * data['BIC3'][r,:, ctti['4 O&M cost SD'], np.newaxis]*conv
         domt = np.where(mask, domt, 0)
 
 
@@ -195,13 +194,13 @@ def get_lcoih(data, titles, year):
         dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOE augmented with gamma values, no gamma values yet
-        tlcoeg = tlcoe+data['IAM5'][r, :, 0]
+        tlcoeg = tlcoe+data['IAM3'][r, :, 0]
 
         # Pass to variables that are stored outside.
-        data['ILC5'][r, :, 0] = lcoe            # The real bare LCOT without taxes (euros/mwh)
+        data['ILC3'][r, :, 0] = lcoe            # The real bare LCOT without taxes (euros/mwh)
         #data['IHLT'][r, :, 0] = tlcoe           # The real bare LCOE with taxes
-        data['ILG5'][r, :, 0] = tlcoeg         # As seen by consumer (generalised cost)
-        data['ILD5'][r, :, 0] = dlcoe          # Variation on the LCOT distribution
+        data['ILG3'][r, :, 0] = tlcoeg         # As seen by consumer (generalised cost)
+        data['ILD3'][r, :, 0] = dlcoe          # Variation on the LCOT distribution
 
 
 
@@ -245,7 +244,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
     """
 
-    # Categories for the cost matrix (BIC5)
+    # Categories for the cost matrix (BIC3)
     ctti = {category: index for index, category in enumerate(titles['CTTI'])}
 
     sector = 'Metals, transport and machinery equipment'
@@ -258,7 +257,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
     data = get_lcoih(data, titles, year)
 
     # Endogenous calculation takes over from here
-    if year > histend['IUD5']:
+    if year > histend['IUD3']:
 
         # Create a local dictionary for timeloop variables
         # It contains values between timeloop interations in the FTT core
@@ -267,16 +266,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
 
+
             data_dt[var] = copy.deepcopy(time_lag[var])
 
         # Create the regulation variable #Regulate capacity #no regulations yet, isReg full of zeros
         isReg = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
-        division = divide((data_dt['IWK5'][:, :, 0] - data['IRG5'][:, :, 0]),
-                          data_dt['IRG5'][:, :, 0])
+        division = divide((data_dt['IWK3'][:, :, 0] - data['IRG3'][:, :, 0]),
+                          data_dt['IRG3'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
-        isReg[data['IRG5'][:, :, 0] == 0.0] = 1.0
-        isReg[data['IRG5'][:, :, 0] == -1.0] = 0.0
+        isReg[data['IRG3'][:, :, 0] == 0.0] = 1.0
+        isReg[data['IRG3'][:, :, 0] == -1.0] = 0.0
 
 
         # Factor used to create quarterly data from annual figures
@@ -285,18 +285,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
         kappa = 10 #tech substitution constant
 
         ############## Computing new shares ##################
-        IUD5tot = data['IUD5'][:, :, 0].sum(axis=1)
+        IUD3tot = data['IUD3'][:, :, 0].sum(axis=1)
         #Start the computation of shares
         for t in range(1, no_it+1):
 
             # Interpolate to prevent staircase profile.
             #Time lagged UED plus change in UED * (no of iterations) * dt
 
-            IUD5t = time_lag['IUD5'][:, :, 0].sum(axis=1) + (IUD5tot - time_lag['IUD5'][:, :, 0].sum(axis=1)) * t * dt
+            IUD3t = time_lag['IUD3'][:, :, 0].sum(axis=1) + (IUD3tot - time_lag['IUD3'][:, :, 0].sum(axis=1)) * t * dt
 
             for r in range(len(titles['RTI'])):
 
-                if IUD5t[r] == 0.0:
+                if IUD3t[r] == 0.0:
                     continue
 
 
@@ -318,36 +318,36 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # -----------------------------------------------------
                 for b1 in range(len(titles['ITTI'])):
 
-                    if  not (data_dt['IWS5'][r, b1, 0] > 0.0 and
-                             data_dt['ILG5'][r, b1, 0] != 0.0 and
-                             data_dt['ILD5'][r, b1, 0] != 0.0):
+                    if  not (data_dt['IWS3'][r, b1, 0] > 0.0 and
+                             data_dt['ILG3'][r, b1, 0] != 0.0 and
+                             data_dt['ILD3'][r, b1, 0] != 0.0):
                         continue
 
                     #TODO: create market share constraints
-                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC5'][0, b1, 0] - data_dt['IWS5'][r, b1, 0])/0.1)
+                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC3'][0, b1, 0] - data_dt['IWS3'][r, b1, 0])/0.1)
                     #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
 
 
 
-                    S_i = data_dt['IWS5'][r, b1, 0]
+                    S_i = data_dt['IWS3'][r, b1, 0]
 
 
                     for b2 in range(b1):
 
-                        if  not (data_dt['IWS5'][r, b2, 0] > 0.0 and
-                                 data_dt['ILG5'][r, b2, 0] != 0.0 and
-                                 data_dt['ILD5'][r, b2, 0] != 0.0):
+                        if  not (data_dt['IWS3'][r, b2, 0] > 0.0 and
+                                 data_dt['ILG3'][r, b2, 0] != 0.0 and
+                                 data_dt['ILD3'][r, b2, 0] != 0.0):
                             continue
 
-                        S_k = data_dt['IWS5'][r,b2, 0]
-                        Aik = data['IWA5'][0,b1 , b2]*kappa
-                        Aki = data['IWA5'][0,b2, b1]*kappa
+                        S_k = data_dt['IWS3'][r,b2, 0]
+                        Aik = data['IWA3'][0,b1 , b2]*kappa
+                        Aki = data['IWA3'][0,b2, b1]*kappa
 
                         # Propagating width of variations in perceived costs
-                        dFik = sqrt(2) * sqrt((data_dt['ILD5'][r, b1, 0]*data_dt['ILD5'][r, b1, 0] + data_dt['ILD5'][r, b2, 0]*data_dt['ILD5'][r, b2, 0]))
+                        dFik = sqrt(2) * sqrt((data_dt['ILD3'][r, b1, 0]*data_dt['ILD3'][r, b1, 0] + data_dt['ILD3'][r, b2, 0]*data_dt['ILD3'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
-                        Fik = 0.5*(1+np.tanh(1.25*(data_dt['ILG5'][r, b2, 0]-data_dt['ILG5'][r, b1, 0])/dFik))
+                        Fik = 0.5*(1+np.tanh(1.25*(data_dt['ILG3'][r, b2, 0]-data_dt['ILG3'][r, b1, 0])/dFik))
 
                         # Preferences are then adjusted for regulations
                         F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
@@ -379,23 +379,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # Add in exogenous sales figures. These are blended with
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
-                Utot = IUD5t[r]
-                iud_lag = time_lag['IUD5'][:, :, 0].sum(axis=1)
+                Utot = IUD3t[r]
+                iud_lag = time_lag['IUD3'][:, :, 0].sum(axis=1)
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
                 # Check that exogenous share changes add to zero
-                dUkTK = data['IXS5'][r, :, 0]
-                if (data['IXS5'][r, :, 0].sum() > 0.0):
-                    dUkTK[0] = dUkTK[0] - data['IXS5'][r, :, 0].sum()
+                dUkTK = data['IXS3'][r, :, 0]
+                if (data['IXS3'][r, :, 0].sum() > 0.0):
+                    dUkTK[0] = dUkTK[0] - data['IXS3'][r, :, 0].sum()
 
                 # Correct for regulations #TODO Does this actually make sense?
 
-                if iud_lag[r] > 0.0 and IUD5t[r] > 0.0 and (IUD5t[r] - iud_lag[r]) > 0.0:
+                if iud_lag[r] > 0.0 and IUD3t[r] > 0.0 and (IUD3t[r] - iud_lag[r]) > 0.0:
 
-                    dUkREG = -data_dt['IUD5'][r, :, 0] * ( (IUD5t[r] - iud_lag[r]) /
+                    dUkREG = -data_dt['IUD3'][r, :, 0] * ( (IUD3t[r] - iud_lag[r]) /
                                     iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])
 
 
@@ -406,21 +406,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['IWS5'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                dSk = np.divide(dUk, Utot) - time_lag['IWS3'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
 
 
                 # New market shares
                 # check that market shares sum to 1
                         #print(np.sum(dSik, axis=1))
-                data['IWS5'][r, :, 0] = data_dt['IWS5'][r, :, 0] + np.sum(dSik, axis=1) + dSk
+                data['IWS3'][r, :, 0] = data_dt['IWS3'][r, :, 0] + np.sum(dSik, axis=1) + dSk
 
-                if ~np.isclose(np.sum(data['IWS5'][r, :, 0]), 1.0, atol=1e-5):
+                if ~np.isclose(np.sum(data['IWS3'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
-                    """.format(sector, titles['RTI'][r], year, np.sum(data['IWS5'][r, :, 0]))
+                    """.format(sector, titles['RTI'][r], year, np.sum(data['IWS3'][r, :, 0]))
                     warnings.warn(msg)
 
-                if np.any(data['IWS5'][r, :, 0] < 0.0):
+                if np.any(data['IWS3'][r, :, 0] < 0.0):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Negative market shares detected! Critical error!
                     """.format(sector, titles['RTI'][r], year)
@@ -436,32 +436,32 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             #TODO: what else needs to go here? TODO calculate new capacity and new yearly capacity change
 
             #Useful heat by technology, calculate based on new market shares #Regional totals
-            data['IUD5'][:, :, 0] = data['IWS5'][:, :, 0]* IUD5t[:, np.newaxis]
+            data['IUD3'][:, :, 0] = data['IWS3'][:, :, 0]* IUD3t[:, np.newaxis]
 
             # Capacity by technology
-            data['IWK5'][:, :, 0] = divide(data['IUD5'][:, :, 0],
-                                              data['BIC5'][:, :, ctti["13 Capacity factor mean"]]*8766)
+            data['IWK3'][:, :, 0] = divide(data['IUD3'][:, :, 0],
+                                              data['BIC3'][:, :, ctti["13 Capacity factor mean"]]*8766)
             #add number of devices replaced due to breakdowns = IWK4_lagged/lifetime to yearly capacity additions
             #note some values of IWI4 negative
-            data["IWI1"][:, :, 0] = 0
+            data["IWI3"][:, :, 0] = 0
             for r in range(len(titles['RTI'])):
                 for tech in range(len(titles['ITTI'])):
-                    if(data['IWK5'][r, tech, 0]-time_lag['IWK5'][r, tech, 0]) > 0:
-                        data['IWI5'][r, tech, 0] = (data['IWK5'][r, tech, 0]-time_lag['IWK5'][r, tech, 0])
-            data['IWI5'][:, :, 0] = data['IWI5'][:, :, 0] + np.where(data['BIC5'][:, :, ctti['5 Lifetime (years)']] !=0.0,
-                                                                        divide(time_lag['IWK5'][:, :, 0],data['BIC5'][:, :, ctti['5 Lifetime (years)']]),
-                                                                        0.0)
+                    if(data['IWK3'][r, tech, 0]-time_lag['IWK3'][r, tech, 0]) > 0:
+                        data['IWI3'][r, tech, 0] = (data['IWK3'][r, tech, 0]-time_lag['IWK3'][r, tech, 0])
 
+            data["IWI3"][:, :, 0] = data["IWI3"][:, :, 0] + np.where(data['BIC3'][:, :, ctti['5 Lifetime (years)']] !=0.0,
+                                                            divide(time_lag['IWK3'][:, :, 0],
+                                                            data['BIC3'][:, :, ctti['5 Lifetime (years)']]),0.0)
             #Update emissions
             #IHW4 is the global average emissions per unit of UED (GWh). IHW4 has units of kt of CO2/GWh
             for r in range(len(titles['RTI'])):
-                data['IWE5'][r, :, 0] = data['IUD5'][r, :, 0] * data['IHW5'][0, :, 0]
+                data['IWE3'][r, :, 0] = data['IUD3'][r, :, 0] * data['IHW3'][0, :, 0]
 
 
             #Final energy by technology
-            data['IFD5'][:, :, 0] = np.where(data['BIC5'][:, :, ctti["9 Conversion efficiency"]] !=0.0,
-                                             divide(data['IUD5'][:, :, 0],
-                                                    data['BIC5'][:, :, ctti["9 Conversion efficiency"]]),
+            data['IFD3'][:, :, 0] = np.where(data['BIC3'][:, :, ctti["9 Conversion efficiency"]] !=0.0,
+                                             divide(data['IUD3'][:, :, 0],
+                                                    data['BIC3'][:, :, ctti["9 Conversion efficiency"]]),
                                             0.0)
 
 
@@ -478,25 +478,24 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
 
 
-
             bi = np.zeros((len(titles['RTI']),len(titles['ITTI'])))
             for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['IWB5'][0, :, :],data['IWI5'][r, :, 0])
+                bi[r,:] = np.matmul(data['IWB3'][0, :, :],data['IWI3'][r, :, 0])
             dw = np.sum(bi, axis=0)*dt
 
             # # Cumulative capacity incl. learning spill-over effects
-            data['IWW5'][0, :, 0] = data_dt['IWW5'][0, :, 0] + dw
+            data['IWW3'][0, :, 0] = data_dt['IWW3'][0, :, 0] + dw
             #
             # # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BIC5'] = copy.deepcopy(data_dt['BIC5'])
+            data['BIC3'] = copy.deepcopy(data_dt['BIC3'])
             #
             # # Learning-by-doing effects on investment
             for tech in range(len(titles['ITTI'])):
 
-                if data['IWW5'][0, tech, 0] > 0.1:
+                if data['IWW3'][0, tech, 0] > 0.1:
 
-                    data['BIC5'][:, tech, ctti['1 Investment cost mean (MEuro per MW)']] = data_dt['BIC5'][:, tech, ctti['1 Investment cost mean (MEuro per MW)']] * \
-                                                                           (1.0 + data['BIC5'][:, tech, ctti['15 Learning exponent']] * dw[tech]/data['IWW5'][0, tech, 0])
+                    data['BIC3'][:, tech, ctti['1 Investment cost mean (MEuro per MW)']] = data_dt['BIC3'][:, tech, ctti['1 Investment cost mean (MEuro per MW)']] * \
+                                                                           (1.0 + data['BIC3'][:, tech, ctti['15 Learning exponent']] * dw[tech]/data['IWW3'][0, tech, 0])
 
             # =================================================================
             # Update the time-loop variables
@@ -507,6 +506,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
             #Update time loop variables:
             for var in data_dt.keys():
+
 
                 data_dt[var] = copy.deepcopy(data[var])
 
