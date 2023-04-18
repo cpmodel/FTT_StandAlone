@@ -3,7 +3,7 @@
 ## Future Technology Transformation
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
 
-* FTT:Power (Mercure, 2012)
+* FTT:Power (Mercure, 2012) *2022 version*
 * FTT:Heat (Knobloch et al, 2017) *under construction*
 * FTT:Industrial heat 
 * FTT:Transport (Mercure et al, 2018) *under construction*
