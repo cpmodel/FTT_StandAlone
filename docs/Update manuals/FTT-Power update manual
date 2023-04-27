@@ -10,7 +10,8 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
     1. The datafile is the same as above
     2. The file is **ask Marina**
 3. The generation data is often not quite up-to-date. You can get more up-to-date data in the MWKA parameter (which specifies exogenous capacity). Do this for fast-changing technologies if relevant (offshore, solar PV). 
-3. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%). **add my script to new repo**
+4. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%). **add my script to new repo**
+5. Update MEWE with the cumulative historical capacity by technology. Use the output of the model over the historical period. This is a step that can be automated, so feel free to improve the code.
 
 ### Calibration (the gamma values)
 The FTT model is calibrated to ensure a historical trends do not suddenly change in the absense of new policies. We estimate a gamma value per country and per technology. 
