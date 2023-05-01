@@ -1,0 +1,105 @@
+variable,description,input
+MEWK,FTT-P Capacity by technology (GW),0
+MEWG,FTT-P Generation by technology (GWh),1
+MEWR,FTT-P regulations on capacity,1
+MEWT,FTT-P Upfront subsidies (%),1
+MEWI,FTT-P Installed capacity additions (GW),0
+MEWW,FTT-P Cumulative global capacity (GW),1
+MJEF,FTT-P Final energy consumption (ktoe),0
+MEWL,FTT:Power load factors (%),0
+MWLO,FTT:Power optimal/initial load factors,1
+MES1,FTT:Power market share limitation 1,0
+MES2,FTT:Power market share limitation 2,0
+MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",0
+MECW,"LCOE bare, no policies, with carbon cost (2013$/MWh)",0
+METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",0
+MECD,MEWC standard deviation,0
+MTCD,METC standard deviation,0
+MECS,LCOE incl. carbon price incl subsidies no FiT (2013$/MWh),0
+MECC,LCOE (for price) no carbon price incl subsidies incl CF (2013$/MWh),0
+MEWB,Spillover learning matrix,1
+MEWA,Substitution matrix,1
+MWKA,FTT:Power exogenous capacity levels (GW),1
+MEFI,FTT:Power feed-in-tariffs,1
+MEWE,FTT:Power CO2 emissions,1
+MEWP,FTT:Power marginal costs of fuels ($2013/GJ),0
+MEWD,FTT:Power demand for fuels (PJ),1
+MEPD,FTT:Power total primary energy demand by resource type (PJ),0
+MERC,FTT Resource prices or costs (2013$/GJ or 2013$/MWh),0
+MRED,Natural resources and REN full technical potentials (PJ),0
+MRES,Fossil reserves and REN remaining technical potentials (PJ),0
+MCSC,FTT:Power cost-supply curves,1
+MWFC,FTT:Power fuel cost component,0
+MWIC,FTT:Power investment cost component,0
+MCFC,FTT:Power load factor scaling cost component,0
+MCOC,FTT:Power CO2 cost component,0
+MWIY,FTT:Power investment,0
+MESC,FTT:Power cost of early scrapping power equipment,0
+MELF,FTT:Power lifetime of power equipment,0
+MJEP,FTT:Power marginal cost of fuels,0
+MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,1
+MJET,FTT:Power technology to fuel use conversion matrix excl CCS,1
+MJCO,FTT:Power fuel use that produces emissions incl CCS,0
+MPTR,Extraction rate of resources,1
+MWMC,FTT:Power marginal costs,0
+MMCD,FTT:Power standard deviation of marginal costs,0
+MEC1,TLCOE load band 1,0
+MEC2,TLCOE load band 2,0
+MEC3,TLCOE load band 3,0
+MEC4,TLCOE load band 4,0
+MEC5,TLCOE load band 5,0
+MEC6,TLCOE load band 6,0
+MGLB,Generation by load band,0
+MKLB,Capacity by load band,0
+MWG1,Generation load band 1,0
+MWG2,Generation load band 2,0
+MWG3,Generation load band 3,0
+MWG4,Generation load band 4,0
+MWG5,Generation load band 5,0
+MWG6,Generation load band 6,0
+MWDD,Matrix of load band tech suitability NETxNLB,1
+MWDT,Matrix of tech top load band NETxNLB,1
+MCRT,FTT:Power curtailment of VRE (% of generation),0
+MGAM,FTT:Power Gamma values ($2013/MWh),1
+MSAL,"Switch for storage cost and investment allocation (0=No, 1=G, 2=C, 3=M)",1
+MSSP,FTT:Power short-term storage costs (2013$/GWh) ,0
+MSSG,FTT:Power short-term storage additional electricity demand (GWh/y),0
+MSSF,FTT:Power short-term storage load factor (-),0
+MSSM,FTT:Power short-term storage marginal costs (2013$/GWh),0
+MSSC,FTT:Power short-term storage capacity (GW),0
+MSSI,FTT:Power short-term storage investment (2010 mEuro),0
+MLSP,FTT:Power long-term storage costs (2013$/GWh),0
+MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),0
+MLSF,FTT:Power long-term storage load factor (-),0
+MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),0
+MLSC,FTT:Power long-term storage capacity (GW),0
+MLSI,FTT:Power long-term storage investment (2010 mEuro),0
+MEKA,FTT:Power age-tracking matrix of existing capacity,0
+MSRV,FTT:Power survival function (Created inside code),0
+MEWS,FTT:Power shares of capacity by tech,0
+MSLB,FTT:Power shares of capacity by tech x load band,0
+MLLB,FTT:Power load factors (%) by tech x load band,0
+BCET,FTT:Power matrix of technology costs,1
+MEWDX,Exogenous demand for energy resources,1
+MELO,"Electricity demand residual (due to imports, losses, ets.)",0
+MERCX,Exogenous MERC (from E3ME run),1
+MEWLX,Exogenous MEWL (from E3ME run),1
+MGAMX,Exogenous MGAM (from E3ME run),1
+MEWGX,Exogenous MEWG (from E3ME run),1
+MEWKX,Exogenous MEWK (from E3ME run),1
+METCX,Exogenous METC (from E3ME run),1
+FRETX,Exogenous FRET (from E3ME run),1
+MSSMX,Exogenous MSSM (from E3ME run),1
+MLSMX,Exogenous MLSM (from E3ME run),1
+MSSPX,Exogenous MSSP (from E3ME run),1
+MLSPX,Exogenous MLSP (from E3ME run),1
+MADG,Additional generation due storage losses and curtailment,0
+MCRG,Curtailment,0
+PRSCX,Price levels (2010=100) from E3ME,1
+PRSC13,Price levels in 2013 (2010=100),0
+PRSC15,Price levels in 2015 (2010=100),0
+EXX,Exchange rate (2010=100) from E3ME,1
+EX13,Exchange rate in 2013 (2010=100),0
+MCOCX,Carbon costs by technology from E3ME,1
+MWFCX,Exogenous FTT:Power fuel cost component,1
+MWICX,Exogenous FTT:Power investment cost component,1

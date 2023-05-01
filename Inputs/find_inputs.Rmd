@@ -1,0 +1,24 @@
+---
+title: "ftt_manipulation"
+author: "Ximing Dong"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+file_list <- list.files(path = "C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/Inputs/S0/FTT-P", pattern = ".csv", all.files = TRUE, full.names = FALSE)
+new_list <- sub("_.*", "",file_list)
+new_list <- sub(".csv", "", new_list)
+
+df <- data.frame(variable = new_list, input = rep(1, 2000)) %>%
+  unique()
+#write.csv(df, file = "inputs.csv",row.names = FALSE)
+
+output <- read.csv('variables.csv') %>%
+  left_join(df, by = c('variable' = 'variable')) %>%
+  mutate(input = ifelse(is.na(input), 0,1))
+
+write.csv(output, file = "existing_inputs.csv",row.names = FALSE)
+```
+
