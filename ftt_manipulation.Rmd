@@ -1,0 +1,295 @@
+---
+title: "ftt_manipulation"
+author: "Ximing Dong"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r library}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+```
+
+```{r variables}
+file_list <- list.files(path = "C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/Inputs/S0/FTT-P", pattern = ".csv", all.files = TRUE, full.names = FALSE)
+new_list <- sub("_.*", "",file_list)
+new_list <- sub(".csv", "", new_list)
+
+df <- data.frame(variable = new_list, input = rep(1, 2000)) %>%
+  unique()
+#write.csv(df, file = "inputs.csv",row.names = FALSE)
+
+output <- read.csv('variables.csv') %>%
+  left_join(df, by = c('variable' = 'variable')) %>%
+  mutate(input = ifelse(is.na(input), 0,1))
+
+write.csv(output, file = "existing_inputs.csv",row.names = FALSE)
+```
+
+```{r S1_MEFI_tariff}
+#setwd for global environment setting
+#setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/Inputs')
+folder_MEFI <- list.files(path = "./S1/FTT-P", pattern = ".csv", all.files = TRUE, full.names = FALSE)
+
+tariff_initial <- 70
+phase_out_year <- 7
+
+for (file in folder_MEFI) {
+  temp <- read.csv(paste("./S1/FTT-P/", file, sep = ''), check.names = FALSE)
+  for (i in 0:phase_out_year){
+    temp[9:24,24+i] <-
+      -(tariff_initial-i*tariff_initial/phase_out_year)
+  }
+  write.csv(temp, file = paste("./S1/FTT-P/", file, sep = ''), row.names = FALSE)
+}
+```
+
+```{r S2_MEWT_subsidy}
+#setwd for global environment setting
+#setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/Inputs')
+folder_MEWT <- list.files(path = "./S2/FTT-P", pattern = ".csv", all.files = TRUE, full.names = FALSE)
+
+tariff_initial_2 <- 20
+phase_out_year_2 <- 5
+
+for (file in folder_MEWT) {
+  temp_2 <- read.csv(paste("./S2/FTT-P/", file, sep = ''), check.names = FALSE)
+  for (i in 0:phase_out_year_2){
+    temp_2[9:24,24+i] <-
+      -(tariff_initial_2-i*tariff_initial_2/phase_out_year_2)
+  }
+  write.csv(temp_2, file = paste("./S2/FTT-P/", file, sep = ''), row.names = FALSE)
+}
+```
+
+Output data manipulation:
+```{r output data}
+#setwd for global environment setting
+setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs')
+folder_output <- list.files(pattern = ".csv", all.files = TRUE, full.names = FALSE)
+for (file in folder_output) {
+  temp_output <- read.csv(file, check.names = FALSE)
+  colnames(temp_output)[1] <- "energy_technologies"
+  temp_output$energy_technologies <- c("Nuclear", "Oil", "Coal", "Coal + CCS", "IGCC", "IGCC + CCS", "CCGT", "CCGT + CCS", "Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP")
+    for (i in 2010:2050) {
+      colnames(temp_output)[i-2008] <- i
+    }
+  temp_output <- temp_output %>%
+    select(-c(2,3,4,5,6,7,8,9,10)) %>%
+    gather("year", "value", -energy_technologies)
+  
+  write.csv(temp_output, file = paste('./manipulated/', file, sep = ''),row.names = FALSE)
+}
+```
+
+Plots:
+
+```{r MEWC plot}
+#MEWC	LCOE bare, no policies, no carbon cost (2013$/MWh)
+setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated')
+s0_mewc <- read.csv('S0_MEWC.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
+s1_mewc <- read.csv('S1_MEWC.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
+s2_mewc <- read.csv('S2_MEWC.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
+s0_mewc_plot <- ggplot(data=s0_mewc, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
+  theme_classic()+
+  ggtitle("LCOE bare without policies or carbon cost \n (2013$/MWh) by energy techonologies 2019-50") +
+  xlab("Year") +
+  ylab("LCOE (2013$/MWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 1200))
+
+s1_mewc_plot <- ggplot(data=s1_mewc, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
+  theme_classic()+
+  ggtitle("LCOE by energy techonologies \n with feed-in tariff for renewables 2019-50") +
+  xlab("Year") +
+  ylab("LCOE (2013$/MWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 1200))
+
+s2_mewc_plot <- ggplot(data=s2_mewc, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
+  theme_classic()+
+  ggtitle("LCOE by energy techonologies \n with subsidies for renewables 2019-50") +
+  xlab("Year") +
+  ylab("LCOE (2013$/MWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 1200))
+```
+```{r fig.width = 14, fig.height = 6}
+ggarrange(
+  s0_mewc_plot, s1_mewc_plot,s2_mewc_plot,
+  common.legend = TRUE, legend = "bottom",
+  ncol = 3, nrow = 1
+  )
+ggsave('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated/mewc_combined.png')
+```
+
+
+```{r MECW plot}
+#MEWC	LCOE bare, no policies, with carbon cost (2013$/MWh)
+setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated')
+s0_mecw <- read.csv('S0_MECW.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
+s1_mecw <- read.csv('S1_MECW.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
+s2_mecw <- read.csv('S2_MECW.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
+
+s0_mecw_plot <- ggplot(data=s0_mewc, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
+  theme_classic()+
+  ggtitle("LCOE bare with carbon cost and no policies \n (2013$/MWh) by energy techonologies 2019-50") +
+  xlab("Year") +
+  ylab("LCOE (2013$/MWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 1200))
+
+s1_mecw_plot <- ggplot(data=s1_mewc, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
+  theme_classic()+
+  ggtitle("LCOE by energy techonologies \n with feed-in tariff for renewables 2019-50") +
+  xlab("Year") +
+  ylab("LCOE (2013$/MWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 1200))
+
+s2_mecw_plot <- ggplot(data=s2_mewc, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
+  theme_classic()+
+  ggtitle("LCOE by energy techonologies \n with subsidies for renewables 2019-50") +
+  xlab("Year") +
+  ylab("LCOE (2013$/MWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 1200))
+```
+```{r fig.width = 14, fig.height = 6}
+ggarrange(
+  s0_mecw_plot, s1_mecw_plot,s2_mecw_plot,
+  common.legend = TRUE, legend = "bottom",
+  ncol = 3, nrow = 1
+  )
+ggsave('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated/mecw_combined.png')
+```
+
+
+```{r mewg plot}
+#MEWG	FTT-P Generation by technology (GWh)
+setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated')
+s0_mewg <- read.csv('S0_MEWG.csv')
+s1_mewg <- read.csv('S1_MEWG.csv')
+s2_mewg <- read.csv('S2_MEWG.csv')
+
+s0_mewg_plot <- ggplot(data=s0_mewg, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies")) +
+  theme_classic()+
+  ggtitle("Electricity generation (GWh) by \n energy techonologies 2019-50") +
+  xlab("Year") +
+  ylab("Generation (GWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=15000000, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 21000000))
+
+s1_mewg_plot <- ggplot(data=s1_mewg, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies")) +
+  theme_classic()+
+  ggtitle("Electricity generation by energy techonologies \n with feed-in tariffs for renewables 2019-50") +
+  xlab("Year") +
+  ylab("Generation (GWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=15000000, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 21000000))
+
+s2_mewg_plot <- ggplot(data=s2_mewg, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies")) +
+  theme_classic()+
+  ggtitle("Electricity generation by energy techonologies \n with subsidies for renewables 2019-50") +
+  xlab("Year") +
+  ylab("Generation (GWh)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=15000000, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 21000000))
+```
+```{r fig.width = 14, fig.height = 6}
+ggarrange(
+  s0_mewg_plot, s1_mewg_plot,s2_mewg_plot,
+  common.legend = TRUE, legend = "bottom",
+  ncol = 3, nrow = 1
+  )
+ggsave('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated/mewg_combined.png')
+```
+
+```{r mewk plot}
+#MEWK	FTT-P Capacity by technology (GW)
+setwd('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated')
+s0_mewk <- read.csv('S0_MEWK.csv')
+s1_mewk <- read.csv('S1_MEWK.csv')
+s2_mewk <- read.csv('S2_MEWK.csv')
+
+s0_mewk_plot <- ggplot(data=s0_mewk, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies")) +
+  theme_classic()+
+  ggtitle("Capacity (GW) by energy techonologies \n 2019-50") +
+  xlab("Year") +
+  ylab("Capacity (GW)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=10000, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 12000))
+
+s1_mewk_plot <- ggplot(data=s1_mewk, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies")) +
+  theme_classic()+
+  ggtitle("Capacity by energy techonologies \n with feed-in tariffs for renewables 2019-50") +
+  xlab("Year") +
+  ylab("Capacity (GW)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=10000, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 12000))
+
+s2_mewk_plot <- ggplot(data=s2_mewk, aes(x=year, y=value, group=energy_technologies)) +
+  geom_line(aes(color=energy_technologies))+
+  geom_point(aes(color=energy_technologies))+
+  guides(color = guide_legend(title = "Energy technologies")) +
+  theme_classic()+
+  ggtitle("Capacity by energy techonologies \n with subsidies for renewables 2019-50") +
+  xlab("Year") +
+  ylab("Capacity (GW)")+
+  geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
+  geom_text(x=2027,y=10000, label = "Simulation starts in 2023", color = "grey")+
+  coord_cartesian(ylim=c(0, 12000))
+```
+```{r fig.width = 14, fig.height = 6}
+ggarrange(
+  s0_mewk_plot, s1_mewk_plot,s2_mewk_plot,
+  common.legend = TRUE, legend = "bottom",
+  ncol = 3, nrow = 1
+  )
+ggsave('C:/Users/ximin/Documents/GitHub/FTT_StandAlone_v0.8/outputs/manipulated/mewk_combined.png')
+```
