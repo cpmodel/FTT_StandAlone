@@ -75,7 +75,7 @@ for (file in folder_output) {
     for (i in 2010:2050) {
       colnames(temp_output)[i-2008] <- i
     }
-  temp_output <- temp_output %>%
+  temp_output <- temp_output 
     select(-c(2,3,4,5,6,7,8,9,10)) %>%
     gather("year", "value", -energy_technologies)
   
@@ -101,7 +101,7 @@ s0_mewc_plot <- ggplot(data=s0_mewc, aes(x=year, y=value, group=energy_technolog
   ylab("LCOE (2013$/MWh)")+
   geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
   geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
-  coord_cartesian(ylim=c(0, 1200))
+  coord_cartesian(ylim=c(0, 175))
 
 s1_mewc_plot <- ggplot(data=s1_mewc, aes(x=year, y=value, group=energy_technologies)) +
   geom_line(aes(color=energy_technologies))+
@@ -113,7 +113,7 @@ s1_mewc_plot <- ggplot(data=s1_mewc, aes(x=year, y=value, group=energy_technolog
   ylab("LCOE (2013$/MWh)")+
   geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
   geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
-  coord_cartesian(ylim=c(0, 1200))
+  coord_cartesian(ylim=c(0, 175))
 
 s2_mewc_plot <- ggplot(data=s2_mewc, aes(x=year, y=value, group=energy_technologies)) +
   geom_line(aes(color=energy_technologies))+
@@ -125,7 +125,7 @@ s2_mewc_plot <- ggplot(data=s2_mewc, aes(x=year, y=value, group=energy_technolog
   ylab("LCOE (2013$/MWh)")+
   geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
   geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
-  coord_cartesian(ylim=c(0, 1200))
+  coord_cartesian(ylim=c(0, 175))
 ```
 ```{r fig.width = 14, fig.height = 6}
 ggarrange(
@@ -144,7 +144,7 @@ s0_mecw <- read.csv('S0_MECW.csv') %>% filter(energy_technologies %in% c("Solid 
 s1_mecw <- read.csv('S1_MECW.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
 s2_mecw <- read.csv('S2_MECW.csv') %>% filter(energy_technologies %in% c("Solid Biomass", "S Biomass CCS", "BIGCC", "BIGCC + CCS", "Biogas", "Biogas + CCS", "Tidal", "Large Hydro", "Onshore", "Offshore", "Solar PV", "CSP", "Geothermal", "Wave", "Fuel Cells", "CHP"))
 
-s0_mecw_plot <- ggplot(data=s0_mewc, aes(x=year, y=value, group=energy_technologies)) +
+s0_mecw_plot <- ggplot(data=s0_mecw, aes(x=year, y=value, group=energy_technologies)) +
   geom_line(aes(color=energy_technologies))+
   geom_point(aes(color=energy_technologies))+
   guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
@@ -154,9 +154,9 @@ s0_mecw_plot <- ggplot(data=s0_mewc, aes(x=year, y=value, group=energy_technolog
   ylab("LCOE (2013$/MWh)")+
   geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
   geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
-  coord_cartesian(ylim=c(0, 1200))
+  coord_cartesian(ylim=c(0, 175))
 
-s1_mecw_plot <- ggplot(data=s1_mewc, aes(x=year, y=value, group=energy_technologies)) +
+s1_mecw_plot <- ggplot(data=s1_mecw, aes(x=year, y=value, group=energy_technologies)) +
   geom_line(aes(color=energy_technologies))+
   geom_point(aes(color=energy_technologies))+
   guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
@@ -166,9 +166,9 @@ s1_mecw_plot <- ggplot(data=s1_mewc, aes(x=year, y=value, group=energy_technolog
   ylab("LCOE (2013$/MWh)")+
   geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
   geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
-  coord_cartesian(ylim=c(0, 1200))
+  coord_cartesian(ylim=c(0, 175))
 
-s2_mecw_plot <- ggplot(data=s2_mewc, aes(x=year, y=value, group=energy_technologies)) +
+s2_mecw_plot <- ggplot(data=s2_mecw, aes(x=year, y=value, group=energy_technologies)) +
   geom_line(aes(color=energy_technologies))+
   geom_point(aes(color=energy_technologies))+
   guides(color = guide_legend(title = "Energy technologies (renewables only)")) +
@@ -178,7 +178,7 @@ s2_mecw_plot <- ggplot(data=s2_mewc, aes(x=year, y=value, group=energy_technolog
   ylab("LCOE (2013$/MWh)")+
   geom_vline(xintercept = 2022,linetype="dotted", color = 'grey')+
   geom_text(x=2027,y=1200, label = "Simulation starts in 2023", color = "grey")+
-  coord_cartesian(ylim=c(0, 1200))
+  coord_cartesian(ylim=c(0, 175))
 ```
 ```{r fig.width = 14, fig.height = 6}
 ggarrange(
