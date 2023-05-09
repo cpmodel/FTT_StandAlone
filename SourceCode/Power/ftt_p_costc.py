@@ -374,7 +374,7 @@ def cost_curves(BCET,BCTL,BCSC,MEWD,MEWG,MEWL,MEPD,MERC,MRCL,RERY,MPTR,PMF,MRED,
                 if(BCET[i,j,11]==1):
 
                     BCET[i,j,4] = BCET[i,j,4] + (MERC[i,conv[j],0] - MRCL[i,conv[j],0])*3.6/BCET[i,j,13]
-                    BCET[i,j,4] = BCET[i,j,4] + (MERCX[i,conv[j],0] - MRCL[i,conv[j],0])*3.6/BCET[i,j,13]
+                    # BCET[i,j,4] = BCET[i,j,4] + (MERCX[i,conv[j],0] - MRCL[i,conv[j],0])*3.6/BCET[i,j,13]
 
                 #For renewable resources: interpolate MEPD into the cost curves. Decreasing capacity factor type of limit
                 elif(BCET[i,j,11]==0):
@@ -387,9 +387,9 @@ def cost_curves(BCET,BCTL,BCSC,MEWD,MEWG,MEWL,MEPD,MERC,MRCL,RERY,MPTR,PMF,MRED,
                     if(X0> 0.0): Y0, Ind = interp(X,Y,X0,L)
                     MERC[i,conv[j],0] = 1.0/(Y0+0.000001)
                     # TODO: SET Exog MERC
-                    MERC[i,conv[j],0] = copy.deepcopy(MERCX[i,conv[j],0])
+                    # MERC[i,conv[j],0] = copy.deepcopy(MERCX[i,conv[j],0])
                     BCET[i,j,10] = 1.0/(Y0+0.000001)         # We use an inverse here
-                    BCET[i,j,10] = copy.deepcopy(MERCX[i,conv[j],0])
+                    # BCET[i,j,10] = copy.deepcopy(MERCX[i,conv[j],0])
                     # For variable renewables (e.g. wind, solar, wave)
                     # the overall (average) capacity factor decreases as new units have lower and lower CFs
 
@@ -405,7 +405,7 @@ def cost_curves(BCET,BCTL,BCSC,MEWD,MEWG,MEWL,MEPD,MERC,MRCL,RERY,MPTR,PMF,MRED,
                     #Fix: CSP is more efficient than PV by a factor 2
                     BCET[i,19,10] = 1.0/(Y0+0.0000001)*2.0
 
-                    BCET[i,19,10] = MERCX[i,conv[j],0] * 2.0
+                    # BCET[i,19,10] = MERCX[i,conv[j],0] * 2.0
 
                 #Increasing investment term type of limit
                 elif(BCET[i,j,11] == 3):
@@ -418,10 +418,10 @@ def cost_curves(BCET,BCTL,BCSC,MEWD,MEWG,MEWL,MEPD,MERC,MRCL,RERY,MPTR,PMF,MRED,
                     if(X0> 0.0): Y0, I = interp(X,Y,X0,L)
                     MERC[i,conv[j],0] = copy.deepcopy(Y0)
                     # TODO: SET Exog MERC
-                    MERC[i,conv[j],0] = copy.deepcopy(MERCX[i,conv[j],0])
+                    # MERC[i,conv[j],0] = copy.deepcopy(MERCX[i,conv[j],0])
                     BCET[i,j,2] = copy.deepcopy(Y0)
-                    BCET[i,j,2] = copy.deepcopy(MERCX[i,conv[j],0])
-
+                    # BCET[i,j,2] = copy.deepcopy(MERCX[i,conv[j],0])
+# 
     #Add REN resources left in MRED, MRES
     #Total technical potential i>4 (j>4 in python)
     MRED[:,4:,0] = copy.deepcopy(BCSC[:,4:,2])

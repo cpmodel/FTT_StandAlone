@@ -166,6 +166,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                                      titles['ERTI'],year,1.0,data['MERCX'])
 
         data['BCET'] = bcet
+        data['MCFC'][:, :, 0] =  np.where(Svar == 1, bcet[:, :, 10], mewl[:, :, 0])
         data['MCSC'] = bcsc
         data['MEWL'] = mewl
         data['MEPD'] = mepd
@@ -461,6 +462,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                                          titles['ERTI'],year,1.0,data['MERCX'])
 
             data['BCET'] = bcet
+            data['MCFC'][:, :, 0] =  np.where(Svar == 1, bcet[:, :, 10], mewl[:, :, 0])
             data['MCSC'] = bcsc
             data['MEWL'] = mewl
             data['MEPD'] = mepd
@@ -764,6 +766,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                                              titles['ERTI'],year,1.0,data['MERCX'])
 
                 data['BCET'] = bcet
+                data['MCFC'][:, :, 0] =  np.where(Svar == 1, bcet[:, :, 10], mewl[:, :, 0])
                 data['MCSC'] = bcsc
                 data['MEWL'] = mewl
                 data['MEPD'] = mepd

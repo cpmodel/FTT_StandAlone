@@ -42,6 +42,7 @@ import SourceCode.support.paths_append
 from SourceCode.model_class import ModelRun
 from SourceCode.support.divide import divide
 
+
 # Instantiate the run
 model = ModelRun()
 
@@ -57,6 +58,7 @@ histend = model.histend
 # Domains to which variables belong
 domain = model.domain
 
+scens = [x.strip() for x in model.scenarios.split(',')]
 
 # Call the 'run' method of the ModelRun class to solve the model
 model.run()
@@ -65,22 +67,59 @@ model.run()
 # Output of the model
 output_all = model.output
 
+tl = model.timeline
+
 
 #output_all['S0']['MWMC'][0, :, 0, :]
 #list all datasets in the output_all dictionary
 #output_all['S0'].keys()
+ # %% 
+ 
+do_print = True
 
-pd.DataFrame(np.sum(output_all['S0']['MEWK'], axis = 0).reshape(-1,41)).to_csv('./outputs/S0_MEWK.csv')
-pd.DataFrame(np.sum(output_all['S0']['MEWG'], axis = 0).reshape(-1,41)).to_csv('./outputs/S0_MEWG.csv')
-pd.DataFrame(np.sum(output_all['S0']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_MEWC.csv')
-pd.DataFrame(np.sum(output_all['S0']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_MECW.csv')
+if do_print:
+    # Weighted average LCOEs
+    lcoe_data = {}
+    
+    mewt = pd.DataFrame(output_all["S2"]['MEWT'][0, :, 0, :], index=titles["T2TI"], columns=tl)
+    
+    mewg = {}
+        
+    for scen in scens:
+        
+        # lcoe_data[scen] = pd.DataFrame(0.0, index=titles["T2TI"], columns= tl)
+        
+        lcoe_data[scen] = {}
 
-pd.DataFrame(np.sum(output_all['S1']['MEWK'], axis = 0).reshape(-1,41)).to_csv('./outputs/S1_MEWK.csv')
-pd.DataFrame(np.sum(output_all['S1']['MEWG'], axis = 0).reshape(-1,41)).to_csv('./outputs/S1_MEWG.csv')
-pd.DataFrame(np.sum(output_all['S1']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_MEWC.csv')
-pd.DataFrame(np.sum(output_all['S1']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_MECW.csv')
+        denom = np.sum(output_all[scen]['MEWG'][:, :, 0, :], axis = 0)
+        
+        mewg[scen] = pd.DataFrame(denom, index=titles["T2TI"], columns=tl)        
+    
+        for lcoe in ["METC", "MEWC", "MWCB"]:
+            
+            lcoe_data[scen][lcoe] = np.zeros( output_all[scen]['MEWG'][0, :, 0, :].shape )
 
-pd.DataFrame(np.sum(output_all['S2']['MEWK'], axis = 0).reshape(-1,41)).to_csv('./outputs/S2_MEWK.csv')
-pd.DataFrame(np.sum(output_all['S2']['MEWG'], axis = 0).reshape(-1,41)).to_csv('./outputs/S2_MEWG.csv')
-pd.DataFrame(np.sum(output_all['S2']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_MEWC.csv')
-pd.DataFrame(np.sum(output_all['S2']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_MECW.csv')
+      
+            for r, reg in enumerate(titles["RTI"]):
+                
+                numer = output_all[scen][lcoe][r, :, 0, :] * output_all[scen]['MEWG'][r, :, 0, :]
+                
+                lcoe_data[scen][lcoe] += divide(numer, denom)
+            
+            lcoe_data[scen][lcoe].reshape(-1,41)
+            pd.DataFrame(lcoe_data[scen][lcoe], index=titles["T2TI"], columns=tl).to_csv('./outputs/{}_{}.csv'.format(scen, lcoe))
+    
+    pd.DataFrame(np.sum(output_all['S0']['MEWK'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S0_MEWK.csv')
+    pd.DataFrame(np.sum(output_all['S0']['MEWG'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S0_MEWG.csv')
+    # pd.DataFrame(np.sum(output_all['S0']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_MEWC.csv')
+    # pd.DataFrame(np.sum(output_all['S0']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_MECW.csv')
+    
+    pd.DataFrame(np.sum(output_all['S1']['MEWK'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S1_MEWK.csv')
+    pd.DataFrame(np.sum(output_all['S1']['MEWG'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S1_MEWG.csv')
+    # pd.DataFrame(np.sum(output_all['S1']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_MEWC.csv')
+    # pd.DataFrame(np.sum(output_all['S1']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_MECW.csv')
+    
+    pd.DataFrame(np.sum(output_all['S2']['MEWK'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S2_MEWK.csv')
+    pd.DataFrame(np.sum(output_all['S2']['MEWG'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S2_MEWG.csv')
+    # pd.DataFrame(np.sum(output_all['S2']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_MEWC.csv')
+    # pd.DataFrame(np.sum(output_all['S2']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_MECW.csv')
