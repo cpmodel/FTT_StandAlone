@@ -34,7 +34,7 @@ import numpy as np
 
 # %% lcot
 # -----------------------------------------------------------------------------
-# --------------------------- LCOT function -----------------------------------
+# --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
 def get_lcoe(data, titles):
     """
@@ -209,25 +209,25 @@ def get_lcoe(data, titles):
         npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
 
         # 1-levelised cost variants in $/pkm
-        # 1.1-Bare LCOT
+        # 1.1-Bare LCOE
         lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOT including policy costs
+        # 1.2-LCOE including policy costs
         tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
         # 1.3 LCOE excluding policy, including co2 price
         lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOT of policy costs
+        # 1.3-LCOE of policy costs
         # lcoe_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
-        # Standard deviation of LCOT
+        # Standard deviation of LCOE
         dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOE augmented with gamma values
         tlcoeg = tlcoe+data['MGAM'][r, :, 0]
 
         # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOT without taxes
+        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOE without taxes
         data['MECW'][r, :, 0] = copy.deepcopy(lcoeco2)  # The real bare LCOE with taxes
         data['METC'][r, :, 0] = copy.deepcopy(tlcoeg)   # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOT distribution
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOE distribution
 
         # Output variables
         data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, 2])
