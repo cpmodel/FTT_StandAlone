@@ -183,8 +183,9 @@ def run_model():
     # Save output for all scenarios to pickle
     #TODO Setup way to retain older results?
     results =  model.output
+    os.makedirs(os.path.dirname(f"{rootdir}\\Output\\"), exist_ok=True)     # Create Output folder if it doesn't exist
     with open('Output\Results.pickle', 'wb') as f:
-        pickle.dump(results,f)
+        pickle.dump(results, f)
     # Save metadata on current model run
     with open("{}\\Output\\Scenarios.json".format(rootdir), 'w') as f:
         json.dump(scenarios_log, f)
