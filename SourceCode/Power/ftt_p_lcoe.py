@@ -208,7 +208,7 @@ def get_lcoe(data, titles):
         # 3-Standard deviation (propagation of error)
         npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
 
-        # 1-levelised cost variants in $/pkm
+        # 1-levelised cost variants in $/kWh
         # 1.1-Bare LCOE
         lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
         # 1.2-LCOE including policy costs
