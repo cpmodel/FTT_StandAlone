@@ -5,18 +5,19 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
 ### Historical generation
 1. Update the historical generation. We use the IEA World Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services in the macrodata section](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access **Describe how**
     1. The datafiles to update are Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. The generation is in the MEWG sheet
-    2. Is there a python file to do this?
-2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022). **Start a pre-processing repo, and ask Marina to add her python script there**
+    2. 
+2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
     1. The datafile is the same as above
-    2. The file is **ask Marina**
-3. The generation data is often not quite up-to-date. You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA parameter. Do this for fast-changing technologies if relevant (offshore, solar PV). 
-    4. The python file to do this is   
-5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%). **add my script to new repo**
-6. Update MEWE with the cumulative historical capacity by technology. Use the output of the model over the historical period. This is a step that can be automated, so feel free to improve the code.
-7. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
+    2. This step is done in excel. If you create a python script for this, please add it to the pre-processing repository.  
+3. The generation data is often not quite up-to-date. You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA variable. Do this for fast-changing technologies if relevant (offshore, solar PV). 
+    4. The python file to do this is can be found in the pre-processing repository. 
+5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%).
+    1. The script to do this can be found in the pre-processing repository. 
+7. Update MEWW with the cumulative historical capacity by technology. **NOTE**: the MEWW variable is used for learning-by-doing. If the start date for the generation is different from the start date of the costs, make sure MEWE aligns with the cost start date. Use the output of the model over the historical period. This is a step that can be automated, so feel free to improve the code.
+8. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
 
 ### Calibration (the gamma values)
-The FTT model is calibrated to ensure a historical trends do not suddenly change in the absense of new policies. We estimate a gamma value per country and per technology. 
+The FTT model is calibrated to ensure a historical trends do not suddenly change in the absense of new policies. We ensure the first derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
 1. To calibrate the gamma values, run the frontend of the standalone version (FTT_Stand_Alone_Launcher.cmd). Navigate to GAMMA. Initialise the power sector model, and do the following by country
 2. Pick a start date which gives you 5 years of historical data, and an end date with 5 year of future data
 4. Per technology, choose a gamma value that ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. If gamma values are often larger than 30, there may be structural errors in the model, so feel free to contact an experienced modeller. 
@@ -24,6 +25,11 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 
 ### Split the Masterfiles by country
 1. The back-end does not read the masterfile directly, but requires 2D files. Use Upload_FTT_data.py in the ``_Masterfiles`` folder to split the data by country.
+
+### Differing start dates for costs and capacity
+1. If your cost data is not from the same year as your final generation data, a code change needs to be made. In ftt_p_main.py, you will need to add an if statement (if year == (cost data year + 1)).., to run the learning-by-doing up to the proper start of the simulation. 
+    1. TODO Option 1: switch to BNEF for cost data
+    2. TODO Option 2: make a new variable in FTT-Standalone/Utilities/Titles/VariableListing.xlsx which contains the date of the cost data, and adjust the code to reflect, so that code doesn't need updating.
 
 ## Less frequent updates
 ### Costs
