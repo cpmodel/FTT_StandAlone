@@ -111,15 +111,15 @@ if do_print:
     
     pd.DataFrame(np.sum(output_all['S0']['MEWK'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S0_MEWK.csv')
     pd.DataFrame(np.sum(output_all['S0']['MEWG'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S0_MEWG.csv')
-    # pd.DataFrame(np.sum(output_all['S0']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_MEWC.csv')
-    # pd.DataFrame(np.sum(output_all['S0']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_MECW.csv')
+    #pd.DataFrame(np.sum(output_all['S0_low_sub_freq']['MEWK'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_low_sub_freq_MEWK.csv')
+    #pd.DataFrame(np.sum(output_all['S0_low_sub_freq']['MEWG'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S0_low_sub_freq_MEWG.csv')
     
     pd.DataFrame(np.sum(output_all['S1']['MEWK'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S1_MEWK.csv')
     pd.DataFrame(np.sum(output_all['S1']['MEWG'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S1_MEWG.csv')
-    # pd.DataFrame(np.sum(output_all['S1']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_MEWC.csv')
-    # pd.DataFrame(np.sum(output_all['S1']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_MECW.csv')
+    #pd.DataFrame(np.sum(output_all['S1_low_sub_freq']['MEWK'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_low_sub_freq_MEWK.csv')
+    #pd.DataFrame(np.sum(output_all['S1_low_sub_freq']['MEWG'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S1_low_sub_freq_MEWG.csv')
     
     pd.DataFrame(np.sum(output_all['S2']['MEWK'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S2_MEWK.csv')
     pd.DataFrame(np.sum(output_all['S2']['MEWG'], axis = 0).reshape(-1,41), index=titles["T2TI"], columns=tl).to_csv('./outputs/S2_MEWG.csv')
-    # pd.DataFrame(np.sum(output_all['S2']['MEWC'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_MEWC.csv')
-    # pd.DataFrame(np.sum(output_all['S2']['MECW'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_MECW.csv')
+    #pd.DataFrame(np.sum(output_all['S2_low_sub_freq']['MEWK'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_low_sub_freq_MEWK.csv')
+    #pd.DataFrame(np.sum(output_all['S2_low_sub_freq']['MEWG'], axis = 0).reshape(-1,41)/71).to_csv('./outputs/S2_low_sub_freq_MEWG.csv')
