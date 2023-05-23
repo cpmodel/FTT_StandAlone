@@ -5,15 +5,16 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
 ### Historical generation
 1. Update the historical generation. We use the IEA World Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services in the macrodata section](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access **Describe how**
     1. The datafiles to update are Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. The generation is in the MEWG sheet
-    2. 
+    2. This step is done manually. If you create a python script for this, please add it to the pre-processing repository.  
 2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
     1. The datafile is the same as above
     2. This step is done in excel. If you create a python script for this, please add it to the pre-processing repository.  
 3. The generation data is often not quite up-to-date. You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA variable. Do this for fast-changing technologies if relevant (offshore, solar PV). 
-    4. The python file to do this is can be found in the pre-processing repository. 
+    4. The python file to do this is can be found in the pre-processing repository (change_IRENA_hist_capacity_MWKA.py). 
+    5. The (2022) data is found at https://irena.org/Statistics/Download-query-tools 
 5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%).
-    1. The script to do this can be found in the pre-processing repository. 
-7. Update MEWW with the cumulative historical capacity by technology. **NOTE**: the MEWW variable is used for learning-by-doing. If the start date for the generation is different from the start date of the costs, make sure MEWE aligns with the cost start date. Use the output of the model over the historical period. This is a step that can be automated, so feel free to improve the code.
+    1. Use the same script as above in the pre-processing file
+7. Update MEWW with the cumulative historical capacity by technology. **NOTE**: the MEWW variable is used for learning-by-doing. If the start date for the generation is different from the start date of the costs, make sure MEWE aligns with the cost start date. Use the output of the model over the historical period. This is a step that can be automated, so feel free to create a script or add it directly to the SourceCode script.
 8. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
 
 ### Calibration (the gamma values)
