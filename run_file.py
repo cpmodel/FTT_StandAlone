@@ -17,12 +17,6 @@ Local library imports:
     - `ModelRun <model_class.html>`__
         Creates a new instance of the ModelRun class
 
-    Support functions:
-
-    - `paths_append <paths_append.html>`__
-        Appends file path to sys path to enable import
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 """
 
@@ -34,12 +28,9 @@ import sys
 # Third party imports
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Local library imports
-import SourceCode.support.paths_append
 from SourceCode.model_class import ModelRun
-from SourceCode.support.divide import divide
 
 # Instantiate the run
 model = ModelRun()

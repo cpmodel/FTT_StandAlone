@@ -53,10 +53,7 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
 import warnings
 
 # Third party imports
@@ -282,22 +279,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
         # Call RLDC function for capacity and load factor by LB, and storage costs
-        if year >= 2013:
-            print(f'MEWS: {data["MEWS"][40, 15, 0]:.7f}\n'
-            f'MWSLt: {data["MEWS"][40, 15, 0]:.7f}\n' \
-            f'MEWG: {data["MEWG"][40, 15, 0]:.0f}\n' \
-            f'MEWK: {data["MEWK"][40, 15, 0]:.4f}\n' \
-            f'MEWL: {data["MEWL"][40, 15, 0]:.7f}\n' \
-            f'MWMC: {data["MWMC"][40, 2, 0]:.7f}\n' \
-            f'MMCD: {data["MMCD"][40, 15, 0]:.5f}\n'\
-            f'MKLB: {data["MKLB"][40, 0, 0]:.7f}\n' \
-            f'MEWL: {data["MEWL"][40, 17, 0]:.5f}\n')
 
             # First, estimate marginal costs:
             #if year == 2013: data = get_lcoe(data, titles)
 
             # Second, estimate RLDC parameters
-            bidon = 0
             data = rldc(data, time_lag, titles)
 
             # Change currency from EUR2015 to USD2013
@@ -474,7 +460,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
-            bidon = 0
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -581,7 +566,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, time_lag, titles)
-            bidon = 0
             # Change currency from EUR2015 to USD2013
 
             if year >= 2015:
@@ -784,15 +768,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Update time loop variables:
             
-            print(year)
-            print(f'MEWS: {data["MEWS"][40, 16, 0]:.7f}\n'
-             f'MWSLt: {data_dt["MEWS"][40, 16, 0]:.7f}\n' \
-             f'MEWG: {data["MEWG"][40, 16, 0]:.0f}\n' \
-             f'MEWK: {data["MEWK"][40, 16, 0]:.4f}\n' \
-             f'MEWL: {data["MEWL"][40, 16, 0]:.7f}\n' \
-             f'METC: {data["METC"][40, 16, 0]:.7f}\n'\
-             f'MWMC: {data_dt["MWMC"][40, 2, 0]:.7f}\n' \
-             f'MMCD: {data_dt["MMCD"][40, 16, 0]:.5f}\n')
+            
             for var in data_dt.keys():
 
                 if domain[var] == 'FTT-P':
