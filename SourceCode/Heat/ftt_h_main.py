@@ -294,6 +294,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
     if year == histend['HEWF']:
+        print(f'year in heat model:  {year}')
         # Historical data ends in 2014, so we need to initialise data
         # when it's 2015 to make sure the model runs.
         # At some point we need to change the start year of the simulation and

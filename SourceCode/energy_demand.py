@@ -19,14 +19,12 @@ def energy_demand(data, titles, histend, ftt_modules):
             data["FRET"][r, 15, 0] = data["TJEF"][r, 7, 0]
         if "FTT-H" in ftt_modules:            
             data["FRET"][r, 18, 0] = data["HJEF"][r, 7, 0]
+        if r == 0:
+            print("Electricity usage in heating in Belgium:")
+            print(data["HJEF"][r, 7, 0])
         
         # Compute the changes in actual electricity demand (normally in FTT.f90, put here for testing purposes)
-        print("Shape FRET is")
-        print(data["FRET"].shape)
-        print("Shape sum FRET is")
-        print(np.sum(data["FRET"], axis=0).shape)
-        print("Shape data['MEWD][r, 7, 0]")
-        print(data["MEWD"][r, 7, 0].shape)
+        
         data["MEWD"][r, 7, 0] = np.sum(data["FRET"][r, :, 0]) * 41.868/1000 #/3.6 electricity
         
     return data
