@@ -111,7 +111,7 @@ def get_lcoh(data, titles):
 
         # Fuel tax costs
         fft = np.ones([len(titles['HTTI']), int(max_lt)])
-        fft = fft*divide(data['HTRT'][r, :, 0, np.newaxis],ce)
+        fft = fft*data['HTRT'][r, :, 0, np.newaxis]/ce
         fft = np.where(mask, fft, 0)
 
         # Average operation & maintenance cost
@@ -168,7 +168,7 @@ def get_lcoh(data, titles):
 
         # Marginal costs of existing units
         tmc = ft[:, 0] + omt[:, 0] + fft[:, 0] - fit[:, 0]
-        dtmc = np.sqrt(dft[:, 0] + domt[:, 0])
+        dtmc = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2)
 
         # Total pay-back costs of potential alternatives
         tpb = tmc + (it[:, 0] + st[:, 0])/pb
@@ -238,6 +238,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     sector = 'residential'
     #sector_index = titles['Sectors_short'].index(sector)
 
+    data['PRSC14'] = copy.deepcopy(time_lag['PRSC14'] )
+    if year == 2014:
+        data['PRSC14'] = copy.deepcopy(data['PRSCX'])
 
 
     # %% First initialise if necessary
@@ -278,11 +281,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['HEWS'][r, :, 0] = np.divide(data['HEWS'][r, :, 0],
                                                        np.sum(data['HEWS'][r, :, 0]))
             # Capacity by boiler
+            #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
             data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
                                   data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
             # Emissions
             # TODO: Cost titles are wrong
-            data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Empty"]]
+            data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Empty"]]/1e6
 
             # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
@@ -346,8 +350,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         isReg = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         division = divide((data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
-                          data_dt['HREG'][:, :, 0])
-        isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
+                          data_dt['HEWS'][:, :, 0])
+        isReg = 0.5 + 0.5*np.tanh(1.25*division)
         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
 
@@ -400,7 +404,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         S_k = data_dt['HEWS'][r, b2, 0]
 
                         # Propagating width of variations in perceived costs
-                        dFik = sqrt(2) * sqrt((data_dt['HWCD'][r, b1, 0]*data_dt['HWCD'][r, b1, 0] + data_dt['HWCD'][r, b2, 0]*data_dt['HWCD'][r, b2, 0]))
+                        dFik = 1.414 * sqrt((data_dt['HWCD'][r, b1, 0]*data_dt['HWCD'][r, b1, 0] + data_dt['HWCD'][r, b2, 0]*data_dt['HWCD'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
                         Fik = 0.5*(1+np.tanh(1.25*(data_dt['HGC1'][r, b2, 0]-data_dt['HGC1'][r, b1, 0])/dFik))
@@ -467,8 +471,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         # replacements take place
 
                         # Propagating width of variations in perceived costs
-                        dFEik = sqrt(2) * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
-                        dFEki = sqrt(2) * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
+                        dFEik = 1.414 * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
+                        dFEki = 1.414 * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
                         FEik = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b2, 0]-data_dt['HGC3'][r, b1, 0])/dFEik))
@@ -617,6 +621,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['BHTC'][:, b, c4ti['2 Investment cost SD']] = (data_dt['BHTC'][:, b, c4ti['2 Investment cost SD']]  \
                                                                              *(1.0 + data['BHTC'][:, b, c4ti['7 Learning rate']] * dw[b]/data['HEWW'][0, b, 0]))
 
+
+            #Total investment in new capacity in a year (m 2014 euros):
+              #HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
+              #BHTC(:,:,1) are the investment costs (2014Euro/kW)
+            data['HWIY'][:,:,0] = data['HWIY'][:,:,0] + data['HEWI'][:,:,0]*dt*data['BHTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
 
 
             # =================================================================
