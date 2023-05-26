@@ -149,16 +149,16 @@ def get_lcoh(data, titles):
         npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
 
         # 1-levelised cost variants in $/pkm
-        # 1.1-Bare LCOT
+        # 1.1-Bare LCOH
         lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOT including policy costs
+        # 1.2-LCOH including policy costs
         tlcoh = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOT of policy costs
+        # 1.3-LCOH of policy costs
         lcoh_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # Standard deviation of LCOT
+        # Standard deviation of LCOH
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
-        # LCOT augmented with non-pecuniary costs
+        # LCOH augmented with non-pecuniary costs
         tlcohg = tlcoh + data['HGAM'][r, :, 0]
 
         # Pay-back thresholds
@@ -327,9 +327,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if data['HJFC'][r, fuel, 0] > 0.0:
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
-        # Calculate the LCOT for each vehicle type.
+        # Calculate the LCOH for each heating technology.
         # Call the function
         data = get_lcoh(data, titles)
+        data["FU14A"] = copy.deepcopy(data['HJHF'])
+        data['FU14B'] = data["HJEF"]*data["HJFC"]
 # %% Simulation of stock and energy specs
 #    t0 = time.time()
     # Stock based solutions first
@@ -510,7 +512,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
                 # Check that exogenous share changes add to zero
-                if (t==1):
+                if t==1:
                     dUkTK = data['HWSA'][r, :, 0]
                     if (data['HWSA'][r, :, 0].sum() > 0.0):
                         dUkTK[0] = dUkTK[0] - data['HWSA'][r, :, 0].sum()
@@ -589,9 +591,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Final energy demand of the residential sector (incl. non-heat)
             # For the time being, this is calculated as a simply scale-up
-            for fuel in range(len(titles['JTI'])):
-                if data['HJFC'][r, fuel, 0] > 0.0:
-                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
+            
+            for r in range(len(titles['RTI'])):          # Loop over regions
+                for fuel in range(len(titles['JTI'])):   # Loop over fuels
+                    if data['HJFC'][r, fuel, 0] > 0.0:
+                        if fuel == 7:
+                            print(f'FU14B: {data["FU14B"][r, fuel, 0]}') # TODO: these are still zero; fix later
+                            print(f'FU14A: {data["FU14A"][r, fuel, 0]}')
+                        #data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
+                        data['HJEF'][r, fuel, 0] = data["FU14B"][r, fuel, 0] * data['HJHF'][r, fuel, 0] / data["FU14A"][r, fuel, 0] / data['HJFC'][r, fuel, 0]
+
 
             ############## Learning-by-doing ##################
 
