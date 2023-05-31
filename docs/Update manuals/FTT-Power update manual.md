@@ -3,7 +3,7 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
 
 ## Frequent updates
 ### Historical generation
-1. Update the historical generation. We use the IEA World Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services in the macrodata section](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access **Describe how**
+1. Update the historical generation. We use the IEA World Energy Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access **Describe how**
     1. The datafiles to update are Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. The generation is in the MEWG sheet
     2. This step is done manually. If you create a python script for this, please add it to the pre-processing repository.  
 2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
