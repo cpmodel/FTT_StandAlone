@@ -14,15 +14,14 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
     5. The (2022) data is found at https://irena.org/Statistics/Download-query-tools 
 5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%).
     1. Use the same script as above in the pre-processing file
-7. Update MEWW with the cumulative historical capacity by technology. **NOTE**: the MEWW variable is used for learning-by-doing. If the start date for the generation is different from the start date of the costs, make sure MEWE aligns with the cost start date. Use the output of the model over the historical period. This is a step that can be automated, so feel free to create a script or add it directly to the SourceCode script.
-8. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
+6. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
 
 ### Calibration (the gamma values)
 The FTT model is calibrated to ensure a historical trends do not suddenly change in the absense of new policies. We ensure the first derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
 1. To calibrate the gamma values, run the frontend of the standalone version (FTT_Stand_Alone_Launcher.cmd). Navigate to GAMMA. Initialise the power sector model, and do the following by country
 2. Pick a start date which gives you 5 years of historical data, and an end date with 5 year of future data
-4. Per technology, choose a gamma value that ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. If gamma values are often larger than 30, there may be structural errors in the model, so feel free to contact an experienced modeller. 
-5. Save the gamma values in Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx.
+3. Per technology, choose a gamma value that ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. If gamma values are often larger than 30, there may be structural errors in the model, so feel free to contact an experienced modeller. 
+4. Save the gamma values in Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx.
 
 ### Split the Masterfiles by country
 1. The back-end does not read the masterfile directly, but requires 2D files. Use Upload_FTT_data.py in the ``_Masterfiles`` folder to split the data by country.
