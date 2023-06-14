@@ -1,5 +1,4 @@
 """
-=========================================
 dimensions_functions.py
 =========================================
 Functions to load dimensions names.

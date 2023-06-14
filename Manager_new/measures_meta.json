@@ -1,0 +1,765 @@
+{
+  "indicies": [{
+    "id": "gdp",
+    "label": "GDP"
+  }, {
+    "id": "se",
+    "label": "Total employment (jobs)"
+  }, {
+    "id": "c",
+    "label": "Household consumption (disaggregated)"
+  }, {
+    "id": "sc",
+    "label": "Household consumption"
+  }, {
+    "id": "sk",
+    "label": "Gross fixed capital formation (CVM)"
+  }, {
+    "id": "ss",
+    "label": "Inventory accumulation"
+  }, {
+    "id": "sx",
+    "label": "Exports"
+  }, {
+    "id": "sm",
+    "label": "Imports"
+  }, {
+    "id": "sg",
+    "label": "General government final consumption"
+  }, {
+    "id": "scv",
+    "label": "Household consumption"
+  }, {
+    "id": "hdi",
+    "label": "Household disposable income"
+  }, {
+    "id": "q",
+    "label": "Gross commodity output"
+  }, {
+    "id": "qc0",
+    "label": "Household consumption by product"
+  }, {
+    "id": "qk0",
+    "label": "Gross fixed capital formation by product"
+  }, {
+    "id": "qg0",
+    "label": "General government final consumption by product"
+  }, {
+    "id": "qy0",
+    "label": "Intermediate demand by product"
+  }, {
+    "id": "qm0",
+    "label": "Imports by product"
+  }, {
+    "id": "qx0",
+    "label": "Exports by product"
+  }, {
+    "id": "qs0",
+    "label": "Inventory accumulation by products"
+  }, {
+    "id": "rhdi",
+    "label": "Real household disposable income"
+  }, {
+    "id": "y",
+    "label": "Gross industry output"
+  }, {
+    "id": "yesc",
+    "label": "Employers' social security contributions"
+  }, {
+    "id": "ycemp",
+    "label": "Wages and salaries per employee job"
+  }, {
+    "id": "yva",
+    "label": "Gross value added by industry"
+  }, {
+    "id": "yaw",
+    "label": "Average wages and salaries by industry"
+  }, {
+    "id": "k",
+    "label": "Gross fixed capital formation by investing sector"
+  }, {
+    "id": "ye0",
+    "label": "Employment (jobs) by industry"
+  }, {
+    "id": "ye0f",
+    "label": "Employment projected by shift-share method"
+  }, {
+    "id": "ye01",
+    "label": "Employment (jobs) by industry before impact"
+  }, {
+    "id": "le0",
+    "label": "Employment (jobs) by gender"
+  }, {
+    "id": "e",
+    "label": "Employment (jobs) by type"
+  }, {
+    "id": "lfc",
+    "label": "Labour force participation ratio"
+  }, {
+    "id": "lf",
+    "label": "Labour force by gender"
+  }, {
+    "id": "lelf",
+    "label": "Employment (workers) by gender"
+  }, {
+    "id": "slf",
+    "label": "Total Labour force"
+  }, {
+    "id": "lulf",
+    "label": "Unemployment by gender (labour force definition)"
+  }, {
+    "id": "lncm",
+    "label": "Net commuting by gender"
+  }, {
+    "id": "lurate",
+    "label": "Unemployment rate by gender"
+  }, {
+    "id": "sulf",
+    "label": "Unemployment (labour force definition)"
+  }, {
+    "id": "surate",
+    "label": "Unemployment rate"
+  }],
+  "groups": [
+    ["gdp"],
+    ["se"],
+    ["c"],
+    ["sc"],
+    ["sk"],
+    ["ss"],
+    ["sx"],
+    ["sm"],
+    ["sg"],
+    ["scv"],
+    ["hdi"],
+    ["q"],
+    ["qc0"],
+    ["qk0"],
+    ["qg0"],
+    ["qy0"],
+    ["qm0"],
+    ["qx0"],
+    ["qs0"],
+    ["rhdi"],
+    ["y"],
+    ["yesc"],
+    ["ycemp"],
+    ["yva"],
+    ["yaw"],
+    ["k"],
+    ["ye0"],
+    ["ye0f"],
+    ["ye01"],
+    ["le0"],
+    ["e"],
+    ["lfc"],
+    ["lf"],
+    ["lelf"],
+    ["slf"],
+    ["lulf"],
+    ["lncm"],
+    ["lurate"],
+    ["sulf"],
+    ["surate"]
+  ],
+  "specs": {
+    "sc": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "c": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "k": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "ye01": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "BASELINE",
+      "Desc": " Specification for calibrating to the baseline"
+    }, {
+      "Name": "EXOG",
+      "Desc": "Set to exogenously defined projection"
+    }, {
+      "Name": "GROW",
+      "Desc": "Grow in line with output (Y)"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "yaw": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "lfc": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "qx0": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "BASELINE",
+      "Desc": " Specification for calibrating to the baseline"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "qm0": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "BASELINE",
+      "Desc": " Specification for calibrating to the baseline"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }],
+    "qs0": [{
+      "Name": "MAIN",
+      "Desc": "Default Solution"
+    }, {
+      "Name": "NULL",
+      "Desc": "Hold variable constant from last year of history"
+    }]
+  },
+  "labels": {
+    "gdp": {
+      "label": "GDP",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "GDP (CVM)",
+      "Group": "Aggregates"
+    },
+    "se": {
+      "label": "Total employment (jobs)",
+      "desc": "Unit: '000 jobs",
+      "unit": "'000",
+      "label_short": "Total employment (jobs)",
+      "Group": "Aggregates"
+    },
+    "c": {
+      "label": "Household consumption (disaggregated)",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Household consumption (disaggregated)",
+      "Group": "Sectoral"
+    },
+    "sc": {
+      "label": "Household consumption",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Household consumption",
+      "Group": "Aggregates"
+    },
+    "sk": {
+      "label": "Gross fixed capital formation (CVM)",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Gross fixed capital formation",
+      "Group": "Aggregates"
+    },
+    "ss": {
+      "label": "Inventory accumulation",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Inventory accumulation",
+      "Group": "Aggregates"
+    },
+    "sx": {
+      "label": "Exports",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Exports from the local area",
+      "Group": "Aggregates"
+    },
+    "sm": {
+      "label": "Imports",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Imports to the local area",
+      "Group": "Aggregates"
+    },
+    "sg": {
+      "label": "General government final consumption",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "General government final consumption",
+      "Group": "Aggregates"
+    },
+    "scv": {
+      "label": "Household consumption",
+      "desc": "Unit: $m",
+      "unit": "$m",
+      "label_short": "Household consumption",
+      "Group": "Aggregates"
+    },
+    "hdi": {
+      "label": "Household disposable income",
+      "desc": "Unit: $m",
+      "unit": "$m",
+      "label_short": "Household disposable income",
+      "Group": "Aggregates"
+    },
+    "q": {
+      "label": "Gross commodity output",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Gross commodity output",
+      "Group": "Sectoral"
+    },
+    "qc0": {
+      "label": "Household consumption by product",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Household consumption by product",
+      "Group": "Sectoral"
+    },
+    "qk0": {
+      "label": "Gross fixed capital formation by product",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Gross fixed capital formation by product",
+      "Group": "Sectoral"
+    },
+    "qg0": {
+      "label": "General government final consumption by product",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "General government final consumption by product",
+      "Group": "Sectoral"
+    },
+    "qy0": {
+      "label": "Intermediate demand by product",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Intermediate demand by product",
+      "Group": "Sectoral"
+    },
+    "qm0": {
+      "label": "Imports by product",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Imports by product",
+      "Group": "Sectoral"
+    },
+    "qx0": {
+      "label": "Exports by product",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Exports by product",
+      "Group": "Sectoral"
+    },
+    "qs0": {
+      "label": "Inventory accumulation by products",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Inventory accumulation by products",
+      "Group": "Sectoral"
+    },
+    "rhdi": {
+      "label": "Real household disposable income",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Real household disposable income",
+      "Group": "Aggregates"
+    },
+    "y": {
+      "label": "Gross industry output",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Gross industry output",
+      "Group": "Sectoral"
+    },
+    "yesc": {
+      "label": "Employers' social security contributions",
+      "desc": "Unit: $m",
+      "unit": "$m",
+      "label_short": "Employers' social security contributions",
+      "Group": "Sectoral"
+    },
+    "ycemp": {
+      "label": "Wages and salaries per employee job",
+      "desc": "Unit: $m",
+      "unit": "$m",
+      "label_short": "Wages and salaries per employee job",
+      "Group": "Sectoral"
+    },
+    "yva": {
+      "label": "Gross value added by industry",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Gross value added by industry",
+      "Group": "Sectoral"
+    },
+    "yaw": {
+      "label": "Average wages and salaries by industry",
+      "desc": "Unit: $m",
+      "unit": "$m",
+      "label_short": "Average wages and salaries",
+      "Group": "Sectoral"
+    },
+    "k": {
+      "label": "Gross fixed capital formation by investing sector",
+      "desc": "Unit: $2015m",
+      "unit": "$2015m, CVM",
+      "label_short": "Gross fixed capital formation by investing sector",
+      "Group": "Sectoral"
+    },
+    "ye0": {
+      "label": "Employment (jobs) by industry",
+      "desc": "Unit: '000 jobs",
+      "unit": "Jobs",
+      "label_short": "Employees plus self-employed (jobs)",
+      "Group": "Sectoral"
+    },
+    "ye0f": {
+      "label": "Employment projected by shift-share method",
+      "desc": "Unit: '000 jobs",
+      "unit": "'000",
+      "label_short": "Employment projected by shift-share method",
+      "Group": "Sectoral"
+    },
+    "ye01": {
+      "label": "Employment (jobs) by industry before impact",
+      "desc": "Unit: '000 jobs",
+      "unit": "Jobs",
+      "label_short": "Employees plus self-employed (jobs) before impact",
+      "Group": "Sectoral"
+    },
+    "le0": {
+      "label": "Employment (jobs) by gender",
+      "desc": "Unit: '000 jobs",
+      "unit": "'000",
+      "label_short": "Employment (jobs) by gender",
+      "Group": "Sectoral"
+    },
+    "e": {
+      "label": "Employment (jobs) by type",
+      "desc": "Unit: '000 jobs",
+      "unit": "'000",
+      "label_short": "Employment (jobs) by type",
+      "Group": "Sectoral"
+    },
+    "lfc": {
+      "label": "Labour force participation ratio",
+      "desc": "Unit: % of working-age population",
+      "unit": "%",
+      "label_short": "Labour force participation ratio",
+      "Group": "Sectoral"
+    },
+    "lf": {
+      "label": "Labour force by gender",
+      "desc": "Unit: '000 persons",
+      "unit": "'000",
+      "label_short": "Labour force by gender",
+      "Group": "Sectoral"
+    },
+    "lelf": {
+      "label": "Employment (workers) by gender",
+      "desc": "Unit: '000 persons",
+      "unit": "'000",
+      "label_short": "Employment (workers) by gender",
+      "Group": "Sectoral"
+    },
+    "slf": {
+      "label": "Total Labour force",
+      "desc": "Unit: '000 persons",
+      "unit": "'000",
+      "label_short": "Total labour force",
+      "Group": "Aggregates"
+    },
+    "lulf": {
+      "label": "Unemployment by gender (labour force definition)",
+      "desc": "Unit: '000 persons",
+      "unit": "'000",
+      "label_short": "Unemployment by gender (labour force definition)",
+      "Group": "Sectoral"
+    },
+    "lncm": {
+      "label": "Net commuting by gender",
+      "desc": "Unit: '000 persons",
+      "unit": "'000",
+      "label_short": "Net commuting by gender",
+      "Group": "Sectoral"
+    },
+    "lurate": {
+      "label": "Unemployment rate by gender",
+      "desc": "Unit: %",
+      "unit": "%",
+      "label_short": "Unemployment rate by gender",
+      "Group": "Sectoral"
+    },
+    "sulf": {
+      "label": "Unemployment (labour force definition)",
+      "desc": "Unit: '000 persons",
+      "unit": "'000",
+      "label_short": "Unemployment (labour force definition)",
+      "Group": "Aggregates"
+    },
+    "surate": {
+      "label": "Unemployment rate",
+      "desc": "Unit: (%) = SU / SLF",
+      "unit": "%",
+      "label_short": "Unemployment rate",
+      "Group": "Sectoral"
+    },
+    "bqxx": {
+      "label": "Export share adjustments",
+      "Unit": "% ",
+      "desc": "unit:%",
+      "label_short": "Export share adjustments",
+      "Group": "Sectoral"
+    }
+  },
+  "specs_indicies": [{
+    "id": "sc",
+    "label": "Household consumption"
+  }, {
+    "id": "c",
+    "label": "Household consumption (disaggregated)"
+  }, {
+    "id": "k",
+    "label": "Gross fixed capital formation by investing sector"
+  }, {
+    "id": "ye01",
+    "label": "Employees plus self-employed (jobs) before impact"
+  }, {
+    "id": "yaw",
+    "label": "Average wages and salaries"
+  }, {
+    "id": "lfc",
+    "label": "Labour force participation ratio"
+  }, {
+    "id": "qx0",
+    "label": "Exports by product"
+  }, {
+    "id": "qm0",
+    "label": "Imports by product"
+  }, {
+    "id": "qs0",
+    "label": "Inventory accumulation by products"
+  }],
+  "assumptions_desc": [
+  {
+    "value": "bqm",
+    "text": "Coefficicent of QM"
+  }, {
+    "value": "bqx",
+    "text": "Coefficicent of QX"
+  }, {
+    "value": "cz",
+    "text": "State-level Consumption by categories ($2015m)"
+  }, {
+    "value": "ecr",
+    "text": "Employers contribution rate"
+  }, {
+    "value": "kz",
+    "text": "State-level Gross fixed capital formation ($2015m)"
+  }, {
+    "value": "lfec",
+    "text": "Ratio of workers to jobs"
+  }, {
+    "value": "lncm",
+    "text": "Net commuting (thousands)"
+  }, {
+    "value": "lpop",
+    "text": "Total population (thousands)"
+  }, {
+    "value": "lwpp",
+    "text": "Working age population (thousands)"
+  }, {
+    "value": "othinc",
+    "text": "Other household net income at current price (millions of dollars)"
+  }, {
+    "value": "pop",
+    "text": "Total population (thousands)"
+  }, {
+    "value": "popz",
+    "text": "State-level Population (thousands)"
+  }, {
+    "value": "qs0z",
+    "text": "State level change of private inventories ($2015m)"
+  }, {
+    "value": "qz",
+    "text": "State-level gross output by industry ($2015m)"
+  }, {
+    "value": "rhdz",
+    "text": "State-level Real disposable income ($2015m)"
+  }, {
+    "value": "scp",
+    "text": "Deflator for household final consumption"
+  }, {
+    "value": "scz",
+    "text": "State-level Total consumption ($2015m)"
+  }, {
+    "value": "sg",
+    "text": "Total government consumption expenditure ($2015m)"
+  }, {
+    "value": "ye0z",
+    "text": "State level Employment by sector (000s jobs)"
+  }, {
+    "value": "yee",
+    "text": "Employee by sectors (000s jobs)"
+  }, {
+    "value": "yesc",
+    "text": "Employers national insurance contributions at current prices (millions of dollars)"
+  }, {
+    "value": "yvaz",
+    "text": "State-level gross value added by industry ($2015m)"
+  }, {
+    "value": "yz",
+    "text": "State-level gross output by commodity ($2015m)"
+  }],
+  "title_map": {
+    "c": {
+      "title": "c"
+    },
+    "q": {
+      "title": "q"
+    },
+    "y": {
+      "title": "y"
+    },
+    "ye0": {
+      "title": "y"
+    },
+    "qc0": {
+      "title": "q"
+    },
+    "qy0": {
+      "title": "q"
+    },
+    "hdi": {
+      "title": "tot"
+    },
+    "rhdi": {
+      "title": "tot"
+    },
+    "gdp": {
+      "title": "tot"
+    },
+    "sc": {
+      "title": "tot"
+    },
+    "sk": {
+      "title": "tot"
+    },
+    "ss": {
+      "title": "tot"
+    },
+    "sx": {
+      "title": "tot"
+    },
+    "sm": {
+      "title": "tot"
+    },
+    "sg": {
+      "title": "tot"
+    },
+    "scv": {
+      "title": "tot"
+    },
+    "qs0": {
+      "title": "q"
+    },
+    "qm0": {
+      "title": "q"
+    },
+    "qx0": {
+      "title": "q"
+    },
+    "qk0": {
+      "title": "q"
+    },
+    "qg0": {
+      "title": "q"
+    },
+    "k": {
+      "title": "k"
+    },
+    "yva": {
+      "title": "y"
+    },
+    "ycemp": {
+      "title": "y"
+    },
+    "yesc": {
+      "title": "y"
+    },
+    "yaw": {
+      "title": "y"
+    },
+    "ye01": {
+      "title": "y"
+    },
+    "ye0f": {
+      "title": "y"
+    },
+    "se": {
+      "title": "tot"
+    },
+    "e": {
+      "title": "lf"
+    },
+    "le0": {
+      "title": "lf"
+    },
+    "lfc": {
+      "title": "lf"
+    },
+    "lf": {
+      "title": "lf"
+    },
+    "lncm": {
+      "title": "lf"
+    },
+    "lelf": {
+      "title": "lf"
+    },
+    "slf": {
+      "title": "tot"
+    },
+    "lulf": {
+      "title": "lf"
+    },
+    "lurate": {
+      "title": "lf"
+    },
+    "sulf": {
+      "title": "tot"
+    },
+    "surate": {
+      "title": "tot"
+    },
+    "bqxf": {
+      "title": "q"
+    },
+    "bqxx": {
+      "title": "q"
+    },
+    "bqm": {
+      "title": "q"
+    }
+  },
+  "chart_colours": ["rgb(197,68,110)", "rgb(73,201,197)", "rgb(170,183,29)", "rgb(0,99,152)", "rgb(0,122,178)", "rgb(100,100,100)"]
+}

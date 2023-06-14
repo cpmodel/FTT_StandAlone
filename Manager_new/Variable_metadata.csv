@@ -1,0 +1,41 @@
+Variable,label,desc,unit,label_short,Group
+gdp,GDP,Unit: $2015m,"$2015m, CVM",GDP (CVM),Aggregates
+se,Total employment (jobs),Unit: '000 jobs,'000,Total employment (jobs),Aggregates
+c,Household consumption (disaggregated),Unit: $2015m,"$2015m, CVM",Household consumption (disaggregated),Sectoral
+sc,Household consumption,Unit: $2015m,"$2015m, CVM",Household consumption,Aggregates
+sk,Gross fixed capital formation (CVM),Unit: $2015m,"$2015m, CVM",Gross fixed capital formation,Aggregates
+ss,Inventory accumulation,Unit: $2015m,"$2015m, CVM",Inventory accumulation,Aggregates
+sx,Exports,Unit: $2015m,"$2015m, CVM",Exports from the local area,Aggregates
+sm,Imports,Unit: $2015m,"$2015m, CVM",Imports to the local area,Aggregates
+sg,General government final consumption,Unit: $2015m,"$2015m, CVM",General government final consumption,Aggregates
+scv,Household consumption,Unit: $m,$m,Household consumption,Aggregates
+hdi,Household disposable income,Unit: $m,$m,Household disposable income,Aggregates
+q,Gross commodity output,Unit: $2015m,"$2015m, CVM",Gross commodity output,Sectoral
+qc0,Household consumption by product,Unit: $2015m,"$2015m, CVM",Household consumption by product,Sectoral
+qk0,Gross fixed capital formation by product,Unit: $2015m,"$2015m, CVM",Gross fixed capital formation by product,Sectoral
+qg0,General government final consumption by product,Unit: $2015m,"$2015m, CVM",General government final consumption by product,Sectoral
+qy0,Intermediate demand by product,Unit: $2015m,"$2015m, CVM",Intermediate demand by product,Sectoral
+qm0,Imports by product,Unit: $2015m,"$2015m, CVM",Imports by product,Sectoral
+qx0,Exports by product,Unit: $2015m,"$2015m, CVM",Exports by product,Sectoral
+qs0,Inventory accumulation by products,Unit: $2015m,"$2015m, CVM",Inventory accumulation by products,Sectoral
+rhdi,Real household disposable income,Unit: $2015m,"$2015m, CVM",Real household disposable income,Aggregates
+y,Gross industry output,Unit: $2015m,"$2015m, CVM",Gross industry output,Sectoral
+yesc,Employers' social security contributions,Unit: $m,$m,Employers' social security contributions,Sectoral
+ycemp,Wages and salaries per employee job,Unit: $m,$m,Wages and salaries per employee job,Sectoral
+yva,Gross value added by industry,Unit: $2015m,"$2015m, CVM",Gross value added by industry,Sectoral
+yaw,Average wages and salaries by industry,Unit: $m,$m,Average wages and salaries,Sectoral
+k,Gross fixed capital formation by investing sector,Unit: $2015m,"$2015m, CVM",Gross fixed capital formation by investing sector,Sectoral
+ye0,Employment (jobs) by industry,Unit: '000 jobs,Jobs,Employees plus self-employed (jobs),Sectoral
+ye0f,Employment projected by shift-share method,Unit: '000 jobs,'000,Employment projected by shift-share method,Sectoral
+ye01,Employment (jobs) by industry before impact,Unit: '000 jobs,Jobs,Employees plus self-employed (jobs) before impact,Sectoral
+le0,Employment (jobs) by gender,Unit: '000 jobs,'000,Employment (jobs) by gender,Sectoral
+e,Employment (jobs) by type,Unit: '000 jobs,'000,Employment (jobs) by type,Sectoral
+lfc,Labour force participation ratio,Unit: % of working-age population,%,Labour force participation ratio,Sectoral
+lf,Labour force by gender,Unit: '000 persons,'000,Labour force by gender,Sectoral
+lelf,Employment (workers) by gender,Unit: '000 persons,'000,Employment (workers) by gender,Sectoral
+slf,Total Labour force,Unit: '000 persons,'000,Total labour force,Aggregates
+lulf,Unemployment by gender (labour force definition),Unit: '000 persons,'000,Unemployment by gender (labour force definition),Sectoral
+lncm,Net commuting by gender,Unit: '000 persons,'000,Net commuting by gender,Sectoral
+lurate,Unemployment rate by gender,Unit: %,%,Unemployment rate by gender,Sectoral
+sulf,Unemployment (labour force definition),Unit: '000 persons,'000,Unemployment (labour force definition),Aggregates
+surate,Unemployment rate,Unit: (%) = SU / SLF,%,Unemployment rate,Sectoral

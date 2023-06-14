@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-=========================================
 titles_functions.py
 =========================================
 Functions to load classification titles.
@@ -25,7 +24,7 @@ def load_titles():
 
     # Check that classification titles workbook exists
     # Note this function is being called from 'run_NEMF.py'
-    titles_path = os.path.join('Utilities', 'titles', titles_file)
+    titles_path = os.path.join('utilities', 'titles', titles_file)
     if not os.path.isfile(titles_path):
         print('Classification titles file not found.')
 
@@ -45,3 +44,9 @@ def load_titles():
 
     # Return titles dictionary
     return titles_dict
+
+
+if __name__ == "__main__":
+
+    # This is blank. Here for testing.
+    print('hello world')

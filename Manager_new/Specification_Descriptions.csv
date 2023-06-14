@@ -1,0 +1,6 @@
+Variable,Specification,Desc
+Generic,MAIN,Default Solution
+Generic,NULL,Hold variable constant from last year of history
+ye01,GROW,Grow in line with output (Y)
+Generic,EXOG,Set to exogenously defined projection
+Generic,BASELINE, Specification for calibrating to the baseline

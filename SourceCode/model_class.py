@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-=========================================
 model_class.py
 =========================================
-
-Model Class file for FTT Stand alone.
-#####################################
-
 ModelRun class: main class for operation of model.
 
 """
@@ -24,63 +19,29 @@ from tqdm import tqdm
 
 # Local library imports
 # Separate FTT modules
-import SourceCode.Power.ftt_p_main as ftt_p
-import SourceCode.Transport.ftt_tr_main as ftt_tr
-import SourceCode.Heat.ftt_h_main as ftt_h
+import ftt_p_main as ftt_p
+#import ftt_tr_main as ftt_tr
+#import ftt_h_main as ftt_h
 #import ftt_s_main as ftt_s
 #import ftt_agri_main as ftt_agri
-import SourceCode.Freight.ftt_fr_main as ftt_fr
+#import ftt_freight_main as ftt_fr
 #import ftt_flex_main as ftt_flex
-import SourceCode.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
-import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
-import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
-import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
-import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
+#import ftt_chemicals_main as ftt_chem
 
 
 # Support modules
-import SourceCode.support.input_functions as in_f
-import SourceCode.support.titles_functions as titles_f
-import SourceCode.support.dimensions_functions as dims_f
-from SourceCode.support.cross_section import cross_section as cs
+import support.input_functions as in_f
+#import support.specification_functions as specs_f
+import support.titles_functions as titles_f
+import support.dimensions_functions as dims_f
+from support.cross_section import cross_section as cs
 
 
 class ModelRun:
     """
-    Class to run the FTT model.
+    Class to run the NEMF model.
 
     Class object is a single run of the model.
-
-    Local library imports:
-
-        FTT modules:
-
-        - `FTT: Power <ftt_p_main.html>`__
-            Power generation FTT module
-        - `FTT: Transport <ftt_tr_main.html>`__
-            Transport FTT module
-        - `FTT: Freight <ftt_fr_main.html>`__
-            Freight FTT module
-        - `FTT: Heat <ftt_h_main.html>`__
-            Heat FTT module
-        - `FTT: IndHe CHI <ftt_chi_main.html>`__
-            Industrial heat - chemicals FTT module
-        - `FTT: IndHe FBT <ftt_fbt_main.html>`__
-            Industrial heat - food, beverages, and tobacco FTT module
-        - `FTT: IndHe MTM <ftt_mtm_main.html>`__
-            Industrial heat - non-ferrous metals, machinery, and transport equipment FTT module
-        - `FTT: IndHe NMM <ftt_nmm_main.html>`__
-            Industrial heat - non-metallic minerals FTT module
-        - `FTT: IndHe OIS <ftt_ois_main.html>`__
-            Industrial heat - other sectors FTT module
-
-
-        Support functions:
-
-        - `paths_append <paths_append.html>`__
-            Appends file path to sys path to enable import
-        - `divide <divide.html>`__
-            Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
     Attributes
     -----------
@@ -96,8 +57,16 @@ class ModelRun:
         Curernt/active year of solution
     years: tuple of (int, int)
         Bookend years of model_timeline
+    fd_sectors: list of str
+        Final demand sectors to solve endogenously (otherwise spec set to
+        exogenous)
+    st_sectors: list of str
+        Supply and transformation sectors to solve endogenously (otherwise spec
+        set to exogenous)
     timeline: list of int
         Years of the model timeline
+    time_sim_index: list of int
+        Index values of simulation years from model timeline
     titles: dictionary of lists
         Dictionary containing all title classifications
     dims: dict of tuples (str, str, str, str)
@@ -108,6 +77,8 @@ class ModelRun:
         Function specifications for each region and module
     input: dictionary of NumPy arrays
         Dictionary containing all model input variables
+    results_list: list of str
+        List of variables to print in results
     variables: dictionary of NumPy arrays
         Dictionary containing all model variables for a given year of solution
     lags: dictionary of NumPy arrays
@@ -115,8 +86,16 @@ class ModelRun:
     output: dictionary of NumPy arrays
         Dictionary containing all model variables for output
 
-
-
+    Methods
+    -----------
+    run
+        Solve model run and save results
+    solve_all
+        Solve model for each year of the simulation period
+    solve_year
+        Solve model for a specific year
+    update
+        Update model variables for a new year of solution
     """
 
     def __init__(self):
@@ -190,7 +169,12 @@ class ModelRun:
                     # Populate output container
                     for var in self.variables:
                         if 'TIME' in self.dims[var]:
-                            self.output[scen][var][:, :, :, y] = self.variables[var]
+                            try:
+                                self.output[scen][var][:, :, :, y] = self.variables[var]
+                            except ValueError:
+                                print(var)
+                                print(self.variables[var])
+                                raise
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
 
@@ -209,9 +193,7 @@ class ModelRun:
         # Define whole period
         tl = self.timeline
 
-        #define modules list in for possible setting.ini selection
-        modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
-                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
+
         # Iteration loop here
         for iter in range(0, max_iter):
 
@@ -219,46 +201,13 @@ class ModelRun:
                 variables = ftt_p.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-            if "FTT-Tr" in self.ftt_modules:
-                variables = ftt_tr.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-            if "FTT-Fr" in self.ftt_modules:
-                variables = ftt_fr.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-            if "FTT-H" in self.ftt_modules:
-                variables = ftt_h.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-            if "FTT-S" in self.ftt_modules:
+            elif "FTT-Tr" in self.ftt_modules:
                 print("Module needs to be created")
-            if "FTT-IH-CHI" in self.ftt_modules:
-                variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                print("running FTT Ind heat chem")
-            if "FTT-IH-FBT" in self.ftt_modules:
-                variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                print("running FTT Ind heat fbt")
-            if "FTT-IH-MTM" in self.ftt_modules:
-                variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                print("running FTT Ind heat mtm")
-            if "FTT-IH-NMM" in self.ftt_modules:
-                variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                print("running FTT Ind heat nmm")
-            if "FTT-IH-OIS" in self.ftt_modules:
-                variables = ftt_indhe_ois2.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                print("running FTT Ind heat ois")
-            if not any(True for x in modules_list if x in self.ftt_modules):
+            elif "FTT-H" in self.ftt_modules:
+                print("Module needs to be created")
+            elif "FTT-S" in self.ftt_modules:
+                print("Module needs to be created")
+            else:
                 print("Incorrect selection of modules. Check settings.ini")
 
             # Third, solve energy supply
@@ -289,3 +238,4 @@ class ModelRun:
             lags = self.variables
 
         return data_to_model, lags
+

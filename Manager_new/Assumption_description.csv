@@ -1,0 +1,24 @@
+code,desc
+bqm,Coefficicent of QM
+bqx,Coefficicent of QX
+cz,State-level Consumption by categories ($2015m)
+ecr,Employers contribution rate
+kz,State-level Gross fixed capital formation ($2015m)
+lfec,Ratio of workers to jobs
+lncm,Net commuting (thousands)
+lpop,Total population (thousands)
+lwpp,Working age population (thousands)
+othinc,Other household net income at current price (millions of dollars)
+pop,Total population (thousands)
+popz,State-level Population (thousands)
+qs0z,State level change of private inventories ($2015m)
+qz,State-level gross output by industry ($2015m)
+rhdz,State-level Real disposable income ($2015m)
+scp,Deflator for household final consumption
+scz,State-level Total consumption ($2015m)
+sg,Total government consumption expenditure ($2015m)
+ye0z,State level Employment by sector (000s jobs)
+yee,Employee by sectors (000s jobs)
+yesc,Employers national insurance contributions at current prices (millions of dollars)
+yvaz,State-level gross value added by industry ($2015m)
+yz,State-level gross output by commodity ($2015m)

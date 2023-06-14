@@ -4,3 +4,23 @@ __pycache__/
 *$py.class
 *.pickle
 Output/Scenarios.json
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_EL.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_EN.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_ES.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_FI.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_FR.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_HR.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_HU.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_IE.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_IT.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_LT.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_LV.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_LX.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_MT.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_NL.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_PL.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_PT.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_RO.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_SI.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_SK.csv
+FTT Industrial Heat/Inputs/FTT-IH/FTT-IH-CHI/IHUD_UK.csv

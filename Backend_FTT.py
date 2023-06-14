@@ -27,8 +27,8 @@ from tkinter import messagebox
 import psutil
 import pickle
 from collections import OrderedDict
-import SourceCode.support.paths_append
-from SourceCode.model_class import ModelRun
+import SourceCode.paths_append
+from model_class import ModelRun
 
 
 #Switch for build
@@ -102,7 +102,6 @@ def run_model():
     global run_entries_cache
 
     entries_to_run = run_entries_cache['data']
-    models_to_run =  run_entries_cache['model']
     endyear = str(run_entries_cache['endyear'])
 
     yield("event: status_change\n")
@@ -114,16 +113,11 @@ def run_model():
 
     yield("data: message:Processing started...;\n\n")
     scenarios = [x["scenario"] for x in entries_to_run]
-    scenarios = ["S0"] + [x for x in scenarios if x != "S0"]
-    models = [x["model"] for x in models_to_run]
-
 
     print(",".join(scenarios))
-    print(",".join(models))
     # Adjust settings file from frontend parameters
     config = configparser.ConfigParser()
     config.read('settings.ini')
-    config.set('settings', 'enable_modules',", ".join(models))
     config.set('settings', 'simulation_end', endyear)
     config.set('settings', 'model_end', endyear)
     config.set('settings', "scenarios",", ".join(scenarios))
@@ -132,12 +126,13 @@ def run_model():
 
     #Initalise the model
     model = ModelRun()
+
     #Define the output based on the inputs
     #TODO: Ensure this matches any revision to model structure changes
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
 
     # Defines the number of items to run to track progress (scenarios x year to run)
-    yield("data: items;{};\n".format(len(scenarios) * (int(endyear) - model.timeline[0] + 1)))
+    yield("data: items;{};\n".format(len(entries_to_run) * (int(endyear) - model.timeline[0] + 1)))
 
     scenarios_log = {}
     for scenario in scenarios:
@@ -183,9 +178,8 @@ def run_model():
     # Save output for all scenarios to pickle
     #TODO Setup way to retain older results?
     results =  model.output
-    os.makedirs(os.path.dirname(f"{rootdir}\\Output\\"), exist_ok=True)     # Create Output folder if it doesn't exist
     with open('Output\Results.pickle', 'wb') as f:
-        pickle.dump(results, f)
+        pickle.dump(results,f)
     # Save metadata on current model run
     with open("{}\\Output\\Scenarios.json".format(rootdir), 'w') as f:
         json.dump(scenarios_log, f)
@@ -229,13 +223,7 @@ def available_scenarios():
         scenid =  {"id":scen,"label":scen}
         scenids.append(scenid)
 
-    models_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="Models",index_col=0)
-    modids = []
-    models = models_list["Short name"]
-    for mod in models:
-        modid =  {"id":mod,"label":mod}
-        modids.append(modid)
-    return {'scenarios': scenids,'models': modids}
+    return {'scenarios': scenids}
 
 #
 #   Returns scenarios that that have been run in latest model run
@@ -253,8 +241,6 @@ def scenarios_ran():
             temp = value
             temp["scenario"] = scen
             exist += [temp]
-            years = value["years"]
-
 
     # Format timestamp for scenarios run
     for e in exist:
@@ -274,7 +260,7 @@ def scenarios_ran():
             else:
                 e['Last Run'] = "Seconds ago"
     # Return scenario metadata
-    return{'exist':exist,"years":years}
+    return{'exist':exist}
 
 #
 # Get the metadata for all model variables
@@ -307,6 +293,7 @@ def retrieve_titles(title):
     if title != "None":
         df = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=title)
         df = df.reset_index()
+        print(df['Full name'])
         title_data = list(df['Full name'].unique())
 
         #Handle numerical titles (like age of technology) and force to string
@@ -383,6 +370,7 @@ def retrieve_chart_data(type_):
 
     title_codes = p.getlist("title[]")
     title2_codes = p.getlist("title2[]")
+    print(title2_codes)
     title3_codes = p.getlist("title3[]")
     var_labels = p.getlist("variable_label[]")
 
@@ -393,13 +381,6 @@ def retrieve_chart_data(type_):
     agg3 = p.get("aggregate3")
     calc_type = p.get("calculation")
     time = p.get("time")
-    start_year = p.get("Start_Year")
-    if start_year != None:
-        start_year = int(p.get("Start_Year"))
-    end_year = p.get("End_Year")
-    if end_year != None:
-        end_year = int(p.get("End_Year"))
-
 
     # Add baseline to scenarios to extract for calculating difference from baseline
     if baseline not in scenarios_ and calc_type != 'Levels':
@@ -472,11 +453,6 @@ def retrieve_chart_data(type_):
 
         if time == "Yes":
            years = [str(x) for x in years]
-           if start_year!=None and end_year!=None:
-               years_filter = [str(x) for x in list(range(start_year,
-                                                    end_year + 1))]
-           else:
-               years_filter = years
         else:
             years = ["None"]
 
@@ -510,9 +486,6 @@ def retrieve_chart_data(type_):
             data_filter = np.vstack(data_filter)
             #Convert collected data to dataframe
             df = pd.DataFrame(data_filter,columns=years)
-            # Filter years
-            df = df.loc[:,years_filter]
-
             df["dimension"] = dims_list
             df["dimension2"] = dims2_list
             df["dimension3"] = dims3_list
@@ -526,6 +499,9 @@ def retrieve_chart_data(type_):
             scenario_df["Variable Name"] = var_label
 
             #Collate into single data frame for all scenarios and variables
+            print(scenario_df.head())
+            if full_df is not None:
+                print(full_df.head())
             full_df = scenario_df if full_df is None else full_df.append(scenario_df)
 
     # Sum across each dimensions if aggregate is set
@@ -542,6 +518,7 @@ def retrieve_chart_data(type_):
     if calc_type in ['absolute_diff','perc_diff']:
         baseline_df = full_df[full_df['scenario'] == baseline].copy().drop(['scenario'], axis=1)
         full_df = full_df.merge(baseline_df, how="left", left_on=["year","variable","Variable Name","dimension","dimension2","dimension3"], right_on=["year","variable","Variable Name","dimension","dimension2","dimension3"])
+        print(full_df.head())
 
         if calc_type == 'absolute_diff':
             full_df["variables"] = full_df.apply(lambda row: row["{}_x".format("variables")] - row["{}_y".format("variables")], axis=1)
@@ -584,6 +561,7 @@ def retrieve_chart_data(type_):
         if len(variables)==1:
             meta_dict = {}
             meta_dict["Variable Name"] = variables[0]
+            print(var_label)
             meta_dict["Desc"] = var_label
             if calc_type == "Annual growth rate" or calc_type == "per_diff" :
                 meta_dict["Unit"] = "%"
@@ -591,8 +569,9 @@ def retrieve_chart_data(type_):
                 meta_dict["Unit"] = var_info["unit"]
             meta_dict["Type"] = calc_type
 
-            metadata = pd.Series(meta_dict).to_csv(quoting=csv.QUOTE_NONNUMERIC, header=False)
 
+            metadata = pd.Series(meta_dict).to_csv(quoting=csv.QUOTE_NONNUMERIC, header=False)
+            print(piv.columns)
             piv = piv.reset_index().drop(columns=["variable","Variable Name"])
             data = piv.to_csv(quoting=csv.QUOTE_NONNUMERIC,index=False)
             return metadata + data
@@ -607,6 +586,7 @@ def retrieve_chart_data(type_):
         piv = piv.drop(columns=list(set(piv.columns)-set(dims_all)))
         if len(variables)==1:
             piv = piv.rename(columns={"variables": variables[0]})
+        print(piv.head())
         if time == "Yes":
             piv = piv.pivot_table(index=dims, columns=['year'])
         else:
@@ -615,7 +595,7 @@ def retrieve_chart_data(type_):
 
         piv = piv.reset_index()
         if type_ == "json":
-            print(piv)
+
             piv_ = piv.to_json(orient='records', double_precision=4)
             return {'info': list(full_df.columns),'results': json_, 'pivot': piv_}
         #Experimental version for jexcel table
@@ -805,6 +785,7 @@ def construct_graphic_data(graphic,type_):
             coms = t.split("-")
             diff = int(coms[1]) - int(coms[0])
             piv[t] = ((piv[coms[1]]/piv[coms[0]])**(1/diff)-1)*100
+    print(piv.columns)
     piv = piv.loc[:,time_select]
     for t in piv.columns:
         piv[t] = round(piv[t],settings.loc["decimal_round"])
@@ -834,7 +815,7 @@ def construct_graphic_data(graphic,type_):
         rgb_values = pd.read_excel('{}\\Utilities\\Titles\\ReportGraphics.xlsx'.format(rootdir),
                              sheet_name="RGB_values",index_col=0)
         brewer_dict = {}
-        colour_codes = [colours.loc[x,"colour_code"] for x in label_set]
+        colour_codes = [colours.loc[x,"WOO_code"] for x in label_set]
         colour_codes_dict = dict(zip( label_set,colour_codes))
         #Handle dual colour classes
         for k,v in colour_codes_dict.items():
@@ -907,24 +888,21 @@ def exit_():
 @enable_cors
 def load_gamma_values(model, region):
     region_map = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="RTI",index_col=0)
-    title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="Models",index_col=0)
-
-    gamma_code = title_list.loc[model,"Gamma_Value"]
-    model_folder = title_list.loc[model,"Short name"]
-
-    #load csv
-    gamma = pd.read_csv("{}\\Inputs\\S0\\{}\\{}_{}.csv".format(rootdir,model_folder,gamma_code,region_map.loc[region,"Short name"]),
-                        skiprows=0,index_col=0)
-    gamma = gamma.iloc[:,0]
-    gamma_dict = gamma.to_dict()
-    gamma_dict = OrderedDict((k,gamma_dict.get(k)) for k in gamma.index)
-    return {'gamma': gamma_dict}
+    if model == "power_gen":
+        #load csv
+        gamma = pd.read_csv("{}\\Inputs\\S0\\FTT-P\\MGAM_{}.csv".format(rootdir,region_map.loc[region,"Short name"]),
+                            skiprows=0,index_col=0)
+        #
+        print(gamma)
+        gamma = gamma.iloc[:,0]
+        gamma_dict = gamma.to_dict()
+        gamma_dict = OrderedDict((k,gamma_dict.get(k)) for k in gamma.index)
+        return {'gamma': gamma_dict}
 
 @route('/api/info/ftt_options', method=['GET'])
 @enable_cors
 def retrieve_ftt_options():
-    title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None,index_col=0)
-    ftt_options = list(title_list["Models"].index)
+    ftt_options = ["power_gen"]
     return json.dumps(ftt_options)
 
 @route('/api/info/region_titles', method=['GET'])
@@ -938,9 +916,9 @@ def retrieve_region_titles():
 
 # Retrieve data for gamma tool graphics
 #TODO Is there a way to merge this into the main graphics function to minimise duplication
-@route('/api/gamma/chart/<model>/<region>/<start_year>/<type_>', method=['GET'])
+@route('/api/gamma/chart/<model>/<region>/<years_from_hist>/<type_>', method=['GET'])
 @enable_cors
-def construct_gamma_graphic_data(model,region,start_year,type_):
+def construct_gamma_graphic_data(model,region,years_from_hist,type_):
 
 
 
@@ -971,10 +949,10 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
     time = "Yes"
 
     full_df = None
+#    print(["check" ,counties,scenarios,vars])
 
     with open('Output\Gamma.pickle', 'rb') as f:
         output = pickle.load(f)
-
     title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None)
     # agg_all = pd.read_excel("{}\\Utilities\\Titles\\Grouping.xlsx".format(rootdir),sheet_name=None,index_col=0)
     if title_code == "None":
@@ -1002,6 +980,7 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
         meta = json.load(f)
         for scen,value in meta.items():
             years = value["years"]
+
     if time == "Yes":
        years = [str(x) for x in years]
     else:
@@ -1026,7 +1005,6 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
                         var_list.append(var)
                         if isinstance(dims_pos[d1],list) or isinstance(dims2_pos[d2],list) or isinstance(dims3_pos[d3],list):
                             #Need to use advanced indexing to cut across multiple dimensions
-
                             index = np.ix_(dims_pos[d1],dims2_pos[d2],dims3_pos[d3],range(data[var].shape[3]))
                             temp = data[var][index]
                             no_dims = len(temp.shape)
@@ -1035,6 +1013,7 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
                         else:
                             data_filter.append(data[var][dims_pos[d1],dims2_pos[d2],dims3_pos[d3],:])
         data_filter = np.vstack(data_filter)
+
 
         df = pd.DataFrame(data_filter,columns=years)
         df["dimension"] = pd.Categorical(dims_list,dims)
@@ -1083,7 +1062,8 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
     fields = ['scenario','dimension','dimension2','dimension3']
 
     piv = full_df.pivot_table(index=fields, columns=['year']).droplevel(0, axis=1)
-    time_select = [str(x) for x in list(range(max(int(piv.columns[0]),int(start_year)),int(piv.columns[-1])+1))]
+
+    time_select = [str(x) for x in list(range(max(int(piv.columns[0]),2020-int(years_from_hist)),min(int(piv.columns[-1]),2021+int(years_from_hist))))]
 
     for t in time_select:
         if "Growth" in t:
@@ -1139,9 +1119,9 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
 
 
 #Initialise model run with updated Gamma value to scenario
-@route('/api/run_gamma/initialize/<end_year>', method=["GET"])
+@route('/api/run_gamma/initialize/', method=["GET"])
 @enable_cors
-def init_model(end_year):
+def init_model():
 
     global run_entries_cache
     run_entries_cache = p
@@ -1149,7 +1129,7 @@ def init_model(end_year):
     # Save Gamma value passed
 
     entries_to_run = ["Gamma"]
-    endyear = str(end_year)
+    endyear = "2024"
 
 
     config = configparser.ConfigParser()
@@ -1163,11 +1143,10 @@ def init_model(end_year):
 
     global model
     model = ModelRun()
-    years = list(model.timeline)
-    years = [int(x) for x in years]
 
 
-    return {'status':'true',"years":years }
+
+    return {'status':'true'}
 
 
 # Updates gamma values in memory for current model run
@@ -1177,25 +1156,10 @@ def load_gamma():
     body = request.body.read()
     p=json.loads(body.decode("utf-8"))
     gamma = p['data']
-    ftt = p["model"]
     reg_pos = int(p['region_pos'])
 
     gamma_values = list(gamma.values())
-
-    config = configparser.ConfigParser()
-    config.read('settings.ini')
-
-    title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None,index_col=0)
-    models = title_list["Models"]
-    gamma_code = models.loc[ftt,"Gamma_Value"]
-    model_folder = models.loc[ftt,"Short name"]
-
-
-    model.input["Gamma"][gamma_code][reg_pos,:,0,:] = np.array(gamma_values).reshape(-1,1)
-    config.set('settings', 'enable_modules', model_folder)
-
-    with open('settings.ini', 'w') as configfile:
-        config.write(configfile)
+    model.input["Gamma"]["MGAM"][reg_pos,:,0,:] = np.array(gamma_values).reshape(-1,1)
 
     return {'status':'true'}
 
@@ -1207,18 +1171,14 @@ def save_gamma():
     p=json.loads(body.decode("utf-8"))
     gamma = p['data']
     region = p['region']
-    ftt = p["model"]
     gamma_values = list(gamma.values())
 
     #Copy gamma file from baseline to gamma
     title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None,index_col=0)
     reg = title_list["RTI"].loc[region,"Short name"]
-    models = title_list["Models"]
-    gamma_code = models.loc[ftt,"Gamma_Value"]
-    model_folder = models.loc[ftt,"Short name"]
+    gamma_file = "MGAM_{}.csv".format(reg)
+    base_dir = "Inputs\\S0\\FTT-P\\"
 
-    gamma_file = "{}_{}.csv".format(gamma_code,reg)
-    base_dir = "Inputs\\S0\\{}\\".format(model_folder)
 
     gamma_df = pd.read_csv(os.path.join(rootdir,base_dir,gamma_file),index_col=0)
     gamma_df.loc[:,:] = np.array(gamma_values).reshape(-1,1)
@@ -1230,13 +1190,15 @@ def save_gamma():
 #run the specific gamma scenario run
 #TODO generalise run model command for general and gamma specific case to remove duplication
 
-@route('/api/run_gamma/start/', method=['GET'])
+@route('/api/run_gamma/start/<years_from_hist>/', method=['GET'])
 @enable_cors
-def run_model():
+def run_model(years_from_hist):
     response.content_type = 'text/event-stream; charset=UTF-8'
     global run_entries_cache
 
     entries_to_run = ["Gamma"]
+    endyear = str(2018+int(years_from_hist))
+
     yield("event: status_change\n")
     yield("data: running\n\n")
 
@@ -1249,18 +1211,18 @@ def run_model():
     # Adjust settings file from frontend parameters
     config = configparser.ConfigParser()
     config.read('settings.ini')
+    config.set('settings', 'simulation_end', endyear)
+    config.set('settings', 'model_end', endyear)
     with open('settings.ini', 'w') as configfile:
         config.write(configfile)
     print (entries_to_run)
     scenarios =  entries_to_run
+    model.model_end = int(endyear)
 
-    model.timeline = np.arange(model.simulation_start, model.model_end+1)
-    model.ftt_modules = config.get('settings', 'enable_modules')
-    print(model.ftt_modules )
-    print(model.timeline)
+    model.timeline = np.arange(model.simulation_start, model.model_end)
 
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
-    yield("data: items;{};\n".format(len(entries_to_run) * (model.timeline[-1] - model.timeline[0])))
+    yield("data: items;{};\n".format(len(entries_to_run) * (int(endyear) - model.timeline[0])))
     print(model.timeline[0])
     scenarios_log = {}
     for scenario in scenarios:
@@ -1270,6 +1232,7 @@ def run_model():
         # time.sleep(1)
         yield("event: processing\n")
         yield("data: ;message:Processing {};\n\n".format(scenario))
+
 
         try:
             #Solve the model for each year

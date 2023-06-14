@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-=========================================
 input_functions.py
 =========================================
 Collection of functions written for model inputs.
@@ -29,6 +28,8 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     """
     Load all model data for all variables and all years.
 
+    Extended summary here if required.
+
     Parameters
     ----------
     titles: dictionary of lists
@@ -54,7 +55,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
     #Declare list of scenarios
     scenario_list = [x.strip() for x in scenarios.split(',')]
-    scenario_list = ["S0"] + [x for x in scenario_list if x != "S0"]
 
     modules_enabled = [x.strip() for x in ftt_modules.split(',')]
     modules_enabled += ['General']
@@ -125,13 +125,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 var_tl = list(range(int(forstart[var]), timeline[-1]+1))
                                 var_tl_fit = [year for year in var_tl if year in timeline]
                                 var_tl_inds = [i for i, year in enumerate(timeline) if year in var_tl]
+
                                 csv.columns = [int(year) for year in csv.columns]
 
-
-                                #print(var)
                                 read = csv.loc[:, var_tl]
-
-
 
                             else:
 
@@ -161,7 +158,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                                     if len(titles[dims[var][1]]) > 1:
                                         data[scen][var][:, :, 0, 0] = read
-                                        
                                     elif len(titles[dims[var][2]]) > 1:
                                         data[scen][var][:, 0, :, 0] = read
                                     elif len(titles[dims[var][3]]) > 1:
@@ -169,12 +165,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                         data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
 
                                 else:
-                                    if all([len(titles[dims[var][x]]) == 1 for x in range(4)]):
-                                        data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
-                                    elif len(titles[dims[var][2]]) == 1:
+                                    if len(titles[dims[var][2]]) == 1:
                                         # data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:, :len(var_tl_fit)]
                                         data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
-
                                     elif len(titles[dims[var][3]]) == 1:
                                         data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
 

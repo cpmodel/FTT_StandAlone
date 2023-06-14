@@ -1,0 +1,67 @@
+{
+  "name": "frontend_pilot_",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@fishtank/icons-vue": "^3.13.1",
+    "@fishtank/vue-treeselect": "^0.2.6",
+    "@fortawesome/fontawesome-svg-core": "^1.2.22",
+    "@fortawesome/free-solid-svg-icons": "^5.10.2",
+    "@fortawesome/vue-fontawesome": "^0.1.7",
+    "@riophae/vue-treeselect": "0.0.38",
+    "axios": "^0.21.4",
+    "bootstrap-vue": "^2.21.0",
+    "jexcel": "^3.4.4",
+    "jquery": "^1.9.1",
+    "lodash": "^4.17.21",
+    "loglevel": "^1.6.3",
+    "multiple-select": "^1.2.2",
+    "taucharts": "^2.6.3",
+    "vue": "^2.5.17",
+    "vue-moment": "^4.1.0",
+    "vue-ripple-directive": "^2.0.1",
+    "vue-router": "^3.0.1",
+    "vue-search-select": "^2.7.0",
+    "vue-sse": "^1.0.2"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.1.1",
+    "@vue/cli-plugin-eslint": "^3.1.5",
+    "@vue/cli-service": "^3.1.4",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.8.0",
+    "eslint-plugin-vue": "^5.0.0-0",
+    "node-sass": "^4.14.1",
+    "sass-loader": "^7.1.0",
+    "vue-template-compiler": "^2.5.21"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "rules": {},
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}

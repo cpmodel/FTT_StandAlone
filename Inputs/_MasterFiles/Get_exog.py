@@ -84,6 +84,7 @@ if __name__ == '__main__':
         # Please add MWMC and MWMD to the DAN1.idiom file!
         mwmcx = {}
         mwmdx = {}
+        mes2x = {}
 
         # 2D variables
         msspx = pd.DataFrame(mre['MSSP'][0], index=regions_short, columns=tl)
@@ -108,7 +109,9 @@ if __name__ == '__main__':
             mwicx[region] = pd.DataFrame(mre['MWIC'][r], index=t2ti, columns=tl)
             mwfcx[region] = pd.DataFrame(mre['MWFC'][r], index=t2ti, columns=tl)
             mwmcx[region] = pd.DataFrame(mre['MWMC'][r], index=t2ti, columns=tl)
-            mwmdx[region] = pd.DataFrame(mre['MWMD'][r], index=t2ti, columns=tl)
+            mes2x[region] = pd.DataFrame(mre['MES2'][r], index=t2ti, columns=tl)
+
+            #mwmdx[region] = pd.DataFrame(mre['MWMD'][r], index=t2ti, columns=tl)
 
 
 
@@ -135,11 +138,7 @@ if __name__ == '__main__':
         mwicx[region].to_csv(os.path.join(dirp_out_ftt, "MWICX_{}.csv".format(region)))
         mwfcx[region].to_csv(os.path.join(dirp_out_ftt, "MWFCX_{}.csv".format(region)))
         mwmcx[region].to_csv(os.path.join(dirp_out_ftt, "MWMCX_{}.csv".format(region)))
-        mwmdx[region].to_csv(os.path.join(dirp_out_ftt, "MWMDX_{}.csv".format(region)))
-
-
-
-
+        mes2x[region].to_csv(os.path.join(dirp_out_ftt, "MES2X_{}.csv".format(region)))
 
 
 

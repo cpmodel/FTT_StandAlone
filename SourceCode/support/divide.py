@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=========================================
-divide.py
-=========================================
-Bespoke divide
+Created on Tue Apr  6 19:16:41 2021
 
-Functions included:
-    - divide
-        Return element-wise a / b with zeroes in place of divide-by-zeroes.
-
-
+@author: pv
 """
 
 import numpy as np

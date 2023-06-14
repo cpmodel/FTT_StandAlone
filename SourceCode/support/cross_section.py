@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=========================================
 cross_section.py
 =========================================
 Function to construct cross section of data for given year.
-
-Functions included in the file:
-    - cross_section
-        Cross-sectional data slicer, selects a single year of the data dictionary.
 """
 
 # Standard library imports
@@ -40,11 +35,6 @@ def cross_section(data_in, dimensions, year, y, scenario, econometrics=None, lag
         Optional argument, target country and number of lags
         for the lagged sales specification.
 
-    Returns
-    -----------
-    data_out: dictionary of numpy arrays
-        Dictionary of numpy array for a single given year
-
 
     """
 
@@ -58,6 +48,7 @@ def cross_section(data_in, dimensions, year, y, scenario, econometrics=None, lag
 
     # Loop through all variables
             for var in data_in[scenario]:
+
                 # If the variable has a time dimension take only the one year
                 if dimensions[var][3] == 'TIME':
                     data_out[var] = copy.deepcopy(data_in[scenario][var][:, :, :, y])
