@@ -10,7 +10,7 @@ import glob
 ################################### Import and format all databases ##################################
 ######################################################################################################
 
-# Import EF data from the Excel file
+# Import EF data from the Master file
 name_sheet_FTTp_Master = 'BCET'
 name_excel_file_EF = r'C:\Users\WB585192\OneDrive - WBG\GitHub_CPAT\FTT_StandAlone_v0.8\Inputs\_MasterFiles\FTT-P\FTT-P-24x70_2021_S0.xlsx'
 df_EF = pd.read_excel (name_excel_file_EF, name_sheet_FTTp_Master)
