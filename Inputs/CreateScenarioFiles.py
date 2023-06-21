@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 
 # Get the path of the current script file
 # script_path = os.path.abspath(__file__)
@@ -12,7 +13,7 @@ os.chdir(working_dir)
 
 
 # Specify the path to your Excel file
-excel_file_path = '_MasterFiles\FTT-P\FTT-P-24x70_2021_S0.xlsx'
+excel_file_path = 'Inputs\_MasterFiles\FTT-P\FTT-P-24x70_2021_S0.xlsx'
 
 # Read the Excel file using pandas
 data_frame = pd.read_excel(excel_file_path, sheet_name='BCET')
@@ -22,7 +23,7 @@ print(data_frame)
 
 
 # EFs in tCO2/GWh, constant accross countries, from tab BCET, in FTT-P-24x70_2021_S0.xlsx  
-EF_file_path = 'EmissionFactors.csv'
+EF_file_path = 'Inputs\EmissionFactors.csv'
 
 # Read the CSV file using pandas
 EF = pd.read_csv(EF_file_path)
@@ -35,10 +36,9 @@ print(EF)
 # Create carbon tax trajectories
 # ______________________________________________________________________________
 
-import numpy as np
 
-time_FTT = np.arange(2010, 2061)
-time_int = np.arange(2023, 2036)
+
+time_FTT = np.arange(2010, 2061).to_list()
 
 # Factor to convert from 2021 to 2013 dollars. NGDP_D in CPAT
 
@@ -60,47 +60,32 @@ tax['Tax1']=  np.where(tax['Time'] < 2023, 0, tax['Tax1'])
 tax['Tax1_US_2013']=tax['Tax1']*factor_dollars
 
 # ______________________________________________________________________________
-# ...
+# Calculating the tax
 # ______________________________________________________________________________
 
-final = pd.DataFrame({'Time': time_FTT, 'Category': EF['Category']})
 
-test=pd.DataFrame(data= 0,columns=EF['Category'], index=time_FTT)
-
-#data= EF.T['15 Emissions (tCO2/GWh)']
+categories = EF['Category'].to_list()
 
 
-# ==================================================================
-# T E S T S
-# ==================================================================
 
-# Create the first DataFrame
-df1 = pd.DataFrame({'A': [1, 2, 3], 'B': ['X', 'Y', 'Z']})
-print("DataFrame 1:")
-print(df1)
+# Generate all possible combinations of categories and times
+combinations = list(itertools.product(categories, time_FTT))
 
-# Create the second DataFrame
-df2 = pd.DataFrame({'A': [1, 2, 4], 'C': ['P', 'Q', 'R']})
-print("\nDataFrame 2:")
-print(df2)
+# Create the DataFrame
+time_categories = pd.DataFrame(combinations, columns=['Category', 'Time'])
 
-# Perform a left join on 'A' column
-result = pd.merge(df1, df2, on='A', how='left')
+tax_categories = pd.merge(time_categories, tax, on=['Time'])
 
-# Print the result
-print("\nLeft Join Result:")
-print(result)
+tax_cat_EF = pd.merge(tax_categories, EF, on=['Category'])
 
-# Otro
+tax_cat_EF['Tax in 2013 $ per MWh']= tax_cat_EF['Tax1_US_2013']*tax_cat_EF['15 Emissions (tCO2/GWh)']/1000
 
-# Create a DataFrame
-df = pd.DataFrame({'A': [1, 2, 3, 4, 5], 'B': [10, 20, 30, 40, 50]})
-df
-# Perform if statement using value condition
-if_condition = df['A'] > 3
+# Wide format Only the tax expressed as 2013 USD per MWh:
 
-# Apply the condition to the DataFrame
-filtered_df = df[if_condition]
+# tax_cat_EF_wide =tax_cat_EF.melt(id_vars=['Time','Category'], value_vars ='Tax in 2013 $ per MWh')
 
-# Print the filtered DataFrame
-print(filtered_df)
+tax_cat_EF_wide = tax_cat_EF.pivot(index='Category', columns='Time', values='Tax in 2013 $ per MWh')
+
+
+tax_fin = tax_cat_EF_wide.iloc[0:24, 0:52]
+
