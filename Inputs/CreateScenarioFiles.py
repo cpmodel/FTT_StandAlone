@@ -1,7 +1,18 @@
 import pandas as pd
+import os
+
+# Get the path of the current script file
+# script_path = os.path.abspath(__file__)
+
+script_path = 'D:\WB\GitHub\FTT_StandAlone\Inputs'
+
+# Set the working directory to the folder containing the script
+working_dir = os.path.dirname(script_path)
+os.chdir(working_dir)
+
 
 # Specify the path to your Excel file
-excel_file_path = 'D:\WB\GitHub\FTT_StandAlone\Inputs\_MasterFiles\FTT-P\FTT-P-24x70_2021_S0.xlsx'
+excel_file_path = '_MasterFiles\FTT-P\FTT-P-24x70_2021_S0.xlsx'
 
 # Read the Excel file using pandas
 data_frame = pd.read_excel(excel_file_path, sheet_name='BCET')
@@ -11,7 +22,7 @@ print(data_frame)
 
 
 # EFs in tCO2/GWh, constant accross countries, from tab BCET, in FTT-P-24x70_2021_S0.xlsx  
-EF_file_path = 'D:\WB\GitHub\FTT_StandAlone\For CPAT scenarios\EmissionFactors.csv'
+EF_file_path = 'EmissionFactors.csv'
 
 # Read the CSV file using pandas
 EF = pd.read_csv(EF_file_path)
