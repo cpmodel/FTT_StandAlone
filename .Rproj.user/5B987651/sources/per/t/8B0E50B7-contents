@@ -1,0 +1,72 @@
+---
+title: "Testing CPAT"
+author: "Faustyna Gawryluk"
+date: "2023-02-02"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction {.tabset}
+
+Welcome to the quick guide on CPAT Testing.
+
+This page navigates you how to test functionality of the CPAT, both from technical and sense-checking side.
+
+-  The CPAT team is constantly working to keep CPAT up to date, but that does not make CPAT bulletproof. CPAT is updated by different team members on the daily basis. Occasionally, the implementation of the new change might cause bugs, which make CPAT or its parts (modules, variables) break or decrease its overall sensitivity. It is important to sense-check CPAT on regular basic to ensure the tool itself works properly and guarantee the quality of work used for country work, concept notes and publications.  
+-  Some of these checks relate to the reliability of input data. Many CPAT users can access national data sources. For continuous improvement of the tool, we would very much recommend to use data sources shared with us by country teams in case data is either missing or substantively different from what is currently in CPAT.
+
+
+### Part 1: Multiple- countries Quick Testing in the MT
+
+The Quick Testing of CPAT is a three step process, that allows users to quickly validate current version of CPAT for multiple countries. It is located in the **MT Tool QuickChecks** Tab.
+
+In terms of process, it deletes previous information from the reporting table, then calls the routine to set the default scenario in CPAT.Next, it runs CPAT, updates CPAT's calculations, copies the data from the Quick checks table created on the dashboard, and fills the respective check rows for all selected countries.
+
+
+**Quick checks in the MT**
+
+**Zero Carbon Tax**
+-  Checks whether “0” Carbon Tax rate results in no changes in the policy vs. baseline for total revenues and emissions (Revenues from Carbon tax should equal 0, change in emissions due to the implemented carbon tax should equal 0)
+
+**Quick checks in the Mitigation Module**
+-  Check on the retail energy prices in the baseline and policy scenario. 
+-  Check on the energy consumption in the baseline and policy scenario (Energy consumption by sector = energy consumption by fuel)
+-  Check on the CO2 emissions in the baseline and policy scenario (Energy consumption by sector = energy consumption by fuel)
+-  Check on the GHG emissions in the baseline and policy scenario. (Emissions by sector = emissions by fuel)
+-  Check on Fiscal revenues in the baseline and policy scenario. (Revenues from Carbon Tax = Total revenues). Please note that this assumption does not hold for countries which already have implemented policies which yield revenues from ETS, VAT, excises, etc. 
+
+Additional checks in CPAT include:
+
+**Quick visual sense-check in CPAT Dashboard** 
+-  Check 1: Start by ensuring that the graphs show and update when you change carbon price inputs(i.e., there should be no errors in panel B: all graphs should show except, for some countries, the fourth graph on the impact on households).
+-  Check 2: Are prices and percentage changes reasonable? 
+
+**Sensitivity testing**  across CPAT versions. At the moment, this check is performed manually by the team members. We check responsiveness of CPAT in terms of Carbon Tax rates needed to achieve NDCs and emissions intensity in % for particular countries. 
+
+
+
+### Part 2. Full MT-CPAT Technical test 
+
+The technical test on CPAT functionality allows for quick errors checking. It ensures that cells across Excel sheets are properly linked and all formulas used in CPAT produce data as expected (i.e, not picking up values from different cells for calculations),or producing errors for the list of working countries such as (#NA,!DIV0, etc), due to CPAT coding errors. It also allows users to evaluate if all indicators are working properly.
+
+
+-  To perform the Technical Test - please run **CPAT and MT together** for all available countries and indicators.If you do not know how to run MT - refer to the training materials [**How to run the MT**](https://worldbankgroup-my.sharepoint.com/:p:/r/personal/dheine_worldbank_org/Documents/CPAT/Presentations%20and%20Training/201.%20Using%20CPAT/Training%20Videos%20and%20Slides/4A.%20Lecture%20A4.%20Data%20Flow%20in%20CPAT.pptx?d=w76174321eeed458b854dc6b833dbe170&csf=1&web=1&e=h0lPSJ)
+
+
+After the data is produced in the MTOutputs Tab, you can check for errors and data outliers. You can use filter and sort functions to quickly spot problems. After spotting an issue report it in the -  [**Tracking issues backlog**](https://worldbankgroup-my.sharepoint.com/:x:/g/personal/dheine_worldbank_org/Ecv_Rjae-ktBjjCv5FaoyRwBm6hDKv6G5xskbv6nWwbDHg?e=fRna8P) 
+
+*Please note that not all the countries are covered in the Distributional module (refer to Generation List in the MT), thus CPAT would produce #NA values for countries that are not part of the module, in the results section for all the distributional module variables. 
+
+* Due to the lack of data some countries are not working in CPAT (refer to documentation) and would produce errors.
+
+
+
+
+
