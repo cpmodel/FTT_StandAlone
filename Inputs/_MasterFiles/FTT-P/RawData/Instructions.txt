@@ -1,0 +1,5 @@
+1) Download data from (https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) for power generation technologies
+2) Store and replace the excel files corresponding to the data in Step-1 to FTT_StandAlone\Inputs\_MasterFiles\FTT-P\RawData
+3) Open the Macro present in the MEWG excel file (to open macro press Alt+F11). Change the start year and number of years for which data needs to be updated within the TransferData subroutine. Run the Macro
+4) The updated data should be captured within the MEWG worksheet of the MEWG excel file
+
