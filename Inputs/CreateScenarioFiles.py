@@ -64,12 +64,14 @@ tax['Tax1_US_2013']=tax['Tax1']*factor_dollars
 # ______________________________________________________________________________
 
 
-categories = EF['Category'].to_list()
+categories_p = EF['Category'].to_list()
+
+categories_df = pd.DataFrame (EF['Category'], columns=['Category'])
 
 
 
 # Generate all possible combinations of categories and times
-combinations = list(itertools.product(categories, time_FTT))
+combinations = list(itertools.product(categories_p, time_FTT))
 
 # Create the DataFrame
 time_categories = pd.DataFrame(combinations, columns=['Category', 'Time'])
@@ -86,6 +88,7 @@ tax_cat_EF['Tax in 2013 $ per MWh']= tax_cat_EF['Tax1_US_2013']*tax_cat_EF['15 E
 
 tax_cat_EF_wide = tax_cat_EF.pivot(index='Category', columns='Time', values='Tax in 2013 $ per MWh')
 
+tax_fin =pd.merge(categories_df, tax_cat_EF_wide, on=['Category'])
 
-tax_fin = tax_cat_EF_wide.iloc[0:24, 0:52]
+#iloc[0:24, 0:52]
 
