@@ -81,7 +81,7 @@ files_mcocx = glob.glob(path_directory + "/MCOCX_*.csv") #To recognize/select ea
 for file in files_mcocx:
     #print(file)
     file_mcocx = pd.read_csv(file).iloc[0:24, 1:53] #Select only the CT data across time and technology (exclude year and technologies)
-    CT_x = file_mcocx.apply(lambda x: x + CT) #For each column of file_mcocx add CT which is the same dimension
+    CT_x = file_mcocx.add(CT, fill_value=0) #For each column of file_mcocx add CT which is the same dimension
     print(CT_x)
 
 """ 
