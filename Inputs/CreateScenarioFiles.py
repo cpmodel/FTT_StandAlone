@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import numpy as np
+import itertools
 
 # Get the path of the current script file
 # script_path = os.path.abspath(__file__)
@@ -38,7 +39,7 @@ print(EF)
 
 
 
-time_FTT = np.arange(2010, 2061).to_list()
+time_FTT = np.arange(2010, 2061) #.to_list()
 
 # Factor to convert from 2021 to 2013 dollars. NGDP_D in CPAT
 
