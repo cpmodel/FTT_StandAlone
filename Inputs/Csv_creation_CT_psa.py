@@ -41,7 +41,7 @@ print(EF)
 
 time_FTT = np.arange(2010, 2061) #.to_list()
 
-time_FTT = time_FTT.to_list() # This line used to work, but not anymore
+time_FTT = time_FTT.tolist() # This line used to work, but not anymore
 
 
 # Factor to convert from 2021 to 2013 dollars. NGDP_D in CPAT
