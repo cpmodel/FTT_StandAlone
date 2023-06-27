@@ -266,7 +266,7 @@ class ModelRun:
                 print("Incorrect selection of modules. Check settings.ini")
 
             # Third, solve energy supply 
-            variables = energy_demand.energy_demand(variables, self.titles,
+            variables = energy_demand.energy_demand_from_sectors(variables, self.titles,
                                         self.histend, tl[y], self.ftt_modules)
             # Overwrite iter_lags to be used in the next iteration round
             iter_lags = copy.deepcopy(variables)
