@@ -13,6 +13,7 @@ import itertools
 ######################################################################################################
 
 script_path = r'C:\Users\WB585192\OneDrive - WBG\GitHub_CPAT\FTT_StandAlone_v0.8\Inputs'
+#script_path = r'D:\WB\GitHub\FTT_StandAlone\Inputs'
 working_dir = os.path.dirname(script_path)
 os.chdir(working_dir)
 
@@ -78,20 +79,31 @@ print(CT)
 # Create MCOCX files with CT in USD/MWh and add the CT trajectory
 # ______________________________________________________________________________
 
-path_directory = 'Inputs/S0/FTT-P'
-files_mcocx = glob.glob(path_directory + "/MCOCX_*.csv") #To recognize/select each file that starts with 'MCOCX_'
+## CHANGE HERE ##
+path_directory = 'C:/Users/WB585192/OneDrive - WBG/GitHub_CPAT/FTT_StandAlone_v0.8/Inputs'
+files_mcocx = sorted(glob.glob(path_directory + "/MCOCX/MCOCX_*.csv"))        #To recognize/select each file that starts with 'MCOCX_'
+
+output_path = 'C:/Users/WB585192/OneDrive - WBG/GitHub_CPAT/FTT_StandAlone_v0.8/Inputs/S0/FTT-P/'
+
+tech_column = pd.read_csv(files_mcocx[0]).iloc[:,0]
+result = pd.DataFrame()
+result['Technology'] =  tech_column
 
 # For each MCOCX file multiply existing CT in USD/tCO2 by EF in USD/GWh divided by 1000 to have MWh
-for file in files_mcocx:
-    #print(file)
-    file_name = os.path.splitext(file)[0]  # Get the file name without extension
-    output_file = file_name + ".csv"  # Output CSV file name
-    file_mcocx = pd.read_csv(file).iloc[0:24, 1:53] #Select only the CT data across time and technology (exclude year and technologies)
-    file_mcocx.columns = range(2010, 2061) # Set column indices from 2010 to 2060
-    CT_x, file_mcocx = CT.align(file_mcocx, axis=0, fill_value=0)  # Align CT and file_mcocx based on index
-    result = file_mcocx.add(CT_x) #For each column of file_mcocx add CT which is the same dimension
-    print(result)
+for file in sorted(files_mcocx):                               
+    file_name = file.split("\\")[1]                                     # Get the file name without extension
+    output_file = output_path + file_name                               # Output CSV file name
+    file_mcocx = pd.read_csv(file)                                      # Select only the CT data across time and technology (exclude year and technologies)
+    years = range(2010, 2061) 
 
-    result.to_csv(output_file, index=False)  # Save the result as a CSV file with the same name
-    print(f"Processed file: {file}. Output saved as: {output_file}")
+    file_mcocx = file_mcocx.iloc[:,1:]                                  # Add the dataframe to file_mcocx, starting from column 2
+    file_mcocx.columns = years                                          # Set column indices from 2010 to 2060
 
+    CT_x, file_mcocx = CT.align(file_mcocx, axis=0, fill_value=0)       # Align CT and file_mcocx indices
+    file_mcocx = file_mcocx.add(CT_x)                                   # Sum the CT trajectory to the original dataset
+
+    result1 = pd.concat([result, file_mcocx], axis=1)                    # Merge the first column with techno + the dataset
+    result1.to_csv(output_file, index=False)                             # Create csv files
+    print(f"Processed file: {file}. Output saved as: {output_file}")    # Print output
+
+    
