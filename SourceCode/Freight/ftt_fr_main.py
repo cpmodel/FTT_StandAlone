@@ -163,7 +163,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         isReg =  np.zeros([len(titles['RTI']), len(titles['FTTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
         division = divide((data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]),
-                          data_dt['ZREG'][:, :, 0])
+                          data['ZREG'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0

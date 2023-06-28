@@ -345,7 +345,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         isReg = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         division = divide((data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
-                          data_dt['HREG'][:, :, 0])
+                          data['HREG'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0

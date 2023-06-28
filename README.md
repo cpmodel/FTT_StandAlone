@@ -4,14 +4,18 @@
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
 
 * FTT:Power (Mercure, 2012) *2022 version*
-* FTT:Heat (Knobloch et al, 2017) *under construction*
+* FTT:Heat (Knobloch et al, 2017) *data up to 2014, data update coming*
 * FTT:Industrial heat 
-* FTT:Transport (Mercure et al, 2018) *under construction*
+* FTT:Transport (Mercure et al, 2018) *data update coming*
 * FTT:Freight
-* FTT:Steel (Vercoulen and Markkannen, 2020) *under construction*
+
+There are a few additional models under construction. The coupled E3ME-FTT model contains an FTT model for the transition in the steel sector, but this has not yet been translated into python
+* FTT:Steel (Vercoulen et al, 2023) 
 
 ## Theoretical background
 The FTT family of models are based on [evolutionary economics](https://en.wikipedia.org/wiki/Evolutionary_economics). The uptake of new technologies typically follows an S-curve, which can be represented well with evolutionary dynamics (Mercure et al, 2012). The core equations for all of the models in the model family are coupled logistic equations of the [Lotka-Volterra family](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations), also known as the predator-prey equations. These equations are used to determine the evolution of the shares of various technologies in the models. Each model contains between ~10 to 25 technologies competing for market share. 
+
+The models can be used to investigate the role of a mix of policies on the energy transition. The exact policies differ by FTT model, but included is a carbon tax, regulations, subsidies and procurement of technologies. 
 
 ## FTT and E3ME
 This repository contains the public standalone version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
@@ -23,4 +27,4 @@ You can run the front-end of the model by starting the FTT_Stand_Alone_Launcher.
 * Knobloch, F., Pollitt H., Chewpreecha U., Daioglou V. and Mercure J-F. (2018) ‘[Simulating the deep decarbonisation of residential heating for limiting global warming to 1.5°C](https://link.springer.com/article/10.1007/s12053-018-9710-0)’, Energy Efficiency **12**, Issue 2, pp 521–550.
 * Mercure (2012) FTT:Power : [A global model of the power sector with induced technological change and natural resource depletion](https://www.sciencedirect.com/science/article/pii/S0301421512005356 ). Energy Policy **48**.
 * Mercure, J-F., Lam, A., Billington, S. and Pollitt, H. (2018) ‘[Integrated assessment modelling as a positive science: private passenger road transport policies to meet a climate target well below 2°C](https://pubmed.ncbi.nlm.nih.gov/30930506/)’, Climatic Change, November 2018, Volume 151, Issue 2, pp 109–129.
-* Vercoulen and Markkannen (2020) 'Vercoulen, P. and Markkanen, S. (2020). [Technology, employment, and climate change mitigation: Modelling the iron and steel industry](https://www.corporateleadersgroup.com/system/files/documents/steel-modelling-paper.pdf). Technical Report. Cambridge, UK: CLG Europe
+*  Vercoulen, P.; Lee, S.; Han, X.; Zhang, W.; Cho, Y.; Pang, J. (2023) '[Carbon-Neutral Steel Production and Its Impact on the Economies of China, Japan, and Korea: A Simulation with E3ME-FTT:Steel](https://www.mdpi.com/1996-1073/16/11/4498). Energies **16**, 4498. https://doi.org/10.3390/en16114498 
