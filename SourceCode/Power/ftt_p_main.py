@@ -4,9 +4,9 @@
 ftt_p_main.py
 =========================================
 Power generation FTT module.
+############################
 
-
-This is the main file for the power module, FTT:Power. The power
+This is the main file for the power module, FTT: Power. The power
 module models technological replacement of electricity generation technologies due
 to simulated investor decision making. Investors compare the **levelised cost of
 electricity**, which leads to changes in the market shares of different technologies.
@@ -17,7 +17,7 @@ supplied by flexible or baseload technologies to meet electricity demand at all 
 This function also returns load band heights, curtailment, and storage information,
 including storage costs and marginal costs for wind and solar.
 
-FTT:Power also includes **dispatchers decisions**; dispatchers decide when different technologies
+FTT: Power also includes **dispatchers decisions**; dispatchers decide when different technologies
 supply the power grid. Investor decisions and dispatcher decisions are matched up, which is an
 example of a stable marraige problem.
 
@@ -53,7 +53,10 @@ Functions included:
 """
 
 # Standard library imports
+from math import sqrt
+import os
 import copy
+import sys
 import warnings
 
 # Third party imports
@@ -69,6 +72,7 @@ from SourceCode.Power.ftt_p_lcoe import get_lcoe
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
+
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -144,7 +148,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     data['PRSC15'] = copy.deepcopy(time_lag['PRSC15'] )
     # %% First initialise if necessary
 
-    T_Scal = 5      # Time scaling factor used in the share dynamics
+    T_Scal = 10      # Time scaling factor used in the share dynamics
 
     # Initialisation, which corresponds to lines 389 to 556 in fortran
     if year == 2013:
@@ -172,7 +176,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRES'] = mres
 
         data = get_lcoe(data, titles)
-        data = rldc(data, time_lag, titles)
+        data = rldc(data, time_lag, iter_lag, year, titles)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
@@ -213,11 +217,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # To avoid division by 0 if 0 shares
             zero_lf = data['MEWL'][r,:,0]==0
             data['MEWL'][r, zero_lf, 0] = copy.deepcopy(data['MWLO'][r, zero_lf, 0])
-
-
+            # TODO: Given faulty code in the EEIST, exogenous load factors are
+            # used here
+            data['MEWL'][r, :, 0] = copy.deepcopy(data['MEWLX'][r, :, 0])
 
             # Capacities
             data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
+            # Update market shares
+            data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
+            
 
             # Investment (eq 8 Mercure EP48 2012)
 #                data['MEWI'][r, :, 0] = (np.minimum(data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0], np.zeros(len(titles['T2TI']))) +
@@ -228,12 +236,22 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
                                              cap_diff + cap_drpctn,
                                              cap_drpctn)
+            
+        # Copy MEWL to the cost matrix for all techs. This essentially
+        # fixes the load factor for decision-making for non-VRE techs
+        # It's not perfect, but it is what it is
+        
+        # TODO: Given faulty code in the EEIST, exogenous load factors are
+        # used here
+        data['MCFC'][:, :, 0] = copy.deepcopy(data['MCFCX'][:, :, 0])
+        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:, :, 0])
+        
         data = get_lcoe(data, titles)
 
 
     #%%
     # Up to the last year of historical market share data
-    if year <= histend['MEWG']:
+    elif year <= histend['MEWG']:
         if year == 2015: data['PRSC15'] = copy.deepcopy(data['PRSCX'])
 
 
@@ -261,17 +279,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Initialise starting capacities
         if year <= 2012:
-            data['MEWK'][:, :, 0] = np.divide(data['MEWG'][:, :, 0], data['MWLO'][:, :, 0],
-                                          where=data['MWLO'][:, :, 0] > 0.0) / 8766
+            data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MWLO'][:, :, 0]) / 8766
         else:
-            data['MEWK'][:, :, 0] = np.divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0],
-                                          where=data['MEWL'][:, :, 0] > 0.0) / 8766
+            data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
 
-        #for r in range(len(titles['RTI'])):
-        #    # Initialise starting market shares
-        #    if np.sum(data['MEWK'][r, :, 0]) > 0.0:
-        #        data['MEWS'][r, :, 0] = np.divide(data['MEWK'][r, :, 0],
-        #                                          np.sum(data['MEWK'][r, :, 0]))
         data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
                                           where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
 
@@ -279,12 +290,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
         # Call RLDC function for capacity and load factor by LB, and storage costs
+        if year >= 2013:
+
 
             # First, estimate marginal costs:
             #if year == 2013: data = get_lcoe(data, titles)
 
             # Second, estimate RLDC parameters
-            data = rldc(data, time_lag, titles)
+            bidon = 0
+            data = rldc(data, time_lag, iter_lag, year, titles)
 
             # Change currency from EUR2015 to USD2013
             if year >= 2015:
@@ -350,7 +364,50 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # To avoid division by 0 if 0 shares
                 zero_lf = data['MEWL'][r,:,0]==0
                 data['MEWL'][r, zero_lf, 0] = copy.deepcopy(data['MWLO'][r, zero_lf, 0])
-
+                
+                # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
+                # Gross Curtailed electricity
+                data['MCGA'][r,0,0] = data['MCRT'][r,0,0] * np.sum(Svar[r, :] * data['MEWG'][r,:,0])
+                #gross_curt(J) = SUM(MGCT(:,J) * MEWG(:,J))
+                # Net curtailed generation
+                # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
+                # On average 45% of curtailed electricity can be reused for long-term storage:
+                # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
+                data['MCNA'][r,0,0] = np.maximum(data['MCGA'][r,0,0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
+                # Impact of net curtailment on load factors for VRE technologies
+                # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
+                data['MCTN'][r,:,0] = data['MCTG'][r,:,0] * data['MCNA'][r,:,0] / data['MCGA'][r,0,0]
+                
+                
+                # #Adjust load factors to correctely represent VRE not being able to deliver to the grid due to net curtailment
+                # data['MEWL'][r,:,0] = np.where(np.isclose(Svar[r, :], 1.0),
+                #                                data['MEWL'][r,:,0] * (1.0*data['MCTN'][r,:,0]),
+                #                                data['MEWL'][r,:,0])    
+                # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+                #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+                #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
+                # data['BCET'][:,:,c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:,:,0])                
+                
+                # # data['BCET'][r,:,c2ti['11 Decision Load Factor']] = np.where(np.isclose(Svar[r, :], 1.0),
+                # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']] * (1.0*data['MCTN'][r,:,0]),
+                # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']])            
+                # data['MEWL'][r,:,0] = np.where(np.isclose(data['MEWL'][r,:,0] , 0.0),
+                #                                data['MWLO'][r,:,0] ,
+                #                                data['MEWL'][r,:,0])
+                
+                # TODO: Given faulty code in the EEIST, exogenous load factors are
+                # used here
+                data['MEWL'][r, :, 0] = copy.deepcopy(data['MEWLX'][r, :, 0]) 
+                data['MCFC'][r, :, 0] = copy.deepcopy(data['MCFCX'][r, :, 0]) 
+                data['BCET'][r, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFCX'][r, :, 0]) 
+                
+                # Total additional electricity that needs to be generated
+                data['MADG'][r,0,0] = data['MCGA'][r,0,0]-data['MCNA'][r,0,0]+data['MSSG'][r,0,0]
+                
+                data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
+                
+                data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
+                                                  where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
 
                 # C02 emissions for carbon costs (MtC02)
                 data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0]*data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
@@ -408,11 +465,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative global learning
             # Using a technological spill-over matrix (MEWB) together with capacity
             # additions (MEWI) we can estimate total global spillover of similar
-            # technologies
+            # techicals
             bi = np.zeros((len(titles['RTI']),len(titles['T2TI'])))
-            for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['MEWB'][0, :, :],data['MEWI'][r, :, 0])
-            dw = np.sum(bi, axis=0)
+            mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
+            dw = np.zeros(len(titles["T2TI"]))
+            
+            for i in range(len(titles["T2TI"])):
+                dw_temp = copy.deepcopy(mewi0)
+                dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
+                dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
@@ -454,24 +515,46 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['RERY'] = rery
             data['MRED'] = mred
             data['MRES'] = mres
+            
+            check_mewl = pd.Series(data["MEWL"][70,:,0], index=titles['T2TI'])
+            check_new_mewl = pd.Series(data["BCET"][70,:,c2ti['11 Decision Load Factor']], index=titles['T2TI'])
+            check_mwmc = pd.Series(data["MWMC"][70,:,0], index=titles["T2TI"])
+            check_mwg1 = pd.Series(data["MWG1"][70,:,0], index=titles["T2TI"])
+            check_mwg2 = pd.Series(data["MWG2"][70,:,0], index=titles["T2TI"])
+            check_mwg3 = pd.Series(data["MWG3"][70,:,0], index=titles["T2TI"])
+            check_mwg4 = pd.Series(data["MWG4"][70,:,0], index=titles["T2TI"])
+            check_mwg5 = pd.Series(data["MWG5"][70,:,0], index=titles["T2TI"])
+            check_mwg6 = pd.Series(data["MWG6"][70,:,0], index=titles["T2TI"])
 
 
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
+            bidon = 0
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
             # We assume that the values do not change throughout simulation.
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
+            
+            # print(f'MEWS: {data["MEWS"][1, 18, 0]:.7f}\n'
+            #  f'MWSLt: {data["MEWS"][1, 18, 0]:.7f}\n' \
+            #  f'MEWG: {data["MEWG"][1, 18, 0]:.0f}\n' \
+            #  f'MEWK: {data["MEWK"][1, 18, 0]:.4f}\n' \
+            #  f'MEWL: {data["MEWL"][1, 18, 0]:.7f}\n' \
+            #  f'METC: {data["METC"][1, 18, 0]:.7f}\n'\
+            #  f'MWMC: {data["MWMC"][1, 18, 0]:.7f}\n' \
+            #  f'MMCD: {data["MMCD"][1, 18, 0]:.5f}\n' \
+            #  f'MLSP: {data["MLSP"][1, 18, 0]:.5f}\n' \
+            #  f'MSSP: {data["MSSP"][1, 18, 0]:.5f}\n')
 
 # %% Simulation of stock and energy specs
 
     # Stock based solutions first
     elif year > histend['MEWG']:
         # TODO: Implement survival function to get a more accurate depiction of
-        # technologies being phased out and to be able to track the age of the fleet.
+        # techicles being phased out and to be able to track the age of the fleet.
         # This means that a new variable will need to be implemented which is
         # basically PG_VFLT with a third dimension (techicle age in years- up to 23y)
         # Reduced efficiences can then be tracked properly as well.
@@ -528,37 +611,64 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Electricity demand is exogenous at the moment
             # TODO: Replace, using price elasticities and feedback from other
             # FTT modules
+            # lag_demand = time_lag['MEWDX'][:, 7, 0] * 1000/3.6
+
+            # e_demand = (lag_demand + (data['MEWDX'][:,7,0] * 1000/3.6 - lag_demand) * t * dt) + data_dt['MADG'][:,0,0]
+
+            # e_demand_step = ((e_demand - lag_demand) * dt)
+            
+            # data['MEWDX'][:,7,0] += data_dt['MADG'][:,0,0] * 0.0036
+            
+            
+            MEWDt = data_dt['MEWDX'][:,7,0] + (data['MEWDX'][:,7,0] - data_dt['MEWDX'][:,7,0]) * t/no_it
+            MEWDt += data_dt['MADG'][:,0,0] * 0.0036
+            e_demand = MEWDt * 1000/3.6
             lag_demand = time_lag['MEWDX'][:, 7, 0] * 1000/3.6
-
-            e_demand = (lag_demand + (data['MEWDX'][:,7,0] * 1000/3.6 - lag_demand) * t * dt)
-
-            e_demand_step = ((data['MEWDX'][:,7,0] * 1000/3.6 - lag_demand) * dt)
+            e_demand_step = e_demand - lag_demand           
+            
+            MWDLt = copy.deepcopy(data_dt['MEWDX'][:,7,0])
+            MWDL = copy.deepcopy(time_lag['MEWDX'][:, 7, 0])
+            
+            # For checking
+            if t==4:
+                data["MEWD"] = copy.deepcopy(data['MEWDX'])
 
             # =================================================================
             # Share equation
             # =================================================================
             bidon = 0
             #
-            mews, mewl, mewg, mewk = shares(dt, T_Scal, e_demand, e_demand_step,
+            mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt, MWDLt,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], data['MWKA'],
                                             data_dt['MES1'], data_dt['MES2'],
                                             data['MEWA'], isReg, data_dt['MEWK'],
                                             data_dt['MEWK'], data['MEWR'],
                                             data_dt['MEWL'], data_dt['MEWS'],
-                                            data['MWLO'], lag_demand,
+                                            data['MWLO'], MWDL,
                                             len(titles['RTI']), len(titles['T2TI']))
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
             data['MEWK'] = mewk
             bidon = 0
+            
+            if np.any(np.isnan(data['MEWS'])):
+                print("NaNs found in MEWS in {}".format(year))
+            if ~np.any(np.isclose(data['MEWS'][:,:,0].sum(axis=1), 1.0)):
+                print("Sum of MEWS does not add up to 1 in {}".format(year))
+            if np.any(data['MEWS'][:,:,0]< 0.0):
+                print("Negative MEWS found in {}".format(year))
+                r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
+                
+                print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
 
             # =================================================================
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
-            data = rldc(data, time_lag, titles)
+            data = rldc(data, time_lag, iter_lag, year, titles)
+            bidon = 0
             # Change currency from EUR2015 to USD2013
 
             if year >= 2015:
@@ -620,23 +730,42 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             #  Update variables
             # =============================================================
 
-            # Adjust capacity factors for VRE due to curtailment and storage efficiency losses
-            data['MCRG'][:, 0, 0] = data['MCRT'][:, 0, 0]*e_demand
-            data['MADG'][:, 0, 0] = data['MCRG'][:, 0, 0] + data['MSSG'][:, 0, 0] + data['MLSG'][:, 0, 0]
-            mewg_int = data['MEWS'][:, :, 0]*e_demand[:, np.newaxis]*data['MEWL'][:, :, 0]/np.sum(data['MEWS'][:, :, 0]*data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            mewg_add = np.zeros_like(mewg_int)
-            mewg_add = np.divide(mewg_int*Svar[:, :], np.sum(mewg_int*Svar[:, :], axis=1)[:, np.newaxis], where=(np.sum(mewg_int*Svar[:, :], axis=1)[:, np.newaxis] > 0))
+            # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
+            # Gross Curtailed electricity
+            data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
+            #gross_curt(J) = SUM(MGCT(:,J) * MEWG(:,J))
+            # Net curtailed generation
+            # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
+            # On average 45% of curtailed electricity can be reused for long-term storage:
+            # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
+            data['MCNA'][:,0,0] = np.maximum(data['MCGA'][:,0,0] - 0.45*2*data['MLSG'][:,0,0], 0.55*data['MCGA'][:,0,0])
+            # Impact of net curtailment on load factors for VRE technologies
+            # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
+            data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:,:,0],
+                                                               data['MCGA'][:,None,0,0])
+            
+            
+            #Adjust load factors to correctely represent VRE not being able to deliver to the grid due to net curtailment
+            data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+                                           data['MEWL'][:,:,0] * (1.0-data['MCTN'][:,:,0]),
+                                           data['MEWL'][:,:,0])            
+            data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+                                           data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+                                           data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
+            data['BCET'][:,:,c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:,:,0])
+            data['MEWL'][:,:,0] = np.where(np.isclose(data['MEWL'][:,:,0] , 0.0),
+                                           data['MWLO'][:,:,0] ,
+                                           data['MEWL'][:,:,0])
+            
+            # Total additional electricity that needs to be generated
+            data['MADG'][:,0,0] = data['MCGA'][:,0,0]-data['MCNA'][:,0,0]+data['MSSG'][:,0,0]
+            
             # Update generation
             denominator = np.sum(data['MEWS'][:, :, 0]*data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
             data['MEWG'][:, :, 0] = np.zeros((len(titles['RTI']), len(titles['T2TI'])))
-            data['MEWG'][:, :, 0] = np.divide(data['MEWS'][:, :, 0] * e_demand[:, np.newaxis] * data['MEWL'][:, :, 0],
-                                              denominator,
-                                              where=denominator > 0.0) + mewg_add*data['MADG'][:, 0, 0, np.newaxis]
-
-            # Just for testing:
-#            data['MEWG'][:, :, 0] = copy.deepcopy(data['MEWGX'][:, :, 0])
-#            data['MEWL'][:, :, 0] = copy.deepcopy(data['MEWLX'][:, :, 0])
-
+            updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
+            data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
+                                           denominator) #TODO: should this be here? + data['MADG'][:, 0, 0, np.newaxis]
 
             # Update capacities
             data['MEWK']= divide(data['MEWG'], data['MEWL']) / 8766
@@ -694,13 +823,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
             # additions (PG_CA) we can estimate total global spillover of similar
             # techicals
-#            bi = np.matmul(data['MEWI'][:, :, 0], data['MEWB'][0, :, :])
-#            dw = np.sum(bi, axis=0)
-
             bi = np.zeros((len(titles['RTI']),len(titles['T2TI'])))
-            for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['MEWB'][0, :, :],data['MEWI'][r, :, 0])
-            dw = np.sum(bi, axis=0)
+            mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
+            dw = np.zeros(len(titles["T2TI"]))
+            
+            for i in range(len(titles["T2TI"])):
+                dw_temp = copy.deepcopy(mewi0)
+                dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
+                dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
@@ -724,14 +854,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
                     data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['4 std ($/MWh)']] * \
                                                                           (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
-
-            # Investment in power sector technologies
+                    data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] * \
+                                                                           (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                    data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] * \
+                                                                          (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+            # Investment in terms of car purchases:
             for r in range(len(titles['RTI'])):
 
                 data['MWIY'][r, :, 0] = data_dt['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*dt*data['BCET'][r, :, c2ti['3 Investment ($/kW)']]/1.33
 
             # =================================================================
-            # Cost-supply curves
+            # Cost-Supply curves
             # =================================================================
             if t == no_it:
                #                print("Did we pass this point?")
@@ -754,14 +887,24 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             data = get_lcoe(data, titles)
+            bidon = 0
 
             # =================================================================
             # Update the time-loop variables
             # =================================================================
 
             # Update time loop variables:
-            
-            
+#            print(year)
+            # print(f'MEWS: {data["MEWS"][1, 18, 0]:.7f}\n'
+            #  f'MWSLt: {data_dt["MEWS"][1, 18, 0]:.7f}\n' \
+            #  f'MEWG: {data["MEWG"][1, 18, 0]:.0f}\n' \
+            #  f'MEWK: {data["MEWK"][1, 18, 0]:.4f}\n' \
+            #  f'MEWL: {data["MEWL"][1, 18, 0]:.7f}\n' \
+            #  f'METC: {data["METC"][1, 18, 0]:.7f}\n'\
+            #  f'MWMC: {data_dt["MWMC"][1, 18, 0]:.7f}\n' \
+            #  f'MMCD: {data_dt["MMCD"][1, 18, 0]:.5f}\n' \
+            #  f'MLSP: {data["MLSP"][1, 18, 0]:.5f}\n' \
+            #  f'MSSP: {data["MSSP"][1, 18, 0]:.5f}\n')
             for var in data_dt.keys():
 
                 if domain[var] == 'FTT-P':

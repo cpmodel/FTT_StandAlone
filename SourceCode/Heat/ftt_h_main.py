@@ -31,15 +31,18 @@ Functions included:
 """
 # Standard library imports
 from math import sqrt
+import os
 import copy
+import sys
 import warnings
+import time
 
 # Third party imports
+import pandas as pd
 import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.Heat.compute_hjef import compute_hjef
 
 
 # %% lcoh
@@ -108,7 +111,7 @@ def get_lcoh(data, titles):
 
         # Fuel tax costs
         fft = np.ones([len(titles['HTTI']), int(max_lt)])
-        fft = fft*data['HTRT'][r, :, 0, np.newaxis]/ce
+        fft = fft*divide(data['HTRT'][r, :, 0, np.newaxis],ce)
         fft = np.where(mask, fft, 0)
 
         # Average operation & maintenance cost
@@ -146,16 +149,16 @@ def get_lcoh(data, titles):
         npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
 
         # 1-levelised cost variants in $/pkm
-        # 1.1-Bare LCOH
+        # 1.1-Bare LCOT
         lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOH including policy costs
+        # 1.2-LCOT including policy costs
         tlcoh = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOH of policy costs
+        # 1.3-LCOT of policy costs
         lcoh_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # Standard deviation of LCOH
+        # Standard deviation of LCOT
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
-        # LCOH augmented with non-pecuniary costs
+        # LCOT augmented with non-pecuniary costs
         tlcohg = tlcoh + data['HGAM'][r, :, 0]
 
         # Pay-back thresholds
@@ -165,7 +168,7 @@ def get_lcoh(data, titles):
 
         # Marginal costs of existing units
         tmc = ft[:, 0] + omt[:, 0] + fft[:, 0] - fit[:, 0]
-        dtmc = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2)
+        dtmc = np.sqrt(dft[:, 0] + domt[:, 0])
 
         # Total pay-back costs of potential alternatives
         tpb = tmc + (it[:, 0] + st[:, 0])/pb
@@ -235,9 +238,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     sector = 'residential'
     #sector_index = titles['Sectors_short'].index(sector)
 
-    data['PRSC14'] = copy.deepcopy(time_lag['PRSC14'] )
-    if year == 2014:
-        data['PRSC14'] = copy.deepcopy(data['PRSCX'])
 
 
     # %% First initialise if necessary
@@ -278,12 +278,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['HEWS'][r, :, 0] = np.divide(data['HEWS'][r, :, 0],
                                                        np.sum(data['HEWS'][r, :, 0]))
             # Capacity by boiler
-            #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
             data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
                                   data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
             # Emissions
             # TODO: Cost titles are wrong
-            data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Empty"]]/1e6
+            data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Empty"]]
 
             # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
@@ -295,7 +294,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
     if year == histend['HEWF']:
-        print(f'year in heat model:  {year}')
         # Historical data ends in 2014, so we need to initialise data
         # when it's 2015 to make sure the model runs.
         # At some point we need to change the start year of the simulation and
@@ -311,7 +309,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Now transform price rates by fuel to price rates by boiler
         #data['HEWP'][:, :, 0] = np.matmul(data['HFFC'][:, :, 0], data['HJET'][0, :, :].T)
- 
+
         for r in range(len(titles['RTI'])):
 
             # Final energy demand by energy carrier
@@ -321,27 +319,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data['HJHF'][r, fuel, 0] = np.sum(data['HEWF'][r, :, 0] * data['HJET'][0, :, fuel])
 
                 # Fuel use for total residential sector #HFUX is missing
-                # 0.0859 is the conversion factor from GWh to th toe
                 if data['HJFC'][r, fuel, 0] > 0.0:
-                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0] * 0.08598
+                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
-        # Calculate the LCOH for each heating technology.
+        # Calculate the LCOT for each vehicle type.
         # Call the function
         data = get_lcoh(data, titles)
-        print("Is this code executed?")
-        print("Print HJHF")
-        print(data["HJHF"][0, :, 0])
-        print("Print HJEF")
-        print(data["HJEF"][0, :, 0])
-        data["FU14A"] = copy.deepcopy(data['HJHF'])
-        data['FU14B'] = data["HJEF"]*data["HJFC"]
-        print("FU14A and FU14B")
-        print(data["FU14A"][0, :, 0])
-        print(data["FU14B"][0, :, 0])
-        
-        data_dt = {}
-        for var in data.keys():
-            data_dt[var] = copy.deepcopy(data[var])
 # %% Simulation of stock and energy specs
 #    t0 = time.time()
     # Stock based solutions first
@@ -357,22 +340,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
             data_dt[var] = copy.deepcopy(time_lag[var])
-            
-        data["FU14A"] = data_dt["FU14A"]
-        data["FU14B"] = data_dt["FU14B"]
-        
-        if year ==  histend['HEWF'] + 1 :
-            print("FU14A and FU14B in time loop")
-            print(data_dt["FU14A"][0, :, 0])
-            print(data["FU14B"][0, :, 0])
-        
+
         # Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         division = divide((data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                           data['HREG'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
-
         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
 
@@ -382,7 +356,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         ############## Computing new shares ##################
 
-        # Start the computation of shares
+        #Start the computation of shares
         for t in range(1, no_it+1):
 
             # Interpolate to prevent staircase profile.
@@ -425,7 +399,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         S_k = data_dt['HEWS'][r, b2, 0]
 
                         # Propagating width of variations in perceived costs
-                        dFik = 1.414 * sqrt((data_dt['HWCD'][r, b1, 0]*data_dt['HWCD'][r, b1, 0] + data_dt['HWCD'][r, b2, 0]*data_dt['HWCD'][r, b2, 0]))
+                        dFik = sqrt(2) * sqrt((data_dt['HWCD'][r, b1, 0]*data_dt['HWCD'][r, b1, 0] + data_dt['HWCD'][r, b2, 0]*data_dt['HWCD'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
                         Fik = 0.5*(1+np.tanh(1.25*(data_dt['HGC1'][r, b2, 0]-data_dt['HGC1'][r, b1, 0])/dFik))
@@ -434,15 +408,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
                         F[b2, b1] = (1.0-Fik)*(1.0-isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1]*(1.0-isReg[r, b2]) + 0.5*(isReg[r, b2]*isReg[r, b1])
 
-                        # Runge-Kutta market share dynamiccs
-                        k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
+                        #Runge-Kutta market share dynamiccs
+                        # k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
+                        # k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
+                        # k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
+                        # k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
 
                         # Market share dynamics
                         dSik[b1, b2] = S_i*S_k* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])*dt
-                        # dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
+                        #dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[b2, b1] = -dSik[b1, b2]
 
                 # -----------------------------------------------------
@@ -492,8 +466,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         # replacements take place
 
                         # Propagating width of variations in perceived costs
-                        dFEik = 1.414 * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
-                        dFEki = 1.414 * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
+                        dFEik = sqrt(2) * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
+                        dFEki = sqrt(2) * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
                         FEik = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b2, 0]-data_dt['HGC3'][r, b1, 0])/dFEik))
@@ -503,16 +477,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         FE[b1, b2] = FEik*(1.0-isReg[r, b1])
                         FE[b2, b1] = FEki*(1.0-isReg[r, b2])
 
-                        # Runge-Kutta market share dynamiccs
-                        kE_1 = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_2 = (SE_i+dt*kE_1/2)*(SE_k-dt*kE_1/2)* (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_3 = (SE_i+dt*kE_2/2)*(SE_k-dt*kE_2/2) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_4 = (SE_i+dt*kE_3)*(SE_k-dt*kE_3) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
+                        #Runge-Kutta market share dynamiccs
+                        # kE_1 = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
+                        # kE_2 = (SE_i+dt*kE_1/2)*(SE_k-dt*kE_1/2)* (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
+                        # kE_3 = (SE_i+dt*kE_2/2)*(SE_k-dt*kE_2/2) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
+                        # kE_4 = (SE_i+dt*kE_3)*(SE_k-dt*kE_3) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
 
 
                         # Market share dynamics
                         dSEik[b1, b2] = SE_i*SE_k* (data['HEWA'][0,b1, b2]*SR[b2]*FE[b1,b2] - data['HEWA'][0,b2, b1]*SR[b1]*FE[b2,b1])*dt
-                        # dSEik[b1, b2] = dt*(kE_1+2*kE_2+2*kE_3+kE_4)/6
+                        #dSEik[b1, b2] = dt*(kE_1+2*kE_2+2*kE_3+kE_4)/6
                         dSEik[b2, b1] = -dSEik[b1, b2]
 
                         # TODO: Calculate additional EOL values
@@ -531,7 +505,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
                 # Check that exogenous share changes add to zero
-                if t==1:
+                if (t==1):
                     dUkTK = data['HWSA'][r, :, 0]
                     if (data['HWSA'][r, :, 0].sum() > 0.0):
                         dUkTK[0] = dUkTK[0] - data['HWSA'][r, :, 0].sum()
@@ -609,12 +583,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HJHF'][:, :, 0] = np.matmul(data['HEWF'][:, :, 0], data['HJET'][0, :, :])
 
             # Final energy demand of the residential sector (incl. non-heat)
-            # TODO: For the time being, this is calculated as a simply scale-up
-        
-            data["HJEF"] = compute_hjef(data, titles)
-            
-            
-
+            # For the time being, this is calculated as a simply scale-up
+            for fuel in range(len(titles['JTI'])):
+                if data['HJFC'][r, fuel, 0] > 0.0:
+                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
             ############## Learning-by-doing ##################
 
@@ -645,20 +617,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                                                              *(1.0 + data['BHTC'][:, b, c4ti['7 Learning rate']] * dw[b]/data['HEWW'][0, b, 0]))
 
 
-            #Total investment in new capacity in a year (m 2014 euros):
-              #HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-              #BHTC(:,:,1) are the investment costs (2014Euro/kW)
-            data['HWIY'][:,:,0] = data['HWIY'][:,:,0] + data['HEWI'][:,:,0]*dt*data['BHTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
-
 
             # =================================================================
             # Update the time-loop variables
             # =================================================================
 
-            # Calculate levelised cost again
+            #Calculate levelised cost again
             data = get_lcoh(data, titles)
 
-            # Update time loop variables:
+            #Update time loop variables:
             for var in data_dt.keys():
 
                 data_dt[var] = copy.deepcopy(data[var])
