@@ -273,7 +273,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
         isReg = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = divide((data_dt['IWK5'][:, :, 0] - data['IRG5'][:, :, 0]),
-                          data_dt['IRG5'][:, :, 0])
+                          data['IRG5'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
         isReg[data['IRG5'][:, :, 0] == 0.0] = 1.0
         isReg[data['IRG5'][:, :, 0] == -1.0] = 0.0
