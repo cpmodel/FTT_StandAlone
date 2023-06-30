@@ -170,8 +170,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
         for t in range(1, no_it+1):
-    #Interpolations to avoid staircase profile
-
+            
+            # Interpolations to avoid staircase profile
             RTCO = time_lag['RZCO'][:, :, :] + (data['RZCO'][:, :, :] - time_lag['RZCO'][:, :, :]) * t * dt
             FuT = time_lag['RTFZ0'][:, :, :] + (data['RTFZ0'][:, :, :] - time_lag['RTFZ0'][:, :, :]) * t * dt
             #ZJET = time_lag['ZJET'][:, :, :] + (data['ZJET'][:, :, :] - time_lag['ZJET'][:, :, :]) * t * dt
@@ -264,7 +264,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
             for r in range(len(titles['RTI'])):
-                #Copy over costs that dont change
+                # Copy over costs that dont change
                 data['ZCET'][:, :, 1:20] = data_dt['ZCET'][:, :, 1:20]
 
                 #G1 is Total service
@@ -281,11 +281,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
                 for x in range(0,20,2):
-                    data['ZESA'][r,x,0] = data['ZEWS'][r,x,0]/data['ZESD'][r,0,0]
+                    data['ZESA'][r,x,0] = divide(data['ZEWS'][r,x,0], data['ZESD'][r,0,0])
                     data['ZEVV'][r,x,0] = data['ZESG'][r,x,0]*data['ZESA'][r,x,0]/(1-1/(data['ZSLR'][r,0,0]+1))
                     data['ZEST'][r,x,0] = data['ZEVV'][r,x,0]*data['ZLOD'][r,1,0]
                 for x in range(1,21,2):
-                    data['ZESA'][r,x,0] = data['ZEWS'][r,x,0]/data['ZESD'][r,1,0]
+                    data['ZESA'][r,x,0] = divide(data['ZEWS'][r,x,0], data['ZESD'][r,1,0])
                     data['ZEVV'][r,x,0] = data['ZESG'][r,x,0]*data['ZESA'][r,x,0]/(1/(data['ZSLR'][r,0,0]+1))
                     data['ZEST'][r,x,0] = data['ZEVV'][r,x,0]*data['ZLOD'][r,1,0]
 

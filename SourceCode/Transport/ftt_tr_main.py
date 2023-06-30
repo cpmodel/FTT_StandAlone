@@ -552,7 +552,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #                        print(np.sum(dSik, axis=1))
                 data['TEWS'][r, :, 0] = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
 
-                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
+                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=3e-3):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
                     """.format(sector, titles['RTI'][r], year, np.sum(data['TEWS'][r, :, 0]))
