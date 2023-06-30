@@ -30,8 +30,6 @@ import warnings
 import pandas as pd
 import numpy as np
 
-# Local library imports
-from SourceCode.support.divide import divide
 
 
 # %% lcot
@@ -91,57 +89,50 @@ def get_lcoe(data, titles):
         bt_mask_out = full_lt_mat > bt_max_mat
         lt_mask_in = full_lt_mat <= lt_max_mat
         lt_mask = np.where(lt_mask_in == bt_mask_out, True, False)
-        
-        # capacity factor of marginal unit (for decision-making)
-        cf_mu = bcet[:, c2ti['11 Decision Load Factor']].copy()
+        # lt_mat = np.where(lt_mask, full_lt_mat, 0)
+
+        # Capacity factor used in decisions (constant), not actual capacity factor
+        # cf = bcet[:, c2ti['11 Decision Load Factor'], np.newaxis]
+        # To match fortran, use actual CF
+        # TODO: Is this correct?
+        cf = data['MEWL'][r, :, 0]
         # Trap for very low CF
-        cf_mu[cf_mu<0.000001] = 0.000001
+        cf[cf<0.000001] = 0.000001
+
         # Factor to transfer cost components in terms of capacity to generation
-        conv_mu = 1/bt / cf_mu/8766*1000
-        
-        # Average capacity factor (for electricity price)
-        cf_av = data['MEWL'][r, :, 0]
-        # Trap for very low CF
-        cf_av[cf_av<0.000001] = 0.000001
-        # Factor to transfer cost components in terms of capacity to generation
-        conv_av = 1/bt / cf_av/8766*1000        
+#        ones = np.ones([len(titles['T2TI']), 1])
+        conv = 1/bt / cf/8766*1000
 
         # Discount rate
         # dr = bcet[6]
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
 
+        data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, c2ti['3 Investment ($/kW)']])
+        data['MWFC'][r, :, 0] = copy.deepcopy(bcet[:, c2ti['5 Fuel ($/MWh)']])
+        data['MCFC'][r, :, 0] = copy.deepcopy(bcet[:, c2ti['11 Decision Load Factor']])
+
         # Initialse the levelised cost components
-        # Average investment cost of marginal unit
-        it_mu = np.ones([len(titles['T2TI']), int(max_lt)])
-        it_mu = it_mu * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis] * conv_mu[:, np.newaxis]
-        it_mu = np.where(bt_mask, it_mu, 0)
-        
-        # Average investment costs of across all units
-        it_av = np.ones([len(titles['T2TI']), int(max_lt)])
-        it_av = it_av * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis] * conv_av[:, np.newaxis]
-        it_av = np.where(bt_mask, it_av, 0)       
+        # Average investment cost
+        it = np.ones([len(titles['T2TI']), int(max_lt)])
+        it = it * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis] * conv[:, np.newaxis]
+        it = np.where(bt_mask, it, 0)
 
-        # Standard deviation of investment cost - marginal unit
-        dit_mu = np.ones([len(titles['T2TI']), int(max_lt)])
-        dit_mu = dit_mu * bcet[:, c2ti['4 std ($/MWh)'], np.newaxis] * conv_mu[:, np.newaxis]
-        dit_mu = np.where(bt_mask, dit_mu, 0)
+        # Standard deviation of investment cost
+        dit = np.ones([len(titles['T2TI']), int(max_lt)])
+        dit = dit * bcet[:, c2ti['4 std ($/MWh)'], np.newaxis] * conv[:, np.newaxis]
+        dit = np.where(bt_mask, dit, 0)
 
-        # Standard deviation of investment cost - average of all units
-        dit_av = np.ones([len(titles['T2TI']), int(max_lt)])
-        dit_av = dit_av * bcet[:, c2ti['4 std ($/MWh)'], np.newaxis] * conv_av[:, np.newaxis]
-        dit_av = np.where(bt_mask, dit_av, 0)
-
-        # Subsidies - only valid for marginal unit
+        # Subsidies
         st = np.ones([len(titles['T2TI']), int(max_lt)])
         st = (st * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis]
-              * data['MEWT'][r, :, :] * conv_mu[:, np.newaxis])
+              * data['MEWT'][r, :, :] * conv[:, np.newaxis])
         st = np.where(bt_mask, st, 0)
 
         # Average fuel costs
         ft = np.ones([len(titles['T2TI']), int(max_lt)])
         ft = ft * bcet[:, c2ti['5 Fuel ($/MWh)'], np.newaxis]
         # TODO: Temporarily get MWFC from E3ME run
-        # ft2 = ft * data['MWFCX'][r, :, :]
+        ft2 = ft * data['MWFCX'][r, :, :]
         ft = np.where(lt_mask, ft, 0)
 
         # Standard deviation of fuel costs
@@ -178,11 +169,11 @@ def get_lcoe(data, titles):
         stor_cost = np.ones([len(titles['T2TI']), int(max_lt)])
         marg_stor_cost = np.ones([len(titles['T2TI']), int(max_lt)])
 
-        if np.rint(data['MSAL'][r, 0, 0]) in [2]:
+        if np.rint(data['MSAL'][r, 0, 0]) == 1:
             stor_cost = stor_cost * (data['MSSP'][r, :, 0, np.newaxis] +
                                      data['MLSP'][r, :, 0, np.newaxis])/1000
             marg_stor_cost = marg_stor_cost * 0
-        elif np.rint(data['MSAL'][r, 0, 0]) in [3, 4, 5]:
+        elif np.rint(data['MSAL'][r, 0, 0]) == 2 or np.rint(data['MSAL'][r, 0, 0]) == 3:
             stor_cost = stor_cost * (data['MSSP'][r, :, 0, np.newaxis] +
                                      data['MLSP'][r, :, 0, np.newaxis])/1000
             marg_stor_cost = marg_stor_cost * (data['MSSM'][r, :, 0, np.newaxis] +
@@ -200,22 +191,22 @@ def get_lcoe(data, titles):
 
         # 1-Expenses
         # 1.1-Without policy costs
-        npv_expenses1 = (it_av+ft+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses1 = (it+ft+omt+stor_cost+marg_stor_cost)/denominator
         # 1.2-With policy costs
         # npv_expenses2 = (it+st+fft+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
-        npv_expenses2 = (it_av+st+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses2 = (it+st+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
         # 1.3-Without policy, with co2p
         # TODO: marg_stor_cost?
-        npv_expenses3 = (it_mu+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses3 = (it+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
         # 1.3-Only policy costs
         # npv_expenses3 = (ct+fft+st)/denominator
         # 2-Utility
         npv_utility = (et)/denominator
         #Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility==1] = 0
-        # npv_utility[:,0] = 1
+        npv_utility[:,0] = 1
         # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator
+        npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOT
@@ -237,28 +228,21 @@ def get_lcoe(data, titles):
         data['MECW'][r, :, 0] = copy.deepcopy(lcoeco2)  # The real bare LCOE with taxes
         data['METC'][r, :, 0] = copy.deepcopy(tlcoeg)   # As seen by consumer (generalised cost)
         data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOT distribution
-        
-        # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])   # As seen by consumer (generalised cost)
-        # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOT distribution
-
 
         # Output variables
         data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, 2])
         data['MWFC'][r, :, 0] = copy.deepcopy(bcet[:, 4])
         data['MCOC'][r, :, 0] = copy.deepcopy(bcet[:, 0])
-        
-        if np.rint(data['MSAL'][r, 0, 0]) > 1:
-            data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
-        else:
-            data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6]
+
+#        data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6]
         # TODO: Temporarily replace fuel costs with MWFCX
-        # data['MWMC'][r, :, 0] = bcet[:, 0] + data['MWFCX'][r, :, 0] + bcet[:, 6]
+        data['MWMC'][r, :, 0] = bcet[:, 0] + data['MWFCX'][r, :, 0] + bcet[:, 6]
 
         data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1]*bcet[:, 1] +
                                         bcet[:, 5]*bcet[:, 5] +
                                         bcet[:, 7]*bcet[:, 7])
 
-        if r == 1:
+        if r == 40:
             x = 1+1
 
     return data

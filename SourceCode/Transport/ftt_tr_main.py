@@ -552,7 +552,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #                        print(np.sum(dSik, axis=1))
                 data['TEWS'][r, :, 0] = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
 
-                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
+                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=3e-3):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
                     """.format(sector, titles['RTI'][r], year, np.sum(data['TEWS'][r, :, 0]))
@@ -595,7 +595,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            #fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
@@ -620,8 +620,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 # Calculate fuel use - passenger car only! Therefore this will
                 # differ from E3ME results
-                # TEWG:                          km driven
-                # Convert energy unit (1/41.868) ktoe/MJ
+                # TEWG:                          million km driven
+                # Convert energy unit (1/41.868) ktoe/million MJ
                 # Energy demand (BBTC)           MJ/km
 
                 data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
@@ -631,8 +631,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data['TVFP'][r, :, 0] = (np.matmul(fuel_converter/fuel_converter.sum(axis=0), data['TE3P'][r, :, 0]))*\
                                             data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']] * \
                                                     CO2Corr[r]/ 41868
-                # "Emissions"
-                data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]*CO2Corr[r]*emis_corr[r,:]/1e6
+                # Emissions
+                data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']] \
+                                                * CO2Corr[r]*emis_corr[r,:]/1e6
 
        ############## Learning-by-doing ##################
 

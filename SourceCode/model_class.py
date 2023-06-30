@@ -22,7 +22,11 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
+
 # Local library imports
+# FTT-wide modules
+import SourceCode.energy_demand as energy_demand 
+
 # Separate FTT modules
 import SourceCode.Power.ftt_p_main as ftt_p
 import SourceCode.Transport.ftt_tr_main as ftt_tr
@@ -261,7 +265,9 @@ class ModelRun:
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
 
-            # Third, solve energy supply
+            # Third, solve energy supply 
+            variables = energy_demand.energy_demand_from_sectors(variables, self.titles,
+                                        self.histend, tl[y], self.ftt_modules)
             # Overwrite iter_lags to be used in the next iteration round
             iter_lags = copy.deepcopy(variables)
 #        # Print any diagnstics

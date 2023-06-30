@@ -73,6 +73,8 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
         for ftt in modules_enabled:
 
+#            if "General" == ftt: print("oi")
+
             # Start reading CSVs
             directory = os.path.join('Inputs', scen, ftt)
 
@@ -83,14 +85,20 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                     if file.endswith(".csv"):
 
+
                         # Read the csv
                         csv = pd.read_csv(os.path.join(root, file), header=0,
                                           index_col=0).fillna(0)
+
+
 
                         # Split file name
                         file_split = file[:-4].split('_')
 
                         var = file_split[0]
+
+#                        if var == 'MEWDX':
+#                            print('stop')
 
                         if len(file_split) == 1:
 
@@ -106,7 +114,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             warnings.warn('Variable {} is present in the folder as a csv but is not included \
                                           in VariableListing, so it will be ignored'.format(var))
 
+
                         else:
+
+#                            if var == "MEFI":
+#                                print(var)
 
                             if dims[var][3] == 'TIME':
 
@@ -118,7 +130,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                                 #print(var)
                                 read = csv.loc[:, var_tl]
-                                
+
+
+
                             else:
 
                                 read = csv
@@ -136,6 +150,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                     if len(titles[dims[var][3]]) == 1:
                                         data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                                     else:
+                                        # data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i, :len(var_tl_fit)]
                                         data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
 
                             # If the variable does not have key
@@ -150,16 +165,37 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                     elif len(titles[dims[var][2]]) > 1:
                                         data[scen][var][:, 0, :, 0] = read
                                     elif len(titles[dims[var][3]]) > 1:
+                                        # data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:,:len(var_tl_fit)]
                                         data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
 
                                 else:
                                     if all([len(titles[dims[var][x]]) == 1 for x in range(4)]):
                                         data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
                                     elif len(titles[dims[var][2]]) == 1:
+                                        # data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:, :len(var_tl_fit)]
                                         data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
 
                                     elif len(titles[dims[var][3]]) == 1:
                                         data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
+
+#            #For the scenarios, copy from the baseline the variables that are not in the scenario folder
+#            if scen != 'S0':
+#
+#                for var in data[scen]:
+#
+#                    if len(dims[var]) > 2 and dims[var][0] == 'RTI':
+#
+#                        for r, reg in enumerate(titles['RTI']):
+#
+#                            if np.all(data[scen][var][r, :, :, :]==0):
+#
+#                                 data[scen][var][r, :, :, :]= data['S0'][var][r, :, :, :].copy()
+#
+#                    elif np.all(data[scen][var]==0):
+#
+#                        data[scen][var] = data['S0'][var].copy()
+
+
 
     data_return = copy.deepcopy(data)
 
