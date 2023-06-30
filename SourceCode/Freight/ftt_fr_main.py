@@ -229,7 +229,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                         F[b2, b1] = (1.0-Fik)*(1.0-isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1]*(1.0-isReg[r, b2]) + 0.5*(isReg[r, b2]*isReg[r, b1])
 
 
-                        #Runge-Kutta market share dynamiccs
+                        # Runge-Kutta market share dynamiccs
                         k_1 = S_i*S_k * (Aik*F[b1, b2] - Aki*F[b2, b1])
                         k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (Aik*F[b1, b2] - Aki*F[b2, b1])
                         k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (Aik*F[b1, b2] - Aki*F[b2, b1])

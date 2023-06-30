@@ -411,7 +411,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # technologies
             bi = np.zeros((len(titles['RTI']),len(titles['T2TI'])))
             for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['MEWB'][0, :, :],data['MEWI'][r, :, 0])
+                bi[r,:] = np.matmul(data['MEWB'][0, :, :], data['MEWI'][r, :, 0])
             dw = np.sum(bi, axis=0)
 
             # Cumulative capacity incl. learning spill-over effects
@@ -706,7 +706,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             bi = np.zeros((len(titles['RTI']),len(titles['T2TI'])))
             for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['MEWB'][0, :, :],data['MEWI'][r, :, 0])
+                bi[r,:] = np.matmul(data['MEWB'][0, :, :], data['MEWI'][r, :, 0])
             dw = np.sum(bi, axis=0)
 
             # Cumulative capacity incl. learning spill-over effects

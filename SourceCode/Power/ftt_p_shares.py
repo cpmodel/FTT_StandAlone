@@ -129,9 +129,16 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
                 # Preferences are then adjusted for regulations
                 F[t1, t2] = Fik*(1.0-isReg[r, t1]) * (1.0 - isReg[r, t2]) + isReg[r, t2]*(1.0-isReg[r, t1]) + 0.5*(isReg[r, t1]*isReg[r, t2])
                 F[t2, t1] = (1.0-Fik)*(1.0-isReg[r, t2]) * (1.0 - isReg[r, t1]) + isReg[r, t1]*(1.0-isReg[r, t2]) + 0.5*(isReg[r, t2]*isReg[r, t1])
-
+                
+                # Runge-Kutta market share dynamiccs
+                k_1 = S_i*S_k * (Aik*F[t1, t2] - Aki*F[t2, t1])
+                k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (Aik*F[t1, t2] - Aki*F[t2, t1])
+                k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (Aik*F[t1, t2] - Aki*F[t2, t1])
+                k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (Aik*F[t1, t2] - Aki*F[t2, t1])
+                
                 # Market share dynamics
-                dSik[t1, t2] = S_i*S_k * (Aik*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - Aki*F[t2, t1]*Gijmax[t2]*Gijmin[t1])*dt/T_Scal
+                #dSik[t1, t2] = S_i*S_k * (Aik*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - Aki*F[t2, t1]*Gijmax[t2]*Gijmin[t1])*dt/T_Scal
+                dSik[t1, t2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                 dSik[t2, t1] = -dSik[t1, t2]
 
         # Add in exogenous sales figures. These are blended with

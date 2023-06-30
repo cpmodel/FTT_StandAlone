@@ -20,15 +20,13 @@ def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
         data["FRET"][:, :, 0] = copy.deepcopy(data['FRETX'][:, :, 0])
         #print(data["FRET"][0])
         for r in range(len(titles['RTI'])):  # Loop over world regions
-            if r == 0 and year in range(2014, 2018):
-                print(f"Electricity usage in heating in Belgium in {year}:")
-                print(f'HJEF: {data["HJEF"][r, 7, 0]}')
-                print(f'FRET: {data["FRET"][r, 18, 0]}')
+           
+                
             
             if "FTT-Tr" in ftt_modules:
                 data["FRET"][r, 15, 0] = data["TJEF"][r, 7, 0]
             if "FTT-Fr" in ftt_modules:
-                # TODO: fix something to account for missing data if freight turned off
+                # TODO?: fix something to account for missing data if freight turned off
                 data["FRET"][r, 15, 0] += data["ZJEF"][r, 7, 0]
                 
                 
@@ -36,7 +34,11 @@ def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
             
             if "FTT-H" in ftt_modules:            
                 data["FRET"][r, 18, 0] = data["HJEF"][r, 7, 0]
-            
+                if r == 0 and year in range(2014, 2018):
+                    print(f"Electricity usage in heating in Belgium in {year}:")
+                    print(f'HJEF: {data["HJEF"][r, 7, 0]}')
+                    print(f'FRET: {data["FRET"][r, 18, 0]}')
+                
            
     
                 
