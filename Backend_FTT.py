@@ -526,7 +526,7 @@ def retrieve_chart_data(type_):
             scenario_df["Variable Name"] = var_label
 
             #Collate into single data frame for all scenarios and variables
-            full_df = scenario_df if full_df is None else full_df.append(scenario_df)
+            full_df = scenario_df if full_df is None else pd.concat([full_df, scenario_df])
 
     # Sum across each dimensions if aggregate is set
     if agg == "true":
