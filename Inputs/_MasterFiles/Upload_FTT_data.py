@@ -30,7 +30,7 @@ ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 #          'FTT-H': [[0], 'FTT-H-13x70_2021'],
 #          'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
-models = {'FTT-P': [[2], 'FTT-P-24x70_2021']}
+models = {'FTT-P': [[0], 'FTT-P-24x70_2021']}
 
 #%%
 if __name__ == '__main__':
