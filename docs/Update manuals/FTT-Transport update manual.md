@@ -13,7 +13,7 @@ Same process as the FTT-Power model.
 
 ### Update cost data 
 1. Price data are updated annually (but can be done every two years) for the major regions, including Europe, the US, China, India, Brazil and Japan. For other regions, if not specifically requested, prices are first mapped from a proxy region (e.g. assume that Canada and the US share the same vehicle prices) (see proxy regions in Excel sheet x), then the weighted averages and standard deviation are calculated based on the mapped prices. The mapping processes are currently all done in Excel. Note that price data are collected and processed alongside the engine and technological specification data. Currently, the calculation is carried out in Excel (could be coded in the long run). 
-2. Fuel cost: collected GlobalPetrolPrices (https://www.globalpetrolprices.com/); World Bank/IMF prices. This variable is connected to E3ME (?) so it is only needed in the standalone version.
+2. Fuel cost: collected GlobalPetrolPrices (https://www.globalpetrolprices.com/); World Bank/IMF prices. 
 3. Rare mineral prices: Go to https://www.usgs.gov/centers/national-minerals-information-center/commodity-statistics-and-information and select a mineral (e.g., aluminium at https://www.usgs.gov/centers/national-minerals-information-center/aluminum-statistics-and-information). Then, open the prices and production cost for aluminium at: https://pubs.usgs.gov/periodicals/mcs2023/mcs2023-aluminum.pdf.
    
 ### Update other technological specification
