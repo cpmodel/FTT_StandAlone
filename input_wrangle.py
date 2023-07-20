@@ -1,24 +1,30 @@
 import os
 import pandas as pd
+import xlsxwriter
 
 os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_StandAlone")
-# Load the Excel workbook
+
 # Change depending on scenario
-scen = 'S2'
-#file_path = "Inputs/_Masterfiles/FTT-P/FTT-P-24x70_2021_S0.xlsx"
-file_path = "Inputs/_Masterfiles/FTT-P/FTT-P-24x70_2021_S2.xlsx"
+scen = 'S0' ## this needs sorting and the scens need to be generalised
+
+# Load the Excel workbook
+file_path = f"Inputs/_Masterfiles/FTT-P/FTT-P-24x70_2021_{scen}.xlsx"
 
 xl = pd.ExcelFile(file_path)
 
+#%% # For future generalisation and running multiple scens
+# # Assuming 'scen' is a string representing a scenario name
+# output_workbooks = {}
+# # Initialize the output workbook as an empty list for the given scenario
+# output_workbooks[scen] = []
 
 #%%
 #### Cell for adding main sheets of master input file to trimmed output
 # initialise output workbook
-output_workbook = []
+output_workbook_S0 = []
 # Specify the sheet names to process
 sheets_to_process = ['BCET', 'MEWA', 'MGAM', 'MEWT', 'MEWR', 'MWKA', 'MEFI']  # Add the desired sheet names here
 #sheets_to_process = ['BCET']
-# Initialize an empty list to store the modified DataFrames
 
 # Iterate over the desired sheets and apply the transformations
 for sheet_name in sheets_to_process:
@@ -53,7 +59,7 @@ for sheet_name in sheets_to_process:
     # Delete the first row from the DataFrame
     df = df.iloc[1:].reset_index(drop=True)
     
-    output_workbook.append(df)
+    output_workbook_S0.append(df)
 
 #%%
 #### Code for adding MWDD sheet which has different structure
@@ -67,7 +73,7 @@ df.columns.values[0] = 'Technology'
 df = df.iloc[1:].reset_index(drop=True)
 
 # Add to output
-output_workbook.append(df)
+output_workbook_S0.append(df)
 
 
 #%%
@@ -77,20 +83,42 @@ sheets_to_output = ['BCET', 'MEWA', 'MGAM', 'MEWT',
                     'MEWR', 'MWKA', 'MEFI', 'MWDD']  # Add the desired sheet names here
 
 # Create a new Excel writer object
-writer = pd.ExcelWriter('output_workbook_S2.xlsx', engine='xlsxwriter')
+#writer = pd.ExcelWriter('output_workbook_S2.xlsx', engine='xlsxwriter')
+#output_file = 'output_workbook_S2.xlsx'
 
+
+with pd.ExcelWriter('output_workbook_S0.xlsx') as writer:
 # Iterate through the sheet names and output list
-for sheet_name, output in zip(sheets_to_output, output_workbook):
-    # Create a new DataFrame from the output
-    df = pd.DataFrame(output)
+    for sheet_name, output in zip(sheets_to_output, output_workbook_S2):
+    
+        # Create a new DataFrame from the output
+        df = pd.DataFrame(output)
+        
+        # Write the DataFrame to a new sheet in the output workbook
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+        # Write the DataFrame to an Excel file directly
+        #df.to_excel(output_file, sheet_name=sheet_name, index=False)
 
-    # Write the DataFrame to a new sheet in the output workbook
-    df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-# Save the output workbook
-writer.save()
+#%%
 
 
+To specify the sheet name:
 
+df1.to_excel("output.xlsx",
+             sheet_name='Sheet_name_1')  
+If you wish to write to more than one sheet in the workbook, it is necessary to specify an ExcelWriter object:
+
+df2 = df1.copy()
+with pd.ExcelWriter('output.xlsx') as writer:  
+    df1.to_excel(writer, sheet_name='Sheet_name_1')
+    df2.to_excel(writer, sheet_name='Sheet_name_2')
+ExcelWriter can also be used to append to an existing Excel file:
+
+with pd.ExcelWriter('output.xlsx',
+                    mode='a') as writer:  
+    df.to_excel(writer, sheet_name='Sheet_name_3')
+To set the library that is used to write the Excel file, you can pass the engine keyword (the default engine is automatically chosen depending on the file extension):
+
+df1.to_excel('output1.xlsx', engine='xlsxwriter') 
 
 

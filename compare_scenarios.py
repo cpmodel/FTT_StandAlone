@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from openpyxl import load_workbook
 
-def compare_scenarios(scen_base, scen_compare, skip_rows=0, skip_columns=0):
+def compare_scenarios(scen_base, scen_compare):
     # Load the workbooks
     wb1 = load_workbook(filename=scen_base)
     wb2 = load_workbook(filename=scen_compare)
@@ -35,9 +35,8 @@ def compare_scenarios(scen_base, scen_compare, skip_rows=0, skip_columns=0):
     return changed_rows
 
 # Example usage
-scen_base = "Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S0.xlsx"
-scen_compare = "Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S2.xlsx"
+scen_base = "output_workbook_S0.xlsx"
+scen_compare = "output_workbook_S2.xlsx"
 
-changed_data = compare_scenarios(scen_base, scen_compare
-                                 skip_columns= )
+changed_data = compare_scenarios(scen_base, scen_compare)
 print(changed_data)
