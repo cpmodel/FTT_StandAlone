@@ -46,8 +46,10 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
-from SourceCode.Freight.ftt_fr_lcof import get_lcof
+from support.divide import divide
+from support.econometrics_functions import estimation
+
+from ftt_fr_lcof import get_lcof
 
 #Main function
 
@@ -160,14 +162,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         #find if there is a regulation and if it is exceeded
 
-        isReg =  np.zeros([len(titles['RTI']), len(titles['FTTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
-        division = divide((data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]),
-                          data_dt['ZREG'][:, :, 0])
-        isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
+        isReg = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
+        isReg = np.where(data['ZREG'][:, :, 0] > 0.0,
+                          (np.tanh(1 +
+                              (data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]) 
+                                  / data['ZREG'][:, :, 0])),
+                          0.0)
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
+        # Factor used to create quarterly data from annual figures
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
 
         for t in range(1, no_it+1):
     #Interpolations to avoid staircase profile
@@ -181,6 +187,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             for r in range(len(titles['RTI'])):
 
+                #print(D[r])
                 if D[r] == 0.0:
                     continue
 
@@ -189,6 +196,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 # F contains the preferences
                 F = np.ones([len(titles['FTTI']), len(titles['FTTI'])])*0.5
+
+                k_1 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
+                k_2 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
+                k_3 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
+                k_4 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
 
                 # -----------------------------------------------------
                 # Step 1: Endogenous EOL replacements
@@ -222,7 +234,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         # Consumer preference incl. uncertainty
                         Fik = 0.5*(1+np.tanh(1.25*(data_dt['ZTLL'][r, b2, 0]-data_dt['ZTLL'][r, b1, 0])/dFik))
-                        Fki = 1-Fik
+                        #Fki = 1-Fik
 
                         # Preferences are then adjusted for regulations
                         F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
@@ -230,20 +242,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
                         #Runge-Kutta market share dynamiccs
-                        k_1 = S_i*S_k * (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_1[b1,b2] = S_i*S_k * (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_2[b1,b2] = (S_i+dt*k_1[b1,b2]/2)*(S_k-dt*k_1[b1,b2]/2)* (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_3[b1,b2] = (S_i+dt*k_2[b1,b2]/2)*(S_k-dt*k_2[b1,b2]/2) * (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_4[b1,b2] = (S_i+dt*k_3[b1,b2])*(S_k-dt*k_3[b1,b2]) * (Aik*F[b1, b2] - Aki*F[b2, b1])
 
                         #This method currently applies RK4 to the shares, but all other components of the equation are calculated for the overall time step
                         #We must assume the the LCOE does not change significantly in a time step dt, so we can focus on the shares.
 
-                        dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6#*data['ZCEZ'][r,0,0]
+                        dSik[b1, b2] = dt*(k_1[b1,b2]+2*k_2[b1,b2]+2*k_3[b1,b2]+k_4[b1,b2])/6 #*data['ZCEZ'][r,0,0]
                         dSik[b2, b1] = -dSik[b1, b2]
 
-                        # Market share dynamics
-#                        dSik[b1, b2] = S_i*S_k* (Aik*F[b1,b2] - Aki*F[b2,b1])*dt#*data['ZCEZ'][r,0,0]
-#                        dSik[b2, b1] = -dSik[b1, b2]
+
 
                     #Check share changes sum to zero goes here, this is under time and region loop
                     #ALso includes share equation
@@ -261,9 +271,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     Negative market shares detected! Critical error!
                     """.format(sector, titles['RTI'][r], year)
                     warnings.warn(msg)
+                
+                #print(data['ZEWS'][r,:,0])
 
-
-            for r in range(len(titles['RTI'])):
+            
                 #Copy over costs that dont change
                 data['ZCET'][:, :, 1:20] = data_dt['ZCET'][:, :, 1:20]
 
@@ -363,13 +374,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 if var.startswith("R"):
 
-                    data_dt[var] = copy.deepcopy(time_lag[var])
+                    data_dt[var] = copy.deepcopy(data[var])
 
             for var in time_lag.keys():
 
                 if var.startswith("Z"):
 
-                    data_dt[var] = copy.deepcopy(time_lag[var])
+                    data_dt[var] = copy.deepcopy(data[var])
 
 
     return data
