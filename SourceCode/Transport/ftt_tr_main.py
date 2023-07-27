@@ -536,6 +536,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
 
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
                 #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                #This will ensure regulations take priority over capacity additions
                 reg_vs_exog = ((data['TWSA'][r, :, 0]*TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
                 data['TWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0])
 
