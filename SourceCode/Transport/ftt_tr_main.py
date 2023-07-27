@@ -320,7 +320,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
             # CORRECTION TO MARKET SHARES
             # Sometimes historical market shares do not add up to 1.0
             if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 0.0, atol=1e-9)
-                    and np.sum(data['TEWS'][r, :, 0]) > 0.0):
+                    and np.sum(data['TEWS'][r, :, 0]) > 0.0 ):
                 data['TEWS'][r, :, 0] = np.divide(data['TEWS'][r, :, 0],
                                                    np.sum(data['TEWS'][r, :, 0]))
 
@@ -420,10 +420,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
 
         #Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
-        division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]),
-                          data_dt['TREG'][:, :, 0])
-        isReg = np.tanh(1 + division)
+        isReg = np.where(data['TREG'][:, :, 0] > 0.0,
+                          (np.tanh(1 +
+                              (data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]) 
+                                  / data['TREG'][:, :, 0])),
+                          0.0)
 
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
@@ -496,8 +497,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
                         Fik = 0.5*(1+np.tanh(1.25*(data_dt['TELC'][r, v2, 0]-data_dt['TELC'][r, v1, 0])/dFik))
 
                         # Preferences are then adjusted for regulations
-                        F[v1, v2] = Fik*(1.0-isReg[r, v1]) 
-                        F[v2, v1] = (1.0-Fik)*(1.0-isReg[r, v2]) 
+                        F[v1, v2] = Fik*(1.0-isReg[r, v1])* (1.0 - isReg[r, v2]) + isReg[r, v2]*(1.0-isReg[r, v1]) + 0.5*(isReg[r, v1]*isReg[r, v2]) 
+                        F[v2, v1] = (1.0-Fik)*(1.0-isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1]*(1.0-isReg[r, v2]) + 0.5*(isReg[r, v2]*isReg[r, v1]) 
 
                         if scenario == 'S0':
 
@@ -536,7 +537,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
 
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
                 #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                #This will ensure regulations take priority over capacity additions
                 reg_vs_exog = ((data['TWSA'][r, :, 0]*TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
                 data['TWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0])
 
