@@ -41,7 +41,8 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
+from support.divide import divide
+from support.econometrics_functions import estimation
 
 
 # %% lcot
@@ -171,7 +172,7 @@ def get_lcot(data, titles):
 
         # Transform into lognormal space
         logtlcot = np.log(tlcot*tlcot/np.sqrt(dlcot*dlcot + tlcot*tlcot)) + data['TGAM'][r, :, 0]
-        dlogtlcot = np.sqrt(np.log10(1.0 + dlcot*dlcot/(tlcot*tlcot)))
+        dlogtlcot = np.sqrt(np.log(1.0 + dlcot*dlcot/(tlcot*tlcot)))
 
         # Pass to variables that are stored outside.
         data['TEWC'][r, :, 0] = lcot            # The real bare LCOT without taxes
@@ -257,7 +258,7 @@ def survival_function(data, time_lag, histend, year, titles):
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, specs):
+def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
     """
     Main solution function for the module.
 
@@ -420,11 +421,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         #Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
-        division = divide((data_dt['TEWS'][:, :, 0] - data['TREG'][:, :, 0]),
+        division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]),
                           data_dt['TREG'][:, :, 0])
-        isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
-        isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
+        isReg = np.tanh(1 + division)
+
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
+        isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
 
         # Call the survival function routine.
         #data = survival_function(data, time_lag, histend, year, titles)
@@ -433,8 +435,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         #data['RVTS'][:, 0, 0] = np.sum(data['REVS'][:, :, 0], axis=1)
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
 
         ############## Computing new shares ##################
 
@@ -444,6 +446,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Both rvkm and RFLT are exogenous at the moment
             # Interpolate to prevent staircase profile.
             rvkmt = time_lag['RVKM'][:, 0, 0] + (data['RVKM'][:, 0, 0] - time_lag['RVKM'][:, 0, 0]) * t * dt
+
+            rfllt = time_lag['RFLT'][:, 0, 0] + (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * (t-1) * dt
             rfltt = time_lag['RFLT'][:, 0, 0] + (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
             for r in range(len(titles['RTI'])):
@@ -492,33 +496,37 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         Fik = 0.5*(1+np.tanh(1.25*(data_dt['TELC'][r, v2, 0]-data_dt['TELC'][r, v1, 0])/dFik))
 
                         # Preferences are then adjusted for regulations
-                        F[v1, v2] = Fik*(1.0-isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2]*(1.0-isReg[r, v1]) + 0.5*(isReg[r, v1]*isReg[r, v2])
-                        F[v2, v1] = (1.0-Fik)*(1.0-isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1]*(1.0-isReg[r, v2]) + 0.5*(isReg[r, v2]*isReg[r, v1])
+                        F[v1, v2] = Fik*(1.0-isReg[r, v1]) 
+                        F[v2, v1] = (1.0-Fik)*(1.0-isReg[r, v2]) 
+
+                        if scenario == 'S0':
+
+                            # Market share dynamics
+                            dSik[v1, v2] = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])*dt
+                            
+                            dSik[v2, v1] = -dSik[v1, v2]
+
+                        else:
 
                         #Runge-Kutta market share dynamiccs
-                        k_1 = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])
-                        k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2)* (Aik*F[v1,v2] - Aki*F[v2,v1])
-                        k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * (Aik*F[v1,v2] - Aki*F[v2,v1])
-                        k_4 = (S_veh_i+dt*k_3)*(S_veh_k-dt*k_3) * (Aik*F[v1,v2] - Aki*F[v2,v1])
+                            k_1 = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])
+                            k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2)* (Aik*F[v1,v2] - Aki*F[v2,v1])
+                            k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * (Aik*F[v1,v2] - Aki*F[v2,v1])
+                            k_4 = (S_veh_i+dt*k_3)*(S_veh_k-dt*k_3) * (Aik*F[v1,v2] - Aki*F[v2,v1])
 
-                        # Market share dynamics
-                        #dSik[v1, v2] = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])*dt
-                        dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
-                        dSik[v2, v1] = -dSik[v1, v2]
+                            dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
 
-                # Add in exogenous sales figures. These are blended with
-                # endogenous result! Note that it's different from the
-                # ExogSales specification!
+                            dSik[v2, v1] = -dSik[v1, v2]
+
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_capacity = endo_shares * rfltt[r, np.newaxis]
+
                 Utot = rfltt[r]
                 dSk = np.zeros([len(titles['VTTI'])])
                 dUk = np.zeros([len(titles['VTTI'])])
                 dUkTK = np.zeros([len(titles['VTTI'])])
                 dUkREG = np.zeros([len(titles['VTTI'])])
-
-                # PV: Added a term to check that exogenous capacity is smaller than rgulated capacity.
-                # Regulations have priority over exogenous capacity
-                reg_vs_exog = ((data['TWSA'][r, :, 0] + data_dt['TEWK'][r, :, 0]) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
-                data['TWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0])
                 TWSA_scalar = 1.0
 
                 # Check that exogenous sales additions aren't too large
@@ -527,32 +535,41 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
 
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
+                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((data['TWSA'][r, :, 0]*TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
+                data['TWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0])
 
-                TWSA_gt_null = data['TWSA'][r, :, 0] >= 0.0
-                dUkTK = np.where(TWSA_gt_null, data['TWSA'][r, :, 0] * TWSA_scalar, 0.0)
+                #TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                dUkTK =  data['TWSA'][r, :, 0]*TWSA_scalar/no_it
 
-                # Correct for regulations
-                #Share of UED * change in UED * isReg i.e. change in UED split into technologies times isReg
-                if time_lag['RFLT'][r, 0, 0] > 0.0 and rfltt[r] > 0.0 and (rfltt[r] - time_lag['RFLT'][r, 0, 0]) > 0.0:
+                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
+                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # if rflt (i.e. total demand) had not grown.
 
-                    dUkREG = -data_dt['TEWK'][r, :, 0] * ( (rfltt[r] - time_lag['RFLT'][r, 0, 0]) /
-                                 time_lag['RFLT'][r, 0, 0]) * isReg[r, :].reshape([len(titles['VTTI'])])
-                # Sum effect of exogenous sales additions (if any) with
-                # effect of regulations
+                dUkREG = -(endo_capacity - endo_shares*rfllt[r,np.newaxis])*isReg[r, :].reshape([len(titles['VTTI'])])
+                           
+
+                # Sum effect of exogenous sales additions (if any) with effect of regulations. 
                 dUk = dUkTK + dUkREG
                 dUtot = np.sum(dUk)
-                # Convert to market shares and make sure sum is zero
+
+                # Convert to market shares 
+                #Although capacity additions and regulations are in levels, we model in shares, 
+                #so we need to calculate the change in shares, and then recalculate capacity.
+                #This makes sure we still match total demand, and do not add/take away
+
+                #Converting the changes in capacity to changes in shares will redistribute the shares based on the new capacity additions/substractions.
+                #This is essentially a renormalisation of shares based on the additions.
+
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['TEWK'][r, :, 0]*np.divide(dUtot, (Utot*Utot))
-#                        soel = np.sum(dSik, axis=1)
-#                        st_1 = data_dt['TEWS'][r, :, 0]
+                dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot))
 
-                # New market shares
+                #Correct endogenous market shares based on capacity additions and regulations              
+                data['TEWS'][r, :, 0] = endo_shares + dSk
 
-#                        print(np.sum(dSik, axis=1))
-                data['TEWS'][r, :, 0] = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
 
-                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
+
+                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
                     """.format(sector, titles['RTI'][r], year, np.sum(data['TEWS'][r, :, 0]))
@@ -576,17 +593,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # Sales are the difference between fleet sizes and the addition of scrapped vehicles #TODO check this
-            data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0])/dt
+            #data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0])/dt
 
-            data["TEWI"][:, :, 0] = 0
-            for r in range(len(titles['RTI'])):
-                for tech in range(len(titles['ITTI'])):
-                    if(data['TEWK'][r, tech, 0]-time_lag['TEWK'][r, tech, 0]) > 0:
-                        data["TEWI"][r, tech, 0] = (data['TEWK'][r, tech, 0]-data_dt['TEWK'][r, tech, 0])/dt
 
-            data["TEWI"][:, :, 0] = data["TEWI"][:, :, 0] + np.where(data['BTTC'][:, :, c3ti['8 lifetime']] !=0.0,
+            #to match e3me:
+            #data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0])/dt  
+            #copying ftt power
+            data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - time_lag['TEWK'][:, :, 0])
+            
+            data['TEWI'][:, :, 0] = np.where(data['TEWI'][:, :, 0] < 0.0,
+                                               np.where(data['BTTC'][:, :, c3ti['8 lifetime']] !=0.0,
                                                             divide(data_dt['TEWK'][:, :, 0],
-                                                            data['BTTC'][:, :, c3ti['8 lifetime']]),0.0)
+                                                            data['BTTC'][:, :, c3ti['8 lifetime']]),0.0),
+                                               data['TEWI'][:, :, 0]+ np.where(data['BTTC'][:, :, c3ti['8 lifetime']] !=0.0,
+                                                            divide(data_dt['TEWK'][:, :, 0],
+                                                            data['BTTC'][:, :, c3ti['8 lifetime']]),0.0))
+            
+
 
 
             #This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
