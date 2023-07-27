@@ -43,7 +43,7 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
+from support.divide import divide
 #from support.econometrics_functions import estimation
 
 # %% lcoh
@@ -142,10 +142,9 @@ def get_lcoih(data, titles, year):
         dft = np.where(mask, dft, 0)
 
         #fuel tax/subsidies
-        #fft = np.ones([len(titles['ITTI']), int(max_lt)])
-#        fft = ft * data['PG_FUELTAX'][r, :, :]
-#        fft = np.where(lt_mask, ft, 0)
-
+        ftt = np.ones([len(titles['ITTI']), int(max_lt)])
+        ftt = ftt * data['IFT1'][r,:, 0, np.newaxis]/ce
+        ftt = np.where(mask, ft, 0)
         # Fixed operation & maintenance cost - variable O&M available but not included
         omt = np.ones([len(titles['ITTI']), int(max_lt)])
         omt = omt * data['BIC1'][r,:, ctti['3 O&M cost mean (Euros/MJ/s/year)'], np.newaxis]*conv #(euros per MW) in a year
@@ -164,7 +163,7 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+omt)/denominator
+        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
@@ -246,6 +245,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
     data = get_lcoih(data, titles, year)
 
+    # Factor used to create quarterly data from annual figures
+    no_it = int(data['noit'][0,0,0])
+    dt = 1 / float(no_it)
+
     # Endogenous calculation takes over from here
     if year > histend['IUD1']:
 
@@ -269,8 +272,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
         kappa = 10 #tech substitution constant
 
         ############## Computing total useful energy demand ##################
@@ -315,7 +318,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         continue
 
                     #TODO: create market share constraints
-                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC1'][0, b1, 0] - data_dt['IWS1'][r, b1, 0])/0.1)
+                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC1'][r, b1, 0] - data_dt['IWS1'][r, b1, 0])/0.1)
                     #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
 
 
@@ -357,8 +360,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[b2, b1] = -dSik[b1, b2]
 
-                        #dSik[b1, b2] = S_i*S_k* (Aik*F[b1,b2]*Gijmax[b1] - Aki*F[b2,b1]*Gijmax[b2])*dt
-                        #dSik[b2, b1] = -dSik[b1, b2]
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['IWS1'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_capacity = endo_shares * IUD1t[r, np.newaxis]
 
 
                 # -----------------------------------------------------
@@ -371,24 +375,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = IUD1t[r]
-                iud_lag = time_lag['IUD1'][:, :, 0].sum(axis=1)
+                iud_lag = data_dt['IUD1'][:, :, 0].sum(axis=1)
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
                 # Check that exogenous share changes add to zero
-                dUkTK = data['IXS1'][r, :, 0]
+                dUkTK = data['IXS1'][r, :, 0]/no_it
                 if (data['IXS1'][r, :, 0].sum() > 0.0):
                     dUkTK[0] = dUkTK[0] - data['IXS1'][r, :, 0].sum()
+                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((dUkTK*Utot + endo_capacity) > data['IRG1'][r, :, 0]) & (data['IRG1'][r, :, 0] >= 0.0)
+                dUkTK = np.where(reg_vs_exog, dUkTK)
 
-                # Correct for regulations
 
-                if iud_lag[r] > 0.0 and IUD1t[r] > 0.0 and (IUD1t[r] - iud_lag[r]) > 0.0:
+                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to demand increasing.
+                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # if total demand had not grown.
 
-                    dUkREG = -data_dt['IUD1'][r, :, 0] * ( (IUD1t[r] - iud_lag[r]) /
-                                    iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])
-
+                dUkREG = -(endo_capacity - endo_shares*rfllt[r,np.newaxis])*isReg[r, :].reshape([len(titles['VTTI'])])
+                     
 
                 # Sum effect of exogenous sales additions (if any) with
                 # effect of regulations
@@ -397,7 +404,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['IWS1'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                dSk = np.divide(dUk, Utot) - endo_capacity*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
 
 
                 # New market shares
@@ -456,6 +463,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                                              divide(data['IUD1'][:, :, 0],
                                                     data['BIC1'][:, :, ctti["9 Conversion efficiency"]]),0.0)
 
+            #Calculate (useful) fuel demand for industrial heat processes by using technology to fuel matrix
+            for r in range(len(titles['RTI'])):
+                data['IHF1'][r,:,0] = np.matmul(data['IJT1'][0,:,:], data['IFD1'][r,:,0])
+
 
 
             # =============================================================
@@ -499,6 +510,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             for var in data_dt.keys():
 
                 data_dt[var] = copy.deepcopy(data[var])
+
 
 
     return data
