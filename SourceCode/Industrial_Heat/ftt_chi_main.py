@@ -287,6 +287,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             #Time lagged UED plus change in UED * (no of iterations) * dt
 
             IUD1t = time_lag['IUD1'][:, :, 0].sum(axis=1) + (IUD1tot - time_lag['IUD1'][:, :, 0].sum(axis=1)) * t * dt
+            IUD1lt = time_lag['IUD1'][:, :, 0].sum(axis=1) + (IUD1tot - time_lag['IUD1'][:, :, 0].sum(axis=1)) * (t-1) * dt
 
             for r in range(len(titles['RTI'])):
 
@@ -375,7 +376,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = IUD1t[r]
-                iud_lag = data_dt['IUD1'][:, :, 0].sum(axis=1)
+                
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
@@ -394,7 +395,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_capacity - endo_shares*rfllt[r,np.newaxis])*isReg[r, :].reshape([len(titles['VTTI'])])
+                dUkREG = -(endo_capacity - endo_shares*IUD1lt[r,np.newaxis])*isReg[r, :].reshape([len(titles['VTTI'])])
                      
 
                 # Sum effect of exogenous sales additions (if any) with
