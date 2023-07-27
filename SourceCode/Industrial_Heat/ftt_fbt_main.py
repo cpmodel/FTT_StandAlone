@@ -43,8 +43,8 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
-#from support.econometrics_functions import estimation
+from support.divide import divide
+from support.econometrics_functions import estimation
 
 # %% lcoh
 # -----------------------------------------------------------------------------
@@ -87,8 +87,6 @@ def get_lcoih(data, titles, year):
         if data['IUD2'][r, :, 0].sum(axis=0)==0:
             continue
 
-        # Cost matrix
-        #BIC2 = data['BIC2'][r, :, :]
 
         lt = data['BIC2'][r,:, ctti['5 Lifetime (years)']]
         max_lt = int(np.max(lt))
@@ -145,9 +143,9 @@ def get_lcoih(data, titles, year):
         dft = np.where(mask, dft, 0)
 
         #fuel tax/subsidies
-        #fft = np.ones([len(titles['ITTI']), int(max_lt)])
-#        fft = ft * data['PG_FUELTAX'][r, :, :]
-#        fft = np.where(lt_mask, ft, 0)
+        ftt = np.ones([len(titles['ITTI']), int(max_lt)])
+        ftt = ftt * data['IFT2'][r,:, 0, np.newaxis]/ce
+        ftt = np.where(mask, ft, 0)
 
         # Fixed operation & maintenance cost - variable O&M available but not included
         omt = np.ones([len(titles['ITTI']), int(max_lt)])
@@ -169,12 +167,12 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+omt)/denominator
+        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
         npv_utility = 1/denominator
-        #Remove 1s for tech with small lifetime than max but keep t=0 as 1
+        #Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility==1] = 0
         npv_utility[:,0] = 1
         # 3-Standard deviation (propagation of error)
@@ -207,7 +205,7 @@ def get_lcoih(data, titles, year):
 
     return data
 
-#Final energy demand has to match IEA
+
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -250,12 +248,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
     sector = 'Food, beverages and tobacco'
 
-    #Get fuel prices from E3ME and add them to the data for this code
-    #Initialise everything #TODO
 
-    #Calculate or read in FED
-    #Calculate historical emissions
     data = get_lcoih(data, titles, year)
+
+
 
     # Endogenous calculation takes over from here
     if year > histend['IUD2']:
@@ -272,20 +268,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
         # Create the regulation variable #Regulate capacity #no regulations yet, isReg full of zeros
         isReg = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
-        division = divide((data_dt['IWK2'][:, :, 0] - data['IRG2'][:, :, 0]),
-                          data_dt['IRG2'][:, :, 0])
-        isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
+        isReg = np.where(data['IRG2'][:, :, 0] > 0.0,
+                          (np.tanh(1 +
+                              (data_dt['IWK2'][:, :, 0] - data['IRG2'][:, :, 0]) 
+                                  / data['IRG2'][:, :, 0])),
+                          0.0)
         isReg[data['IRG2'][:, :, 0] == 0.0] = 1.0
         isReg[data['IRG2'][:, :, 0] == -1.0] = 0.0
 
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
         kappa = 10 #tech substitution constant
 
-        ############## Computing new shares ##################
+        ############## Computing total useful energy demand ##################
 
         IUD2tot = data['IUD2'][:, :, 0].sum(axis=1)
         #Start the computation of shares
@@ -295,6 +292,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             #Time lagged UED plus change in UED * (no of iterations) * dt
 
             IUD2t = time_lag['IUD2'][:, :, 0].sum(axis=1) + (IUD2tot - time_lag['IUD2'][:, :, 0].sum(axis=1)) * t * dt
+            IUD2lt = time_lag['IUD2'][:, :, 0].sum(axis=1) + (IUD2tot - time_lag['IUD2'][:, :, 0].sum(axis=1)) * (t-1) * dt
 
             for r in range(len(titles['RTI'])):
 
@@ -326,7 +324,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         continue
 
                     #TODO: create market share constraints
-                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC2'][0, b1, 0] - data_dt['IWS2'][r, b1, 0])/0.1)
+                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC2'][r, b1, 0] - data_dt['IWS2'][r, b1, 0])/0.1)
                     #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
 
 
@@ -353,7 +351,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                         # Preferences are then adjusted for regulations
                         F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
-                        F[b2, b1] = (1.0-Fik)*(1.0-isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1]*(1.0-isReg[r, b2]) + 0.5*(isReg[r, b2]*isReg[r, b1])
+                        F[b2, b1] = (1.0-Fik)*(1.0-isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1]*(1.0-isReg[r, b2]) + 0.5*(isReg[r, b2]*isReg[r, b1]) 
 
 
                         #Runge-Kutta market share dynamiccs
@@ -368,8 +366,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[b2, b1] = -dSik[b1, b2]
 
-                        #dSik[b1, b2] = S_i*S_k* (Aik*F[b1,b2]*Gijmax[b1] - Aki*F[b2,b1]*Gijmax[b2])*dt
-                        #dSik[b2, b1] = -dSik[b1, b2]
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['IWS1'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_capacity = endo_shares * IUD2t[r, np.newaxis]
 
 
                 # -----------------------------------------------------
@@ -382,23 +381,26 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = IUD2t[r]
-                iud_lag = time_lag['IUD2'][:, :, 0].sum(axis=1)
+                
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
                 # Check that exogenous share changes add to zero
-                dUkTK = data['IXS2'][r, :, 0]
+                dUkTK = data['IXS2'][r, :, 0]/no_it
                 if (data['IXS2'][r, :, 0].sum() > 0.0):
                     dUkTK[0] = dUkTK[0] - data['IXS2'][r, :, 0].sum()
+                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((dUkTK*Utot + endo_capacity) > data['IRG2'][r, :, 0]) & (data['IRG2'][r, :, 0] >= 0.0)
+                dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
-                # Correct for regulations #TODO Does this actually make sense?
 
-                if iud_lag[r] > 0.0 and IUD2t[r] > 0.0 and (IUD2t[r] - iud_lag[r]) > 0.0:
+                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to demand increasing.
+                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # if total demand had not grown.
 
-                    dUkREG = -data_dt['IUD2'][r, :, 0] * ( (IUD2t[r] - iud_lag[r]) /
-                                    iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])
+                dUkREG = -(endo_capacity - endo_shares*IUD2lt[r,np.newaxis])*isReg[r, :].reshape([len(titles['ITTI'])])
 
 
                 # Sum effect of exogenous sales additions (if any) with
@@ -408,15 +410,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['IWS2'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot)) + dUkTK
 
 
                 # New market shares
                 # check that market shares sum to 1
-                        #print(np.sum(dSik, axis=1))
+
+
                 data['IWS2'][r, :, 0] = data_dt['IWS2'][r, :, 0] + np.sum(dSik, axis=1) + dSk
 
-                if ~np.isclose(np.sum(data['IWS2'][r, :, 0]), 1.0, atol=1e-5):
+                if ~np.isclose(np.sum(data['IWS1'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
                     """.format(sector, titles['RTI'][r], year, np.sum(data['IWS2'][r, :, 0]))
