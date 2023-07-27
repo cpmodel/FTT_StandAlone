@@ -24,25 +24,26 @@ from tqdm import tqdm
 
 # Local library imports
 # Separate FTT modules
-import SourceCode.Power.ftt_p_main as ftt_p
-import SourceCode.Transport.ftt_tr_main as ftt_tr
-import SourceCode.Heat.ftt_h_main as ftt_h
+import ftt_p_main as ftt_p
+import ftt_tr_main as ftt_tr
+import ftt_h_main as ftt_h
 #import ftt_s_main as ftt_s
 #import ftt_agri_main as ftt_agri
-import SourceCode.Freight.ftt_fr_main as ftt_fr
+import ftt_fr_main as ftt_fr
 #import ftt_flex_main as ftt_flex
-import SourceCode.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
-import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
-import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
-import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
-import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
+import ftt_chi_main as ftt_indhe_chi
+import ftt_fbt_main as ftt_indhe_fbt
+import ftt_mtm_main as ftt_indhe_mtm
+import ftt_nmm_main as ftt_indhe_nmm
+import ftt_ois_main as ftt_indhe_ois2
 
 
 # Support modules
-import SourceCode.support.input_functions as in_f
-import SourceCode.support.titles_functions as titles_f
-import SourceCode.support.dimensions_functions as dims_f
-from SourceCode.support.cross_section import cross_section as cs
+import support.input_functions as in_f
+#import support.specification_functions as specs_f
+import support.titles_functions as titles_f
+import support.dimensions_functions as dims_f
+from support.cross_section import cross_section as cs
 
 
 class ModelRun:
@@ -222,7 +223,7 @@ class ModelRun:
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
-                                        self.domain)
+                                        self.domain, self.scenarios)
             if "FTT-Fr" in self.ftt_modules:
                 variables = ftt_fr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
