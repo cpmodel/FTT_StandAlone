@@ -81,7 +81,7 @@ def interp(X,Y,X0,L):
     # X Data spacing: assumes homogenous spacing
     D = abs(X[1]-X[0])
     # We do a table lookup algorithm
-    I = int(LL)
+    I = int(LL)-1
     while abs(X[I]-X0) > D:
         LL = LL/2
         if(X[I] > X0):
@@ -123,6 +123,7 @@ def interp(X,Y,X0,L):
 # -----------------------------------------------------------------------------
 # -------------------------- marginal calculation ------------------------------
 # -----------------------------------------------------------------------------
+#@njit(fastmath=True)
 def marginal_function(MEPD,RERY,MPTR,BCSC,HistC,MRCL,MERC,MRED,MRES,rti,erti,year,dt,MERCX):
     '''
     Marginal cost of production of non renewable resources.
@@ -257,6 +258,7 @@ def marginal_function(MEPD,RERY,MPTR,BCSC,HistC,MRCL,MERC,MRED,MRES,rti,erti,yea
 # -----------------------------------------------------------------------------
 # -------------------------- Cost Curves ------------------------------
 # -----------------------------------------------------------------------------
+#@njit(fastmath=True) ## Doesn't work!
 def cost_curves(BCET,BCTL,BCSC,MEWD,MEWG,MEWL,MEPD,MERC,MRCL,RERY,MPTR,PMF,MRED,MRES,mti,rti,t2ti,c2ti,jti,erti,year,dt,MERCX):
     '''FTT: Power cost-supply curves routine. This calculates the cost of resources given
     the available supply. '''
@@ -366,66 +368,68 @@ def cost_curves(BCET,BCTL,BCSC,MEWD,MEWG,MEWL,MEPD,MERC,MRCL,RERY,MPTR,PMF,MRED,
 
 
     # Update costs in the technology cost matrix BCET (BCET(:,:,12) is the type of cost curve)
-    for i in range(len(rti)):
+    for r in range(len(rti)):
         for j in range(len(t2ti)):
-            if(MEPD[i,conv[j]] > 0.0):
+            if(MEPD[r,conv[j]] > 0.0):
 
                 #Non-renewable resources fuel costs (histograms)
-                if(BCET[i,j,11]==1):
+                if(BCET[r,j,11]==1):
 
-                    BCET[i,j,4] = BCET[i,j,4] + (MERC[i,conv[j],0] - MRCL[i,conv[j],0])*3.6/BCET[i,j,13]
-                    BCET[i,j,4] = BCET[i,j,4] + (MERCX[i,conv[j],0] - MRCL[i,conv[j],0])*3.6/BCET[i,j,13]
+                    BCET[r,j,4] = BCET[r,j,4] + (MERC[r,conv[j],0] - MRCL[r,conv[j],0])*3.6/BCET[r,j,13]
+                    # BCET[r,j,4] = BCET[r,j,4] + (MERCX[r,conv[j],0] - MRCL[r,conv[j],0])*3.6/BCET[r,j,13]
 
                 #For renewable resources: interpolate MEPD into the cost curves. Decreasing capacity factor type of limit
-                elif(BCET[i,j,11]==0):
+                elif(BCET[r,j,11]==0):
 
-                    X = copy.deepcopy(CSC_Q[i,conv[j],:])
-                    Y = copy.deepcopy(BCSC[i,conv[j],4:])
+                    X = copy.deepcopy(CSC_Q[r,conv[j],:])
+                    Y = copy.deepcopy(BCSC[r,conv[j],4:])
 
                     # Note: the curve is in the form of an inverse capacity factor in BCSC
-                    X0 = MEPD[i,conv[j],0]/3.6 #PJ -> TWh
+                    X0 = MEPD[r,conv[j],0]/3.6 #PJ -> TWh
                     if(X0> 0.0): Y0, Ind = interp(X,Y,X0,L)
-                    MERC[i,conv[j],0] = 1.0/(Y0+0.000001)
+                    MERC[r,conv[j],0] = 1.0/(Y0+0.000001)
                     # TODO: SET Exog MERC
-                    MERC[i,conv[j],0] = copy.deepcopy(MERCX[i,conv[j],0])
-                    BCET[i,j,10] = 1.0/(Y0+0.000001)         # We use an inverse here
-                    BCET[i,j,10] = copy.deepcopy(MERCX[i,conv[j],0])
+                    # MERC[r,conv[j],0] = copy.deepcopy(MERCX[r,conv[j],0])
+                    BCET[r,j,10] = 1.0/(Y0+0.000001)         # We use an inverse here
+                    # BCET[r,j,10] = copy.deepcopy(MERCX[r,conv[j],0])
                     # For variable renewables (e.g. wind, solar, wave)
                     # the overall (average) capacity factor decreases as new units have lower and lower CFs
 
-                    if(MEWG[i,j,0] > 0.01 and Ind > 1 and X0 > 0):
+                    if(MEWG[r,j,0] > 0.01 and Ind > 1 and X0 > 0):
 
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
                         CFvar[1:Ind+1] = 1.0/(Y[1:Ind+1]+0.000001)/(Ind)
-                        if(sum(CFvar[1:Ind+1]) > 0):
+                        CFvar2 = sum(CFvar[1:Ind+1])
+                        if(CFvar2 > 0):
 
-                            MEWL[i,j,0] = sum(CFvar[1:Ind+1])
+                            MEWL[r,j,0] = CFvar2
 
 
                     #Fix: CSP is more efficient than PV by a factor 2
-                    BCET[i,19,10] = 1.0/(Y0+0.0000001)*2.0
+                    if j == 19 :
+                        BCET[r,j,10] = 1.0/(Y0+0.0000001)*2.0
 
-                    BCET[i,19,10] = MERCX[i,conv[j],0] * 2.0
+                        # BCET[r,j,10] = MERCX[r,conv[j],0] * 2.0
 
                 #Increasing investment term type of limit
-                elif(BCET[i,j,11] == 3):
+                elif(BCET[r,j,11] == 3):
 
                     #------> Insert an interpolation here TODO this is from the fortran, do I need to do this?
-                    X = copy.deepcopy(CSC_Q[i,conv[j],:])
-                    Y = copy.deepcopy(BCSC[i,conv[j],4:])
+                    X = copy.deepcopy(CSC_Q[r,conv[j],:])
+                    Y = copy.deepcopy(BCSC[r,conv[j],4:])
 
-                    X0 = MEPD[i,conv[j],0]/3.6 #PJ -> TWh
+                    X0 = MEPD[r,conv[j],0]/3.6 #PJ -> TWh
                     if(X0> 0.0): Y0, I = interp(X,Y,X0,L)
-                    MERC[i,conv[j],0] = copy.deepcopy(Y0)
+                    MERC[r,conv[j],0] = copy.deepcopy(Y0)
                     # TODO: SET Exog MERC
-                    MERC[i,conv[j],0] = copy.deepcopy(MERCX[i,conv[j],0])
-                    BCET[i,j,2] = copy.deepcopy(Y0)
-                    BCET[i,j,2] = copy.deepcopy(MERCX[i,conv[j],0])
+                    # MERC[r,conv[j],0] = copy.deepcopy(MERCX[r,conv[j],0])
+                    BCET[r,j,2] = copy.deepcopy(Y0)
+                    # BCET[r,j,2] = copy.deepcopy(MERCX[r,conv[j],0])
 
     #Add REN resources left in MRED, MRES
-    #Total technical potential i>4 (j>4 in python)
-    MRED[:,4:,0] = copy.deepcopy(BCSC[:,4:,2])
+    #Total technical potential r>4 (j>4 in python)
+    MRED[:,4:,0] = copy.deepcopy(BCSC[:,4:,2]) * 3.6
     #Remaining technical potential
-    MRES[:,4:,0] = BCSC[:,4:,2] - MEPD[:,4:,0]
+    MRES[:,4:,0] = BCSC[:,4:,2]*3.6 - MEPD[:,4:,0]
 
     return BCET, BCSC, MEWL, MEPD, MERC, RERY, MRED, MRES
