@@ -7,7 +7,9 @@ Last updated 12/2021, 17:10:35
 """
 
 # Libraries
-
+import mimetypes
+mimetypes.add_type('application/javascript', '.js')
+mimetypes.add_type('text/css', '.css')
 from bottle import (route, run, request, response, static_file)
 import socket
 import glob
@@ -27,8 +29,8 @@ from tkinter import messagebox
 import psutil
 import pickle
 from collections import OrderedDict
-import SourceCode.support.paths_append
-from SourceCode.model_class import ModelRun
+import SourceCode.paths_append
+from model_class import ModelRun
 
 
 #Switch for build
@@ -183,9 +185,8 @@ def run_model():
     # Save output for all scenarios to pickle
     #TODO Setup way to retain older results?
     results =  model.output
-    os.makedirs(os.path.dirname(f"{rootdir}\\Output\\"), exist_ok=True)     # Create Output folder if it doesn't exist
     with open('Output\Results.pickle', 'wb') as f:
-        pickle.dump(results, f)
+        pickle.dump(results,f)
     # Save metadata on current model run
     with open("{}\\Output\\Scenarios.json".format(rootdir), 'w') as f:
         json.dump(scenarios_log, f)
@@ -526,7 +527,7 @@ def retrieve_chart_data(type_):
             scenario_df["Variable Name"] = var_label
 
             #Collate into single data frame for all scenarios and variables
-            full_df = scenario_df if full_df is None else pd.concat([full_df, scenario_df])
+            full_df = scenario_df if full_df is None else full_df.append(scenario_df)
 
     # Sum across each dimensions if aggregate is set
     if agg == "true":
@@ -834,7 +835,7 @@ def construct_graphic_data(graphic,type_):
         rgb_values = pd.read_excel('{}\\Utilities\\Titles\\ReportGraphics.xlsx'.format(rootdir),
                              sheet_name="RGB_values",index_col=0)
         brewer_dict = {}
-        colour_codes = [colours.loc[x,"colour_code"] for x in label_set]
+        colour_codes = [colours.loc[x,"WOO_code"] for x in label_set]
         colour_codes_dict = dict(zip( label_set,colour_codes))
         #Handle dual colour classes
         for k,v in colour_codes_dict.items():

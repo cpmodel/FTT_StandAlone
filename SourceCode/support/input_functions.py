@@ -85,12 +85,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                     if file.endswith(".csv"):
 
-
                         # Read the csv
                         csv = pd.read_csv(os.path.join(root, file), header=0,
                                           index_col=0).fillna(0)
-
-
 
                         # Split file name
                         file_split = file[:-4].split('_')
@@ -125,12 +122,12 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 var_tl = list(range(int(forstart[var]), timeline[-1]+1))
                                 var_tl_fit = [year for year in var_tl if year in timeline]
                                 var_tl_inds = [i for i, year in enumerate(timeline) if year in var_tl]
+                                #print(csv.columns, var)
                                 csv.columns = [int(year) for year in csv.columns]
 
 
-                                #print(var)
+                                #print(file)
                                 read = csv.loc[:, var_tl]
-
 
 
                             else:
@@ -146,11 +143,15 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 # Loop through the second dimension
                                 for i in range(read.shape[0]):
 
+                                    if var == "MCSC":
+                                        x = 1 +1
+
                                     # Distinction whether the last dimension is time or not
                                     if len(titles[dims[var][3]]) == 1:
                                         data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                                     else:
                                         # data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i, :len(var_tl_fit)]
+                                        # print(var, key)
                                         data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
 
                             # If the variable does not have key
@@ -160,8 +161,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 if dims[var][0] == 'RTI':
 
                                     if len(titles[dims[var][1]]) > 1:
+                                        # print(var)
                                         data[scen][var][:, :, 0, 0] = read
-                                        
+
                                     elif len(titles[dims[var][2]]) > 1:
                                         data[scen][var][:, 0, :, 0] = read
                                     elif len(titles[dims[var][3]]) > 1:

@@ -24,18 +24,18 @@ from tqdm import tqdm
 
 # Local library imports
 # Separate FTT modules
-import ftt_p_main as ftt_p
-import ftt_tr_main as ftt_tr
-import ftt_h_main as ftt_h
+import Power.ftt_p_main as ftt_p
+import Transport.ftt_tr_main as ftt_tr
+import Heat.ftt_h_main as ftt_h
 #import ftt_s_main as ftt_s
 #import ftt_agri_main as ftt_agri
-import ftt_fr_main as ftt_fr
+import Freight.ftt_fr_main as ftt_fr
 #import ftt_flex_main as ftt_flex
-import ftt_chi_main as ftt_indhe_chi
-import ftt_fbt_main as ftt_indhe_fbt
-import ftt_mtm_main as ftt_indhe_mtm
-import ftt_nmm_main as ftt_indhe_nmm
-import ftt_ois_main as ftt_indhe_ois2
+import Industrial_Heat.ftt_chi_main as ftt_indhe_chi
+import Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
+import Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
+import Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
+import Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
 
 
 # Support modules
@@ -223,7 +223,7 @@ class ModelRun:
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
-                                        self.domain, self.scenarios)
+                                        self.domain)
             if "FTT-Fr" in self.ftt_modules:
                 variables = ftt_fr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],

@@ -50,21 +50,49 @@ if __name__ == '__main__':
         FR08 = {}
         DPAR = {}
         RPOP = {}
+
         for region in regions_short:
             FR08[region] = pd.DataFrame(dbf['FR08_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
             DPAR[region] = pd.DataFrame(dbf['DPAR_{}'.format(region)], index=pop_groups, columns=range(2003,2101))
+            
+            
+    # with  DB1(os.path.join(dirp_db, 'E.db1')) as dbe:
+    #     dbe_index = dbe.index
+    #     PFRO = {}
+    #     PFRG = {}
+    #     PFRM = {}
+    #     PFRE = {}
+    #     PFRC = {}
+    #     PFRB = {}
+
+    #     for region in regions_short:
+
+    #         PFRO[region] = pd.DataFrame(dbf['PFRO_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
+    #         PFRG[region] = pd.DataFrame(dbf['PFRG_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
+    #         PFRM[region] = pd.DataFrame(dbf['PFRM_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
+    #         PFRE[region] = pd.DataFrame(dbf['PFRE_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
+    #         PFRC[region] = pd.DataFrame(dbf['PFRC_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
+    #         PFRB[region] = pd.DataFrame(dbf['PFRB_{}'.format(region)], index=fuel_users, columns=range(2003,2101))
 
 
-    for region in regions_short:
-        FR08[region].to_csv(os.path.join(dirp_out_gen, "FR08_{}.csv".format(region)))
-        DPAR[region].to_csv(os.path.join(dirp_out_gen, "DPAR_{}.csv".format(region)))
+    # for region in regions_short:
+    #     FR08[region].to_csv(os.path.join(dirp_out_gen, "FR08_{}.csv".format(region)))
+    #     DPAR[region].to_csv(os.path.join(dirp_out_gen, "DPAR_{}.csv".format(region)))
+    #     PFRB[region].to_csv(os.path.join(dirp_out_gen, "PFRB_{}.csv".format(region)))
+    #     PFRC[region].to_csv(os.path.join(dirp_out_gen, "PFRC_{}.csv".format(region)))
+    #     PFRO[region].to_csv(os.path.join(dirp_out_gen, "PFRO_{}.csv".format(region)))
+    #     PFRM[region].to_csv(os.path.join(dirp_out_gen, "PFRM_{}.csv".format(region)))
+    #     PFRE[region].to_csv(os.path.join(dirp_out_gen, "PFRE_{}.csv".format(region)))
+    #     PFRG[region].to_csv(os.path.join(dirp_out_gen, "PFRG_{}.csv".format(region)))
 
     # %% From MRE
 
-    with MRE(os.path.join(dirp_mre, 'Dan_ba.mre')) as mre:
+    with MRE(os.path.join(dirp_mre, 'Dan1.mre')) as mre:
 
         # MRE timeline:
-        tl = np.arange(2010, 2060+1)
+        tl = np.arange(2010, 2070+1)
+        
+        mre_out = copy.deepcopy(mre)
 
         # 3D variables
         mewlx = {}
@@ -81,13 +109,24 @@ if __name__ == '__main__':
         mcocx = {}
         mwicx = {}
         mwfcx = {}
+        msspx = {}
+        mlspx = {}
+        mwkax = {}
+        pfrb = {}
+        pfrc = {}
+        pfrm = {}
+        pfre = {}
+        pfro = {}
+        pfrg = {}
         # Please add MWMC and MWMD to the DAN1.idiom file!
         mwmcx = {}
-        mwmdx = {}
+        mmcdx = {}
+        
+        mtcdx = {}
+        
+        mcfcx = {}
 
         # 2D variables
-        msspx = pd.DataFrame(mre['MSSP'][0], index=regions_short, columns=tl)
-        mlspx = pd.DataFrame(mre['MLSP'][0], index=regions_short, columns=tl)
         prsc = pd.DataFrame(mre['PRSC'][0], index=regions_short, columns=tl)
         ex = pd.DataFrame(mre['EX'][0], index=regions_short, columns=tl)
 
@@ -97,6 +136,7 @@ if __name__ == '__main__':
             mercx[region] = pd.DataFrame(mre['MERC'][r], index=erti, columns=tl)
             mewdx[region] = pd.DataFrame(mre['MEWD'][r], index=jti, columns=tl)
             metcx[region] = pd.DataFrame(mre['METC'][r], index=t2ti, columns=tl)
+            mtcdx[region] = pd.DataFrame(mre['MTCD'][r], index=t2ti, columns=tl)
             mgamx[region] = pd.DataFrame(mre['MGAM'][r], index=t2ti, columns=tl)
             mewgx[region] = pd.DataFrame(mre['MEWG'][r], index=t2ti, columns=tl)
             mewkx[region] = pd.DataFrame(mre['MEWK'][r], index=t2ti, columns=tl)
@@ -108,14 +148,20 @@ if __name__ == '__main__':
             mwicx[region] = pd.DataFrame(mre['MWIC'][r], index=t2ti, columns=tl)
             mwfcx[region] = pd.DataFrame(mre['MWFC'][r], index=t2ti, columns=tl)
             mwmcx[region] = pd.DataFrame(mre['MWMC'][r], index=t2ti, columns=tl)
-            mwmdx[region] = pd.DataFrame(mre['MWMD'][r], index=t2ti, columns=tl)
+            mmcdx[region] = pd.DataFrame(mre['MMCD'][r], index=t2ti, columns=tl)
+            msspx[region] = pd.DataFrame(mre['MSSP'][r], index=t2ti, columns=tl)
+            mlspx[region] = pd.DataFrame(mre['MLSP'][r], index=t2ti, columns=tl)
+            mwkax[region] = pd.DataFrame(mre['MWKA'][r], index=t2ti, columns=tl)
+            mcfcx[region] = pd.DataFrame(mre['MCFC'][r], index=t2ti, columns=tl)
+            # pfrb[region] = pd.DataFrame(mre["PFRB"][r], index=fuel_users, columns=tl)
+            # pfrc[region] = pd.DataFrame(mre["PFRC"][r], index=fuel_users, columns=tl)
+            # pfro[region] = pd.DataFrame(mre["PFRO"][r], index=fuel_users, columns=tl)
+            # pfrm[region] = pd.DataFrame(mre["PFRM"][r], index=fuel_users, columns=tl)
+            # pfre[region] = pd.DataFrame(mre["PFRE"][r], index=fuel_users, columns=tl)
+            # pfrg[region] = pd.DataFrame(mre["PFRG"][r], index=fuel_users, columns=tl)
 
-
-
-    msspx.to_csv(os.path.join(dirp_out_ftt, "MSSPX.csv"))
-    mlspx.to_csv(os.path.join(dirp_out_ftt, "MLSPX.csv"))
-    prsc.to_csv(os.path.join(dirp_out_ftt, "PRSCX.csv"))
-    ex.to_csv(os.path.join(dirp_out_ftt, "EXX.csv"))
+    # prsc.to_csv(os.path.join(dirp_out_ftt, "PRSCX.csv"))
+    # ex.to_csv(os.path.join(dirp_out_ftt, "EXX.csv"))
 
     for region in regions_short:
 
@@ -123,6 +169,7 @@ if __name__ == '__main__':
         mercx[region].to_csv(os.path.join(dirp_out_ftt, "MERCX_{}.csv".format(region)))
         mewdx[region].to_csv(os.path.join(dirp_out_ftt, "MEWDX_{}.csv".format(region)))
         metcx[region].to_csv(os.path.join(dirp_out_ftt, "METCX_{}.csv".format(region)))
+        mtcdx[region].to_csv(os.path.join(dirp_out_ftt, "MTCDX_{}.csv".format(region)))
         mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAMX_{}.csv".format(region)))
         mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAM_{}.csv".format(region)))
         mewgx[region].to_csv(os.path.join(dirp_out_ftt, "MEWGX_{}.csv".format(region)))
@@ -135,8 +182,18 @@ if __name__ == '__main__':
         mwicx[region].to_csv(os.path.join(dirp_out_ftt, "MWICX_{}.csv".format(region)))
         mwfcx[region].to_csv(os.path.join(dirp_out_ftt, "MWFCX_{}.csv".format(region)))
         mwmcx[region].to_csv(os.path.join(dirp_out_ftt, "MWMCX_{}.csv".format(region)))
-        mwmdx[region].to_csv(os.path.join(dirp_out_ftt, "MWMDX_{}.csv".format(region)))
+        mmcdx[region].to_csv(os.path.join(dirp_out_ftt, "MMCDX_{}.csv".format(region)))
+        msspx[region].to_csv(os.path.join(dirp_out_ftt, "MSSPX_{}.csv".format(region)))
+        mlspx[region].to_csv(os.path.join(dirp_out_ftt, "MLSPX_{}.csv".format(region)))
+        mwkax[region].to_csv(os.path.join(dirp_out_ftt, "MWKA_{}.csv".format(region)))
+        mcfcx[region].to_csv(os.path.join(dirp_out_ftt, "MCFCX_{}.csv".format(region)))
 
+        # pfrb[region].to_csv(os.path.join(dirp_out_gen, "PFRB_{}.csv".format(region)))
+        # pfrc[region].to_csv(os.path.join(dirp_out_gen, "PFRC_{}.csv".format(region)))
+        # pfrm[region].to_csv(os.path.join(dirp_out_gen, "PFRM_{}.csv".format(region)))
+        # pfro[region].to_csv(os.path.join(dirp_out_gen, "PFRO_{}.csv".format(region)))
+        # pfre[region].to_csv(os.path.join(dirp_out_gen, "PFRE_{}.csv".format(region)))
+        # pfrg[region].to_csv(os.path.join(dirp_out_gen, "PFRG_{}.csv".format(region)))
 
 
 

@@ -258,7 +258,7 @@ def survival_function(data, time_lag, histend, year, titles):
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
+def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     """
     Main solution function for the module.
 
@@ -500,24 +500,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs, scenario):
                         F[v1, v2] = Fik*(1.0-isReg[r, v1])* (1.0 - isReg[r, v2]) + isReg[r, v2]*(1.0-isReg[r, v1]) + 0.5*(isReg[r, v1]*isReg[r, v2]) 
                         F[v2, v1] = (1.0-Fik)*(1.0-isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1]*(1.0-isReg[r, v2]) + 0.5*(isReg[r, v2]*isReg[r, v1]) 
 
-                        if scenario == 'S0':
 
-                            # Market share dynamics
-                            dSik[v1, v2] = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])*dt
-                            
-                            dSik[v2, v1] = -dSik[v1, v2]
-
-                        else:
 
                         #Runge-Kutta market share dynamiccs
-                            k_1 = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])
-                            k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2)* (Aik*F[v1,v2] - Aki*F[v2,v1])
-                            k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * (Aik*F[v1,v2] - Aki*F[v2,v1])
-                            k_4 = (S_veh_i+dt*k_3)*(S_veh_k-dt*k_3) * (Aik*F[v1,v2] - Aki*F[v2,v1])
+                        k_1 = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])
+                        k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2)* (Aik*F[v1,v2] - Aki*F[v2,v1])
+                        k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * (Aik*F[v1,v2] - Aki*F[v2,v1])
+                        k_4 = (S_veh_i+dt*k_3)*(S_veh_k-dt*k_3) * (Aik*F[v1,v2] - Aki*F[v2,v1])
 
-                            dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
+                        dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
 
-                            dSik[v2, v1] = -dSik[v1, v2]
+                        dSik[v2, v1] = -dSik[v1, v2]
 
                 #calculate temportary market shares and temporary capacity from endogenous results
                 endo_shares = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) 

@@ -1,0 +1,6 @@
+{
+"ftt_base":"S0",
+"start_year":2010,
+"end_year":2050,
+"enable_modules":["FTT-P", "FTT-H", "FTT-Tr","FTT-IH-CHI", "FTT-IH-FBT", "FTT-IH-MTM", "FTT-IH-NMM", "FTT-IH-OIS2"]
+}

@@ -37,7 +37,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Local library imports
-import SourceCode.support.paths_append
+import SourceCode.paths_append
 from SourceCode.model_class import ModelRun
 from SourceCode.support.divide import divide
 
@@ -55,7 +55,8 @@ inputs = model.input
 histend = model.histend
 # Domains to which variables belong
 domain = model.domain
-
+tl = model.timeline
+scens = model.scenarios
 
 # Call the 'run' method of the ModelRun class to solve the model
 model.run()
@@ -63,6 +64,85 @@ model.run()
 # Fetch ModelRun attributes, for examination
 # Output of the model
 output_all = model.output
+
+# %%
+# mwka = {}
+# mewk = {}
+# mewg = {}
+# mews = {}
+# mewsx = {}
+# mewd = {}
+# mlsp = {}
+# mssp = {}
+# mlsm = {}
+# mssm = {}
+# mewr = {}
+# metc = {}
+# mewl = {}
+# mwfc = {}
+# mwic = {}
+# mgam = {}
+# mewl = {}
+# mwmc = {}
+# mklb = {}
+# mred = {}
+# mres = {}
+# mepd = {}
+# mtcd = {}
+# mewc = {}
+# mcfc = {}
+# mcfcx = {}
+# mewlx = {}
+# for r, reg in enumerate(titles["RTI"]):
+#     mwka[reg] = pd.DataFrame(inputs[scens]['MWKA'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewr[reg] = pd.DataFrame(inputs[scens]['MEWR'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewk[reg] = pd.DataFrame(output_all[scens]['MEWK'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewk[reg].loc["TOT", :] = mewk[reg].sum(axis=0)
+#     mewg[reg] = pd.DataFrame(output_all[scens]['MEWG'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewg[reg].loc["TOT", :] = mewg[reg].sum(axis=0)    
+#     mews[reg] = pd.DataFrame(output_all[scens]['MEWS'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mews[reg].loc["TOT", :] = mews[reg].sum(axis=0)
+#     mewsx[reg] = pd.DataFrame(output_all[scens]['MEWSX'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+
+#     mewd[reg] = pd.DataFrame(output_all[scens]['MEWDX'][r, :, 0, :], index=titles['JTI'], columns=tl)
+#     mlsp[reg] = pd.DataFrame(output_all[scens]['MLSP'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mssp[reg] = pd.DataFrame(output_all[scens]['MSSP'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mlsm[reg] = pd.DataFrame(output_all[scens]['MLSM'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mssm[reg] = pd.DataFrame(output_all[scens]['MSSM'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     msal = pd.DataFrame(output_all[scens]['MSAL'][:, 0, 0, :], index=titles['RTI'], columns=tl)
+#     metc[reg] = pd.DataFrame(output_all[scens]['METC'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewc[reg] = pd.DataFrame(output_all[scens]['MEWC'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mtcd[reg] = pd.DataFrame(output_all[scens]['MTCD'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mwfc[reg] = pd.DataFrame(output_all[scens]['MWFC'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mwic[reg] = pd.DataFrame(output_all[scens]['MWIC'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mgam[reg] = pd.DataFrame(output_all[scens]['MGAM'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewl[reg] = pd.DataFrame(output_all[scens]['MEWL'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mewlx[reg] = pd.DataFrame(output_all[scens]['MEWLX'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mcfc[reg] = pd.DataFrame(output_all[scens]['MCFC'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mcfcx[reg] = pd.DataFrame(output_all[scens]['MCFCX'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mwmc[reg] = pd.DataFrame(output_all[scens]['MWMC'][r, :, 0, :], index=titles['T2TI'], columns=tl)
+#     mklb[reg] = pd.DataFrame(output_all[scens]['MKLB'][r, :, 0, :], index=titles['LBTI'], columns=tl)
+#     mred[reg] = pd.DataFrame(output_all[scens]['MRED'][r, :, 0, :], index=titles['ERTI'], columns=tl)
+#     mres[reg] = pd.DataFrame(output_all[scens]['MRES'][r, :, 0, :], index=titles['ERTI'], columns=tl)
+#     mepd[reg] = pd.DataFrame(output_all[scens]['MEPD'][r, :, 0, :], index=titles['ERTI'], columns=tl)
+
+# mssr = pd.DataFrame(output_all[scens]['MSSR'][:, 0, 0, :], index=titles['RTI'], columns=tl)
+# mlsr = pd.DataFrame(output_all[scens]['MLSR'][:, 0, 0, :], index=titles['RTI'], columns=tl)
+
+# # %% Pick a country
+# r_select = 2
+# reg_select = titles["RTI"][r_select]
+
+# excel_fn = "EEIST_vs_SA_comparison_for_{}.xlsx".format(titles["RTI"][r_select][-3:-1])
+# with pd.ExcelWriter("./Output/{}".format(excel_fn)) as writer:
+    
+#     mews[reg_select].loc[titles["T2TI"], 2013:].to_excel(writer, sheet_name="Result SA")
+#     mewsx[reg_select].loc[titles["T2TI"], 2013:].to_excel(writer, sheet_name="Result EEIST")
+#     diff = mews[reg_select].subtract(mewsx[reg_select])    
+#     diff.loc[titles["T2TI"], 2013:].to_excel(writer, sheet_name="Diff")
+#     pct_diff = diff.div(mewsx[reg_select])
+#     pct_diff.loc[titles["T2TI"], 2013:].to_excel(writer, sheet_name="Pct diff")    
+
 
 # # %% Check MEWDX
 # mewdx_in = {}

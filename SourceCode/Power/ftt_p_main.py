@@ -283,15 +283,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             time_lag = get_lcoe(data, titles)
         # Call RLDC function for capacity and load factor by LB, and storage costs
         if year >= 2013:
-            print(f'MEWS: {data["MEWS"][40, 15, 0]:.7f}\n'
-            f'MWSLt: {data["MEWS"][40, 15, 0]:.7f}\n' \
-            f'MEWG: {data["MEWG"][40, 15, 0]:.0f}\n' \
-            f'MEWK: {data["MEWK"][40, 15, 0]:.4f}\n' \
-            f'MEWL: {data["MEWL"][40, 15, 0]:.7f}\n' \
-            f'MWMC: {data["MWMC"][40, 2, 0]:.7f}\n' \
-            f'MMCD: {data["MMCD"][40, 15, 0]:.5f}\n'\
-            f'MKLB: {data["MKLB"][40, 0, 0]:.7f}\n' \
-            f'MEWL: {data["MEWL"][40, 17, 0]:.5f}\n')
+            # print(f'MEWS: {data["MEWS"][40, 15, 0]:.7f}\n'
+            # f'MWSLt: {data["MEWS"][40, 15, 0]:.7f}\n' \
+            # f'MEWG: {data["MEWG"][40, 15, 0]:.0f}\n' \
+            # f'MEWK: {data["MEWK"][40, 15, 0]:.4f}\n' \
+            # f'MEWL: {data["MEWL"][40, 15, 0]:.7f}\n' \
+            # f'MWMC: {data["MWMC"][40, 2, 0]:.7f}\n' \
+            # f'MMCD: {data["MMCD"][40, 15, 0]:.5f}\n'\
+            # f'MKLB: {data["MKLB"][40, 0, 0]:.7f}\n' \
+            # f'MEWL: {data["MEWL"][40, 17, 0]:.5f}\n')
 
             # First, estimate marginal costs:
             #if year == 2013: data = get_lcoe(data, titles)
@@ -534,8 +534,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #        data['MWIA'][:, 0, 0][data['MEWKA'][:, 0, 0] < 0.0] = 0.0
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
 
         # store exogenous load factors in local variable
         loadfac = copy.deepcopy(data['MWLO'][:, :, 0])
@@ -784,15 +784,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Update time loop variables:
             
-            print(year)
-            print(f'MEWS: {data["MEWS"][40, 16, 0]:.7f}\n'
-             f'MWSLt: {data_dt["MEWS"][40, 16, 0]:.7f}\n' \
-             f'MEWG: {data["MEWG"][40, 16, 0]:.0f}\n' \
-             f'MEWK: {data["MEWK"][40, 16, 0]:.4f}\n' \
-             f'MEWL: {data["MEWL"][40, 16, 0]:.7f}\n' \
-             f'METC: {data["METC"][40, 16, 0]:.7f}\n'\
-             f'MWMC: {data_dt["MWMC"][40, 2, 0]:.7f}\n' \
-             f'MMCD: {data_dt["MMCD"][40, 16, 0]:.5f}\n')
+            # print(year)
+            # print(f'MEWS: {data["MEWS"][40, 16, 0]:.7f}\n'
+            #  f'MWSLt: {data_dt["MEWS"][40, 16, 0]:.7f}\n' \
+            #  f'MEWG: {data["MEWG"][40, 16, 0]:.0f}\n' \
+            #  f'MEWK: {data["MEWK"][40, 16, 0]:.4f}\n' \
+            #  f'MEWL: {data["MEWL"][40, 16, 0]:.7f}\n' \
+            #  f'METC: {data["METC"][40, 16, 0]:.7f}\n'\
+            #  f'MWMC: {data_dt["MWMC"][40, 2, 0]:.7f}\n' \
+            #  f'MMCD: {data_dt["MMCD"][40, 16, 0]:.5f}\n')
             for var in data_dt.keys():
 
                 if domain[var] == 'FTT-P':

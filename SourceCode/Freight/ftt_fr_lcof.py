@@ -30,6 +30,7 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
+from support.divide import divide
 #from support.econometrics_functions import estimation
 
 
@@ -84,9 +85,6 @@ def get_lcof(data, titles):
         mask = LF_mat < LF_max_mat
         LF_mask = np.where(mask, LF_mat, 0)
 
-
-
-
         #Discount rate
         rM = zcet[:,c6ti['7 Discount rate'], np.newaxis]
         #For NPV calculations
@@ -127,6 +125,12 @@ def get_lcof(data, titles):
         dFT = dFT * zcet[:, c6ti['4 std fuel cost (USD/km)'], np.newaxis]
 
         dFT = np.where(mask, dFT, 0)
+
+        # fuel tax/subsidies
+        fft = np.ones([len(titles['FTTI']), int(max_LF)])
+        fft = FT * data['ZTFT'][r, :, 0, np.newaxis]
+        print(data['ZTFT'][r, :, 0, np.newaxis])
+        fft = np.where(mask, FT, 0)
 
         #Lifetime vector of fuel taxes to be added
         FtFT = np.ones([len(titles['FTTI']), int(max_LF)])
@@ -173,7 +177,7 @@ def get_lcof(data, titles):
         dLCOF = np.sum(dnpv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
 
         #Calculate LCOF with policy, and find standard deviation
-        npv_expenses2 = (It+ItVT+FT+FtFT+OMt+RT)/Lfactor
+        npv_expenses2 = (It+ItVT+FT+fft+FtFT+OMt+RT)/Lfactor
         npv_expenses2 = npv_expenses2/denominator
         TLCOF = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
         dTLCOF=dLCOF

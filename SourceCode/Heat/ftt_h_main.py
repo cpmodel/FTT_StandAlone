@@ -350,7 +350,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         isReg = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         isReg = np.where(data['HREG'][:, :, 0] > 0.0,
                           (np.tanh(1 +
-                              (data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]) 
+                              (data_dt['HEWK'][:, :, 0] - data['HREG'][:, :, 0]) 
                                   / data['HREG'][:, :, 0])),
                           0.0)
 
@@ -496,8 +496,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 #calculate temportary market shares and temporary capacity from endogenous results
                 endo_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1) + np.sum(dSEik, axis=1)
-                test = np.sum(endo_shares)
-                endo_capacity = endo_shares * rhudt[r, np.newaxis]
+                
+                endo_capacity = endo_shares * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
 
                 # -----------------------------------------------------
                 # Step 3: Exogenous sales additions
@@ -512,12 +512,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUkREG = np.zeros([len(titles['HTTI'])])
 
 
-                # Check that exogenous share changes add to zero
-                dUkTK = data['HWSA'][r, :, 0]/no_it
-                if (data['HWSA'][r, :, 0].sum() > 0.0):
-                    dUkTK[0] = dUkTK[0] - data['HWSA'][r, :, 0].sum()
-                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                reg_vs_exog = ((dUkTK*Utot + endo_capacity) > data['HREG'][r, :, 0]) & (data['HREG'][r, :, 0] >= 0.0)
+                # Convert exogenous shares to exogenous capacity
+                dUkTK = data['HWSA'][r, :, 0]*Utot/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000/no_it
+               
+                #Check endogenous generation plus additions for a single time step does not exceed regulated capacity
+                reg_vs_exog = ((dUkTK + endo_capacity) > data['HREG'][r, :, 0]) & (data['HREG'][r, :, 0] >= 0.0)
                 dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
 
@@ -526,17 +525,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_capacity - endo_shares*rhudlt[r,np.newaxis])*isReg[r, :].reshape([len(titles['HTTI'])])
+                dUkREG = -(endo_capacity - endo_shares*rhudlt[r,np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000)*isReg[r, :].reshape([len(titles['HTTI'])])
                      
 
                 # Sum effect of exogenous sales additions (if any) with
                 # effect of regulations
-                dUk = copy.deepcopy(dUkREG)
+                dUk = dUkREG + dUkTK
                 dUtot = np.sum(dUk)
 
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot)) 
 
 #                        soel = np.sum(dSik, axis=1)
 #                        st_1 = data_dt['TP_MS'][r, :, 0]
