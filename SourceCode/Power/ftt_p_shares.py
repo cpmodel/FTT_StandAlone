@@ -23,13 +23,15 @@ import pandas as pd
 import numpy as np
 from numba import njit
 
+# Local library imports
+from SourceCode.support.divide import divide
 
 # %% JIT-compiled shares equation
 # -----------------------------------------------------------------------------
-#@njit(fastmath=True)
-def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
+@njit(fastmath=True)
+def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
-           mewl_dt, mews_lag, mwlo, lag_demand, rti, t2ti):
+           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti,no_it):
 
     """
     Function to calculate market share dynamics
@@ -72,10 +74,10 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
 
     for r in range(rti):
 
-        if e_demand[r] == 0.0:
+        if mewdt[r] == 0.0:
             continue
 
-        if r==40:
+        if r==1:
             x = 1+1
 #            print('BE')
 
@@ -117,11 +119,11 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
 
                 # Use substitution rate matrix, instead of a
                 # estimation based on EoL capacity
-                Aik = mewa[r, t1, t2]
-                Aki = mewa[r, t2, t1]
+                # Aik = mewa[r, t1, t2]
+                # Aki = mewa[r, t2, t1]
 
                 # Propagating width of variations in perceived costs
-                dFik = np.sqrt(2) * np.sqrt((mtcd_dt[r, t1, 0]*mtcd_dt[r, t1, 0] + mtcd_dt[r, t2, 0]*mtcd_dt[r, t2, 0]))
+                dFik = np.sqrt(2) * np.sqrt(mtcd_dt[r, t1, 0]*mtcd_dt[r, t1, 0] + mtcd_dt[r, t2, 0]*mtcd_dt[r, t2, 0])
 
                 # Consumer preference incl. uncertainty
                 Fik = 0.5*(1+np.tanh(1.25*(metc_dt[r, t2, 0]-metc_dt[r, t1, 0])/dFik))
@@ -130,28 +132,34 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
                 F[t1, t2] = Fik*(1.0-isReg[r, t1]) * (1.0 - isReg[r, t2]) + isReg[r, t2]*(1.0-isReg[r, t1]) + 0.5*(isReg[r, t1]*isReg[r, t2])
                 F[t2, t1] = (1.0-Fik)*(1.0-isReg[r, t2]) * (1.0 - isReg[r, t1]) + isReg[r, t1]*(1.0-isReg[r, t2]) + 0.5*(isReg[r, t2]*isReg[r, t1])
 
-                # Market share dynamics
-                dSik[t1, t2] = S_i*S_k * (Aik*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - Aki*F[t2, t1]*Gijmax[t2]*Gijmin[t1])*dt/T_Scal
+                
+                #Runge-Kutta market share dynamics (do not remove the divide-by-6, it is part of the algorithm)
+                k_1 = S_i*S_k * (mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+                k_2 = (S_i+dt*k_1/2)* (S_k-dt*k_1/2)*(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+                k_3 = (S_i+dt*k_2/2)* (S_k-dt*k_2/2)*(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+                k_4 = (S_i+dt*k_3)*(S_k-dt*k_3)  *(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+
+                dSik[t1, t2] = (k_1+2*k_2+2*k_3+k_4)*dt/T_Scal/6
                 dSik[t2, t1] = -dSik[t1, t2]
 
         # Add in exogenous sales figures. These are blended with
         # endogenous result! Note that it's different from the
         # ExogSales specification!
         Utot = np.sum(mewk_dt[:, :, 0], axis=1)
-        Utot_lag = np.sum(mewk_lag[:, :, 0], axis=1)
+
         dSk = np.zeros((t2ti))
         dUk = np.zeros((t2ti))
         dUkTK = np.zeros((t2ti))
         dUkREG = np.zeros((t2ti))
 
-#def shares(e_demand, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, rti, t2ti):
+
         # PV: Added a term to check that exogenous capacity is smaller than regulated capacity.
         # Regulations have priority over exogenous capacity
         reg_vs_exog = ((mwka[r, :, 0]) > mewr[r, :, 0]) & (mewr[r, :, 0] >= 0.0)
         mwka[r, :, 0] = np.where(reg_vs_exog, -1.0, mwka[r, :, 0])
         MWKA_scalar = 1.0
 
-        dUkTK = mwka[r, :, 0] - mewk_dt[r, :, 0]
+        dUkTK = (mwka[r, :, 0] - mewk_lag[r, :, 0])/no_it
         dUkTK[mwka[r, :, 0] < 0.0] = 0.0
         #dUkTK[dUkTK < 0.0] = 0.0
         # Check that exogenous capacity isn't too large
@@ -164,11 +172,14 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
             dUkTK = dUkTK / MWKA_scalar
 
         # Correct for regulations
-        if Utot_lag[r] > 0.0 and Utot[r] > 0.0:
+        if Utot[r] > 0.0:
+            # e_demand_step = ((e_demand - lag_demand) * dt) therefore lag_demand = e_demand - e_demand_step/dt
+            
+            dUkREG = -(mewdt[r] - mwdlt[r]) / mwdlt[r] * Utot[r] * mews_dt[r, :, 0] * isReg[r, :] * (1/t)
 
-            dUkREG = -(mewk_dt[r, :, 0]
-                      * (e_demand_step[r] / (e_demand[r] - e_demand_step[r]))
-                      * isReg[r, :].reshape((t2ti)))
+            # dUkREG = -(mewk_dt[r, :, 0]
+            #           * (e_demand_step[r] / (e_demand[r] - e_demand_step[r]/dt))
+            #           * isReg[r, :].reshape((t2ti)))*(1/t)
         # Sum effect of exogenous sales additions (if any) with
         # effect of regulations
         dUk = dUkTK + dUkREG
@@ -179,9 +190,13 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
 
         # Correct for overestimation of reduction in share space due to regulation
         # dSk[data_dt['MEWS'][r, :, 0] + dSk < 0] = -data_dt['MEWS'][r, :, 0]
-        dSk = np.where(mews_dt[r, :, 0] + dSk < 0, -mews_dt[r, :, 0], dSk)
+        
+        dSk = np.where((mews_dt[r, :, 0] + dSk < 0), -mews_dt[r, :, 0], dSk)
 
         # New market shares
+        # mews[r, :, 0] = np.where(mews_dt[r, :, 0] + np.sum(dSik, axis=1) + dSk < 0, 0, 
+        #                          mews_dt[r, :, 0] + np.sum(dSik, axis=1) + dSk)
+        
         mews[r, :, 0] = mews_dt[r, :, 0] + np.sum(dSik, axis=1) + dSk
 
         # Copy over load factors that do not change
@@ -193,10 +208,11 @@ def shares(dt, T_Scal, e_demand, e_demand_step, mews_dt, metc_dt, mtcd_dt,
                     mewl[r, tech_idx, 0] = mwlo[r, tech_idx, 0]
 
         # Grid operators guess-estimate expected generation based on LF from last step
-        mewg[r, :, 0] = mewk_dt[r, :, 0] * mewl[r, :, 0] * e_demand[r] / (lag_demand[r]) * 8766
+        # mewg[r, :, 0] = mewk_dt[r, :, 0] * mewl[r, :, 0] * e_demand[r] / (lag_demand[r]) * 8766
+        mewg[r, :, 0] = mews[r, :, 0] * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(mews[r, :, 0] * mewl[r, :, 0])
         mewk[r, :, 0] = mewg[r, :, 0] / mewl[r, :, 0] / 8766
 
-        if r == 40:
+        if r == 2:
             x = 1+1
 
     return mews, mewl, mewg, mewk

@@ -43,7 +43,6 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 
-
 # %% lcot
 # -----------------------------------------------------------------------------
 # --------------------------- LCOT function -----------------------------------
@@ -119,9 +118,9 @@ def get_lcot(data, titles):
 
         # Fuel tax costs
         fft = np.ones([len(titles['VTTI']), int(max_lt)])
-        fft = fft * data['RTFT'][r, 0, 0]*en/ns/ff*tf
+        fft = fft * data['RTFT'][r, :, 0, np.newaxis]*en/ns/ff
         fft = np.where(mask, fft, 0)
-
+        
         # Average operation & maintenance cost
         omt = np.ones([len(titles['VTTI']), int(max_lt)])
         omt = omt * bttc[:, c3ti['5 O&M costs (USD/km)'], np.newaxis]/ns/ff
@@ -171,7 +170,7 @@ def get_lcot(data, titles):
 
         # Transform into lognormal space
         logtlcot = np.log(tlcot*tlcot/np.sqrt(dlcot*dlcot + tlcot*tlcot)) + data['TGAM'][r, :, 0]
-        dlogtlcot = np.sqrt(np.log10(1.0 + dlcot*dlcot/(tlcot*tlcot)))
+        dlogtlcot = np.sqrt(np.log(1.0 + dlcot*dlcot/(tlcot*tlcot)))
 
         # Pass to variables that are stored outside.
         data['TEWC'][r, :, 0] = lcot            # The real bare LCOT without taxes
@@ -350,7 +349,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            #fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
@@ -433,8 +432,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         #data['RVTS'][:, 0, 0] = np.sum(data['REVS'][:, :, 0], axis=1)
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
 
         ############## Computing new shares ##################
 
@@ -529,21 +528,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
 
                 TWSA_gt_null = data['TWSA'][r, :, 0] >= 0.0
-                dUkTK = np.where(TWSA_gt_null, data['TWSA'][r, :, 0] * TWSA_scalar, 0.0)
+                
+                
+                dUkTK = np.where(TWSA_gt_null, data['TWSA'][r, :, 0] * TWSA_scalar/no_it , 0.0)
+                
 
                 # Correct for regulations
                 #Share of UED * change in UED * isReg i.e. change in UED split into technologies times isReg
                 if time_lag['RFLT'][r, 0, 0] > 0.0 and rfltt[r] > 0.0 and (rfltt[r] - time_lag['RFLT'][r, 0, 0]) > 0.0:
 
                     dUkREG = -data_dt['TEWK'][r, :, 0] * ( (rfltt[r] - time_lag['RFLT'][r, 0, 0]) /
-                                 time_lag['RFLT'][r, 0, 0]) * isReg[r, :].reshape([len(titles['VTTI'])])
+                                 time_lag['RFLT'][r, 0, 0]) * isReg[r, :].reshape([len(titles['VTTI'])])/t
+                    
                 # Sum effect of exogenous sales additions (if any) with
                 # effect of regulations
                 dUk = dUkTK + dUkREG
                 dUtot = np.sum(dUk)
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['TEWK'][r, :, 0]*np.divide(dUtot, (Utot*Utot))
+                dSk = np.divide(dUk, Utot) - data_dt['TEWK'][r, :, 0]*np.divide(dUtot, (Utot*Utot))
 #                        soel = np.sum(dSik, axis=1)
 #                        st_1 = data_dt['TEWS'][r, :, 0]
 
@@ -576,17 +579,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # Sales are the difference between fleet sizes and the addition of scrapped vehicles #TODO check this
-            data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0])/dt
+            #data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0])/dt
 
-            data["TEWI"][:, :, 0] = 0
-            for r in range(len(titles['RTI'])):
-                for tech in range(len(titles['ITTI'])):
-                    if(data['TEWK'][r, tech, 0]-time_lag['TEWK'][r, tech, 0]) > 0:
-                        data["TEWI"][r, tech, 0] = (data['TEWK'][r, tech, 0]-data_dt['TEWK'][r, tech, 0])/dt
 
-            data["TEWI"][:, :, 0] = data["TEWI"][:, :, 0] + np.where(data['BTTC'][:, :, c3ti['8 lifetime']] !=0.0,
+            #to match e3me:
+            #data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0])/dt  
+            #copying ftt power
+            data['TEWI'][:, :, 0] = (data['TEWK'][:, :, 0] - time_lag['TEWK'][:, :, 0])
+            
+            data['TEWI'][:, :, 0] = np.where(data['TEWI'][:, :, 0] < 0.0,
+                                               np.where(data['BTTC'][:, :, c3ti['8 lifetime']] !=0.0,
                                                             divide(data_dt['TEWK'][:, :, 0],
-                                                            data['BTTC'][:, :, c3ti['8 lifetime']]),0.0)
+                                                            data['BTTC'][:, :, c3ti['8 lifetime']]),0.0),
+                                               data['TEWI'][:, :, 0]+ np.where(data['BTTC'][:, :, c3ti['8 lifetime']] !=0.0,
+                                                            divide(data_dt['TEWK'][:, :, 0],
+                                                            data['BTTC'][:, :, c3ti['8 lifetime']]),0.0))
+            
+
 
 
             #This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
@@ -595,7 +604,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            #fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:

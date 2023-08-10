@@ -44,7 +44,6 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-#from support.econometrics_functions import estimation
 
 # %% lcoh
 # -----------------------------------------------------------------------------
@@ -145,9 +144,9 @@ def get_lcoih(data, titles, year):
         dft = np.where(mask, dft, 0)
 
         #fuel tax/subsidies
-        #fft = np.ones([len(titles['ITTI']), int(max_lt)])
-#        fft = ft * data['PG_FUELTAX'][r, :, :]
-#        fft = np.where(lt_mask, ft, 0)
+        ftt = np.ones([len(titles['ITTI']), int(max_lt)])
+        ftt = ftt * data['IFT2'][r,:, 0, np.newaxis]/ce
+        ftt = np.where(mask, ft, 0)
 
         # Fixed operation & maintenance cost - variable O&M available but not included
         omt = np.ones([len(titles['ITTI']), int(max_lt)])
@@ -169,7 +168,7 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+omt)/denominator
+        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
@@ -281,8 +280,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
         kappa = 10 #tech substitution constant
 
         ############## Computing new shares ##################
@@ -326,7 +325,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         continue
 
                     #TODO: create market share constraints
-                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC2'][0, b1, 0] - data_dt['IWS2'][r, b1, 0])/0.1)
+                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC2'][r, b1, 0] - data_dt['IWS2'][r, b1, 0])/0.1)
                     #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
 
 
@@ -389,16 +388,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
                 # Check that exogenous share changes add to zero
-                dUkTK = data['IXS2'][r, :, 0]
+                dUkTK = data['IXS2'][r, :, 0]/no_it
                 if (data['IXS2'][r, :, 0].sum() > 0.0):
-                    dUkTK[0] = dUkTK[0] - data['IXS2'][r, :, 0].sum()
+                    dUkTK[0] = dUkTK[0] - data['IXS2'][r, :, 0].sum()/no_it
 
-                # Correct for regulations #TODO Does this actually make sense?
+                # Correct for regulations 
 
                 if iud_lag[r] > 0.0 and IUD2t[r] > 0.0 and (IUD2t[r] - iud_lag[r]) > 0.0:
 
                     dUkREG = -data_dt['IUD2'][r, :, 0] * ( (IUD2t[r] - iud_lag[r]) /
-                                    iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])
+                                    iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])/t
 
 
                 # Sum effect of exogenous sales additions (if any) with
@@ -408,7 +407,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['IWS2'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                dSk = np.divide(dUk, Utot) - data_dt['IWS2'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
 
 
                 # New market shares

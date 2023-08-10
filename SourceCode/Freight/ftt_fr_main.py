@@ -24,8 +24,6 @@ Local library imports:
 
     - `divide <divide.html>`__
         Bespoke element-wise divide which replaces divide-by-zeros with zeros
-    - `estimation <econometrics_functions.html>`__
-        Predict future values according to the estimated coefficients.
 
 Functions included:
     - solve
@@ -46,8 +44,8 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
 from SourceCode.Freight.ftt_fr_lcof import get_lcof
+from SourceCode.support.divide import divide
 
 #Main function
 
@@ -84,8 +82,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
 
     # Factor used to create quarterly data from annual figures
-    no_it = 4
-    dt = 1 / no_it
+    no_it = int(data['noit'][0,0,0])
+    dt = 1 / float(no_it)
 
     #T_Scal = 5      # Time scaling factor used in the share dynamics
 
@@ -181,6 +179,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             for r in range(len(titles['RTI'])):
 
+                #print(D[r])
                 if D[r] == 0.0:
                     continue
 
@@ -189,6 +188,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 # F contains the preferences
                 F = np.ones([len(titles['FTTI']), len(titles['FTTI'])])*0.5
+
+                k_1 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
+                k_2 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
+                k_3 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
+                k_4 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
 
                 # -----------------------------------------------------
                 # Step 1: Endogenous EOL replacements
@@ -230,15 +234,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
                         #Runge-Kutta market share dynamiccs
-                        k_1 = S_i*S_k * (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_1[b1,b2] = S_i*S_k * (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_2[b1,b2] = (S_i+dt*k_1[b1,b2]/2)*(S_k-dt*k_1[b1,b2]/2)* (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_3[b1,b2] = (S_i+dt*k_2[b1,b2]/2)*(S_k-dt*k_2[b1,b2]/2) * (Aik*F[b1, b2] - Aki*F[b2, b1])
+                        k_4[b1,b2] = (S_i+dt*k_3[b1,b2])*(S_k-dt*k_3[b1,b2]) * (Aik*F[b1, b2] - Aki*F[b2, b1])
 
                         #This method currently applies RK4 to the shares, but all other components of the equation are calculated for the overall time step
                         #We must assume the the LCOE does not change significantly in a time step dt, so we can focus on the shares.
 
-                        dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6#*data['ZCEZ'][r,0,0]
+                        dSik[b1, b2] = dt*(k_1[b1,b2]+2*k_2[b1,b2]+2*k_3[b1,b2]+k_4[b1,b2])/6 #*data['ZCEZ'][r,0,0]
                         dSik[b2, b1] = -dSik[b1, b2]
 
                         # Market share dynamics
@@ -261,9 +265,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     Negative market shares detected! Critical error!
                     """.format(sector, titles['RTI'][r], year)
                     warnings.warn(msg)
+                
+                #print(data['ZEWS'][r,:,0])
 
-
-            for r in range(len(titles['RTI'])):
+            
                 #Copy over costs that dont change
                 data['ZCET'][:, :, 1:20] = data_dt['ZCET'][:, :, 1:20]
 
@@ -363,13 +368,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 if var.startswith("R"):
 
-                    data_dt[var] = copy.deepcopy(time_lag[var])
+                    data_dt[var] = copy.deepcopy(data[var])
 
             for var in time_lag.keys():
 
                 if var.startswith("Z"):
 
-                    data_dt[var] = copy.deepcopy(time_lag[var])
+                    data_dt[var] = copy.deepcopy(data[var])
 
 
     return data
