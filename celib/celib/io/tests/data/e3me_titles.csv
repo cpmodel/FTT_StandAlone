@@ -1,0 +1,95 @@
+name,code,desc
+RTI,1,titles of standard regions for E3ME4
+YTI,2,titles of industries
+CTI,3,titles of consumers' expenditures
+GTI,4,titles of government spending
+RHTI,5,titles free
+HTI,6,titles free
+STI,2,titles of stockbuilding sectors
+VTI,8,titles of fixed investment assets
+FTI,9,titles free
+XTI,2,titles free
+MTI,11,titles of import groups
+ETI,12,titles free
+TTI,14,titles of indirect taxes
+WRTI,15,titles of world areas
+KTI,16,titles of investing sectors
+OTI,17,titles of overall sectors
+UTI,18,titles free
+JTI,19,titles of fuel types
+WTI,20,titles free
+ZTI,21,titles free
+LTI,22,titles free
+ITI,23,titles free
+BTI,25,titles free
+ETTI,27,titles free
+DPTI,28,titles of detailed population groups
+EMTI,29,titles of environmental emissions
+EATI,30,titles free
+HMTI,31,titles of heavy metals (DROPS)
+ESTI,32,titles of emission sources (DGXI)
+HSTI,33,titles of heavy metals pollution sources (DROPS)
+WTTI,34,titles of Waste Type
+RETI,35,titles of E3ME regions (2nd cl)
+QTI,2,titles of products
+KRTI,37,titles of investment (2nd cl)
+QRTI,38,titles of products (2nd cl)
+YSTI,39,titles of summary of industries
+CRTI,40,titles of consumers' exp. (2nd cl)
+YRTI,41,titles of industries (2nd cl)
+WGTI,43,titles for Waste Generators
+FUTI,44,titles of fuel users
+COTI,45,titles of EU member states
+DCTI,46,titles free
+PATI,47,titles of population by age groups
+ARTI,48,titles of regional assumptions
+AWTI,49,titles of world assumptions
+ASTI,50,titles of special assumptions (none at present)
+VMTI,52,titles of columns of validation matrix
+BBTI,53,titles of dummy 71 rows
+T2TI,54,titles of FTT energy technologies
+C2TI,55,titles of FTT technological costs
+ENTI,56,titles free
+QBTI,57,titles free
+Y1TI,58,titles of time periods Y1 (2001-2050)
+Y5TI,59,titles free
+YATI,60,titles of time periods YA (2000-2020~2100)
+ERTI,61,titles of FTT resources classification
+MTTI,62,titles of materials
+MUTI,63,titles of material users
+EBTI,64,titles free
+MFTI,65,"Fuels used for materials submodel (coal, oil, gas)"
+RRTI,66,titles free
+TITI,67,titles of full years 1970-2050
+ECTI,68,titles free
+FPTI,69,titles free
+AGTI,70,titles free
+LGTI,71,titles of labour groups
+OCTI,72,titles free
+HYTI,73,titles of hydrogen technologies
+SATI,74,titles free
+SOTI,75,titles of EC strategic objectives
+PMTI,76,titles of travel modes (passengers)
+FMTI,77,titles of freight travel modes
+TPTI,78,titles free
+TLTI,79,titles of trip length
+HTTI,80,titles heat technologies
+C4TI,81,titles heat cost categories
+STTI,82,titles free
+MATI,83,titles of macro forecasting variables
+VLTI,84,titles free
+VTTI,85,titles of vehicle technologies
+VYTI,86,titles of years of vehicle age
+C3TI,87,titles of vehicle cost categories
+LHTI,88,titles free
+WDTI,89,titles for Waste Disposal
+SFTI,90,titles of stochastic functions
+DTTI,91,titles of diagnostic tests
+CMTI,92,titles of Czech emissions
+SETI,93,titles of socio-economic groups
+CETI,94,titles of consumers' environmentally sensitive categories
+EPTI,95,titles of energy prices (from IEA)
+YCTI,96,titles of years of C-B projection
+CSTI,97,titles free
+CFTI,98,titles free
+TCTI,99,titles of technical characteristics

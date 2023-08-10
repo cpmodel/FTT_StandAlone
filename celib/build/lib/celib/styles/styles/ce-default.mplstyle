@@ -1,0 +1,28 @@
+# CE defaults (excluding colour palettes) for Python-generated charts, to
+# conform to the templates in J:\Templates\CE Excel
+#
+# Set palette colours separately (e.g. with 'ce-three')
+
+
+# Larger default chart size (fills Jupyter notebooks better)
+figure.figsize: 12.0, 8.0
+
+# Remove non-axis plot-area borders and ticks
+axes.spines.top: False
+axes.spines.right: False
+axes.edgecolor: black
+
+font.sans-serif: Arial
+
+# Current .mplstyles configuration do not seem to allow for the differentiation
+# between colour of tick marks and colour of the tick labels. Preference would
+# have been to use ce-blue axis lines and tick marks, with black text.
+
+# To implement the Kaleko font requires the importing of specific font files,
+# which based on the documentation (https://matplotlib.org/examples/api/font_file.html)
+# is not recommended. For this reason it's been ommitted for now.
+
+
+# xtick.color: 009fe3
+# ytick.color: 009fe3
+# text.color: 0b1f2c

@@ -1,0 +1,6 @@
+name,dimnames,dimcodes,units,desc
+Q,"('QTI', )","(1, )",1,product outputs
+QD,"('QTI', )","(1, )",1,product total demands (QY0+QC0+QG0+QK0+QS0+QX0)
+QC0,"('QTI', )","(1, )",1,products purchased by consumers
+QG0,"('QTI', )","(1, )",1,products purchased by government
+QM0,"('QTI', )","(1, )",1,product imports

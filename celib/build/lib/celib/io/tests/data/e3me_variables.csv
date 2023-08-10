@@ -1,0 +1,6 @@
+name,dimnames,dimcodes,units,desc
+QYA,"('YTI', 'YTI')","(2, 2)",1,product functions (in order of SYMSF)
+QY,"('YTI', 'YTI')","(2, 2)",1,average input-output coefficients (BQRY holds regional IO tables)
+QY1,"('YTI', 'RTI')","(2, 1)",1,Lagged QRY
+QR,"('YTI', 'RTI')","(2, 1)",1,output of products at basic prices
+QRPI,"('YTI', 'RTI')","(2, 1)",1,QR previous iteration

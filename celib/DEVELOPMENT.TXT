@@ -1,0 +1,72 @@
+# DEVELOPMENT
+
+This file explains the recommended procedure for developing (fixing bugs and
+adding features to) the CE Python library. The steps are:
+
+1. Create a new virtual environment that replicates the minimal installation
+   for the CE Python library and install the checked-out library (`celib`)
+2. Ensure that the library passes **all** tests before you start making changes
+3. Make your changes, adding new tests as necessary
+4. Run all tests to check that the new code works and does not interfere with
+   functionality elsewhere in the library
+
+More detail on each step is in the sections below.
+
+**The assumption here at CE is that users are using the Anaconda distribution
+  of Python.**
+
+## 1. Create a new virtual environment
+
+A virtual environment is an isolated Python installation. It is distinct from
+the user's main installation and allows for sandboxing because users can create
+a new Python environment without having to reinstall Python and any packages.
+
+Using a virtual environment, users can:
+
+* run a different version of Python e.g. Python 2 rather than Python 3
+* install different packages e.g. a minimal installation
+* install different versions of packages e.g. version 1.0 of a package versus
+  version 2.0 of the same package
+
+Virtual environments are temporary and easy to switch between ('activate' and
+'deactivate'). They are a critical tool for code testing and replication.
+
+Using conda, create the `cedev` virtual environment with the minimum set of
+packages as follows:
+
+1. Set the current directory to be the one this file ('DEVELOPMENT.txt') is in
+2. Create the `cedev` virtual environment with the command:
+
+	conda env create --file environment.yml
+
+3. Activate the `cedev` environment with:
+
+    activate cedev
+	
+4. Install `celib` in editable mode (this is different to a regular install) to
+   the current environment:
+
+    pip install -e .
+
+Now, any changes you make to `celib` will be automatically reflected in the
+current virtual environment.
+
+**You do not need to re-install `celib` everytime you make a change to it.**
+
+## 2. Run test suite
+
+**Before making any changes to `celib` you should run the test suite to ensure
+  that the version of the library you have checked out is already in a working
+  condition.**
+
+Run the built-in tests with:
+
+    python -m unittest discover .
+	
+## 3. Make your changes, adding new tests as necessary
+
+Refer to the separate CE documentation on unit testing.
+
+## 4. Re-run the test suite
+
+As for Step [2].

@@ -1,0 +1,5 @@
+# CE 2019-palette for Python-generated charts
+#
+# Set other chart styles separately (e.g. with 'ce-default')
+
+axes.prop_cycle: cycler('linestyle', ['-', '--', ':', '-.']) * cycler('color', ['c5446e', 'aab71d', '49c9c5', '009fe3', '909090', '0b1f2c', 'f7e3ea', 'd9f4f3', 'f2f4dc', '66c5ee', '99d9f4', '639800', 'b2007a', 'e39f00'])

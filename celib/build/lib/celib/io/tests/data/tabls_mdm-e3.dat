@@ -1,0 +1,2090 @@
+                  The following list contains the names of variables,
+                  parameters, switches & converters for IDIOM.  The
+                  columns of the list are
+                  First column  : symbolic name
+                  Second and third columns : identitiers of internal
+                         IDIOM classifications for rows & cols (U also dummy)
+                  Fourth column : units of measurement
+                                  1 constant price values
+                                  2 current price values
+                                  3 base year=1.0
+                                  4 thousands  (no decimal place)
+                                  5 million therms (no dec)
+                                  6 rate as specified (3 dec)
+                                  7 titles
+                                  8 parameters (4 dec)
+                                  9 working variable
+                  Fifth column  : identifier for type of IDIOM store
+                   0 no store
+                   1 fixed store for variables
+                   2 fixed store for parameters (ordered as in BLKDATA SYMSF)
+                   3 store for sparse matrices
+                   4 store for switches  (ordered as in BLKDATA SYMSF)
+                   5 store for macrovariables
+                   6 store for workspace
+                   7 titles
+Q     1  0 1 1    product outputs
+QD    1  0 1 1    product total demands (QY0+QC0+QG0+QK0+QS0+QX0)
+QC0   1  0 1 1    products purchased by consumers
+QG0   1  0 1 1    products purchased by government
+QM0   1  0 1 1    product imports
+QM01  1  0 1 1    lagged QM0
+QDTS  1  0 6 1    share of total demand
+QS0   1  0 1 1    stockbuilding by product content
+QK0   1  0 1 1    product flows to social investment
+QMTD  1  0 6 1    tariff rates on product domestic demands
+QX0   1  0 1 1    product exports
+QX01  1  0 1 1    lagged QX0
+QX02  1  0 1 1    lagged QX01
+QY0   1  0 1 1    products absorbed by industries
+QRDC  1  0 6 1    logistic change in IO coefficients (annual, Q)
+QRDD  1  0 3 1    logistic change in IO coefficients (from base year, Q)
+QRDY  1  2 6 1    logistic change in IO coefficients (annual, QxY)
+QYE   1  0 1 1    products absorbed by the ESI
+QTNC  1  0 1 1    product economic weights (tonne/sterling)
+PQ    1  0 3 1    prices of products
+PQH   1  0 3 1    prices of home sales
+PQHH  1  0 3 1    prices of home sales by home producers
+PQH1  1  0 3 1    PQHH lagged 1 year
+PQH2  1  0 3 1    PQHH lagged 2 years
+PQM   1  0 3 1    prices of imported products
+PQM1  1  0 3 1    lagged PQM
+PQMC  1  0 6 1    international effort on carbon reductions price effect
+PQMT  1  0 3 1    effective price of imports including tariffs
+PQWX  1  0 3 1    dollar wholesale prices in UK export destinations
+PQWM  1  0 3 1    dollar wholesale prices in UK import sources
+PQX   1  0 3 1    prices of export sales
+PQX1  1  0 3 1    lagged PQX
+QMW0  1  0 2 1    tariffs on imported products
+QMWZ  1  0 6 1    tariff rates on imported products base year
+QMQ   1  0 6 1    quotas on product imports
+QAD   1  0 6 1    activity indices by UK export destination
+QEM   1  0 6 1    exchange rate indices by UK import source
+QEX   1  0 6 1    exchange rate indices by UK export destination
+QXT0  1  0 2 1    product taxes on exported products
+QXTZ  1  0 6 1    indirect tax rates exports base year
+Y     2  0 1 1    industry outputs (accounting basis)
+YSCL  2  0 1 1    scaling factors accounting - time series (Y/YST)
+YVA   2  0 1 1    industry value-added
+YVA0 41  0 1 1    UK industry value-added by regional industry classification
+YRE0 41  0 1 1    UK industry employment by regional industry classification
+YRVL 41  5 1 1    lagged regional industrial value added
+YRMF 41  5 4 1    regional industrial male employees (full-time)
+YRFF 41  5 4 1    regional industrial female employees (full-time)
+YRMP 41  5 4 1    regional industrial male employees (part-time)
+YRFP 41  5 4 1    regional industrial female employees (part-time)
+YRMS 41  5 4 1    regional industrial male self-employed
+YRFS 41  5 4 1    regional industrial female self-employed
+YRE  41  5 4 1    regional industrial employment
+YRE1 41  5 4 1    lagged regional industrial employment
+YREL 41  5 4 1    lagged regional industrial employment (FTE)
+YREA 41  5 4 1    actual regional industrial employment
+YREX 41  5 6 1    exogenous growth (% pa) in labour productivity (YRVA/YRE)
+YE0P  2  0 6 1    exogenous growth (% pa) in labour productivity (YVA/YE0)
+YREP 41  5 6 1    differential growth (pp) in labour productivity (to YREX)
+YVAL  2  0 1 1    lagged industry value-added
+YVAY  2  0 1 1    income-based industry value-added as SUM(YRVA)
+YAYR  2  0 6 1    scaling factors regional - UK value-added (YVAY/YVA)
+YQ0   2  0 1 1    all industry inputs of goods and services
+YQCO  2  0 1 1    industry inputs of coal
+YQO   2  0 1 1    industry inputs of manufactured fuel
+YQE   2  0 1 1    industry inputs of electricity
+YQG   2  0 1 1    industry inputs of gas
+YQW   2  0 1 1    industry inputs of water
+YST   2  0 1 1    industry outputs (econometric time series)
+YL1   2  0 1 1    industry outputs lagged 1 year
+YL2   2  0 1 1    industry outputs lagged 2 years
+YL3   2  0 1 1    industry outputs lagged 3 year
+YSTX  2  0 1 1    exogenous value of YST (used for tracking the past)
+ZAHP 55  0 2 1    working RPI parameters incl 25-years lagged AHP
+YZ    2 55 6 1    all-purpose storage and work variables (NY x 72)
+YN    2  0 1 1    'normal' level of industry output
+YYN   2  0 6 1    YN/Y formed in YN.f90
+LYYN  2  0 6 1    ln(YN/Y) formed in YN.f90
+YSA   2  0 2 1    stock appreciation by industry
+YE    2 12 4 1    industry employment by type of labour
+YE0   2  0 4 1    industry employment (employees + self-employed)
+YEL1  2  0 4 1    industry employment lagged 1 year
+YFTE  2  0 4 1    YE0 (full-time equivalent) RSUM(YRMF+YRFF+.57143*(YRMP+YRFP))
+YH    2  0 6 1    average hours worked per week in industry
+YHL1  2  0 6 1    average hours worked lagged 1 year
+YNH   2  0 6 1    standard hours worked in industry
+YWA   2  0 2 1    average earnings by industry pounds per person-year
+YWAL  2  0 2 1    YWA lagged one year
+YUMC  2  0 6 1    industrial unit material and service costs (sterling/unit output)
+YTLC  2  0 2 1    industrial total labour costs
+YTLL  2  0 2 1    industrial total labour costs lagged one year
+YEC   2  0 2 1    employers' total (state+private) social contributions by industry
+YECL  2  0 2 1    employers' contributions by industry lagged one year
+YNIC  2  0 2 1    employers' state social contributions by industry
+YNIR  2  0 2 1    value of CCL cut in YNIC as ECSC*YWS
+YECS  2  0 6 1    employers' NIC (secondary rate) industry averages
+YULC  2  0 6 1    industrial unit labour costs (sterling/unit output)
+YLCZ  2  0 6 1    industrial unit labour costs in base year
+YUC   2  0 6 1    industrial unit costs (sterling/unit output)
+YUCZ  2  0 6 1    industrial unit costs in base year
+YP    2  0 2 1    industry profits
+YRD1  2  0 6 1 1  R&D var 1 innovations for import share equs (IER)
+YRD2  2  0 6 1 1  R&D var 2 innovations for export volume equs(IER)
+YR2L  2  0 6 1 1  lagged YRD2
+YRD3  2  0 6 1 1  R&D var 3 innovations for export price equs (IER)
+YRD5  2  0 6 1 1  R&D var 5 number of strikes (IER)
+YR5L  2  0 6 1 1  lagged YRD5
+YALC  2  0 4 1    industrial average real labour costs (re YRE) sterling/person
+YALP  2  0 2 1    industrial average real labour productivity  (re YRW)
+YQTN  2  0 4 1    industrial inputs in million tonnes
+YCCL  2  0 6 1    CCL lower-rate proportions by industry 
+FUGS 44  0 4 1    change in gross energy saving by fuel user: E-E policies m therm
+EPID 95  0 6 1    energy-efficiency policies: Fuel user identifier
+EPES 95  0 4 1    E-E policies: gross energy saving (GWh)
+EPSL 95  0 4 1    lagged EPES
+EPEN 95  0 4 1    E-E policies: net energy saving (GWh) EPES*(1-EPRE*.01)
+EPNL 95  0 4 1    lagged EPEN
+EPRE 95  0 6 1    E-E policies: direct rebound effect (%)
+EPCS 95  0 4 1    E-E policies: carbon saving mtC (MDM est)
+EPCE 95  0 4 1    E-E policies: carbon saving mtC (DEFRA est)
+EPCO 95  0 2 1    E-E policies: total investment costs (sterling1995m)
+EPCY 95  0 2 1    E-E policies: investment costs to industry (sterling2005m)
+EPCC 95  0 2 1    E-E policies: investment costs to consumers (sterling2005m)
+EPSF 95  0 6 1    E-E policies: scaling factor =1 full E-E, =0 no E-E policies
+FUES 44  0 4 1    change in net energy saving by fuel user: E-E policies m therm
+FESP 44  0 4 1    permanent FUES
+FEST 44  0 4 1    transitory FUES
+FCES 44  0 4 1    accummulated FUES
+FCGS 44  0 4 1    accummulated gross energy saving (from EPES)
+FCEL 44  0 6 1    adjustment: lagged ALOG(1-(FCES/FUJ0))
+FCVS 44  0 1 1    value of energy saving to consumers (PC(?)*C(?)*FCES/FUJ0)
+FUTP 44  0 6 1    =0 NO ACTION, =1 energy saving from E-E policies
+FKEE 44  0 1 1    acc. inv. & R&D for EPES from MDM-E3 (add to FYKE)
+FKED 44  0 1 1    DEFRA estimate of FKEE
+FJES 44 19 4 1    FUES by fuel user and fuel
+FSSM 44  0 6 1    SME proportions in MDM fuel users 
+FSLE 44  0 6 1    LNE proportions in MDM fuel users
+LYWE  2  0 6 1    ln(external FTE industry wage rates (same region)) c/f YRW
+YKE   2  0 1 1    cumulated YK enhanced by YRD
+YKE1  2  0 1 1    lagged YKE
+LYKE  2  0 1 1    ln(YKE)
+RFTE  5  0 4 1    regional FTE employment CSUM(YRMF+YRFF+.57143*(YRMP+YRFP))
+YM0   2  0 1 1    industrial direct imports
+YZ0   2  0 1 1    industrial absorptions of other activities
+YIP   2  0 6 1    weights on Y to give ind. prod. (IP)
+YMP   2  0 6 1    weights on Y to give man. prod. (MP)
+S     7  0 1 1    stockbuilding by sector of destination
+PS    7  0 3 1    price indices for stocks
+PSL   7  0 3 1    stock price indices lagged 1 year
+SLL   7  0 1 1    stock levels by sector of destination
+SA    7  0 2 1    stock appreciation
+PY    2  0 3 1    prices of industry outputs
+PYVA  2  0 3 1    implicit unit values of industry value added
+YOT   2  0 2 1    output taxes paid by industries
+YT0   2  0 2 1    product taxes on industry
+YTZ   2  0 6 1    indirect tax rates industries base year
+YW0   2  0 2 1    value-added in industries
+C     3  0 1 1    consumers' expenditures
+PC    3  0 3 1    prices of consumers' expenditures
+PCL   3  0 3 1    lagged prices of consumers' expenditures
+CWA   3  0 2 1    average wage paid by consumption activity
+CT0   3  0 2 1    product taxes on consumers' expenditure
+CTZ   3  0 6 1    indirect tax rates consumers' exp. base year
+CW0   3  0 2 1    value-added in consumers' expenditures
+CM0   3  0 1 1    consumer direct imports
+CZ0   3  0 1 1    consumer absorptions of other activities
+G     4  0 1 1    government current expenditure
+GL    4  0 1 1    lagged government current expenditure
+GA    4  0 1 1    actual government current expenditure
+GR    4  0 6 1    residual on government current expenditure
+PG    4  0 3 1    prices of gov. cur. exp.
+PGVA  4  0 3 1    implicit unit-values of government value-added
+GXB   4  0 1 1 1  exogeneous component of government expenditure
+GGR   4  0 6 1 1  growth rate of government current expenditure
+GXW   4  0 6 1    weighting factor for government current expenditure
+GE0   4  0 4 1    employment by government
+GE0B  4  0 8 1    labour required per ` mn government expenditure
+GVA   4  0 1 1    value added by government activity
+GVAR  4  0 6 1    change in value-added prop. of government activity
+GWA   4  0 2 1    average wage paid by government activity in $pound
+GWS   4  0 2 1    wages and salaries paid by government activity
+GEXB  4  0 4 1 1  exogeneous component of government employment
+GEXG  4  0 6 1 1  growth rate of 'productivity' in government
+GT0   4  0 2 1    product taxes on gov. cur. exp.
+GTZ   4  0 6 1    indirect tax rates government exp. base year
+GW0   4  0 2 1    value-added in government current exp.
+GM0   4  0 1 1    government direct imports
+GZ0   4  0 1 1    government absorptions of other activities
+R    36  0 2 1    receipts and payments in aggregate
+H     6  0 2 1    institutional financial surpluses
+RH   36  6 2 1    transfers from institutions to other institutions
+RHR  36  6 2 1    receipts by institutions from other institutions
+HWP0  6  0 2 1    value added by institution of origin
+HWR0  6  0 2 1    indirect taxes received by institutions
+RHP0 36  0 2 1    inst. payments classified by form of payment
+HRR0  6  0 2 1    inst. receipts classified by institution of receipt
+HGTP  6  0 2 1    gross trading profit/surplus by institutional sector
+HSA   6  0 2 1    stock appreciation by institutional sector
+HDEP  6  0 2 1    depreciation (capital consumption) by institutional sector
+HV0   6  0 2 1    gross investment by institutional sector
+HS0   6  0 2 1    stockbuilding by institutional sector
+HK0   6  0 2 1    social capital formation by institutional sector4
+HCAP  6  0 2 1    capital stock by instit. sector
+HL0   6  0 2 1    capital transfers by institutional sector of receipt
+HF0   6  0 2 1    NAFA : totals by institutional sector
+HFBB  6  0 2 1    receipts of interest payments (Blue Book definition)
+HFFM  6  0 2 1    receipts of interest payments (financial model)
+FIA   9 23 2 1    financial assets held by institutions year end
+FIL   9 23 2 1    financial liabilities held by institutions year end
+FINW  9 23 2 1    financial net worth year beginning
+FADJ  9  0 6 1    adjustment to FI0
+I    23  0 6 1    institutions (=1 assets fixed, =2 liab. fixed, =3 adj both)
+INW  23  0 2 1    institutions' net worth year end
+INW1 23  0 2 1    INW lagged one year
+IREV 23  0 2 1    revaluations of financial assets institutional sectors
+RHFM 36  6 2 1    interest payments of FINMOD
+INAF 23  0 2 1    institutional NAFA assets/liabilities
+IA   23  0 2 1    total institutional assets closing stock
+IAL  23  0 2 1    total institutional  financial assets opening stock
+IL   23  0 2 1    total institutional liabilities closing stock
+ILL  23  0 2 1    total institutional financial liabilities opening stock
+ICAP 23  0 2 1    institutions' tangible capital stock (incl. stkbg)
+IAAD 23  0 6 1    adjustment for assets
+ILAD 23  0 6 1    adjustment for liabilities
+FRES  9  0 8 1    switch for residual financial asset/liability
+FRR   9  0 6 1    financial assets rate of return
+FRRL  9  0 6 1    FRR lagged one year
+FAP   9  0 3 1    financial asset price index for FNV
+FNV   9  0 2 1    nominal value of financial assets year end
+FNVL  9  0 2 1    FNV lagged one year
+FAM   9  0 6 1    financial asset average maturity in years for FNV
+FAML  9  0 2 1    lagged value of financial asset average maturity
+FSI   9  0 2 1    financial stock issued through year
+FI0   9  0 2 1    total value financial assets year end
+FI0L  9  0 2 1    FI0 lagged one year
+FREV  9  0 2 1    revaluations of financial assets through year
+FRRE  9  0 6 1 1  financial return end year
+FNR   9  0 6 1    extent to which fin. assets are inflation-indexed
+FCR   9  0 6 1    financial coupon return per unit over the year
+FCRL  9  0 6 1    FCR lagged one year
+FDCE  9  0 6 1    weights on F variable to give DCE
+FPSB  9  0 6 1    weights on F variable to give PSBR
+FPTG  9  0 6 1    weights on F variable to give PTGD
+FM3   9  0 6 1    weights on F variable to give sterling M3
+FIAA  9  0 6 1    weights to give liquid assets of ICCs
+FILA  9  0 6 1    weights to give liquid liabilities of ICCs
+HSL   6  0 2 1    stocks held by institutional sectors values end year
+HSLL  6  0 2 1    HSL lagged one year
+RHR0 36  0 2 1    inst. receipts classified by form of receipt
+RM0  36  0 2 1    transfers to the rest of the world
+RX0  36  0 2 1    transfers from the rest of the world
+RLE   5 71 4 1    LFS employment by region and gender
+XWR  10 15 1 1    export matrix export group by area
+XT0  10  0 6 1    tax rates on exports by export
+M    11  0 1 1    imports by import group
+MC0  11  0 1 1    direct imports by consumers
+MG0  11  0 1 1    direct imports by government
+MY0  11  0 1 1    direct imports by industries
+MR0  11  0 2 1    transfers from the rest of the world
+PFM  11  0 3 1 1  prices of import groups in $
+PFM1 11  0 3 1 1  lagged PFM
+PM   11  0 3 1    prices of import groups in sterling
+E    12  0 4 1    employment by type in total
+UE   12  0 4 1    unemployment by type
+LF   47  0 4 1    labour force by age and gender	
+LFDE 12  0 4 1 1  labour force by type of labour GE Gaz. def.
+PE   12  0 6 1    wage rates by type of labour ` per year
+PEL1 12  0 6 1    wage rates lagged 1 year ` per year
+EY0  12  0 4 1    industrial employment by type
+EG0  12  0 4 1    government employment by type
+DBT  13  0 6 1    income limits by tax brackets
+DC   13  3 1 1    consumption by tax bracket and functional category
+DPDI 13  0 2 1    disposable income by tax bracket
+WWPI 15  0 3 1 1  area/country wholesale price index local currency
+DSC  13  0 1 1    aggregate consumption by tax bracket
+DSPC 13  0 2 1    value of consumption by tax bracket
+DPCE 13  0 3 1    price index of consumption by tax bracket
+DPW  13  0 2 1    aggregate wealth by tax bracket
+DPWH 13  0 2 1    per capita wealth by tax bracket
+T    14  0 2 1    product tax revenues by type
+TO   14 17 2 1    product tax revenues for each SAM group
+TQX0 14  0 2 1    product tax revenues exports
+TY0  14  0 2 1    product tax revenues industries
+TC0  14  0 2 1    product tax revenues consumers' exp.
+TG0  14  0 2 1    product tax revenues government exp.
+TK0  14  0 2 1    product tax revenues investing sector
+PWL0 15  0 3 1    domestic prices by export area $
+PWL1 15  0 3 1    domestic prices by export area lagged 1 year
+PWL2 15  0 3 1    domestic prices by export area lagged 2 years
+WD1  15  0 3 1 1  aggregate demand measure (actual value)
+WD11 15  0 3 1 1  lagged WD1
+WD2  15  0 6 1    weights area/country in world GDP
+WEX  15  0 6 1 1  area/country exchange rates per US$
+WEXZ 15  0 6 1    WEX in base year
+WRX0 15  0 1 1    UK exports by area
+WRM0 15  0 1 1    UK imports by area
+K    16  0 1 1    investment by investing sector
+KL   16  0 1 1    lagged investment by investing sector
+PK   16  0 3 1    prices of investment by sector
+PKL  16  0 3 1    PK lagged one year
+EYAD 2  12 6 1    Shares with absolute annual trends by employment type
+EGAD 12  4 6 1    change in EGEC
+W    20  0 2 1    value-added payments in aggregate
+WQM0 20  0 2 1    indirect tax revenues imports
+WY0  20  0 2 1    value-added payments by industry
+WC0  20  0 2 1    value-added payments in consumers' exp.
+WG0  20  0 2 1    value-added payments in government exp.
+WK0  20  0 2 1    value-added payments social capital formation
+WZ0  20  0 2 1    other activities value-added
+Z    21  0 1 1    other activities aggregate output
+ZC0  21  0 1 1    other activities absorbed by consumers
+ZG0  21  0 1 1    other activities absorbed by government
+ZK0  21  0 1 1    other activities absorbed by social capital
+ZX0  21  0 1 1    other activities absorbed by exports
+ZY0  21  0 1 1    other activities absorbed by industries
+ZGN  21  4 8 1    35 parameters for government other activities(ZGB full)
+PZ   21  0 3 1    prices of other activities
+LH   22  6 2 1    capital transfers by transfer and sector of origin
+AWYR 93 60 6 1    assumption variables for presentation
+ASYR 94 60 6 1    assumption variables for presentation
+ARUS 92 60 6 1    assumptions for US
+ARJP 92 60 6 1    assumptions for JP
+ARDE 92 60 6 1    assumptions for DE
+ARUK 92 60 6 1    assumptions for UK
+ARFR 92 60 6 1    assumptions for FR
+ARIT 92 60 6 1    assumptions for IT
+ARER 92 60 6 1    assumptions for ER
+AREE 92 60 6 1    assumptions for EE
+ARCA 92 60 6 1    assumptions for CA
+ARAU 92 60 6 1    assumptions for AU
+ARRO 92 60 6 1    assumptions for RO
+ARRS 92 60 6 1    assumptions for RS
+ARRA 92 60 6 1    assumptions for RA
+ARCH 92 60 6 1    assumptions for CH
+ARIN 92 60 6 1    assumptions for IN
+ARMX 92 60 6 1    assumptions for MX
+ARBR 92 60 6 1    assumptions for BR
+ARNI 92 60 6 1    assumptions for NI
+AROP 92 60 6 1    assumptions for OP
+ARRW 92 60 6 1    assumptions for RW
+ARSW 92  0 6 1    switch (%pa=1) (for interval solution when ISWY=1)
+AWSW 93  0 6 1    switch (%pa=1) (for interval solution when ISWY=1)
+ASSW 94  0 6 1    switch (%pa=1) (for interval solution when ISWY=1)
+BBYR 53  0 2 1    Blue Book variables for presentation
+PBYR 54  0 2 1    Pink Book variables for presentation
+FSYR 55  0 2 1    Financial Statistics variables for presentation
+ENYR 56  0 2 1    Energy Statistics variables for presentation
+RSYR 61  0 2 1    Regional Statistics variables for presentation
+ASYD 67  0 6 1    diff. from base assumptions
+BBYD 53  0 6 1    diff. from base Blue Book variables
+PBYD 54  0 2 1    diff. from base Pink Book variables
+FSYD 55  0 2 1    diff. from base Financial Statistics variables
+ENYD 56  0 2 1    diff. from base Energy Statistics variables
+RSYD 61  0 6 1    diff. from base Regional Statistics variables
+ASYB 67  0 2 1    base for assumptions
+BBYB 53  0 2 1    base for Blue Book variables
+PBYB 54  0 2 1    base for Pink Book variables
+FSYB 55  0 2 1    base for Financial Statistics variables
+ENYB 56  0 2 1    base for Energy Statistics variables
+RSYB 61  0 2 1    base for Regional Statistics variables
+YYYB  2  0 1 1    base for industrial output
+PYYB  2  0 3 1    base for industrial output prices (PQHH)
+YEYB  2  0 4 1    base for industrial employment
+QXYB  1  0 1 1    base for exports
+QMYB  1  0 1 1    base for imports
+PXYB  1  0 3 1    base for export prices
+PMYB  1  0 3 1    base for import prices
+CCYB  3  0 1 1    base for consumers expenditures
+PCYB  3  0 3 1    base for consumers expenditure prices (PC)
+QYDC  1  0 6 1    defence input coefficients for 2001
+QYNC  1  0 6 1    PAD non-defence input coefficients for 2001
+RZ   36  4 6 1    working matrix 32 X 5
+RWB  36 20 6 1    clas. con. value-added to form of income
+QERR 38  5 6 1    regional residual errors
+QRYR 38  0 6 1    scaling regional to UK total intermediate demand
+QRCR 38  0 6 1    scaling regional to UK com. consumers expenditure
+QRGR 38  0 6 1    scaling regional to UK com. government exp.
+QRKR 38  0 6 1    scaling regional to UK GDFCF by source product
+YRWR 41  5 6 1    residuals or scaling regional to UK ind. wages and salaries
+CRRR 40  5 6 1    residuals for CRR regional consumers expenditure
+KRRA 37  5 1 1    actuals for KRR
+KRRR 37  5 6 1    residuals for KRR
+GRC   4  5 6 1    converter for regional government exp
+KRKC 37 16 6 1    converter from GDFCF to regional GDFCF
+QRY  38 39 6 1    converter from product to regional product
+CRP1  5 52 6 1    forecast decomposition for BRPC(?:1)
+CRP4  5 52 6 1    forecast decomposition for BRPC(?:4)
+CRP5  5 52 6 1    forecast decomposition for BRPC(?:5)
+CRP6  5 52 6 1    forecast decomposition for BRPC(?:6)
+CDSC 13 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CPE  12 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CEXL 13 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CRSC  5 52 6 1    forecast=1 ECM=10 eq_err=20 c=21 resid=22 resa=23 mod=24
+CQM0  1 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CPQM  1 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CPQH  2 52 6 1    forecast=1 ECM=8 eq_err=20 c=21 resid=22 resa=23 mod=24
+CYE0  2 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CYH   2 52 6 1    forecast=1 ECM=5 eq_err=20 c=21 resid=22 resa=23 mod=24
+CS    7 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CDC   3 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CPQX  1 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CRHE 36 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CYWA  2 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CKRR 37 52 6 1    region SFDT(11,10): forecast=1 ECM=6 eq_err=20 c=21 resid=22
+CCRR 40 52 6 1    region SFDT(9,10): forecast=1 ECM=7 eq_err=20 c=21 resid=22
+CYRW 38 52 6 1    region SFDT(21,10): forecast=1 ECM=12 eq_err=20 c=21 resid=22
+CYRE 38 52 6 1    region SFDT(16,10): forecast=1 ECM=6 eq_err=20 c=21 resid=22
+CQRX 38 52 6 1    region SFDT(13,10): forecast=1 ECM=6 eq_err=20 c=21 resid=22
+CQRM 38 52 6 1    region SFDT(15,10): forecast=1 ECM=5 eq_err=20 c=21 resid=22
+CFU8 44 52 6 1    elec share: forecast=1 ECM=10 eq_err=20 c=21 resid=22
+CFU5 44 52 6 1    fuel oil share: forecast=1 ECM=10 eq_err=20 c=21 resid=22
+CFU1 44 52 6 1    coal share: forecast=1 ECM=10 eq_err=20 c=21 resid=22
+CFU7 44 52 6 1    gas share: forecast=1 ECM=10 eq_err=20 c=21 resid=22
+CFUE 44 52 6 1    energy: forecast=1 ECM=9 eq_err=20 c=21 resid=22 resa=23
+CQX0  1 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CK   16 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CIA  23 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CIL  23 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CFRR  9 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+CSC  13 52 6 1    forecast=1 ECM=11 eq_err=20 c=21 resid=22 resa=23 mod=24
+LARF 47  5 4 1    LFS labour force by ageband/gender and region
+CTPK 86 52 6 1    transport network SFDT(26,10): forecast=1 ECM=11 eq_err=20 c=21 resid=22
+CTVP 86 52 6 1    transport technology SFDT(27,10): forecast=1 ECM=6 eq_err=20 c=21 resid=22
+CTTF101 52 6 1    transport vehicle SFDT(28,10): forecast=1 ECM=6 eq_err=20 c=21 resid=22
+QYCQ  1  2 6 1    input-output coefficients by industry (rows = products)
+QYCY  2  1 6 1    input-output coefficients by product (rows = industries)
+ZZ1  55 55 6 1    working matrix
+ZZ2  55 55 6 1    working matrix
+ZZ3  55 55 6 1    working matrix
+ZZ4  55 55 6 1    working matrix
+ZZ5  55 55 6 1    working matrix
+ZZ6  55 55 6 1    working matrix
+ZZ7  55 55 6 1    working matrix
+ZZ8  55 55 6 1    working matrix
+ZZ9  55 55 6 1    working matrix
+ZZA  55 55 6 1    working matrix
+ZZB  55 55 6 1    working matrix
+ZZC  55 55 6 1    working matrix
+ZZD  55 55 6 1    working matrix
+ZZE  55 55 6 1    working matrix
+ZI1  55  0 6 1    working matrix
+ZI2   0 55 6 1    working matrix
+ZZI  55 55 6 1    working matrix
+ZZK  55 55 6 1    working matrix
+ZZJ  55 55 6 1    working matrix
+ZZW  55 55 6 1    working matrix
+ZZWL 55 55 6 1    working matrix
+VM   52  5 6 1    decomposition vector (programming requirement)
+VMSA 52 90 6 1    weighted ave decomposition matrix for stoch. fns
+VMSR 52 90 6 1    weighted ave decomposition mx, stoch. fns region IDR
+VRYE 52  5 6 1    employment: regional wted ave decomposition matrix
+MR   11  0 6 1    model residuals for M
+QM0R  1  0 6 1    model residuals for QM0
+PQMR  1  0 6 1    model residuals for PQM
+PQHR  2  0 6 1    model residuals for PQHH
+KR   16  0 6 1    model residuals for K
+PKR  16  0 6 1    model residuals for PK
+YE0R  2  0 6 1    model residuals for YE0
+YHR   2  0 6 1    model residuals for YH
+SER   7  0 6 1    model residuals for S
+CR    3  0 6 1    model residuals for C
+PCR   3  0 6 1    model residuals for PC
+PQXR  1  0 6 1    model residuals for PQX
+QR    1  0 6 1    model residuals for Q
+RHER 36  6 6 1    model residuals for RH
+RHIR 36  6 6 1    model residuals for RHR
+YVAR  2  0 1 1    model residuals for YVA
+YWAR  2  0 6 1    model residuals for YWA
+QRXR 38  5 6 1    model residuals for regional exports by product
+QRMR 38  5 6 1    model residuals for reg. residual output (QRR-QRX)
+MRZC 11 36 6 1    classification converter current transfers to R.O.W
+FRZC  9 36 6 1    classification converter financial assets to inc/exps
+HRZC  6 36 6 1    class con unidentified financial receipts to sectors
+HRRC  6 36 6 1    classification converter receipts to institutions
+QKRC 38 37 6 1    converter for regional GDFCF to products
+BSW  25  0 2 1    special switches for macrovariables
+TDR  69  0 6 1    test discount rate
+BERR 25  0 6 1    model residuals for BVAR
+WR   20  0 6 1    model residuals for W
+ZR   21  0 6 1    model residuals for Z
+QX0R  1  0 6 1    model residuals for QX0
+FI0R  9  0 6 1    model residuals for FI0
+FRRR  9  0 6 1    model residuals for FRR
+IAR  23  0 6 1    model residuals for IA
+ILR  23  0 6 1    model residuals for IL
+INWR 23  0 6 1    model residuals for INW
+PGR   4  0 6 1    model residuals for PG
+HDER  6  0 6 1    model residuals for HD
+RR   36  0 6 1    model residuals for R
+QC0R  1  0 6 1    model residuals for QC0
+QG0R  1  0 6 1    model residuals for QG0
+QK0R  1  0 6 1    model residuals for QK0
+QY0R  1  0 6 1    model residuals for QY0
+LARR 47  5 6 1    model residuals for LARE
+YRER 41  5 6 1    model residuals for YRE
+MA   11  0 1 1    actuals for M
+QM0A  1  0 1 1    actuals for QM0
+PQMA  1  0 3 1    actuals for PQM
+PQHA  2  0 3 1    actuals for PQHH
+KA   16  0 1 1    actuals for K
+PKA  16  0 3 1    actuals for PK
+YE0A  2  0 4 1    actuals for YE0
+YHA   2  0 6 1    actuals for YH
+YNA   2  0 6 1    actuals for YN
+SACT  7  0 1 1    actuals for S
+CA    3  0 1 1    actuals for C
+PCA   3  0 3 1    actuals for PC
+PQXA  1  0 3 1    actuals for PQX
+QA    1  0 1 1    actuals for Q
+RHEA 36  6 2 1    actuals for RH
+RHIA 36  6 2 1    actuals for RHR
+YVAA  2  0 2 1    actuals for YVA
+YWAA  2  0 2 1    actuals for YWA
+FUJA 44 19 4 1    actuals for FUJT
+FUEA 44  0 4 1    actuals for FUJ0
+BACT 25  0 6 1    actuals for BVAR
+WA   20  0 2 1    actuals for W
+ZA   21  0 1 1    actuals for Z
+QX0A  1  0 1 1    actuals for QX0
+FI0A  9  0 2 1    actuals for FI0
+FRRA  9  0 2 1    actuals for FRR
+IAA  23  0 2 1    actuals for IA
+ILA  23  0 2 1    actuals for IL
+PGA   4  0 3 1    actuals for PG
+HDEA  6  0 3 1    actuals for HD
+HA    6  0 3 1    actuals for H
+RA   36  0 3 1    actuals for R
+LARA 47  5 6 1    actuals for LARE
+SFDT 90 91 6 1    stochastic function diagnostic tests
+SFDA 90 91 6 1    accumulated stochastic function diagnostic tests
+SFSW 90  5 6 1    stochastic function calibrations switch (like calib)
+SFLT 90  0 6 1    number of LT parameters for stochastic functions
+TYKE 86  0 1 1    cumulated YK enhanced by YRD mapped to transport vehicles
+PPV  86  0 6 1    price of vehicles
+PRPV 86  0 6 1    price of vehicles relative to the consumer price level
+YEA   2 12 4 1    actual industry employment by type of labour
+YER   2 12 6 1    residual industry employment by type of labour
+YMFA 41  5 4 1    actual regional industrial male employees (full-time)
+YFFA 41  5 4 1    actual regional industrial female employees (full-time)
+YMPA 41  5 4 1    actual regional industrial male employees (part-time)
+YFPA 41  5 4 1    actual regional industrial female employees (part-time)
+YMSA 41  5 4 1    actual regional industrial male self-employed
+YFSA 41  5 4 1    actual regional industrial female self-employed
+YMFR 41  5 6 1    residual regional industrial male employees (full-time)
+YFFR 41  5 6 1    residual regional industrial female employees (full-time)
+YMPR 41  5 6 1    residual regional industrial male employees (part-time)
+YFPR 41  5 6 1    residual regional industrial female employees (part-time)
+YMSR 41  5 6 1    residual regional industrial male self-employed
+YFSR 41  5 6 1    residual regional industrial female self-employed
+YWS   2  0 4 1    UK Industrial wages and salaries
+YFTL  2  0 4 1    Lagged YFTE (full-time equivalent)
+YEL   2 12 4 1    Lagged industry employment by type of labour
+PQF   1  0 3 1    world commodity price index
+QXRT  1  0 6 1    share of exports in product output
+YUCB  2  0 6 1    industrial unit costs centred on base year
+QM0X  1  0 1 1    exogenous, additional product imports
+QX0X  1  0 1 1    exogenous, additional product exports
+RWAL  5  0 4 1    lagged regional working-age population
+YUTC  2  0 6 1    industrial unit net taxes (sterling/unit output)
+YWSC  2  0 4 1    real wage costs
+FAPS 44  0 6 1    emissions allowance prices (sterling/tCO2) - added into FEAP
+FAPE 44  0 6 1    EU ETS emissions allowance prices (euros/tCO2) - added into FEAP
+FCPF 44  0 6 1    carbon price floor (sterling/tCO2) - selected if greater than FEAP(1)
+RPC   5 48 4 1    regional population change in thousands
+RPC1  5 48 4 1    lagged RPC
+RPCA  5 48 4 1    actFual regional population change in thousands
+RPCR  5 48 6 1    residuals for regional population change functions
+RCHI  5  0 4 1    regional child population
+ROAP  5  0 4 1    regional retired population (men over 65, women over 60)
+RYAD  5  0 4 1    regional young adult population
+RWMG  5  0 4 1    regional working-age net migration
+RWAP  5  0 4 1    regional working-age population
+RIMI  5  0 4 1    regional in-migration of working-age population (th)
+ROMI  5  0 4 1    regional out-migration of working-age population (th)
+RPOP  5  0 4 1    regional population
+RPO1  5  0 4 1    lagged regional population
+RAHS  5  0 6 1    regional average household size (in persons)
+RHHL  5  0 4 1    regional households in thousands
+REMP  5  0 4 1    regional total employment
+REM1  5  0 4 1    lagged REMP
+RUNE  5  0 4 1    regional unemployment
+RUNL  5  0 4 1    lagged regional unemployment
+RUNR  5  0 6 1    regional unemployment rate
+RUN1  5  0 6 1    lagged RUNR
+RWFR  5  0 6 1    model residuals for RWF
+RWFA  5  0 2 1    actuals for RWF
+RWF   5  0 2 1    regional workforce
+RWFL  5  0 2 1    lagged regional workforce
+RLF   5 71 4 1    LFS labour force by region and gender
+RLF1  5 71 4 1    lagged LFS labour force by region and gender
+RPAR  5  0 6 1    regional participation ratios
+RGTR  5  0 4 1    regional work-related government training
+YRYC 41  2 6 1    industry to regional industry convertor (87 to 46)
+YRVA 41  5 1 1    industry value added by region
+YRAA 41  5 1 1    actual industry value added by region
+YRVR 41  5 6 1    residual for industry value added by region
+KRR0 37  0 1 1    UK GDFCF mapped to regional investment category
+KRR  37  5 1 1    regional GDFCF
+KRR1 37  5 1 1    lagged KRR
+RRPD  5  0 1 1    regional real personal disposable income
+RRP1  5  0 1 1    lagged RRPD
+RRPA  5  0 2 1    actuals for regional RPDI
+RRPR  5  0 6 1    model residuals for regional RPDI
+RSC   5  0 2 1    regional total consumers' expenditure
+RSC1  5  0 2 1    lagged RSC
+RSCA  5  0 2 1    observed regional total consumers' expenditure
+RSCR  5  0 6 1    residuals for regional total consumers' expenditure
+CRR  40  5 1 1    regional consumers expenditure
+CRRA 40  5 1 1    actual values regional consumers expenditure
+LARE 47  5 6 1    LFS activity rates by ageband/gender and region
+LARL 47  5 6 1    lagged LARE
+LARP 47  5 4 1    population by ageband/gender and region
+RLUA  5 71 4 1    actuals for RLUN
+RLIU  5 71 6 1    ILO unemployment rate by region and gender
+RLIL  5 71 6 1    lagged RLIU
+RLRS  5 71 4 1    labour market residual by region and gender
+RLE1  5 71 4 1    lagged RLE
+LARS 47  5 6 1    shares in RPOP by age band/gender and region 
+RLUN  5 71 4 1    ILO unemployment level by region and gender
+RLU1  5 71 4 1    lagged RLUN
+RNHP  5  0 2 1    regional Nationwide house prices in sterling
+RE    5 71 4 1    workforce employment by region and gender
+RE1   5 71 4 1    lagged RE
+RWS   5  0 2 1    regional wages and salaries
+YRGT 41  5 6 1    computed adjustment factors from sum of individual YRgt matrices to total
+YWS0 41  0 1 1    UK industry wages and salaries by regional industry classification
+YRWS 41  5 2 1    regional industrial wages and salaries
+YRW  41  5 2 1    regional average industrial wages and salaries
+ROOD  5  0 1 1    regional ownership of dwellings
+RHSP  5  0 2 1    regional housing starts, private sector (th)
+QRR  41  5 1 1    regional gross output by product
+QRRL 41  5 1 1    lagged regional gross output by product
+QRRA 41  5 1 1    actuals for regional gross output by product
+QRRR 41  5 6 1    residuals for regional gross output by product
+Q0 	 41  0 1 1    UK Product output by regional industry classification
+RUNB  5  0 2 1    regional unemployment	benefits
+RIFE  5  0 2 1    regional income from employment
+RSEY  5  0 2 1    regional self employment income
+RIFA  5  0 2 1    actuals for RIFE
+RIFR  5  0 6 1    residuals for RIFE
+RSER  5  0 6 1    residuals for RSEY
+RSYA  5  0 2 1    actuals for RSEY
+RIFL  5  0 2 1    lagged for RIFE
+YWSL 41  0 1 1    lagged UK industrial wages and salaries
+KX   16  0 1 1    exogenous additions to investment by sector and asset
+PSGC 50 51 4 1    UK power-sector generation capacity by technology and generator (MW)
+PSGA 50 51 4 1    UK power-sector generation capacity by technology and generator actuals
+PSGR 50 51 6 1    UK power-sector generation capacity by technology and generator residuals
+PSGG 50 51 4 1    UK power-sector generation by technology and generator (GWh)
+PGGA 50 51 4 1    UK power-sector generation by technology and generator actuals
+PGGR 50 51 6 1    UK power-sector generation by technology and generator residuals
+PSC0 50  0 4 1    UK power-sector generation capacity by technology (sum of PSGC)
+PSG0 50  0 4 1    UK power-sector generation by technology (sum of PSGG)
+PSCK 50 51 6 1    Power-sector costs: capital (pounds/kW pa)
+PSCO 50 51 6 1    Power-sector costs: fixed O+M (pounds/kW pa)
+PSCV 50 51 6 1    Power-sector costs: variable O+M (pounds/MWh pa)
+PSCF 50 51 6 1    Power-sector costs: fuel (pounds/MWh pa)
+PSCC 50 51 6 1    Power-sector costs: carbon (pounds/MWh pa)
+PSCD 50 51 6 1    Power-sector costs: demand-side management (pounds million)
+PSCM 50 51 6 1    Power-sector costs: total cost in pounds per MWh
+PSCE 50 51 6 1    Power-sector efficiency factors: ratio of electricity to fuel in kWh/kWh
+PCO2 50 51 6 1    Power-sector emissions factors (CO2) in gCO2/kWh fuel
+PSGL 50 51 4 1    Lagged power-sector capacity by technology and generator (MW)
+PSIK 50  0 6 1    Power-sector: additional capacity build cost (sterling/kW)
+PSNG 50 51 4 1    Power-sector: new net capacity per year (MW)
+PSKK 50  0 4 1    Power-sector: investment cost (sterlingm)
+PSDC 50  0 6 1    Power-sector: domestic content (%)
+PSMC 50  0 6 1    Power-sector: import content (%)
+PSLF 50 51 6 1    Power-sector: load factor (%)
+PSKC 50  0 4 1    Power-sector: investment cost (constant-price sterling m)
+FUJT 44 19 4 1    fuel use by type of fuel, m therms
+FUJ0 44  0 4 1    fuel use for energy, in millions of therms
+ESC  32  0 4 1    electricity supply capacity in MW
+JFU  19  0 4 1    secondary energy use by fuel in original units
+EMJ  29 19 4 1    environmental emissions by fuel source th tonnes
+HSC  98 99 4 1    CHP plant characteristics (various units, year and year-end)
+TTFN101 86 6 1    new vehicle fuel efficiency (l/100km)
+FEPV 44  0 4 1    emission permit net trade in th tonnes carbon (FEPA-FEPU)
+FEPA 44  0 4 1    emission permit allocation =0 before 2005 th tonnes CO2
+FEAP 44  0 6 1    segmented-market emission allowance prices (sterling/tCO2)
+YEP   2  0 4 1    industry value gain from EU ETS emissions granfathering by industry
+FEAA 44  0 6 1    government auctioning proportion by FU [0,1]
+FEAR 44  0 4 1    government auctioning revenue by FU
+FUYC 44  2 6 1    clas. con. industries to fuel users
+CX    3  0 1 1    additive exogenous change to consumers' expenditure by category
+QC0X  1  0 1 1    additive exogenous change in products purchased by consumers
+YE0X  2  0 4 1    additive exogenous change in industry employment (employees + self-employed)
+PQMX  1  0 3 1    exogenous modifications to prices of imported products
+PQXX  1  0 3 1    exogenous modifications to prices of export sales
+QK0X  1  0 1 1    additive exogenous product flows to social investment
+PQHX  1  0 3 1    exogenous modifications to prices of home sales by home producers
+CNS   3  0 4 1    switchs on disaggregate consumers' expenditure: set to 1 to prevent scaling for a particular category
+JFPR 19 69 6 1    ratios for domestic fuel use by income group
+JFPV 19 69 2 1    values for domestic fuel use by income group
+PJFP 19 69 3 1    prices for domestic fuel use by income group p/therm
+JFPC 19 69 4 1    domestic fuel use by income group in m therms
+FUY0 44  0 1 1    output or activity measure by energy user
+PFU  44  0 3 1    ave (across fuels) fuel prices (pence/therm) from PFUJ
+PFUJ 44 19 6 1    prices of FUJT (incl taxes) (p/therm)
+FUER 44  0 6 1    model residuals for FUJ0
+FYKE 44  0 1 1    cumulated YK enhanced by YRD grouped as fuel users
+FUJ1 44  0 4 1    lagged FUJ0
+FUJN 44  0 4 1    non-CHP fuel use for energy, mtherms (FUJ0-fac*sum(FJCT))
+FUNC 44  0 6 1    ratio of CHP to total fuel use for energy fac*sum(FJCT)/FUJ0
+FUEC 44  0 6 1    ratio of energy use to output (FUJ0/FUY0) therm/sterling(2002)
+FUEB 44  0 6 1    base (2002) value of FUEC
+FUET 44  0 6 1    CCLA target (2010) for FUEC relative to FUEB (2002=1)
+FYKX 44  0 1 1    extra energy-saving FYKE induced by CCLA target
+FJCT 44 19 4 1    CHP total fuel use GWh
+FJCH 44 19 4 1    conventional heating fuel replaced by CHP (m therms)
+F8CH 44  0 4 1    electricity replaced by CHP onsite power (m therms)
+FCCL 44  0 6 1    CCL lower-rate proportions by fuel user (from YCCL)
+FUEZ 44  0 6 1    base-case time-series of FUER (for E-E in FUE.FOR)
+CCLD 44  0 6 1    CCL awareness effect by fuel user
+CCAW 44  0 6 1    2006 and 2007 CCL awareness effect used for CTUKCCP scenario
+FU0S 44  0 4 1    energy savings from CCC policies in m therms
+FUX  44  0 4 1    exogenous, additional fuel use
+FUOO 44  0 4 1    oil use for energy, in original units (from FUJO)
+FUJO 44 19 4 1    fuel use by type of fuel, original units
+TTF0102  0 4 1    fuel use by fuel type (m therms)
+JEFU 19  0 4 1    ESI fuel use (from ESFU) in m therms
+JRFU 19 68 4 1    regional ESI fuel use (from ESFU) in m therms
+JRF1 19 68 4 1    regional ESI fuel use (DUKES basis) in m therms
+FUJD 44 19 6 1    implicit fuel conversion rates therms/original units
+FUJL 44 19 4 1    lagged FUJT
+FUJR 44 19 6 1    model residuals for FUJT
+FUFD 44  0 4 1    fuel use for final energy, in th toe
+PFUD 44 19 6 1    price differentials, PFUJ to specfic elements of PQH
+PJ   19  0 3 1    ave (across uses) fuel prices (pence/therm) from PFUJ-PFUT
+JFTT 19  0 4 1    total energy use by fuel in m therms
+FURR 44  0 6 1    scaling non-electric FUJ0/(sum j FUJT) (ex power/own use)
+JFUT 19  0 4 1    secondary energy use by fuel in m therms
+FUJV 44 19 2 1    fuel use by type of fuel, current prices incl. taxes
+FUO  44  0 4 1    oil use for energy, in millions of therms
+PFUV 44 19 6 1    value added tax in PFUJ (p/therm)
+PF7L 44  0 3 1    lagged PFU7
+EBFB 64 65 4 1    DEn energy balances table
+EBFC 64 65 4 1    coefficients for DEn energy balances table
+FJNC 44 19 4 1    non-CHP fuel use by type of fuel, m therms (FUJT-fac*FJCT)
+FUJS 44 19 4 1    energy savings from CCC policies in m therms by fuel user and type
+FUJX 44 19 4 1    exogenous, additional fuel use by type of fuel
+COMP 44 19 6 1    prices of competing FUJT (incl taxes) (p/therm)
+JEG  19  0 4 1    total electricity generation by fuel type in GWh
+JEGA 19  0 4 1    actual JEG
+JEGR 19  0 6 1    residual for JEG
+ESG  32  0 4 1    electricity generation in GWh [ESC/ETM]
+ESFU 32  0 4 1    electricity fuel use in m therms [ESC/ETM]
+STCP 82  0 6 1    average NETA competitive price JESP/(.01*STAE) p/KWh [ESC/ETM]
+ESV  32  0 6 1    ES investment in MWe [ESC/ETM]
+JEBA 19  0 6 1    fuel price in elect. generation in 2002, p/therm (PFUJ(1,J) [ESC/ETM]
+JESP 19  0 6 1    fuel price in elect. generation incl tax, pence/KWh [ESC/ETM]
+JESE 19  0 6 1    fuel use efficiency of new electricity plant % [ESC/ETM]
+JMCC 19  0 6 1    marginal capital cost of elect. generation p/KWh [ESC/ETM]
+JMCG 19  0 6 1    marginal fuel cost of elect. generation p/KWh [ESC/ETM]
+JEC  19  0 4 1    total electricity capacity by fuel type in MWe end year [ESC/ETM]
+PJ1  19  0 3 1    lagged ave fuel prices (pence/therm) ex tax
+JEPE 19  0 6 1    JESP excluding taxes, pence/KWh [ESC/ETM]
+JEAE 19  0 6 1    average fuel use efficiency of electricity plant % [ESC/ETM]
+JELF 19  0 6 1    average load factors of electricity plant % [ESC/ETM]
+JMS  19  0 6 1    import share of 'inputs to power generation' [ESC/ETM]
+FUYL 44  0 1 1    lagged FUY0
+RMXL 68  0 4 1    lagged RMXD [ESC/ETM]
+RDGL 68  0 4 1    lagged RDGE [ESC/ETM]
+RBCA 68  0 4 1    balance of elect. cap. (RTCA-RMXD*(1+RPMA)) MWe [ESC/ETM]
+STJ  82  0 4 1    fuel use for generation by station type, m therms [ESC/ETM]
+STJA 82  0 4 1    actual for STJ [ESC/ETM]
+STJR 82  0 6 1    residual for STJ [ESC/ETM]
+STG  82  0 4 1    generation by station type, GWh [ESC/ETM]
+SCLE 82  0 6 1    implicit CCL rates on electricity by station type p/KWh [ESC/ETM]
+STGA 82  0 4 1    actual for STG [ESC/ETM]
+STGR 82  0 6 1    residual for STG [ESC/ETM]
+STC  82  0 4 1    capacity by station type, MWe end year [ESC/ETM]
+STCA 82  0 4 1    actual for STC [ESC/ETM]
+STCR 82  0 6 1    residual for STC [ESC/ETM]
+JCLE 19  0 6 1    implicit CCL rates on elect. by fuel use (from SCLE) p/KWh [ESC/ETM]
+FJQT 44 19 4 1    CHP total qualifying fuel use GWh [ESC/ETM]
+FQEG 44  0 4 1    CHP qualifying power gen. by fuel user, GWh [ESC/ETM]
+FUHG 44  0 4 1    CHP heat generation by fuel user, GWh [ESC/ETM]
+JCHP 19  0 4 1    CHP qualifying fuel use by fuel type, GWh [ESC/ETM]
+ESHC 32  0 2 1    equivalent of ESC for heat capacity, MW [ESC/ETM]
+ESCL 32  0 4 1    lagged ESC [ESC/ETM]
+ESCC 32  0 6 1    discounted nominal costs in sterling m/MWe [ESC/ETM]
+FHCQ 44  0 4 1    CHP qualifying heat capacity by fuel user (MWe) end of year [ESC/ETM]
+FPCQ 44  0 4 1    CHP qualifying power capacity by fuel user (MWe) end of year [ESC/ETM]
+ESAE 32  0 6 1    ave fuel use effic. % 100*ESG(J)*0.034121/ESFU(J) [ESC/ETM]
+JREC 19 68 4 1    fuel-type electricity capacity by region in MW [ESC/ETM]
+JREG 19 68 4 1    fuel-type electricity generation by region in GWh [ESC/ETM]
+PJRT 19 68 6 1    price of fuels for elect. gen. incl. tax p/KWh [ESC/ETM]
+JRMG 19 68 6 1    marginal fuel cost of electricity generation p/KWh [ESC/ETM]
+PJRE 19 68 6 1    price of fuels for elect. gen. excl. tax p/KWh [ESC/ETM]
+RDGE 68  0 4 1    regional desired generation in GWh [ESC/ETM]
+RECL 68  0 6 1    RECE lagged (regional ave costs ex tax p/kWh) [ESC/ETM]
+RTCA 68  0 4 1    regional total electricity capacity in MWe [ESC/ETM]
+SSO2 82  0 4 1    SO2 emissions by station (th tonnes) [ESC/ETM]
+RRCA 68  0 4 1    regional renewable electricity capacity in MWe [ESC/ETM]
+RPMA 68  0 6 1    regional plant margin [ESC/ETM]
+RCCA 68  0 4 1    regional coal electricity capacity in MWe [ESC/ETM]
+RGCA 68  0 4 1    regional gas electricity capacity in MW [ESC/ETM]
+RGTC 68  0 4 1    regional gas turbine electricity capacity in MWe [ESC/ETM]
+RMXD 68  0 4 1    regional maximum demand in MWe [ESC/ETM]
+RTGE 68  0 4 1    regional total generation in GWh [ESC/ETM]
+EPP  32  0 6 1    ES price index: costs marker/alt. technology ES=IES (index) [ESC/ETM]
+RECE 68  0 6 1    RECI (ex tax) p/kWh [ESC/ETM]
+ESCH 32  0 6 1    discounted real hourly costs of electricity generation in p(2005)/kWh [ESC/ETM]
+RRPT 68  0 6 1    taxable proportions of renewable thermal inputs [ESC/ETM]
+RECD 68  0 6 1    differentials for RECE [ESC/ETM]
+ESAC 32  0 6 1    electricity station average costs p/KWh [ESC/ETM]
+STLF 82  0 6 1    ave load factors % 100*STG(J)/(STC(J)*8.76) [ESC/ETM]
+STAE 82  0 6 1    ave fuel use effic. % 100*STG(J)*0.034121/STJ(J) [ESC/ETM]
+JRAC 19 68 6 1    ave regional capital cost of elect. generation p/KWh [ESC/ETM]
+FJ2C 44 19 6 1    use by fuel converter, emissions of SO2 th tonnes [ESC/ETM]
+JECA 19  0 4 1    actual JEC [ESC/ETM]
+JECR 19  0 6 1    residual for JEC [ESC/ETM]
+JESO 19  0 4 1    ESI emissions of SO2 th tonnes [ESC/ETM]
+ESO2 32  0 4 1    SO2 from electricity fuel use in th tonnes [ESC/ETM]
+PFUL 44 19 6 1    lagged PFUJ
+ESP  32 19 6 1    ES capacity pending yrs 1-11 from previous orders [ESC/ETM]
+ESLF 32  0 6 1    electricity station load factor BESC(?:6) ESG/(ESC*8.76) [ESC/ETM]
+ESC1 32  0 4 1    store for new capacity (less retirals) coming on stream in the future [ESC/ETM]
+ESCA 32  0 4 1    actual electricity supply capacity in MW [ESC/ETM]
+ESCX 32  0 4 1    exogenous electricity supply capacity in MW (for scenarios) [ESC/ETM]
+ESBH 32  0 6 1    discounted real hourly benefits of elec generation in p(2005)/kWh [ESC/ETM]
+ESCB 32  0 6 1    discounted total benefits less costs in sterling/MWe [ESC/ETM]
+RESH 68  0 6 1    share of all non-marker tech. in total new investment [ESC/ETM]
+RESL 68  0 6 1    lagged RESH [ESC/ETM]
+ESVL 32  0 6 1    lagged ESV [ESC/ETM]
+EPPL 32  0 6 1    lagged EPP [ESC/ETM]
+ESPS 32  0 6 1    subsidy added to WPE for electricity technology sterling/MWe [ESC/ETM]
+ESSH 32  0 6 1    ES share of each tech. in total new investment [ESC/ETM]
+ESSL 32  0 6 1    lagged ESSH [ESC/ETM]
+FJD8 58  0 6 1    projection of demand for electricity, %pa 1990-2100 [ESC/ETM]
+ESSA 32  0 6 1    actual ESSH (taken as shares of ESC-ESCL) [ESC/ETM]
+RBAN 32  0 6 1    renewables obligation banding parameters (ROCs/MWh) [ESC/ETM]
+ES06 32 68 4 1    new technology capital allowance as % capital costs [ESC/ETM]
+ESPL 32 19 6 1    lagged ESPL [ESC/ETM]
+EAV  32  0 6 1    accumulated gross investment GWe [ESC/ETM]
+EAVL 32  0 6 1    lagged EAV [ESC/ETM]
+ETC  32  0 6 1    energy-capital technological change 00=1.0 [ESC/ETM]
+ECC  32  0 4 1    capital costs ES from BESC(I,8) sterling(2005)m/MWe [ESC/ETM]
+EVC  32  0 6 1    variable costs ES from BESC(I,7) sterling m/MWe [ESC/ETM]
+ESCR 32  0 6 1    residual ESCH (IF ADDITIONAL: non-fuel var. costs (2005)p/kWh) [ESC/ETM]
+ESCN 32  0 6 1    nominal hourly costs of electricity generation p/kWh [ESC/ETM]
+RETE 68  2 6 1    regional ET equation for IETC (cols: parameters and results) [ESC/ETM]
+RRPC 68 19 6 1    planned capacity next NYC years GWe at year end [ESC/ETM]
+RRDC 68 19 6 1    desired cap. next NYC years GWe from demand growth in year [ESC/ETM]
+RRVC 68  0 6 1    desired cap. next NYC years GWe from demand growth in year [ESC/ETM]
+YPF1 58  0 6 1    projection of coal prices, 1990-2100 [ESC/ETM]
+YPF5 58  0 6 1    projection of oil prices, 1990-2100 [ESC/ETM]
+YPF7 58  0 6 1    projection of gas prices, 1990-2100 [ESC/ETM]
+YPF8 58  0 6 1    projection of electricity prices, 1990-2100 [ESC/ETM]
+PFUC 44 19 6 1    cost of CO2 permit in PFUJ (p/therm) [ESC/ETM]
+EOLF 32  0 6 1    electricity station optimal load factor from BESC(?:6) [ESC/ETM]
+RRKC 58 68 4 1    change in capacity if no endogenous new build is allowed for MW [ESC/ETM]
+YPGC 58  0 6 1    projection of gas prices with no carbon price for CCS, 1990-2100 [ESC/ETM]
+YPCC 58  0 6 1    projection of coal prices with no carbon price for CCS, 1990-2100 [ESC/ETM]
+PFUT 44 19 6 1    CCL component in PFUJ (p/therm)
+PFU7 44  0 3 1    price of gas before tax (pence/therm) (ex CCL)
+PFU8 44  0 3 1    price of electricity before tax (pence/therm) (ex CCL)
+HSCL 98 99 4 1    lagged HSC [HSC]
+HSGR 98  0 6 1    CHP growth rate in CHPQPO 1996-2000 (%pa) [HSC]
+HSAL 98  0 4 1    CHP EU ETS allocations (HSC_5*HHLF*const) [HSC]
+HSAV 98  0 4 1    money value of CHP allocations by heat station [HSC]
+CSAL 96  0 4 1    CHP EU ETS allocations (HSC_5*HHLF*const) by CHP technology [HSC]
+CPAV 96  0 4 1    money value of CHP allocations by CHP technology [HSC]
+CPAM 96  0 4 1    CHP subsidy by CHP technology (CPAV*PERM/CPCQ) [HSC]
+CPAG 96  0 6 1    CHP subsidy by CHP technology in p/kwh [HSC]
+FPCL 44  0 4 1    CHP power capacity by fuel user (MWe) end of year [HSC]
+FHCL 44  0 4 1    CHP heat capacity by fuel user (MWe) end of year [HSC]
+FPCD 44  0 4 1    change in CHP power capacity by fuel user (MWe) [HSC]
+FHCD 44  0 4 1    change in CHP heat capacity by fuel user (MWe) [HSC]
+FPQD 44  0 4 1    change in CHP qualifying power capacity by fuel user (MWe) [HSC]
+FHQD 44  0 4 1    change in CHP qualifying heat capacity by fuel user (MWe) [HSC]
+CPQD 96  0 4 1    change in CHP qualifying power capacity by tech. (MWe) [HSC]
+CHQE 96  0 4 1    CHP qualifying power output by technology GWh [HSC]
+CHQD 96  0 4 1    change in CHP qualifying heat capacity by tech. (MWe) [HSC]
+JPCQ 19  0 4 1    CHP qualifying power capacity by fuel (MWe) end of year [HSC]
+JHCQ 19  0 4 1    CHP qualifying heat capacity by fuel (MWe) end of year [HSC]
+CPCQ 96  0 4 1    CHP qualifying power capacity by tech. (MWe) end of year [HSC]
+CHCQ 96  0 4 1    CHP qualifying heat capacity by tech. (MWe) end of year [HSC]
+CHQH 96  0 4 1    CHP qualifying heat output by technology GWh [HSC]
+FQHG 44  0 4 1    CHP qualifying heat gen. by fuel user, GWh [HSC]
+FQEH 44  0 4 1    CHP qualifying power used onsite by fuel user, GWh [HSC]
+FQEX 44  0 4 1    CHP qualifying power exported by fuel user, GWh [HSC]
+CHEX 96  0 4 1    CHP qualifying power exported by technology, GWh [HSC]
+FIUE 44  0 4 1    CHP total fuel use for power GWh [HSC]
+FIUH 44  0 4 1    CHP total fuel use for heat GWh [HSC]
+FUEG 44  0 4 1    CHP power generation by fuel user, GWh [HSC]
+FUEH 44  0 4 1    CHP power used onsite by fuel user, GWh [HSC]
+FUEX 44  0 4 1    CHP power exported by fuel user, GWh [HSC]
+CBCH 97 96 6 1    costs and benefits of CHP technologies [HSC]
+CBEC 97 96 6 1    CHP economics of scale (%pa fall in price) [HSC]
+HSCR 98 99 4 1    residuals for HSCA (end-year) ABS(HSCA-HSC)
+HSDV 98  0 6 1    probability of HSPV being -ve (ie if =1, install CHP) [HSC]
+FJCL 44 19 4 1    lagged FJCH [HSC]
+PJ03 19 58 6 1    forecast fuel prices, own use 1990-2100 (PFUJ(3,?) [HSC]
+PJ04 19 58 6 1    forecast fuel prices, I&S use 1990-2100 (PFUJ(4,?) [HSC]
+PJ05 19 58 6 1    forecast fuel prices, Mineral use 1990-2100 (PFUJ(5,?) [HSC]
+PJ06 19 58 6 1    forecast fuel prices, Chemicals use 1990-2100 (PFUJ(6,?) [HSC]
+PJ07 19 58 6 1    forecast fuel prices, other Ind use 1990-2100 (PFUJ(7,?) [HSC]
+PJ12 19 58 6 1    forecast fuel prices, domestic use 1990-2100 (PFUJ(12,?) [HSC]
+PJ13 19 58 6 1    forecast fuel prices, commercial use 1990-2100 (PFUJ(13,?) [HSC]
+CCR  99  0 4 1    residuals for HSCA (end-year) SUM(ABS(HSCA-HSC)) [HSC]
+HELF 98  0 6 1    CHP qual. plant elect. load factor (GWh_c7/MWe_c5) [HSC]
+HHLF 98  0 6 1    CHP qual. plant heat load factor (GWh_c13/MWth_c11) [HSC]
+HSCA 98 99 4 1    actual CHP plant char.s (various units, year and year-start) [HSC]
+HSY1 98  0 4 1    new CHP capacity ordered and installed year 1 (current year=0) [HSC]
+HSY2 98  0 4 1    new CHP capacity ordered and installed year 2 [HSC]
+HSY3 98  0 4 1    new CHP capacity ordered and installed year 3 [HSC]
+CHY0 96  0 6 1    propn. new CHP capacity ordered and installed year 0 [HSC]
+CHY1 96  0 6 1    propn. new CHP capacity ordered and installed year 1 [HSC]
+CHY2 96  0 6 1    propn. new CHP capacity ordered and installed year 2 [HSC]
+FJRH 44 19 4 1    potential demand: replacement of conventional heat (m therms) [HSC]
+CBTT 97 19 6 1    stream of total CHP costs-benefits col 1 = year 1 [HSC]
+FSAV 44  0 6 1    heat requirement saving when new CHP installed (ratio) [HSC]
+FCHO 44 96 4 1    obsolete CHP heat output replaced by GT and CCGT in GWh [HSC]
+FCHN 44 96 4 1    replacment new CHP as GT and CCGT in GWh [HSC]
+CBTN 97 19 6 1    id=NCHP stream of CHP costs-benefits col 1 = year 1 [HSC]
+HSPV 98  0 6 1    discounted total CHP costs-benefits (sterlingM/MWelec capacity) [HSC]
+CPTT 97  0 6 1    discounted total CHP costs-benefits [HSC]
+CPTN 97  0 6 1    id=NCHP discounted CHP costs-benefits [HSC]
+CHQF 96  0 4 1    CHP qualifying fuel use by technology GWh
+CHOR 96  0 4 1    orders for new CHP plant in power capacity (MWe/year)
+CHAV 96  0 4 1    availability of new CHP plant in power capacity (MWe/year)
+CHWL 96  0 4 1    waiting list, new CHP plant 52*((CHOR/CHAV)-1) (weeks)
+FJPO 44 19 6 1    potential annual replacement ratio CHP:conventional fuel use (=1 all) [HSC]
+FJNL 44 19 4 1    lagged FJNC [HSC]
+HPQD 98  0 4 1    change in CHP qualifying power capacity by station (MWe) [HSC]
+HHQD 98  0 4 1    change in CHP qualifying heat capacity by station (MWe) [HSC]
+PHSB 98  0 3 1    base-year price of new CHP relative to replacement (sterling/MWe)/(sterling/MWe) [HSC]
+CHQ1 96  0 4 1    potential green-field CHP QPO by tech. (MWe) [HSC]
+CHQ2 96  0 4 1    potential replacement of old CHP QPO by tech. (MWe) [HSC]
+CHQ3 96  0 4 1    potential forced replacement of heat by QPO by tech. (MWe) [HSC]
+CHQ4 96  0 4 1    potential planned replacement of heat by QPO by tech. (MWe) [HSC]
+HSOB 98  0 4 1    calibrated/projected obsolete CHPQPO in MWe [HSC]
+CHQT 96  0 6 1    ratio of qualifying to total power capacity [HSC]
+PHS  98  0 3 1    price of new CHP relative to replacement (sterling/MWe)/(sterling/MWe) [HSC]
+PHSL 98  0 3 1    lagged PHS [HSC]
+PHSN 98  0 3 1    price of new CHP (sterling/MWe) [HSC]
+PHSR 98  0 3 1    price of replacement to new CHP (sterling/MWe) [HSC]
+HSRE 98  0 6 1    reponse of CHP to cost changes [HSC]
+HSQT 98  0 6 1    ratio of qualifying to total CHP power capacity (HSC(,5/,4)) [HSC]
+CHPR 96  0 6 1    CHP ave heat/power ratio (qual. plant capacity) (CHCQ/CPCQ) [HSC]
+PHSI 98  0 3 1    installation-decision relative price of new CHP (from PHS) [HSC]
+HSP1 98  0 6 1    lagged HSPV
+TPKE 86 85 6 1    passenger kilometres (billion kms)
+TPK1 86 85 6 1    lagged TPKE
+TPKW 86 85 6 1    sum of competing transport demand for each vehicle type
+DTPK 86 85 6 1    D version of TPKE, for use in TPK0.f90
+TPKA 86 85 6 1    actual passenger kilometres (billion kms)
+TPKR 86 85 6 1    residuals for passenger kilometres (billion kms)
+TPKT 86  0 4 1    total passenger kilometres (billion kms)
+TPKL 86  0 4 1    lagged total passenger kilometres (billion kms)
+PRCO 86  0 6 1    competitors price for transport vehicle types
+PROW 86  0 6 1    own price for transport vehicle types
+TVKE 86 85 4 1    vehicle kilometres (million kms)
+TVKA 86 85 6 1    actual vehicle kilometres (million kms)
+TVKR 86 85 6 1    residuals for vehicle kilometres (million kms)
+TVKB 86 85 6 1    base year value of TVKA
+TVKT 86  0 4 1    total vehicle kilometres (million kms)
+TVMA 86  0 6 1    vehicle movements (1000s)
+TPMC 86 79 6 1    prop of passenger movements by vehicle & length (commute)
+TPMB 86 79 6 1    prop of passenger movements by vehicle & length (business)
+TPMS 86 79 6 1    prop of passenger movements by vehicle & length (shop)
+TPME 86 79 6 1    prop of passenger movements by vehicle & length (education)
+TPMO 86 79 6 1    prop of passenger movements by vehicle & length (other)
+TPDC 86 79 6 1    billions of passenger kms by vehicle and length (commute)
+TPDB 86 79 6 1    billions of passenger kms by vehicle and length (business)
+TPDS 86 79 6 1    billions of passenger kms by vehicle and length (shop)
+TPDE 86 79 6 1    billions of passenger kms by vehicle and length (education)
+TPDO 86 79 6 1    billions of passenger kms by vehicle and length (other)
+TNLE 85  0 6 1    network length (kms)
+TNLA 85  0 6 1    network length (kms)
+TNLB 85  0 6 1    network length (kms)
+TNLC 85  0 6 1    network costs (mill � / km)
+TSLG 85  0 6 1    transport stage length (secs,kms)
+TVRS 86 70 6 1    vehicle survival rate (proportions)
+TVOP 86  0 6 1    vehicle occupancy (passengers)
+TVOR 86  0 6 1    vehicle ownership (proportion)
+TVTL 79  0 6 1    transport vehicle trip length (kms)
+TVKX 86 16 6 1    VSA capital share matrix (prop)
+TVKF 86  0 6 1    vehicle kms by fuel - rail (proportion)
+TVKP 86  0 6 1    vehicle purchases by type - road (proportion)
+TNCS 85  0 6 1    effect of congestion parameters for road and air (COBA-9 parameters)
+TVPE 86  0 4 1    transport vehicle purchases (thousands)
+TVPA 86101 4 1    actual transport vehicle purchases (thousands)
+TVPR 86101 6 1    residuals for transport vehicle purchases
+TVPT 86101 6 1    transport vehicle purchases by technology type (proportions)
+TVPV 86101 4 1    transport vehicle purchases by technology type (thousands)
+TVPX 86101 4 1    exogenous additive vehicle purchases (thousands)
+TVP1 86101 6 1    lagged TVPV
+DTVP 86101 6 1    D version of TVPV, for use in TVAE0.f90
+TVAE 86 70 4 1    transport vehicles by age (thousands)
+TT11101 70 4 1    transport vehicle 11 by technology type and age
+TVAA 86 70 6 1    actual transport vehicles by age (thousands)
+TVSE 86  0 4 1    transport vehicle stock (thousands)
+TVSL 86  0 4 1    lagged transport vehicle stock (thousands)
+TVSA 86  0 4 1    actual transport vehicle stock (thousands)
+TVSR 86  0 4 1    residuals for transport vehicle stock
+TVAP 86 70 6 1    proportion of vehicles by age in stock
+TVFN 86  0 6 1    new vehicle fuel efficiency (l/100k)
+TVFE 86  0 6 1    vehicle stock fuel efficiency (l/100k,kg/sec,therm/km)
+TVFA 86  0 6 1    actual vehicle stock fuel efficiency (l/100k,kg/sec,therm/km)
+TVFI 86 85 6 1    matrix of fuel efficiency by road (index)
+TVFY 86 70 6 1    fuel efficiency by age of vehicle (l/100k)
+TVFP 86 85 6 1    fuel efficiency by place (l/100k)
+TVFB 86 85 6 1    fuel efficiency by place (l/100k in base year)
+TVFV 86 85 6 1    fuel consumption by vehicles and place (1000 therms)
+TVF0 86  0 6 1    fuel consumption by vehicles (1000 therms)
+RCRL  5  0 6 1    adj. for lagged investment in vehicles by consumers (CRR.FOR)
+TVVE 86 85 6 1    average est'd vehicle speed (kms/hr)
+TVVA 86 85 6 1    average actual vehicle speed (kms/hr)
+TVVB 86 85 6 1    average vehicle speed (kms/hr in base year)
+TVC2 86 70 6 1    CO2 emissions matrix  (g/l)
+TVSX 86 70 6 1    SOx emissions matrix  (g/l)
+TVNX 86 70 6 1    NOx emissions matrix  (g/km)
+TVC1 86 70 6 1    CO emissions matrix  (g/km)
+TVHC 86 70 6 1    HC emissions matrix  (g/km)
+TVBS 86 70 6 1    PM emissions matrix  (g/l)
+TVPB 86 70 6 1    Lead emissions matrix  (g/l)
+TC2I 86 70 6 1    CO2 emissions matrix (base)  (index)
+TSXI 86 70 6 1    SOx emissions matrix (base) (index)
+TNXI 86 70 6 1    NOx emissions matrix (base) (index)
+TC1I 86 70 6 1    CO emissions matrix (base) (index)
+THCI 86 70 6 1    HC emissions matrix (base) (index)
+TBSI 86 70 6 1    BS (black smoke) emissions matrix (base) (index)
+TPBI 86 70 6 1    Lead emissions matrix (base) (index)
+TNEA 85 29 6 1    air emissions parameter matrix (g/kg)
+TVET 86 29 6 1    rail emissions parameter matrix (g/km)
+TVER 86 29 6 1    road emissions variable matrix (g/l,g/km)
+TVEB 86 29 6 1    road emissions base matrix (g/l,g/km)
+TVEV 86 29 6 1    emissions by vehicle (tonnes)
+TNEP 85 29 6 1    emissions by network (tonnes)
+ETRV 86  0 6 1    emissions by road vehicles (tonnes)
+JTV  86  0 6 1    identifier of fuel used by vehicle
+TMTV 86  0 6 1    identifier of mode by vehicle
+TMTN 85  0 6 1    identifier of mode by network
+TTTT101  0 6 1    transport technology dummy variable
+TTPE101 86 4 1    transport vehicle purchases by technology type (thousands)
+TTSE101 86 4 1    transport vehicle stock by technology type (thousands)
+TTFI101 86 6 1    average fleet fuel efficiency relative to new vehicles (index)
+TTFA101 86 6 1    actual new vehicle fuel efficiency (l/100km)
+TTFF101 86 6 1    average fleet fuel efficiency (l/100km)
+TTFJ101102 6 1    fuel efficiency relative to marker fuel (index)
+TTJT101102 6 1    matrix of 'marker' fuel for each transport technology
+TTJM101 19 6 1    matrix of 'marker' fuel for each transport technology (11 fuels)
+TTF1101 86 6 1    lagged TTFN
+DTTF101 86 6 1    D version of TTFN, for use in TVFR0.f90
+TTFP101102 6 1    proportion of technology using specified fuel type (proportions)
+TTVP 86102 6 1    proportion of vehicle using specified fuel type (proportions)
+TVFU 86102 6 1    average vehicle fuel efficiency by fuel type in lt/100km : fuel consumption/vehicle kms 
+TTFR101 86 6 1    residuals for new vehicle fuel efficiency (l/100km)
+TVFT 86102 6 1    fuel efficiency by vehicle and fuel type (l/100km)
+TVSJ 86102 4 1    transport vehicle stock by fuel type (thousands)
+TVST 86101 6 1    transport vehicle stock by technology type (proportions)
+ITVC 86  0 6 1    identifier of consumer expenditure category by vehicle
+ITVK 86  0 6 1    identifier of capital formation category by vehicle
+TPCF102  0 6 1    conversion factor of transport fuels (MJ/lt)
+TPMP 78  0 6 1    Prop of Agg Trips by Purpose
+TTC2101 86 6 1    average CO2 emissions (g/km) of NEW vehicles for all network types of road transport
+TIC2101 86 6 1    average CO2 emissions (100gr/lt) of NEW vehicles for all network types of road transport
+TTEJ101102 6 1    fuel emissions relative to marker fuel (index)
+TTEP101102 6 1    proportion of technology using specified fuel type (proportions)
+TNAV 85  0 4 1    transport network availability in Kilometres / Aircraft Movements (Departures) in Thousands
+TVAV 86  0 4 1    transport vehicle availability (stock/departures * number of average seats) in Thousands
+TREL 86  0 6 1    public transport reliability in %, as public performance measure
+TSFT 86  0 6 1    transport vehicle safety as Passenger casualty rates per billion passenger kilometers
+TSPD 86  0 6 1    transport vehicle speed in mph
+TI2N101 86 6 1    average fleet CO2 emissions relative to new vehicles emissions for minor roads network type (index)
+TI2R101 86 6 1    average fleet CO2 emissions relative to new vehicles emissions for rural roads network type (index) 
+TI2U101 86 6 1    average fleet CO2 emissions relative to new vehicles emissions for urban roads network type (index)
+TI2M101 86 6 1    average fleet CO2 emissions relative to new vehicles emissions for motorways network type (index)
+TINN101 86 6 1    average fleet NOx emissions relative to new vehicles emissions for minor roads network type (index)
+TINR101 86 6 1    average fleet NOx emissions relative to new vehicles emissions for rural roads network type (index) 
+TINU101 86 6 1    average fleet NOx emissions relative to new vehicles emissions for urban roads network type (index)
+TINM101 86 6 1    average fleet NOx emissions relative to new vehicles emissions for motorways network type (index)
+TISN101 86 6 1    average fleet SOx emissions relative to new vehicles emissions for minor roads network type (index)
+TISR101 86 6 1    average fleet SOx emissions relative to new vehicles emissions for rural roads network type (index) 
+TISU101 86 6 1    average fleet SOx emissions relative to new vehicles emissions for urban roads network type (index)
+TISM101 86 6 1    average fleet SOx emissions relative to new vehicles emissions for motorways network type (index)
+TICN101 86 6 1    average fleet CO emissions relative to new vehicles emissions for minor roads network type (index)
+TICR101 86 6 1    average fleet CO emissions relative to new vehicles emissions for rural roads network type (index) 
+TICU101 86 6 1    average fleet CO emissions relative to new vehicles emissions for urban roads network type (index)
+TICM101 86 6 1    average fleet CO emissions relative to new vehicles emissions for motorways network type (index)
+TIHN101 86 6 1    average fleet HC emissions relative to new vehicles emissions for minor roads network type (index)
+TIHR101 86 6 1    average fleet HC emissions relative to new vehicles emissions for rural roads network type (index) 
+TIHU101 86 6 1    average fleet HC emissions relative to new vehicles emissions for urban roads network type (index)
+TIHM101 86 6 1    average fleet HC emissions relative to new vehicles emissions for motorways network type (index)
+TIBN101 86 6 1    average fleet PM emissions relative to new vehicles emissions for minor roads network type (index)
+TIBR101 86 6 1    average fleet PM emissions relative to new vehicles emissions for rural roads network type (index) 
+TIBU101 86 6 1    average fleet PM emissions relative to new vehicles emissions for urban roads network type (index)
+TIBM101 86 6 1    average fleet PM emissions relative to new vehicles emissions for motorways network type (index)
+TIVN101 86 6 1    average fleet VOC emissions relative to new vehicles emissions for minor roads network type (index)
+TIVR101 86 6 1    average fleet VOC emissions relative to new vehicles emissions for rural roads network type (index) 
+TIVU101 86 6 1    average fleet VOC emissions relative to new vehicles emissions for urban roads network type (index)
+TIVM101 86 6 1    average fleet VOC emissions relative to new vehicles emissions for motorways network type (index)
+TC2N101 86 6 1    average fleet CO2 emissions (g/km) for minor roads network type
+TC2R101 86 6 1    average fleet CO2 emissions (g/km) for urban roads network type
+TC2U101 86 6 1    average fleet CO2 emissions (g/km) for rural roads network type
+TC2M101 86 6 1    average fleet CO2 emissions (g/km) for motorways network type
+TNXN101 86 6 1    average fleet NOx emissions (g/km) for minor roads network type
+TNXR101 86 6 1    average fleet NOx emissions (g/km) for urban roads network type
+TNXU101 86 6 1    average fleet NOx emissions (g/km) for rural roads network type
+TNXM101 86 6 1    average fleet NOx emissions (g/km) for motorways network type
+TSXN101 86 6 1    average fleet SOx emissions (g/km) for minor roads network type
+TSXR101 86 6 1    average fleet SOx emissions (g/km) for urban roads network type
+TSXU101 86 6 1    average fleet SOx emissions (g/km) for rural roads network type
+TSXM101 86 6 1    average fleet SOx emissions (g/km) for motorways network type
+TC1N101 86 6 1    average fleet CO emissions (g/km) for minor roads network type
+TC1R101 86 6 1    average fleet CO emissions (g/km) for urban roads network type
+TC1U101 86 6 1    average fleet CO emissions (g/km) for rural roads network type
+TC1M101 86 6 1    average fleet CO emissions (g/km) for motorways network type
+THCN101 86 6 1    average fleet HC emissions (g/km) for minor roads network type
+THCR101 86 6 1    average fleet HC emissions (g/km) for urban roads network type
+THCU101 86 6 1    average fleet HC emissions (g/km) for rural roads network type
+THCM101 86 6 1    average fleet HC emissions (g/km) for motorways network type
+TBSN101 86 6 1    average fleet PM emissions (g/km) for minor roads network type
+TBSR101 86 6 1    average fleet PM emissions (g/km) for urban roads network type
+TBSU101 86 6 1    average fleet PM emissions (g/km) for rural roads network type
+TBSM101 86 6 1    average fleet PM emissions (g/km) for motorways network type
+TVCN101 86 6 1    average fleet VOC emissions (g/km) for minor roads network type
+TVCR101 86 6 1    average fleet VOC emissions (g/km) for urban roads network type
+TVCU101 86 6 1    average fleet VOC emissions (g/km) for rural roads network type
+TVCM101 86 6 1    average fleet VOC emissions (g/km) for motorways network type
+TJ2N 86102 6 1    CO2 emissions by vehicle and fuel type (g/km) for minor roads network type
+TJ2R 86102 6 1    CO2 emissions by vehicle and fuel type (g/km) for rural roads network type
+TJ2U 86102 6 1    CO2 emissions by vehicle and fuel type (g/km) for urban roads network type
+TJ2M 86102 6 1    CO2 emissions by vehicle and fuel type (g/km) for motorways network type
+TJNN 86102 6 1    NOx emissions by vehicle and fuel type (g/km) for minor roads network type
+TJNR 86102 6 1    NOx emissions by vehicle and fuel type (g/km) for rural roads network type
+TJNU 86102 6 1    NOx emissions by vehicle and fuel type (g/km) for urban roads network type
+TJNM 86102 6 1    NOx emissions by vehicle and fuel type (g/km) for motorways network type
+TJSN 86102 6 1    SOX emissions by vehicle and fuel type (g/km) for minor roads network type
+TJSR 86102 6 1    SOx emissions by vehicle and fuel type (g/km) for rural roads network type
+TJSU 86102 6 1    SOx emissions by vehicle and fuel type (g/km) for urban roads network type
+TJSM 86102 6 1    SOx emissions by vehicle and fuel type (g/km) for motorways network type
+TJCN 86102 6 1    CO emissions by vehicle and fuel type (g/km) for minor roads network type
+TJCR 86102 6 1    CO emissions by vehicle and fuel type (g/km) for rural roads network type
+TJCU 86102 6 1    CO emissions by vehicle and fuel type (g/km) for urban roads network type
+TJCM 86102 6 1    CO emissions by vehicle and fuel type (g/km) for motorways network type
+TJHN 86102 6 1    HC emissions by vehicle and fuel type (g/km) for minor roads network type
+TJHR 86102 6 1    HC emissions by vehicle and fuel type (g/km) for rural roads network type
+TJHU 86102 6 1    HC emissions by vehicle and fuel type (g/km) for urban roads network type
+TJHM 86102 6 1    HC emissions by vehicle and fuel type (g/km) for motorways network type
+TJBN 86102 6 1    PM emissions by vehicle and fuel type (g/km) for minor roads network type
+TJBR 86102 6 1    PM emissions by vehicle and fuel type (g/km) for rural roads network type
+TJBU 86102 6 1    PM emissions by vehicle and fuel type (g/km) for urban roads network type
+TJBM 86102 6 1    PM emissions by vehicle and fuel type (g/km) for motorways network type
+TJVN 86102 6 1    VOC emissions by vehicle and fuel type (g/km) for minor roads network type
+TJVR 86102 6 1    VOC emissions by vehicle and fuel type (g/km) for rural roads network type
+TJVU 86102 6 1    VOC emissions by vehicle and fuel type (g/km) for urban roads network type
+TJVM 86102 6 1    VOC emissions by vehicle and fuel type (g/km) for motorways network type
+T02N102  0 6 1    CO2 emissions by fuel type (g) for minor roads network type
+T02R102  0 6 1    CO2 emissions by fuel type (g) for rural roads network type
+T02U102  0 6 1    CO2 emissions by fuel type (g) for urban roads network type
+T02M102  0 6 1    CO2 emissions by fuel type (g) for motorways network type
+T0NN102  0 6 1    NOx emissions by fuel type (g) for minor roads network type
+T0NR102  0 6 1    NOx emissions by fuel type (g) for rural roads network type
+T0NU102  0 6 1    NOx emissions by fuel type (g) for urban roads network type
+T0NM102  0 6 1    NOx emissions by fuel type (g) for motorways network type
+T0SN102  0 6 1    SOx emissions by fuel type (g) for minor roads network type
+T0SR102  0 6 1    SOx emissions by fuel type (g) for rural roads network type
+T0SU102  0 6 1    SOx emissions by fuel type (g) for urban roads network type
+T0SM102  0 6 1    SOx emissions by fuel type (g) for motorways network type
+T0CN102  0 6 1    CO emissions by fuel type (g) for minor roads network type
+T0CR102  0 6 1    CO emissions by fuel type (g) for rural roads network type
+T0CU102  0 6 1    CO emissions by fuel type (g) for urban roads network type
+T0CM102  0 6 1    CO emissions by fuel type (g) for motorways network type
+T0HN102  0 6 1    HC emissions by fuel type (g) for minor roads network type
+T0HR102  0 6 1    HC emissions by fuel type (g) for rural roads network type
+T0HU102  0 6 1    HC emissions by fuel type (g) for urban roads network type
+T0HM102  0 6 1    HC emissions by fuel type (g) for motorways network type
+T0BN102  0 6 1    PM emissions by fuel type (g) for minor roads network type
+T0BR102  0 6 1    PM emissions by fuel type (g) for rural roads network type
+T0BU102  0 6 1    PM emissions by fuel type (g) for urban roads network type
+T0BM102  0 6 1    PM emissions by fuel type (g) for motorways network type
+T0VN102  0 6 1    VOC emissions by fuel type (g) for minor roads network type
+T0VR102  0 6 1    VOC emissions by fuel type (g) for rural roads network type
+T0VU102  0 6 1    VOC emissions by fuel type (g) for urban roads network type
+T0VM102  0 6 1    VOC emissions by fuel type (g) for motorways network type
+PFR0101  0 6 1    prices for vehicle fuel by technology type (p/therm)
+PFR1101  0 6 1    prices for vehicle fuel by technology type lagged one year (p/therm)
+PFR2101  0 6 1    prices for vehicle fuel by technology type lagged two years  (p/therm)
+PFRT101  0 4 1    FUJT mapped to technology types
+PFRV101  0 4 1    FUJV mapped to technology types
+VS01 70101 4 1    vehicle stock by age and technology for TV 1
+VS02 70101 4 1    vehicle stock by age and technology for TV 2
+VS03 70101 4 1    vehicle stock by age and technology for TV 3
+VS04 70101 4 1    vehicle stock by age and technology for TV 4
+VS05 70101 4 1    vehicle stock by age and technology for TV 5
+VS06 70101 4 1    vehicle stock by age and technology for TV 6
+VS07 70101 4 1    vehicle stock by age and technology for TV 7
+VS08 70101 4 1    vehicle stock by age and technology for TV 8
+VS09 70101 4 1    vehicle stock by age and technology for TV 9
+VS10 70101 4 1    vehicle stock by age and technology for TV 10
+VS11 70101 4 1    vehicle stock by age and technology for TV 11
+VS12 70101 4 1    vehicle stock by age and technology for TV 12
+VS13 70101 4 1    vehicle stock by age and technology for TV 13
+VS14 70101 4 1    vehicle stock by age and technology for TV 14
+VS15 70101 4 1    vehicle stock by age and technology for TV 15
+VS16 70101 4 1    vehicle stock by age and technology for TV 16
+VS17 70101 4 1    vehicle stock by age and technology for TV 17
+VS18 70101 4 1    vehicle stock by age and technology for TV 18
+VS19 70101 4 1    vehicle stock by age and technology for TV 19
+VS20 70101 4 1    vehicle stock by age and technology for TV 20
+VS21 70101 4 1    vehicle stock by age and technology for TV 21
+VS22 70101 4 1    vehicle stock by age and technology for TV 22
+SE01 70101 6 1    vehicle fuel effiency by age and technology for TV 1
+SE02 70101 6 1    vehicle fuel effiency by age and technology for TV 2
+SE03 70101 6 1    vehicle fuel effiency by age and technology for TV 3
+SE04 70101 6 1    vehicle fuel effiency by age and technology for TV 4
+SE05 70101 6 1    vehicle fuel effiency by age and technology for TV 5
+SE06 70101 6 1    vehicle fuel effiency by age and technology for TV 6
+SE07 70101 6 1    vehicle fuel effiency by age and technology for TV 7
+SE08 70101 6 1    vehicle fuel effiency by age and technology for TV 8
+SE09 70101 6 1    vehicle fuel effiency by age and technology for TV 9
+SE10 70101 6 1    vehicle fuel effiency by age and technology for TV 10
+SE11 70101 6 1    vehicle fuel effiency by age and technology for TV 11
+SE12 70101 6 1    vehicle fuel effiency by age and technology for TV 12
+SE13 70101 6 1    vehicle fuel effiency by age and technology for TV 13
+SE14 70101 6 1    vehicle fuel effiency by age and technology for TV 14
+SE15 70101 6 1    vehicle fuel effiency by age and technology for TV 15
+SE16 70101 6 1    vehicle fuel effiency by age and technology for TV 16
+SE17 70101 6 1    vehicle fuel effiency by age and technology for TV 17
+SE18 70101 6 1    vehicle fuel effiency by age and technology for TV 18
+SE19 70101 6 1    vehicle fuel effiency by age and technology for TV 19
+SE20 70101 6 1    vehicle fuel effiency by age and technology for TV 20
+SE21 70101 6 1    vehicle fuel effiency by age and technology for TV 21
+SE22 70101 6 1    vehicle fuel effiency by age and technology for TV 22
+TVRN 86 70 4 1    number of vehicles scrapped, by vehicle type and age
+VTFE 86101 6 1    average fuel efficiency by vehicle type and technology
+VTKD 86101 4 1    vehicle-kilometres demand by vehicle type and technology (TVKT * TVST)
+VTFD 86101 4 1    fuel demand by vehicle type and technology (l/100km)
+TFUJ 44102 6 1    energy demand by fuel user and transport sub-model fuel type
+VRTP 52 85 6 1    transport passenger demand: transport network wted ave decomposition mx
+VRTV 52101 6 1    transport new vehicles purchases: transport technology wted ave decomposition mx
+VRTF 52 86 6 1    transport new vehicles fuel efficiency: transport vehicle wted ave decomposition mx
+TTFL101 86 6 1    upper limit on new vehicle fuel efficiency (l/100km)
+PFUO 44  0 3 1    ave oil product prices (pence/therm) from PFUJ
+PFO1 44  0 3 1    lagged PFUO
+YJEC  2  0 6 1    coal: price elasticity of industrial demand
+YJEO  2  0 6 1    oil products: price elasticity of industrial demand
+YJEE  2  0 6 1    electricity: price elasticity of industrial demand
+YJEG  2  0 6 1    gas: price elasticity of industrial demand
+YJFC  2  0 6 1    coal: calibration factor for input-output coefficients
+YJFO  2  0 6 1    oil products: calibration factor for input-output coeff.
+YJFE  2  0 6 1    electricity: calibration factor for input-output coeff.
+YJFG  2  0 6 1    gas: calibration factor for input-output coefficients
+CL    3  0 1 1    lagged consumers' expenditures
+PJFD 19 69 6 1    price differentials, fuel use by income group p/therm
+PFU1 44  0 3 1    lagged PFU
+JETR 19  0 6 1    tax rates on fuels sterling/sterling (constant prices)
+EMJT 29  0 2 1    revenues from emission taxes
+EMTR 29  0 6 1    tax rates on environmental emissions sterling/tonne
+JFU0 19  0 1 1    total fuel use by fuel in monetary units
+JFUV 19  0 2 1    fuel use in current prices including CCL
+JEMT 19  0 2 1    revenues from EC carbon tax
+FEA  44  0 6 1    participation in emission allowance scheme 
+FEAU 44  0 4 1    net use of emission allowances th tonnes CO2
+FJEV 44 19 2 1    net cost of emission allowances sterling million
+PJA  19  0 3 1    ave (across uses) fuel prices (pence/therm) ex tax
+PJ0  19  0 3 1    ave fuel prices (pence/therm) in base year ex tax
+FCO2 44  0 4 1    user emissions of carbon dioxide th tonnes carbon
+FSO2 44  0 4 1    user emissions of sulphur dioxide th tonnes
+FNOX 44  0 4 1    user emissions of nitrous oxides th tonnes
+FCO  44  0 4 1    user emissions of carbon monoxide th tonnes
+FCH4 44  0 4 1    user emissions of methane & other hydrocarbons th tonnes
+FBS  44  0 4 1    user emissions of black smoke th tonnes
+FVOC 44  0 4 1    user emissions of volatile organic compounds th tonnes
+FN2O 44  0 4 1    user emissions of nitrous oxide th tonnes
+FHFC 44  0 4 1    user emissions of HFC th tonnes
+FPFC 44  0 4 1    user emissions of PFC th tonnes
+FSF6 44  0 4 1    user emissions of SF6 th tonnes
+FJ1  44 19 4 1    use by fuel, emissions of CO2 th tonnes carbon
+FJ2  44 19 4 1    use by fuel, emissions of SO2 th tonnes
+FJ3  44 19 4 1    use by fuel, emissions of NOX th tonnes
+FJ4  44 19 4 1    use by fuel, emissions of CO th tonnes
+FJ5  44 19 4 1    use by fuel, emissions of CH4 th tonnes
+FJ6  44 19 4 1    use by fuel, emissions of black smoke th tonnes
+FJ7  44 19 4 1    use by fuel, emissions of VOC th tonnes
+FJ11 44 19 4 1    use by fuel, emissions of N2O th tonnes
+FJ12 44 19 4 1    use by fuel, emissions of HFCs th tonnes
+FJ13 44 19 4 1    use by fuel, emissions of PFCs th tonnes
+FJ14 44 19 4 1    use by fuel, emissions of SF6 th tonnes
+FJHC 44 19 6 1    emissions coefficients for HFCs
+FJPC 44 19 6 1    emissions coefficients for PFCs
+FJSC 44 19 6 1    emissions coefficients for SF6
+JCO2 19  0 4 1    fuel emissions of carbon dioxide th tonnes carbon
+JSO2 19  0 4 1    fuel emissions of SO2 th tonnes
+JNOX 44  0 4 1    fuel emissions of nitrous oxides th tonnes
+JCO  44  0 4 1    fuel emissions of carbon monoxide th tonnes
+JCH4 44  0 4 1    fuel emissions of methane & other hydrocarbons th tonnes
+JBSK 44  0 4 1    fuel emissions of black smoke th tonnes
+JVOC 44  0 4 1    fuel emissions of volatile organic compounds th tonnes
+JN2O 44  0 4 1    fuel emissions of nitrous oxide th tonnes
+FJ1C 44 19 6 1    use by fuel converter, emissions of CO2 th tonnes carbon
+FJ1L 44 19 6 1    lagged use by fuel converter, emissions of CO2 th tonnes carbon
+FJ3C 44 19 6 1    use by fuel converter, emissions of NOX th tonnes
+FJ4C 44 19 6 1    use by fuel converter, emissions of CO th tonnes
+FJ5C 44 19 6 1    use by fuel converter, emissions of CH4 th tonnes
+FJ6C 44 19 6 1    use by fuel converter, emissions of black smoke th tonnes
+FJ7C 44 19 6 1    use by fuel converter, emissions of VOC th tonnes
+FJAC 44 19 6 1    use by fuel converter, emissions of N2O th tonnes
+FUJM 44 19 1 1    indicators of fuel use by type of fuel, constant prices
+JEET 19  0 2 1    revenues from EC energy tax
+FURE 44  0 6 1    weight of regulated component in electricity price
+FURG 44  0 6 1    weight of regulated component in gas price
+PJRD 19 68 6 1    differential price of fuels for elect. gen. (to PJRT)
+PJRF 19 68 6 1    differential price of fuels for elect. gen. (to PJRE)
+PRF8 44 68 3 1    regional price of electricity before tax (pence/therm)
+PR8L 44 68 3 1    lagged PRF8
+PR8T 44 68 3 1    regional electricity price incl. tax (pence/therm)
+FR8T 44 68 3 1    regional elect. price add-on for c/energy tax p/therm
+PF8L 44  0 3 1    lagged PFU8
+RECI 68  0 6 1    regional ave cost of elect. generation p/kWh
+FEPU 44  0 4 1    emission permit use in th tonnes carbon
+YETS  2  0 4 1    Gross cost of ETS to industry
+RTR8 68  0 2 1    regional carbon/energy tax payments by ESI
+JUX0 19  0 2 1    revenues from PFUE (CCL/extra excise duties) by fuel
+FEPC 44  0 4 1    net use of emission permits in th tonnes carbon (FEPU-FEPV)
+JESD 19  0 6 1    differential of JESP to PFUJ(1,J)
+FJIE 44 19 4 1    international carbon dioxide emissions with associated UK energy consumption
+FJIC 44 19 6 1    international carbon dioxide coefficients with associated UK energy consumption
+FUXV 44 19 2 1    revenues from PFUE (CCL/extra excise duties)
+JCRG 19  0 4 1    total cost of electricity generation sterling m
+JCCR 19  0 6 1    C-based CCL rates p/KWh (JTBC*(CCL/SUM(JTBC))*100/(JTBE*29.306))
+SCLL 82  0 6 1    lagged SCLE
+JCER 19  0 6 1    effective CCL rates by fuel type p/KWh (JUX0*100/JTBE)
+FUEM 44 29 4 1    matrix of overriding switches to control emissions calculations by FU and EM
+FJ1A 44 19 4 1    actual: use by fuel, emissions of CO2 th tonnes
+FJ1R 44 19 6 1    residual: use by fuel, emissions of CO2 th tonnes
+FJ2A 44 19 4 1    actual: use by fuel, emissions of SO2 th tonnes
+FJ2R 44 19 6 1    residual: use by fuel, emissions of SO2 th tonnes
+FJ3A 44 19 4 1    actual: use by fuel, emissions of NOx th tonnes
+FJ3R 44 19 6 1    residual: use by fuel, emissions of NOx th tonnes
+FJ4A 44 19 4 1    actual: use by fuel, emissions of CO th tonnes
+FJ4R 44 19 6 1    residual: use by fuel, emissions of CO th tonnes
+FJ5A 44 19 4 1    actual: use by fuel, emissions of CH4 th tonnes
+FJ5R 44 19 6 1    residual: use by fuel, emissions of CH4 th tonnes
+FJ6A 44 19 4 1    actual: use by fuel, emissions of black smoke (PM10) th tonnes
+FJ6R 44 19 6 1    residual: use by fuel, emissions of black smoke (PM10) th tonnes
+FJ7A 44 19 4 1    actual: use by fuel, emissions of VOCs th tonnes
+FJ7R 44 19 6 1    residual: use by fuel, emissions of VOCs th tonnes
+FJAA 44 19 4 1    actual: use by fuel, emissions of N2O th tonnes
+FJAR 44 19 6 1    residual: use by fuel, emissions of N2O th tonnes
+FJHA 44 19 4 1    actual: use by fuel, emissions of HFC th tonnes
+FJHR 44 19 6 1    residual: use by fuel, emissions of HFC th tonnes
+FJPA 44 19 4 1    actual: use by fuel, emissions of PFC th tonnes
+FJPR 44 19 6 1    residual: use by fuel, emissions of PFC th tonnes
+FJSA 44 19 4 1    actual: use by fuel, emissions of SF6 th tonnes
+FJSR 44 19 6 1    residual: use by fuel, emissions of SF6 th tonnes
+FJ9  44 19 6 1    use by fuel, emissions of lead (PB) th tonnes
+FJ9A 44 19 6 1    actual: use by fuel, emissions of lead (PB) th tonnes
+FJ9R 44 19 6 1    residual: use by fuel, emissions of lead (PB) th tonnes
+FJ9C 44 19 6 1    use by fuel converter, emissions of lead (PB) th tonnes
+BGHG 29 44 6 1    multiplicative adjustment on non-energy emissions coefficients
+JHFC 44  0 4 1    fuel emissions of HFC th tonnes
+JPFC 44  0 4 1    fuel emissions of PFC th tonnes
+JSF6 44  0 4 1    fuel emissions of SF6 th tonnes
+JTBE 19  0 4 1    fuel tax base for CCL (energy) (no NAs basis) TWh
+JTBC 19  0 4 1    fuel tax base for CCL (carbon) (no NAs basis) th tC
+JTBP 19  0 4 1    tax base for CCL (carbon used in power generation) th tC
+FJ1O 44  0 4 1    CO2 from oil use, in th tonnes carbon (from FJ1)
+FJ2O 44  0 4 1    SO2 from oil use, in th tonnes (from FJ2)
+FAGE 44  0 4 1    autogeneration CO2 emissions
+FAGC 44  0 6 1    autogeneration CO2 emissions coefficients
+JCCE 19  0 6 1    C-based CCL rates p/KWh in power gen.(JTBP*(CCL/SUM(JTBC))*100/(JEFU*29.306))
+FTBE 44  0 4 1    fuel-user tax base for CCL (energy) (no NAs basis) TWh
+FTBC 44  0 4 1    fuel-user tax base for CCL (carbon) (no NAs basis) th tC
+FUX0 44  0 2 1    revenues from PFUE (CCL/extra excise duties) by fuel user
+FCER 44  0 6 1    effective CCL rates by fuel user p/KWh (FUX0*100/FTBE)
+FCCR 44  0 6 1    C-based CCL rates p/KWh (FTBC*(CCL/SUM(FTBC))*100/(FTBE*29.306))
+EMJ0 29  0 4 1    environmental emissions th tonnes
+ECO2 32  0 4 1    CO2 from electricity fuel use in mtC
+FGHG 44  0 4 1    GHG emissions by fuel user th tC-eq (CO2+CH4+N2O only)
+JGHG 19  0 4 1    GHG emissions by fuel th tC-eq (CO2+CH4+N2O only)
+EMGG 29  0 4 1    GHG emissions th tonnes carbon-equivalent
+EMCE 29  0 6 1    conversion of GHGs to CO2-equivalence (CO2=1)
+NCO2 44  0 4 1    emissions of carbon dioxide th tonnes carbon, NCA
+NGHG 44  0 4 1    GHG emissions by fuel user th tC-eq (CO2+CH4+N2O only), NCA
+CO2T 44  0 4 1    traded-sector emissions of carbon dioxide th tonnes carbon
+NETP 44  0 4 1    net purchases of CO2 emissions allowances (CO2T-FEPA)
+CO2N 44  0 4 1    non-traded sector emissions of carbon dioxide th tonnes carbon
+GHNC 44  0 4 1    non-CO2 GHG emissions ktCe
+LLAP 47  5 4 1    lagged population by ageband/gender and region
+F012  1  0 6 1    free function variable: F012
+F014  1  0 6 1    free function variable: F014
+F017  1  0 6 1    free function variable: F017
+F019  1  0 6 1    free function variable: F019
+F031  1  0 6 1    free function variable: F031
+F036  1  0 6 1    free function variable: F036
+F038  1  0 6 1    free function variable: F038
+F039  1  0 6 1    free function variable: F039
+F041  1  0 6 1    free function variable: F041
+F042  1  0 6 1    free function variable: F042
+F043  1  0 6 1    free function variable: F043
+F045  1  0 6 1    free function variable: F045
+F046  1  0 6 1    free function variable: F046
+F047  1  0 6 1    free function variable: F047
+F056  1  0 6 1    free function variable: F056
+F062  1  0 6 1    free function variable: F062
+F063  1  0 6 1    free function variable: F064
+F064  1  0 6 1    free function variable: F064
+F065  1  0 6 1    free function variable: F065
+F066  1  0 6 1    free function variable: F066
+F067  1  0 6 1    free function variable: F067
+F068  1  0 6 1    free function variable: F068
+F069  1  0 6 1    free function variable: F069
+F071  1  0 6 1    free function variable: F071
+F077  1  0 6 1    free function variable: F077
+F078  1  0 6 1    free function variable: F078
+F088  1  0 6 1    free function variable: F088
+F089  1  0 6 1    free function variable: F089
+F090  1  0 6 1    free function variable: F090
+F091  1  0 6 1    free function variable: F091
+F092  1  0 6 1    free function variable: F092
+F093  1  0 6 1    free function variable: F093
+F094  1  0 6 1    free function variable: F094
+F095  1  0 6 1    free function variable: F095
+F096  1  0 6 1    free function variable: F096
+F097  1  0 6 1    free function variable: F097
+F098  1  0 6 1    free function variable: F098
+F099  1  0 6 1    free function variable: F099
+F100  1  0 6 1    free function variable: F100
+F101  1  0 6 1    free function variable: F101
+F102  1  0 6 1    free function variable: F102
+F103  1  0 6 1    free function variable: F103
+F104  1  0 6 1    free function variable: F104
+F105  1  0 6 1    free function variable: F105
+PFUW 44 19 6 1    wholesale prices of FUJT (excl taxes) (p/therm)
+PFUH 44 19 6 1    hydrocarbon (excise) duty of FUJT (p/therm)
+PFUA 44 19 6 1    actuals for PFUJ (p/therm)
+PFUF 44 19 6 1    final fuel prices (incl carbon cost) (p/therm)
+QYCD  1  2 6 1    additive change to input-output coefficients matrix in QYC (to represent change through time)
+QYCL  1  2 6 1    lag of input-output coefficients matrix in QYC
+PSGI 50 51 6 1    technology shares for incremental UK power-sector generation by technology and generator (GWh)
+PSGB 50 51 4 1    base UK power-sector generation by technology and generator (GWh)
+QYCV  1  2 6 1    input-output coefficients: volume changes
+QYCP  1  2 6 1    input-output coefficients: price changes
+QYCC  1  2 6 1    input-output coefficients: total changes (unscaled)
+QYCS  1  2 6 1    input-output coefficients: final total changes (scaled)
+FJXL 44 19 4 1    lagged exogenous, additional fuel use by type of fuel
+YES   2 12 6 1    Variable created for checking	employment by type shares
+YESL  2 12 6 1    Lagged variable for employment by type shares
+KQC  16  1 6 1    converts product to investment
+LFL  47  0 4 1    Lagged Labour force by ageband and gender
+LFA  47  0 4 1    actuals for LF
+LFR  47  0 6 1    Residuals for LF
+LFAE 47  0 4 1    Activity Rate by age and gender
+LFAL 47  0 4 1    Lagged Activity Rate by age and gender
+LFCH 47  0 6 1    Checking Variable
+X105  1  0 6 1    free variable
+X104  1  0 6 1    free variable
+X103  1  0 6 1    free variable
+X102  1  0 6 1    free variable
+X101  1  0 6 1    free variable
+X100  1  0 6 1    free variable
+X099  1  0 6 1    free variable
+X098  1  0 6 1    free variable
+X097  1  0 6 1    free variable
+X096  1  0 6 1    free variable
+X095  1  0 6 1    free variable
+X094  1  0 6 1    free variable
+X093  1  0 6 1    free variable
+X092  1  0 6 1    free variable
+X091  1  0 6 1    free variable
+X090  1  0 6 1    free variable
+X089  1  0 6 1    free variable
+X088  1  0 6 1    free variable
+X087  1  0 6 1    free variable
+X086  1  0 6 1    free variable
+X085  1  0 6 1    free variable
+X084  1  0 6 1    free variable
+X083  1  0 6 1    free variable
+X082  1  0 6 1    free variable
+X081  1  0 6 1    free variable
+X080  1  0 6 1    free variable
+X079  1  0 6 1    free variable
+X078  1  0 6 1    free variable
+X077  1  0 6 1    free variable
+X076  1  0 6 1    free variable
+X075  1  0 6 1    free variable
+X074  1  0 6 1    free variable
+X073  1  0 6 1    free variable
+X072  1  0 6 1    free variable
+X071  1  0 6 1    free variable
+X070  1  0 6 1    free variable
+X069  1  0 6 1    free variable
+X068  1  0 6 1    free variable
+X067  1  0 6 1    free variable
+X066  1  0 6 1    free variable
+X065  1  0 6 1    free variable
+X064  1  0 6 1    free variable
+X063  1  0 6 1    free variable
+X062  1  0 6 1    free variable
+X061  1  0 6 1    free variable
+X060  1  0 6 1    free variable
+X059  1  0 6 1    free variable
+X058  1  0 6 1    free variable
+X057  1  0 6 1    free variable
+X056  1  0 6 1    free variable
+X055  1  0 6 1    free variable
+X054  1  0 6 1    free variable
+X053  1  0 6 1    free variable
+X052  1  0 6 1    free variable
+X051  1  0 6 1    free variable
+X050  1  0 6 1    free variable
+X049  1  0 6 1    free variable
+X048  1  0 6 1    free variable
+X047  1  0 6 1    free variable
+X046  1  0 6 1    free variable
+X045  1  0 6 1    free variable
+X044  1  0 6 1    free variable
+X043  1  0 6 1    free variable
+X042  1  0 6 1    free variable
+X041  1  0 6 1    free variable
+X040  1  0 6 1    free variable
+X039  1  0 6 1    free variable
+X038  1  0 6 1    free variable
+X037  1  0 6 1    free variable
+X036  1  0 6 1    free variable
+X035  1  0 6 1    free variable
+X034  1  0 6 1    free variable
+X033  1  0 6 1    free variable
+X032  1  0 6 1    free variable
+X031  1  0 6 1    free variable
+X030  1  0 6 1    free variable
+X029  1  0 6 1    free variable
+X028  1  0 6 1    free variable
+X027  1  0 6 1    free variable
+X026  1  0 6 1    free variable
+X025  1  0 6 1    free variable
+X024  1  0 6 1    free variable
+X023  1  0 6 1    free variable
+X022  1  0 6 1    free variable
+X021  1  0 6 1    free variable
+X020  1  0 6 1    free variable
+X019  1  0 6 1    free variable
+X018  1  0 6 1    free variable
+X017  1  0 6 1    free variable
+X016  1  0 6 1    free variable
+X015  1  0 6 1    free variable
+X014  1  0 6 1    free variable
+X013  1  0 6 1    free variable
+X012  1  0 6 1    free variable
+X011  1  0 6 1    free variable
+X010  1  0 6 1    free variable
+X009  1  0 6 1    free variable
+X008  1  0 6 1    free variable
+X007  1  0 6 1    free variable
+X006  1  0 6 1    free variable
+X005  1  0 6 1    free variable
+X004  1  0 6 1    free variable
+X003  1  0 6 1    free variable
+X002  1  0 6 1    free variable
+BVAR 25  0 6 1    macrovariables stored as a vector
+BQM0  1  0 8 2    import-output ratio functions (order of SYMSf)
+BPQM  1  0 8 2    import price functions
+BPY   2  0 8 2    mark-up price equations or profit share functions
+B004  1  0 8 2    free function
+BYE0  2 12 8 2    employment functions for industries
+BS    7  0 8 2    function for stockbuilding by sector
+BC    3  0 8 2    consumers' expenditure functions 
+BSC   0  0 8 2    aggregate consumption function 
+BYE   2 12 8 2    functions and parameters for industry employment by type of labour
+BPQX  1  0 8 2    export product price functions
+BRPC  5 48 8 2    functions for regional population change
+B012  1  0 8 2    free function
+BT   14  0 8 2    indirect tax definitions
+B014  1  0 8 2    free function
+BRWF  5  0 8 2    functions for regional total workforce
+BQ    1  0 8 2    functions relating product prices to industries
+B017  1  0 8 2    free function
+BRH  36  6 8 2    functions for receipts and payments by sector
+B019  1  0 8 2    free function
+BQYC  1  2 8 2    input-output coefficient functions
+BYH   2  0 8 2    hours worked functions for industries
+BYWA  2  0 8 2    average earnings functions for industries
+BG    4  0 8 2    functions for government current expenditure
+BK   16  0 8 2    functions for investing sector
+BYN   2  0 8 2    'normal' output functions for industries
+BFUJ 44 19 8 2    fuel share equation systems for energy users
+BFUE 44  0 8 2    aggregate energy demand equations for energy users
+BRRP  0  0 8 2    functions for real disposable income
+BY    2  0 8 2    industrial output functions for industries
+B    25  0 8 2    macrovariable parameters
+BPFJ 44 19 8 2    functions for fuel user energy prices
+BW   20  0 8 2    functions giving extra information for value-added
+BZ   21  0 8 2    functions identifying other activities
+BM   11  0 8 2    import functions (dummies)
+BQX0  1  0 8 2    functions for exports by product (invisibles)
+B036  1  0 8 2    free function
+BLH  22  6 8 2    functions for capital transfers by transfer and sector
+B038  1  0 8 2    free function
+B039  1  0 8 2    free function
+BFRR  9  0 8 2    functions for financial rates of return
+B041  1  0 8 2    free function
+B042  1  0 8 2    free function
+B043  1  0 8 2    free function
+BEXL  0  0 8 2    function for sterling-dollar exchange rate
+B045  1  0 8 2    free function
+B046  1  0 8 2    free function
+B047  1  0 8 2    free function
+BLF  47  0 8 2    functions for labour participation
+BPC   3  0 8 2    functions for consumer prices
+BPG   4  0 8 2    functions for government prices
+BPK  16  0 8 2    functions for investment sector prices
+BYRV 41  5 8 2    free function
+BESC 32  0 8 2    functions for electricity supply capacity
+BJFU  1  0 8 2    free function
+BEMJ 29 19 8 2    functions for environmental emissions
+B056  1  0 8 2    free function
+BRSC  5  0 8 2    functions for regional total consumers exp
+BCRR 40  5 8 2    functions for regional consumers expenditure
+BKRR 37  5 8 2    functions for regional GDFCF
+BYRE 41  5 8 2    functions for regional industrial employment
+BRPD  1  0 8 2    free function
+B062  1  0 8 2    free function
+B063  1  0 8 2    free function
+B064  1  0 8 2    free function
+B065  1  0 8 2    free function
+B066  1  0 8 2    free function
+B067  1  0 8 2    free function
+B068  1  0 8 2    free function
+B069  1  0 8 2    free function
+BLAA 47  5 8 2    functions for LFS activity rates
+B071  1  0 8 2    free function
+BTPK 86 85 8 2    functions for transport passenger kilometers (bnkm)
+BTVK 86  0 8 2    functions and parameters for transport vehicles
+BHSC 98  0 8 2    parameters and data for CHP installations
+BTVP 86101 8 2    functions and parameters for new vehicle purchases
+BTTF101 86 8 2    functions and parameters for fuel efficiency of new vehicles
+B077  1  0 8 2    free function
+B078  1  0 8 2    free function
+BYMF 41  5 8 2    functions and parameters for male, full-time employment by industry and region
+BYFF 41  5 8 2    functions and parameters for female, full-time employment by industry and region
+BYMP 41  5 8 2    functions and parameters for male, part-time employment by industry and region
+BYFP 41  5 8 2    functions and parameters for female, part-time employment by industry and region
+BYMS 41  5 8 2    functions and parameters for male, self-employment by industry and region
+BYFS 41  5 8 2    functions and parameters for female, self-employment by industry and region
+BYRG 41  5 8 2    functions and parameters for adjusting BYMF, BYFF, BYMP, BYFP, BYMS, BYFS as a whole
+BPGC 50 51 8 2    functions and parameters for UK power-sector generation capacity (PSGC)
+BPGG 50 51 8 2    functions and parameters for UK power-sector generation (PSGG)
+B088  1  0 8 2    free function
+B089  1  0 8 2    free function
+B090  1  0 8 2    free function
+B091  1  0 8 2    free function
+B092  1  0 8 2    free function
+B093  1  0 8 2    free function
+B094  1  0 8 2    free function
+B095  1  0 8 2    free function
+B096  1  0 8 2    free function
+B097  1  0 8 2    free function
+B098  1  0 8 2    free function
+B099  1  0 8 2    free function
+B100  1  0 8 2    free function
+B101  1  0 8 2    free function
+B102  1  0 8 2    free function
+B103  1  0 8 2    free function
+B104  1  0 8 2    free function
+B105  1  0 8 2    free function
+MCC  11  3 5 3    1 parameter for direct imports by consumers
+MGC  11  4 5 3    2 parameter for direct imports by government
+MYC  11  2 5 3    3 parameter for direct imports by industries
+WQMB 20  1 5 3    4 indirect tax rates on imports
+TYB  14  2 5 3    5 product tax rates on industries
+TCB  14  3 5 3    6 product tax rates on consumers' exp.
+TGB  14  4 5 3    7 product tax rates on government curr. exp.
+YKC   2 16 6 3    8 clas. con. ind. output to inv. sector
+TQXB 14  1 5 3    9 product tax rates on exports
+WYB  20  2 5 3    10 parameters for industry value-added
+WCB  20  3 5 3    11 parameters for consumer value-added
+WGB  20  4 5 3    12 parameters for government current value-added
+WKB  20 16 5 3    13 parameters for value-added by investing sector
+KVVC 16  8 6 3    14 clas. con. invest. sectors to assets (vehicles)
+WZB  20 21 5 3    15 parameters for value-added in other activities
+QYC   1  2 6 3    16 input-output matrix
+MQC  11  1 6 3    17 clas. con. products to imports
+YQC   2  1 6 3    18 clas. con. product to industrial output
+QCC   1  3 6 3    19 clas. con. consumers' exp. to products
+QGC   1  4 6 3    20 clas. con. gov. cur. exp. to products
+QSC   1  6 6 3    21 clas. con. stockbuilding to products
+KVPC 16  8 6 3    22 clas. con. invest. sectors to assets (plant)
+QXC   1  9 6 3    23 clas. con. exports to products
+KVBC 16  8 6 3    24 clas. con. invest. sectors to assets (buildings)
+QKVC  1 16 6 3    25 clas. con. invest. sectors to commod. (vehicles)
+EYEC 12  2 6 3    26 clas. con. industrial employment to type
+ECEC 12  3 6 3    27 clas. con. consumer employment to type
+EGEC 12  4 6 3    28 clas. con. government employment to type
+DRZC 13 36 6 3    29 clas. con. households to tax brackets
+QKPC  1 16 6 3    30 clas. con. invest. sectors to commod. (plant)
+QKBC  1 16 6 3    31 clas. con. invest. sectors to commod. (buildings)
+UYC  18  2 6 3    32  clas. con. industries to EC urban areas
+QJC   1 19 6 3    33 clas. con. products to fuels
+ZCB  21  3 8 3    34 parameters for consumer other activities
+ZGB  21  4 8 3    35 parameters for government other activities
+ZKB  21 16 8 3    36 parameters for social capital other activities
+YSC   2  6 6 3    37 clas. con. ind. output to stockbuil. sector
+ZXB  21 10 8 3    38 parameters for exported other activities
+ZYB  21  2 8 3    39 parameters for industrial other activities
+XWAC 10 87 6 3    40 clas. con.
+XLHC 10 88 6 3    41 converter
+HWPC  6 20 6 3    42 clas. con. value-added to paying institutions
+HWRC  6 20 6 3    43 clas. con. indirect taxes to receiving inst.
+TKB  14 16 6 3    44 product tax rates on investing sector
+YTCC  2 14 6 3    45 clas. con. comm. taxes on industry output
+CHC   3  6 6 3    46 clas. con. consumers' expenditure to sector
+GHC   4  6 6 3    47 clas. con. government expenditure to sector
+YHC   2  6 6 3    48 clas. con. industry investment to sector
+KHC  16  6 6 3    49 clas. con. social investment to sector
+HLC   6 22 6 3    50 clas. con. capital transfers to sector
+XXRC 10 85 6 3    51 parameter matrix current transfers to R.O.W
+HISC  6 23 6 3    52 clas. con. institutions' savings to ass/liab
+XWDC 10 88 6 3    53 clas. con.
+HIVC  6 23 6 3    54 clas. con. institutions' investment to ass/liab
+WQXC 15  1 6 3    55 clas. con. world areas/countries to commod. (exports)
+WQMC 15  1 6 3    56 clas. con. world areas/countries to commod. (imports)
+XXYC 10 86 6 3    57 clas. con.
+HWC   6 15 6 3    58 clas. con.
+TOB  14 17 5 3    59 clas. con. product taxes to SAM categories
+WOB  20 17 5 3    60 clas. con. factor taxes to SAM categories
+YJC   2 19 6 3    61 clas. con. fuels to industries
+YR1C 41  5 6 3    62 share of regional male employees in YRE full-time
+YR2C 41  5 6 3    63 share of regional female employees in YRE full-time
+YR3C 41  5 6 3    64 share of regional male employees in YRE part-time
+YR4C 41  5 6 3    65 share of regional female employees in YRE part-time
+YR5C 41  5 6 3    66 share of regional male self-employed in YRE
+YR6C 41  5 6 3    67 share of regional female self-employed in YRE
+YR7C 41  5 6 3    68 change in share of reg male employees in YRE full-time
+YR8C 41  5 6 3    69 change in share of reg female employees in YRE full-time
+YR9C 41  5 6 3    70 change in share of reg male employees in YRE part-time
+YR0C 41  5 6 3    71 change in share of reg female employees in YRE part-time
+YRAC 41  5 6 3    72 change in share of reg male self-employed in YRE
+YRBC 41  5 6 3    73 change in share of reg female self-employed in YRE
+QKIC  1 16 6 3    74 clas. con. invest. sectors to commod. (intangible assets)
+QKC   1 16 6 3    75 Converts investment to product
+IMCC 11  3 9      identifier MCC
+IMGC 11  4 9      identifier MGC
+IMYC 11  2 9      identifier MYC
+IWMB 20  1 9      identifier WQMB
+ITYB 14  2 9      identifier TYB
+ITCB 14  3 9      identifier TCB
+ITGB 14  4 9      identifier TGB
+IYKC  2 16 9      identifier YKC
+ITXB 14  1 9      identifier TQXB
+IWYB 20  2 9      identifier RYB
+IWCB 20  3 9      identifier WCB
+IWGB 20  4 9      identifier WGB
+IWKB 20 16 9      identifier WKB
+IKVV 16  8 9      identifiers for KVVC
+IWZB 20 21 9      identifier WZB
+IQYC  1  2 9      identifiers for QYC
+IMQC 11  1 9      identifiers for MQC
+IYQC  2  1 9      identifiers for YQC
+IQCC  1  3 9      identifiers for QCC
+IQGC  1  4 9      identifiers for QGC
+IQSC  1  6 9      identifiers for QSC
+IKVP 16  8 9      identifiers for KVPC
+IQXC  1  9 9      identifiers for QXC
+IKVB 16  8 9      identifiers for KVBC
+IQKV  1 16 9      identifiers for QKVC
+IEYC 12  2 9      identifiers for EYEC
+IECC 12  3 9      identifiers for ECEC
+IEGC 12  4 9      identifiers for EGEC
+IDRC 13 36 9      identifiers for DRC
+IQKP  1 16 9      identifiers for QKPC
+IQKB  1 16 9      identifiers for QKBC
+IUYC 18  2 9      identifiers for UYC
+IQJC  1 19 9      identifiers for QJC
+IZCB 21  3 9      identifier ZCB
+IZGB 21  4 9      identifier ZGB
+IZKB 21 16 9      identifier ZKB
+IYSC  2  6 9      identifier ysc
+IZXB 21 10 9      identifier ZXB
+IZYB 21  2 9      identifier ZYB
+IXWA 10 87 9      identifiers for XWAC
+IXLH 10 88 9      identifier XLHC
+IHWP  6 20 9      identifier HWPC
+IHWR  6 20 9      identifier HWRC
+ITKB 14 16 9      identifier TKB
+IYTC  2 14 9      identifier YTCC
+ICHC  3  6 9      identifier CHC
+IGHC  4  6 9      identifier GHC
+IYHC  2  6 9      identifier YHC
+IKHC 16  6 9      identifier KHC
+IHLC  6 22 9      identifier HLC
+IXRC 10 85 9      identifier XXRC
+IHIS  6 23 9      identifier for HICS
+IXWD 10 88 9      identifier for XWDC
+IHIV  6 23 9      identifier for HICV
+IWQX 15  1 9      identifier for WQXC
+IWQM 15  1 9      identifier for WQMC
+IXYC 10 86 9      identifier XXYC
+IHWC  6 15 9      identifier HWC
+ITOB 14 17 9      identifier TOB
+IWOB 20 17 9      identifier WOB
+IYJC  2 19 9      identifier YJC
+IYR1 41  5 9      identifier YR1C
+IYR2 41  5 9      identifier YR2C
+IYR3 41  5 9      identifier YR3C
+IYR4 41  5 9      identifier YR4C
+IYR5 41  5 9      identifier YR5C
+IYR6 41  5 9      identifier YR6C
+IYC1 41  5 9      identifier YR7C
+IYC2 41  5 9      identifier YR8C
+IYC3 41  5 9      identifier YR9C
+IYC4 41  5 9      identifier YR0C
+IYC5 41  5 9      identifier YRAC
+IYC6 41  5 9      identifier YRBC
+IQKI  1 16 9      identifiers for QKIC
+IQKC  1 16 9      identifiers for QKC
+JBQM  1  0 9 4    switches for import ratio functions
+JBPM  1  0 9 4    switches for import price functions
+JBPY  2  0 9 4    switches for industry price functions
+JBYE  2 12 9 4    switches for industry employment functions
+JBS   7  0 9 4    switches for stockbuilding functions
+JBDC 13  3 9 4    switches for consumers' expenditure functions
+JBSC  0  0 9 4    switches for aggregate consumption functions
+JBR  36  0 9 4    switches for receipts & payments functions
+JBPX  1  0 9 4    switches for export price functions
+JBI  23  0 9 4    switches for financial institutions
+JBPE 12  0 9 4    switches for wage functions
+JBT  14  0 9 4    switches for product tax definitions
+JBLC  2  0 9 4    switches for unit labour cost functions
+JBQ   1  0 9 4    switches for product price functions
+JBUE 12  0 9 4    switches for unemployment/participation functions
+JBRH 36  6 9 4    switches for sectoral receipt functions
+JBH   6  0 9 4    switches for institutional definitions
+JBQY  1  2 9 4    switches for input-output coefficient functions
+JBYH  2  0 9 4    switches for hours worked functions
+JBYW  2  0 9 4    switches for average earnings functions
+JBG   4  0 9 4    switches for govt. current expenditure functions
+JBK  16  0 9 4    switches for investing sector functions
+JBYN  2  0 9 4    switches for 'normal' output functions
+JBUJ 44  0 9 4    switches for fuel share systems
+JBU  18  0 9 4    switches for EC urban areas
+JBEP  0  0 9 4    switches for expected PDI functions
+JBY   2  0 9 4    switches for industry characteristics
+JB   25  0 9 4    switches for macrovariable equations
+JBWD 15  0 9 4    switches for overseas trend aggregate demand
+JBW  20  0 9 4    switches for value-added functions
+JBZ  21  0 9 4    switches for other activity functions
+JBM  11  0 9 4    switches for dummy import functions
+JBQX  1  0 9 4    switches for product export functions (invisibles)
+JBHD  6  0 9 4    switches for sector capital consumption functions
+JBLH 22  6 9 4    switches for sector capital transfer functions
+JBFA  9 23 9 4    switch for financial asset functions
+JBFL  9 23 9 4    switches for financial liability functions
+JBFR  9  0 9 4    switches for financial rates of return
+JBIA 23  0 9 4    switches for financial assets
+JBIL 23  0 9 4    switches for financial liabilities
+JBHF  6  0 9 4    switches for fin. model -> Blue Book functions
+JBEX  0  0 9 4    switch for exchange rate functions
+JBQR  1  0 9 4    switch for functions for output errors
+JBPR  3  0 9 4    switch for functions for consumer price errors
+JBYV  2  0 9 4    switch for industrial value added errors
+JBLF 47  0 9 4    switch for participation functions
+JBPC  3  0 9 4    switch for PC functions
+JBPG  4  0 9 4    switch for PG functions
+JBPK 16  0 9 4    switch for PK functions
+JBEM 29 19 9 4    switch for EMJ functions
+JBES 32  0 9 4    switches for ES functions
+JBJ  19  0 9 4    switches for JFU
+JBPD  5  0 9 4    switches for RPD
+QTI   1  0 7      titles of products                         (87)
+YTI   2  0 7      titles of industries                       (87)
+CTI   3  0 7      titles of consumers' expenditure           (52)
+GTI   4  0 7      titles of government spending              ( 6)
+RTI   5  0 7      titles of regions                          (13)
+HTI   6  0 7      titles of institutions (to be revised)     ( 7)
+STI   7  0 7      titles of stockbuilding sectors            (29)
+VTI   8  0 7      titles of fixed investment assets          ( 3)
+FTI   9  0 7      titles of financial investment assets      (32)
+XTI  10  0 7      titles of export groups                    ( 1)
+MTI  11  0 7      titles of import groups (for world commodit( 6)ies)
+ETI  12  0 7      titles of employment groups                ( 6)
+DTI  13  0 7      titles of dummy title (=TOTAL)             ( 1)
+TTI  14  0 7      titles of indirect taxes                   (30)
+WRTI 15  0 7      titles of world areas                      (20)
+KTI  16  0 7      titles of investing sectors                (88)
+OTI  17  0 7      titles of overall classification (1-11 abov(11)e)
+UTI  18  0 7      titles of EU urban areas (not decided yet) ( 1)
+JTI  19  0 7      titles of fuels                            (11)
+WTI  20  0 7      titles of value-added categories           (35)
+ZTI  21  0 7      titles of other activities                 ( 3)
+LTI  22  0 7      titles of capital transfers                ( 4)
+ITI  23  0 7      titles of financial institutions           ( 9)
+PTI  24  0 7      titles of reserved to indicate prices      ( 1)
+BTI  25  0 7      titles of macro variables (to be revised) (350)
+NTI  26  0 7      titles of reserved to indicate numbers     ( 1)
+DVTI 27  0 7      titles of detailed assets (calc in K.FOR)  ( 7)
+EITI 28  0 7      titles (available)                         ( 1)
+EMTI 29  0 7      titles of environmental emissions          (14)
+EATI 30  0 7      titles of domestic energy appliances       (36)
+EETI 31  0 7      titles (available)                         ( 1)
+ESTI 32  0 7      titles of electricity supply stations     (250)
+ERTI 33  0 7      titles (available)                         ( 1)
+EYTI 34  0 7      titles (available)                         ( 1)
+RETI 35  0 7      titles of MDM regions (2nd class.)         (13)
+RZTI 36  0 7      titles of receipts and payments            (32)
+KRTI 37  0 7      titles of investment (2nd class.)          (16)
+QRTI 38  0 7      titles of products (2nd class.)            (87)
+YSTI 39  0 7      titles of summary of regional industries   (21)
+CRTI 40  0 7      titles of consumers' expenditure (2nd clas)(52)
+YRTI 41  0 7      titles of regional industries (2nd class.) (46)
+DDTI 42  0 7      titles of EU districts                     ( 1)
+YYTI 43  0 7      titles (available)                         ( 1)
+FUTI 44  0 7      titles of fuel users                       (25)
+COTI 45  0 7      titles of MDM regions (3rd class.)         ( 1)
+DCTI 46  0 7      titles of tax brackets for income tax      ( 1)
+LATI 47  0 7      titles of population by gender and age     (14)
+PCTI 48  0 7      titles of population by age groups         ( 6)
+PITI 49  0 7      titles physical indicators                 ( 1)
+PSTI 50  0 7      titles of new power-sector technologies    (27)
+GNTI 51  0 7      titles of new generators classification    ( 3)
+VMTI 52  0 7      titles of columns of validation matrix     (26)
+BBTI 53  0 7      titles of official statistics No 1         (28)
+PBTI 54  0 7      titles of official statistics No 2         (44)
+FSTI 55  0 7      titles of official statistics No 3         (72)
+ENTI 56  0 7      titles of official statistics No 4         (53)
+QBTI 57  0 7      titles of product balances (final demand)  ( 1)
+Y1TI 58  0 7      titles of 101 year time period 1990-2100  (111)
+Y5TI 59  0 7      titles of years 1990 to 2040               (51)
+YATI 60  0 7      titles of time period for assumptions
+RSTI 61  0 7      titles of official statistics No 5         ( 1)
+YXTI 62  0 7      titles of industry cross-section table     ( 1)
+RXTI 63  0 7      titles of regional cross-section table     ( 1)
+EBTI 64  0 7      titles of energy balances                  (36)
+FBTI 65  0 7      titles of fuels (2nd classification)       (18)
+RRTI 66  0 7      titles of incomes/expenditures             (32)
+XZTI 67  0 7      titles available
+ECTI 68  0 7      titles of MDM regions (4th class.)         ( 3)
+FPTI 69  0 7      titles of income groups for fuel poverty   ( 5)
+AGTI 70  0 7      titles of age groups                       (20)
+LGTI 71  0 7      titles of labour groups                    ( 2)
+OCTI 72  0 7      titles of occupational groups              ( 1)
+GATI 73  0 7      titles of geographical areas               ( 1)
+SATI 74  0 7      titles of sub-areas                        ( 1)
+SOTI 75  0 7      titles of EC strategic objectives          ( 1)
+TMTI 76  0 7      titles of travel modes (passengers)        ( 4)
+FMTI 77  0 7      titles of freight modes                    ( 1)
+TPTI 78  0 7      titles of trip purpose                     ( 5)
+TLTI 79  0 7      titles of trip length                      (13)
+HRTI 80  0 7      titles of heat retention characteristics   (12)
+SMTI 81  0 7      titles of strategic measures               ( 1)
+STTI 82  0 7      titles of electricity station types        (18)
+MATI 83  0 7      titles of macro forecasting variables      ( 1)
+VLTI 84  0 7      titles of very long-term assumptions       ( 8)
+TNTI 85  0 7      titles of transport network                (15)
+TVTI 86  0 7      titles of transport vehicles               (22)
+WATI 87  0 7      titles of waste arisings                   ( 6)
+LHTI 88  0 7      titles 3-way split (eg low,mid,high)       ( 1)
+WDTI 89  0 7      titles of waste disposals                  ( 5)
+SFTI 90  0 7      titles of stochastic functions             (30)
+DTTI 91  0 7      titles of diagnostic tests                 (24)
+ARTI 92  0 7      titles of world regional assumptions       (28)         
+AWTI 93  0 7      titles of world assumptions                ( 7)
+ASTI 94  0 7      titles of MDM specific assumptions        (131)           
+EPTI 95  0 7      titles of energy-efficiency policies       (32)
+CHTI 96  0 7      titles of CHP technologies                 (13)
+CBTI 97  0 7      titles of cost-benefit categories          (48)
+HSTI 98  0 7      titles of heat stations (CHP inventory)   (115)
+CCTI 99  0 7      titles CHP plant characteristics           (34)
+CZTI100  0 7      titles - unused                            ( 0)
+TTTI101  0 7      titles of transport technologies           (18)
+JTTI102  0 7      titles of transport energy carriers        (16)
+FZTI103  0 7      titles - unused                            ( 0)
+GZTI104  0 7      titles - unused                            ( 0)
+HZTI105  0 7      titles - unused                            ( 0)
+                  ** CONTENTS OF 'O' STORE **
+                  The store with symbolic name O contains macrovariables
+                  arranged as follows:-
+                        Q    Y    C    G    X    R    H    S    V    F
+                        1    2    3    4    5    6    7    8    9   10
+                    1 DFE  LAE  RSGR MPN  CHIL OAP  BPEN EEC  GVAO GVAC
+                   11 SM   GDP  SC   SG   SX   SKG  RPDI SS   SV   WVOL
+                   21 SPM  GDPC SPC  SPG  SPX  SPK  PDI  SPS  SPV  WPRI
+                   31 PSM  HUC  PCE  PSG  PSX  PSK  OIL  PSS  PSV  SSA
+                   41 WTM  SEY  CTA  GWP  SR   POP  WPOP SYS  POPL SGS
+                   51 AW   AWY  AWC  AWG  GAS  EMPL UNEM EMPY EFTE EMPG
+                   61 RVAT CTR  SRT  RET  EX   RINT RMOR SPYS HNEQ SPGS
+                   71 BOT  BP   PSBR PSFD EXL1 PWPH SRAT SYSA RETL SGSA
+                   81 SY   TRAG TREP MCT  EXL2 XFT  EPDI XPFT SYV  PUP
+                   91 SPY  WAGY WAGC WAGG WAGE TXPD TXPI PCET RESE PW
+                  101 SIP1 SIP2 BBR  DWEL DS   MTGN ECSR ECPR DWAC MTA
+                  111 GDPL SCL  SGL  SVL  SSL  SXL  SML  EML1 UNL1 PDIL
+                  121 HUCL PCEL PSGL PSVL PSSL PSXL PSML AWL  RDI1 RDI2
+                  131 GDPB SCB  SGB  SVB  SSB  SXB  SMB  EMB  AIRT TVWT
+                  141 SKL  SKB  PSKL SDE  AFC  AFS  OPH  OPM  OPX  GPH
+                  151 GPM  PRTR PROY GPBA OPBA OMBA OXPR OQM  PRT  PSGS
+                  161 EESR EEPR AJPC RRR  NOP  NOCA WINF DCE  PTGD M3
+                  171 IP   MP   COPR UNRA TOTV PBRA IPZ  MPZ  ETR  RRE
+                  181 EERX EERM EERG USR  EXLC EXLB WIV  WAGL SEMP SEML
+                  191 OFF  OFFL SVO  SVOL SVO2 BUNB BPNL BUNL PCE2 O2
+                  201 DFEF PSAS UPRP UPRU LFRC LAIC RLR  RYSH ADJI SLUD
+                  211 EQ   PEQ  PEQL GVBD PGB  PGBL CG1  CG2  PCE3 PCS
+                  221 PCSL PCS2 PCS3 UKR  USRL UKRL EXDL GDCL BOTL EXER
+                  231 HUC2 WWP  WWPL CTRA OPSS OCAA NOPA OCA  OGP  OPAR
+                  241 OPA  NOFA NOCT CTII CTIF ACTI ACTF PDAI PDAF OCT
+                  251 PRTI PRTN MAS  OFAS MNTI OMTI MLI  OLI  SLIC XFM
+                  261 BBRL WWP2 M3L  USR2 UKR2 EDR  EDRL ROP  ROPL BPL
+                  271 WPS  WPSL EXD2 PTGA PTGP FNBL PADK ROAD EDK  NHSK
+                  281 SSK  DWPS SCBE REQ  RGB  ECS  ECP  EES  EEP  OFFV
+                  291 RETV RSGV OVH  OVX  OVM  GVH  GVM  OQX  GASM IFE
+                  301 IFEY IFEG OGV  PRV  EER  AWER SCER PIFA GDPN SDEV
+                  311 TPDA OILR TAXF AUTX DTAX GINT PNDW PNDL CHEQ CG3
+                  321 EKVP EKVB DTAL SRTL MPL  RHP7 LAIR OSV1 XHCL RX17
+                  331 WGMR WGFR ALMR ALFR PPUL RVRC TMBA OPML SHIP SHIL
+                  341 HNRA PTRA PTRV AFCL CO2  TCO2 PSRA BPRA EERL GVAL
+                  351 TCAP TGEN NCAP GCAP RCAP CCAP PMAR MAXD DGEN RPI
+                  361 MIPI CCI  WMIP WCC  AHP  MTRL HHOO HOWM PIRD RMSQ
+                  371 CETC CETO CETE CETG FCTC FCTO FCTE FCTG R29L TLFT
+                  381 FFL  OCAP GCA2 CLLH EELA EECG ES11 ES12 TECE TECC
+                  391 FFLL ETCE ETCI ETRE HHLD ECET YU6L ETCL HSLA HSLB
+                  401 EQL  SLAB GVBL WAP  PDW  HMFA WF   WFR  PDEE REPW
+                  411 PM2L COAL COLL OO3  OO4  OO5  OO6  OO7  PQM2 COSU
+                  421 AITD POPB HHBA TPCE TPTE TPIT OTDS TDRA RPIL DR
+                  431 TDEE UADW UNDW RPDB AITB AITM B0IT B1IT B2IT RSI
+                  441 RSIA RSIR RSIT EAKT HRKT SUBC TRLF TRAP TRIN TRLI
+                  451 TST1 RETW SYRW REWL TINF SURE LEIW LEIP EPCE VFFL
+                  461 EESL DMGC DCPC TCPC DGNC TGNC JCHE O468 O469 O470
+                  471 GASH ELEH GSOP ESOP GREV EREV RRSH RSOP HHLL SQY
+                  481 SQC  SQG  SQK  SQS  SQD  AFCV AFS0 SYQ  SYTZ SYZ0
+                  491 SYVA SYVZ SYVY SQX  SQM  SQDX SYVD SQ1  SQ2  SQAD
+                  501 SY1  SY2  SYAD GPHL OPHL CCL  CCLC CCLG CCLE CCL1
+                  511 CCL2 CTRU ECSC DRB  EAP  CHP1 CHP2 CHPE WPE  WPEL
+                  521 PROE PCOE CHP3 CHP4 CHP5 CHP6 CHP7 PCHP TQPC TQHC
+                  531 CCLX PCHN CHCA CHPL CHPS MAXL GHG  GHGA GHGK GHGT
+                  541 GHGB EAPA EAI  EAU  EAB  EATR EAT  EAR  EAAC CHP8
+                  551 CHP9 CHP0 PRBO PRBL WPER CLCL CLGL CCLP CCLA CCLR
+                  561 CCLF CLPL CIES CHPC CHT1 CHT2 CHT3 CHPT CHPA PCGR
+                  571 PCER DVAE AFSR AFSA XFTR CPI  CPIA CPIR SUBS PERM
+                  581 SUBT CCES CCEL CCCS CCCL CCPS CCPL CCGS CCGL AEEI
+                  591 RENT REN1 RGEN RTAR PROC ROGN ROCA RCTA ROSH PROT
+                  601 VROC TEIN TEIR TEIL CCLI HCCL O607 O608 O609 O610
+                  611 O611 O612 O613 O614 O615 O616 ILOU O618 O619 O620
+                  621 O621 O622 O623 O624 O625 O626 O627 O628 O629 O630
+                  631 O631 O632 O633 O634 O635 O636 O637 O638 O639 O640
+                  641 O641 O642 O643 O644 O645 O646 O647 O648 O649 O650
+                  651 I651 I652 I653 NCHP IESR STAR FINI YEAR DATE ITER
+                  661 PBAS QBAS NYFB ITIM ICON FBAS EXSW SECD ICEF IMDM
+                  671 PESW SCSW JVAT JCVA KVSW ESSW IDR  JSW2 JSW3 IPRI
+                  681 TBAS IPRP JSEP IRSM ISWR ICTY IBAS IRUN ISWF ISEP
+                  691 IESO ISWA LEEP ICTI JSW4 ILFT ITR1 ITR2 ICHP IREN
+                  701 IOSW I702 I703 JUNI JEEP IEMT IYR1 JYRF IROC ISWU
+                  711 IYEA JCCC JNUC JAB8 JAUC IYSW IOOB I718 I719 I720
+                  721 I721 I722 I723 I724 I725 I726 I727 I728 I729 I730
+                  731 I731 I732 I733 I734 I735 I736 I737 I738 I739 I740
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,20 @@
+# ISSUES
+
+This file lists known issues and planned features for future `celib` releases.
+
+
+## Issues
+
+1. DOC: Docstrings for public code often incomplete or missing
+2. DOC: Better integration with pydoc/Sphinx would be a nice to have
+
+
+## Features
+
+1. DB1: Implement more-complete support for MDVs (will likely have to deviate
+		from how they're handled in Ox)
+2. DB1: Improve implementation of `condense()` (see method docstring for
+		details)
+3. MRE: Consider whether to implement file writing
+4. Consider porting non-analytical code from Ox e.g. timesheets, cost monitors,
+   SharePoint data

@@ -1,0 +1,15 @@
+# QUICK REFERENCE
+
+Common Python development tasks.
+
+## Managing conda environments
+
+From: https://conda.io/docs/using/envs.html
+
+* List all environments: `conda env list`
+* Create a new environment (conda *requires* you to install at least one package at the same time): `conda create --name newenvname pandas`
+* Add packages to an existing environment: `conda install --name existingenv somenewpackage`
+* Create a new environment from a pre-specified environment file: `conda env create --file environment.yml`
+* Clone an environment: `conda create --name newenv --clone existingenv`
+* Remove an environment: `conda remove --name envtodelete --all`
+* Export the environment file (for the current environment): `conda env export > environment.yml`

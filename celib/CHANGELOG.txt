@@ -1,0 +1,205 @@
+# CHANGELOG
+
+This file lists notable changes between releases of `celib`.
+
+
+## [0.4.1] - 2020-07 (r220)
+
+Various bugfixes and improvements, including for compatibility with `pandas`
+version 1.0.
+
+### Added
+
+### Changed
+
+* fillmat: Replaced `print()` statements with warnings for messages about the
+		   outcome of filling operations
+* I/O:
+    * DB1: Changed instances of `FutureWarning` to `DeprecationWarning`
+    * MRE:
+        * `_read_structure()` is now a static method
+        * Replaced a `print()` statement about asterisks (overflows in the data
+          file) with a warning
+        * `write()` now more clearly checks that the user is using an empty MRE
+          object (i.e. one not previously used to read data) to write arrays to
+          a text file. This avoids any potential confusion between the data so
+          written and any (different) data that might otherwise have been in
+          the object. This also avoids the worst case in which the user
+          overwrites a previously-read file, breaking any link between the
+          object's contents and what is (now) in the file.
+        * `write()` method now carries out all checks before attempting to
+          write the data. This contrasts with the earlier treatment which wrote
+          the data as it went, leaving an incomplete file in the event of an
+          error
+    * ONS: Revised `load_ons_db()` to replace the name of the DataFrame index
+      (rather than delete it), for compatibility with `pandas` version 1.0
+
+### Deprecated
+
+* I/O:
+    * MRE: Deprecated the `close()` method. Files are never left open so this
+      method is now redundant. Prints a warning telling the user that it's safe
+      to delete calls to `close()` in their own scripts. No plans to remove, so
+      as to preserve backward compatibility.
+
+### Removed
+
+### Fixed
+
+* fillmat: Corrected assignment of weights in restricted_fill_forward 
+	(which throws an error when data are zeros)
+
+* I/O:
+    * MRE: Various corrections to ensure that all attributes are properly
+      defined in `__init__()`. This also corrects a bug that meant opening an
+      MRE file but not accessing its contents before closing would lead to an
+      unintentional `AttributeError`
+
+### Security
+
+## [0.4.0] - 2019-11 (r194)
+
+### Added
+
+*mre_merged
+	* MRE: Merged (manually) mre_merged development into master. mre_merged encompasses mre_write and mre_other_fixes
+
+
+## [0.4.0] - 2019-10 (r190)
+
+### Added
+
+*fillmat
+	* Merged (manually) fillmat class into master.
+
+## [0.4.0] - 2019-10 (r189)
+
+### Added
+
+*I/O
+	* DB1:  Added/checked methods condense; create; write_list; adding calling script to the index
+		Updated write_matrix
+
+
+## [0.4.0] - 2019-10 (r188)
+
+### Added
+
+* Styles:
+	* New `styles` sub-package to apply CE chart styles (2019 marketing colours) to `matplotlib`, with
+	  helper functions to customise the palette if desired. CE colours automatically added to palette upon
+	  importing of celib.
+
+
+## [0.3.2] - YYYY-MM-DD (rR)
+
+### Added
+
+*I/O
+	* DB1: Added write_list() to allow lists of a single data type to be written
+
+### Fixed
+
+*I/O
+	* DB1: DB1.create() now functional after setting default self._user=None in init
+
+
+## [0.3.1] - 2018-04-23 (r106)
+
+### Added
+
+* Matrix functions
+	* New `matrix` submodule for operations on NumPy arrays
+	* Added new `ras()` function implementing the RAS procedure for matrix
+	  updating
+* Custom exceptions
+	* New exception: `NonConvergenceError` for when numerical procedures fail
+	  to solve
+
+### Changed
+
+* Custom exceptions
+	* All now inherit from `CELibError`
+
+### Deprecated
+
+* Econometrics
+	* Added warning on import of `engle_granger_two_step` to signal that the
+	  module is experimental and largely untested
+
+
+## [0.3.0] - 2017-10-03 (r78)
+
+### Added
+
+* I/O:
+	* ONS: Added tests for ONS module
+
+* Styles:
+	* New `styles` sub-package to apply CE chart styles to `matplotlib`, with
+	  helper functions to customise the palette if desired
+
+* General:
+	* For development versions of the library (`celib.DEV = True`), a warning
+	  is now printed on `import`
+
+### Changed
+
+* I/O:
+	* Tabls: New class to replace previous `read_tabls()` function
+
+### Removed
+
+* I/O:
+	* ONS: Removed old ONS read function (for pre-2016 CSV files)
+
+### Fixed
+
+* I/O:
+	* ONS: Fixed import error in `load_ons_db()`
+
+
+## [0.2.0] - 2016-11-25 (r15)
+
+### Added
+
+* I/O:
+	* MRE: Added magic methods to implement more container-like behaviour
+* For developers:
+	* New conda requirements file to create a minimal virtual environment
+	* New DEVELOPMENT.txt file containing further information for developers
+
+### Changed
+
+* General:
+	* More consistent use of verbs (e.g. for public code, 'read'/'get'/'write',
+	  over 'open'/'parse'/'add') in function and method names
+* I/O:
+	* MRE: Changed name of `Reader` class to `MRE`
+	* ONS: Moved some `pandas` `import` statements inside functions, to avoid
+	  needlessly compiling `pandas` into Python executables (using
+	  `pyinstaller`)
+
+### Removed
+
+* I/O:
+	* DB1: Removed dependency on third-party `tabulate` package
+	* MRE: Removed `read_mre()` function - users should use the class only
+
+
+## [0.1.0] - 2016-11-08 (r6)
+
+Initial (version-controlled) release with an install script. (Earlier versions
+were imported as a local package.)
+
+### Added
+
+* I/O:
+	* DB1 class mimicking the features of the original Ox implementation
+	* MRE read function (to load an entire file) and class (to load matrices on
+	  demand)
+	* ONS CSV-file readers, for both current and pre-2016 formats
+	* IDIOM tabls.dat read function to return model metadata as a dictionary
+* Econometrics:
+	* **Very rough** implementation of the Engle-Granger two-step procedure to
+	  estimate single-equation error-correction models

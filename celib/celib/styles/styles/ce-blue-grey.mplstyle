@@ -1,0 +1,6 @@
+# CE three-colour palette for Python-generated charts
+#
+# Set other chart styles separately (e.g. with 'ce-default')
+
+
+axes.prop_cycle: cycler('linestyle', ['-', '--', ':', '-.']) * cycler('color', ['009fe3', '909090', '0b1f2c'])
