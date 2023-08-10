@@ -153,51 +153,59 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         dUkREG = np.zeros((t2ti))
 
 
+        endo_shares = mews_dt[r, :, 0] + np.sum(dSik, axis=1)
+
+        # Copy over load factors that do not change
+        # Only applies to baseload and variable technologies
+        mewl[r, :, 0] = mewl_dt[r, :, 0].copy()
+        # new_capacity_idx = np.logical_and(mews_lag[r, :, 0]==0, mews[r, :, 0] > 0)
+        for tech_idx in range(t2ti):
+            if np.logical_and(mews_lag[r, tech_idx, 0]==0, endo_shares[tech_idx] > 0):
+                    mewl[r, tech_idx, 0] = mwlo[r, tech_idx, 0]
+
+        endo_gen = endo_shares * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(endo_shares * mewl[r, :, 0])
+
+        endo_capacity = endo_gen / mewl[r, :, 0] / 8766
+
+
         # PV: Added a term to check that exogenous capacity is smaller than regulated capacity.
         # Regulations have priority over exogenous capacity
         reg_vs_exog = ((mwka[r, :, 0]) > mewr[r, :, 0]) & (mewr[r, :, 0] >= 0.0)
         mwka[r, :, 0] = np.where(reg_vs_exog, -1.0, mwka[r, :, 0])
         MWKA_scalar = 1.0
 
-        dUkTK = (mwka[r, :, 0] - mewk_lag[r, :, 0])/no_it
+        dUkTK = mwka[r, :, 0] - endo_capacity
         dUkTK[mwka[r, :, 0] < 0.0] = 0.0
-        #dUkTK[dUkTK < 0.0] = 0.0
+
         # Check that exogenous capacity isn't too large
         # As a proxy, the sum of exogenous capacities can't be greater
-        # than 90% of last year's capacity level.
+        # than 95% of last year's capacity level.
         if (dUkTK.sum() > 0.95 * Utot[r]):
 
             MWKA_scalar = dUkTK.sum() / (0.95 * Utot[r])
 
             dUkTK = dUkTK / MWKA_scalar
 
-        # Correct for regulations
-        if Utot[r] > 0.0:
-            # e_demand_step = ((e_demand - lag_demand) * dt) therefore lag_demand = e_demand - e_demand_step/dt
+        # Correct for regulations using difference between endogenous capacity and capacity from last time step with endo shares
             
-            dUkREG = -(mewdt[r] - mwdlt[r]) / mwdlt[r] * Utot[r] * mews_dt[r, :, 0] * isReg[r, :] * (1/t)
+        dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
 
-            # dUkREG = -(mewk_dt[r, :, 0]
-            #           * (e_demand_step[r] / (e_demand[r] - e_demand_step[r]/dt))
-            #           * isReg[r, :].reshape((t2ti)))*(1/t)
+
         # Sum effect of exogenous sales additions (if any) with
         # effect of regulations
         dUk = dUkTK + dUkREG
         dUtot = np.sum(dUk)
         # Convert to market shares and make sure sum is zero
+        # Note that FTT Power's market shares are not shares of capacity, so this calculation is skewed. Worth rethinking.
+        # This equation comes from S = U/Utot. 
+        # If this is not how shares are calauclted, then we are not corerctly ammending shares. Possibly just needs scaling.
         # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-        dSk = np.divide(dUk, Utot[r]) - mewk_dt[r, :, 0]*np.divide(dUtot, (Utot[r]*Utot[r]))
+        dSk = np.divide(dUk, Utot[r]) - endo_capacity*np.divide(dUtot, (Utot[r]*Utot[r]))
 
-        # Correct for overestimation of reduction in share space due to regulation
-        # dSk[data_dt['MEWS'][r, :, 0] + dSk < 0] = -data_dt['MEWS'][r, :, 0]
-        
-        dSk = np.where((mews_dt[r, :, 0] + dSk < 0), -mews_dt[r, :, 0], dSk)
 
         # New market shares
-        # mews[r, :, 0] = np.where(mews_dt[r, :, 0] + np.sum(dSik, axis=1) + dSk < 0, 0, 
-        #                          mews_dt[r, :, 0] + np.sum(dSik, axis=1) + dSk)
-        
-        mews[r, :, 0] = mews_dt[r, :, 0] + np.sum(dSik, axis=1) + dSk
+       
+        mews[r, :, 0] = endo_shares + dSk
 
         # Copy over load factors that do not change
         # Only applies to baseload and variable technologies
@@ -208,7 +216,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                     mewl[r, tech_idx, 0] = mwlo[r, tech_idx, 0]
 
         # Grid operators guess-estimate expected generation based on LF from last step
-        # mewg[r, :, 0] = mewk_dt[r, :, 0] * mewl[r, :, 0] * e_demand[r] / (lag_demand[r]) * 8766
+       
         mewg[r, :, 0] = mews[r, :, 0] * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(mews[r, :, 0] * mewl[r, :, 0])
         mewk[r, :, 0] = mewg[r, :, 0] / mewl[r, :, 0] / 8766
 

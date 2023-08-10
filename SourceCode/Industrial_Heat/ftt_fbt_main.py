@@ -294,6 +294,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             #Time lagged UED plus change in UED * (no of iterations) * dt
 
             IUD2t = time_lag['IUD2'][:, :, 0].sum(axis=1) + (IUD2tot - time_lag['IUD2'][:, :, 0].sum(axis=1)) * t * dt
+            IUD2lt = time_lag['IUD2'][:, :, 0].sum(axis=1) + (IUD2tot - time_lag['IUD2'][:, :, 0].sum(axis=1)) * (t-1) * dt
 
             for r in range(len(titles['RTI'])):
 
@@ -371,6 +372,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         #dSik[b2, b1] = -dSik[b1, b2]
 
 
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['IWS2'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_ued = endo_shares * IUD2t[r, np.newaxis]
+
+
                 # -----------------------------------------------------
                 # Step 3: Exogenous sales additions
                 # -----------------------------------------------------
@@ -381,39 +387,41 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = IUD2t[r]
-                iud_lag = time_lag['IUD2'][:, :, 0].sum(axis=1)
+                
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
-                # Check that exogenous share changes add to zero
-                dUkTK = data['IXS2'][r, :, 0]/no_it
-                if (data['IXS2'][r, :, 0].sum() > 0.0):
-                    dUkTK[0] = dUkTK[0] - data['IXS2'][r, :, 0].sum()/no_it
+                # Convert exogenous share changes to capcity/useful energy demand. They do not need to sum to one.
+                dUkTK = data['IXS2'][r, :, 0]*Utot/no_it
 
-                # Correct for regulations 
+                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((dUkTK + endo_ued) > data['IRG2'][r, :, 0]) & (data['IRG2'][r, :, 0] >= 0.0)
+                dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
-                if iud_lag[r] > 0.0 and IUD2t[r] > 0.0 and (IUD2t[r] - iud_lag[r]) > 0.0:
 
-                    dUkREG = -data_dt['IUD2'][r, :, 0] * ( (IUD2t[r] - iud_lag[r]) /
-                                    iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])/t
+                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to demand increasing.
+                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # if total demand had not grown.
+
+                dUkREG = -(endo_ued - endo_shares*IUD2lt[r,np.newaxis])*isReg[r, :].reshape([len(titles['ITTI'])])
 
 
                 # Sum effect of exogenous sales additions (if any) with
                 # effect of regulations
-                dUk = copy.deepcopy(dUkREG)
+                dUk = dUkREG + dUkTK
                 dUtot = np.sum(dUk)
 
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - data_dt['IWS2'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                dSk = np.divide(dUk, Utot) - endo_ued*np.divide(dUtot, (Utot*Utot)) 
 
 
                 # New market shares
                 # check that market shares sum to 1
-                        #print(np.sum(dSik, axis=1))
-                data['IWS2'][r, :, 0] = data_dt['IWS2'][r, :, 0] + np.sum(dSik, axis=1) + dSk
+
+                data['IWS2'][r, :, 0] = endo_shares + dSk
 
                 if ~np.isclose(np.sum(data['IWS2'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}

@@ -419,7 +419,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         #Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
-        division = divide((data_dt['TEWS'][:, :, 0] - data['TREG'][:, :, 0]),
+        division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]),
                           data_dt['TREG'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
@@ -443,6 +443,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Both rvkm and RFLT are exogenous at the moment
             # Interpolate to prevent staircase profile.
             rvkmt = time_lag['RVKM'][:, 0, 0] + (data['RVKM'][:, 0, 0] - time_lag['RVKM'][:, 0, 0]) * t * dt
+            rfllt = time_lag['RFLT'][:, 0, 0] + (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * (t-1) * dt
             rfltt = time_lag['RFLT'][:, 0, 0] + (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
             for r in range(len(titles['RTI'])):
@@ -505,19 +506,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[v2, v1] = -dSik[v1, v2]
 
-                # Add in exogenous sales figures. These are blended with
-                # endogenous result! Note that it's different from the
-                # ExogSales specification!
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_capacity = endo_shares * rfltt[r, np.newaxis]
+
                 Utot = rfltt[r]
                 dSk = np.zeros([len(titles['VTTI'])])
                 dUk = np.zeros([len(titles['VTTI'])])
                 dUkTK = np.zeros([len(titles['VTTI'])])
                 dUkREG = np.zeros([len(titles['VTTI'])])
-
-                # PV: Added a term to check that exogenous capacity is smaller than rgulated capacity.
-                # Regulations have priority over exogenous capacity
-                reg_vs_exog = ((data['TWSA'][r, :, 0] + data_dt['TEWK'][r, :, 0]) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
-                data['TWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0])
                 TWSA_scalar = 1.0
 
                 # Check that exogenous sales additions aren't too large
@@ -526,34 +523,36 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
 
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
+                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((data['TWSA'][r, :, 0]*TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
 
-                TWSA_gt_null = data['TWSA'][r, :, 0] >= 0.0
-                
-                
-                dUkTK = np.where(TWSA_gt_null, data['TWSA'][r, :, 0] * TWSA_scalar/no_it , 0.0)
-                
+                #TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                dUkTK =  np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0]*TWSA_scalar/no_it)
 
-                # Correct for regulations
-                #Share of UED * change in UED * isReg i.e. change in UED split into technologies times isReg
-                if time_lag['RFLT'][r, 0, 0] > 0.0 and rfltt[r] > 0.0 and (rfltt[r] - time_lag['RFLT'][r, 0, 0]) > 0.0:
+                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
+                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # if rflt (i.e. total demand) had not grown.
 
-                    dUkREG = -data_dt['TEWK'][r, :, 0] * ( (rfltt[r] - time_lag['RFLT'][r, 0, 0]) /
-                                 time_lag['RFLT'][r, 0, 0]) * isReg[r, :].reshape([len(titles['VTTI'])])/t
-                    
-                # Sum effect of exogenous sales additions (if any) with
-                # effect of regulations
+                dUkREG = -(endo_capacity - endo_shares*rfllt[r,np.newaxis])*isReg[r, :].reshape([len(titles['VTTI'])])
+                           
+
+                # Sum effect of exogenous sales additions (if any) with effect of regulations. 
                 dUk = dUkTK + dUkREG
                 dUtot = np.sum(dUk)
-                # Convert to market shares and make sure sum is zero
+
+                # Convert to market shares 
+                #Although capacity additions and regulations are in levels, we model in shares, 
+                #so we need to calculate the change in shares, and then recalculate capacity.
+                #This makes sure we still match total demand, and do not add/take away
+
+                #Converting the changes in capacity to changes in shares will redistribute the shares based on the new capacity additions/substractions.
+                #This is essentially a renormalisation of shares based on the additions.
+
                 # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - data_dt['TEWK'][r, :, 0]*np.divide(dUtot, (Utot*Utot))
-#                        soel = np.sum(dSik, axis=1)
-#                        st_1 = data_dt['TEWS'][r, :, 0]
+                dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot))
 
-                # New market shares
-
-#                        print(np.sum(dSik, axis=1))
-                data['TEWS'][r, :, 0] = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
+                #Correct endogenous market shares based on capacity additions and regulations              
+                data['TEWS'][r, :, 0] = endo_shares + dSk
 
                 if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
                     msg = """Sector: {} - Region: {} - Year: {}

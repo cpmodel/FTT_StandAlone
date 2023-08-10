@@ -19,6 +19,8 @@ Local library imports:
 
     - `divide <divide.html>`__
         Bespoke element-wise divide which replaces divide-by-zeros with zeros
+    - `estimation <econometrics_functions.html>`__
+        Predict future values according to the estimated coefficients.
 
 Functions included:
     - solve
@@ -40,7 +42,9 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
+from support.divide import divide
+from support.econometrics_functions import estimation
+
 # %% lcoh
 # -----------------------------------------------------------------------------
 # --------------------------- LCOH function -----------------------------------
@@ -274,7 +278,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # CORRECTION TO MARKET SHARES
                 # Sometimes historical market shares do not add up to 1.0
                 if (~np.isclose(np.sum(data['HEWS'][r, :, 0]), 0.0, atol=1e-9)
-                        and np.sum(data['HEWS'][r, :, 0]) > 0.0):
+                        and np.sum(data['HEWS'][r, :, 0]) > 0.0 ):
                     data['HEWS'][r, :, 0] = np.divide(data['HEWS'][r, :, 0],
                                                        np.sum(data['HEWS'][r, :, 0]))
             # Capacity by boiler
@@ -344,10 +348,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
-        division = divide((data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
-                          data_dt['HEWS'][:, :, 0])
-        isReg = 0.5 + 0.5*np.tanh(1.25*division)
+        isReg = np.where(data['HREG'][:, :, 0] > 0.0,
+                          (np.tanh(1 +
+                              (data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]) 
+                                  / data['HREG'][:, :, 0])),
+                          0.0)
+
         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
 
@@ -362,6 +368,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Interpolate to prevent staircase profile.
             rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * t * dt
+            rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * (t-1) * dt
 
             for r in range(len(titles['RTI'])):
 
@@ -415,8 +422,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
                         k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
 
-                        # Market share dynamics
-                        #dSik[b1, b2] = S_i*S_k* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])*dt
                         dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[b2, b1] = -dSik[b1, b2]
 
@@ -484,13 +489,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         kE_3 = (SE_i+dt*kE_2/2)*(SE_k-dt*kE_2/2) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
                         kE_4 = (SE_i+dt*kE_3)*(SE_k-dt*kE_3) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
 
-
-                        # Market share dynamics
-                        #dSEik[b1, b2] = SE_i*SE_k* (data['HEWA'][0,b1, b2]*SR[b2]*FE[b1,b2] - data['HEWA'][0,b2, b1]*SR[b1]*FE[b2,b1])*dt
                         dSEik[b1, b2] = dt*(kE_1+2*kE_2+2*kE_3+kE_4)/6
                         dSEik[b2, b1] = -dSEik[b1, b2]
 
                         # TODO: Calculate additional EOL values
+
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1) + np.sum(dSEik, axis=1)
+                
+                endo_capacity = endo_shares * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
+
+                endo_gen = endo_shares * rhudt[r, np.newaxis]
 
                 # -----------------------------------------------------
                 # Step 3: Exogenous sales additions
@@ -498,43 +507,48 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Add in exogenous sales figures. These are blended with
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
-                Utot = data_dt['HEWG'][r, :, 0].sum()
+                Utot = rhudt[r]
                 dSk = np.zeros([len(titles['HTTI'])])
                 dUk = np.zeros([len(titles['HTTI'])])
                 dUkTK = np.zeros([len(titles['HTTI'])])
                 dUkREG = np.zeros([len(titles['HTTI'])])
 
-
-                # Check that exogenous share changes add to zero
-                
-                dUkTK = data['HWSA'][r, :, 0]/no_it
-                if (data['HWSA'][r, :, 0].sum() > 0.0):
-                    dUkTK[0] = dUkTK[0] - data['HWSA'][r, :, 0].sum()/no_it
-
-                # # Correct for regulations Note: Not in e3me
-
-                if time_lag['RHUD'][r, 0, 0] > 0.0 and rhudt[r] > 0.0 and (rhudt[r] - time_lag['RHUD'][r, 0, 0]) > 0.0:
-
-                    dUkREG = -data_dt['HEWS'][r, :, 0] * Utot * ( (rhudt[r] - time_lag['RHUD'][r, 0, 0]) /
-                                    time_lag['RHUD'][r, 0, 0]) * isReg[r, :].reshape([len(titles['HTTI'])])/t
+                #Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation. Otherwise, the corrections won't line up with the market shares.
 
 
-                # # Sum effect of exogenous sales additions (if any) with
-                # # effect of regulations
-                dUk = copy.deepcopy(dUkREG)
+                # Convert exogenous shares to exogenous generation. Exogenous sharess no longer need to add up to 1. Beware removals!
+                dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
+               
+                #Check endogenous shares plus additions for a single time step does not exceed regulated shares
+                reg_vs_exog = ((data['HWSA'][r, :, 0]/no_it + endo_shares) > data['HREG'][r, :, 0]) & (data['HREG'][r, :, 0] >= 0.0)
+                #Filter capacity additions based on regulated shares
+                dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
+
+
+
+                # Correct for regulations due to the stretching effect. This is the difference in generation due only to demand increasing.
+                # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
+                # if total demand had not grown.
+
+                dUkREG = -(endo_gen - endo_shares*rhudlt[r,np.newaxis])*isReg[r, :].reshape([len(titles['HTTI'])])
+                     
+
+                # Sum effect of exogenous sales additions (if any) with
+                # effect of regulations
+                dUk = dUkREG + dUkTK
                 dUtot = np.sum(dUk)
 
-                # # Convert to market shares and make sure sum is zero
-                # # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - data_dt['HEWS'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                # Convert to market shares and make sure sum is zero
+                # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
+                dSk = np.divide(dUk, Utot) - endo_gen*np.divide(dUtot, (Utot*Utot)) 
 
 
                 # New market shares
                 # Implement check that market shares sum to 1
 #                        print(np.sum(dSik, axis=1))
-                data['HEWS'][r, :, 0] = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1) + np.sum(dSEik, axis=1) +dSk
+                data['HEWS'][r, :, 0] = endo_shares + dSk
 
-                if ~np.isclose(np.sum(data['HEWS'][r, :, 0]), 1.0, atol=1e-4, rtol=0.0):
+                if ~np.isclose(np.sum(data['HEWS'][r, :, 0]), 1.0, atol=1e-2):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
                     """.format(sector, titles['RTI'][r], year, np.sum(data['HEWS'][r, :, 0]))
