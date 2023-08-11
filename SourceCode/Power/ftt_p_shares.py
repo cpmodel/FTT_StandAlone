@@ -145,7 +145,6 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # Add in exogenous sales figures. These are blended with
         # endogenous result! Note that it's different from the
         # ExogSales specification!
-        Utot = np.sum(mewk_dt[:, :, 0], axis=1)
 
         dSk = np.zeros((t2ti))
         dUk = np.zeros((t2ti))
@@ -167,6 +166,10 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
         endo_capacity = endo_gen / mewl[r, :, 0] / 8766
 
+        Utot = np.sum(endo_capacity)
+        Utot_scaled = (mewdt[r]*1000/3.6)/(8766*np.sum(endo_shares * mewl[r, :, 0]))
+
+
 
         # PV: Added a term to check that exogenous capacity is smaller than regulated capacity.
         # Regulations have priority over exogenous capacity
@@ -174,33 +177,38 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         mwka[r, :, 0] = np.where(reg_vs_exog, -1.0, mwka[r, :, 0])
         MWKA_scalar = 1.0
 
-        dUkTK = mwka[r, :, 0] - endo_capacity
-        dUkTK[mwka[r, :, 0] < 0.0] = 0.0
 
-        # Check that exogenous capacity isn't too large
-        # As a proxy, the sum of exogenous capacities can't be greater
-        # than 95% of last year's capacity level.
-        if (dUkTK.sum() > 0.95 * Utot[r]):
-
-            MWKA_scalar = dUkTK.sum() / (0.95 * Utot[r])
-
-            dUkTK = dUkTK / MWKA_scalar
 
         # Correct for regulations using difference between endogenous capacity and capacity from last time step with endo shares
             
         dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
 
+        #calculate capcity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
+
+        dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
+        dUkTK[mwka[r, :, 0] < 0.0] = 0.0
+
+        # Check that exogenous capacity isn't too large
+        # As a proxy, the sum of exogenous capacities can't be greater
+        # than 95% of last year's capacity level.
+        if (dUkTK.sum() > 0.95 * Utot):
+
+            MWKA_scalar = dUkTK.sum() / (0.95 * Utot)
+
+            dUkTK = dUkTK / MWKA_scalar
+
 
         # Sum effect of exogenous sales additions (if any) with
         # effect of regulations
         dUk = dUkTK + dUkREG
+        #dUtot = np.sum(dUk)*Utot_scaled/Utot
         dUtot = np.sum(dUk)
         # Convert to market shares and make sure sum is zero
         # Note that FTT Power's market shares are not shares of capacity, so this calculation is skewed. Worth rethinking.
         # This equation comes from S = U/Utot. 
-        # If this is not how shares are calauclted, then we are not corerctly ammending shares. Possibly just needs scaling.
+        # If S = MEWK*8766*np.sum(endo_shares * mewl[r, :, 0])/(mewdt[r]*1000/3.6) we can instead write S = U/Utot_scaled to correct this
         # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-        dSk = np.divide(dUk, Utot[r]) - endo_capacity*np.divide(dUtot, (Utot[r]*Utot[r]))
+        dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot))
 
 
         # New market shares

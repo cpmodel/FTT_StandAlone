@@ -44,8 +44,8 @@ import pandas as pd
 import numpy as np
 
 # Local library imports
-from support.divide import divide
-from support.econometrics_functions import estimation
+from SourceCode.support.divide import divide
+
 
 # %% lcoh
 # -----------------------------------------------------------------------------
