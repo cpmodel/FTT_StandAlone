@@ -349,8 +349,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['HTTI'])])
         isReg = np.where(data['HREG'][:, :, 0] > 0.0,
-                          (np.tanh(1 +
-                              (data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]) 
+                          (0.5+0.5*np.tanh(1.5 +
+                              10*(data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]) 
                                   / data['HREG'][:, :, 0])),
                           0.0)
 
