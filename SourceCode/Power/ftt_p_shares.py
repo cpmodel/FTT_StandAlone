@@ -142,9 +142,6 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                 dSik[t1, t2] = (k_1+2*k_2+2*k_3+k_4)*dt/T_Scal/6
                 dSik[t2, t1] = -dSik[t1, t2]
 
-        # Add in exogenous sales figures. These are blended with
-        # endogenous result! Note that it's different from the
-        # ExogSales specification!
 
         dSk = np.zeros((t2ti))
         dUk = np.zeros((t2ti))
