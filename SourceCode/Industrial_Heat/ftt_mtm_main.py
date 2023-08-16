@@ -390,8 +390,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # Convert exogenous share changes to capcity/useful energy demand. They do not need to sum to one.
                 dUkTK = data['IXS3'][r, :, 0]*Utot/no_it
 
-                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                #Convert ued to capcity for this check
+                # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                # Convert ued to capcity for this check
                 reg_vs_exog = ((dUkTK + endo_ued)/data['BIC3'][r, :, ctti["13 Capacity factor mean"]]/8766 > data['IRG3'][r, :, 0]) & (data['IRG3'][r, :, 0] >= 0.0)
                 dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
