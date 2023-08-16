@@ -540,19 +540,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUk = dUkTK + dUkREG
                 dUtot = np.sum(dUk)
 
-                # Convert to market shares 
-                #Although capacity additions and regulations are in levels, we model in shares, 
-                #so we need to calculate the change in shares, and then recalculate capacity.
-                #This makes sure we still match total demand, and do not add/take away
-
-                #Converting the changes in capacity to changes in shares will redistribute the shares based on the new capacity additions/substractions.
-                #This is essentially a renormalisation of shares based on the additions.
-
-                # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot))
-
-                #Correct endogenous market shares based on capacity additions and regulations              
-                data['TEWS'][r, :, 0] = endo_shares + dSk
+                # Calaculate changes to endogenous capacity, and use to find new market shares
+                # Zero capacity will result in zero shares
+                # All other capacities will be streched
+            
+                data['TEWS'][r, :, 0] = (endo_capacity + dUk)/(np.sum(endo_capacity)+dUtot)
 
                 if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
                     msg = """Sector: {} - Region: {} - Year: {}

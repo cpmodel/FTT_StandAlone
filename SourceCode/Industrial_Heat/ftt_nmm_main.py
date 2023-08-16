@@ -391,12 +391,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 dUkTK = data['IXS4'][r, :, 0]*Utot/no_it
 
                 #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                reg_vs_exog = ((dUkTK + endo_ued) > data['IRG4'][r, :, 0]) & (data['IRG4'][r, :, 0] >= 0.0)
+                #Convert ued to capcity for this check
+                reg_vs_exog = ((dUkTK + endo_ued)/data['BIC4'][:, :, ctti["13 Capacity factor mean"]]/8766 > data['IRG4'][r, :, 0]) & (data['IRG4'][r, :, 0] >= 0.0)
                 dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
 
-                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to demand increasing.
-                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # Correct for regulations due to the stretching effect. This is the difference in ued due only to demand increasing.
+                # This will be the difference between ued based on the endogenous ued, and what the endogenous ued would have been
                 # if total demand had not grown.
 
                 dUkREG = -(endo_ued - endo_shares*IUD4lt[r,np.newaxis])*isReg[r, :].reshape([len(titles['ITTI'])])
@@ -407,15 +408,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 dUk = dUkREG + dUkTK
                 dUtot = np.sum(dUk)
 
-                # Convert to market shares and make sure sum is zero
-                # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - endo_ued*np.divide(dUtot, (Utot*Utot)) 
+                # Calaculate changes to endogenous ued, and use to find new market shares
+                # Zero ued will result in zero shares
+                # All other ueds will be streched
 
-
-                # New market shares
-                # check that market shares sum to 1
-
-                data['IWS4'][r, :, 0] = endo_shares + dSk
+                data['IWS4'][r, :, 0] = (endo_ued + dUk)/(np.sum(endo_ued)+dUtot)
 
                 if ~np.isclose(np.sum(data['IWS4'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}

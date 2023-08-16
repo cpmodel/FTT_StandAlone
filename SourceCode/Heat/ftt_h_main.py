@@ -538,15 +538,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUk = dUkREG + dUkTK
                 dUtot = np.sum(dUk)
 
-                # Convert to market shares and make sure sum is zero
-                # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - endo_gen*np.divide(dUtot, (Utot*Utot)) 
+  
+                # Calaculate changes to endogenous generation, and use to find new market shares
+                # Zero generation will result in zero shares
+                # All other capacities will be streched
 
-
-                # New market shares
-                # Implement check that market shares sum to 1
-#                        print(np.sum(dSik, axis=1))
-                data['HEWS'][r, :, 0] = endo_shares + dSk
+                data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
 
                 if ~np.isclose(np.sum(data['HEWS'][r, :, 0]), 1.0, atol=1e-2):
                     msg = """Sector: {} - Region: {} - Year: {}

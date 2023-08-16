@@ -167,7 +167,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         endo_capacity = endo_gen / mewl[r, :, 0] / 8766
 
         Utot = np.sum(endo_capacity)
-        Utot_scaled = (mewdt[r]*1000/3.6)/(8766*np.sum(endo_shares * mewl[r, :, 0]))
+        
 
 
 
@@ -201,19 +201,19 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # Sum effect of exogenous sales additions (if any) with
         # effect of regulations
         dUk = dUkTK + dUkREG
-        #dUtot = np.sum(dUk)*Utot_scaled/Utot
-        dUtot = np.sum(dUk)
-        # Convert to market shares and make sure sum is zero
-        # Note that FTT Power's market shares are not shares of capacity, so this calculation is skewed. Worth rethinking.
-        # This equation comes from S = U/Utot. 
-        # If S = MEWK*8766*np.sum(endo_shares * mewl[r, :, 0])/(mewdt[r]*1000/3.6) we can instead write S = U/Utot_scaled to correct this
-        # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-        dSk = np.divide(dUk, Utot) - endo_capacity*np.divide(dUtot, (Utot*Utot))
 
+        dUtot = np.sum(dUk)
+ 
+
+        #Use modified capacity and modified total capacity to recalulate market shares
+        #This method will mean any capacities set to zero will result in zero shares
+        #It avoids negatuve shares
+        #All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity
+        #If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, MWKA is fairly accurate
 
         # New market shares
        
-        mews[r, :, 0] = endo_shares + dSk
+        mews[r, :, 0] = (endo_capacity + dUk)/(np.sum(endo_capacity)+dUtot)
 
         # Copy over load factors that do not change
         # Only applies to baseload and variable technologies

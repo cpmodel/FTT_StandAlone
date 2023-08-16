@@ -6,9 +6,16 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "stopOnEntry": true,
-            "justMyCode": false
+            "justMyCode": false,
         },
-
+        {
+            "name": "Python: Debug File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {"NUMBA_DISABLE_JIT": "1"}
+        },
     ]
 }
