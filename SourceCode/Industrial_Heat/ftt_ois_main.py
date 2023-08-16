@@ -368,7 +368,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         #dSik[b1, b2] = S_i*S_k* (Aik*F[b1,b2]*Gijmax[b1] - Aki*F[b2,b1]*Gijmax[b2])*dt
                         #dSik[b2, b1] = -dSik[b1, b2]
 
-                #calculate temportary market shares and temporary capacity from endogenous results
+                # calculate temporary market shares and temporary capacity from endogenous results
                 endo_shares = data_dt['IWS5'][r, :, 0] + np.sum(dSik, axis=1) 
                 endo_ued = endo_shares * IUD5t[r, np.newaxis]
 
