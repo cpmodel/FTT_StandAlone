@@ -392,7 +392,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                 #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
                 #Convert ued to capcity for this check
-                reg_vs_exog = ((dUkTK + endo_ued)/data['BIC3'][:, :, ctti["13 Capacity factor mean"]]/8766 > data['IRG3'][r, :, 0]) & (data['IRG3'][r, :, 0] >= 0.0)
+                reg_vs_exog = ((dUkTK + endo_ued)/data['BIC3'][r, :, ctti["13 Capacity factor mean"]]/8766 > data['IRG3'][r, :, 0]) & (data['IRG3'][r, :, 0] >= 0.0)
                 dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
 
@@ -405,14 +405,26 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                 # Sum effect of exogenous sales additions (if any) with
                 # effect of regulations
+                #Note that the share of indirect heating vs direct must be preserved
+                indirect_cut_off = 7
                 dUk = dUkREG + dUkTK
-                dUtot = np.sum(dUk)
+                dUtot_indirect = np.sum(dUk[:indirect_cut_off])
+                dUtot_direct = np.sum(dUk[indirect_cut_off:])
+
+                indirect_shares = (endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off])/(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect)
+                direct_shares = (endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:])/(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct)
+                indirect_weighting = np.sum(endo_shares[:indirect_cut_off])
+                
 
                 # Calaculate changes to endogenous ued, and use to find new market shares
                 # Zero ued will result in zero shares
                 # All other ueds will be streched
 
-                data['IWS3'][r, :, 0] = (endo_ued + dUk)/(np.sum(endo_ued)+dUtot)
+
+
+                data['IWS3'][r, :indirect_cut_off, 0] = indirect_shares*indirect_weighting
+                data['IWS3'][r, indirect_cut_off:, 0] = direct_shares*(1-indirect_weighting)
+
 
                 if ~np.isclose(np.sum(data['IWS3'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}
