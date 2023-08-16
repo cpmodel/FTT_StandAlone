@@ -422,7 +422,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 indirect_weighting = np.sum(endo_shares[:indirect_cut_off])
                 
 
-                # Calaculate changes to endogenous ued, and use to find new market shares
+                # Calculate changes to endogenous ued, and use to find new market shares
                 # Zero ued will result in zero shares
                 # All other ueds will be streched
 
