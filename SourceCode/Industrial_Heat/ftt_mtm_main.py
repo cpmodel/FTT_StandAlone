@@ -273,8 +273,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
         division = divide((data_dt['IWK3'][:, :, 0] - data['IRG3'][:, :, 0]),
                           data_dt['IRG3'][:, :, 0])
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
-        isReg[data['IRG2'][:, :, 0] == 0.0] = 1.0
-        isReg[data['IRG2'][:, :, 0] == -1.0] = 0.0
+        isReg[data['IRG3'][:, :, 0] == 0.0] = 1.0
+        isReg[data['IRG3'][:, :, 0] == -1.0] = 0.0
 
 
         # Factor used to create quarterly data from annual figures
