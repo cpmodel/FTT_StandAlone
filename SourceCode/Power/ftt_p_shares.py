@@ -180,7 +180,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
             
         dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
 
-        #calculate capcity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
+        # calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
 
         dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
         dUkTK[mwka[r, :, 0] < 0.0] = 0.0
