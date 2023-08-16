@@ -389,7 +389,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 dUkTK = np.zeros((len(titles['ITTI'])))
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
-                # Convert exogenous share changes to capcity/useful energy demand. They do not need to sum to one.
+                # Convert exogenous share changes to capacity/useful energy demand. They do not need to sum to one.
                 dUkTK = data['IXS5'][r, :, 0]*Utot/no_it
 
                 #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
