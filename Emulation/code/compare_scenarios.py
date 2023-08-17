@@ -23,8 +23,8 @@ os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_St
 
 def compare_scenarios(scen_base, scen_compare):
     # create file names
-    baseline = f'output_workbook_{scen_base}.xlsx'
-    comparison = f'output_workbook_{scen_compare}.xlsx'
+    baseline = f'Emulation/data/output_workbook_{scen_base}.xlsx'
+    comparison = f'Emulation/data/output_workbook_{scen_compare}.xlsx'
     
     # Load the workbooks
     wb1 = load_workbook(filename= baseline)
@@ -84,8 +84,8 @@ def export_compare(compare_output, output_file):
 
 #%%
 # Example usage
-comparison_output = compare_scenarios('S0', 'S2')
-export_compare(comparison_output,'S0_S2_comparison.xlsx')
+comparison_output = compare_scenarios('S0', 'S3')
+export_compare(comparison_output,'Emulation/data/S0_S3_comparison.xlsx')
 
 
 #%% POTENTIAL IMPROVEMENTS
@@ -95,6 +95,10 @@ export_compare(comparison_output,'S0_S2_comparison.xlsx')
 # Do something with missing values
 # Change so that baseline values are included for all cells in comparison and 
 # colour for base and comparison (red/green)
+# Needs adapting so that scenarios can be read in from different sources, so 
+# not just a comparison workook
+# need to always have the original value in the baseline so we know what is was when
+# it is the same as the compare
 
 
 

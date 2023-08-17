@@ -73,6 +73,9 @@ from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
 
+# Local library imports for emulation
+#from Emulation.code.ambition_vary import regional_ambition
+
 # %% main function
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -506,7 +509,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
 
-        # Create the regulation variable
+        # Create new regulation variable for emulation
+        isReg = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
+        isReg = data['MEWR'][:, :, 0]
+
+        # Create the regulation variable (previous)
         isReg = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
         division = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
         division = np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]),
@@ -520,6 +527,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         isReg[data['MEWR'][:, :, 0] == 0.0] = 1.0
         isReg[data['MEWR'][:, :, 0] == -1.0] = 0.0
+
+
 
         # Call the survival function routine.
 #        data = survival_function(data, time_lag, histend, year, titles)

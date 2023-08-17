@@ -21,29 +21,35 @@ os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_St
 
 #%%
 
-def changed_input_export(compare_path, master_path):
+def changed_input_export(new_scen, master_path):
     
-    compare_path = compare_path
+    new_scen = new_scen
     master_path = master_path
     
-    comparison_output = load_workbook(filename=compare_path) # this takes a lot of time, maybe just list, but less general
-    sheet_names = comparison_output.sheetnames
+    # comparison_output = load_workbook(filename=compare_path) # this takes a lot of time, maybe just list, but less general
+    # sheet_names = comparison_output.sheetnames
+    sheet_names = ['MEWR','MGAM', 'MEWT', 'MWKA', 'MEFI', 'BCET']
     
-
     for sheet_name in tqdm(sheet_names):
         
-        #sheet_name = 'MWKA' ##### Check generalisability
+        ### DEBUG
+        sheet_name = 'MEWR' ##### Check generalisability
+        master_path = "Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S0.xlsx"
+        new_scen = S3_check
+        new_scen_name = new_scen['Scenario'].iloc[0]
+        country = 'US'
+        ### END
+        
         # this may be more efficient than compare scenarios process, maybe retrofit
         # imports master input file, chops of titles and puts top row as columns,
         # BE becomes technology col header but dealt with later
         master = pd.read_excel(master_path, sheet_name = sheet_name, 
-                               usecols=lambda col: col not in [1], skiprows=4)
+                               usecols=lambda col: col not in [1], skiprows=4) # get this into input_wrangle.py
         #master.columns = ['Technology'] + list(master.columns[1:]) # do we need to rename, can we search by index later??
         
-        
+        #need to generalise this to handle excels as well as Dfs
         # read in dataframe of changes in new scenario, change name of df1 for better understanding
-        df1 = pd.read_excel(compare_path, sheet_name=sheet_name)
-        df1 = df1[df1["Scenario"] == 'S2']
+        df1 = new_scen[new_scen['Sheet'] == sheet_name]
         df1 = df1.reset_index(drop= True)
         
         countries = pd.unique(df1['Country']) # list of countries to loop through
@@ -52,7 +58,7 @@ def changed_input_export(compare_path, master_path):
             #country = 'XX' ## Check generalisability
             
  
-                
+             
             df_country = df1[df1['Country'] == country]
             df_country = df_country.reset_index(drop = True)
             # wrangling data frame, is this general??
@@ -83,7 +89,8 @@ def changed_input_export(compare_path, master_path):
                 master_df[''].iloc[row] = str(row + 1) + ' ' + master_df[''].iloc[row]
             
             sheet_out = sheet_name + '_' + country # for exporting below 
-            master_df.to_csv(f'Inputs/S2_updates_only/{sheet_out}.csv', index = False, header = True)
+            os.makedirs(f'Inputs/{new_scen_name}/FTT-P')
+            master_df.to_csv(f'Inputs/{new_scen_name}/FTT-P/{sheet_out}.csv', index = False, header = True)
             print(f'Sheet {sheet_out} saved')
             
 
@@ -100,6 +107,7 @@ changed_input_export(compare_path, master_path)
 
 #%% Possible improvements
 
+#### Needs updating to handle new ambition levels rather than comparison files, ideally to do both
 ## Generalisability
     # Handle different forms of input
     # e.g. just a new input chosen, will create function for this

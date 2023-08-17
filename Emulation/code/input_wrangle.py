@@ -6,7 +6,7 @@ os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_St
 
 # Change depending on scenario
 #scen = 'S2' ## this needs sorting and the scens need to be generalised
-scenario_list = ['S0', 'S2']
+scenario_list = ['S0', 'S3']
 
 # create dictionaries to store input files
 # dictionaries used for generalisaiotn and multiple scenarios
@@ -89,7 +89,7 @@ sheets_to_output = ['BCET', 'MEWA', 'MGAM', 'MEWT',
 
 for scen in scenario_list:
     # Create a new Excel writer object
-    with pd.ExcelWriter(f'output_workbook_{scen}.xlsx') as writer:
+    with pd.ExcelWriter(f'Emulation/data/output_workbook_{scen}.xlsx') as writer:
     # Iterate through the sheet names and output list
         for sheet_name, output in zip(sheets_to_output, dataframes[f"df_{scen}"]):
         
@@ -100,7 +100,14 @@ for scen in scenario_list:
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-#%%
+#%% Possible developments
+
+### This code needs streamlining to be just a function that can be called in the run file
+## Can the below code be used as a simpler way of manipulating data?
+##  master = pd.read_excel(master_path, sheet_name = sheet_name, 
+                        usecols=lambda col: col not in [1], skiprows=4) # get this into input_wrangle.py
+ #master.columns = ['Technology'] + list(master.columns[1:]) # do we need to rename, can we search by index later??
+
 
 
 

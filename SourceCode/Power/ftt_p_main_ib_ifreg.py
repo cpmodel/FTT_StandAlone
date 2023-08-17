@@ -73,7 +73,7 @@ from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
 
-# %% main function
+# %% main function 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
@@ -505,22 +505,29 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data_dt[var] = copy.deepcopy(time_lag[var])
 
         data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
-
+        print(data_dt['MWIY']).head() # manual debug
         # Create the regulation variable
         isReg = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
+        print(isReg) # manual debug
         division = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
+        print(division) # manual debug
         division = np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]),
                              data['MEWR'][:, :, 0],
                              where=data['MEWR'][:, :, 0] > 0.0)
+        print(division) # manual debug
         try:
             isReg = 1 + np.tanh(2*1.25*division)
+            print(isReg) # manual debug
         except RuntimeWarning:
             print('stop')
             isReg = 1 + np.tanh(2*1.25*division)
+            print(isReg) # manual debug
 
         isReg[data['MEWR'][:, :, 0] == 0.0] = 1.0
         isReg[data['MEWR'][:, :, 0] == -1.0] = 0.0
-
+        
+        print(isReg[data['MEWR'])
+        print('JJJJJOOOOSSSSSSHHHHHHHHHH!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         # Call the survival function routine.
 #        data = survival_function(data, time_lag, histend, year, titles)
 
