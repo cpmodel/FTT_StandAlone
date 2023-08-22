@@ -16,7 +16,7 @@ MWKA		Exogenous capacity in GW (kickstart or phase-out policies)
 
 @author: ib400
 """
-#%%
+#%% packages
 
 import os
 import pandas as pd
@@ -25,7 +25,7 @@ from tqdm import tqdm
 import time
 
 os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_StandAlone")
-#%%
+#%% regional_ambition function
 
 
 def regional_ambition(regions = {'ROW': 0.2}, scenarios = ['S0','S2'], new_scen_code = None): # take out S0
@@ -33,6 +33,7 @@ def regional_ambition(regions = {'ROW': 0.2}, scenarios = ['S0','S2'], new_scen_
     regions = regions
     scenarios = scenarios
     new_scen_code = new_scen_code
+    
     
     # trial values
     # regions = {'US': 0.5,
@@ -53,7 +54,7 @@ def regional_ambition(regions = {'ROW': 0.2}, scenarios = ['S0','S2'], new_scen_
     # laoding wb takes a lot of time and we need to load spreadsheets anyway
     #compare_wb = load_workbook(comparison_path)
     #sheet_names = compare_wb.sheetnames
-    sheet_names = ['MEWR', 'MEWT', 'MEFI', 'MWKA', 'MGAM']
+    sheet_names = ['MEWR', 'MGAM', 'MWKA', 'MEFI','MEWT'] # currently requires earliest variable first (MEWR)
     
     # seperation in variable types
     simple_vars = ['MEWR', 'MEWT', 'MEFI']
@@ -79,7 +80,7 @@ def regional_ambition(regions = {'ROW': 0.2}, scenarios = ['S0','S2'], new_scen_
                 meta = var_df.iloc[row, 0:5]
                 #lower_bound = var_df.iloc[row]
                 upper_bound = var_df.iloc[row]
-                new_level = (upper_bound[5:] * ambition) # this is currently not GEn, neg numbers
+                new_level = (upper_bound[5:] * ambition) # this is currently not Gen, neg numbers
                 new_level_meta = pd.concat([meta, new_level])
                 new_level_meta.loc['Scenario'] = f'{new_scen_code}'
                 # need to decide where to store ambition level for meta
@@ -88,10 +89,16 @@ def regional_ambition(regions = {'ROW': 0.2}, scenarios = ['S0','S2'], new_scen_
         # This will be updated once variables with -1 off switch are restructured
         if sheet_name not in simple_vars:
             pass
-         
+    
+    # maybe sort chronologically like this:
+    # Concatenate Series and sort columns
+    # result = pd.concat(series_list, axis=1)
+    # result = result.sort_index(axis=1)
     new_sheet = pd.DataFrame(new_sheets)
     
-    return new_sheet
+    new_scen = {f'{new_scen_code}': new_sheet}
+    
+    return new_scen
 
 #%% Example usage
 
@@ -106,7 +113,7 @@ S3_check = regional_ambition(regions = {'US': 0.5, 'CN': 0.5, 'ROW': 0.2}, scena
 # Need to think about MGAMs - value range is a little different
 # Also background variables - BCET etc. how do we vary these? Randomly, peturbation?
 # load_workbook is really slow and getting sheet names from another way, even manually, would be faster
-
+# need to add code to save ambition levels and upper scenario
 
 #### Argument additions:
     # variables of interest?
