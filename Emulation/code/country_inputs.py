@@ -16,11 +16,13 @@ from openpyxl import load_workbook
 from tqdm import tqdm
 import time
 
+# Set wd
+os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_StandAlone")
 
 # Local packages
 from Emulation.code.ambition_vary import regional_ambition
 
-os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_StandAlone")
+
 
 
 #%%
@@ -33,17 +35,17 @@ def changed_input_export(new_scen, master_path):
     
     # comparison_output = load_workbook(filename=compare_path) # this takes a lot of time, maybe just list, but less general
     # sheet_names = comparison_output.sheetnames
-    sheet_names = ['MEWR','MGAM', 'MEWT', 'MWKA', 'MEFI', 'BCET'] # bring outside in run file
+    sheet_names = ['MEWR','MGAM', 'MEWT', 'MWKA', 'MEFI'] # bring outside in run file
     
     for sheet_name in tqdm(sheet_names):
         
-        # ### DEBUG
+        # # DEBUG
         # new_scen_code = list(new_scen.keys())[0]
         # new_scen = list(new_scen.values())[0]
         # sheet_name = 'MEWT' ##### Check generalisability
         # master_path = "Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S0.xlsx"
-        #country = 'US'
-        ### END
+        # country = 'US'
+        # END
         
         # this may be more efficient than compare scenarios process, maybe retrofit
         # imports master input file, chops of titles and puts top row as columns,
@@ -91,18 +93,22 @@ def changed_input_export(new_scen, master_path):
 
             # Update the values in the larger DataFrame using the values from the smaller DataFrame
             #master_df.update(df_country)
-            updated_df = df_country.combine_first(master_df).reset_index()
+            master_df.update(df_country)
+            updated_df = master_df.reset_index()
+           
+
             # Reorder after merge
-            updated_df_reordered = master_order.merge(updated_df, on = 'Technology')
+            # updated_df_reordered = master_order.merge(updated_df, on = 'Technology')
             
-            updated_df_reordered.columns = [''] + list(range(2001, 2101))
-            updated_df_reordered = result_reorder[0:24] # remove placeholders
+            updated_df.columns = [''] + list(range(2001, 2101))
+            updated_df = updated_df[0:24] # remove placeholders
             
             
             # add tech numbers
-            for row in updated_df_reordered.index:
-                updated_df_reordered[''].iloc[row] = str(row + 1) + ' ' + updated_df_reordered[''].iloc[row]
-            
+            for row in updated_df.index:
+                updated_df[''].iloc[row] = str(row + 1) + ' ' + updated_df[''].iloc[row]
+                
+
             # Export to input folders
             folder_path = f'Inputs/{new_scen_code}/FTT-P'
             sheet_out = sheet_name + '_' + country
@@ -112,7 +118,7 @@ def changed_input_export(new_scen, master_path):
                 # Create if new
                 os.makedirs(folder_path)
                 
-            master_df.to_csv(folder_path + '/' + f'{sheet_out}.csv', index = False, header = True)
+            updated_df.to_csv(folder_path + '/' + f'{sheet_out}.csv', index = False, header = True)
             print(f'Sheet {sheet_out} saved')
             
 
@@ -125,8 +131,10 @@ new_scen = S3_check
 # baseline inputs masterfile
 master_path = "Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S0.xlsx"
 
+#%%
+
 changed_input_export(new_scen, master_path)
-    
+
 
 #%% Possible improvements
 
