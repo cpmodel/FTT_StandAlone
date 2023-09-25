@@ -417,10 +417,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
         #Create the regulation variable
-        isReg = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
-        division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]),
-                          data_dt['TREG'][:, :, 0])
+        division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data_dt['TREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
