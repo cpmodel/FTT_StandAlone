@@ -238,27 +238,27 @@ class ModelRun:
                 variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat chem")
+                
             if "FTT-IH-FBT" in self.ftt_modules:
                 variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat fbt")
+                
             if "FTT-IH-MTM" in self.ftt_modules:
                 variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat mtm")
+                
             if "FTT-IH-NMM" in self.ftt_modules:
                 variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat nmm")
+                
             if "FTT-IH-OIS2" in self.ftt_modules:
                 variables = ftt_indhe_ois2.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat ois")
+                
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
 
