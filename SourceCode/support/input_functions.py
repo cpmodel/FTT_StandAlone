@@ -126,8 +126,12 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 csv.columns = [int(year) for year in csv.columns]
 
 
-                                #print(file)
-                                read = csv.loc[:, var_tl]
+                                # print(file)
+                                try:
+                                    read = csv.loc[:, var_tl]
+                                except KeyError as e:
+                                    print(f"Error while reading {var}")
+                                    print(e)
 
 
                             else:
