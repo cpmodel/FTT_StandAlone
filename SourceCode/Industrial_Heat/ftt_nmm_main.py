@@ -267,10 +267,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             data_dt[var] = copy.deepcopy(time_lag[var])
 
         # Create the regulation variable #Regulate capacity #no regulations yet, isReg full of zeros
-        isReg = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = divide((data_dt['IWK4'][:, :, 0] - data['IRG4'][:, :, 0]),
-                          data_dt['IRG4'][:, :, 0])
+                        data_dt['IRG4'][:, :, 0]) # divide gives 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['IRG4'][:, :, 0] == 0.0] = 1.0
         isReg[data['IRG4'][:, :, 0] == -1.0] = 0.0

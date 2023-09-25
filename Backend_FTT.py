@@ -1399,7 +1399,7 @@ if __name__ == '__main__':
 
         start = lambda: run(host='localhost', port=int(port), server='paste', reloader=False)
         thr = Thread(target=start)
-        thr.setDaemon(True)
+        thr.daemon = True
         thr.start()
 
         os.system("start {}/main".format(addr))

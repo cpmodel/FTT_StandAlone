@@ -138,7 +138,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     "Model Dynamics"
 
-    #Endogenous calculation starts here
+    # Endogenous calculation starts here
     if year > histend['RVKZ']:
 
         data_dt = {}
@@ -156,19 +156,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 data_dt[var] = copy.deepcopy(time_lag[var])
 
-        #find if there is a regulation and if it is exceeded
+        # Find if there is a regulation and if it is exceeded
 
-        isReg =  np.zeros([len(titles['RTI']), len(titles['FTTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
-        division = divide((data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]),
-                          data_dt['ZREG'][:, :, 0])
+        division = divide((data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]), data_dt['ZREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
 
         for t in range(1, no_it+1):
-    #Interpolations to avoid staircase profile
+        # Interpolations to avoid staircase profile
 
             RTCO = time_lag['RZCO'][:, :, :] + (data['RZCO'][:, :, :] - time_lag['RZCO'][:, :, :]) * t * dt
             FuT = time_lag['RTFZ0'][:, :, :] + (data['RTFZ0'][:, :, :] - time_lag['RTFZ0'][:, :, :]) * t * dt
