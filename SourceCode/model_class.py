@@ -31,10 +31,11 @@ import SourceCode.energy_demand as energy_demand
 import SourceCode.Power.ftt_p_main as ftt_p
 import SourceCode.Transport.ftt_tr_main as ftt_tr
 import SourceCode.Heat.ftt_h_main as ftt_h
-#import ftt_s_main as ftt_s
-#import ftt_agri_main as ftt_agri
+#import SourceCode.Steel.ftt_s_main as ftt_s
+#import SourceCode.Agri.ftt_agri_main as ftt_agri
 import SourceCode.Freight.ftt_fr_main as ftt_fr
-#import ftt_flex_main as ftt_flex
+#import SourceCode.Flex.ftt_flex_main as ftt_flex
+#import SourceCode.Hydrogen.ftt_h2_main as ftt_h2
 import SourceCode.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
 import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
@@ -241,27 +242,27 @@ class ModelRun:
                 variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat chem")
+                
             if "FTT-IH-FBT" in self.ftt_modules:
                 variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat fbt")
+                
             if "FTT-IH-MTM" in self.ftt_modules:
                 variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat mtm")
+                
             if "FTT-IH-NMM" in self.ftt_modules:
                 variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat nmm")
-            if "FTT-IH-OIS" in self.ftt_modules:
+                
+            if "FTT-IH-OIS2" in self.ftt_modules:
                 variables = ftt_indhe_ois2.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                print("running FTT Ind heat ois")
+                
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
 

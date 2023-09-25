@@ -45,7 +45,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-#from support.econometrics_functions import estimation
+
 
 # %% lcoh
 # -----------------------------------------------------------------------------
@@ -88,8 +88,6 @@ def get_lcoih(data, titles, year):
         if data['IUD3'][r, :, 0].sum(axis=0)==0:
             continue
 
-        # Cost matrix
-        #BIC3 = data['BIC3'][r, :, :]
 
         lt = data['BIC3'][r,:, ctti['5 Lifetime (years)']]
         max_lt = int(np.max(lt))
@@ -144,9 +142,9 @@ def get_lcoih(data, titles, year):
         dft = np.where(mask, dft, 0)
 
         #fuel tax/subsidies
-        #fft = np.ones([len(titles['ITTI']), int(max_lt)])
-#        fft = ft * data['PG_FUELTAX'][r, :, :]
-#        fft = np.where(lt_mask, ft, 0)
+        ftt = np.ones([len(titles['ITTI']), int(max_lt)])
+        ftt = ftt * data['IFT3'][r,:, 0, np.newaxis]/ce
+        ftt = np.where(mask, ft, 0)
 
         # Fixed operation & maintenance cost - variable O&M available but not included
         omt = np.ones([len(titles['ITTI']), int(max_lt)])
@@ -168,7 +166,7 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+omt)/denominator
+        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
@@ -269,19 +267,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
             data_dt[var] = copy.deepcopy(time_lag[var])
 
-        # Create the regulation variable #Regulate capacity #no regulations yet, isReg full of zeros
+        # Create the regulation variable #Regulate ued #no regulations yet, isReg full of zeros
         isReg = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = divide((data_dt['IWK3'][:, :, 0] - data['IRG3'][:, :, 0]),
-                          data['IRG3'][:, :, 0])
-        isReg = 0.5 + 0.5*np.tanh(2*1.25*division)
+
+                          data_dt['IRG3'][:, :, 0])
+        isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['IRG3'][:, :, 0] == 0.0] = 1.0
         isReg[data['IRG3'][:, :, 0] == -1.0] = 0.0
 
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
         kappa = 10 #tech substitution constant
 
         ############## Computing new shares ##################
@@ -293,6 +292,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             #Time lagged UED plus change in UED * (no of iterations) * dt
 
             IUD3t = time_lag['IUD3'][:, :, 0].sum(axis=1) + (IUD3tot - time_lag['IUD3'][:, :, 0].sum(axis=1)) * t * dt
+            IUD3lt = time_lag['IUD3'][:, :, 0].sum(axis=1) + (IUD3tot - time_lag['IUD3'][:, :, 0].sum(axis=1)) * (t-1) * dt
 
             for r in range(len(titles['RTI'])):
 
@@ -324,7 +324,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         continue
 
                     #TODO: create market share constraints
-                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC3'][0, b1, 0] - data_dt['IWS3'][r, b1, 0])/0.1)
+                    Gijmax[b1] = np.tanh(1.25*(data_dt['ISC3'][r, b1, 0] - data_dt['IWS3'][r, b1, 0])/0.1)
                     #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
 
 
@@ -366,8 +366,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                         dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[b2, b1] = -dSik[b1, b2]
 
-                        #dSik[b1, b2] = S_i*S_k* (Aik*F[b1,b2]*Gijmax[b1] - Aki*F[b2,b1]*Gijmax[b2])*dt
-                        #dSik[b2, b1] = -dSik[b1, b2]
+                #calculate temportary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['IWS3'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_ued = endo_shares * IUD3t[r, np.newaxis]
 
 
                 # -----------------------------------------------------
@@ -380,39 +381,50 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = IUD3t[r]
-                iud_lag = time_lag['IUD3'][:, :, 0].sum(axis=1)
+                
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
                 dUkREG = np.zeros((len(titles['ITTI'])))
 
-                # Check that exogenous share changes add to zero
-                dUkTK = data['IXS3'][r, :, 0]
-                if (data['IXS3'][r, :, 0].sum() > 0.0):
-                    dUkTK[0] = dUkTK[0] - data['IXS3'][r, :, 0].sum()
+                # Convert exogenous share changes to capcity/useful energy demand. They do not need to sum to one.
+                dUkTK = data['IXS3'][r, :, 0]*Utot/no_it
 
-                # Correct for regulations #TODO Does this actually make sense?
+                # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                # Convert ued to capcity for this check
+                reg_vs_exog = ((dUkTK + endo_ued)/data['BIC3'][r, :, ctti["13 Capacity factor mean"]]/8766 > data['IRG3'][r, :, 0]) & (data['IRG3'][r, :, 0] >= 0.0)
+                dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
-                if iud_lag[r] > 0.0 and IUD3t[r] > 0.0 and (IUD3t[r] - iud_lag[r]) > 0.0:
 
-                    dUkREG = -data_dt['IUD3'][r, :, 0] * ( (IUD3t[r] - iud_lag[r]) /
-                                    iud_lag[r]) * isReg[r, :].reshape([len(titles['ITTI'])])
+                # Correct for regulations due to the stretching effect. This is the difference in ued due only to demand increasing.
+                # This will be the difference between ued based on the endogenous ued, and what the endogenous ued would have been
+                # if total demand had not grown.
+
+                dUkREG = -(endo_ued - endo_shares*IUD3lt[r,np.newaxis])*isReg[r, :].reshape([len(titles['ITTI'])])
 
 
                 # Sum effect of exogenous sales additions (if any) with
                 # effect of regulations
-                dUk = copy.deepcopy(dUkREG)
-                dUtot = np.sum(dUk)
+                #Note that the share of indirect heating vs direct must be preserved
+                indirect_cut_off = 7
+                dUk = dUkREG + dUkTK
+                dUtot_indirect = np.sum(dUk[:indirect_cut_off])
+                dUtot_direct = np.sum(dUk[indirect_cut_off:])
 
-                # Convert to market shares and make sure sum is zero
-                # dSk = dUk/Utot - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot) - time_lag['IWS3'][r, :, 0]*Utot*np.divide(dUtot, (Utot*Utot)) + dUkTK
+                indirect_shares = (endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off])/(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect)
+                direct_shares = (endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:])/(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct)
+                indirect_weighting = np.sum(endo_shares[:indirect_cut_off])
+                
+
+                # Calculate changes to endogenous ued, and use to find new market shares
+                # Zero ued will result in zero shares
+                # All other ueds will be streched
 
 
-                # New market shares
-                # check that market shares sum to 1
-                        #print(np.sum(dSik, axis=1))
-                data['IWS3'][r, :, 0] = data_dt['IWS3'][r, :, 0] + np.sum(dSik, axis=1) + dSk
+
+                data['IWS3'][r, :indirect_cut_off, 0] = indirect_shares*indirect_weighting
+                data['IWS3'][r, indirect_cut_off:, 0] = direct_shares*(1-indirect_weighting)
+
 
                 if ~np.isclose(np.sum(data['IWS3'][r, :, 0]), 1.0, atol=1e-5):
                     msg = """Sector: {} - Region: {} - Year: {}
