@@ -414,8 +414,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 dUtot_indirect = np.sum(dUk[:indirect_cut_off])
                 dUtot_direct = np.sum(dUk[indirect_cut_off:])
 
-                indirect_shares = (endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off])/(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect)
-                direct_shares = (endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:])/(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct)
+                indirect_shares = divide((endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off]),(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect))
+                direct_shares = divide((endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:]),(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct))
                 indirect_weighting = np.sum(endo_shares[:indirect_cut_off])
                 
 
