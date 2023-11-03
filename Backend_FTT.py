@@ -346,7 +346,7 @@ def retrieve_all_titles():
 @enable_cors
 def retrieve_var_data():
 
-    vars_meta = pd.read_excel('{}\\Utilities\\Titles\\VariableListing.xlsx'.format(rootdir),sheet_name="Sheet1")
+    vars_meta = pd.read_csv(f'{rootdir}\\Utilities\\Titles\\VariableListing.csv')
     vars_meta = vars_meta.fillna("None")
     vars_meta_dict = vars_meta.to_dict("records")
 
@@ -665,10 +665,10 @@ def construct_graphic_data(graphic,type_):
     dims2 = [settings.loc["Dim2"]]
     dims3 = [settings.loc["Dim3"]]
 
-    #Get titles from var listing
-    vars_meta = pd.read_excel('{}\\Utilities\\Titles\\VariableListing.xlsx'.format(rootdir),
-                              sheet_name="Sheet1",index_col=0)
-    #Assume al variables needed have same dimension as first for processing
+    # Get titles from var listing
+
+    vars_meta = pd.read_csv(f'{rootdir}\\Utilities\\Titles\\VariableListing.csv', index_col=0)
+    # Assume all variables needed have same dimension as first for processing
     vars_meta = vars_meta.fillna("None")
 
     title_code = vars_meta.loc[vars[0],"Dim1"]
@@ -955,10 +955,9 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
     dims3 = [settings.loc["Dim3"]]
 
 
-    #Get titles from var listing
-    vars_meta = pd.read_excel('{}\\Utilities\\Titles\\VariableListing.xlsx'.format(rootdir),
-                              sheet_name="Sheet1",index_col=0)
-    #Assume al variables needed have same dimension as first for processing
+    # Get titles from var listing
+    vars_meta = pd.read_csv(f'{rootdir}\\Utilities\\Titles\\VariableListing.csv', index_col=0)
+    # Assume al variables needed have same dimension as first for processing
     vars_meta = vars_meta.fillna("None")
 
     title_code = vars_meta.loc[vars[0],"Dim1"]

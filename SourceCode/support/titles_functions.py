@@ -24,7 +24,6 @@ def load_titles():
     titles_file = 'classification_titles.xlsx'
 
     # Check that classification titles workbook exists
-    # Note this function is being called from 'run_NEMF.py'
     titles_path = os.path.join('Utilities', 'titles', titles_file)
     if not os.path.isfile(titles_path):
         print('Classification titles file not found.')
