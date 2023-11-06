@@ -268,11 +268,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             data_dt[var] = copy.deepcopy(time_lag[var])
 
         # Create the regulation variable #Regulate ued #no regulations yet, isReg full of zeros
-        isReg = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
-        division = np.zeros([len(titles['RTI']), len(titles['ITTI'])])
         division = divide((data_dt['IWK3'][:, :, 0] - data['IRG3'][:, :, 0]),
-
-                          data_dt['IRG3'][:, :, 0])
+        data_dt['IRG3'][:, :, 0]) # divide gives 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['IRG3'][:, :, 0] == 0.0] = 1.0
         isReg[data['IRG3'][:, :, 0] == -1.0] = 0.0
@@ -411,8 +408,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 dUtot_indirect = np.sum(dUk[:indirect_cut_off])
                 dUtot_direct = np.sum(dUk[indirect_cut_off:])
 
-                indirect_shares = (endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off])/(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect)
-                direct_shares = (endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:])/(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct)
+                indirect_shares = divide((endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off]),(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect))
+                direct_shares = divide((endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:]),(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct))
                 indirect_weighting = np.sum(endo_shares[:indirect_cut_off])
                 
 
