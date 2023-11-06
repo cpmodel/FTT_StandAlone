@@ -24,8 +24,6 @@ from tqdm import tqdm
 
 
 # Local library imports
-# FTT-wide modules
-import SourceCode.energy_demand as energy_demand 
 
 # Separate FTT modules
 import SourceCode.Power.ftt_p_main as ftt_p
@@ -42,6 +40,9 @@ import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
 
+# Sector coupling modules
+from SourceCode.sector_coupling.electricity_price import relative_electricity_price
+import SourceCode.sector_coupling.energy_demand as energy_demand 
 
 # Support modules
 import SourceCode.support.input_functions as in_f
@@ -224,6 +225,11 @@ class ModelRun:
                 variables = ftt_p.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
+                # relative_electricity_price(variables, 
+                #                            self.titles, self.histend, tl[y],
+                #                            self.domain)
+            
+            
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],

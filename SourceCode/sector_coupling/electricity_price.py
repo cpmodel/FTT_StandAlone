@@ -5,9 +5,12 @@ Created on Fri Nov  3 12:52:54 2023
 @author: Femke Nijsse
 """
 
-def relative_electricity_price_movements(data, titles, histend, year, ftt_modules):
+def relative_electricity_price(data, titles, histend, year, ftt_modules):
     """ "This function takes as input the electricity price from FTT-P, and 
-    return the relative price of electricity at year x"""
+    returns the relative price of electricity at year x"""
+    
+    if year >= histend["MEWG"]:
+        print(year)
     
     pass
 
