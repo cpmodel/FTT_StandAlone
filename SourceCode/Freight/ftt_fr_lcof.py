@@ -128,7 +128,7 @@ def get_lcof(data, titles):
         # fuel tax/subsidies
         fft = np.ones([len(titles['FTTI']), int(max_LF)])
         fft = FT * data['ZTFT'][r, :, 0, np.newaxis]
-        print(data['ZTFT'][r, :, 0, np.newaxis])
+        # print(data['ZTFT'][r, :, 0, np.newaxis])
         fft = np.where(mask, FT, 0)
 
         #Lifetime vector of fuel taxes to be added

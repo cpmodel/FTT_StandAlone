@@ -296,7 +296,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
     if year == histend['HEWF']:
-        print(f'year in heat model:  {year}')
+        #print(f'year in heat model:  {year}')
         # Historical data ends in 2014, so we need to initialise data
         # when it's 2015 to make sure the model runs.
         # At some point we need to change the start year of the simulation and
@@ -329,16 +329,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Calculate the LCOH for each heating technology.
         # Call the function
         data = get_lcoh(data, titles)
-        print("Is this code executed?")
-        print("Print HJHF")
-        print(data["HJHF"][0, :, 0])
-        print("Print HJEF")
-        print(data["HJEF"][0, :, 0])
-        data["FU14A"] = copy.deepcopy(data['HJHF'])
-        data['FU14B'] = data["HJEF"]*data["HJFC"]
-        print("FU14A and FU14B")
-        print(data["FU14A"][0, :, 0])
-        print(data["FU14B"][0, :, 0])
+        # print("Is this code executed?")
+        # print("Print HJHF")
+        # print(data["HJHF"][0, :, 0])
+        # print("Print HJEF")
+        # print(data["HJEF"][0, :, 0])
+        # data["FU14A"] = copy.deepcopy(data['HJHF'])
+        # data['FU14B'] = data["HJEF"]*data["HJFC"]
+        # print("FU14A and FU14B")
+        # print(data["FU14A"][0, :, 0])
+        # print(data["FU14B"][0, :, 0])
         
         data_dt = {}
         for var in data.keys():
@@ -362,10 +362,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data["FU14A"] = data_dt["FU14A"]
         data["FU14B"] = data_dt["FU14B"]
         
-        if year ==  histend['HEWF'] + 1 :
-            print("FU14A and FU14B in time loop")
-            print(data_dt["FU14A"][0, :, 0])
-            print(data["FU14B"][0, :, 0])
+        #if year ==  histend['HEWF'] + 1 :
+            # print("FU14A and FU14B in time loop")
+            # print(data_dt["FU14A"][0, :, 0])
+            # print(data["FU14B"][0, :, 0])
         
         # Create the regulation variable
         division = divide((data_dt['HEWS'][:, :, 0] - data['HREG'][:, :, 0]), data['HREG'][:, :, 0]) # 0 if dividing by 0

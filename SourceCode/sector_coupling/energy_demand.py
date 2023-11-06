@@ -34,10 +34,10 @@ def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
             
             if "FTT-H" in ftt_modules:            
                 data["FRET"][r, 18, 0] = data["HJEF"][r, 7, 0]
-                if r == 0 and year in range(2014, 2018):
-                    print(f"Electricity usage in heating in Belgium in {year}:")
-                    print(f'HJEF: {data["HJEF"][r, 7, 0]}')
-                    print(f'FRET: {data["FRET"][r, 18, 0]}')
+                # if r == 0 and year in range(2014, 2018):
+                #     print(f"Electricity usage in heating in Belgium in {year}:")
+                #     print(f'HJEF: {data["HJEF"][r, 7, 0]}')
+                #     print(f'FRET: {data["FRET"][r, 18, 0]}')
                 
            
     

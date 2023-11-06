@@ -245,7 +245,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:, :, 0])
         
         data = get_lcoe(data, titles) # Get the levelised costs
-        data = get_marginal_fuel_prices_mewp(data, titles) # Get the marginal fuel prices
+        data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3) # Get the marginal fuel prices
 
 
     #%%
@@ -532,6 +532,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -890,7 +891,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             data = get_lcoe(data, titles)
-            bidon = 0
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)
 
             # =================================================================
             # Update the time-loop variables
