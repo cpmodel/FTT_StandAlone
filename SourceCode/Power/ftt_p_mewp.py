@@ -21,12 +21,12 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
     non_vre_lb_weight[1] = (4400.0 - 2200.0) / 8766.0
     non_vre_lb_weight[0] = (8766.0 - 4400.0) / 8766.0
     
-    
 
     data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]  # Hard coal
     data["MEWP"][:, 1, 0] = data["MERC"][:, 2, 0]  # Soft coal
     data["MEWP"][:, 2, 0] = data["MERC"][:, 1, 0]  # Crude oil
     data["MEWP"][:, 3, 0] = data["MERC"][:, 3, 0]  # Natural gas
+    data["MEWP"][:, 10, 0] = data["MERC"][:, 4, 0]  # Biomass
 
 
 
@@ -49,56 +49,59 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             shares_old[shares_old < 0.0] = 0.0
             shares_old = shares_old / np.sum(shares_old)
 
-            weighted_lcoe_new = np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0]) / np.sum(shares_new * data["MEWL"][r, :, 0])
-            weighted_lcoe_old = np.sum(shares_old * data["MEWL"][r, :, 0] * data["MEWC"][r, :, 0]) / np.sum(shares_old * data["MEWL"][r, :, 0])
+            weighted_lcoe_new = np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0])  \
+                                / np.sum(shares_new * data["MEWL"][r, :, 0])
+            weighted_lcoe_old = np.sum(shares_old * data["MEWL"][r, :, 0] * data["MEWC"][r, :, 0]) \
+                                / np.sum(shares_old * data["MEWL"][r, :, 0])
 
             data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
 
         # If MPRI == 2 --> estimate a costs based on a merit order
         elif data["MPRI"][r] == 2:
-            glb_dict = {0: data["MWG1"][r, :, 0], 1: data["MWG2"][r, :, 0], 2: data["MWG3"][r, :, 2],
+            wait = 1
+            glb_dict = {0: data["MWG1"][r, :, 0], 1: data["MWG2"][r, :, 0], 2: data["MWG3"][r, :, 0],
                         3: data["MWG4"][r, :, 0], 4: data["MWG5"][r, :, 0], 5: data["MWG6"][r, :, 0]}
             NLB = len(glb3[0])                          # NLB is the number of load bands
             
-            MLBP = np.zeros((NLB, len(titles['RTI']), 1))  # Initialize MLBP with appropriate dimensions
 
             # We loop over our load bands
             for LB in range(NLB):
-                mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])  # Initialize mc_tech_by_lb
+                mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])  # Initialize marginal costs array
                 
                 # Only select technologies with non-zero generation in each respective load band
                 # Remove carbon tax, because they are added in the PJR routine # TODO: change this for standalone
                 where_condition = glb_dict[LB] > 0.0
-                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0] - data["BCET"][r, :, LB, 0]
+                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition] \
+                                                - data["BCET"][r, :, 0][where_condition]
                 
                 # Taking the maximum marginal cost has proven to cause massive fluctuations
                 # Instead, take the weighted average of the marginal cost to stabilise the fluctuations
                 # (It's mainly oil that is causing issues)
                 if np.sum(glb_dict[LB]) > 0.0:
-                    MLBP[LB, r, 0] = np.sum(mc_tech_by_lb * glb_dict[LB]) / np.sum(glb3[r, LB])
+                    data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * glb_dict[LB]) / np.sum(glb_dict[LB])
                 else:
-                    MLBP[LB, r, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :, 0])
+                    data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
 
             if LB == 5:         # To reflect increased costs due to start-up and switch off
-                MLBP[LB, r] *= 1.25 
+                data["MLBP"][r, LB, 0] *= 1.25 
             if LB == 4:          # Same as above but there is less intermittency
-                MLBP[LB, r] *= 1.1
+                data["MLBP"][r, LB, 0] *= 1.1
             if LB == 3:          # Same
-                MLBP[LB, r] *= 1.05
+                data["MLBP"][r, LB, 0] *= 1.05
             if LB == 6:          # Reflecting higher transmission costs for VRE
-                MLBP[LB, r] *= 1.3
+                data["MLBP"][r, LB, 0] *= 1.3
 
-            vre_weight = 0.0
-            non_vre_price = 0.0
+            vre_weight = np.zeros((len(titles['RTI'])))
+            non_vre_price =  np.zeros((len(titles['RTI'])))
             
             # Estimate prices as a weighted average of marginal costs
             # Above 25% VRE penetration, we assume that at certain moments
             # electricity prices are completely determined by VRE technologies.
-            if np.sum(data["MEWG"][:, r] * Svar[:, r]) / np.sum(data["MEWG"][:, r]) > 0.25:
-                vre_weight = (1.0 / 0.75) * np.sum(data["MEWG"][:, r] * Svar[:, r]) / np.sum(data["MEWG"][:, r]) - (1.0 / 3.0)
+            if np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :]) > 0.25:
+                vre_weight[r] = (1.0 / 0.75) * np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :, 0]) - (1.0 / 3.0)
     
             if np.sum(np.array([glb_dict[LB] for LB in range(NLB-1)])) > 0.0:
-                non_vre_price = np.sum(MLBP[:NLB-1, r] * non_vre_lb_weight)
+                non_vre_price[r] = np.sum(data["MLBP"][r, :NLB-1, 0] * non_vre_lb_weight)
                 
             data["MEWP"][r, 7, 0] = vre_weight[r] * data["MLBP"][r, 5, 0] + \
                                     (1.0 - vre_weight[r]) * non_vre_price[r] 
