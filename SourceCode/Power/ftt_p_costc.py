@@ -160,12 +160,11 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
       MRED
       MRES
 
-    '''    
+    '''  
     L = 990
     MRED = np.zeros([71, 14, 1])
     MRES = np.zeros([71, 14, 1])
     P = np.zeros([4])
-    D = np.zeros([4])
     #dQdt = np.zeros([990])
     tc = np.zeros([990])
     #dFdthold = np.zeros([990])
@@ -186,38 +185,40 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
 
     P[:4] = copy.deepcopy(MRCL[1, :4, 0])     # All marginal costs of non-renewable resources are identical (global), we use Belgium
     MEPD_sum = np.sum(MEPD[:, :, 0], axis=0)  # Sum over regions
-    D[:4] = copy.deepcopy(MEPD_sum[:4])       # Global demand for non-renewable resources
+    demand_non_renewables = copy.deepcopy(MEPD_sum[:4])       # Global demand for non-renewable resources
 
     # We search for the value of P that enables enough total production to supply demand
-    # i.e. the value of P that minimises the difference between dFdt and D
+    # i.e. the value of P that minimises the difference between dFdt and demand_non_renewables
     for j in range(4): # j is the non-renewable resource
+        
         # Cost interval
         dC = HistC[j, 1] - HistC[j, 0]
         dFdt = 0
         count = 0
-        while abs((dFdt - D[j]) / D[j]) > 0.01  and count < 20:
+        while abs((dFdt - demand_non_renewables[j]) / demand_non_renewables[j]) > 0.01  and count < 20:
+            
             # Sum total supply dFdt from all extraction cost ranges below marginal cost P            dFdt = 0
             tc[:] = 0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j]))
-            #tc = 0
-            #WHERE (HistC(I, :) < P(I)) tc(:) = 1
-
-            # for i in range(rti): THIS IS REWRITTEN BELOW
-            #     dQdt = MPTR[i, j] * BCSC[i, j, 4:] * tC #goes from 5 in fortran
-            #     dFdthold[i] = sum(dQdt)*dC
-            # dFdt= sum(dFdthold[1:rti])
-
+            
+            # The supply dFdt is determined from production-to-reserve ratio MPTR,
+            # the number of reserves by cost level (BCSC) 
+            # and fraction of costs under the currrent cost guess P (tc)
             dFdt = np.sum(MPTR[:, j, 0].reshape((71, 1)) * BCSC[: , j, 4:] * tc.reshape((1, L)) * dC)
 
             # Work out price
-            # Difference between supply and demand
-            if dFdt < D[j]:
+            # Difference between supply and demand. 
+            # As we usually go up, the step in that direction is larger
+            if dFdt < demand_non_renewables[j]:
                 # Increase the marginal cost
-                P[j] = P[j]*(1.0 + np.abs(dFdt - D[j])/D[j]/8)
+                P[j] = P[j] * \
+                    (1.0 + np.abs(dFdt - demand_non_renewables[j]) / demand_non_renewables[j] / 8)
             else:
                 # Decrease the marginal cost
-                P[j] = P[j]/(1.0 + np.abs(dFdt - D[j])/D[j]/5)
+                P[j] = P[j]  / \
+                    (1.0 + np.abs(dFdt - demand_non_renewables[j]) / demand_non_renewables[j] / 5)
             count = count + 1
 
+        
         # Remove used resources from the regional histograms (uranium, oil, coal and gas only)
         # Have removed loop, loop was over regions
         BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j, 0].reshape((71, 1)) * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dt
@@ -309,17 +310,21 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
-    MEPD[:, 4, 0] = (divide(MEWG[:, 8, 0], BCET[:, 8, 13])      \
-                    + divide(MEWG[:, 9, 0], BCET[:, 9, 13])    \
+    MEPD[:, 4, 0] =  (divide(MEWG[:, 8, 0],  BCET[:, 8, 13])   \
+                    + divide(MEWG[:, 9, 0],  BCET[:, 9, 13])   \
                     + divide(MEWG[:, 10, 0], BCET[:, 10, 13])  \
                     + divide(MEWG[:, 11, 0], BCET[:, 11, 13])) \
                     * 3.6/1000 # +  MEWD[11, :]   +   MEWD[10, :]
     RERY[:, 4, 0] = copy.deepcopy(MEPD[:, 4, 0]) #in PJ
     # Biogas (From here onwards cost curves are in TWh)
-    MEPD[:, 5, 0] = (MEWG[:, 12, 0] + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) * 3.6/1000
+    MEPD[:, 5, 0] = (MEWG[:, 12, 0] \
+                   + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
+                    * 3.6/1000
     RERY[:, 5, 0] = copy.deepcopy(MEPD[:, 5, 0]) # in PJ
     # Biogas + CCS
-    MEPD[:, 6, 0] = (MEWG[:, 12, 0] + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) * 3.6/1000
+    MEPD[:, 6, 0] = (MEWG[:, 12, 0] \
+                   + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
+                    * 3.6/1000
     RERY[:, 6, 0] = copy.deepcopy(MEPD[:, 6, 0]) # in PJ
     # Tidal
     MEPD[:, 7, 0] = MEWG[:, 14, 0] * 3.6/1000
@@ -360,13 +365,13 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
         RERY, BCSC, HistC, MERC, MRED, MRES = \
                 marginal_function(
-                MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, rti, erti, year, dt, MERCX
+                MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt, MERCX
                 )
 
 
     # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
     for r in range(len(rti)):           # Loop over region
-        for j in range(len(t2ti)):      # Loop over technology 
+        for j in range(len(t2ti)):      # Loop over technology
             if(MEPD[r, tech_to_resource[j]] > 0.0):
 
                 # Non-renewable resources fuel costs (histograms)
