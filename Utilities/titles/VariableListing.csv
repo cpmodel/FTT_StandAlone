@@ -65,7 +65,7 @@ MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 FRET,Energy supply,ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,,,Y
 MEWD,Demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,,,Y
 MJET,FTT:Power technology to fuel use conversion matrix excl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,,Y
-MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
