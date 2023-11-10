@@ -81,7 +81,7 @@ def interp(X, Y, X0, L):
     while abs(X[I] - X0) > D:
         LL = LL/2
         if X[I] > X0:
-            I = I - max(int(LL), 1)    # int() truncates decimals and tech_to_resourceerts to an integer
+            I = I - max(int(LL), 1)    # int() truncates decimals to int
         else:
             I = I + max(int(LL), 1)
         # These conditionals refer to cases where X0 falls outside of X
@@ -160,13 +160,12 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
       MRED
       MRES
 
-    '''  
+    '''
     L = 990
     MRED = np.zeros([71, 14, 1])
     MRES = np.zeros([71, 14, 1])
     P = np.zeros([4])
     #dQdt = np.zeros([990])
-    tc = np.zeros([990])
     #dFdthold = np.zeros([990])
     # Values of nu: empirical production to reserve ratio (y^-1)
     # See paper Mercure & Salas arXiv:1209.0708 for data (Energy Policy 2013)
@@ -174,7 +173,7 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
     #nu(2) = 1/42.0    #Oil        (i.e. 42 years to deplete current reserves (not resources#))
     #nu(3) = 1/122.0   #Coal
     #nu(4) = 1/62.0    #Gas
-    # Width of the F function is resource-dependent (exception made for coal where cost data is coarse)
+    # Width of the F function is resource-dependent (except coal where cost data is coarse)
     sig = np.zeros([4])
     sig[0] = 1       # Uranium
     sig[1] = 1       # Oil
@@ -190,23 +189,28 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
     # We search for the value of P that enables enough total production to supply demand
     # i.e. the value of P that minimises the difference between dFdt and demand_non_renewables
     for j in range(4): # j is the non-renewable resource
-        
+       
         # Cost interval
         dC = HistC[j, 1] - HistC[j, 0]
         dFdt = 0
         count = 0
         while abs((dFdt - demand_non_renewables[j]) / demand_non_renewables[j]) > 0.01  and count < 20:
             
-            # Sum total supply dFdt from all extraction cost ranges below marginal cost P            dFdt = 0
-            tc[:] = 0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j]))
+            # Sum total supply dFdt from all extraction cost ranges below marginal cost P 
+            # 1 (or close to 1) when P(rice) > HistC, 0 otherwise (tc in FORTRAN)
+            costs_below_price = \
+                0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j]))
             
-            # The supply dFdt is determined from production-to-reserve ratio MPTR,
-            # the number of reserves by cost level (BCSC) 
-            # and fraction of costs under the currrent cost guess P (tc)
-            dFdt = np.sum(MPTR[:, j, 0].reshape((71, 1)) * BCSC[: , j, 4:] * tc.reshape((1, L)) * dC)
+            # The supply dFdt is determined from:
+            # the regional production-to-reserve ratio MPTR,
+            # the BCSC contains (sparse) regional matrix of reserves at cost level
+            # and where_costs_below_price selects costs hist under the currrent cost guess P, with smoothing
+            dFdt = np.sum(MPTR[:, j, 0].reshape((71, 1)) \
+                         * BCSC[: , j, 4:] \
+                         * costs_below_price.reshape((1, L)) * dC)
 
             # Work out price
-            # Difference between supply and demand. 
+            # Difference between supply and demand.
             # As we usually go up, the step in that direction is larger
             if dFdt < demand_non_renewables[j]:
                 # Increase the marginal cost
@@ -217,18 +221,18 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
                 P[j] = P[j]  / \
                     (1.0 + np.abs(dFdt - demand_non_renewables[j]) / demand_non_renewables[j] / 5)
             count = count + 1
-
         
         # Remove used resources from the regional histograms (uranium, oil, coal and gas only)
         # Have removed loop, loop was over regions
         BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j, 0].reshape((71, 1)) * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dt
-        RERY[:, j, 0] = np.sum((MPTR[:, j, 0].reshape((71, 1))*BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dC)
+        RERY[:, j, 0] = np.sum((MPTR[:, j, 0].reshape((71, 1)) * BCSC[:, j, 4:] \
+                                * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dC)
 
         # Write back new marginal cost values (same value for all regions)
         MERC[:, j, 0] = copy.deepcopy(P[j])
         MERC[:, j, 0] = copy.deepcopy(MERCX[:, j, 0])
         
-        # Sum resources. rewritten to remove loops
+        # Sum resources. 
         HistCSUM = np.sum(HistC, axis=1)
         MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1)
         MRES[:, j, 0] = MRES[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1) * (0.5 - 0.5 * np.tanh(1.25 * 2 * divide(HistCSUM[j] - P[j], P[j])))
@@ -371,7 +375,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
     for r in range(len(rti)):           # Loop over region
-        for j in range(len(t2ti)):      # Loop over technology
+        for j in range(len(t2ti)):      # Loop over technology 
             if(MEPD[r, tech_to_resource[j]] > 0.0):
 
                 # Non-renewable resources fuel costs (histograms)
