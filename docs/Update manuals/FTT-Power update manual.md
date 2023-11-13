@@ -14,7 +14,7 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
     5. The (2022) data is found at https://irena.org/Statistics/Download-query-tools 
 5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%).
     1. Use the same script as above in the pre-processing file
-6. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
+6. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
 
 ### Calibration (the gamma values)
 The FTT model is calibrated to ensure a historical trends do not suddenly change in the absense of new policies. We ensure the first derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
@@ -29,13 +29,13 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 ### Differing start dates for costs and capacity
 1. If your cost data is not from the same year as your final generation data, a code change needs to be made. In ftt_p_main.py, you will need to add an if statement (if year == (cost data year + 1)).., to run the learning-by-doing up to the proper start of the simulation. 
     1. TODO Option 1: switch to BNEF for cost data
-    2. TODO Option 2: make a new variable in FTT-Standalone/Utilities/Titles/VariableListing.xlsx which contains the date of the cost data, and adjust the code to reflect, so that code doesn't need updating.
+    2. TODO Option 2: make a new variable in FTT-Standalone/Utilities/Titles/VariableListing.csv which contains the date of the cost data, and adjust the code to reflect, so that code doesn't need updating.
 
 ## Less frequent updates
 ### Costs
 1. Update the costs of CAPEX, OPEX and the  standard deviation of both using the IEA's [Projected Cost of Generating Electricity](https://www.iea.org/reports/projected-costs-of-generating-electricity-2020) file. An [xlsx file can be found](https://iea.blob.core.windows.net/assets/2df33f6b-eba0-4639-926a-bc1c3d3e3268/IEA-NEAProjectedCostsofGeneratingElectricity2020-Datafile.xlsx) with this data at the IEA data server (**how??**) xlsx file at ). We take the standard deviation as the sample standard deviation of the project by country. This data is updated every 5 years, which is suboptimal, so let the team know if you know a different data set. Updates are manual.
 3. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies.
-4. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. For instance, change J5 from 2016 to 2020 after you've updated the cost data. 
+4. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J5 from 2016 to 2020 after you've updated the cost data. 
 
 ### Technical parameters
 5. Update the technical potential. The last update for the technical potential for onshore, offshore and solar was done early 2022. 

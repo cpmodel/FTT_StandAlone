@@ -1,5 +1,5 @@
 # Instructions for updating FTT: Transport
-Ideally, FTT: Transport is updated every year. In particular, it is important to update the share data every year when the latest sales data become available. It is important to update the price and other data in countries undergoing rapid changes in the model variety. Ideally, the history end-year for FTT-Transport should be updated annually. If any updates are made, please ensure that the history end-year is also updated in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. The current end-year is assumed to be the same for all countries and is set for the year 2022.
+Ideally, FTT: Transport is updated every year. In particular, it is important to update the share data every year when the latest sales data become available. It is important to update the price and other data in countries undergoing rapid changes in the model variety. Ideally, the history end-year for FTT-Transport should be updated annually. If any updates are made, please ensure that the history end-year is also updated in FTT-Standalone/Utilities/Titles/VariableListing.csv. The current end-year is assumed to be the same for all countries and is set for the year 2022.
 
 ## Frequent updates
 ### Update share data
@@ -27,7 +27,7 @@ This is only carried out in countries where cost data are collected because the 
 ### Other cost data and learning rates
 1. Maintenance cost: Collect from a 2021 U.S. Department of Energy comprehensive quantification of total ownership costs, including maintenance costs for BEVs, PHEVs, HEVs, and ICEVs.
 2. Update the learning rate. We use learning rates from literature. It is worth updating every 2-3 years for EVs, but more importantly for fuel cell vehicles where learning rates are very uncertain. 
-3. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.xlsx. 
+3. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. 
 
 ### Technical parameters
 5. Mechanical survival rates: Taken from literature for ICEVs and assumed that EVs follow the same survival rates. Updates on the mechanical survival rates for EVs and fuel cell cars are recommended when the data become available
