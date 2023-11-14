@@ -161,10 +161,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
                                           where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
 
-        bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(data['BCET'], time_lag['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
-                                                                     data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['PMF'], data['MRED'], data['MRES'],
-                                                                     titles['MTI'],titles['RTI'],titles['T2TI'],titles['C2TI'],titles['JTI'],
-                                                                     titles['ERTI'],year,1.0,data['MERCX'])
+        bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
+                data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
+                data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                )
 
         data['BCET'] = bcet
         data['MCSC'] = bcsc
@@ -502,10 +503,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cost-supply curve
             # =====================================================================
 
-            bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(data['BCET'], time_lag['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
-                                                                         data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['PMF'], data['MRED'], data['MRES'],
-                                                                         titles['MTI'],titles['RTI'],titles['T2TI'],titles['C2TI'],titles['JTI'],
-                                                                         titles['ERTI'],year,1.0,data['MERCX'])
+            bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
+                data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
+                data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                )
 
             data['BCET'] = bcet
             data['MCSC'] = bcsc
@@ -870,10 +872,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             if t == no_it:
                #                print("Did we pass this point?")
-                bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(data['BCET'], data_dt['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
-                                                                             data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['PMF'], data['MRED'], data['MRES'],
-                                                                             titles['MTI'],titles['RTI'],titles['T2TI'],titles['C2TI'],titles['JTI'],
-                                                                             titles['ERTI'],year,1.0,data['MERCX'])
+                bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
+                    data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
+                    data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
+                    titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                    )
 
                 data['BCET'] = bcet
                 data['MCSC'] = bcsc
