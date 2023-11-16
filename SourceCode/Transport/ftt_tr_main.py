@@ -515,11 +515,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
 
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
-                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                reg_vs_exog = ((data['TWSA'][r, :, 0]*TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
+                # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
 
-                #TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
-                dUkTK =  np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0]*TWSA_scalar/no_it)
+                # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                dUkTK =  np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0]/TWSA_scalar/no_it)
 
                 # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
                 # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been

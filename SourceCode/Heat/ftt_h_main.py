@@ -508,24 +508,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUkTK = np.zeros([len(titles['HTTI'])])
                 dUkREG = np.zeros([len(titles['HTTI'])])
 
-                #Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation. Otherwise, the corrections won't line up with the market shares.
+                # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation. Otherwise, the corrections won't line up with the market shares.
 
 
                 # Convert exogenous shares to exogenous generation. Exogenous sharess no longer need to add up to 1. Beware removals!
                 dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
                
-                #Check endogenous shares plus additions for a single time step does not exceed regulated shares
+                # Check endogenous shares plus additions for a single time step does not exceed regulated shares
                 reg_vs_exog = ((data['HWSA'][r, :, 0]/no_it + endo_shares) > data['HREG'][r, :, 0]) & (data['HREG'][r, :, 0] >= 0.0)
-                #Filter capacity additions based on regulated shares
+                # Filter capacity additions based on regulated shares
                 dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
-
 
 
                 # Correct for regulations due to the stretching effect. This is the difference in generation due only to demand increasing.
                 # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_gen - endo_shares*rhudlt[r,np.newaxis])*isReg[r, :].reshape([len(titles['HTTI'])])
+                dUkREG = -(endo_gen - endo_shares * rhudlt[r,np.newaxis]) * isReg[r, :].reshape([len(titles['HTTI'])])
                      
 
                 # Sum effect of exogenous sales additions (if any) with
