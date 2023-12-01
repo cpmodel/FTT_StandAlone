@@ -1,18 +1,18 @@
-﻿Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment,Summary,Detailed
+Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment,Summary,Detailed
 PRSCX,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 PRSC15,Price levels in 2015 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 RPOP,Population by age and gender,Thousands,RTI,NA,NA,TIME,General,1970,-,2001,-,,Y
-PFRE,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRC,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRO,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
-PFRM,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRB,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRH,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
+PFRE,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRC,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRO,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
+PFRM,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRB,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRH,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
 PRSC13,Price levels in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWMC,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWLO,FTT:Power optimal/initial load factors,%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWKA,FTT:Power exogenous capacity levels (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
-MWIY,FTT:Power investment,m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MWIY,FTT:Power investment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWICX,Exogenous FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWIC,FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWG6,Generation load band 6,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -31,7 +31,7 @@ MSSPX,Exogenous MSSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,F
 MSSP,FTT:Power short-term storage costs (2013$/GWh) ,$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSMX,Exogenous MSSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MSSM,FTT:Power short-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MSSI,FTT:Power short-term storage investment (2010 mEuro),m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MSSI,FTT:Power short-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSG,FTT:Power short-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSF,FTT:Power short-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSE,Short-term storage round-trop efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2011,,,Y
@@ -50,7 +50,7 @@ MLSPX,Exogenous MLSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,F
 MLSP,FTT:Power long-term storage costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSMX,Exogenous MLSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MLSI,FTT:Power long-term storage investment (2010 mEuro),m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSF,FTT:Power long-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSE,Long-term storage round-trip efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2010,,,Y
@@ -95,7 +95,7 @@ RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,General,-,-,2010,Fro
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
 METCX,Exogenous METC (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MESC,FTT:Power cost of early scrapping power equipment,m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MERCX,Exogenous MERC (from E3ME run),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
@@ -168,7 +168,7 @@ TEWE,FTT-Transport emissions,Mt/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TEWC,FTT-Transport levelised costs,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TEWB,FTT-Transport Technology spill-over matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
 TEWA,FTT-Transport Technology substitution matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
-PFRG,Price of gas (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRG,Price of gas (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
 TETH,FTT-Transport Efficiency ,,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
 TETC,FTT-Transport levelised costs with taxes,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TESH,FTT-Transport Vehicle sales,,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
@@ -177,7 +177,7 @@ TELC,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TEGC,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TEFF,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TECD,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TE3P,Fuel Prices ,2013 €/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
+TE3P,Fuel Prices ,2013 euros/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
 RVKM,FTT-Transport Passenger road driving demand,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTFT,FTT-Transport Fuel tax,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 RTCO,FTT-Transport Registration tax,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
@@ -368,3 +368,8 @@ MTCDX,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3M
 MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
+REX,Local exchange rate (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2010,,Y,Y
+EX,Exchange rate (2010 = 100),index,RTI,NA,NA,TIME,FTT-P,-,-,2010,,Y,Y
+PRSC,Price Levels (2010=100) ,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,,Y,Y
+REPP,"Carbon Price (Nominal, 2010=100)",2010 Euros,RTI,NA,NA,TIME,FTT-P,-,-,2010,,Y,Y
+REX13,Local exchange rate 2013,index,RTI,NA,NA,TIME,FTT-P,-,-,2001,,Y,Y
