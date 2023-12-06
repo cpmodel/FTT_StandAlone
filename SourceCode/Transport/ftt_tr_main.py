@@ -31,13 +31,10 @@ Functions included:
 
 # Standard library imports
 from math import sqrt
-import os
 import copy
-import sys
 import warnings
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
 # Local library imports
@@ -173,12 +170,12 @@ def get_lcot(data, titles):
         dlogtlcot = np.sqrt(np.log(1.0 + dlcot*dlcot/(tlcot*tlcot)))
 
         # Pass to variables that are stored outside.
-        data['TEWC'][r, :, 0] = lcot            # The real bare LCOT without taxes
-        data['TETC'][r, :, 0] = tlcot           # The real bare LCOE with taxes
+        data['TEWC'][r, :, 0] = lcot           # The real bare LCOT without taxes
+        data['TETC'][r, :, 0] = tlcot          # The real bare LCOE with taxes
         data['TEGC'][r, :, 0] = tlcotg         # As seen by consumer (generalised cost)
-        data['TELC'][r, :, 0] = logtlcot      # In lognormal space
+        data['TELC'][r, :, 0] = logtlcot       # In lognormal space
         data['TECD'][r, :, 0] = dlcot          # Variation on the LCOT distribution
-        data['TLCD'][r, :, 0] = dlogtlcot     # Log variation on the LCOT distribution
+        data['TLCD'][r, :, 0] = dlogtlcot      # Log variation on the LCOT distribution
 
     return data
 # %% Fleet size - under development
@@ -328,7 +325,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # "Capacities", defined as 1000 vehicles
         data['TEWK'][:, :, 0] = data['TEWS'][:, :, 0] * data['RFLT'][:, 0, 0, np.newaxis]
 
-        # "Generation", defined as total km driven
+        # "Generation", defined as total mln km driven
         data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * data['RVKM'][:, 0, 0, np.newaxis] * 1e-3
 
         # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2Corr
@@ -374,8 +371,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 # Calculate fuel use - passenger car only! Therefore this will
                 # differ from E3ME results
-                # TEWG:                          km driven
-                # Convert energy unit (1/41.868) ktoe/MJ
+                # TEWG:                          mkm driven
+                # Convert energy unit (1/41.868) ktoe/TJ
                 # Energy demand (BBTC)           MJ/km
 
                 data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
@@ -388,8 +385,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 # "Emissions"
                 data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]*CO2Corr[r]*emis_corr[r,:]/1e6
-
-
 
 
         # Calculate the LCOT for each vehicle type.
@@ -520,11 +515,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
 
                     TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
-                #Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                reg_vs_exog = ((data['TWSA'][r, :, 0]*TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
+                # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity) > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
 
-                #TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
-                dUkTK =  np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0]*TWSA_scalar/no_it)
+                # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                dUkTK =  np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0]/TWSA_scalar/no_it)
 
                 # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
                 # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
@@ -617,8 +612,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 # Calculate fuel use - passenger car only! Therefore this will
                 # differ from E3ME results
-                # TEWG:                          km driven
-                # Convert energy unit (1/41.868) ktoe/MJ
+                # TEWG:                          mkm driven
+                # Convert energy unit (1/41.868) ktoe/TJ
                 # Energy demand (BBTC)           MJ/km
 
                 data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
