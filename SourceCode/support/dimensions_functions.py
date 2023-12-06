@@ -23,7 +23,7 @@ def load_dims():
     dims_file = 'VariableListing.csv'
 
     # Check that classification titles file exists
-    dims_path = os.path.join('utilities', 'titles', dims_file)
+    dims_path = os.path.join('Utilities', 'titles', dims_file)
     if not os.path.isfile(dims_path):
         print('Dimensions name file not found.')
 
