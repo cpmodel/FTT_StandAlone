@@ -1,24 +1,58 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov 13 10:14:12 2023
+Created on Tue Dec 12 10:25:47 2023
 
-Output manipulation - to be used after model run
+Script for output processing, manipulation and visualisation
+
+Developments and tasks:
+    - Compare MCOCX and MCOC
 
 @author: ib400
 """
 
-s0 = output_all['S0']
-mcocx = s0['MCOCX']
-mcoc = s0['MCOC']
-mcocx_be = mcocx[0,:,0,:]
-mcoc_be = mcoc[0,:,0,:]
+import os 
+import pandas as pd
+import numpy as np
+import matplotlib
+import pickle
 
-mcocx_us = mcocx[37,:,0,:]
-mcoc_us = mcoc[37,:,0,:]
+os.chdir("C:/Users/ib400/OneDrive - University of Exeter/Documents/GitHub/FTT_StandAlone")
 
-mewg = s0['MEWG']
-mewgx = s0['MEWGX']
+#%%
 
-mewg_us = mewg[37,:,0,:]
-mewgx_us = mewgx[37,:,0,:]
-repp = s0['REPP'][:,0,0,:]
+scen_levels = pd.read_csv('Emulation/data/scenarios/S3_scenario_levels.csv')
+
+# combine scenario data and output
+data = {}
+for ID in scen_levels['ID']:
+    # extract scen data and drop ID column
+    data[ID] = {'scenario' : scen_levels.loc[scen_levels['ID'] == ID].drop('ID', axis=1)}
+    
+    # path to output of model runs
+    output_path = f'Output/Results_{ID}_core.pickle'
+    
+    # Open the pickle file in binary mode and load its content
+    with open(output_path, 'rb') as file:
+        # Use pickle.load() to load the content into a dictionary
+        output = pickle.load(file)
+    
+    # add output data
+    data[ID].update({'output': output})
+
+
+### Baseline
+
+# path to output of model runs
+output_path = f'Output/Results_S0_core.pickle'
+
+# Open the pickle file in binary mode and load its content
+with open(output_path, 'rb') as file:
+    # Use pickle.load() to load the content into a dictionary
+    output = pickle.load(file)
+
+
+mcoc = output['MCOC']
+mcocx = output['MCOCX']
+
+mcoc_us  = mcoc[36, :, 0, :]
+mcocx_us = mcocx[36, :, 0, :]
