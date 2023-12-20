@@ -27,6 +27,13 @@ Functions included:
         Main solution function for the module
     - get_lcot
         Calculate levelised cost of transport
+        
+variables: 
+cf = capacity factor
+ff = filling factors
+ns = number of seats
+      
+        
 """
 
 # Standard library imports

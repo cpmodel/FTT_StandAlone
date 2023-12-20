@@ -162,7 +162,11 @@ if __name__ == '__main__':
                     c_ttle = dims[vardict[model][var]['Dims'][1]]
                 else:
                     cdim = len(tl_dict[var])
+                try:
                     c_ttle = tl_dict[var]
+                except KeyError as e:
+                    print(f"KeyError: {e}. Variable '{var}' not found in tl_dict.")
+                    c_ttle = [] 
                 excel_dim = len(ftt_titles[vardict[model][var]['Dims'][0]])
                 cf = ci + cdim
                 sep = 1 + excel_dim - rdim
