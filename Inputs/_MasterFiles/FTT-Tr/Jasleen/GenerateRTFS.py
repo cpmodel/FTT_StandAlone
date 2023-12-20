@@ -45,7 +45,7 @@ for index, row in df.iterrows():
                     for year in range(2001,2023):
                         line.append(round(row[fuel], 10))
                     
-                    reductionAmount = 0.1*row[fuel]
+                    reductionAmount = 0.2*row[fuel]
                     prevValue = row[fuel]
                     for year in range(2023,2101):
                         line.append(round(prevValue, 10))
