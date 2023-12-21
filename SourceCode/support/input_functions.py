@@ -23,6 +23,8 @@ import numpy as np
 import pandas as pd
 from numba import njit
 
+from SourceCode.support.debug_messages import input_functions_message
+
 #@njit(nopython=False)
 #def load_data(titles, dimensions, start, end, scenarios):
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
@@ -52,14 +54,14 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     # Load dimensions
     dims = dimensions
 
-    #Declare list of scenarios
+    # Declare list of scenarios
     scenario_list = [x.strip() for x in scenarios.split(',')]
     scenario_list = ["S0"] + [x for x in scenario_list if x != "S0"]
 
     modules_enabled = [x.strip() for x in ftt_modules.split(',')]
     modules_enabled += ['General']
 
-    #Create container with the correct dimensions
+    # Create container with the correct dimensions
     data = {scen : { var : np.zeros([len(titles[dims[var][0]]), len(titles[dims[var][1]]),
                                      len(titles[dims[var][2]]), len(titles[dims[var][3]])]) for var in dims}
                     for scen in scenario_list}
@@ -179,7 +181,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                         data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
                                     elif len(titles[dims[var][2]]) == 1:
                                         # data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:, :len(var_tl_fit)]
-                                        data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                                        try:
+                                            data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                                        except ValueError as e:
+                                            input_functions_message(scen, var, read, timeline=var_tl_fit)
+                                            raise(e)
 
                                     elif len(titles[dims[var][3]]) == 1:
                                         data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]

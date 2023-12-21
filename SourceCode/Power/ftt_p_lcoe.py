@@ -34,7 +34,9 @@ import numpy as np
 from SourceCode.support.divide import divide
 
 
-# %% LCOE
+
+# %% lcoe
+
 # -----------------------------------------------------------------------------
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
@@ -224,19 +226,43 @@ def get_lcoe(data, titles):
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1)/utility_tot + data['MEFI'][r, :, 0]
         lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
 
+<<<<<<< HEAD
         # 4b levelised cost – average units 
         lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1)/utility_tot + data['MEFI'][r, :, 0]    
         
         # Standard deviation of LCOE
         dlcoe                   = np.sum(npv_std, axis=1)/utility_tot
+=======
+        # 1-levelised cost variants in $/pkm
+        # 1.1-Bare LCOE
+        lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
+        # 1.2-LCOE including policy costs
+        tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
+        # 1.3 LCOE excluding policy, including co2 price
+        lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
+        # 1.3-LCOE of policy costs
+        # lcoe_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
+        # Standard deviation of LCOE
+        dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
+>>>>>>> main
 
 
         # Pass to variables that are stored outside.
+<<<<<<< HEAD
         data['MEWC'][r, :, 0] = copy.deepcopy(lcoe_mu_no_policy)    # The real bare LCOE without taxes
         data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
         data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # The bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # The lcoe with policy, without co2
         data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!)
+=======
+        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOE without taxes
+        data['MECW'][r, :, 0] = copy.deepcopy(lcoeco2)  # The real bare LCOE with taxes
+        data['METC'][r, :, 0] = copy.deepcopy(tlcoeg)   # As seen by consumer (generalised cost)
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOE distribution
+
+        # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])   # As seen by consumer (generalised cost)
+        # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOE distribution
+>>>>>>> main
 
         # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])    # As seen by consumer (generalised cost)
         # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOE distribution
