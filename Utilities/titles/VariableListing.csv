@@ -321,7 +321,7 @@ ZEVV,FTT-Fr Service by Technology,Mvkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZESG,FTT-Fr Total Service (Mvkm),Mvkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEST,FTT-Fr Service by Technology (MTkm),MTkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZJEF,FTT-Fr Fuel use,ktoe,RTI,NA,NA,TIME,FTT-Fr,,,2001,,Y,Y
-ZJNJ,FTT-Fr Fuel use by fuel type,ktoe,RTI,JTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
+ZJEF,FTT-Fr Fuel use by fuel type,ktoe,RTI,JTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWE,FTT-Fr emissions,MTCO2,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZWIY,FTT-Fr Investment by Technology (monetary value),2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
@@ -367,3 +367,4 @@ MTCDX,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3M
 MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
+MPRI,FTT:Power,"Switch for electricity price calculation (1=Double weighted LCOE, 2=Merit order approach)",RTI,NA,NA,NA,FTT-P,-,-,-,-,Y,Y
