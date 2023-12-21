@@ -126,7 +126,7 @@ for key, agg in grouping_dict.items():
     agg_dict = OrderedDict()
     agg_dict_labels = OrderedDict()
     agg_json = []
-    if key in ["Variables", key =="Variables_Summary", key =="Variables_Detailed"]:
+    if key in ["Variables", "Variables_Summary", "Variables_Detailed"]:
         items = agg["Group"].values
         groups = list(OrderedDict.fromkeys(items))
     else:
