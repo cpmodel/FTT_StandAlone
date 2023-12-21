@@ -23,6 +23,8 @@ import numpy as np
 import pandas as pd
 from numba import njit
 
+from SourceCode.support.debug_messages import input_functions_message
+
 #@njit(nopython=False)
 #def load_data(titles, dimensions, start, end, scenarios):
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
@@ -175,7 +177,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                         data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
                                     elif len(titles[dims[var][2]]) == 1:
                                         # data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:, :len(var_tl_fit)]
-                                        data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                                        try:
+                                            data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                                        except ValueError as e:
+                                            input_functions_message(scen, var, read, timeline=var_tl_fit)
+                                            raise(e)
 
                                     elif len(titles[dims[var][3]]) == 1:
                                         data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
