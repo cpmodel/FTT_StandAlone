@@ -615,7 +615,7 @@ export default {
           if (state == "system_error") this.status_text = "System error!";
           this.status_state = "#F06449";
           this.log(
-            "message;message:System error - if all runs have finished running and this error is displayed it is likely that at least one of the scenarios have failed to converge after 100 iterations;"
+            "message;message:System error - an unexpected error occurs during the model run. There may be more information in the command prompt.;"
           );
       }
     },
