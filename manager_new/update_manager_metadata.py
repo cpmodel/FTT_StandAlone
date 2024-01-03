@@ -7,12 +7,12 @@ Created on Wed Jul 24 11:08:31 2019
 @author: jp
 """
 
-import pandas as pd
-import configparser
 from collections import OrderedDict
 import json
+import pandas as pd
+
 # Load variables metadata
-var_meta = pd.read_excel("../utilities/titles/VariableListing.xlsx",index_col=0,sheet_name="Sheet1")
+var_meta = pd.read_csv("../utilities/titles/VariableListing.csv", index_col=0)
 var_meta = var_meta.reset_index()
 var_meta = var_meta.fillna("None")
 var_meta = var_meta.rename(columns={"Variable name":"Variable",
@@ -104,7 +104,7 @@ colour_list = pd.read_csv("ChartColours.csv")
 colour_list = colour_list.astype("str")
 colour_list['rgb'] = colour_list[["R", "G", "B"]].apply(lambda x: ','.join(x),
                                                         axis=1)
-colour_list['rgb'] = colour_list['rgb'].apply(lambda x: "rgb({})".format(x))
+colour_list['rgb'] = colour_list['rgb'].apply(lambda x: f"rgb({x})")
 colour_list = colour_list['rgb'].values
 out_dict["chart_colours"] = colour_list.tolist()
 
@@ -126,7 +126,7 @@ for key, agg in grouping_dict.items():
     agg_dict = OrderedDict()
     agg_dict_labels = OrderedDict()
     agg_json = []
-    if key =="Variables" or key =="Variables_Summary" or key =="Variables_Detailed":
+    if key in ["Variables", "Variables_Summary", "Variables_Detailed"]:
         items = agg["Group"].values
         groups = list(OrderedDict.fromkeys(items))
     else:
@@ -134,7 +134,7 @@ for key, agg in grouping_dict.items():
         groups = list(agg.columns)
 
     for g in groups:
-        if key =="Variables" or key =="Variables_Summary" or key =="Variables_Detailed":
+        if key in ["Variables", "Variables_Summary", "Variables_Detailed"]:
             agg_dict[g] = list(agg.loc[agg["Group"]==g,"Variable"].values)
             agg_dict_labels[g] = list(agg.loc[agg["Group"]==g,"label"].values)
         else:
@@ -169,7 +169,7 @@ for key, agg in grouping_dict.items():
             children = list(hierachy[children_mask].index)
             if len(children) >1:
                 for c in children:
-                     hier_dict["children"].append(agg_json_children[groups.index(c)])
+                    hier_dict["children"].append(agg_json_children[groups.index(c)])
             agg_json.append(hier_dict)
 
     final_json[key] = agg_json
@@ -185,5 +185,3 @@ out_dict["indicies_detailed"] = final_json["Variables_Detailed"]
 
 with open('..\\measures_meta.json', 'w') as fp:
     json.dump(out_dict, fp)
-
-
