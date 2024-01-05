@@ -99,12 +99,17 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         else:
                             key = file_split[1]
 
+
                         # User warning for variables that are present in the folder but not used
+                        # TODO: catch this before the loops starts to prevent one if-else construct
                         if var not in data[scen].keys():
                             warnings.warn(f'Variable {var} is present in the folder as a csv but is not included \
                                           in VariableListing, so it will be ignored')
 
                         else:
+                            # The length of the dimensions
+                            dims_length = [len(titles[dims[var][x]]) for x in range(4)]
+
                             # If the fourth dimension is time
                             if dims[var][3] == 'TIME':
 
@@ -142,11 +147,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 if dims[var][0] == 'RTI':
                                     
                                     # If there is a second dimension # TODO: check if this is correct
-                                    if len(titles[dims[var][1]]) > 1:
-                                        if var == "RTFT":
-                                            print("What does titles[dims[var]] look like?")
-                                            print(titles[dims[var]])
-                                            print("pause")
+                                    if dims_length[1] > 1:
+                                        if var == "RBFM":
+                                            print("printing dims_length")
+                                            print(dims_length) 
                                         try: 
                                             data[scen][var][:, :, 0, 0] = read
                                         except ValueError as e:
@@ -154,21 +158,27 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                             raise(e)
                                     
                                     # If there is a third dimension only
-                                    elif len(titles[dims[var][2]]) > 1:
-                                        data[scen][var][:, 0, :, 0] = read
+                                    elif dims_length[2] > 1:
+                                    #elif len(titles[dims[var][2]]) > 1:
+                                        print("Test if this is ever used")
+                                        try:
+                                            data[scen][var][:, 0, :, 0] = read
+                                        except ValueError as e:
+                                            input_functions_message(scen, var, dims, read)
+                                            raise(e)    
                                     
                                     # If there is a fourth dimension only (time)
-                                    elif len(titles[dims[var][3]]) > 1:
+                                    elif dims_length[3] > 1:
                                         data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
 
                                 # If the first dimension is not regions
                                 else:
                                     # If there is only one number
-                                    if all([len(titles[dims[var][x]]) == 1 for x in range(4)]):
+                                    if all(dim_length == 1 for dim_length in dims_length):
                                         data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
 
                                     # If there is no third dimension
-                                    elif len(titles[dims[var][2]]) == 1:
+                                    elif dims_length[2] == 1:
                                         try:
                                             data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
                                         except ValueError as e:
@@ -176,7 +186,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                             raise(e)
 
                                     # If there is no time dimension (fourth dimension)
-                                    elif len(titles[dims[var][3]]) == 1:
+                                    elif dims_length[3] == 1:
                                         data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
 
 #            #For the scenarios, copy from the baseline the variables that are not in the scenario folder

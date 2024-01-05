@@ -6,7 +6,7 @@ Created on Thu Dec 21 11:46:06 2023
 """
 
 def input_functions_message(scen, var, dims, read, timeline="None"):
-    print("Critical error reading input functions. Error in the following variable")
+    print("Critical error reading input functions. Error in the following variable:")
     print(f"Scenario is {scen}")
     print(f'Variable is {var} with dimensions {dims[var]}')
     print(f"Timeline is {timeline}")
