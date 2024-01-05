@@ -58,67 +58,7 @@ from SourceCode.Transport.ftt_tr_lcot import get_lcot
 #     return print("Hello")
 
 
-# %% survival function
-# -----------------------------------------------------------------------------
-# -------------------------- Survival calcultion ------------------------------
-# -----------------------------------------------------------------------------
-def survival_function(data, time_lag, histend, year, titles):
-    # In this function we calculate scrappage, sales, tracking of age, and
-    # average efficiency.
-    # Categories for the cost matrix (BTTC)
-    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
-
-    # Create a generic matrix of fleet-stock by age
-    # Assume uniform distribution, but only do so when we still have historical
-    # market share data. Afterwards it becomes endogeous
-    if year < histend['TEWS']:
-
-        # TODO: This needs to be replaced with actual data
-        correction = np.linspace(1/(3*len(titles['VYTI'])), 3/len(titles['VYTI']), len(titles['VYTI'])) * 0.6
-
-        for age in range(len(titles['VYTI'])):
-
-            data['RLTA'][:, :, age] = correction[age] *  data['TEWK'][:, :, 0]
-
-    else:
-        # Once we start to calculate the market shares and total fleet sizes
-        # endogenously, we can update the vehicle stock by age matrix and
-        # calculate scrappage, sales, average age, and average efficiency.
-        for r in range(len(titles['RTI'])):
-
-            for veh in range(len(titles['VTTI'])):
-
-                # Move all vehicles one year up:
-                # New sales will get added to the age-tracking matrix in the main
-                # routine.
-                data['RLTA'][r, veh, :-1] = copy.deepcopy(time_lag['RLTA'][r, veh, 1:])
-
-                # Current age-tracking matrix:
-                # Only retain the fleet that survives
-                data['RLTA'][r, veh, :] = data['RLTA'][r, veh, :] * data['TESF'][r, 0, :]
-
-                # Total amount of vehicles that survive:
-                survival = np.sum(data['RLTA'][r, veh, :])
-
-                # EoL scrappage: previous year's stock minus what survived
-                if time_lag['TEWK'][r, veh, 0] > survival:
-
-                    data['REVS'][r, veh, 0] = time_lag['TEWK'][r, veh, 0] - survival
-
-                elif time_lag['TEWK'][r, veh, 0] < survival:
-                    if year > 2016:
-                        msg = """
-                        Erronous outcome!
-                        Check year {}, region {} - {}, vehicle {} - {}
-                        Vehicles that survived are greater than what was in the fleet before:
-                        {} versus {}
-                        """.format(year, r, titles['RTI'][r], veh,
-                                   titles['VTTI'][veh], time_lag['TEWK'][r, veh, 0], survival)
-#                        print(msg)
-
-    # calculate fleet size
-    return data
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -179,9 +119,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
     # Up to the last year of historical market share data
-    if year <= histend['TEWS']:
 
-        for r in range(len(titles['RTI'])):
+    for r in range(len(titles['RTI'])):
+        if year <= data["TDA1"][r, 0, 0]:
 
             # CORRECTION TO MARKET SHARES
             # Sometimes historical market shares do not add up to 1.0
@@ -190,27 +130,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data['TEWS'][r, :, 0] = np.divide(data['TEWS'][r, :, 0],
                                                    np.sum(data['TEWS'][r, :, 0]))
 
-        # Computes initial values for the capacity factor, numbers of
-        # vehicles by technology and distance driven
+            # Computes initial values for the capacity factor, numbers of
+            # vehicles by technology and distance driven
+    
+            # "Capacities", defined as 1000 vehicles
+            data['TEWK'][:, :, 0] = data['TEWS'][:, :, 0] * data['RFLT'][:, 0, 0, np.newaxis]
+    
+            # "Generation", defined as total mln km driven
+            data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * data['RVKM'][:, 0, 0, np.newaxis] * 1e-3
+    
+            # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2Corr
+            data['TEWE'][:, :, 0] = data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['14 CO2Emissions']]/1e6*1.2
+    
+            # Call the survival function routine.
+            #data = survival_function(data, time_lag, histend, year, titles)
 
-        # "Capacities", defined as 1000 vehicles
-        data['TEWK'][:, :, 0] = data['TEWS'][:, :, 0] * data['RFLT'][:, 0, 0, np.newaxis]
-
-        # "Generation", defined as total mln km driven
-        data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * data['RVKM'][:, 0, 0, np.newaxis] * 1e-3
-
-        # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2Corr
-        data['TEWE'][:, :, 0] = data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['14 CO2Emissions']]/1e6*1.2
-
-        # Call the survival function routine.
-        #data = survival_function(data, time_lag, histend, year, titles)
-
-        if year == histend['TEWS']:
+        if year == data["TDA1"][r, 0, 0]:
 
             # Calculate scrapping
             #data['REVS'][:, 0, 0] = sum(data['TESH'][:, :, 0]*data['TSFD'][:, :, 0], axis=1)
 
-            #This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
+            # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
             CO2Corr = np.ones(len(titles['RTI']))
 
             # Fuel use
@@ -219,43 +159,43 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
             fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
-            for r in range(len(titles['RTI'])):
-                if data['RFLT'][r, 0, 0] > 0.0:
-                    CO2Corr[r] = (data['TESH'][r, :, 0]*data['TESF'][r, :, 0]* \
-                             data['TETH'][r, :, 0]).sum()/(data['TESH'][r, :, 0]*data['TESF'][r, :, 0]).sum()
+        
+            if data['RFLT'][r, 0, 0] > 0.0:
+                CO2Corr[r] = (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]* \
+                         data['TETH'][r, :, 0]).sum() / (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]).sum()
 
-                for fuel in range(len(titles['JTI'])):
+            for fuel in range(len(titles['JTI'])):
 
-                    for veh in range(len(titles['VTTI'])):
+                for veh in range(len(titles['VTTI'])):
 
-                        if titles['JTI'][fuel] == '5 Middle distillates' and data['TJET'][0, veh, fuel] ==1:  # Middle distillates
+                    if titles['JTI'][fuel] == '5 Middle distillates' and data['TJET'][0, veh, fuel] == 1:  # Middle distillates
 
-                            # Mix with biofuels/hydrogen if there's a biofuel mandate or hydrogen mandate
-                            fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * (1.0 - data['RBFM'][r, 0, 0])
+                        # Mix with biofuels/hydrogen if there's a biofuel mandate or hydrogen mandate
+                        fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * (1.0 - data['RBFM'][r, 0, 0])
 
-                            # Emission correction factor
-                            emis_corr[r, veh] = 1.0 - data['RBFM'][r, 0, 0]
+                        # Emission correction factor
+                        emis_corr[r, veh] = 1.0 - data['RBFM'][r, 0, 0]
 
-                        elif titles['JTI'][fuel] == '11 Biofuels'  and data['TJET'][0, veh, fuel] == 1:
+                    elif titles['JTI'][fuel] == '11 Biofuels'  and data['TJET'][0, veh, fuel] == 1:
 
-                            fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * data['RBFM'][r, 0, 0]
+                        fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * data['RBFM'][r, 0, 0]
 
-                # Calculate fuel use - passenger car only! Therefore this will
-                # differ from E3ME results
-                # TEWG:                          mkm driven
-                # Convert energy unit (1/41.868) ktoe/TJ
-                # Energy demand (BBTC)           MJ/km
+            # Calculate fuel use - passenger car only! Therefore this will
+            # differ from E3ME results
+            # TEWG:                          mkm driven
+            # Convert energy unit (1/41.868) ktoe/TJ
+            # Energy demand (BBTC)           MJ/km
 
-                data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
-                                        data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2Corr[r]/41.868))
+            data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
+                                    data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2Corr[r]/41.868))
 
 
-                data['TVFP'][r, :, 0] = (np.matmul(fuel_converter/fuel_converter.sum(axis=0), data['TE3P'][r, :, 0]))*\
-                                            data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']] * \
-                                                    CO2Corr[r]/ 41868
+            data['TVFP'][r, :, 0] = (np.matmul(fuel_converter/fuel_converter.sum(axis=0), data['TE3P'][r, :, 0]))*\
+                                        data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']] * \
+                                                CO2Corr[r]/ 41868
 
-                # "Emissions"
-                data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]*CO2Corr[r]*emis_corr[r,:]/1e6
+            # "Emissions"
+            data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]*CO2Corr[r]*emis_corr[r,:]/1e6
 
 
         # Calculate the LCOT for each vehicle type.
@@ -264,7 +204,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # %% Simulation of stock and energy specs
 
-    if year > histend['TEWS']:
+    if year > min(data["TDA1"]):
+        # Note, regions have different start dates (TDA1) 
+        
         # TODO: Implement survival function to get a more accurate depiction of
         # vehicles being phased out and to be able to track the age of the fleet.
         # This means that a new variable will need to be implemented which is
@@ -284,7 +226,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Create the regulation variable
         division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data_dt['TREG'][:, :, 0]) # 0 when dividing by 0
-        isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
+        isReg = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
 
@@ -300,7 +242,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         ############## Computing new shares ##################
 
-        #Start the computation of shares
+        # Start the computation of shares
         for t in range(1, no_it+1):
 
             # Both rvkm and RFLT are exogenous at the moment
@@ -310,9 +252,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rfltt = time_lag['RFLT'][:, 0, 0] + (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
             for r in range(len(titles['RTI'])):
-
+                if data['TDA1'][r, 0, 0] >= year:
+                    continue
+                
                 if rfltt[r] == 0.0:
                     continue
+                # Skip regions for which more recent data is available
+                
 
                 ############################ FTT ##################################
                 # Initialise variables related to market share dynamics
@@ -322,13 +268,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # F contains the preferences
                 F = np.ones([len(titles['VTTI']), len(titles['VTTI'])])*0.5
 
-#                    if int(data['TDA1'][r]) < year:
 
                 # TODO: Check Specs dimensions
                 #if np.any(specs[sector][r, :] == 1):  # FTT Specification
 
                 for v1 in range(len(titles['VTTI'])):
-
+                    
+                    # Skip technologies with zero market share or zero costs
                     if not (data_dt['TEWS'][r, v1, 0] > 0.0 and
                             data_dt['TELC'][r, v1, 0] != 0.0 and
                             data_dt['TLCD'][r, v1, 0] != 0.0):
@@ -338,7 +284,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
                     for v2 in range(v1):
-
+                        
+                        # Skip technologies with zero market share or zero costs
                         if not (data_dt['TEWS'][r, v2, 0] > 0.0 and
                                 data_dt['TELC'][r, v2, 0] != 0.0 and
                                 data_dt['TLCD'][r, v2, 0] != 0.0):

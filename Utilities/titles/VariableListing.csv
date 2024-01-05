@@ -159,7 +159,7 @@ TJET,FTT-Transport Fuel converter,,NA,VTTI,JTI,NA,FTT-Tr,,,,,,
 TJEF,FTT-Transport fuel use,th toe,RTI,JTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TGAM,FTT-Transport Gamma Values,,RTI,VTTI,NA,TIME,FTT-Tr,,,2014,,,
 TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
-TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2018,1990,,Y,Y
+TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2019,1990,,Y,Y
 TEWK,FTT-Transport fleet size,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWI,FTT-Transport sales,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWG,FTT-Transport demand by technology,mln km/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
