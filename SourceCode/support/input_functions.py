@@ -68,9 +68,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
 
     for scen in data:
-
         if scen != 'S0':
-
             data[scen] = copy.deepcopy(data['S0'])
 
         for ftt in modules_enabled:
@@ -93,32 +91,21 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                         # Split file name
                         file_split = file[:-4].split('_')
-
                         var = file_split[0]
 
-#                        if var == 'MEWDX':
-#                            print('stop')
-
                         if len(file_split) == 1:
-
                             key = None
 
                         else:
-
                             key = file_split[1]
 
                         # User warning for variables that are present in the folder but not used
                         if var not in data[scen].keys():
-
-                            warnings.warn('Variable {} is present in the folder as a csv but is not included \
-                                          in VariableListing, so it will be ignored'.format(var))
-
+                            warnings.warn(f'Variable {var} is present in the folder as a csv but is not included \
+                                          in VariableListing, so it will be ignored')
 
                         else:
-
-#                            if var == "MEFI":
-#                                print(var)
-
+                            # If the fourth dimension is time
                             if dims[var][3] == 'TIME':
 
                                 var_tl = list(range(int(forstart[var]), timeline[-1]+1))
@@ -127,16 +114,13 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 #print(csv.columns, var)
                                 csv.columns = [int(year) for year in csv.columns]
 
-
                                 #print(file)
                                 read = csv.loc[:, var_tl]
 
-
                             else:
-
                                 read = csv
 
-                            # If the CSV file has a key indicator than it's 3D
+                            # If the csv file has a region key indicator (like _BE), it's 3D
                             if key in titles['RTI_short']:
 
                                 # Take the index of the region
@@ -145,44 +129,53 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 # Loop through the second dimension
                                 for i in range(read.shape[0]):
 
-                                    if var == "MCSC":
-                                        x = 1 +1
-
                                     # Distinction whether the last dimension is time or not
                                     if len(titles[dims[var][3]]) == 1:
                                         data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                                     else:
-                                        # data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i, :len(var_tl_fit)]
-                                        # print(var, key)
                                         data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
 
-                            # If the variable does not have key
+                            # If the file does not have a region key like _BE
                             else:
 
-                                # Distinction between various cases
+                                # If the first dimension is regions
                                 if dims[var][0] == 'RTI':
-
+                                    
+                                    # If there is a second dimension # TODO: check if this is correct
                                     if len(titles[dims[var][1]]) > 1:
-                                        print(var)
-                                        data[scen][var][:, :, 0, 0] = read
-
+                                        if var == "RTFT":
+                                            print("What does titles[dims[var]] look like?")
+                                            print(titles[dims[var]])
+                                            print("pause")
+                                        try: 
+                                            data[scen][var][:, :, 0, 0] = read
+                                        except ValueError as e:
+                                            input_functions_message(scen, var, dims, read)
+                                            raise(e)
+                                    
+                                    # If there is a third dimension only
                                     elif len(titles[dims[var][2]]) > 1:
                                         data[scen][var][:, 0, :, 0] = read
+                                    
+                                    # If there is a fourth dimension only (time)
                                     elif len(titles[dims[var][3]]) > 1:
-                                        # data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:,:len(var_tl_fit)]
                                         data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
 
+                                # If the first dimension is not regions
                                 else:
+                                    # If there is only one number
                                     if all([len(titles[dims[var][x]]) == 1 for x in range(4)]):
                                         data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
+
+                                    # If there is no third dimension
                                     elif len(titles[dims[var][2]]) == 1:
-                                        # data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:, :len(var_tl_fit)]
                                         try:
                                             data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
                                         except ValueError as e:
-                                            input_functions_message(scen, var, read, timeline=var_tl_fit)
+                                            input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
                                             raise(e)
 
+                                    # If there is no time dimension (fourth dimension)
                                     elif len(titles[dims[var][3]]) == 1:
                                         data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
 

@@ -204,5 +204,5 @@ if __name__ == '__main__':
                     df = pd.DataFrame(data.values, index=r_ttle, columns=c_ttle)
                     df.to_csv(out_fn)
 
-                msg = "Data for {} saved to CSV. Model: {}".format(var, model)
+                msg = f"Data for {var} saved to CSV. Model: {model}"
                 print(msg)
