@@ -135,10 +135,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 for i in range(read.shape[0]):
 
                                     # Distinction whether the last dimension is time or not
-                                    if len(titles[dims[var][3]]) == 1:
-                                        data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
-                                    else:
+                                    if dims_length[3] > 1:
                                         data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
+                                    else:
+                                        data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
+                                        
 
                             # If the file does not have a region key like _BE
                             else:
@@ -146,11 +147,13 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 # If the first dimension is regions
                                 if dims[var][0] == 'RTI':
                                     
+                                    # If there are only regions
+                                    if all(dim_length == 1 for dim_length in dims_length[1:]):
+                                        data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
+
+                                    
                                     # If there is a second dimension # TODO: check if this is correct
                                     if dims_length[1] > 1:
-                                        if var == "RBFM":
-                                            print("printing dims_length")
-                                            print(dims_length) 
                                         try: 
                                             data[scen][var][:, :, 0, 0] = read
                                         except ValueError as e:

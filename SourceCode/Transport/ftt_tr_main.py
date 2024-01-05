@@ -252,12 +252,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rfltt = time_lag['RFLT'][:, 0, 0] + (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
             for r in range(len(titles['RTI'])):
+                # Skip regions for which more recent data is available
                 if data['TDA1'][r, 0, 0] >= year:
                     continue
                 
                 if rfltt[r] == 0.0:
                     continue
-                # Skip regions for which more recent data is available
                 
 
                 ############################ FTT ##################################
@@ -399,7 +399,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
 
-            #This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
+            # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
             CO2Corr = np.ones(len(titles['RTI']))
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
@@ -444,14 +444,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # "Emissions"
                 data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]*CO2Corr[r]*emis_corr[r,:]/1e6
 
-       ############## Learning-by-doing ##################
+            ############## Learning-by-doing ##################
 
             # Cumulative global learning
             # Using a technological spill-over matrix (TEWB) together with capacity
             # additions (TEWI) we can estimate total global spillover of similar
-            # vehicals
-#            bi = np.matmul(data['TEWI'][:, :, 0], data['TEWB'][0, :, :])
-#            dw = np.sum(bi, axis=0)*dt
+            # vehicles
+            # bi = np.matmul(data['TEWI'][:, :, 0], data['TEWB'][0, :, :])
+            # dw = np.sum(bi, axis=0)*dt
 
             bi = np.zeros((len(titles['RTI']),len(titles['VTTI'])))
             for r in range(len(titles['RTI'])):
@@ -482,10 +482,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Update the time-loop variables
             # =================================================================
 
-            #Calculate levelised cost again
+            # Calculate levelised cost again
             data = get_lcot(data, titles)
 
-            #Update time loop variables:
+            # Update time loop variables:
             for var in data_dt.keys():
 
                 data_dt[var] = copy.deepcopy(data[var])
