@@ -418,7 +418,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
-        #Create the regulation variable
+        # Create the regulation variable
         division = divide((data_dt['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data_dt['TREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
@@ -494,7 +494,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         F[v1, v2] = Fik*(1.0-isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2]*(1.0-isReg[r, v1]) + 0.5*(isReg[r, v1]*isReg[r, v2])
                         F[v2, v1] = (1.0-Fik)*(1.0-isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1]*(1.0-isReg[r, v2]) + 0.5*(isReg[r, v2]*isReg[r, v1])
 
-                        #Runge-Kutta market share dynamiccs
+                        # Runge-Kutta market share dynamiccs
                         k_1 = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])
                         k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2)* (Aik*F[v1,v2] - Aki*F[v2,v1])
                         k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * (Aik*F[v1,v2] - Aki*F[v2,v1])
@@ -505,7 +505,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
                         dSik[v2, v1] = -dSik[v1, v2]
 
-                #calculate temportary market shares and temporary capacity from endogenous results
+                # Calculate temporary market shares and temporary capacity from endogenous results
                 endo_shares = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1) 
                 endo_capacity = endo_shares * rfltt[r, np.newaxis]
 
@@ -529,7 +529,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUkTK =  np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0]/TWSA_scalar/no_it)
 
                 # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
-                # This will be the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
                 # if rflt (i.e. total demand) had not grown.
 
                 dUkREG = -(endo_capacity - endo_shares*rfllt[r,np.newaxis])*isReg[r, :].reshape([len(titles['VTTI'])])
