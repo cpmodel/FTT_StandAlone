@@ -11,11 +11,14 @@ The user can select one or more scenarios to upload from the excel sheet.
 @author: MM
 """
 
+from pathlib import Path
+import os
+
 import pandas as pd
 import numpy as np
-import os
+
 from celib import DB1
-from pathlib import Path
+
 
 """
 Structure of dict:
@@ -25,9 +28,7 @@ Scenario 1 = 2-degree scenario (default)
 Scenario 2 = 1.5-degree scenario (default)
 ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 """
-models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023'],
-          'FTT-Tr': [[1], 'FTT-Tr_31x71_2023'],
-          'FTT-Tr': [[2], 'FTT-Tr_31x71_2023']}
+models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023']}
         #  'FTT-P': [[0], 'FTT-P-24x71_2022'],
         #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
         #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
@@ -52,18 +53,18 @@ if __name__ == '__main__':
     # Time horizons
     time_horizon_df = pd.read_excel(os.path.join(dirp, 'FTT_variables.xlsx'),
                                     sheet_name='Time_Horizons')
-    tl_dict = {}
+    time_line_dict = {}
     for i, var in enumerate(time_horizon_df['Variable name']):
         if time_horizon_df.loc[i, 'Time horizon'] == 'tl_1990':
-            tl_dict[var] = list(range(1990, 2100+1))
+            time_line_dict[var] = list(range(1990, 2100+1))
         elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_2001':
-            tl_dict[var] = list(range(2001, 2100+1))
+            time_line_dict[var] = list(range(2001, 2100+1))
         elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_1918':
-            tl_dict[var] = list(range(1918, 2017+1))
+            time_line_dict[var] = list(range(1918, 2017+1))
         elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_1995':
-            tl_dict[var] = list(range(1995, 2100+1))
+            time_line_dict[var] = list(range(1995, 2100+1))
         elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_2018':
-            tl_dict[var] = list(range(2018, 2100+1))
+            time_line_dict[var] = list(range(2018, 2100+1))
 
     # Dict to collect errors
     errors = {}
@@ -105,32 +106,32 @@ if __name__ == '__main__':
         with DB1(os.path.join(dirpdb, 'U.db1')) as db1:
             for dim in dims:
                 dims[dim] = db1[dim]
-#%%
-### ----------------------------------------------------------------------- ###
-### ---------------------------- EXTRACT DATA ----------------------------- ###
-### ----------------------------------------------------------------------- ###
+
+        #%%
+        ### ----------------------------------------------------------------------- ###
+        ### ---------------------------- EXTRACT DATA ----------------------------- ###
+        ### ----------------------------------------------------------------------- ###
+        
         # Define which sheets to load
         vars_to_upload[model] = [var for var in vardict[model] if vardict[model][var]['Read in?']]
-#        scen_vars = [var for var in vardict if vardict[var]['Scen']]
-
         sheets = ['Titles'] + vars_to_upload[model]
 
         for scen in scenarios:
 
-            out_dir = os.path.join(dirp_up, 'S{}'.format(scen), model)
+            out_dir = os.path.join(dirp_up, f'S{scen}', model)
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
 
 
             # Check whether the excel files exist
             raw_f = models[model][1]
-            raw_p = os.path.join(dirp, model, '{}_S{}.xlsx'.format(raw_f, scen))
+            raw_p = os.path.join(dirp, model, f'{raw_f}_S{scen}.xlsx')
             if not os.path.exists(raw_p):
-                msg = "{} does not exists. {} variables will not be uploaded".format(raw_f, model)
+                msg = f"{raw_f} does not exists. {model} variables will not be uploaded"
                 print(msg)
                 continue
             # Tell the user that the file is being read in.
-            msg = "Extracting {} variables of scenario {} from the excelsheets".format(model, scen)
+            msg = f"Extracting {model} variables of scenario {scen} from the excelsheets"
             print(msg)
 
             # Load sheets
@@ -153,25 +154,26 @@ if __name__ == '__main__':
             for i, var in enumerate(vars_to_upload[model]):
                 ndims = len(vardict[model][var]['Dims'])
                 rdim = len(dims[vardict[model][var]['Dims'][0]])
-                r_ttle = dims[vardict[model][var]['Dims'][0]]
+                row_title = dims[vardict[model][var]['Dims'][0]]
                 if len(vardict[model][var]['Dims']) == 1:
                     cdim = 1
-                    c_ttle = ['NA']
+                    col_title = ['NA']
                 elif vardict[model][var]['Dims'][1] != 'TIME':
                     cdim = len(dims[vardict[model][var]['Dims'][1]])
-                    c_ttle = dims[vardict[model][var]['Dims'][1]]
+                    col_title = dims[vardict[model][var]['Dims'][1]]
                 else:
-                    cdim = len(tl_dict[var])
-                try:
-                    c_ttle = tl_dict[var]
-                except KeyError as e:
-                    print(f"KeyError: {e}. Variable '{var}' not found in tl_dict.")
-                    c_ttle = [] 
+                    cdim = len(time_line_dict[var])
+                    try:
+                        col_title = time_line_dict[var]
+                    except KeyError as e:
+                        print(f"KeyError: {e}. Variable '{var}' not found in time_line_dict.")
+                        col_title = []
                 excel_dim = len(ftt_titles[vardict[model][var]['Dims'][0]])
                 cf = ci + cdim
                 sep = 1 + excel_dim - rdim
                 vardict[model][var]['Data'][scen] = {}
                 sheet_name = var
+
                 if ndims == 3:
                     vardict[model][var]['Data'][scen] = {}
                     for i, reg in enumerate(regs):
@@ -180,8 +182,8 @@ if __name__ == '__main__':
                         data = raw_data[sheet_name].iloc[ri:rf, ci:cf]
                         vardict[model][var]['Data'][scen][reg] = np.array(data.astype(np.float32))
 
-                        out_fn = os.path.join(out_dir, "{}_{}.csv".format(var, reg))
-                        df = pd.DataFrame(data.values, index=r_ttle, columns=c_ttle)
+                        out_fn = os.path.join(out_dir, f"{var}_{reg}.csv")
+                        df = pd.DataFrame(data.values, index=row_title, columns=col_title)
                         df.to_csv(out_fn)
 
                 elif ndims==2:
@@ -189,9 +191,19 @@ if __name__ == '__main__':
                     rf = ri + rdim
                     data = raw_data[sheet_name].iloc[ri:rf, ci:cf]
                     vardict[model][var]['Data'][scen] = np.array(data.astype(np.float32))
-
-                    out_fn = os.path.join(out_dir, "{}.csv".format(var))
-                    df = pd.DataFrame(data.values, index=r_ttle, columns=c_ttle)
+                    
+                    # Some variables have regions as second dimension in masterfile
+                    # Transpose those
+                    transposed_dimension_bool = variables_df.loc[variables_df["Variable name"] == var]["ColDim"] == "RSHORTTI"
+                    if transposed_dimension_bool.item():
+                        print(f'For var {var}, transposing the two dimensions so that RTI first')
+                        dummy = col_title
+                        col_title = row_title
+                        row_title = dummy
+                        data = data.T
+                   
+                    out_fn = os.path.join(out_dir, f"{var}.csv")
+                    df = pd.DataFrame(data.values, index=row_title, columns=col_title)
                     df.to_csv(out_fn)
 
                 elif ndims==1:
@@ -200,8 +212,8 @@ if __name__ == '__main__':
                     data = raw_data[sheet_name].iloc[ri:rf, ci:cf]
                     vardict[model][var]['Data'][scen] = np.array(data.astype(np.float32))
 
-                    out_fn = os.path.join(out_dir, "{}.csv".format(var))
-                    df = pd.DataFrame(data.values, index=r_ttle, columns=c_ttle)
+                    out_fn = os.path.join(out_dir, f"{var}.csv")
+                    df = pd.DataFrame(data.values, index=row_title, columns=col_title)
                     df.to_csv(out_fn)
 
                 msg = f"Data for {var} saved to CSV. Model: {model}"
