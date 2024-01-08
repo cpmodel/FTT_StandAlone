@@ -3,12 +3,11 @@
 Created on Wed Jan 16 17:10:10 2019
 
 This script extracts all the data from FTT excel sheets in the
-"/In/FTTAssumptions/[model]" folders and stores it on the databank of your
-choosing (default C databank).
+"/In/FTTAssumptions/[model]" folders and and saves them in separate csv files.
 
 The user can select one or more scenarios to upload from the excel sheet.
 
-@author: MM
+@author: MM and Femke Nijsse
 """
 
 from pathlib import Path
@@ -41,6 +40,34 @@ models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023']}
 # }
 
 #%%
+
+                
+def bttc_to_gam(bttc, reg):
+    """In FTT:Tr, the gamma values are not saved separately, but instead
+    part of the BTTC variable. Here, I'm extracting those values to ensure the
+    gamma values are in the expected format
+    
+    
+    """
+    # Only return gamma sheets for the first scenario
+    if scen != "0":
+        return
+    
+    var = "TGAM"
+    gamma_1D = bttc[14]
+    col_names = list(range(2014, 2101))
+    
+    # Make data 2D with np.tile
+    data = pd.DataFrame(np.tile(gamma_1D.values.T, (len(col_names), 1)).T)
+
+    # Add column names    
+    data.columns = col_names
+    
+    out_fn = os.path.join(out_dir, f"{var}_{reg}.csv")
+    df = pd.DataFrame(data.values, index=dims["VTTI"], columns=col_names)
+    df.to_csv(out_fn)
+    
+    
 if __name__ == '__main__':
 ### ----------------------------------------------------------------------- ###
 ### -------------------------- VARIABLE SETUP ----------------------------- ###
@@ -185,6 +212,11 @@ if __name__ == '__main__':
                         out_fn = os.path.join(out_dir, f"{var}_{reg}.csv")
                         df = pd.DataFrame(data.values, index=row_title, columns=col_title)
                         df.to_csv(out_fn)
+                        
+                        # Extract the gamma values from BTTC
+                        if var=="BTTC":
+                            #print(data)
+                            bttc_to_gam(data, reg, scen)
 
                 elif ndims==2:
                     ri = row_start
@@ -194,8 +226,8 @@ if __name__ == '__main__':
                     
                     # Some variables have regions as second dimension in masterfile
                     # Transpose those
-                    transposed_dimension_bool = variables_df.loc[variables_df["Variable name"] == var]["ColDim"] == "RSHORTTI"
-                    if transposed_dimension_bool.item():
+                    needs_transposing = variables_df.loc[variables_df["Variable name"] == var]["ColDim"] == "RSHORTTI"
+                    if needs_transposing.item():
                         print(f'For var {var}, transposing the two dimensions so that RTI first')
                         dummy = col_title
                         col_title = row_title
@@ -218,3 +250,4 @@ if __name__ == '__main__':
 
                 msg = f"Data for {var} saved to CSV. Model: {model}"
                 print(msg)
+
