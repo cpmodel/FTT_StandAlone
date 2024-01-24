@@ -122,7 +122,7 @@ HEWB,FTT-Heat Technology spill-over matrix,,NA,HTTI,HTTI,NA,FTT-H,,,,,,
 HEWW,FTT-Heat Global cumulative investment,GW,NA,HTTI,NA,TIME,FTT-H,,2014,2014,,,
 HFIN,FTT-Heat Interest rates,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HFFC,FTT-Heat Fuel price rates,%,RTI,JTI,NA,TIME,FTT-H,,,2001,,,
-HEWF,FTT-Heat Final energy demand for heat generation,GWh/y,RTI,HTTI,NA,TIME,FTT-H,,2014,1990,,Y,Y
+HEWF,FTT-Heat Final energy demand for heat generation,GWh/y,RTI,HTTI,NA,TIME,FTT-H,,2020,1990,,Y,Y
 RHUD,FTT-Heat Useful energy demand,GWh/y,RTI,NA,NA,TIME,FTT-H,,,2001,,,
 HTVS,FTT-Heat Subsidy on investment cost,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HTRT,FTT-Heat Subsidy/tax on fuel use,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,

@@ -164,7 +164,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                                     if len(titles[dims[var][1]]) > 1:
                                         print(var)
-                                        data[scen][var][:, :, 0, 0] = read
+                                        try:
+                                            data[scen][var][:, :, 0, 0] = read
+                                        except ValueError as ve:
+                                            print(f"'{var}'")
+                                            raise ve
 
                                     elif len(titles[dims[var][2]]) > 1:
                                         data[scen][var][:, 0, :, 0] = read
