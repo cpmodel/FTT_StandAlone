@@ -204,7 +204,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # %% Simulation of stock and energy specs
 
-    if year > min(data["TDA1"]):
+    if year > data["TDA1"][r, 0, 0]:
         # Note, regions have different start dates (TDA1) 
         
         # TODO: Implement survival function to get a more accurate depiction of
