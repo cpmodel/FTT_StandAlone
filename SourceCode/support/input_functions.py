@@ -136,6 +136,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                                 read = csv
 
+                            if key not in titles['RTI_short'] and key is not None:
+                                print(f'Key not in RTI short: {key}')
+                                print(var)
+
                             # If the CSV file has a key indicator than it's 3D
                             if key in titles['RTI_short']:
 
@@ -154,7 +158,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                     else:
                                         # data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i, :len(var_tl_fit)]
                                         # print(var, key)
-                                        data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
+                                        try:  
+                                            data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
+                                        except (IndexError , ValueError) as e:
+                                            input_functions_message(scen, var, read, timeline=var_tl_fit)
+                                            raise(e)
 
                             # If the variable does not have key
                             else:

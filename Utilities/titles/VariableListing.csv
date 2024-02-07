@@ -85,7 +85,6 @@ MEWG,FTT-P Generation by technology (GWh),GWh,RTI,T2TI,NA,TIME,FTT-P,-,2018,2001
 MEWE,FTT:Power CO2 emissions,MtCO2/y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWDX,Exogenous demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-,,Y
-FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,From E3ME results,,Y
 MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y

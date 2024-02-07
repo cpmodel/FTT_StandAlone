@@ -76,11 +76,10 @@ def get_lcoh(data, titles):
 
         # Capacity factor
         cf = data['BHTC'][r,:, c4ti['13 Capacity factor mean'], np.newaxis]
-        
-        print("cf:", cf)
 
         # Conversion efficiency
         ce = data['BHTC'][r,:, c4ti['9 Conversion efficiency'], np.newaxis]
+        #print("ce:", ce)
 
         # Discount rate
         dr = data['BHTC'][r,:, c4ti['8 Discount rate'], np.newaxis]
@@ -111,12 +110,12 @@ def get_lcoh(data, titles):
         dft = dft*ft * data['BHTC'][r,:, c4ti['11 Fuel cost SD'], np.newaxis]
         dft = np.where(mask, dft, 0)
 
-        print("ce:", ce)
-
         # Fuel tax costs
         fft = np.ones([len(titles['HTTI']), int(max_lt)])
         fft = fft*data['HTRT'][r, :, 0, np.newaxis]/ce
         fft = np.where(mask, fft, 0)
+        #print("fft:", fft)
+        #print(fft.shape)
 
         # Average operation & maintenance cost
         omt = np.ones([len(titles['HTTI']), int(max_lt)])
@@ -549,10 +548,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # All other capacities will be streched
 
                 data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
-                
-                print("Year:", year)
-                print("Region:", titles['RTI'][r])
-                print("Sum of market shares:", np.sum(data['HEWS'][r, :, 0]))
+
+                #print("Year:", year)
+                #print("Region:", titles['RTI'][r])
+                #print("Sum of market shares:", np.sum(data['HEWS'][r, :, 0]))
 
                 if ~np.isclose(np.sum(data['HEWS'][r, :, 0]), 1.0, atol=1e-2):
                     msg = """Sector: {} - Region: {} - Year: {}
@@ -581,7 +580,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                               data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
 
             # Emissions
-            # TODO: Cost titles are wrong
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
             #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
@@ -636,7 +634,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['BHTC'][:, b, c4ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']]  \
                                                                              *(1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b]/data['HEWW'][0, b, 0]))
                     data['BHTC'][:, b, c4ti['9 Conversion efficiency']] = (data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']] \
-                                                                            * (1.0 * data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
+                                                                            * (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
 
 
             #Total investment in new capacity in a year (m 2014 euros):
