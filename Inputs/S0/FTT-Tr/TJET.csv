@@ -1,6 +1,6 @@
 ,1 Hard coal,2 Other coal etc,3 Crude oil etc,4 Heavy fuel oil,5 Middle distillates,6 Other gas,7 Natural gas,8 Electricity,9 Heat,10 Combustible waste,11 Biofuels,12 Hydrogen
 1 Petrol Econ,0,0,0,0,1,0,0,0,0,0,1,0
-2 Petrol  Mid,0,0,0,0,1,0,0,0,0,0,1,0
+2 Petrol Mid,0,0,0,0,1,0,0,0,0,0,1,0
 3 Petrol Lux,0,0,0,0,1,0,0,0,0,0,1,0
 4 Adv Petrol Econ,0,0,0,0,1,0,0,0,0,0,1,0
 5 Adv Petrol Mid,0,0,0,0,1,0,0,0,0,0,1,0
@@ -11,16 +11,22 @@
 10 Adv Diesel Econ,0,0,0,0,1,0,0,0,0,0,1,0
 11 Adv Diesel Mid,0,0,0,0,1,0,0,0,0,0,1,0
 12 Adv Diesel Lux,0,0,0,0,1,0,0,0,0,0,1,0
-13 LPG Econ,0,0,0,0,0,0,1,0,0,0,0,0
-14 LPG Mid,0,0,0,0,0,0,1,0,0,0,0,0
-15 LPG Lux,0,0,0,0,0,0,1,0,0,0,0,0
+13 CNG Econ,0,0,0,0,0,0,1,0,0,0,0,0
+14 CNG Mid,0,0,0,0,0,0,1,0,0,0,0,0
+15 CNG Lux,0,0,0,0,0,0,1,0,0,0,0,0
 16 Hybrid Econ,0,0,0,0,1,0,0,1,0,0,0,0
 17 Hybrid Mid,0,0,0,0,1,0,0,1,0,0,0,0
 18 Hybrid Lux,0,0,0,0,1,0,0,1,0,0,0,0
 19 Electric Econ,0,0,0,0,0,0,0,1,0,0,0,0
 20 Electric Mid,0,0,0,0,0,0,0,1,0,0,0,0
 21 Electric Lux,0,0,0,0,0,0,0,1,0,0,0,0
-22 motorcycles Econ,0,0,0,0,1,0,0,1,0,0,0,0
-23 motorcycles Lux,0,0,0,0,1,0,0,1,0,0,0,0
-24 Adv motorcycles Econ,0,0,0,0,1,0,0,1,0,0,0,0
-25 Adv motorcycles Lux,0,0,0,0,0,0,0,0,0,0,0,1
+22 PHEV Econ,0,0,0,0,1,0,0,1,0,0,0,0
+23 PHEV Mid,0,0,0,0,1,0,0,1,0,0,0,0
+24 PHEV Lux,0,0,0,0,1,0,0,1,0,0,0,0
+25 Hydrogen Econ,0,0,0,0,0,0,0,0,0,0,0,1
+26 Hydrogen Mid,0,0,0,0,0,0,0,0,0,0,0,1
+27 Hydrogen Lux,0,0,0,0,0,0,0,0,0,0,0,1
+28 Bikes Econ,0,0,0,0,1,0,0,0,0,0,1,0
+29 Bikes Lux,0,0,0,0,1,0,0,0,0,0,1,0
+30 Bikes Adv Econ,0,0,0,0,1,0,0,0,0,0,1,0
+31 Bikes Adv Lux,0,0,0,0,1,0,0,0,0,0,1,0

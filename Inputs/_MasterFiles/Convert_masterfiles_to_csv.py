@@ -27,7 +27,7 @@ Scenario 1 = 2-degree scenario (default)
 Scenario 2 = 1.5-degree scenario (default)
 ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 """
-models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023']}
+models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023']}
         #  'FTT-P': [[0], 'FTT-P-24x71_2022'],
         #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
         #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
@@ -42,7 +42,7 @@ models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023']}
 #%%
 
                 
-def bttc_to_gam(bttc, reg):
+def bttc_to_gam(bttc, reg, scen):
     """In FTT:Tr, the gamma values are not saved separately, but instead
     part of the BTTC variable. Here, I'm extracting those values to ensure the
     gamma values are in the expected format
