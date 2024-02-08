@@ -177,6 +177,7 @@ TEGC,FTT-Transport Levelised cost of transport with tax + non-pecuniary,$/pkm,RT
 TEFF,FTT-Transport ,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TECD,FTT-Transport Levelised cost of transport variations ,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TE3P,Fuel Prices ,2013 €/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
+TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,Y,Y
 RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTFT,FTT-Transport Fuel tax,cents/litre,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTCO,FTT-Transport Registration tax,$/gCO2/km,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,

@@ -115,6 +115,24 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data['TE3P'][:, jti["8 Electricity"], 0] = iter_lag['PFRE'][:, sector_index, 0] / 1.33
     data['TE3P'][:, jti["11 Biofuels"], 0] = iter_lag['PFRB'][:, sector_index, 0] / 1.33
 #    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
+
+    if year == 2012:
+        start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
+        for veh in range(len(titles['VTTI'])):
+            if (veh > 17) and (veh < 24):
+                # Starting EV/PHEV cost (without battery)
+                start_i_cost[:,veh,0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] 
+                                            / data['BTTC'][:, veh, c3ti['20 Markup factor']]
+                                            - data['BTTC'][:, veh, c3ti['18 Battery cap (kWh)']] 
+                                            * data['BTTC'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                                            - data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] * 0.15)
+            else:
+                start_i_cost[:,veh,0] = 0
+        # TEVC is 'Start_ICost' in the Fortran model
+        data["TEVC"] = start_i_cost
+    elif year > 2012:
+        # Copy over TEVC values
+        data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
     # %% First initialise if necessary
 
 
@@ -122,7 +140,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     for r in range(len(titles['RTI'])):
         if year <= data["TDA1"][r, 0, 0]:
-
             # CORRECTION TO MARKET SHARES
             # Sometimes historical market shares do not add up to 1.0
             if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 0.0, atol=1e-9)
@@ -146,6 +163,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #data = survival_function(data, time_lag, histend, year, titles)
 
         if year == data["TDA1"][r, 0, 0]:
+            
+            # Define starting battery capacity
+            start_bat_cap = data["TEWW"]
+            for veh in range(len(titles['VTTI'])):
+                if (veh < 18) or (veh > 23):
+                    # Set starting cumulative battery capacities to 0 for ICE vehicles
+                    start_bat_cap[0,veh,0] = 0
 
             # Calculate scrapping
             #data['REVS'][:, 0, 0] = sum(data['TESH'][:, :, 0]*data['TSFD'][:, :, 0], axis=1)
