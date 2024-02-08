@@ -165,7 +165,6 @@ def get_lcoh(data, titles):
         tlcohg = tlcoh + data['BHTC'][r, :, c4ti['12 Gamma value']]
 
         # Pay-back thresholds
-        # TODO: Titles for FTT:Heat's cost categories are wrong
         pb = data['BHTC'][r,:, c4ti['16 Payback time, mean']]
         dpb = data['BHTC'][r,:, c4ti['17 Payback time, SD']]
 
@@ -242,8 +241,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     #sector_index = titles['Sectors_short'].index(sector)
 
     data['PRSC14'] = copy.deepcopy(time_lag['PRSC14'] )
-    if year == 2014:
+    if year == 2020:
         data['PRSC14'] = copy.deepcopy(data['PRSCX'])
+
+    # 2020 Fuel prices
+    FP20 = 1.0
+    FCE3 = 1.0 
 
 
     # %% First initialise if necessary
@@ -273,10 +276,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
 
-            if data['RHUD'][r, 0, 0] > 0.0:
+            if (data['RHUD'][r, 0, 0] > 0.0 and
+                data['HEWG'][r, :, 0] > 0.0):
 
                 # Market shares (based on useful energy demand)
                 data['HEWS'][r, :, 0] = data['HEWG'][r, :, 0] / data['RHUD'][r, 0, 0]
+                # Shares of final energy demand (without electricity)
+                data['HESR'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["19 RES calc"]] / np.sum(data['HEWF'] * data['BHTC'][r, :, c4ti["19 RES calc"]])
 
                 # CORRECTION TO MARKET SHARES
                 # Sometimes historical market shares do not add up to 1.0
@@ -307,10 +313,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if data['HJFC'][r, fuel, 0] > 0.0:
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
+            
+
 
     if year == histend['HEWF']:
-        # Historical data ends in 2014, so we need to initialise data
-        # when it's 2015 to make sure the model runs.
+        # Historical data ends in 2020, so we need to initialise data
+        # when it's 2021 to make sure the model runs.
         # At some point we need to change the start year of the simulation and
         # Change the timelines in ALL of the csv's
         # Endogenous price rates
@@ -582,10 +590,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Emissions
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
-            #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
+            data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
 
-            # Now transform price rates by fuel to price rates by boiler
-            #data['HEWP'][:, :, 0] = np.matmul(data['HFFC'][:, :, 0], data['HJET'][0, :, :].T)
+            data['HEWP'][r, 0, 0] = data['HFPR'][r, 4, 0]
+            data['HEWP'][r, 1, 0] = data['HFPR'][r, 4, 0]
+            data['HEWP'][r, 2, 0] = data['HFPR'][r, 6, 0]
+            data['HEWP'][r, 3, 0] = data['HFPR'][r, 6, 0]
+            data['HEWP'][r, 4, 0] = data['HFPR'][r, 10, 0]
+            data['HEWP'][r, 5, 0] = data['HFPR'][r, 10, 0]
+            data['HEWP'][r, 6, 0] = data['HFPR'][r, 0, 0]
+            data['HEWP'][r, 7, 0] = data['HFPR'][r, 8, 0]
+            data['HEWP'][r, 8, 0] = data['HFPR'][r, 7, 0]
+            data['HEWP'][r, 9, 0] = data['HFPR'][r, 7, 0]
+            data['HEWP'][r, 10, 0] = data['HFPR'][r, 7, 0]
+            data['HEWP'][r, 11, 0] = data['HFPR'][r, 7, 0]
 
 
             #to match e3me:
