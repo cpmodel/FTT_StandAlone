@@ -461,13 +461,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Convert energy unit (1/41.868) ktoe/TJ
                 # Energy demand (BBTC)           MJ/km
 
+                # Fuel use
                 data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
                                         data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2Corr[r]/41.868))
 
-
-                data['TVFP'][r, :, 0] = (np.matmul(fuel_converter/fuel_converter.sum(axis=0), data['TE3P'][r, :, 0]))*\
-                                            data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']] * \
-                                                    CO2Corr[r]/ 41868
                 # "Emissions"
                 data['TEWE'][r, :, 0] = data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]*CO2Corr[r]*emis_corr[r,:]/1e6
 
@@ -479,11 +476,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # vehicles
             # bi = np.matmul(data['TEWI'][:, :, 0], data['TEWB'][0, :, :])
             # dw = np.sum(bi, axis=0)*dt
-
+                
+            # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (KWh)  
+            new_bat = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
+            new_bat[:,:,0] = data["TEWI"][:, :, 0] * data["BTTC"][:, :, c3ti["18 Battery cap (kWh)"]]  
+            
             bi = np.zeros((len(titles['RTI']),len(titles['VTTI'])))
             for r in range(len(titles['RTI'])):
                 bi[r,:] = np.matmul(data['TEWB'][0, :, :],data['TEWI'][r, :, 0])
             dw = np.sum(bi, axis=0)*dt
+
+            # Copy over TWWB values
+            data['TWWB'] = copy.deepcopy(time_lag['TWWB'])
 
             # Cumulative capacity incl. learning spill-over effects
             data['TEWW'][0, :, 0] = data_dt['TEWW'][0, :, 0] + dw

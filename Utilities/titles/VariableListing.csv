@@ -2,12 +2,12 @@ Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start
 PRSCX,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 PRSC15,Price levels in 2015 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 RPOP,Population by age and gender,Thousands,RTI,NA,NA,TIME,General,1970,-,2001,-,,Y
-PFRE,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRC,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRO,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
-PFRM,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRB,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRH,Price of electricity (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
+PFRE,Price of electricity use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRC,Price of coal use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRO,Price of heavy oil use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
+PFRM,Price of middle distillates [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRB,Price of biofuel use (incl taxes) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRH,Endogenous energy price with tax [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
 PRSC13,Price levels in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWMC,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWLO,FTT:Power optimal/initial load factors,%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -176,8 +176,9 @@ TELC,"FTT-Transport Generalised cost of transport, with tax + non-pecuniary, log
 TEGC,FTT-Transport Levelised cost of transport with tax + non-pecuniary,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TEFF,FTT-Transport ,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TECD,FTT-Transport Levelised cost of transport variations ,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TE3P,Fuel Prices ,2013 €/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
+TE3P,FTT-Tr Fuel Prices ,2013 $/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
 TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,Y,Y
+TWWB,FTT-Tr starting cumulative battery capacity,MWh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
 RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTFT,FTT-Transport Fuel tax,cents/litre,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTCO,FTT-Transport Registration tax,$/gCO2/km,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
