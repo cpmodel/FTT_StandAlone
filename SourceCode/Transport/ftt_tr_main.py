@@ -142,7 +142,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         if year <= data["TDA1"][r, 0, 0]:
             # CORRECTION TO MARKET SHARES
             # Sometimes historical market shares do not add up to 1.0
-            if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 0.0, atol=1e-9)
+            if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-9)
                     and np.sum(data['TEWS'][r, :, 0]) > 0.0):
                 data['TEWS'][r, :, 0] = np.divide(data['TEWS'][r, :, 0],
                                                    np.sum(data['TEWS'][r, :, 0]))
@@ -170,6 +170,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if (veh < 18) or (veh > 23):
                     # Set starting cumulative battery capacities to 0 for ICE vehicles
                     start_bat_cap[0,veh,0] = 0
+            # TWWB is 'StartBatCap' in the FORTRAN model
+            data["TWWB"] = start_bat_cap
 
             # Calculate scrapping
             #data['REVS'][:, 0, 0] = sum(data['TESH'][:, :, 0]*data['TSFD'][:, :, 0], axis=1)
@@ -380,6 +382,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             
                 data['TEWS'][r, :, 0] = (endo_capacity + dUk)/(np.sum(endo_capacity)+dUtot)
 
+                # Check shares sum to 1 
                 if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
                     msg = """Sector: {} - Region: {} - Year: {}
                     Sum of market shares do not add to 1.0 (instead: {})
