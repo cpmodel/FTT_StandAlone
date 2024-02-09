@@ -140,11 +140,11 @@ HEWI,FTT-Heat Capacity Additions,GW/y,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
 HEWC,FTT-Heat LCOH no policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
 HETC,FTT-Heat LCOH all policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
 HGC1,FTT-Heat LCOH w policies & Gamma,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HWCD,FTT-Heat LCSD,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGC2,FTT-Heat MC,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGD2,FTT-Heat MCSD,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGC3,FTT-Heat PC,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGD3,FTT-Heat PCSD,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HWCD,FTT-Heat LCOH no policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGC2,"FTT-Heat Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGD2,"FTT-Heat SD Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGC3,"FTT-Heat Payback cost w policies, Gamma, for endogenous scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGD3,"FTT-Heat SD Payback cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGAM,FTT-Heat Gamma values,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HEWS,FTT-Heat Market Shares,,RTI,HTTI,NA,TIME,FTT-H,,2014,2014,,Y,Y
 HJEF,FTT-Heat Residential fuel use,th toe,RTI,JTI,NA,TIME,FTT-H,,,2014,,,
@@ -164,7 +164,7 @@ TEWK,FTT-Transport fleet size,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWI,FTT-Transport sales,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWG,FTT-Transport demand by technology,mln km/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWE,FTT-Transport emissions,Mt/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
-TEWC,FTT-Transport levelised costs,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
+TEWC,FTT-Transport levelised costs (no taxes),$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWB,FTT-Transport Technology spill-over matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
 TEWA,FTT-Transport Technology substitution matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
 PFRG,Price of gas (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
@@ -179,16 +179,18 @@ TECD,FTT-Transport Levelised cost of transport variations ,$/pkm,RTI,VTTI,NA,TIM
 TE3P,FTT-Tr Fuel Prices ,2013 $/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
 TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,Y,Y
 TWWB,FTT-Tr starting cumulative battery capacity,MWh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
+TEBC,FTT-Tr battery cost,USD/kWh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,Y,Y
 RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTFT,FTT-Transport Fuel tax,cents/litre,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTCO,FTT-Transport Registration tax,$/gCO2/km,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
-RLTA,FTT-Transport,,RTI,VTTI,VYTI,TIME,FTT-Tr,,,2017,,,
+RLTA,FTT-Transport age-tracking matrix,,RTI,VTTI,VYTI,TIME,FTT-Tr,,,2017,,,
 RHSM,FTT-Transport Hydrogen blending mandate,share H2 in freight,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RFLT,FTT-Transport Fleet stocks in use (from survival),th-veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 REVS,FTT-Transport vehicle scrappage,th-veh/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 RBFM,FTT-Transport Biofuel blending mandate,%,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 BTTC,FTT-Transport Cost matrix,,RTI,VTTI,C3TI,NA,FTT-Tr,,,2014,,,
-TDA1,FTT-Tr last year of shares data,,RTI,NA,NA,NA,FTT-Tr,,,,,Y,Y 
+BTCI,FTT-Transport  initial cost matrix,,RTI,VTTI,C3TI,NA,FTT-Tr,,,2014,,,
+TDA1,FTT-Tr last year of shares data,,RTI,NA,NA,NA,FTT-Tr,,,,,,
 TDA2,FTT-Tr last year of cost data,,RTI,NA,NA,NA,FTT-Tr,,,,,,
 IUD1,FTT-IH-CHI useful energy demand (GWh),GWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,1970,2015,1970,,Y,Y
 ISC1,FTT-IH-CHI market share caps,%,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2015,-,Y,Y

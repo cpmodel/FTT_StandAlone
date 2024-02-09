@@ -50,7 +50,7 @@ def bttc_to_gam(bttc, reg, scen):
     
     """
     # Only return gamma sheets for the first scenario
-    if scen != "0":
+    if scen != 0:
         return
     
     var = "TGAM"
