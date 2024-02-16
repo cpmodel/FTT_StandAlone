@@ -158,7 +158,7 @@ TLCD,FTT-Transport log(levelised costs),,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TJET,FTT-Transport Fuel converter,,NA,VTTI,JTI,NA,FTT-Tr,,,,,,
 TJEF,FTT-Transport fuel use,th toe,RTI,JTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TGAM,FTT-Transport Gamma Values,,RTI,VTTI,NA,TIME,FTT-Tr,,,2014,,,
-TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
+TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,Y,Y
 TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2019,1990,,Y,Y
 TEWK,FTT-Transport fleet size,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWI,FTT-Transport sales,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
@@ -169,7 +169,7 @@ TEWB,FTT-Transport Technology spill-over matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
 TEWA,FTT-Transport Technology substitution matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
 PFRG,Price of gas (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
 TETH,FTT-Transport Efficiency ,,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
-TETC,FTT-Transport levelised costs with taxes,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TETC,FTT-Transport levelised costs with taxes,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,Y
 TESH,FTT-Transport Vehicle sales,th-veh,RTI,VYTI,NA,NA,FTT-Tr,,,,,Y,Y
 TESF,FTT-Transport Survival function,th-veh,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
 TELC,"FTT-Transport Generalised cost of transport, with tax + non-pecuniary, lognormal space",,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
@@ -177,9 +177,9 @@ TEGC,FTT-Transport Levelised cost of transport with tax + non-pecuniary,$/pkm,RT
 TEFF,FTT-Transport ,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TECD,FTT-Transport Levelised cost of transport variations ,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TE3P,FTT-Tr Fuel Prices ,2013 $/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
-TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,Y,Y
+TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 TWWB,FTT-Tr starting cumulative battery capacity,MWh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
-TEBC,FTT-Tr battery cost,USD/kWh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,Y,Y
+TEBC,FTT-Tr battery cost,USD/kWh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
 RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTFT,FTT-Transport Fuel tax,cents/litre,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTCO,FTT-Transport Registration tax,$/gCO2/km,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,

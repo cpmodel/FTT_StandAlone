@@ -319,21 +319,22 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                             continue
 
                         S_veh_k = data_dt['TEWS'][r, v2, 0]
-                        Aik = data['TEWA'][0,v1 , v2]/data['BTTC'][r, v1, c3ti['17 Turnover rate']]
-                        Aki = data['TEWA'][0,v2 , v1]/data['BTTC'][r, v2, c3ti['17 Turnover rate']]
+                        Aik = data['TEWA'][0, v1 , v2] / data['BTTC'][r, v1, c3ti['17 Turnover rate']]
+                        Aki = data['TEWA'][0, v2 , v1] / data['BTTC'][r, v2, c3ti['17 Turnover rate']]
 
                         # Propagating width of variations in perceived costs
-                        dFik = sqrt(2) * sqrt((data_dt['TLCD'][r, v1, 0]*data_dt['TLCD'][r, v1, 0] 
-                                               + data_dt['TLCD'][r, v2, 0]*data_dt['TLCD'][r, v2, 0]))
+                        dFik = sqrt(2) * sqrt((data_dt['TLCD'][r, v1, 0] * data_dt['TLCD'][r, v1, 0] 
+                                               + data_dt['TLCD'][r, v2, 0] * data_dt['TLCD'][r, v2, 0]))
 
                         # Consumer preference incl. uncertainty
-                        Fik = 0.5*(1+np.tanh(1.25*(data_dt['TELC'][r, v2, 0]-data_dt['TELC'][r, v1, 0])/dFik))
+                        Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['TELC'][r, v2, 0] 
+                                                         - data_dt['TELC'][r, v1, 0]) / dFik))
 
                         # Preferences are then adjusted for regulations
-                        F[v1, v2] = (Fik*(1.0-isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2] 
-                                     * (1.0-isReg[r, v1]) + 0.5*(isReg[r, v1]*isReg[r, v2]))
-                        F[v2, v1] = ((1.0-Fik)*(1.0-isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1] 
-                                     * (1.0-isReg[r, v2]) + 0.5*(isReg[r, v2]*isReg[r, v1]))
+                        F[v1, v2] = (Fik * (1.0 - isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2] 
+                                     * (1.0 - isReg[r, v1]) + 0.5 * (isReg[r, v1] * isReg[r, v2]))
+                        F[v2, v1] = ((1.0 - Fik) * (1.0 - isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1] 
+                                     * (1.0-isReg[r, v2]) + 0.5 * (isReg[r, v2] * isReg[r, v1]))
 
                         # Runge-Kutta market share dynamiccs
                         k_1 = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])
@@ -400,7 +401,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     warnings.warn(msg)
 
 
-
             ############## Update variables ##################
 
             # Update demand for driving (in km/ veh/ y) - exogenous atm
@@ -411,36 +411,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # New additions (TEWI)
-            # data, tewi_t = get_sales(data, data_dt, time_lag, 
-            #                          titles, dt, c3ti, t)
-            # # Find the difference in capacity between this iteration and last
-            cap_diff = data['TEWK'][:, :, 0] - data_dt['TEWK'][:, :, 0]
-            # Initialise variable for amount of capacity depreciated
-            cap_drpctn = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
-            # If capacity has grown, additions equal the difference +
-            # depreciation from the previous year.
-            # Otherwise, additions just equal depreciations.
-            # Where capacity has decreased, we only add new capacity if the depreciation > capacity loss
-            for r in range(len(titles['RTI'])):
-                for veh in range(len(titles['VTTI'])):
-                    cap_drpctn[r,veh,0] = np.where(cap_diff[r, veh] > 0.0,
-                                        data_dt["TEWK"][r, veh, 0] * dt/data['BTTC'][r, veh, c3ti['8 lifetime']],
-                                        np.where((-data_dt["TEWS"][r, veh, 0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']] <
-                                                  data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] < 0),
-                                                  (data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] +
-                                                   data_dt["TEWS"][r,veh,0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']])
-                                                   * time_lag["TEWK"][r, veh, 0], 0))
-            # Find total additions at time t
-            tewi_t = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1],)
-            tewi_t[:, :, 0] = np.where(cap_diff[:, :] > 0.0,
-                                       cap_diff[:, :] + cap_drpctn[:, :, 0],
-                                       cap_drpctn[:, :, 0])
-            
-            # Reset new additions if first FTT iteration
-            if (t == 1):
-                data["TEWI"][: ,: ,0] = 0
-            # Add additions at iteration t to total annual additions
-            data["TEWI"][:, :, 0] = data["TEWI"][:,:,0] + tewi_t[:,:,0]
+            data, tewi_t = get_sales(data, data_dt, time_lag, 
+                                     titles, dt, c3ti, t)
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.

@@ -51,6 +51,7 @@ def get_sales(data, data_dt, time_lag, titles, dt, c3ti, t):
         Variable names are keys and the values are 3D NumPy arrays.
         The values inside the container are updated and returned to the main
         routine.
+    tewi_t: 
     
     """
     # Find the difference in capacity between this iteration and last
@@ -66,10 +67,10 @@ def get_sales(data, data_dt, time_lag, titles, dt, c3ti, t):
         for veh in range(len(titles['VTTI'])):
             cap_drpctn[r,veh,0] = np.where(cap_diff[r, veh] > 0.0,
                                 data_dt["TEWK"][r, veh, 0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']],
-                                np.where((-data_dt["TEWS"][r, veh, 0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']] <
-                                            data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] < 0),
-                                            (data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] +
-                                            data_dt["TEWS"][r,veh,0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']])
+                                np.where((-data_dt["TEWS"][r, veh, 0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']] 
+                                          < data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] < 0),
+                                            (data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] 
+                                             + data_dt["TEWS"][r,veh,0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']])
                                             * time_lag["TEWK"][r, veh, 0], 0))
     # Find total additions at time t
     tewi_t = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1],)
