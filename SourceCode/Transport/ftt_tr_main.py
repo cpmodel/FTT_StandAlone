@@ -250,7 +250,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
         # Create the regulation variable
-        division = divide((time_lag['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
+        division = divide((time_lag['TEWS'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
@@ -321,7 +321,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         Aki = data['TEWA'][0, v2 , v1] / data['BTTC'][r, v2, c3ti['17 Turnover rate']]
 
                         # Propagating width of variations in perceived costs
-                        dFik = sqrt(2) * sqrt((data_dt['TLCD'][r, v1, 0] * data_dt['TLCD'][r, v1, 0] 
+                        dFik = 1.414 * sqrt((data_dt['TLCD'][r, v1, 0] * data_dt['TLCD'][r, v1, 0] 
                                                + data_dt['TLCD'][r, v2, 0] * data_dt['TLCD'][r, v2, 0]))
 
                         # Consumer preference incl. uncertainty
