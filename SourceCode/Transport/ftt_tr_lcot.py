@@ -107,7 +107,7 @@ def get_lcot(data, titles, year):
 
         # Stadard deviation of fuel costs
         dft = np.ones([len(titles['VTTI']), int(max_lt)])
-        dft = dft * bttc[:, c3ti['4 std fuel cost'], np.newaxis]
+        dft = dft * bttc[:, c3ti['4 std fuel cost'], np.newaxis]/ns/ff
         dft = np.where(mask, dft, 0)
 
         # Fuel tax costs
@@ -122,13 +122,22 @@ def get_lcot(data, titles, year):
 
         # Standard deviation of operation & maintenance cost
         domt = np.ones([len(titles['VTTI']), int(max_lt)])
-        domt = domt * bttc[:, c3ti['6 std O&M'], np.newaxis]/ns
+        domt = domt * bttc[:, c3ti['6 std O&M'], np.newaxis]/ns/ff
         domt = np.where(mask, domt, 0)
 
         # Road tax cost
         rtt = np.ones([len(titles['VTTI']), int(max_lt)])
         rtt = rtt * data['TTRT'][r, :, 0, np.newaxis]/cf/ns/ff/1000
         rtt = np.where(mask, rtt, 0)
+
+        # Vehicle price components for front end ($/veh)
+        data["TWIC"][r, :, 0] = bttc[:, c3ti['1 Prices cars (USD/veh)']] \
+                              + data["TTVT"][r, :, 0] + data["RTCO"][r, 0, 0] \
+                              * bttc[:,c3ti['14 CO2Emissions']]
+        
+        # Fuel cost components for front end
+        data["TWFC"][r, :, 0] = bttc[:,c3ti['3 fuel cost (USD/km)']] / ns[:,0] / ff[:,0] \
+                                + data['RTFT'][r, 0, 0] * en[:,0] / ns[:,0] / ff[:,0]
 
         # Net present value calculations
         # Discount rate

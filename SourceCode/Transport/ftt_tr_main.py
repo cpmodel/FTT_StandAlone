@@ -223,9 +223,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                      * CO2Corr[r] * emis_corr[r,:]/1e6)
 
 
-        # Calculate the LCOT for each vehicle type.
-        # Call the function
-        data = get_lcot(data, titles, year)
+    # Calculate the LCOT for each vehicle type.
+    # Call the function
+    data = get_lcot(data, titles, year)
 
     # %% Simulation of stock and energy specs
 
@@ -327,7 +327,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         # Consumer preference incl. uncertainty
                         Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['TELC'][r, v2, 0] 
                                                          - data_dt['TELC'][r, v1, 0]) / dFik))
-
                         # Preferences are then adjusted for regulations
                         F[v1, v2] = (Fik * (1.0 - isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2] 
                                      * (1.0 - isReg[r, v1]) + 0.5 * (isReg[r, v1] * isReg[r, v2]))
