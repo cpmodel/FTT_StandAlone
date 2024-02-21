@@ -72,12 +72,16 @@ def get_sales(data, data_dt, time_lag, titles, dt, c3ti, t):
                                             (data["TEWS"][r, veh, 0] - data_dt["TEWS"][r, veh, 0] 
                                              + data_dt["TEWS"][r,veh,0] * dt / data['BTTC'][r, veh, c3ti['8 lifetime']])
                                             * time_lag["TEWK"][r, veh, 0], 0))
+            # Catch any negative values
+            if cap_drpctn[r, veh, 0] < 0:
+                cap_drpctn[r, veh, 0] = 0
+
     # Find total additions at time t
     tewi_t = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1],)
     tewi_t[:, :, 0] = np.where(cap_diff[:, :] > 0.0,
                                 cap_diff[:, :] + cap_drpctn[:, :, 0],
                                 cap_drpctn[:, :, 0])
-    
+        
     # Reset new additions if first FTT iteration
     if (t == 1):
         data["TEWI"][: ,: ,0] = 0
