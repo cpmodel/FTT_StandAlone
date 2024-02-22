@@ -138,6 +138,12 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                     if dims_length[3] > 1:
                                         data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
                                     else:
+                                        try:
+                                            data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
+                                        except ValueError as e:
+                                            input_functions_message(scen, var, dims, read)
+                                            raise(e)
+                                        
                                         data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                                         
 
