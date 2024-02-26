@@ -18,6 +18,10 @@ import numpy as np
 
 from celib import DB1
 
+models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023']}
+        #  'FTT-P': [[0], 'FTT-P-24x71_2022'],
+        #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
+        #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
 # If running this code as a script, set the input files in the main bit of the code
 
@@ -65,32 +69,6 @@ def extract_data(raw_data, sheet_name, row_start, rdim, ci, cf):
     return data
 
 
-def write_to_csv(data, row_title, col_title, var, out_dir, reg=None, gamma_overwrite=None):
-    if reg:
-        out_fn = os.path.join(out_dir, f"{var}_{reg}.csv")
-    else:
-        out_fn = os.path.join(out_dir, f"{var}.csv")
-    #if csv_exists(out_fn):
-    #    print(f"CSV file {out_fn.split('Inputs', 1)[-1]} already exists. Skipping...")
-    #    return
-    df = pd.DataFrame(data.values, index=row_title, columns=col_title)
-    
-    
-    if gamma_overwrite == None:
-        if csv_exists(out_fn) and var.endswith('GAM'):
-            proceed = input(f"CSV file {out_fn.split('Inputs', 1)[-1]} already exists. Do you want to overwrite it? (y/n) ")
-            if proceed.lower() != 'y':
-                print("Skipping...")
-                return "skip"
-            else:
-                print("Overwriting...")
-                df.to_csv(out_fn)
-                return "overwrite"
-    
-    df.to_csv(out_fn)
-    if gamma_overwrite == "overwrite"    :
-        return "overwrite"
-
 def get_sheets_to_convert(var_dict, model, scen):
     """ Get all the variables to convert to CSV files
     There are three options:
@@ -111,10 +89,68 @@ def get_sheets_to_convert(var_dict, model, scen):
 
     return vars_to_convert, sheets
 
+def get_remaining_variables(vars_to_convert, out_dir, model, \
+                            var_dict, gamma_options, overwrite_existing):
+
+    """Remove variables that already exist from list to convert"""
+    if overwrite_existing:
+        
+        for var in vars_to_convert:
+            
+            # We want to double check if the user wants to overwrite gamma values
+            if var_dict[model][var]["Conversion?"] == "GAMMA":    
+                gamma_options["Overwrite user input"] = \
+                    gamma_input_on_overwrite(out_dir, var, gamma_options)
+        
+        return vars_to_convert, gamma_options
+    
+
+    vars_to_convert_remaining = []
+    for var in vars_to_convert:
+        
+        out_fn = os.path.join(out_dir, f"{var}.csv")
+        out_fn_reg = os.path.join(out_dir, f"{var}_BE.csv")
+        exists = (csv_exists(out_fn) or csv_exists(out_fn_reg))
+                
+        if not exists:
+            vars_to_convert_remaining.append(var)
+    return vars_to_convert_remaining, gamma_options
+
+
+def gamma_input_on_overwrite(out_dir, var, gamma_options):
+    """ When the script is run as a script, and
+    the gamma csv files already exist, confirm with
+    the user if you want to overwrite, given that
+    the user may not want to lose their calibrated gamma
+    values """ 
+    
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    var_gamma = costvar_to_gam_dict[var]
+    out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
+    
+    
+    if gamma_options["Overwrite possible"] == False:
+        return
+    else:
+        if gamma_options["Overwrite user input"] == None:
+            if csv_exists(out_fn) and var_gamma.endswith('GAM'):
+                file_string = out_fn.split('Inputs', 1)[-1].replace("BE", "XX")
+                proceed = input(f"CSV files {file_string} already exist. Do you want to overwrite them? (y/n) ")
+                if proceed.lower() != 'y':
+                    print("Skipping...")
+                    return "skip"
+                else:
+                    print("Overwriting...")
+                    return "overwrite"
+
 def set_up_rows(model, var, var_dict, dims):
     """Setting up the size of the rows, and the name of the rows"""
 
-    rdim = len(dims[var_dict[model][var]['Dims'][0]])
+    try:
+        rdim = len(dims[var_dict[model][var]['Dims'][0]])
+    except KeyError:
+        print(f'model is {model}')
+        print(f'var is {var}')
     row_title = dims[var_dict[model][var]['Dims'][0]]
 
     return rdim, row_title
@@ -140,7 +176,19 @@ def set_up_cols(model, var, var_dict, dims, timeline_dict):
 
     return cdim, col_title
 
-def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir, gamma_overwrite=None):
+
+    
+def write_to_csv(data, row_title, col_title, var, out_dir, reg=None):
+    if reg:
+        out_fn = os.path.join(out_dir, f"{var}_{reg}.csv")
+    else:
+        out_fn = os.path.join(out_dir, f"{var}.csv")
+    
+    df = pd.DataFrame(data.values, index=row_title, columns=col_title)
+    df.to_csv(out_fn)
+    
+
+def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     """
     In Tr, H and Fr, gamma values are not saved separately, but instead
     part of the cost variable. Here, those values are extracted to ensure the
@@ -162,15 +210,10 @@ def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir, gamma_overwrite=N
     row_title = dims[gamma_row_titles[var]]
     col_title = col_names
     
-    if gamma_overwrite != "skip":
-        gamma_overwrite = write_to_csv(data, row_title, col_title, gamma_var, out_dir,\
-                             reg=reg, gamma_overwrite=gamma_overwrite)
-    return gamma_overwrite
-
+    write_to_csv(data, row_title, col_title, gamma_var, out_dir, reg=reg)
 
 def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
-    """
-    Some variables (e.g. TEWW, MEWW), are 1D in the excel sheets. 
+    """ Some variables (e.g. TEWW, MEWW), are 1D in the excel sheets. 
     However, in the model, these variables change over time, 
     and we store this data. Therefore, the csv files should have a time dimension
     """
@@ -193,7 +236,7 @@ def directories_setup():
     dirp_db = os.path.join(dirp, 'databank')
     return dirp, dirp_up, dirp_db
 
-def variable_setup(dirp):
+def variable_setup(dirp, models):
     # Time horizons, as defined in the Time Horizons sheet
     time_horizon_df = pd.read_excel(os.path.join(dirp, 'FTT_variables.xlsx'),
                                     sheet_name='Time_Horizons')
@@ -212,6 +255,7 @@ def variable_setup(dirp):
 
     # Which variables are converted?
     vars_to_convert = {}
+    variables_df_dict = {}
 
     # Loop over all FTT models of interest
     for model in models.keys():
@@ -225,7 +269,7 @@ def variable_setup(dirp):
                                      true_values='y',
                                      false_values='n',
                                      na_values='-')
-
+        variables_df_dict[model] = variables_df
         for i, var in enumerate(variables_df['Variable name']):
             var_dict[model][var] = {}
             var_dict[model][var]['Code'] = int(variables_df.loc[i, 'Code'])
@@ -240,8 +284,9 @@ def variable_setup(dirp):
             # printed for the S0 scenario to save space
             var_dict[model][var]["Scenario"] = variables_df.loc[i, "Scenario"]
             var_dict[model][var]['Data'] = {}
+        
 
-    return variables_df, var_dict, vars_to_convert, scenarios, timeline_dict
+    return variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict
 
 def get_model_classification(dirp_db, variables_df):
     dims = list(pd.concat([variables_df['RowDim'], variables_df['ColDim'], variables_df['3DDim']]))
@@ -253,28 +298,45 @@ def get_model_classification(dirp_db, variables_df):
     return dims
 
 #%%
-def main(models):
+# Main function
+
+def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overwrite_existing=False):
     # Define paths, directories and subfolders
     dirp, dirp_up, dirp_db = directories_setup()
-    variables_df, var_dict, vars_to_convert, scenarios, timeline_dict = variable_setup(dirp)
-    dims = get_model_classification(dirp_db, variables_df)
-                
+    variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict = \
+            variable_setup(dirp, models)
+               
     for model in models.keys():
+        variables_df = variables_df_dict[model]
+        dims = get_model_classification(dirp_db, variables_df)
+        gamma_options = {"Overwrite possible": gamma_overwrite_pos, 
+                          "Overwrite user input": None}    
+        
         # file_list = generate_file_list(var_dict, dirp_up models)
         ### ----------------------------------------------------------------------- ###
         ### ---------------------------- EXTRACT DATA ----------------------------- ###
         ### ----------------------------------------------------------------------- ###
-   
+       
         for scen in scenarios:
-
+    
             # Define which sheets to convert
             vars_to_convert[model], sheets = \
                         get_sheets_to_convert(var_dict, model, scen)
-
+            
+            
             out_dir = os.path.join(dirp_up, f'S{scen}', model)
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
                         
+            # Remove the variables for which csv files exist (except if they need overwriting)
+            vars_to_convert[model], gamma_options = \
+                    get_remaining_variables(vars_to_convert[model], out_dir, model, \
+                                            var_dict, gamma_options, overwrite_existing)
+            
+            if len(vars_to_convert[model])==0:
+                print("All variables already exist")
+                continue
+            
             raw_data = read_data(models, model, dirp, scen, sheets)
             if raw_data is None:
                 continue
@@ -286,72 +348,73 @@ def main(models):
                 var = raw_titles.iloc[0, col]
                 titles = list(raw_titles.iloc[:, col].dropna())[1:]
                 ftt_titles[var] = titles
-
+    
             # Extract data & save to relevant variable
             row_start = 5
             regs = dims['RSHORTTI']
-
+    
             ## Read in sheet by sheet
             ci = 2              # Column indenting
             for i, var in enumerate(vars_to_convert[model]):
-
+    
                 ndims = len(var_dict[model][var]['Dims'])
                 rdim, row_title = set_up_rows(model, var, var_dict, dims)
                 cdim, col_title = set_up_cols(model, var, var_dict, dims, timeline_dict)
-
+    
                 excel_dim = len(ftt_titles[var_dict[model][var]['Dims'][0]])
                 cf = ci + cdim                   # Final column
                 sep = 1 + excel_dim - rdim
                 sheet_name = var
-
+    
                 if ndims == 3:
                     var_dict[model][var]['Data'][scen] = {}
-                    gamma_overwrite = None  
+                    gamma_options["Overwrite user input"] = None  
                     for i, reg in enumerate(regs):          
                         ri = row_start + i*(rdim + sep)
                         data = extract_data(raw_data, sheet_name, ri, rdim, ci, cf)
-
+    
                         var_dict[model][var]['Data'][scen][reg] = \
                             np.array(data.astype(np.float32))
-
+    
                         write_to_csv(data, row_title, col_title, var, out_dir, reg)
                         
-                        # Extract the gamma values from BTTC
+                        # Extract the gamma values from cost matrix
                         if var_dict[model][var]["Conversion?"] == "GAMMA":
-                            if gamma_overwrite == "skip":
+                            if gamma_options["Overwrite user input"] == "skip":
                                 continue
-                            gamma_overwrite = costs_to_gam(data, var, reg,\
-                                                    timeline_dict, dims, out_dir, gamma_overwrite)
+                            costs_to_gam(data, var, reg, timeline_dict, dims, out_dir)
                             
                 elif ndims == 2:
                     
                     data = extract_data(raw_data, sheet_name, row_start, rdim, ci, cf)
                     var_dict[model][var]['Data'][scen] = np.array(data.astype(np.float32))
-
+    
                     # Some variables have regions as second dimension in masterfile
                     # Transpose those
                     needs_transposing = variables_df.loc[variables_df["Variable name"] == var]["ColDim"] == "RSHORTTI"
                     if needs_transposing.item():
                         col_title, row_title = row_title, col_title
                         data = data.T
-
+    
                     write_to_csv(data, row_title, col_title, var, out_dir)
-
+    
                 elif ndims == 1:
-
+    
                     data = extract_data(raw_data, sheet_name, row_start, rdim, ci, cf)
-
+    
                     # If a 1D variable needs to be converted into 2D
                     if var_dict[model][var]["Conversion?"] == "TIME":
                         convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict)
                         continue  # continue to the next variable
-
+    
                     var_dict[model][var]['Data'][scen] = np.array(data.astype(np.float32))
                     write_to_csv(data, row_title, col_title, var, out_dir)
                     
                 print(f"Data for {var} saved to CSV. Model: {model}")
+    return var_dict
 
 if __name__ == '__main__':
+    """If you run this as a script, it will overwrite existing files"""
     # Structure of dict:
     # Model name: [Model name, scenarios to read in, excel file]
     # Scenario 0 = Baseline
@@ -359,8 +422,8 @@ if __name__ == '__main__':
     # Scenario 2 = 1.5-degree scenario (default)
     # ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 
-    models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023']}
-            #  'FTT-P': [[0], 'FTT-P-24x71_2022'],
+    models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023'],
+              'FTT-P': [[0, 2], 'FTT-P-24x70_2021']}
             #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
             #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
@@ -371,4 +434,4 @@ if __name__ == '__main__':
     #           'FTT-IH-OIS': [[0], 'FTT-IH-OIS-13x70_2022'],
     # }
 
-    main(models)
+    var_dict = convert_masterfiles_to_csv(models, gamma_overwrite_pos="possible", overwrite_existing=True)

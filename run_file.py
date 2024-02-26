@@ -17,21 +17,23 @@ Local library imports:
     - `ModelRun <model_class.html>`__
         Creates a new instance of the ModelRun class
 
-    Support functions:
+    Support function:
 
-    - `paths_append <paths_append.html>`__
-        Appends file path to sys path to enable import
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
+    - `initialise_csv_files <initialise_csv_files.html>`__
+        Generates input files (variables and historical data)
+  
 
 """
 
 
 # Local library imports
 from SourceCode.model_class import ModelRun
+from SourceCode.initialise_csv_files import initialise_csv_files
 
 # Instantiate the run
 model = ModelRun()
+
+initialise_csv_files(model.ftt_modules, model.scenarios)
 
 # Fetch ModelRun attributes, for examination
 # Titles of the model
