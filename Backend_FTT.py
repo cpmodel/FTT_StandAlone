@@ -31,7 +31,7 @@ import SourceCode.support.paths_append
 from SourceCode.model_class import ModelRun
 
 
-#Switch for build
+# Switch for build
 PRODUCTION = True if len(sys.argv) == 1 else False
 
 # File paths
@@ -130,10 +130,10 @@ def run_model():
     with open('settings.ini', 'w') as configfile:
         config.write(configfile)
 
-    #Initalise the model
+    # Initalise the model
     model = ModelRun()
-    #Define the output based on the inputs
-    #TODO: Ensure this matches any revision to model structure changes
+    # Define the output based on the inputs
+    # TODO: Ensure this matches any revision to model structure changes
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
 
     # Defines the number of items to run to track progress (scenarios x year to run)
