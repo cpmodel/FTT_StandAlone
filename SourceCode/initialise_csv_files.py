@@ -3,7 +3,7 @@ import glob
 import re
 
 
-from Inputs._MasterFiles.convert_masterfiles_to_csv import convert_masterfiles_to_csv
+from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
 #from convert_masterfiles_to_csv import convert_masterfiles_to_csv
 
 

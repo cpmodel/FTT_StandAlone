@@ -39,16 +39,16 @@ def csv_exists(filename):
     """Check if a CSV file already exists."""
     return os.path.isfile(filename)
 
-def read_data(models, model, dirp, scen, sheets):
+def read_data(models, model, dir_masterfiles, scen, sheets):
     """Read the masterfiles
     
     Returns:
         raw_data: the dataframe with all the excel data"""
     # Check whether the excel files exist
     raw_f = models[model][1]
-    raw_p = os.path.join(dirp, model, f'{raw_f}_S{scen}.xlsx')
+    raw_p = os.path.join(dir_masterfiles, model, f'{raw_f}_S{scen}.xlsx')
     if not os.path.exists(raw_p):
-        print(f"{raw_f} does not exists. No csv files will be created for {model} variables")
+        print(f"{raw_f} does not exists at {raw_p}. No csv files will be created for {model} variables")
         return None
 
     # Tell the user that the file is being read in.
@@ -228,17 +228,20 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 # Core functions for the main programme
 def directories_setup():
     """ Set up directory masterfile, the directory above it, and the databank directory"""
-    dirp = os.path.dirname(os.path.realpath(__file__))
-    dirp_up = Path(dirp).parents[0]
-    dirp_db = os.path.join(dirp, 'databank')
-    return dirp, dirp_up, dirp_db
+    dir_file = os.path.dirname(os.path.realpath(__file__))
+    dir_root = Path(dir_file).parents[1] 
+    dir_inputs = os.path.join(dir_root, "Inputs")  
+    dir_masterfiles = os.path.join(dir_root, "Inputs\_MasterFiles")  
+    dir_db = os.path.join(dir_masterfiles, 'databank')
+    
+    return dir_inputs, dir_masterfiles, dir_db
 
-def variable_setup(dirp, models):
+def variable_setup(dir_masterfiles, models):
     """Set up the various containers and metadata for variables:
         variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict
     """
     # Time horizons, as defined in the Time Horizons sheet
-    time_horizon_df = pd.read_excel(os.path.join(dirp, 'FTT_variables.xlsx'),
+    time_horizon_df = pd.read_excel(os.path.join(dir_masterfiles, 'FTT_variables.xlsx'),
                                     sheet_name='Time_Horizons')
 
     timeline_dict = {}
@@ -264,7 +267,7 @@ def variable_setup(dirp, models):
         var_dict[model] = {}
 
         # Get variable dimensions/attributes
-        variables_df = pd.read_excel(os.path.join(dirp, 'FTT_variables.xlsx'),
+        variables_df = pd.read_excel(os.path.join(dir_masterfiles, 'FTT_variables.xlsx'),
                                      sheet_name=model,
                                      true_values='y',
                                      false_values='n',
@@ -287,12 +290,12 @@ def variable_setup(dirp, models):
 
     return variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict
 
-def get_model_classification(dirp_db, variables_df):
+def get_model_classification(dir_db, variables_df):
     """Get the dimensions for the databank"""
     dims = list(pd.concat([variables_df['RowDim'], variables_df['ColDim'], variables_df['3DDim']]))
     dims = list(set([dim for dim in dims if dim not in ['TIME', np.nan, 0]]))
     dims = {dim: None for dim in dims}
-    with DB1(os.path.join(dirp_db, 'U.db1')) as db1:
+    with DB1(os.path.join(dir_db, 'U.db1')) as db1:
         for dim in dims:
             dims[dim] = db1[dim]
     return dims
@@ -310,13 +313,13 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
         new file if the files do not yet exist.
     """
     # Define paths, directories and subfolders
-    dirp, dirp_up, dirp_db = directories_setup()
+    dir_inputs, dir_masterfiles, dir_db = directories_setup()
     variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict = \
-            variable_setup(dirp, models)
+            variable_setup(dir_masterfiles, models)
                
     for model in models.keys():
         variables_df = variables_df_dict[model]
-        dims = get_model_classification(dirp_db, variables_df)
+        dims = get_model_classification(dir_db, variables_df)
         gamma_options = {"Overwrite possible": gamma_overwrite_pos, 
                           "Overwrite user input": None}    
         
@@ -331,7 +334,7 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
                         get_sheets_to_convert(var_dict, model, scen)
             
             
-            out_dir = os.path.join(dirp_up, f'S{scen}', model)
+            out_dir = os.path.join(dir_inputs, f'S{scen}', model)
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
                         
@@ -344,7 +347,7 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
                 print("All variables already exist")
                 continue
             
-            raw_data = read_data(models, model, dirp, scen, sheets)
+            raw_data = read_data(models, model, dir_masterfiles, scen, sheets)
             if raw_data is None:
                 continue
             

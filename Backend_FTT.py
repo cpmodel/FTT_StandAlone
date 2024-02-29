@@ -27,7 +27,7 @@ from tkinter import messagebox
 import psutil
 import pickle
 from collections import OrderedDict
-import SourceCode.support.paths_append
+
 from SourceCode.model_class import ModelRun
 
 
