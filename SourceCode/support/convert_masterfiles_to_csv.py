@@ -19,7 +19,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from celib import DB1
+from openpyxl import load_workbook
 
 #%%
 # Function definitions
@@ -232,9 +232,14 @@ def directories_setup():
     dir_root = Path(dir_file).parents[1] 
     dir_inputs = os.path.join(dir_root, "Inputs")  
     dir_masterfiles = os.path.join(dir_root, "Inputs\_MasterFiles")  
-    dir_db = os.path.join(dir_masterfiles, 'databank')
+    # Classifiactions
+    titles_file = 'classification_titles.xlsx'
+    # Check that classification titles workbook exists
+    titles_path = os.path.join(dir_root, 'Utilities', 'titles', titles_file)
+    if not os.path.isfile(titles_path):
+        print('Classification titles file not found.')
     
-    return dir_inputs, dir_masterfiles, dir_db
+    return dir_inputs, dir_masterfiles, titles_path
 
 def variable_setup(dir_masterfiles, models):
     """Set up the various containers and metadata for variables:
@@ -290,14 +295,36 @@ def variable_setup(dir_masterfiles, models):
 
     return variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict
 
-def get_model_classification(dir_db, variables_df):
-    """Get the dimensions for the databank"""
+def get_model_classification(titles_path, variables_df):
+    """Get the dimensions for the classifications"""
     dims = list(pd.concat([variables_df['RowDim'], variables_df['ColDim'], variables_df['3DDim']]))
     dims = list(set([dim for dim in dims if dim not in ['TIME', np.nan, 0]]))
     dims = {dim: None for dim in dims}
-    with DB1(os.path.join(dir_db, 'U.db1')) as db1:
-        for dim in dims:
-            dims[dim] = db1[dim]
+
+    ## Code segment to replace DB1 with classification_titles ############
+    ## TODO Clean up and streamline, code taken straight from titles_functions.py
+    titles_wb = load_workbook(titles_path)
+    sn = titles_wb.sheetnames
+    sn.remove('Cover')
+
+    # Iterate through worksheets and add to titles dictionary
+    titles_dict = {}
+    for sheet in sn:
+        active = titles_wb[sheet]
+        for value in active.iter_cols(min_row=1, values_only=True):
+            if value[0] == 'Full name':
+                titles_dict['{}'.format(sheet)] = value[1:]
+            if value[0] == 'Short name':
+                titles_dict['{}_short'.format(sheet)] = value[1:]  
+    
+    # Loop pulling out dimensions from the classifications data
+    for dim in dims:
+        if dim == 'RSHORTTI':
+            dims[dim] = list(titles_dict['RTI_short'])
+            
+        else: 
+            dims[dim] = list(titles_dict[dim])    
+
     return dims
 
 #%%
@@ -433,8 +460,8 @@ if __name__ == '__main__':
     # Scenario 2 = 1.5-degree scenario (default)
     # ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 
-    models = {'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023'],
-              'FTT-P': [[0, 2], 'FTT-P-24x71_2022']}
+    models = {#'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023'],
+              'FTT-P': [[0, 2], 'FTT-P-24x70_2021']}
             #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
             #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
