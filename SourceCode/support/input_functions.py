@@ -112,7 +112,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                             # If the fourth dimension is time
                             if dims[var][3] == 'TIME':
-
                                 var_tl = list(range(int(forstart[var]), timeline[-1]+1))
                                 var_tl_fit = [year for year in var_tl if year in timeline]
                                 var_tl_inds = [i for i, year in enumerate(timeline) if year in var_tl]
@@ -151,8 +150,8 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             else:
 
                                 # If the first dimension is regions
-                                if dims[var][0] == 'RTI':
-                                    
+                                # Quick fix for ZLER (first dim here is FTTI)
+                                if (dims[var][0] == 'RTI') or (var == "ZLER"):
                                     # If there are only regions
                                     if all(dim_length == 1 for dim_length in dims_length[1:]):
                                         data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
