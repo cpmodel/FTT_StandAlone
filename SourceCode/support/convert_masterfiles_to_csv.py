@@ -19,7 +19,8 @@ import os
 import pandas as pd
 import numpy as np
 
-from openpyxl import load_workbook
+from SourceCode.support.titles_functions import load_titles
+
 
 #%%
 # Function definitions
@@ -301,21 +302,7 @@ def get_model_classification(titles_path, variables_df):
     dims = list(set([dim for dim in dims if dim not in ['TIME', np.nan, 0]]))
     dims = {dim: None for dim in dims}
 
-    ## Code segment to replace DB1 with classification_titles ############
-    ## TODO Clean up and streamline, code taken straight from titles_functions.py
-    titles_wb = load_workbook(titles_path)
-    sn = titles_wb.sheetnames
-    sn.remove('Cover')
-
-    # Iterate through worksheets and add to titles dictionary
-    titles_dict = {}
-    for sheet in sn:
-        active = titles_wb[sheet]
-        for value in active.iter_cols(min_row=1, values_only=True):
-            if value[0] == 'Full name':
-                titles_dict['{}'.format(sheet)] = value[1:]
-            if value[0] == 'Short name':
-                titles_dict['{}_short'.format(sheet)] = value[1:]  
+    titles_dict = load_titles()
     
     # Loop pulling out dimensions from the classifications data
     for dim in dims:
@@ -340,13 +327,13 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
         new file if the files do not yet exist.
     """
     # Define paths, directories and subfolders
-    dir_inputs, dir_masterfiles, dir_db = directories_setup()
+    dir_inputs, dir_masterfiles, titles_path = directories_setup()
     variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict = \
             variable_setup(dir_masterfiles, models)
                
     for model in models.keys():
         variables_df = variables_df_dict[model]
-        dims = get_model_classification(dir_db, variables_df)
+        dims = get_model_classification(titles_path, variables_df)
         gamma_options = {"Overwrite possible": gamma_overwrite_pos, 
                           "Overwrite user input": None}    
         
@@ -371,9 +358,10 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
                                             var_dict, gamma_options, overwrite_existing)
             
             if len(vars_to_convert[model])==0:
-                print("All variables already exist")
+                print("All variables already exist, no need to create CSV files")
                 continue
             
+            print("Initialising: extracting CSV input files. This can take a minute.")
             raw_data = read_data(models, model, dir_masterfiles, scen, sheets)
             if raw_data is None:
                 continue

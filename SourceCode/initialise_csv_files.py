@@ -25,7 +25,6 @@ def initialise_csv_files(ftt_modules, scenarios):
     scenarios = scenarios.split(', ')
     
     model_list = generate_model_list(ftt_modules, scenarios)
-    print(model_list)
     
     # Convert masterfiles to csv
     convert_masterfiles_to_csv(model_list)
