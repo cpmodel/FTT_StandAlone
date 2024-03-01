@@ -757,7 +757,7 @@ def construct_graphic_data(graphic,type_):
             df["dimension3"] = dims3_list
 
         df["indic"] = var_list
-        scenario_df = pd.melt(df, id_vars=["indic","dimension","dimension2","dimension3"])
+        scenario_df = pd.melt(df, id_vars=["indic", "dimension", "dimension2", "dimension3"])
 
         scenario_df['scenario'] = scenario
 
@@ -1392,7 +1392,7 @@ if __name__ == '__main__':
                 if count > 1:
                     root = tk.Tk()
                     root.withdraw()
-                    if messagebox.askokcancel("Error","Application already running. Do you want to go to the running instance?"):
+                    if messagebox.askokcancel("Error", "Application already running. Do you want to go to the running instance?"):
                         os.system("start {}/main".format(addr))
                     os._exit(1)
 

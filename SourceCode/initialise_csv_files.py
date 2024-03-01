@@ -47,7 +47,7 @@ def get_masterfile(ftt_module, scenario):
     if len(matching_file) == 0:
         print(f"Warning: No files matched the pattern for module {ftt_module} and scenario {scenario}.")
     elif len(matching_file) > 1:
-        print("Warning: Multiple files matched the pattern for module {ftt_module} and scenario {scenario}.")
+        print(f"Warning: Multiple files matched the pattern for module {ftt_module} and scenario {scenario}.")
     
     # Select part of the filename without the scenario or xlsx extension
     try:
