@@ -360,7 +360,7 @@ MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh/y,RTI,T2TI,
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh/y,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
+FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,General,-,-,2010,From E3ME results,Y,Y
 EXX,Exchange rate (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 EX13,Exchange rate in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 BCET,FTT:Power matrix of technology costs,various,RTI,T2TI,C2TI,NA,FTT-P,-,-,2001,-,Y,Y
