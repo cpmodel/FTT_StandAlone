@@ -15,12 +15,25 @@ If running this code as a script, set the input files in the main bit of the cod
 
 from pathlib import Path
 import os
+import sys
 
 import pandas as pd
 import numpy as np
 
-from SourceCode.support.titles_functions import load_titles
+# Get the absolute path of the current script
+current_script_path = os.path.abspath(__file__)
 
+# Get the absolute path of the root directory (assuming the root directory is two levels up from the current script)
+root_directory_path = os.path.dirname(os.path.dirname(os.path.dirname(current_script_path)))
+
+# Path to the 'support' directory
+support_directory_path = os.path.join(root_directory_path, 'SourceCode', 'support')
+
+# Add the 'support' directory to sys.path if it's not already there
+if support_directory_path not in sys.path:
+    sys.path.append(support_directory_path)
+
+from titles_functions import load_titles
 
 #%%
 # Function definitions
@@ -233,12 +246,14 @@ def directories_setup():
     dir_root = Path(dir_file).parents[1] 
     dir_inputs = os.path.join(dir_root, "Inputs")  
     dir_masterfiles = os.path.join(dir_root, "Inputs\_MasterFiles")  
-    # Classifiactions
+    # Classifications
+
     titles_file = 'classification_titles.xlsx'
     # Check that classification titles workbook exists
     titles_path = os.path.join(dir_root, 'Utilities', 'titles', titles_file)
+    
     if not os.path.isfile(titles_path):
-        print('Classification titles file not found.')
+        print(f'Classification titles file not found at {titles_path}.')
     
     return dir_inputs, dir_masterfiles, titles_path
 

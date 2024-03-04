@@ -13,18 +13,25 @@ Functions included in the file:
 # Standard library imports
 import os
 
+
 # Third party imports
 from openpyxl import load_workbook
+from pathlib import Path
 
 
 def load_titles():
+    # Ensure we're using consistent relative paths
+    dir_file = os.path.dirname(os.path.realpath(__file__))
+    dir_root = Path(dir_file).parents[1] 
+   
+    
     """ Load model classifications and titles. """
 
     # Declare file name
     titles_file = 'classification_titles.xlsx'
 
     # Check that classification titles workbook exists
-    titles_path = os.path.join('Utilities', 'titles', titles_file)
+    titles_path = os.path.join(dir_root, 'Utilities', 'titles', titles_file)
     if not os.path.isfile(titles_path):
         print('Classification titles file not found.')
 
