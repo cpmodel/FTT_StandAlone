@@ -11,15 +11,7 @@ Functions included:
 
 """
 
-# Standard library imports
-from math import sqrt
-import os
-import copy
-import sys
-import warnings
-
 # Third party imports
-import pandas as pd
 import numpy as np
 from numba import njit
 
@@ -180,7 +172,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
             
         dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
 
-        # calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
+        # Calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
 
         dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
         dUkTK[mwka[r, :, 0] < 0.0] = 0.0
@@ -202,11 +194,11 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         dUtot = np.sum(dUk)
  
 
-        #Use modified capacity and modified total capacity to recalulate market shares
-        #This method will mean any capacities set to zero will result in zero shares
-        #It avoids negatuve shares
-        #All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity
-        #If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, MWKA is fairly accurate
+        # Use modified capacity and modified total capacity to recalulate market shares
+        # This method will mean any capacities set to zero will result in zero shares
+        # It avoids negatuve shares
+        # All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity
+        # If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, MWKA is fairly accurate
 
         # New market shares
        

@@ -53,11 +53,7 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
 import pandas as pd

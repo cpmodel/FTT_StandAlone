@@ -27,11 +27,11 @@ from tkinter import messagebox
 import psutil
 import pickle
 from collections import OrderedDict
-import SourceCode.support.paths_append
+
 from SourceCode.model_class import ModelRun
 
 
-#Switch for build
+# Switch for build
 PRODUCTION = True if len(sys.argv) == 1 else False
 
 # File paths
@@ -130,10 +130,10 @@ def run_model():
     with open('settings.ini', 'w') as configfile:
         config.write(configfile)
 
-    #Initalise the model
+    # Initalise the model
     model = ModelRun()
-    #Define the output based on the inputs
-    #TODO: Ensure this matches any revision to model structure changes
+    # Define the output based on the inputs
+    # TODO: Ensure this matches any revision to model structure changes
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
 
     # Defines the number of items to run to track progress (scenarios x year to run)
@@ -757,7 +757,7 @@ def construct_graphic_data(graphic,type_):
             df["dimension3"] = dims3_list
 
         df["indic"] = var_list
-        scenario_df = pd.melt(df, id_vars=["indic","dimension","dimension2","dimension3"])
+        scenario_df = pd.melt(df, id_vars=["indic", "dimension", "dimension2", "dimension3"])
 
         scenario_df['scenario'] = scenario
 
@@ -1392,7 +1392,7 @@ if __name__ == '__main__':
                 if count > 1:
                     root = tk.Tk()
                     root.withdraw()
-                    if messagebox.askokcancel("Error","Application already running. Do you want to go to the running instance?"):
+                    if messagebox.askokcancel("Error", "Application already running. Do you want to go to the running instance?"):
                         os.system("start {}/main".format(addr))
                     os._exit(1)
 

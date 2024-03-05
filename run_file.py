@@ -17,12 +17,6 @@ Local library imports:
     - `ModelRun <model_class.html>`__
         Creates a new instance of the ModelRun class
 
-    Support functions:
-
-    - `paths_append <paths_append.html>`__
-        Appends file path to sys path to enable import
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 """
 

@@ -65,6 +65,11 @@ def get_lcoe(data, titles):
     Notes
     ---------
     Additional notes if required.
+    BCET = cost matrix 
+    MEWL = Average capacity factor
+    MEWT = Subsidies.
+    MTFT = Fuel tax
+    
     """
 
     # Categories for the cost matrix (BCET)
