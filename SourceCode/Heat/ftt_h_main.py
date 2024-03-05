@@ -272,10 +272,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # This is the demand driver for FTT:Heat
             #data['RHUD'][r, 0, 0] = np.sum(data['HEWG'][r, :, 0])
 
-
-
-
-
             if data['RHUD'][r, 0, 0] > 0.0:
 
                 # Market shares (based on useful energy demand)
@@ -299,8 +295,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Capacity by boiler
             #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
-            data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                  data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
+            data['HEWK'][r, :, 0] = divide(data['HEWG'][r, :, 0],
+                                  data['BHTC'][r, :, c4ti["13 Capacity factor mean"]])/1000
             # Emissions
             # TODO: Cost titles are wrong
             data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Emission factor"]]/1e6
@@ -313,7 +309,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if data['HJFC'][r, fuel, 0] > 0.0:
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
-            
+                # Investment (= capacity additions) by technology (in GW/y)
+                # data['HEWI'][:, :, 0] = ((data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0])/dt \
+                        # + data_dt['HEWK'][:, :, 0]*data['HETR'][:, :, 0])
+
+                # data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
+                                                # 0.0,
+                                                # data['HEWI'][:, :, 0])
+                
+                # bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
+            # for r in range(len(titles['RTI'])):
+                # bi[r,:] = np.matmul(data['HEWB'][0, :, :],data['HEWI'][r, :, 0])
+            # dw = np.sum(bi, axis=0)
+            # data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
+
 
 
     if year == histend['HEWF']:
@@ -367,13 +376,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         for var in time_lag.keys():
             data_dt[var] = copy.deepcopy(time_lag[var])
 
+        
+
 
         # Create the regulation variable
+        for r in range (len(titles['RTI'])):
+            for b in range (len(titles['HTTI'])):
+
+                if data['HREG'][r, b, 0] > 0.0:
+                    data['HREG'][r, b, 0] = -1.0
+
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]), data['HREG'][:, :, 0]) # 0 if dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5 +10*division)
         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
-
+    
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0,0,0])
         dt = 1 / float(no_it)
@@ -538,10 +555,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
                 # Convert exogenous shares to exogenous generation. Exogenous sharess no longer need to add up to 1. Beware removals!
+                for b in range (len(titles['HTTI'])):
+                    if data['HWSA'][r, b, 0] < 0.0:
+                        data['HWSA'][r, b, 0] = 0.0
+                
                 dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
-               
+
                 # Check endogenous shares plus additions for a single time step does not exceed regulated shares
-                reg_vs_exog = ((data['HWSA'][r, :, 0]/no_it + endo_shares) > data['HREG'][r, :, 0]) & (data['HREG'][r, :, 0] >= 0.0)
+                reg_vs_exog = ((data['HWSA'][r, :, 0]*Utot/no_it + endo_gen) > data['HREG'][r, :, 0]*Utot) & (data['HREG'][r, :, 0] >= 0.0)
                 # Filter capacity additions based on regulated shares
                 dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
 
@@ -563,8 +584,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Zero generation will result in zero shares
                 # All other capacities will be streched
 
-
-                data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
+                if (np.sum(endo_gen) + dUtot) > 0.0:
+                    data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
 
                 #print("Year:", year)
                 #print("Region:", titles['RTI'][r])
@@ -596,7 +617,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
                                               data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
 
-            # Emissions
+            # EmissionsFis
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
             #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
@@ -620,13 +641,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                            time_lag['HEWK'][:, :, 0] * dt * data['HETR'][:, :, 0],
                                            0.0)
             eol_repl_t[:, :, 0] = np.where(np.logical_and(-data_dt['HEWS'][:,:,0] * dt * data['HETR'][:,:,0] < endo_eol ,  endo_eol < 0.0),
-                                           ((data['HEWS'][:, :, 0] - data_dt['HEWS'][:, :, 0] + data_dt['HEWS'][:, :, 0] * dt * data['HETR'][:, :, 0]) * time_lag['HEWK'][:, :, 0]), 
-                                           0.0)
+                                           ((data['HEWS'][:, :, 0] - data_dt['HEWS'][:, :, 0] + data_dt['HEWS'][:, :, 0] * dt * data['HETR'][:, :, 0]) * time_lag['HEWK'][:, :, 0]),
+                                           eol_repl_t[:, :, 0])
+            
+            # Catch any negative values
+            for r in range (len(titles['RTI'])):
+                for b in range (len(titles['HTTI'])):
+                    if eol_repl_t[r, b, 0] < 0.0:
+                        eol_repl_t[r, b, 0] = 0.0
 
+            # Capacity growth
             data_dt['HEWI'][:, :, 0] = np.where(data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] > 0.0,
                                                 data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] + eol_repl_t[:, :, 0],
                                                 eol_repl_t[:, :, 0])
 
+            # Capacity growth, add each time step to get total at end of loop
             data['HEWI'][:, :, 0] = data['HEWI'][:, :, 0] + data_dt['HEWI'][:, :, 0]
             
             data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
@@ -651,8 +680,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
             for r in range(len(titles['RTI'])):
                 bi[r,:] = np.matmul(data['HEWB'][0, :, :],data_dt['HEWI'][r, :, 0])
-            dw = np.sum(bi, axis=0)*dt
-
+            dw = np.sum(bi, axis=0)
 
             # Cumulative capacity incl. learning spill-over effects
             data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw

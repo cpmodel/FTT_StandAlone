@@ -209,6 +209,7 @@ class ModelRun:
                             self.output[scen][var][:, :, :, y] = self.variables[var]
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
+                    test = 1
 
             # Set the progress bar to say it's complete
             pbar.set_description("Model run {} finished".format(self.name))

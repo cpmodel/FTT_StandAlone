@@ -72,14 +72,23 @@ def get_sales(data, data_dt, time_lag, titles, dt, c4ti, t, endo_eol):
                                            ((data['HEWS'][:, :, 0] - data_dt['HEWS'][:, :, 0] + data_dt['HEWS'][:, :, 0] * dt * data['HETR'][:, :, 0]) * time_lag['HEWK'][:, :, 0]), 
                                            0.0)
 
-            data_dt['HEWI'][:, :, 0] = np.where(data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] > 0.0,
+            # Catch any negative values
+            if eol_repl_t[:, :, 0] < 0.0:
+                eol_repl_t[:, :, 0] = 0.0
+
+            hewi_t = np.zeros([len(titles['RTI']), len(titles['HTTI']), 1])
+            hewi_t[:, :, 0] = np.where(data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] > 0.0,
                                                 data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] + eol_repl_t[:, :, 0],
                                                 eol_repl_t[:, :, 0])
 
-            data['HEWI'][:, :, 0] = data['HEWI'][:, :, 0] + data_dt['HEWI'][:, :, 0]
+            # Add additions at iteration t to total annual additions
+            data['HEWI'][:, :, 0] = data['HEWI'][:, :, 0] + hewi_t[:, :, 0]
             
             data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
                                              0.0,
                                              data['HEWI'][:, :, 0])
+     
+            if (t == 1):
+                data['HEWI'][:, :, 0] = 0.0
 
-    return data, hewi_t
+            return data, hewi_t
