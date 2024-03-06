@@ -144,7 +144,7 @@ def run_model():
 
         start_time = time.time()
         yield("event: processing\n")
-        yield("data: ;message:Processing {};\n\n".format(scenario))
+        yield(f"data: ;message:Processing {scenario};\n\n")
 
         try:
             #Solve the model for each year
@@ -197,7 +197,7 @@ def run_model():
         yield("data: finished_w_errors\n\n")
     else:
         yield("event: processing\n")
-        yield("data: message;message:Finished processing scenarios in {}; \n\n".format(elapsed_time))
+        yield(f"data: message;message:Finished processing scenarios in {elapsed_time:.2f} s; \n\n")
         yield("event: status_change\n")
         yield("data: finished\n\n")
 
@@ -309,7 +309,7 @@ def retrieve_titles(title):
         df = df.reset_index()
         title_data = list(df['Full name'].unique())
 
-        #Handle numerical titles (like age of technology) and force to string
+        # Handle numerical titles (like age of technology) and force to string
         if isinstance(title_data[0],np.int64):
             title_data = [str(x) for x in title_data]
         data = json.dumps(title_data)
@@ -940,11 +940,11 @@ def retrieve_region_titles():
 #TODO Is there a way to merge this into the main graphics function to minimise duplication
 @route('/api/gamma/chart/<model>/<region>/<start_year>/<type_>', method=['GET'])
 @enable_cors
-def construct_gamma_graphic_data(model,region,start_year,type_):
+def construct_gamma_graphic_data(model, region, start_year, type_):
 
 
 
-    graphics = pd.read_excel('{}\\Utilities\\Titles\\ReportGraphics.xlsx'.format(rootdir),
+    graphics = pd.read_excel(f'{rootdir}\\Utilities\\Titles\\ReportGraphics.xlsx',
                          sheet_name="Gamma_chart",index_col="ref")
     settings = graphics.loc[model]
     command = settings.loc["Vars"].split("|")
@@ -974,7 +974,7 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
     with open('Output\Gamma.pickle', 'rb') as f:
         output = pickle.load(f)
 
-    title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None)
+    title_list = pd.read_excel(f'{rootdir}\\Utilities\\Titles\\classification_titles.xlsx', sheet_name=None)
     # agg_all = pd.read_excel("{}\\Utilities\\Titles\\Grouping.xlsx".format(rootdir),sheet_name=None,index_col=0)
     if title_code == "None":
         title = ["None"]
@@ -1055,7 +1055,7 @@ def construct_gamma_graphic_data(model,region,start_year,type_):
 
     full_df = full_df.rename(columns={"variable":"year"})
 
-    #Based on command and time specified transform data
+    # Based on command and time specified transform data
     full_df = full_df.set_index(["indic","dimension","dimension2","dimension3","scenario","year"])
     if command[0] =="DIVIDE":
         #Divde two variables of the same size
@@ -1226,8 +1226,8 @@ def save_gamma():
 
     return {'status':'true'}
 
-#run the specific gamma scenario run
-#TODO generalise run model command for general and gamma specific case to remove duplication
+# run the specific gamma scenario run
+# TODO generalise run model command for general and gamma specific case to remove duplication
 
 @route('/api/run_gamma/start/', method=['GET'])
 @enable_cors
@@ -1268,10 +1268,10 @@ def run_model():
         start_time = time.time()
         # time.sleep(1)
         yield("event: processing\n")
-        yield("data: ;message:Processing {};\n\n".format(scenario))
+        yield(f"data: ;message:Processing {scenario};\n\n")
 
         try:
-            #Solve the model for each year
+            # Solve the model for each year
             for year_index, year in enumerate(model.timeline):
                 model.variables, model.lags = model.solve_year(year,year_index,scenario)
 
@@ -1284,8 +1284,8 @@ def run_model():
 
                 elapsed_time = time.time() - start_time
                 yield("event: processing\n")
-                yield("data: progress;{}; \n".format(year))
-                yield("data: elapsed;{} \n\n".format(elapsed_time))
+                yield(f"data: progress;{year}; \n")
+                yield(f"data: elapsed;{elapsed_time} \n\n")
 
                 message = 'done'
         except (KeyError, FileNotFoundError) as e:
@@ -1317,7 +1317,7 @@ def run_model():
         yield("data: finished_w_errors\n\n")
     else:
         yield("event: processing\n")
-        yield("data: message;message:Finished processing scenarios in {}; \n\n".format(elapsed_time))
+        yield(f"data: message;message:Finished processing scenarios in {elapsed_time:.3f}; \n\n")
         yield("event: status_change\n")
         yield("data: finished\n\n")
 
@@ -1393,7 +1393,7 @@ if __name__ == '__main__':
                     root = tk.Tk()
                     root.withdraw()
                     if messagebox.askokcancel("Error", "Application already running. Do you want to go to the running instance?"):
-                        os.system("start {}/main".format(addr))
+                        os.system(f"start {addr}/main")
                     os._exit(1)
 
         start = lambda: run(host='localhost', port=int(port), server='paste', reloader=False)
@@ -1401,7 +1401,7 @@ if __name__ == '__main__':
         thr.daemon = True
         thr.start()
 
-        os.system("start {}/main".format(addr))
+        os.system(f"start {addr}/main")
 
     else:
         print("Manager running in development mode...")
