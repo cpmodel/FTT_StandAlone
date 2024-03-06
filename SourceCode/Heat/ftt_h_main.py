@@ -310,19 +310,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
                 # Investment (= capacity additions) by technology (in GW/y)
-                # data['HEWI'][:, :, 0] = ((data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0])/dt \
-                        # + data_dt['HEWK'][:, :, 0]*data['HETR'][:, :, 0])
+                if year > 2014:
+                    data['HEWI'][:, :, 0] = ((data['HEWK'][:, :, 0] - time_lag['HEWK'][:, :, 0]) \
+                        + time_lag['HEWK'][:, :, 0]*data['HETR'][:, :, 0])
 
-                # data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
-                                                # 0.0,
-                                                # data['HEWI'][:, :, 0])
-                
-                # bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
-            # for r in range(len(titles['RTI'])):
-                # bi[r,:] = np.matmul(data['HEWB'][0, :, :],data['HEWI'][r, :, 0])
-            # dw = np.sum(bi, axis=0)
-            # data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
-
+                    data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
+                                                     0.0,
+                                                     data['HEWI'][:, :, 0])
+                    
+                    bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
+                    for r in range (len(titles['RTI'])):
+                        bi[r,:] = np.matmul(data['HEWB'][0, :, :],data['HEWI'][r, :, 0])
+                    dw = np.sum(bi, axis=0)
+                    data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
+        test = 1
 
 
     if year == histend['HEWF']:
