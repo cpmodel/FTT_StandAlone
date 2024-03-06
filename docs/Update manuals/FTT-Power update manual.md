@@ -5,7 +5,30 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
 ### Historical generation
 1. Update the historical generation. We use the IEA World Energy Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access **Describe how**
     1. The datafiles to update are Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. The generation is in the MEWG sheet
-    2. This step is done manually. If you create a python script for this, please add it to the pre-processing repository.  
+	2. The following data sources are used for technologies:
+		Nuclear: World Extended Energy Balances-> Nuclear
+		Coal: World Summary Energy Balances-> Coal and coal products
+		Tidal: 90% value of World Extended Energy Balances-> Tidal, wave and ocean
+		Large Hydro: World Extended Energy Balances-> Hydro
+		Solar: World Extended Energy Balances-> Solar photovoltaics
+		Geothermal: World Extended Energy Balances-> Geothermal
+		CCGT: World Extended Energy Balances-> Natural gas 
+		Biogas:  World Extended Energy Balances-> Biogases 
+		Oil: World Summary Energy Balances-> Oil products 
+		Solid Biomass: Addition of the following data sets from World Extended Energy Balances: Municipal waste (non-renewable), Municipal waste (renewable), Industrial Waste (non-renewable, Primary solid biofuels. This seemed to give the closest match to the already existing MEWG values captured in MasterFiles
+		CSP: World Extended Energy Balances-> Solar thermal
+		Wave: 10% value of World Extended Energy Balances-> Tidal, wave and ocean
+	3.	The first step is to manually update the data files present in Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles for the technologies listed above. The naming of files should remain the same and the excel formulas within the current sheets should also be kept in place for the updated excel files.
+	4. 	For some of the regions for which values are not present in the database, the following methodology is used (this is done via excel formulas of the individual files in the Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles):
+		-For Rest of Annex I, Rest Latin America, Rest of Asea, North Africa OPEC, Central Africa OPEC: 
+			-Addition of generation values of the countries belonging to the region whose values are not present in the MEWG sheet
+		-OPEC region (listed as OP in the MEWG sheet): 
+			-Same generation value as provided by "Memo: OPEC" in the data set. This gave the same result as was present in the MEWG sheet earlier.
+		-For Rest North Africa, Rest Central Africa, Rest West Africa, Rest East Africa and Rest South Africa:
+			-Step-1: Added the generation values of the countries belonging to the given  regions whose values were not already present in the MEWG sheet either as separate countries or as part of North Africa OPEC/Central Africa OPEC
+			-Step 2: Some countries (indicated in Step-1) were not present in the dataset. Hence, for each region, the following value is added to the generation: (number of countries of given region not present in dataset * generation value of "Other Africa" / number of countries of Africa not present in the dataset )
+		-For Rest of World: Generation value of entry "World" of dataset - addition of generation values of the countries present in the MEWG sheet. 
+	5.	Run the VBA script "Inputs\_MasterFiles\FTT-P\MEWG Update\MEWG.xlsm". This script should process all the data present in the Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles and compile the updated values in "MEWG" sheet. The data can then be copied to the master files.
 2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
     1. The datafile is the same as above
     2. This step is done in excel. If you create a python script for this, please add it to the pre-processing repository.  
