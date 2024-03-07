@@ -323,8 +323,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         bi[r,:] = np.matmul(data['HEWB'][0, :, :],data['HEWI'][r, :, 0])
                     dw = np.sum(bi, axis=0)
                     data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
-        test = 1
-
 
     if year == histend['HEWF']:
         # Historical data ends in 2020, so we need to initialise data
@@ -381,11 +379,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
         # Create the regulation variable
-        for r in range (len(titles['RTI'])):
-            for b in range (len(titles['HTTI'])):
+        # for r in range (len(titles['RTI'])):
+            # for b in range (len(titles['HTTI'])):
 
-                if data['HREG'][r, b, 0] > 0.0:
-                    data['HREG'][r, b, 0] = -1.0
+                # if data['HREG'][r, b, 0] > 0.0:
+                    # data['HREG'][r, b, 0] = -1.0
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]), data['HREG'][:, :, 0]) # 0 if dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5 +10*division)
