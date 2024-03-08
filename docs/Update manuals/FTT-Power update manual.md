@@ -18,16 +18,11 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
 		Solid Biomass: Addition of the following data sets from World Extended Energy Balances: Municipal waste (non-renewable), Municipal waste (renewable), Industrial Waste (non-renewable, Primary solid biofuels. This seemed to give the closest match to the already existing MEWG values captured in MasterFiles
 		CSP: World Extended Energy Balances-> Solar thermal
 		Wave: 10% value of World Extended Energy Balances-> Tidal, wave and ocean
-	3.	The first step is to manually update the data files present in Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles for the technologies listed above. The naming of files should remain the same and the excel formulas within the current sheets should also be kept in place for the updated excel files.
-	4. 	For some of the regions for which values are not present in the database, the following methodology is used (this is done via excel formulas of the individual files in the Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles):
-		-For Rest of Annex I, Rest Latin America, Rest of Asea, North Africa OPEC, Central Africa OPEC: 
-			-Addition of generation values of the countries belonging to the region whose values are not present in the MEWG sheet
-		-OPEC region (listed as OP in the MEWG sheet): 
-			-Same generation value as provided by "Memo: OPEC" in the data set. This gave the same result as was present in the MEWG sheet earlier.
-		-For Rest North Africa, Rest Central Africa, Rest West Africa, Rest East Africa and Rest South Africa:
-			-Step-1: Added the generation values of the countries belonging to the given  regions whose values were not already present in the MEWG sheet either as separate countries or as part of North Africa OPEC/Central Africa OPEC
-			-Step 2: Some countries (indicated in Step-1) were not present in the dataset. Hence, for each region, the following value is added to the generation: (number of countries of given region not present in dataset * generation value of "Other Africa" / number of countries of Africa not present in the dataset )
-		-For Rest of World: Generation value of entry "World" of dataset - addition of generation values of the countries present in the MEWG sheet. 
+	3.	The first step is to manually update the data files present in Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles\RawFiles for the technologies listed above. The naming of files should remain the same.
+	4. 	For some of the regions for which values are not present in the database, the following methodology is used (this is done by running the python script Inputs\_MasterFiles\FTT-P\MEWG Update\ExcelParsing.py):
+		- The countries present in each region (e.g. Rest of Annex I) are determined from https://github.com/cpmodel/FTT_Standalone-support/blob/main/country_to_E3ME_region.py
+		- MEWG values for the identified countries (whichever is available in the dataset) are added together to get the region value
+		- The final values are written in a new excel file present in the folder Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles
 	5.	Run the VBA script "Inputs\_MasterFiles\FTT-P\MEWG Update\MEWG.xlsm". This script should process all the data present in the Inputs\_MasterFiles\FTT-P\MEWG Update\DataFiles and compile the updated values in "MEWG" sheet. The data can then be copied to the master files.
 2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
     1. The datafile is the same as above
