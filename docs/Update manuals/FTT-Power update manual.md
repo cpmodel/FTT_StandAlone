@@ -1,6 +1,8 @@
 # Instructions for updating FTT:Power
 Ideally, FTT:Power is updated every two years. The last data update was done early 2022. Not all data is available yearly. An important data gap is the costs, which the IEA only publishes every five years. **You may need to have different start years for cost and generation in the code**
 
+The IEA data comes out every year around July (April has preliminary data). IRENA comes out end of March, so updates at the end of summer are optimal.
+
 ## Frequent updates
 ### Historical generation
 1. Update the historical generation. We use the IEA World Energy Balances to update generation data. This data was freely available for universities, but as of March 2024, it is (temporarily?) not accessible. Only CE has direct paid access **Describe how**. People with a UK institutional log-in could find it at the [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB).
@@ -30,12 +32,10 @@ Ideally, FTT:Power is updated every two years. The last data update was done ear
 		- MEWG values for the identified countries (whichever is available in the dataset) are added together to get the region value
 		- The final values are written in a new excel file present in the folder FTT_Standalone-support\FTT-Power updates\MEWG Update\DataFiles
 	5.	Run the VBA script "FTT_Standalone-support\FTT-Power updates\MEWG Update\MEWG.xlsm". This script should process all the data present in the FTT_Standalone-support\FTT-Power updates\MEWG Update\DataFiles and compile the updated values in "MEWG" sheet. The data can then be copied to the master files.
-2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
-    1. The datafile is the same as above
-    2. This step is done in excel. If you create a python script for this, please add it to the [support repository][https://github.com/cpmodel/FTT_Standalone-support]. The file  
+2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [IRENA Query Tools](https://www.irena.org/Data/Downloads/Tools): Desktop version.
+    1. A python script for this can be found in the the [support repository][https://github.com/cpmodel/FTT_Standalone-support/tree/main/FTT-Power%20updates]: change_IRENA_hist_capacity_MWKA.py. 
 3. The generation data is often not quite up-to-date. You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA variable. Do this for fast-changing technologies if relevant (offshore, solar PV). 
-    4. The python file to do this is can be found in the [support repository][https://github.com/cpmodel/FTT_Standalone-support] (change_IRENA_hist_capacity_MWKA.py). 
-    5. The (2022) data is found at https://irena.org/Statistics/Download-query-tools 
+    4. This is the same python file as in step 2. 
 5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%).
     1. Use the same script as above in the pre-processing file
 6. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J3 from 2018 to 2019 after you've updated the historical generation to include 2019 data. 
