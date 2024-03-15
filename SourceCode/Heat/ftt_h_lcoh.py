@@ -27,9 +27,7 @@ Local library imports:
         Predict future values according to the estimated coefficients.
 
 Functions included:
-    - solve
-        Main solution function for the module
-    - get_lcot
+    - get_lcoh
         Calculate levelised cost of transport
         
 variables: 

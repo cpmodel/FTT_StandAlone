@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """
+Created on Wed Feb 21 11:54:30 2024
+
+@author: AE & CL
+
 =========================================
 ftt_h_main.py
 =========================================
-Residential heating sector FTT module.
-######################################
+Domestic Heat FTT module.
+####################################
 
 This is the main file for FTT: Heat, which models technological
 diffusion of residential heating technologies due to simulated consumer decision making.
@@ -43,156 +47,8 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-
-
-# %% lcoh
-# -----------------------------------------------------------------------------
-# --------------------------- LCOH function -----------------------------------
-# -----------------------------------------------------------------------------
-def get_lcoh(data, titles):
-    """
-    Calculate levelized costs.
-
-    The function calculates the levelised cost of heat in 2014 Euros/kWh per
-    boiler type. It includes intangible costs (gamma values) and together
-    determines the investor preferences.
-    """
-    # Categories for the cost matrix (BHTC)
-    c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
-
-    for r in range(len(titles['RTI'])):
-
-        # Cost matrix
-        #bhtc = data['BHTC'][r, :, :]
-
-        # Boiler lifetime
-        lt = data['BHTC'][r,:, c4ti['5 Lifetime']]
-        max_lt = int(np.max(lt))
-        lt_mat = np.linspace(np.zeros(len(titles['HTTI'])), max_lt-1,
-                             num=max_lt, axis=1, endpoint=True)
-        lt_max_mat = np.concatenate(int(max_lt)*[lt[:, np.newaxis]], axis=1)
-        mask = lt_mat < lt_max_mat
-        lt_mat = np.where(mask, lt_mat, 0)
-
-        # Capacity factor
-        cf = data['BHTC'][r,:, c4ti['13 Capacity factor mean'], np.newaxis]
-
-        # Conversion efficiency
-        ce = data['BHTC'][r,:, c4ti['9 Conversion efficiency'], np.newaxis]
-        #print("ce:", ce)
-
-        # Discount rate
-        dr = data['BHTC'][r,:, c4ti['8 Discount rate'], np.newaxis]
-
-        # Initialse the levelised cost components
-        # Average investment cost
-        it = np.zeros([len(titles['HTTI']), int(max_lt)])
-        # print(it.shape)
-        # print(data['BHTC'][r,:, c4ti['1 Investment cost mean']].shape)
-        it[:, 0,np.newaxis] = data['BHTC'][r,:, c4ti['1 Inv cost mean (EUR/Kw)'],np.newaxis]/(cf*1000)
-
-
-        # Standard deviation of investment cost
-        dit = np.zeros([len(titles['HTTI']), int(max_lt)])
-        dit[:, 0, np.newaxis] = divide(data['BHTC'][r,:, c4ti['2 Inv Cost SD'], np.newaxis], (cf*1000))
-
-        # Upfront subsidy/tax at purchase time
-        st = np.zeros([len(titles['HTTI']), int(max_lt)])
-        st[:, 0, np.newaxis] = it[:, 0, np.newaxis] * data['HTVS'][r, :, 0, np.newaxis]
-
-        # Average fuel costs
-        ft = np.ones([len(titles['HTTI']), int(max_lt)])
-        ft = ft * divide(data['BHTC'][r,:, c4ti['10 Fuel cost  (EUR/kWh)'], np.newaxis]*data['HEWP'][r, :, 0, np.newaxis], ce)
-        ft = np.where(mask, ft, 0)
-
-        # Standard deviation of fuel costs
-        dft = np.ones([len(titles['HTTI']), int(max_lt)])
-        dft = dft * ft * data['BHTC'][r,:, c4ti['11 Fuel cost SD'], np.newaxis] 
-        dft = np.where(mask, dft, 0)
-        
-        # Fuel tax costs
-        fft = np.ones([len(titles['HTTI']), int(max_lt)])
-        fft = fft* divide(data['HTRT'][r, :, 0, np.newaxis], ce)
-        fft = np.where(mask, fft, 0)
-        #print("fft:", fft)
-        #print(fft.shape)
-
-        # Average operation & maintenance cost
-        omt = np.ones([len(titles['HTTI']), int(max_lt)])
-        omt = omt * divide(data['BHTC'][r,:, c4ti['3 O&M mean (EUR/kW)'], np.newaxis], (cf*1000))
-        omt = np.where(mask, omt, 0)
-
-        # Standard deviation of operation & maintenance cost
-        domt = np.ones([len(titles['HTTI']), int(max_lt)])
-        domt = domt * divide(data['BHTC'][r,:, c4ti['4 O&M SD'], np.newaxis], (cf*1000))
-        domt = np.where(mask, domt, 0)
-
-        # Feed-in-Tariffs
-        fit = np.ones([len(titles['HTTI']), int(max_lt)])
-        fit = fit * data['HEFI'][r, :, 0, np.newaxis]
-        fit = np.where(mask, fit, 0)
-
-        # Net present value calculations
-        # Discount rate
-        denominator = (1+dr)**lt_mat
-
-        # 1-Expenses
-        # 1.1-Without policy costs
-        npv_expenses1 = (it+ft+omt)/denominator
-        # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+fft+omt-fit)/denominator
-        # 1.3-Only policy costs
-        npv_expenses3 = (st+fft-fit)/denominator
-        # 2-Utility
-        npv_utility = 1/denominator
-        #Remove 1s for tech with small lifetime than max
-        npv_utility[npv_utility==1] = 0
-        npv_utility[:,0] = 1
-        # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
-
-        # 1-levelised cost variants in $/pkm
-        # 1.1-Bare LCOH
-        lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOH including policy costs
-        tlcoh = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOH of policy costs
-        lcoh_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # Standard deviation of LCOH
-        dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
-
-        # LCOH augmented with non-pecuniary costs
-        tlcohg = tlcoh + data['BHTC'][r, :, c4ti['12 Gamma value']]
-
-        # Pay-back thresholds
-        pb = data['BHTC'][r,:, c4ti['16 Payback time, mean']]
-        dpb = data['BHTC'][r,:, c4ti['17 Payback time, SD']]
-
-        # Marginal costs of existing units
-        tmc = ft[:, 0] + omt[:, 0] + fft[:, 0] - fit[:, 0]
-        dtmc = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2)
-
-        # Total pay-back costs of potential alternatives
-        tpb = tmc + (it[:, 0] + st[:, 0])/pb
-        dtpb = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2 +
-                       divide(dit[:, 0]**2, pb**2) +
-                       divide(it[:, 0]**2, pb**4)*dpb**2)
-
-        # Add gamma values
-        tmc = tmc + data['BHTC'][r, :, c4ti['12 Gamma value']]
-        tpb = tpb + data['BHTC'][r, :, c4ti['12 Gamma value']]
-
-        # Pass to variables that are stored outside.
-        data['HEWC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
-        data['HETC'][r, :, 0] = tlcoh           # The real bare LCOH with taxes
-        data['HGC1'][r, :, 0] = tlcohg         # As seen by consumer (generalised cost)
-        data['HWCD'][r, :, 0] = dlcoh          # Variation on the LCOH distribution
-        data['HGC2'][r, :, 0] = tmc             # Total marginal costs
-        data['HGD2'][r, :, 0] = dtmc          # SD of Total marginal costs
-        data['HGC3'][r, :, 0] = tpb             # Total payback costs
-        data['HGD3'][r, :, 0] = dtpb          # SD of Total payback costs
-
-    return data
+from SourceCode.Heat.ftt_h_sales import get_sales
+from SourceCode.Heat.ftt_h_lcoh import get_lcoh
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -230,7 +86,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     This function should be broken up into more elements in development.
     """
 
-    # Categories for the cost matrix (BHTC)
+     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     jti = {category: index for index, category in enumerate(titles['JTI'])}
 
@@ -244,23 +100,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     if year == 2014:
         data['PRSC14'] = copy.deepcopy(data['PRSCX'])
 
-    # 2020 Fuel prices
-    FP20 = 1.0
-    FCE3 = 1.0 
-
+    # Calculate the LCOH for each heating technology
+    # Call the function
+    data = get_lcoh(data, titles)
 
     # %% First initialise if necessary
     # Initialise in case of stock solution specification
     #if np.any(specs[sector]) < 5:
 
     # Up to the last year of historical useful energy demand by boiler
-    if year <= histend['HEWF']:
     # Historical data ends in 2020, so we need to initialise data
     # when it's 2021 to make sure the model runs.
-    # At some point we need to change the start year of the simulation and
-    # Change the timelines in ALL of the csv's
-#        if year == 2015:
-
+    if year <= histend['HEWF']:
 
         for r in range(len(titles['RTI'])):
 
@@ -297,8 +148,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
             data['HEWK'][r, :, 0] = divide(data['HEWG'][r, :, 0],
                                   data['BHTC'][r, :, c4ti["13 Capacity factor mean"]])/1000
+            
             # Emissions
-            # TODO: Cost titles are wrong
             data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Emission factor"]]/1e6
 
             # Final energy demand by energy carrier
@@ -327,8 +178,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     if year == histend['HEWF']:
         # Historical data ends in 2020, so we need to initialise data
         # when it's 2021 to make sure the model runs.
-        # At some point we need to change the start year of the simulation and
-        # Change the timelines in ALL of the csv's
         # Endogenous price rates
         # endog_price_rate = divide(data['MEWP'][:, :, 0],
         #                           time_lag['MEWP'][:, :, 0])
@@ -356,13 +205,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Calculate the LCOT for each vehicle type.
         # Call the function
         data = get_lcoh(data, titles)
+
 # %% Simulation of stock and energy specs
 #    t0 = time.time()
     # Stock based solutions first
 #    if np.any(specs[sector] < 5):
-        
-    # if year > 2014:
-        # data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
 
     # Endogenous calculation takes over from here
     if year > histend['HEWF']:
@@ -376,14 +223,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data_dt[var] = copy.deepcopy(time_lag[var])
 
         
-
-
         # Create the regulation variable
-        # for r in range (len(titles['RTI'])):
-            # for b in range (len(titles['HTTI'])):
+        # Test that proved that the implimination of tanh across python and fortran is different
+        #for r in range (len(titles['RTI'])):
+            #for b in range (len(titles['HTTI'])):
 
-                # if data['HREG'][r, b, 0] > 0.0:
-                    # data['HREG'][r, b, 0] = -1.0
+                #if data['HREG'][r, b, 0] > 0.0:
+                    #data['HREG'][r, b, 0] = -1.0
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]), data['HREG'][:, :, 0]) # 0 if dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5 +10*division)
@@ -527,8 +373,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         dSEik[b1, b2] = dt*(kE_1+2*kE_2+2*kE_3+kE_4)/6
                         dSEik[b2, b1] = -dSEik[b1, b2]
 
-                        # TODO: Calculate additional EOL values
-
                 #calculate temportary market shares and temporary capacity from endogenous results
                 endo_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1) + np.sum(dSEik, axis=1)
                 
@@ -619,6 +463,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # EmissionsFis
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
+            # New additions (HEWI)
+            data, hewi_t = get_sales(data, data_dt, time_lag, titles, dt, t, endo_eol)
+
+            # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
 
             data['HEWP'][:, 0, 0] = data['HFFC'][:, 4, 0]
@@ -633,33 +481,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HEWP'][:, 9, 0] = data['HFFC'][:, 7, 0]
             data['HEWP'][:, 10, 0] = data['HFFC'][:, 7, 0]
             data['HEWP'][:, 11, 0] = data['HFFC'][:, 7, 0]
-
-            eol_repl_t = np.zeros([len(titles['RTI']), len(titles['HTTI']), 1])
-
-            eol_repl_t[:, :, 0] = np.where(endo_eol >= 0.0,
-                                           time_lag['HEWK'][:, :, 0] * dt * data['HETR'][:, :, 0],
-                                           0.0)
-            eol_repl_t[:, :, 0] = np.where(np.logical_and(-data_dt['HEWS'][:,:,0] * dt * data['HETR'][:,:,0] < endo_eol ,  endo_eol < 0.0),
-                                           ((data['HEWS'][:, :, 0] - data_dt['HEWS'][:, :, 0] + data_dt['HEWS'][:, :, 0] * dt * data['HETR'][:, :, 0]) * time_lag['HEWK'][:, :, 0]),
-                                           eol_repl_t[:, :, 0])
-            
-            # Catch any negative values
-            for r in range (len(titles['RTI'])):
-                for b in range (len(titles['HTTI'])):
-                    if eol_repl_t[r, b, 0] < 0.0:
-                        eol_repl_t[r, b, 0] = 0.0
-
-            # Capacity growth
-            data_dt['HEWI'][:, :, 0] = np.where(data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] > 0.0,
-                                                data['HEWK'][:, :, 0] - data_dt['HEWK'][:, :, 0] + eol_repl_t[:, :, 0],
-                                                eol_repl_t[:, :, 0])
-
-            # Capacity growth, add each time step to get total at end of loop
-            data['HEWI'][:, :, 0] = data['HEWI'][:, :, 0] + data_dt['HEWI'][:, :, 0]
-            
-            data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
-                                             0.0,
-                                             data['HEWI'][:, :, 0])
 
             # Final energy demand for heating purposes
             data['HJHF'][:, :, 0] = np.matmul(data['HEWF'][:, :, 0], data['HJET'][0, :, :])
@@ -678,7 +499,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # technologies
             bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
             for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['HEWB'][0, :, :],data_dt['HEWI'][r, :, 0])
+                bi[r,:] = np.matmul(data['HEWB'][0, :, :],hewi_t[r, :, 0])
             dw = np.sum(bi, axis=0)
 
             # Cumulative capacity incl. learning spill-over effects
