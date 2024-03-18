@@ -27,6 +27,8 @@ Functions included:
         Main solution function for the module
     - get_lcot
         Calculate levelised cost of transport
+    - get_sales
+        Calculate new sales/additions in FTT-Transport 
         
 variables: 
 cf = capacity factor
@@ -231,12 +233,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     if year > data["TDA1"][r, 0, 0]:
         # Note, regions have different start dates (TDA1) 
-        
-        # TODO: Implement survival function to get a more accurate depiction of
-        # vehicles being phased out and to be able to track the age of the fleet.
-        # This means that a new variable will need to be implemented which is
-        # basically TP_VFLT with a third dimension (vehicle age in years- up to 23y)
-        # Reduced efficiences can then be tracked properly as well.
 
         # Create a local dictionary for timeloop variables
         # It contains values between timeloop interations in the FTT core

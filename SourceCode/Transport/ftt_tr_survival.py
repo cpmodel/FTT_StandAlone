@@ -2,20 +2,31 @@
 """
 Created on Fri Jan  5 14:38:50 2024
 
-@author: Femke Nijsse
 """
 
 import numpy as np
 import copy
 
 
-# %% survival function
-# -----------------------------------------------------------------------------
-# -------------------------- Survival calcultion ------------------------------
-# -----------------------------------------------------------------------------
 def survival_function(data, time_lag, histend, year, titles):
-    # In this function we calculate scrappage, sales, tracking of age, and
-    # average efficiency.
+    """
+    Survival function for each car type
+    
+    We calculate the number of cars by age bracket (RLTA) and scrappage (REVS), 
+    Ultimately, we want to include sales and average efficiency in this function too.
+    
+    Returns
+    ----------
+    data: dictionary of NumPy arrays
+        Model variables for the given year of solution
+    """
+    
+    # TODO: Implement survival function to get a more accurate depiction of
+    # vehicles being phased out and to be able to track the age of the fleet.
+    # This means that a new variable will need to be implemented which is
+    # basically TP_VFLT with a third dimension (vehicle age in years- up to 23y)
+    # Reduced efficiences can then be tracked properly as well.
+    
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
@@ -24,12 +35,13 @@ def survival_function(data, time_lag, histend, year, titles):
     # Assume uniform distribution, but only do so when we still have historical
     # market share data. Afterwards it becomes endogeous
     if year < histend['TEWS']:
-
+        
+        # VYTI has 23 year categories (number 0-22)
         # TODO: This needs to be replaced with actual data
         correction = np.linspace(1/(3*len(titles['VYTI'])), 3/len(titles['VYTI']), len(titles['VYTI'])) * 0.6
 
         for age in range(len(titles['VYTI'])):
-
+            # RLTA -> age-tracking matrix
             data['RLTA'][:, :, age] = correction[age] *  data['TEWK'][:, :, 0]
 
     else:
@@ -46,26 +58,25 @@ def survival_function(data, time_lag, histend, year, titles):
                 data['RLTA'][r, veh, :-1] = copy.deepcopy(time_lag['RLTA'][r, veh, 1:])
 
                 # Current age-tracking matrix:
-                # Only retain the fleet that survives
+                # Only retain the fleet that survives; TESF is the survival function
                 data['RLTA'][r, veh, :] = data['RLTA'][r, veh, :] * data['TESF'][r, 0, :]
 
                 # Total amount of vehicles that survive:
                 survival = np.sum(data['RLTA'][r, veh, :])
 
-                # EoL scrappage: previous year's stock minus what survived
+                # EoL vehicle scrappage: previous year's stock minus what survived
                 if time_lag['TEWK'][r, veh, 0] > survival:
 
                     data['REVS'][r, veh, 0] = time_lag['TEWK'][r, veh, 0] - survival
 
                 elif time_lag['TEWK'][r, veh, 0] < survival:
                     if year > 2016:
-                        msg = """
-                        Erronous outcome!
-                        Check year {}, region {} - {}, vehicle {} - {}
-                        Vehicles that survived are greater than what was in the fleet before:
-                        {} versus {}
-                        """.format(year, r, titles['RTI'][r], veh,
-                                   titles['VTTI'][veh], time_lag['TEWK'][r, veh, 0], survival)
+                        msg = (
+                            f"Erronous outcome!\n"
+                            f"Check year {year}, region {r} - {titles['RTI'][r]}, vehicle {veh} - {titles['VTTI'][veh]}\n"
+                            "Vehicles that survived are greater than what was in the fleet before:\n"
+                            f"{time_lag['TEWK'][r, veh, 0]} versus {survival}"
+                            )
 #                        print(msg)
 
     # calculate fleet size
