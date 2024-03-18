@@ -14,13 +14,10 @@ ModelRun class: main class for operation of model.
 # Standard library imports
 import configparser
 import copy
-import os
-import sys
 
 print("Current working directory:", os.getcwd())
 
 # Third party imports
-import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
@@ -46,6 +43,7 @@ import SourceCode.support.input_functions as in_f
 import SourceCode.support.titles_functions as titles_f
 import SourceCode.support.dimensions_functions as dims_f
 from SourceCode.support.cross_section import cross_section as cs
+from SourceCode.initialise_csv_files import initialise_csv_files
 
 
 class ModelRun:
@@ -157,7 +155,10 @@ class ModelRun:
 
         # Load variable dimensions
         self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
-
+        
+        # Set up csv files if they do not exist yet
+        initialise_csv_files(self.ftt_modules, self.scenarios)
+        
         # Retrieve inputs
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
@@ -169,6 +170,7 @@ class ModelRun:
         self.lags = {}
         self.output = {}
 
+
     def run(self):
         """ Solve model run and save results """
 
@@ -179,7 +181,8 @@ class ModelRun:
         """ Solve model for each year of the simulation period """
 
         # Define output container
-        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) for var in self.input[scen]} for scen in self.input}
+        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) \
+                              for var in self.input[scen]} for scen in self.input}
         # self.output = copy.deepcopy(self.input)
 
         # Clear any previous instances of the progress bar
@@ -196,7 +199,7 @@ class ModelRun:
 #                for year_index, year in enumerate(self.timeline):
                 for y, year in enumerate(self.timeline):
                     # Set the description to be the current year
-                    pbar.set_description('Running Scenario: {} - Solving year: {}'.format(scen, year))
+                    pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
 
                     self.variables, self.lags = self.solve_year(year, y, scen)
 
@@ -212,7 +215,7 @@ class ModelRun:
                     test = 1
 
             # Set the progress bar to say it's complete
-            pbar.set_description("Model run {} finished".format(self.name))
+            pbar.set_description(f"Model run {self.name} finished")
 
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """
@@ -226,11 +229,11 @@ class ModelRun:
         # Define whole period
         tl = self.timeline
 
-        #define modules list in for possible setting.ini selection
+        # define modules list in for possible setting.ini selection
         modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
                     "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
         # Iteration loop here
-        for iter in range(0, max_iter):
+        for itereration in range(max_iter):
 
             if "FTT-P" in self.ftt_modules:
                 variables = ftt_p.solve(variables, time_lags, iter_lags,
@@ -299,8 +302,8 @@ class ModelRun:
         data_to_model = cs(self.input, self.dims, year, y, scenario)
 
         # LB TODO: to improve the treatment of lags to include also historical data
-        if y == 0:
-            lags = cs(self.input, self.dims, year, y, scenario)   #If year is the first year, lags equal variables in starting year
+        if y == 0: # If year is the first year, lags equal variables in starting year
+            lags = cs(self.input, self.dims, year, y, scenario)
         else:
             #lags = cs(self.variables, self.dims, year-1)
             lags = self.variables
