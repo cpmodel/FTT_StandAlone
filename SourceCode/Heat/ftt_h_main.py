@@ -108,12 +108,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # Historical data ends in 2020, so we need to initialise data
     # when it's 2021 to make sure the model runs.
     if year <= histend['HEWF']:
+        # Useful energy demand by boilers
+        # The historical data contains final energy demand
+        data['HEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
         for r in range(len(titles['RTI'])):
-
-            # Useful energy demand by boilers
-            # The historical data contains final energy demand
-            data['HEWG'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["9 Conversion efficiency"]]
 
             # Total useful heat demand
             # This is the demand driver for FTT:Heat
@@ -136,18 +135,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     
             # Normalise HEWG to RHUD
             data['HEWG'][r, :, 0] = data['HEWS'][r, :, 0] * data['RHUD'][r, 0, 0]
-            
-            # Recalculate HEWF based on RHUD
-            data['HEWF'][r, :, 0] = data['HEWG'][r, :, 0] / data['BHTC'][r, :, c4ti["9 Conversion efficiency"]]
+        
+        # Recalculate HEWF based on RHUD
+        data['HEWF'][:, :, 0] = data['HEWG'][:, :, 0] / data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
-            # Capacity by boiler
-            #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
-            data['HEWK'][r, :, 0] = divide(data['HEWG'][r, :, 0],
-                                  data['BHTC'][r, :, c4ti["13 Capacity factor mean"]])/1000
-            
-            # Emissions
-            data['HEWE'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["15 Emission factor"]]/1e6
+        # Capacity by boiler
+        #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
+        data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
+                                data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
+        
+        # Emissions
+        data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]] / 1e6
 
+        for r in range(len(titles['RTI'])):
             # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
                 # Fuel use for heating
@@ -156,20 +156,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if data['HJFC'][r, fuel, 0] > 0.0:
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
-                # Investment (= capacity additions) by technology (in GW/y)
-                if year > 2014:
-                    data['HEWI'][:, :, 0] = ((data['HEWK'][:, :, 0] - time_lag['HEWK'][:, :, 0]) \
-                        + time_lag['HEWK'][:, :, 0]*data['HETR'][:, :, 0])
-
-                    data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
-                                                     0.0,
-                                                     data['HEWI'][:, :, 0])
-                    
-                    bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
-                    for r in range (len(titles['RTI'])):
-                        bi[r,:] = np.matmul(data['HEWB'][0, :, :],data['HEWI'][r, :, 0])
-                    dw = np.sum(bi, axis=0)
-                    data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
+        # Investment (= capacity additions) by technology (in GW/y)
+        if year > 2014:
+            data["HEWI"][:, :, 0] = ((data["HEWK"][:, :, 0] - time_lag["HEWK"][:, :, 0])
+                                        + time_lag["HEWK"][:, :, 0] * data["HETR"][:, :, 0])
+            # Prevent HEWI from going negative
+            data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
+                                                0.0,
+                                                data['HEWI'][:, :, 0])
+            
+            bi = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
+            for r in range(len(titles['RTI'])):
+                bi[r,:] = np.matmul(data['HEWB'][0, :, :], data['HEWI'][r, :, 0])
+            dw = np.sum(bi, axis=0)
+            data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
 
     if year == histend['HEWF']:
         # Historical data ends in 2020, so we need to initialise data
