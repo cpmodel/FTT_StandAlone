@@ -174,9 +174,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     if year == histend['HEWF']:
         # Historical data ends in 2020, so we need to initialise data
         # when it's 2021 to make sure the model runs.
-        # Endogenous price rates
-        # endog_price_rate = divide(data['MEWP'][:, :, 0],
-        #                           time_lag['MEWP'][:, :, 0])
 
         # If switch is set to 1, then an exogenous price rate is used
         # Otherwise, the price rates are set to endogenous
@@ -227,13 +224,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 #if data['HREG'][r, b, 0] > 0.0:
                     #data['HREG'][r, b, 0] = -1.0
 
-        division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]), data['HREG'][:, :, 0]) # 0 if dividing by 0
-        isReg = 0.5 + 0.5*np.tanh(1.5 +10*division)
+        division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
+                           data['HREG'][:, :, 0]) # 0 if dividing by 0
+        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
     
         # Factor used to create quarterly data from annual figures
-        no_it = int(data['noit'][0,0,0])
+        no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
         ############## Computing new shares ##################
@@ -260,7 +258,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dSik = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
 
                 # F contains the preferences
-                F = np.ones([len(titles['HTTI']), len(titles['HTTI'])])*0.5
+                F = np.ones([len(titles['HTTI']), len(titles['HTTI'])]) * 0.5
 
                 # -----------------------------------------------------
                 # Step 1: Endogenous EOL replacements
@@ -284,14 +282,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         S_k = data_dt['HEWS'][r, b2, 0]
 
                         # Propagating width of variations in perceived costs
-                        dFik = 1.414 * sqrt((data_dt['HWCD'][r, b1, 0]*data_dt['HWCD'][r, b1, 0] + data_dt['HWCD'][r, b2, 0]*data_dt['HWCD'][r, b2, 0]))
+                        dFik = 1.414 * sqrt((data_dt['HWCD'][r, b1, 0] * data_dt['HWCD'][r, b1, 0] 
+                                             + data_dt['HWCD'][r, b2, 0] * data_dt['HWCD'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
-                        Fik = 0.5*(1+np.tanh(1.25*(data_dt['HGC1'][r, b2, 0]-data_dt['HGC1'][r, b1, 0])/dFik))
+                        Fik = 0.5 * (1- + np.tanh(1.25 * (data_dt['HGC1'][r, b2, 0]
+                                                   - data_dt['HGC1'][r, b1, 0]) / dFik))
 
                         # Preferences are then adjusted for regulations
-                        F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
-                        F[b2, b1] = (1.0-Fik)*(1.0-isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1]*(1.0-isReg[r, b2]) + 0.5*(isReg[r, b2]*isReg[r, b1])
+                        F[b1, b2] = Fik * (1.0 - isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2] \
+                                    * (1.0 - isReg[r, b1]) + 0.5 * (isReg[r, b1] * isReg[r, b2])
+                        F[b2, b1] = (1.0 - Fik) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
+                                    * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
 
                         #Runge-Kutta market share dynamiccs
                         k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
@@ -521,7 +523,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
               #HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
               #BHTC(:,:,1) are the investment costs (2014Euro/kW)
             data['HWIY'][:,:,0] = data['HWIY'][:,:,0] + data['HEWI'][:,:,0]*dt*data['BHTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
-
+            # Save investment cost for front end
+            data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/Kw)']]
+            # Save efficiency for front end
+            data["HEFF"][:, :, 0] = data["BHTC"][:, :, c4ti['9 Conversion efficiency']]
 
             # =================================================================
             # Update the time-loop variables
