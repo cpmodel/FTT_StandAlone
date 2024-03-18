@@ -15,8 +15,6 @@ ModelRun class: main class for operation of model.
 import configparser
 import copy
 
-print("Current working directory:", os.getcwd())
-
 # Third party imports
 import numpy as np
 from tqdm import tqdm
@@ -125,30 +123,17 @@ class ModelRun:
 
         # Attributes given in settings.ini file
         config = configparser.ConfigParser()
-        try:
-            config.read('settings.ini')
-        except FileNotFoundError:
-            print("Error: Configuration file 'settings.ini' not found")
-        except config.Error as e:
-            print(f"Error reading configuration file: {e}")
-
-        try:
-            if 'settings' not in config:
-                raise configparser.NoSectionError("No 'settings' section found in the configuration file.")
-        
-            self.name = config.get('settings', 'name')
-            self.model_start = int(config.get('settings', 'model_start'))
-            self.model_end = int(config.get('settings', 'model_end'))
-            self.simulation_start = int(config.get('settings', 'simulation_start'))
-            self.simulation_end = int(config.get('settings', 'simulation_end'))
-            self.current = self.model_start
-            self.years = np.arange(self.model_start, self.model_end+1)
-            self.timeline = np.arange(self.simulation_start, self.simulation_end+1)
-            self.ftt_modules = config.get('settings', 'enable_modules')
-            self.scenarios = config.get('settings', 'scenarios')
-
-        except (configparser.NoSectionError, configparser.Error) as e:
-            print(f"Error: {e}")
+        config.read('settings.ini')
+        self.name = config.get('settings', 'name')
+        self.model_start = int(config.get('settings', 'model_start'))
+        self.model_end = int(config.get('settings', 'model_end'))
+        self.simulation_start = int(config.get('settings', 'simulation_start'))
+        self.simulation_end = int(config.get('settings', 'simulation_end'))
+        self.current = self.model_start
+        self.years = np.arange(self.model_start, self.model_end+1)
+        self.timeline = np.arange(self.simulation_start, self.simulation_end+1)
+        self.ftt_modules = config.get('settings', 'enable_modules')
+        self.scenarios = config.get('settings', 'scenarios')
 
         # Load classification titles
         self.titles = titles_f.load_titles()
@@ -212,7 +197,6 @@ class ModelRun:
                             self.output[scen][var][:, :, :, y] = self.variables[var]
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
-                    test = 1
 
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
