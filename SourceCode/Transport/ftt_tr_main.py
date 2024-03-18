@@ -50,6 +50,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_sales import get_sales
+from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
 
 # %% Fleet size - under development
@@ -138,7 +139,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
     
 
-    # %% First initialise if necessary
+    # %% Initialise
     # Up to the last year of historical market share data
     for r in range(len(titles['RTI'])):
         if year <= data["TDA1"][r, 0, 0]:
@@ -161,8 +162,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2Corr
             data['TEWE'][:, :, 0] = data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['14 CO2Emissions']]/1e6*1.2
     
-            # Call the survival function routine.
-            #data = survival_function(data, time_lag, histend, year, titles)
+        # Call the survival function routine.
+        data = survival_function(data, time_lag, histend, year, titles)
 
         if year == data["TDA1"][r, 0, 0]:
             
@@ -252,7 +253,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
 
         # Call the survival function routine.
-        #data = survival_function(data, time_lag, histend, year, titles)
+        data = survival_function(data, time_lag, histend, year, titles)
 
         # Total number of scrapped vehicles: #TP_TEOL changed to RVTS #Is this really needed?
         #data['RVTS'][:, 0, 0] = np.sum(data['REVS'][:, :, 0], axis=1)
@@ -557,4 +558,5 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 data_dt[var] = copy.deepcopy(data[var])
 
+        # data["RLTA"][:, :, 22] = add_new_cars_age_matrix(data["TEWK"], time_lag["TEWK"], data["REVS"])
     return data
