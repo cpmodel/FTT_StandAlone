@@ -286,7 +286,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                              + data_dt['HWCD'][r, b2, 0] * data_dt['HWCD'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
-                        Fik = 0.5 * (1- + np.tanh(1.25 * (data_dt['HGC1'][r, b2, 0]
+                        Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['HGC1'][r, b2, 0]
                                                    - data_dt['HGC1'][r, b1, 0]) / dFik))
 
                         # Preferences are then adjusted for regulations
