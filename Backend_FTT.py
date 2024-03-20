@@ -1,32 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-US_Local_Backend
-Code to handle backend requests for data. Using bottle for server foundations
-Last updated 12/2021, 17:10:35
-@authors: jp, bkd
+Backend_FTT
+===========
+Script to run the FTT Standalone frontend in a web browser.
 """
 
-# Libraries
+from collections import OrderedDict
+import configparser
+import csv
+import datetime
+import glob
+import json
+import os
+import pickle
+import sys
+import time
+from threading import Timer, Thread
+import webbrowser
 
 from bottle import (route, run, request, response, static_file)
-import socket
-import glob
-import os
-import json
-import time
-import datetime
-import csv
-import sys
-import pandas as pd
 import numpy as np
-
-import configparser
-from threading import Timer, Thread
-import tkinter as tk
-from tkinter import messagebox
-import psutil
-import pickle
-from collections import OrderedDict
+import pandas as pd
 
 from SourceCode.model_class import ModelRun
 
@@ -373,7 +367,7 @@ def get_dim_pos(title_code,dims,title):
 def retrieve_chart_data(type_):
 
     #Load requests
-    p = request.query;
+    p = request.query
 
     #extract parameters passed
     variables = p.getlist("variable[]")
@@ -394,10 +388,10 @@ def retrieve_chart_data(type_):
     calc_type = p.get("calculation")
     time = p.get("time")
     start_year = p.get("Start_Year")
-    if start_year != None:
+    if start_year is not None:
         start_year = int(p.get("Start_Year"))
     end_year = p.get("End_Year")
-    if end_year != None:
+    if end_year is not None:
         end_year = int(p.get("End_Year"))
 
 
@@ -472,7 +466,7 @@ def retrieve_chart_data(type_):
 
         if time == "Yes":
            years = [str(x) for x in years]
-           if start_year!=None and end_year!=None:
+           if start_year is not None and end_year is not None:
                years_filter = [str(x) for x in list(range(start_year,
                                                     end_year + 1))]
            else:
@@ -898,7 +892,8 @@ def statics(filename):
 #
 @route('/api/exit', method=['GET'])
 def exit_():
-    q = Timer(2.0, os._exit(1), ())
+    t = Timer(2.0, os._exit, (0,))
+    t.start()
     return None
 
 # Gamma commands (export to seperate backend)
@@ -1329,80 +1324,16 @@ def run_model():
 message_cache = []
 
 if __name__ == '__main__':
-
-    def splash():
-        root = tk.Tk()
-        root.overrideredirect(True)
-        width = root.winfo_screenwidth()
-        height = root.winfo_screenheight()
-
-        img_width = 533
-        img_height = 300
-
-        x0 = width / 2 - img_width / 2
-        x1 = width / 2 + img_width / 2
-        y0 = height / 2 - img_height / 2
-        y1 = height / 2 + img_height / 2
-
-        root.geometry('%dx%d+%d+%d' % (img_width, img_height, x0, y0))
-        root.attributes("-alpha", 0.9)
-
-        if os.path.exists("{}//splash.png".format(rootdir)):
-            image_file = "{}//splash.png".format(rootdir)
-        else:
-            image_file = "{}//splash.png".format(rundir)
-
-        image = tk.PhotoImage(file=image_file)
-        canvas = tk.Canvas(root, height=img_height, width=img_width)
-        canvas.create_image(0, 0, image=image, anchor=tk.NW)
-        canvas.pack()
-        # show the splash screen for 5000 milliseconds then destroy
-        root.after(5000, root.destroy)
-        root.call('wm', 'attributes', '.', '-topmost', '1')
-        root.mainloop()
-    # splash()
-
-    # testing if the given port is available, if not, test other ones
-    bport = 5000  # base port number, to be added on to
-    success = False
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    for jj in range(100):
-        port = bport + jj
-        try:
-            s.bind(('127.0.0.1', port))
-            success = True
-            s.close()
-            break
-        except socket.error as e:
-            # print(e)
-            continue
-
-    if not success:
-        raise IOError('Failed to open a port, the front end will not start.')
-
     port = 5000
-    addr = 'http://localhost:%s' % port
+
     if PRODUCTION:
-
-        already_running = False
-        count = 0
-        for p in psutil.process_iter(attrs=['pid', 'name']):
-            if "CE_LEM_Launcher.exe" in p.info['name']:
-                count += 1
-                if count > 1:
-                    root = tk.Tk()
-                    root.withdraw()
-                    if messagebox.askokcancel("Error", "Application already running. Do you want to go to the running instance?"):
-                        os.system(f"start {addr}/main")
-                    os._exit(1)
-
         start = lambda: run(host='localhost', port=int(port), server='paste', reloader=False)
         thr = Thread(target=start)
         thr.daemon = True
         thr.start()
 
-        os.system(f"start {addr}/main")
-
     else:
         print("Manager running in development mode...")
         run(host='localhost', port=int(port), server='paste', reloader=True)
+
+    webbrowser.open(f'http://localhost:{port}/main')
