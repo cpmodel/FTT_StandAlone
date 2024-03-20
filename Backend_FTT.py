@@ -9,7 +9,6 @@ from collections import OrderedDict
 import configparser
 import csv
 import datetime
-import glob
 import json
 import os
 from pathlib import Path
@@ -36,9 +35,7 @@ try:
 except AttributeError:
     rootdir = os.path.abspath(os.getcwd())
     rundir = rootdir
-switch_dir = "../specs/area1/"
-print(rootdir)
-print(rundir)
+
 # cache for runs
 run_entries_cache = {}
 
