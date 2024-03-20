@@ -207,24 +207,26 @@ def run_model():
 @enable_cors
 def available_scenarios():
 
-    list_files_from_results = []
+    # Generate list of scenarios by searching the 'Inputs' folder. Each
+    # subfolder (excluding '_MasterFiles/') is assumed to be a scenario
 
+    # Find all subfolders
+    scenarios = [x.name for x in (Path('.') / 'Inputs').glob('*') if x.is_dir()]
 
-    scenarios  = glob.glob("{}\\inputs\\*\\".format(rootdir))
-
-    scenarios = [s.split("\\")[-2] for s in scenarios]
-    scenarios.remove("_MasterFiles")
-    list_files_from_results.extend(scenarios)
-
-    list_files_from_results = list(set(list_files_from_results))
-
+    # Then remove '_MasterFiles' to leave the final list of scenarios
+    scenarios.remove('_MasterFiles')
 
     scenids = []
-    for scen in list_files_from_results:
+    for scen in scenarios:
         scenid =  {"id":scen,"label":scen}
         scenids.append(scenid)
 
-    models_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="Models",index_col=0)
+    # Read the list of available FTT models
+    models_list = pd.read_excel(
+        Path('.') / 'Utilities' / 'titles' / 'classification_titles.xlsx',
+        sheet_name="Models", index_col=0
+    )
+
     modids = []
     models = models_list["Short name"]
     for mod in models:
