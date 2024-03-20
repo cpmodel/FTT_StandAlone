@@ -178,12 +178,17 @@ def run_model():
     # Save output for all scenarios to pickle
     #TODO Setup way to retain older results?
     results =  model.output
-    os.makedirs(os.path.dirname(f"{rootdir}\\Output\\"), exist_ok=True)     # Create Output folder if it doesn't exist
-    with open('Output\Results.pickle', 'wb') as f:
+
+    # Create Output folder if it doesn't exist
+    (Path('.') / 'Output').mkdir(parents=True, exist_ok=True)
+
+    with open(Path('.') / 'Output' / 'Results.pickle', 'wb') as f:
         pickle.dump(results, f)
+
     # Save metadata on current model run
-    with open("{}\\Output\\Scenarios.json".format(rootdir), 'w') as f:
+    with open(Path('.') / 'Output' / 'Scenarios.json', 'w') as f:
         json.dump(scenarios_log, f)
+
     if(error):
         yield("event: processing\n")
         yield("data: message;message:Encountered errors while processing scenarios; \n")
@@ -302,7 +307,10 @@ def retrieve_titles(title):
 #
 #            data = json.dumps({"Sectors": data[title]})
     if title != "None":
-        df = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=title)
+        df = pd.read_excel(
+            Path('.') / 'Utilities' / 'titles' / 'classification_titles.xlsx',
+            sheet_name=title
+        )
         df = df.reset_index()
         title_data = list(df['Full name'].unique())
 
@@ -405,13 +413,15 @@ def retrieve_chart_data(type_):
         scenarios = scenarios_
     full_df = None
 
-
     # Load latest model run results
-    with open('Output\Results.pickle', 'rb') as f:
+    with open(Path('.') / 'Output' / 'Results.pickle', 'rb') as f:
         output = pickle.load(f)
 
     #Get titles
-    title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None)
+    title_list = pd.read_excel(
+        Path('.') / 'Utilities' / 'titles' / 'classification_titles.xlsx',
+        sheet_name=None
+    )
     # agg_all = pd.read_excel("{}\\Utilities\\Titles\\Grouping.xlsx".format(rootdir),sheet_name=None,index_col=0)
 
 
