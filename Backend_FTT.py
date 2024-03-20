@@ -12,6 +12,7 @@ import datetime
 import glob
 import json
 import os
+from pathlib import Path
 import pickle
 import sys
 import time
@@ -881,11 +882,11 @@ def construct_graphic_data(graphic,type_):
 #
 @route('/main', method=['GET'])
 def frontend():
-    return static_file("{}\\frontend\\index.html".format(rootdir), "frontend")
+    return static_file('index.html', (Path('.') / 'frontend').absolute())
 
 @route('/frontend/:filename#.*#', method=['GET'])
 def statics(filename):
-    return static_file(filename, "{}\\frontend\\".format(rootdir))
+    return static_file(filename, (Path('.') / 'frontend').absolute())
 
 #
 # Terminate the application
