@@ -327,7 +327,10 @@ def retrieve_titles(title):
 @enable_cors
 def retrieve_all_titles():
 
-    title_dict = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None)
+    title_dict = pd.read_excel(
+        Path('.') / 'Utilities' / 'titles' / 'classification_titles.xlsx',
+        sheet_name=None
+    )
     titles = []
     for t,title in title_dict.items():
         if t=="Cover":
@@ -348,7 +351,7 @@ def retrieve_all_titles():
 @enable_cors
 def retrieve_var_data():
 
-    vars_meta = pd.read_csv(f'{rootdir}\\Utilities\\Titles\\VariableListing.csv')
+    vars_meta = pd.read_csv(Path('.') / 'Utilities' / 'titles' / 'VariableListing.csv')
     vars_meta = vars_meta.fillna("None")
     vars_meta_dict = vars_meta.to_dict("records")
 
