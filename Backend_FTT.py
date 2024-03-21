@@ -639,6 +639,7 @@ def retrieve_chart_data(type_):
 @route('/api/Report/Options', method=['GET'])
 @enable_cors
 def retrieve_report_graphics():
+    # TODO: Still to review for cross-platform compatibility
     graphics = pd.read_excel('{}\\Utilities\\Titles\\ReportGraphics.xlsx'.format(rootdir),
                              sheet_name="Graphic_Definitions",index_col="ref")
     categories = list(set(graphics["Category"]))
@@ -659,8 +660,7 @@ def retrieve_report_graphics():
 @route('/api/Report/Values/<graphic>/<type_>', method=['GET'])
 @enable_cors
 def construct_graphic_data(graphic,type_):
-
-
+    # TODO: Still to review for cross-platform compatibility
     graphics = pd.read_excel('{}\\Utilities\\Titles\\ReportGraphics.xlsx'.format(rootdir),
                          sheet_name="Graphic_Definitions",index_col="Figure label")
     settings = graphics.loc[graphic.replace("-"," ")]
@@ -914,6 +914,7 @@ def exit_():
 @route('/api/Gamma/values/<model>/<region>', method=['GET'])
 @enable_cors
 def load_gamma_values(model, region):
+    # TODO: Still to review for cross-platform compatibility
     region_map = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="RTI",index_col=0)
     title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="Models",index_col=0)
 
@@ -931,6 +932,7 @@ def load_gamma_values(model, region):
 @route('/api/info/ftt_options', method=['GET'])
 @enable_cors
 def retrieve_ftt_options():
+    # TODO: Still to review for cross-platform compatibility
     title_list = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name=None,index_col=0)
     ftt_options = list(title_list["Models"].index)
     return json.dumps(ftt_options)
@@ -938,20 +940,18 @@ def retrieve_ftt_options():
 @route('/api/info/region_titles', method=['GET'])
 @enable_cors
 def retrieve_region_titles():
-       df = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="RTI")
-       df = df.reset_index()
-       data = json.dumps(list(df['Full name'].unique()))
-       return data
-
+    # TODO: Still to review for cross-platform compatibility
+    df = pd.read_excel('{}\\Utilities\\Titles\\classification_titles.xlsx'.format(rootdir),sheet_name="RTI")
+    df = df.reset_index()
+    data = json.dumps(list(df['Full name'].unique()))
+    return data
 
 # Retrieve data for gamma tool graphics
 #TODO Is there a way to merge this into the main graphics function to minimise duplication
 @route('/api/gamma/chart/<model>/<region>/<start_year>/<type_>', method=['GET'])
 @enable_cors
 def construct_gamma_graphic_data(model, region, start_year, type_):
-
-
-
+    # TODO: Still to review for cross-platform compatibility
     graphics = pd.read_excel(f'{rootdir}\\Utilities\\Titles\\ReportGraphics.xlsx',
                          sheet_name="Gamma_chart",index_col="ref")
     settings = graphics.loc[model]
@@ -1149,7 +1149,7 @@ def construct_gamma_graphic_data(model, region, start_year, type_):
 @route('/api/run_gamma/initialize/<end_year>', method=["GET"])
 @enable_cors
 def init_model(end_year):
-
+    # TODO: Still to review for cross-platform compatibility
     global run_entries_cache
     run_entries_cache = p
 
@@ -1181,6 +1181,7 @@ def init_model(end_year):
 @route('/api/run_gamma/update_gamma/', method=['OPTIONS','POST'])
 @enable_cors
 def load_gamma():
+    # TODO: Still to review for cross-platform compatibility
     body = request.body.read()
     p=json.loads(body.decode("utf-8"))
     gamma = p['data']
@@ -1210,6 +1211,7 @@ def load_gamma():
 @route('/api/run_gamma/save_gamma/', method=['OPTIONS','POST'])
 @enable_cors
 def save_gamma():
+    # TODO: Still to review for cross-platform compatibility
     body = request.body.read()
     p=json.loads(body.decode("utf-8"))
     gamma = p['data']
@@ -1240,6 +1242,7 @@ def save_gamma():
 @route('/api/run_gamma/start/', method=['GET'])
 @enable_cors
 def run_model():
+    # TODO: Still to review for cross-platform compatibility
     response.content_type = 'text/event-stream; charset=UTF-8'
     global run_entries_cache
 
