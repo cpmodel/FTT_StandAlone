@@ -84,7 +84,6 @@ def generate_model_list(ftt_modules, scenarios):
                 module_scenarios.append(int(scenario[1:]))
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
-    print(f"models: {models}")
     return models
 
     
