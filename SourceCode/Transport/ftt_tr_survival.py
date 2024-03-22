@@ -44,12 +44,9 @@ def initialise_age_matrix(data, time_lag, titles, survival_ratio):
     # VYTI has 23 year categories (number 0-22)
     # TODO: This needs to be replaced with actual data
     fraction_per_age = np.linspace(1/(3*len(titles['VYTI'])), 3/len(titles['VYTI']), len(titles['VYTI'])) * 0.6
-
-
-    for age in range(len(titles['VYTI'])):
-        # RLTA -> age-tracking matrix of cars
-        data['RLTA'][:, :, age] = fraction_per_age[age] *  data['TEWK'][:, :, 0]
-    #data["RLTA"] = fraction_per_age[None, None, :] * data["TEWK"][:, :, None]
+    
+    # Split the capacity TEWK into different age brackets via broadcasting
+    data["RLTA"] = fraction_per_age[None, None, :] * data["TEWK"][:, :, 0][:, :, np.newaxis]
 
     # Sum over the age dimension
     survival = np.sum(data['RLTA'][:, :, 1:] * survival_ratio[:, :, :], axis=2)
@@ -80,41 +77,31 @@ def survival_function(data, time_lag, histend, year, titles):
         # After the first year of historical data, we can start calculating 
         # the age matrix endogenously. This allows us to calculate scrappage,
         # sales, average age, and average efficiency.
-        for r in range(len(titles['RTI'])):
+        
+        # Move all vehicles one year up
+        data['RLTA'][..., :-1] = np.copy(time_lag['RLTA'][..., 1:])
+        
+        # Apply the survival ratio
+        data['RLTA'][..., :-1] *= survival_ratio
+        
+        # Set the newest car category to zero
+        data['RLTA'][..., -1] = 0
+        
+        # Calculate survival and handle EoL vehicle scrappage
+        survival = np.sum(data['RLTA'], axis=-1)
+        survival_diff = time_lag['TEWK'][..., 0] - survival
+        
+        # Vectorized condition for scrappage
+        data['REVS'][..., 0] = np.where(survival_diff > 0, survival_diff, 0)
+        
+        # Warning if more cars survive than existed previous timestep:
+        for r in range(data['RLTA'].shape[0]):
+            for veh in range(data['RLTA'].shape[1]):
+                if time_lag['TEWK'][r, veh, 0] < np.sum(data['RLTA'][r, veh, :]):
+                    msg = (f"Error! \n"
+                           f"Check year {year}, region - {titles['RTI'][r]}, vehicle - {titles['VTTI'][veh]}\n"
+                           "More cars survived than what was in the fleet before:\n"
+                           f"{time_lag['TEWK'][r, veh, 0]:.4f} versus {np.sum(data['RLTA'][r, veh, :]):.4f}")
+                    print(msg)
 
-            for veh in range(len(titles['VTTI'])):
-
-                # Move all vehicles one year up:
-                # New sales will get added to the age-tracking matrix in the main
-                # routine.
-                data['RLTA'][r, veh, :-1] = copy.deepcopy(time_lag['RLTA'][r, veh, 1:])
-
-                # Current age-tracking matrix:
-                # Only retain the fleet that survives; TESF is the survival function
-                data['RLTA'][r, veh, :-1] = data['RLTA'][r, veh, :-1] * survival_ratio[r, :, :]
-                
-                # Set the newest car category to zero. 
-                data["RLTA"][r, veh, -1] = 0
-
-                # Total amount of vehicles that survive:
-                survival = np.sum(data['RLTA'][r, veh, :])
-
-                # EoL vehicle scrappage: previous year's stock minus what survived
-                if time_lag['TEWK'][r, veh, 0] > survival:
-
-                    data['REVS'][r, veh, 0] = time_lag['TEWK'][r, veh, 0] - survival
-
-                elif time_lag['TEWK'][r, veh, 0] < survival:
-                    if year > 2014:
-                        msg = (
-                            f"Error! \n"
-                            f"Check year {year}, region - {titles['RTI'][r]}, vehicle - {titles['VTTI'][veh]}\n"
-                            "More cars survived than what was in the fleet before:\n"
-                            f"{time_lag['TEWK'][r, veh, 0]:.4f} versus {survival:.4f}"
-                            )
-                        print(msg)
-        test = 1
-
-    # calculate fleet size
-    test=1
     return data
