@@ -141,8 +141,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # %% Initialise
     # Up to the last year of historical market share data
-    for r in range(len(titles['RTI'])):
-        if year <= data["TDA1"][r, 0, 0]:
+    if year <= data["TDA1"][0, 0, 0]:
+        for r in range(len(titles['RTI'])):
+        
             # CORRECTION TO MARKET SHARES
             # Sometimes historical market shares do not add up to 1.0
             if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-9)
@@ -164,9 +165,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     
         # Call the survival function routine.
         data = survival_function(data, time_lag, histend, year, titles)
+        data["RLTA"] = add_new_cars_age_matrix(data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"])
 
-        if year == data["TDA1"][r, 0, 0]:
-            
+    if year == data["TDA1"][0, 0, 0]:  # TODO: think about how to change this from different start years
+         for r in range(len(titles['RTI'])):   
             # Define starting battery capacity
             start_bat_cap = copy.deepcopy(data["TEWW"])
             for veh in range(len(titles['VTTI'])):
@@ -232,7 +234,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # %% Simulation of stock and energy specs
 
-    if year > data["TDA1"][r, 0, 0]:
+    if year > data["TDA1"][0, 0, 0]: # Todo: make this r dependent again
         # Note, regions have different start dates (TDA1) 
 
         # Create a local dictionary for timeloop variables
@@ -558,5 +560,5 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 data_dt[var] = copy.deepcopy(data[var])
 
-        # data["RLTA"][:, :, 22] = add_new_cars_age_matrix(data["TEWK"], time_lag["TEWK"], data["REVS"])
+        data["RLTA"] = add_new_cars_age_matrix(data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"])
     return data

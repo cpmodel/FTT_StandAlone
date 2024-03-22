@@ -4,8 +4,6 @@ Created on Fri Jan  5 14:38:50 2024
 TODO: use pre-simulation TEWK values to improve the age distribution before simulation starts
 """
 
-
-
 import numpy as np
 import copy
 
@@ -20,7 +18,7 @@ def get_survival_ratio(survival_function):
     survival_ratio = survival_ratio.reshape(71, 1, 22)
     return survival_ratio
 
-def add_new_cars_age_matrix(capacity, lagged_capacity, scrappage):
+def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     """Add new cars to the age matrix.
     Add the growth in capacity (pos or neg) to the scrappage    
     
@@ -31,9 +29,32 @@ def add_new_cars_age_matrix(capacity, lagged_capacity, scrappage):
     new_cars = capacity_growth[:, :, 0] + scrappage[:, :, 0]
     # Set new cars to zero
     new_cars = np.where(new_cars < 0, 0, new_cars)
-        
     
-    return new_cars
+    age_matrix[:, :, 22] = new_cars
+    
+    # Normalise age_matrix, so that in each country + car, it sums to overall capacity TEWK. 
+    age_matrix = age_matrix * capacity / np.sum(age_matrix, axis=2, keepdims=True)
+    
+    return age_matrix
+
+def initialise_age_matrix(data, time_lag, titles, survival_ratio):
+    """At the start of the simulation, set up an age matrix, assuming
+    an equilibrium has been reached"""
+    
+    # VYTI has 23 year categories (number 0-22)
+    # TODO: This needs to be replaced with actual data
+    fraction_per_age = np.linspace(1/(3*len(titles['VYTI'])), 3/len(titles['VYTI']), len(titles['VYTI'])) * 0.6
+
+
+    for age in range(len(titles['VYTI'])):
+        # RLTA -> age-tracking matrix of cars
+        data['RLTA'][:, :, age] = fraction_per_age[age] *  data['TEWK'][:, :, 0]
+    #data["RLTA"] = fraction_per_age[None, None, :] * data["TEWK"][:, :, None]
+
+    # Sum over the age dimension
+    survival = np.sum(data['RLTA'][:, :, 1:] * survival_ratio[:, :, :], axis=2)
+    data['REVS'][:, :, 0] = time_lag["TEWK"][:, :, 0] - survival
+    return data
     
 
 def survival_function(data, time_lag, histend, year, titles):
@@ -48,38 +69,17 @@ def survival_function(data, time_lag, histend, year, titles):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     """
-    
-    # TODO: Implement survival function to get a more accurate depiction of
-    # vehicles being phased out and to be able to track the age of the fleet.
-    # This means that a new variable will need to be implemented which is
-    # basically TP_VFLT with a third dimension (vehicle age in years- up to 23y)
-    # Reduced efficiences can then be tracked properly as well.
-    
-    # Categories for the cost matrix (BTTC)
-    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
+        
     survival_ratio = get_survival_ratio(data['TESF'])
     
-    # Create a generic matrix of fleet-stock by age
-    # Assume uniform distribution, but only do so when we still have historical
-    # market share data. Afterwards it becomes endogeous
-    if year <= np.min(data["TDA1"][:, 0, 0]):
-        
-        # VYTI has 23 year categories (number 0-22)
-        # TODO: This needs to be replaced with actual data
-        correction = np.linspace(1/(3*len(titles['VYTI'])), 3/len(titles['VYTI']), len(titles['VYTI'])) * 0.6
-
-        for age in range(len(titles['VYTI'])):
-            # RLTA -> age-tracking matrix of cars
-            data['RLTA'][:, :, age] = correction[age] *  data['TEWK'][:, :, 0]
-        
-        # Sum over the age dimension
-        survival = np.sum(data['RLTA'][:, :, 1:] * survival_ratio[:, :, :], axis=2)
-        data['REVS'][:, :, 0] = time_lag["TEWK"][:, :, 0] - survival
+    # We assume a linearly decreasing distribution of ages at initialisation
+    if np.sum(time_lag["RLTA"])==0:
+         initialise_age_matrix(data, time_lag, titles, survival_ratio)   
 
     else:
-        # Once we start to calculate the market shares and total fleet sizes
-        # endogenously, we can update the vehicle stock by age matrix and
-        # calculate scrappage, sales, average age, and average efficiency.
+        # After the first year of historical data, we can start calculating 
+        # the age matrix endogenously. This allows us to calculate scrappage,
+        # sales, average age, and average efficiency.
         for r in range(len(titles['RTI'])):
 
             for veh in range(len(titles['VTTI'])):
@@ -92,6 +92,9 @@ def survival_function(data, time_lag, histend, year, titles):
                 # Current age-tracking matrix:
                 # Only retain the fleet that survives; TESF is the survival function
                 data['RLTA'][r, veh, :-1] = data['RLTA'][r, veh, :-1] * survival_ratio[r, :, :]
+                
+                # Set the newest car category to zero. 
+                data["RLTA"][r, veh, -1] = 0
 
                 # Total amount of vehicles that survive:
                 survival = np.sum(data['RLTA'][r, veh, :])
@@ -102,12 +105,12 @@ def survival_function(data, time_lag, histend, year, titles):
                     data['REVS'][r, veh, 0] = time_lag['TEWK'][r, veh, 0] - survival
 
                 elif time_lag['TEWK'][r, veh, 0] < survival:
-                    if year > 2016:
+                    if year > 2014:
                         msg = (
                             f"Error! \n"
-                            f"Check year {year}, region {r} - {titles['RTI'][r]}, vehicle {veh} - {titles['VTTI'][veh]}\n"
-                            "Vehicles that survived are greater than what was in the fleet before:\n"
-                            f"{time_lag['TEWK'][r, veh, 0]} versus {survival}"
+                            f"Check year {year}, region - {titles['RTI'][r]}, vehicle - {titles['VTTI'][veh]}\n"
+                            "More cars survived than what was in the fleet before:\n"
+                            f"{time_lag['TEWK'][r, veh, 0]:.4f} versus {survival:.4f}"
                             )
                         print(msg)
         test = 1
