@@ -64,7 +64,17 @@ def get_masterfile(ftt_module, scenario):
 
 
 def generate_model_list(ftt_modules, scenarios):
+    """
+    Using the models and scenarios from the settings.ini file,
+    put these into a dictionary.
+    
+    Remove the pseudo-scenario gamma, as this should not be initialised separately
+    """
+    # Remove Gamma pseudo-scenario for initialisation
+    scenarios = [item for item in scenarios if item != "Gamma"]
+    
     models = {}
+    
     for module in ftt_modules:
         module_scenarios = []
         for scenario in scenarios:
@@ -74,6 +84,7 @@ def generate_model_list(ftt_modules, scenarios):
                 module_scenarios.append(int(scenario[1:]))
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
+    print(f"models: {models}")
     return models
 
     
