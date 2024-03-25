@@ -15,16 +15,17 @@ This means the new car numbers can be quite volatile, especially historically
 import numpy as np
 
 
-def get_survival_ratio(survival_function):
+def get_survival_ratio(survival_function_array):
     """Transform survival function into a year-on-year ratio of survival.
     
     The survival ratio is reshapen to work with RLTA
+    
     Returns:
         survival ratio with shape (country, None, age brackets)
     """
-    
-    survival_ratio = survival_function[:, :-1, :] / survival_function[:, 1:, :] 
+    survival_ratio = survival_function_array[:, :-1, :] / survival_function_array[:, 1:, :] 
     survival_ratio = survival_ratio.reshape(71, 1, 22)
+    
     return survival_ratio
 
 def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
@@ -41,7 +42,7 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     
     age_matrix[:, :, 22] = new_cars
     
-    # Sum over each age bracket. This should be equal to TEWK. 
+    # Sum over each age bracket. This should be equal to TEWK.
     sum_age_matrix = np.sum(age_matrix, axis=2, keepdims=True)
     
         # Check for NaNs
@@ -51,8 +52,9 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     if np.any(np.isnan(age_matrix)):
         print("NaN values found in age_matrix.")
     
-    # Normalise age_matrix, so that in each country + car, it sums to overall capacity TEWK. 
-    age_matrix = np.divide(age_matrix * capacity, sum_age_matrix, where=sum_age_matrix!=0, out=np.zeros_like(age_matrix))
+    # Normalise age_matrix, so that in each country + car, it sums to overall capacity TEWK.
+    age_matrix = np.divide(age_matrix * capacity, sum_age_matrix, \
+                           where=sum_age_matrix!=0, out=np.zeros_like(age_matrix))
 
     return age_matrix
 
@@ -93,7 +95,7 @@ def survival_function(data, time_lag, histend, year, titles):
     
     # We assume a linearly decreasing distribution of ages at initialisation
     if np.sum(time_lag["RLTA"]) == 0:
-         initialise_age_matrix(data, time_lag, titles, survival_ratio)   
+        initialise_age_matrix(data, time_lag, titles, survival_ratio)   
     
     # After the first year of historical data, we start calculating the age
     # matrix endogenously.
@@ -112,6 +114,7 @@ def survival_function(data, time_lag, histend, year, titles):
         # Vectorized condition for scrappage
         data['REVS'][..., 0] = np.where(scrappage > 0, scrappage, 0)
         
+        
         # Warning if more cars survive than existed previous timestep:
         for r in range(data['RLTA'].shape[0]):
             for veh in range(data['RLTA'].shape[1]):
@@ -121,5 +124,9 @@ def survival_function(data, time_lag, histend, year, titles):
                            "More cars survived than what was in the fleet before:\n"
                            f"{time_lag['TEWK'][r, veh, 0]:.8f} versus {np.sum(data['RLTA'][r, veh, :]):.8f}")
                     print(msg)
+    
+    data["RLTA"] = add_new_cars_age_matrix(
+                data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]
+                )
 
     return data

@@ -4,7 +4,7 @@
 ftt_tr_main.py
 =========================================
 Passenger road transport FTT module.
-####################################
+
 
 This is the main file for FTT: Transport, which models technological
 diffusion of passenger vehicle types due to simulated consumer decision making.
@@ -137,12 +137,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
 
 
-    # %% Initialise
-    # Up to the last year of historical market share data
-    if year <= data["TDA1"][0, 0, 0]:
-        for r in range(len(titles['RTI'])):
+    for r in range(len(titles['RTI'])):
+        # %% Initialise
+        # Up to the last year of historical market share data
+        if year <= data["TDA1"][r, 0, 0]:
         
-            # CORRECTION TO MARKET SHARES
+        
+            # Correction to market shares
             # Sometimes historical market shares do not add up to 1.0
             if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-9)
                     and np.sum(data['TEWS'][r, :, 0]) > 0.0):
@@ -161,14 +162,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2_corr
             data['TEWE'][:, :, 0] = data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['14 CO2Emissions']]/1e6*1.2
     
-        # Call the survival function routine.
-        data = survival_function(data, time_lag, histend, year, titles)
-        data["RLTA"] = add_new_cars_age_matrix(
-                    data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]
-                    )
+        
 
-    if year == data["TDA1"][0, 0, 0]:  # TODO: think about how to change this from different start years
-        for r in range(len(titles['RTI'])):   
+        if year == data["TDA1"][r, 0, 0]: 
             # Define starting battery capacity
             start_bat_cap = copy.deepcopy(data["TEWW"])
             for veh in range(len(titles['VTTI'])):
@@ -223,7 +219,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # "Emissions"
             data['TEWE'][r, :, 0] = (data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
                                      * CO2_corr[r] * emis_corr[r,:]/1e6)
-
+    
+    # Call the survival function routine, updating scrappage and age matrix:
+    if year <= np.max(data["TDA1"][:, 0, 0]):
+        data = survival_function(data, time_lag, histend, year, titles)
+        
 
     # Calculate the LCOT for each vehicle type.
     # Call the function
@@ -231,8 +231,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # %% Simulation of stock and energy specs
 
-    if year > data["TDA1"][0, 0, 0]: # Todo: make this r dependent again
-        # Note, regions have different start dates (TDA1) 
+    if year > np.min(data["TDA1"][:, 0, 0]): 
+        # Regions have different start dates (TDA1) 
 
         # Create a local dictionary for timeloop variables
         # It contains values between timeloop interations in the FTT core
@@ -251,11 +251,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
 
-        # Call the survival function routine.
-        data = survival_function(data, time_lag, histend, year, titles)
-
-        # Total number of scrapped vehicles: #TP_TEOL changed to RVTS #Is this really needed?
-        #data['RVTS'][:, 0, 0] = np.sum(data['REVS'][:, :, 0], axis=1)
 
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0,0,0])
@@ -264,7 +259,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         ############## Computing new shares ##################
 
         # Start the computation of shares
-        for t in range(1, no_it+1):
+        for t in range(1, no_it + 1):
 
             # Both rvkm and RFLT are exogenous at the moment
             # Interpolate to prevent staircase profile.
@@ -557,5 +552,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 data_dt[var] = copy.deepcopy(data[var])
 
-        data["RLTA"] = add_new_cars_age_matrix(data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"])
+        # Call the survival function routine.
+        data = survival_function(data, time_lag, histend, year, titles)
+        
     return data
