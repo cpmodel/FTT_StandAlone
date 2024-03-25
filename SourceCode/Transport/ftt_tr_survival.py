@@ -58,11 +58,12 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
 
 def initialise_age_matrix(data, time_lag, titles, survival_ratio):
     """At the start of the simulation, set up an age matrix, assuming
-    an equilibrium has been reached"""
+    an equilibrium has been reached
+    
+    # TODO: This needs to be replaced with actual data
+    """
     
     # VYTI has 23 year categories (number 0-22)
-    # TODO: This needs to be replaced with actual data
-    
     n_age_brackets = len(titles['VYTI'])
     fraction_per_age = np.linspace(1/(3*n_age_brackets), 3/n_age_brackets, n_age_brackets)
     fraction_per_age = fraction_per_age / np.sum(fraction_per_age)

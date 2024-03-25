@@ -8,7 +8,7 @@ Passenger road transport FTT module.
 
 This is the main file for FTT: Transport, which models technological
 diffusion of passenger vehicle types due to simulated consumer decision making.
-Consumers compare the **levelised cost of heat**, which leads to changes in the
+Consumers compare the log of the **levelised costs**, which leads to changes in the
 market shares of different technologies.
 
 The outputs of this module include sales, fuel use, and emissions.
@@ -18,9 +18,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
-    - `estimation <econometrics_functions.html>`__
-        Predict future values according to the estimated coefficients.
+        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -123,13 +121,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     if year == 2012:
         start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
         for veh in range(len(titles['VTTI'])):
-            if (veh > 17) and (veh < 24):
+            if 17 < veh < 24:
                 # Starting EV/PHEV cost (without battery)
-                start_i_cost[:,veh,0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] 
-                                            / data['BTTC'][:, veh, c3ti['20 Markup factor']]
-                                            - data['BTTC'][:, veh, c3ti['18 Battery cap (kWh)']] 
-                                            * data['BTTC'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
-                                            - data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] * 0.15)
+                start_i_cost[:,veh,0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']]
+                                         / data['BTTC'][:, veh, c3ti['20 Markup factor']]
+                                         - data['BTTC'][:, veh, c3ti['18 Battery cap (kWh)']]
+                                         * data['BTTC'][:, veh, c3ti['19 Battery cost ($/kWh)']]
+                                         - data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] * 0.15)
             else:
                 start_i_cost[:,veh,0] = 0
         # TEVC is 'Start_ICost' in the Fortran model
@@ -137,7 +135,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     elif year > 2012:
         # Copy over TEVC values
         data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
-    
+
 
     # %% Initialise
     # Up to the last year of historical market share data
@@ -160,15 +158,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # "Generation", defined as total mln km driven
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * data['RVKM'][:, 0, 0, np.newaxis] * 1e-3
 
-            # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2Corr
+            # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2_corr
             data['TEWE'][:, :, 0] = data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['14 CO2Emissions']]/1e6*1.2
     
         # Call the survival function routine.
         data = survival_function(data, time_lag, histend, year, titles)
-        data["RLTA"] = add_new_cars_age_matrix(data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"])
+        data["RLTA"] = add_new_cars_age_matrix(
+                    data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]
+                    )
 
     if year == data["TDA1"][0, 0, 0]:  # TODO: think about how to change this from different start years
-         for r in range(len(titles['RTI'])):   
+        for r in range(len(titles['RTI'])):   
             # Define starting battery capacity
             start_bat_cap = copy.deepcopy(data["TEWW"])
             for veh in range(len(titles['VTTI'])):
@@ -181,11 +181,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Save initial cost matrix (BTCLi from FORTRAN model)
             data["BTCI"] = copy.deepcopy(data["BTTC"])
 
-            # Calculate scrapping
-            #data['REVS'][:, 0, 0] = sum(data['TESH'][:, :, 0]*data['TSFD'][:, :, 0], axis=1)
-
             # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
-            CO2Corr = np.ones(len(titles['RTI']))
+            CO2_corr = np.ones(len(titles['RTI']))
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
@@ -195,7 +192,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         
             if data['RFLT'][r, 0, 0] > 0.0:
-                CO2Corr[r] = (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]* \
+                CO2_corr[r] = (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]* \
                          data['TETH'][r, :, 0]).sum() / (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]).sum()
 
             for fuel in range(len(titles['JTI'])):
@@ -221,11 +218,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Energy demand (BTTC)           MJ/km
 
             data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
-                                    data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2Corr[r]/41.868))
+                                    data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2_corr[r]/41.868))
 
             # "Emissions"
             data['TEWE'][r, :, 0] = (data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
-                                     * CO2Corr[r] * emis_corr[r,:]/1e6)
+                                     * CO2_corr[r] * emis_corr[r,:]/1e6)
 
 
     # Calculate the LCOT for each vehicle type.
@@ -348,8 +345,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 endo_capacity = endo_shares * rfltt[r, np.newaxis]
 
                 Utot = rfltt[r]
-                dSk = np.zeros([len(titles['VTTI'])])
-                dUk = np.zeros([len(titles['VTTI'])])
                 dUkTK = np.zeros([len(titles['VTTI'])])
                 dUkREG = np.zeros([len(titles['VTTI'])])
                 TWSA_scalar = 1.0
@@ -385,15 +380,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 # Check shares sum to 1 
                 if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
-                    msg = """Sector: {} - Region: {} - Year: {}
-                    Sum of market shares do not add to 1.0 (instead: {})
-                    """.format(sector, titles['RTI'][r], year, np.sum(data['TEWS'][r, :, 0]))
+                    msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
+                    Sum of market shares do not add to 1.0 (instead: {np.sum(data['TEWS'][r, :, 0])})
+                    """
                     warnings.warn(msg)
 
                 if np.any(data['TEWS'][r, :, 0] < 0.0):
-                    msg = """Sector: {} - Region: {} - Year: {}
+                    msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
                     Negative market shares detected! Critical error!
-                    """.format(sector, titles['RTI'][r], year)
+                    """
                     warnings.warn(msg)
 
 
@@ -412,14 +407,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
-            CO2Corr = np.ones(len(titles['RTI']))
+            CO2_corr = np.ones(len(titles['RTI']))
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
             fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
-                    CO2Corr[r] = (data['TESH'][r, :, 0]*data['TESF'][r, :, 0]* \
+                    CO2_corr[r] = (data['TESH'][r, :, 0]*data['TESF'][r, :, 0]* \
                              data['TETH'][r, :, 0]).sum()/(data['TESH'][r, :, 0]*data['TESF'][r, :, 0]).sum()
 
                 for fuel in range(len(titles['JTI'])):
@@ -446,11 +441,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 # Fuel use
                 data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
-                                        data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2Corr[r]/41.868))
+                                        data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2_corr[r]/41.868))
 
                 # "Emissions"
                 data['TEWE'][r, :, 0] = (data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
-                                         *CO2Corr[r]*emis_corr[r,:]/1e6)
+                                         *CO2_corr[r]*emis_corr[r,:]/1e6)
 
             ############## Learning-by-doing ##################
 
@@ -499,7 +494,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Battery learning
             for veh in range(len(titles['VTTI'])):
-                if (veh > 17) and (veh < 24):
+                if 17 < veh < 24:
                     # Battery cost as a result of learning
                     # Battery cost = energy density over time*rare metal price trend over time
                     data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] = ((data["BTTC"][:, veh, c3ti['22 Energy density']]**(year - 2022)) 
@@ -528,18 +523,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                                       ** (data["BTTC"][:, veh, c3ti['16 Learning exponent']]/2))
                     
                     # Calculate new costs (seperate treatments for ICE vehicles and EVs/PHEVs)
-                    if (veh > 17) and (veh < 24):
+                    if 17 < veh < 24:
                         # EVs and PHEVs HERE     
                         # Cost (excluding the cost of battery) + Updated cost of battery
                         # + updated indirect cost) * Markup factor
-                        data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] = ((i_cost[:,veh,0] + (data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] 
-                                                                                * data["BTTC"][:, veh, c3ti['18 Battery cap (kWh)']]) + id_cost[:, veh, 0]) 
-                                                                                * data['BTTC'][:, veh, c3ti['20 Markup factor']])
+                        data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] =  \
+                                ((i_cost[:,veh,0] + (data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                                 * data["BTTC"][:, veh, c3ti['18 Battery cap (kWh)']]) + id_cost[:, veh, 0]) 
+                                 * data['BTTC'][:, veh, c3ti['20 Markup factor']])
                     else:
                         # ICE HERE
-                        data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] = data_dt['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] \
-                                                                                * (1.0 + data['BTTC'][:, veh, c3ti['16 Learning exponent']] \
-                                                                                   * dw[veh] / data['TEWW'][0, veh, 0])
+                        data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] = \
+                            data_dt['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] \
+                            * (1.0 + data['BTTC'][:, veh, c3ti['16 Learning exponent']] \
+                            * dw[veh] / data['TEWW'][0, veh, 0])
 
             # Investment in terms of car purchases:
             for r in range(len(titles['RTI'])):
