@@ -28,12 +28,6 @@ Functions included:
     - get_sales
         Calculate new sales/additions in FTT-Transport 
         
-variables: 
-cf = capacity factor
-ff = filling factors
-ns = number of seats
-      
-        
 """
 
 # Standard library imports
@@ -552,7 +546,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 data_dt[var] = copy.deepcopy(data[var])
 
-        # Call the survival function routine.
+        # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
         
     return data

@@ -23,7 +23,7 @@ def get_survival_ratio(survival_function_array):
     Returns:
         survival ratio with shape (country, None, age brackets)
     """
-    survival_ratio = survival_function_array[:, :-1, :] / survival_function_array[:, 1:, :] 
+    survival_ratio = survival_function_array[:, :-1, :] / survival_function_array[:, 1:, :]
     survival_ratio = survival_ratio.reshape(71, 1, 22)
     
     return survival_ratio
@@ -58,23 +58,21 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
 
     return age_matrix
 
-def initialise_age_matrix(data, time_lag, titles, survival_ratio):
+def initialise_age_matrix(data, titles):
     """At the start of the simulation, set up an age matrix, assuming
     an equilibrium has been reached
     
-    # TODO: This needs to be replaced with actual data
+    # TODO: This needs to be replaced with actual data?
     """
     
     # VYTI has 23 year categories (number 0-22)
     n_age_brackets = len(titles['VYTI'])
     fraction_per_age = np.linspace(1/(3*n_age_brackets), 3/n_age_brackets, n_age_brackets)
     fraction_per_age = fraction_per_age / np.sum(fraction_per_age)
+    
     # Split the capacity TEWK into different age brackets via broadcasting
     data["RLTA"] = fraction_per_age[None, None, :] * data["TEWK"][:, :, 0][:, :, np.newaxis]
 
-    # Sum over the age dimension
-    survival = np.sum(data['RLTA'][:, :, 1:] * survival_ratio[:, :, :], axis=2)
-    data['REVS'][:, :, 0] = time_lag["TEWK"][:, :, 0] - survival
     return data
     
 
@@ -95,7 +93,7 @@ def survival_function(data, time_lag, histend, year, titles):
     
     # We assume a linearly decreasing distribution of ages at initialisation
     if np.sum(time_lag["RLTA"]) == 0:
-        initialise_age_matrix(data, time_lag, titles, survival_ratio)   
+        initialise_age_matrix(data, titles)   
     
     # After the first year of historical data, we start calculating the age
     # matrix endogenously.
