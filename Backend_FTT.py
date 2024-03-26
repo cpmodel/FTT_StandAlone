@@ -946,7 +946,7 @@ def construct_gamma_graphic_data(model, region, start_year, type_):
 
     graphics = pd.read_excel(f'{rootdir}\\Utilities\\Titles\\ReportGraphics.xlsx',
                          sheet_name="Gamma_chart",index_col="ref")
-    settings = graphics.loc[model]
+    settings = graphics.loc[model].fillna('None')
     command = settings.loc["Vars"].split("|")
 
     vars = command[1].split(",")
