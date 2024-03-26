@@ -42,7 +42,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_sales import get_sales
-from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
+from SourceCode.Transport.ftt_tr_survival import survival_function
 
 
 # %% Fleet size - under development

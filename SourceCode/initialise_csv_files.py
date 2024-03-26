@@ -1,10 +1,8 @@
 import os
 import glob
-import re
 
 
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
-#from convert_masterfiles_to_csv import convert_masterfiles_to_csv
 
 
 def initialise_csv_files(ftt_modules, scenarios):
