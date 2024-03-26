@@ -4,14 +4,7 @@
 ftt_p_lcoe.py
 =========================================
 Power LCOE FTT module.
-#################################
 
-Local library imports:
-
-    Support functions:
-
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - get_lcoe
@@ -20,18 +13,11 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
-# Local library imports
-from SourceCode.support.divide import divide
 
 
 # %% lcoe
@@ -64,10 +50,10 @@ def get_lcoe(data, titles):
 
     Notes
     ---------
-    Additional notes if required.
+    Additional notes.
     BCET = cost matrix 
     MEWL = Average capacity factor
-    MEWT = Subsidies.
+    MEWT = Subsidies
     MTFT = Fuel tax
     
     """
