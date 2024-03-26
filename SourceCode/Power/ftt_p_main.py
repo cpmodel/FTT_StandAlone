@@ -4,7 +4,7 @@
 ftt_p_main.py
 =========================================
 Power generation FTT module.
-############################
+
 
 This is the main file for the power module, FTT: Power. The power
 module models technological replacement of electricity generation technologies due
@@ -45,7 +45,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
+        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -68,6 +68,7 @@ from SourceCode.Power.ftt_p_lcoe import get_lcoe
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
+from SourceCode.Power.ftt_p_2nd_hand_batteries import second_hand_batteries
 
 
 # %% main function
@@ -663,6 +664,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
                 
                 print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
+
+            # =================================================================
+            # Second-hand batteries
+            # =================================================================
+            second_hand_b = second_hand_batteries(data, time_lag, iter_lag, year, titles)
 
             # =================================================================
             # Residual load-duration curve

@@ -125,7 +125,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                 F[t2, t1] = (1.0-Fik)*(1.0-isReg[r, t2]) * (1.0 - isReg[r, t1]) + isReg[r, t1]*(1.0-isReg[r, t2]) + 0.5*(isReg[r, t2]*isReg[r, t1])
 
                 
-                #Runge-Kutta market share dynamics (do not remove the divide-by-6, it is part of the algorithm)
+                # Runge-Kutta market share dynamics (do not remove the divide-by-6, it is part of the algorithm)
                 k_1 = S_i*S_k * (mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
                 k_2 = (S_i+dt*k_1/2)* (S_k-dt*k_1/2)*(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
                 k_3 = (S_i+dt*k_2/2)* (S_k-dt*k_2/2)*(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
