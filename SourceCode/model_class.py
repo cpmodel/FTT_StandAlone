@@ -190,13 +190,16 @@ class ModelRun:
 
                     # Increment the progress bar by one step
                     pbar.update(1)
-
-                    # Populate output container
-                    for var in self.variables:
-                        if 'TIME' in self.dims[var]:
-                            self.output[scen][var][:, :, :, y] = self.variables[var]
-                        else:
-                            self.output[scen][var][:, :, :, 0] = self.variables[var]
+                    try:
+                        # Populate output container
+                        for var in self.variables:
+                            if 'TIME' in self.dims[var]:
+                                self.output[scen][var][:, :, :, y] = self.variables[var]
+                            else:
+                                self.output[scen][var][:, :, :, 0] = self.variables[var]
+                    except ValueError as e:
+                        print(f"Error in scenario {scen} and variable {var}")
+                        raise(e)
 
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")

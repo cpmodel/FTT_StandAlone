@@ -147,16 +147,19 @@ def run_model():
         yield(f"data: ;message:Processing {scenario};\n\n")
 
         try:
-            #Solve the model for each year
+            # Solve the model for each year
             for year_index, year in enumerate(model.timeline):
                 model.variables, model.lags = model.solve_year(year,year_index,scenario)
-
-                # Populate output container
-                for var in model.variables:
-                    if 'TIME' in model.dims[var]:
-                        model.output[scenario][var][:, :, :, year_index] = model.variables[var]
-                    else:
-                        model.output[scenario][var][:, :, :, 0] = model.variables[var]
+                try:
+                    # Populate output container
+                    for var in model.variables:
+                        if 'TIME' in model.dims[var]:
+                            model.output[scenario][var][:, :, :, year_index] = model.variables[var]
+                        else:
+                            model.output[scenario][var][:, :, :, 0] = model.variables[var]
+                except ValueError as e:
+                    print(f"Error saving {var} in {year_index+2010} in {model}")
+                    raise(e)
 
                 elapsed_time = time.time() - start_time
                 yield("event: processing\n")

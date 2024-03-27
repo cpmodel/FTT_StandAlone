@@ -16,7 +16,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     based on scrappage of electric vehicles from FTT:Tr. We use batteries
     from cars scrapped in the previous time step
     
-    Numbers are taken from the Xu et al (2023) paper: https://www.nature.com/articles/s41467-022-35393-0
+    Numbers are taken from the Xu et al (2022) paper: https://www.nature.com/articles/s41467-022-35393-0
 
     Returns:
         data dictionary with updated battery capacity in GWh
@@ -24,7 +24,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     """
     utilisation_rate = 0.5  # Share of car batteries getting a second life in power
     yearly_decay = 0.98  # Assumption, very roughly based on Xu, but not really
-    starting_degredation = 0.74 # Starting capacity of the batteries according to Xu et al (2023)
+    starting_degredation = 0.74 # Starting capacity of the batteries according to Xu et al.
 
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
@@ -39,7 +39,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     
     data['Second-hand batteries by age'][..., :-1] = np.copy(time_lag['Second-hand battery stock'][..., 1:]) * yearly_decay
     data['Second-hand batteries by age'][..., -1] = used_battery_capacity
-    data['Second-hand battery stock'] = np.sum(data['Second-hand battery by age'], axis=-1)
-    
+    data['Second-hand battery stock'] = np.sum(data['Second-hand batteries by age'], axis=-1)
+    br = 1
 
     return data

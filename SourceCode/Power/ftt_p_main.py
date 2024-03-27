@@ -13,7 +13,7 @@ electricity**, which leads to changes in the market shares of different technolo
 
 After market shares are determined, the rldc function is called, which calculates
 **residual load duration curves**. This function estimates how much power needs to be
-supplied by flexible or baseload technologies to meet electricity demand at all times.
+supplied by flexible or dispatchable technologies to meet electricity demand at all times.
 This function also returns load band heights, curtailment, and storage information,
 including storage costs and marginal costs for wind and solar.
 
@@ -668,7 +668,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Second-hand batteries
             # =================================================================
-            second_hand_b = second_hand_batteries(data, time_lag, iter_lag, year, titles)
+            data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
 
             # =================================================================
             # Residual load-duration curve
