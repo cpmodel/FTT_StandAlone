@@ -53,9 +53,11 @@ def get_lcot(data, titles, year):
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
+    # Taxable categories for fuel - not all fuels subject to fuel tax
     tf = np.ones([len(titles['VTTI']), 1])
-    tf[12:15] = 0
+    # Just EVs exempt at the moment
     tf[18:21] = 0
+    taxable_fuels = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
     for r in range(len(titles['RTI'])):
 
@@ -87,6 +89,9 @@ def get_lcot(data, titles, year):
         # Energy use
         en = bttc[:, c3ti['9 energy use (MJ/km)'], np.newaxis]
 
+        # Taxable fuels
+        taxable_fuels[r,:] = tf[:]
+
         # Initialse the levelised cost components
         # Average investment cost
         it = np.zeros([len(titles['VTTI']), int(max_lt)])
@@ -112,7 +117,8 @@ def get_lcot(data, titles, year):
 
         # Fuel tax costs
         fft = np.ones([len(titles['VTTI']), int(max_lt)])
-        fft = fft * data['RTFT'][r, :, 0, np.newaxis]*en/ns/ff
+        fft = fft * data['RTFT'][r, :, 0, np.newaxis]*en/ns/ff \
+              * taxable_fuels[r, :]
         fft = np.where(mask, fft, 0)
         
         # Average operation & maintenance cost
@@ -137,8 +143,8 @@ def get_lcot(data, titles, year):
         
         # Fuel cost components for front end
         data["TWFC"][r, :, 0] = bttc[:,c3ti['3 fuel cost (USD/km)']] / ns[:,0] / ff[:,0] \
-                                + data['RTFT'][r, 0, 0] * en[:,0] / ns[:,0] / ff[:,0]
-
+                                + data['RTFT'][r, 0, 0] * en[:,0] / ns[:,0] / ff[:,0] \
+                                * taxable_fuels[r, :, 0]
         # Net present value calculations
         # Discount rate
         denominator = (1+dr)**lt_mat
