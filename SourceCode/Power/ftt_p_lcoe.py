@@ -66,24 +66,23 @@ def get_lcoe(data, titles):
         # Cost matrix
         bcet = data['BCET'][r, :, :]
 
-        # plant lifetime
+        # Plant lifetime
         lt = bcet[:, c2ti['9 Lifetime (years)']]
         bt = bcet[:, c2ti['10 Lead Time (years)']]
         max_lt = int(np.max(bt+lt))
-        # max_bt = int(np.max(bt))
+        
+        # Define (matrix) masks to turn off cost components before or after contruction 
         full_lt_mat = np.linspace(np.zeros(len(titles['T2TI'])), max_lt-1,
                                   num=max_lt, axis=1, endpoint=True)
-        lt_max_mat = np.concatenate(int(max_lt)*[(lt+bt-1)[:, np.newaxis]], axis=1)
-
-        bt_max_mat = np.concatenate(int(max_lt)*[(bt-1)[:, np.newaxis]], axis=1)
+        lt_max_mat = np.concatenate(int(max_lt) * [(lt+bt-1)[:, np.newaxis]], axis=1)
+        bt_max_mat = np.concatenate(int(max_lt) * [(bt-1)[:, np.newaxis]], axis=1)
+        
         bt_mask = full_lt_mat <= bt_max_mat
-        # bt_mat = np.where(bt_mask, full_lt_mat, 0)
-
         bt_mask_out = full_lt_mat > bt_max_mat
         lt_mask_in = full_lt_mat <= lt_max_mat
         lt_mask = np.where(lt_mask_in == bt_mask_out, True, False)
         
-        # capacity factor of marginal unit (for decision-making)
+        # Capacity factor of marginal unit (for decision-making)
         cf_mu = bcet[:, c2ti['11 Decision Load Factor']].copy()
         # Trap for very low CF
         cf_mu[cf_mu<0.000001] = 0.000001
