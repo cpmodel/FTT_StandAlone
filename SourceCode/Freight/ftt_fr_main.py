@@ -4,24 +4,21 @@
 ftt_fr_main.py
 ============================================================
 Freight transport FTT module.
-#############################
 
 This is the main file for FTT: Freight, which models technological
 diffusion of freight vehicle types due to simulated consumer decision making.
-Consumers compare the **levelised cost of freight**, which leads to changes in the
-market shares of different technologies.
+Consumers compare the **levelised cost of freight**, which leads to changes 
+in the market shares of different technologies.
 
 The outputs of this module include market shares, fuel use, and emissions.
 
 Local library imports:
 
     FTT: Freight functions:
-
     - `get_lcof <ftt_fr_lcof.html>`__
         Levelised cost calculation
 
     Support functions:
-
     - `divide <divide.html>`__
         Element-wise divide which replaces divide-by-zeros with zeros
 
@@ -33,6 +30,7 @@ Functions included:
 
 """
 
+# Standard library imports
 from math import sqrt
 import copy
 import warnings
@@ -44,32 +42,32 @@ import numpy as np
 from SourceCode.Freight.ftt_fr_lcof import get_lcof
 from SourceCode.support.divide import divide
 
-# Main function
-
+# %% main function
+# -----------------------------------------------------------------------------
+# ----------------------------- Main ------------------------------------------
+# -----------------------------------------------------------------------------
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
-    This function simulates investor decision making in the freight sector.
-    Levelised costs (from the lcof function) are taken and market shares
-    for each vehicle type are simulated to ensure demand is met.
 
+    This function simulates investor decision making in the freight sector.
+    Levelised costs (from the get_lcof function) are taken and market shares
+    for each vehicle type are simulated to ensure demand is met.
 
     Parameters
     -----------
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     time_lag: type
-        Description
+        Model variables from the previous year
     iter_lag: type
-        Description
+        Model variables from the previous year
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
         Curernt/active year of solution
-    Domain: dictionary of lists
-        Pairs variables to domains
 
     Returns
     ----------
@@ -78,32 +76,43 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     """
 
+    # Categories for the cost matrix
+    c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
+
+    sector = 'freight'
+
     # Factor used to create intermediate data from annual figures
     no_it = int(data['noit'][0, 0, 0])
     dt = 1 / float(no_it)
 
-    c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
-
-    sector = 'freight'
     # Creating variables
-
+    # Technology to fuel user conversion matrix
     zjet = copy.deepcopy(data['ZJET'][0, :, :])
+    # Initialise the emission correction factor
     emis_corr = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
 
+    # Initialise up to the last year of historical data
     if year <= histend["RVKZ"]:
-
-        # U (ZEWG) is number of vehicles by technology
-        data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] * data['RFLZ'][:, np.newaxis, 0, 0]
+        
+        for r in range(len(titles['RTI'])):
+            # Correction to market shares
+            # Sometimes historical market shares do not add up to 1.0
+            if (~np.isclose(np.sum(data['ZEWS'][r, :, 0]), 1.0, atol=1e-9)
+                    and np.sum(data['ZEWS'][r, :, 0]) > 0.0):
+                        data['ZEWS'][r, :, 0] = np.divide(data['ZEWS'][r, :, 0],
+                                                np.sum(data['ZEWS'][r, :, 0]))
+        
+        # Calculate number of vehicles per technology
+        data['ZEWK'][:, :, 0] = data['ZEWS'][:, :, 0] \
+                                * data['RFLZ'][:, np.newaxis, 0, 0]
+        
+        # Calculate demand per technology, defined as total mln tkm driven
+        data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] \
+                                * data['RVKZ'][:, 0, 0, np.newaxis]
 
         if year == histend["RVKZ"]:
             # Calculate levelised cost
             data = get_lcof(data, titles)
-
-#
-#
-#        #I (ZEWY) is new sales, positive changes in U
-#        data['ZEWY'][r, :, 0] = ((data['ZEWG'][r, :, 0] - data['ZEWG'][r, :, 0])/dt)*((data['ZEWG'][r, :, 0] - data['ZEWG'][r, :, 0])>0)
-
 
 #
 ##        for veh in range(len(titles['FTTI'])):
@@ -249,7 +258,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 # Check that exogenous capacity is smaller than rgulated capacity
                 # Regulations have priority over exogenous capacity
-                reg_vs_exog = ((data['ZWSA'][r, :, 0] + data_dt['ZEWG'][r, :, 0]) > data['ZREG'][r, :, 0]) \
+                reg_vs_exog = ((data['ZWSA'][r, :, 0] + data_dt['ZEWK'][r, :, 0]) > data['ZREG'][r, :, 0]) \
                              & (data['ZREG'][r, :, 0] >= 0.0)
                 data['ZWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['ZWSA'][r, :, 0])
                 ZWSA_scalar = 1.0
@@ -270,7 +279,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Share of UED * change in UED * isReg i.e. change in UED split into technologies times isReg
                 if time_lag['RFLZ'][r, 0, 0] > 0.0 and Utot_d > 0.0 and (Utot_d - time_lag['RFLZ'][r, 0, 0]) > 0.0:
 
-                    dUkREG = -data_dt['ZEWG'][r, :, 0] * ( (D[r] - time_lag['RFLZ'][r, 0, 0]) /
+                    dUkREG = -data_dt['ZEWK'][r, :, 0] * ( (D[r] - time_lag['RFLZ'][r, 0, 0]) /
                                  time_lag['RFLZ'][r, 0, 0]) * isReg[r, :].reshape([len(titles['FTTI'])])
                 
                 # Sum effect of exogenous sales additions (if any) with
@@ -281,7 +290,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Convert to market shares and make sure sum is zero
                 # dSk = dUk/Utot_d - Uk dUtot/Utot^2  (Chain derivative)
                 dSk = np.divide(dUk, Utot_d) \
-                      - time_lag['ZEWG'][r, :, 0] / np.sum(time_lag['ZEWG'][r, :, 0]) * np.divide(dUtot, Utot_d)
+                      - time_lag['ZEWK'][r, :, 0] / np.sum(time_lag['ZEWK'][r, :, 0]) * np.divide(dUtot, Utot_d)
 
                 try:
                     data['ZEWS'][r, :, 0] = data_dt['ZEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
@@ -313,7 +322,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 data['ZESG'][r, :, 0] = D[r, 0, 0]/data['ZLOD'][r, 0, 0]
 
-                # Sd is share difference between small and large trucks
+                # ZESD is share difference between small and large trucks
                 data['ZESD'][r, 0, 0] = data['ZEWS'][r, 0, 0] + data['ZEWS'][r, 2, 0] + data['ZEWS'][r, 4, 0] + \
                 data['ZEWS'][r, 6, 0] + data['ZEWS'][r, 8, 0] + data['ZEWS'][r, 10, 0] + data['ZEWS'][r, 12, 0] + \
                 data['ZEWS'][r, 14, 0] + data['ZEWS'][r, 16, 0] + data['ZEWS'][r, 18, 0]
@@ -333,20 +342,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # T is total service generated by small trucks in MTkm
 
                 # This is number of trucks by technology
-                # data['ZEWG'][r, :, 0] = data['ZEWS'][r, :, 0]*data['RFLZ'][r, 0, 0]
-                data['ZEWG'][r, :, 0] = data['ZEWS'][r, :, 0] * Utot[r, 0, 0]
-                # Investment (sales) = new capacity created
+                data['ZEWK'][r, :, 0] = data['ZEWS'][r, :, 0] * Utot[r, 0, 0]
 
-                veh_diff = data['ZEWG'][r, :, 0] - data_dt['ZEWG'][r, :, 0]
-                veh_dprctn = data_dt['ZEWG'][r, :, 0] / data['ZCET'][r, :, c6ti['8 service lifetime (y)']]
+                # Investment (sales) = new capacity created
+                veh_diff = data['ZEWK'][r, :, 0] - data_dt['ZEWK'][r, :, 0]
+                veh_dprctn = data_dt['ZEWK'][r, :, 0] / data['ZCET'][r, :, c6ti['8 service lifetime (y)']]
                 data['ZEWY'][r, :, 0] = np.where(veh_diff > 0.0, 
                                                veh_diff/dt + veh_dprctn, 
                                                veh_dprctn)
 
-
                 # Emissions
                 data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1E6)
-
 
                 zjet = copy.deepcopy(data['ZJET'][0, :, :])
                 for veh in range(len(titles['FTTI'])):
@@ -375,6 +381,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 bi[r, :] = np.matmul(data['ZEWB'][0, :, :], data['ZEWY'][r, :, 0])
             dw = np.sum(bi, axis = 0)*dt
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
+
+            # Calculate demand per technology, defined as total mln tkm driven
+            data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] \
+                                    * data['RVKZ'][:, 0, 0, np.newaxis]
 
 #                data['ZCET'][:, :, c6ti['11 Cumulative seats']] = data_dt['ZCET'][:, :, c6ti['11 Cumulative seats']]
 #                 + np.sum(data['ZEWB'][0, :, :]*data['ZEWY'][:, :, 0], axis = 1)*dt

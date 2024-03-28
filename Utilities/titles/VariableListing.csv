@@ -322,7 +322,9 @@ ZTTC,FTT-Fr LCOF with policy,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZTTD,FTT-Fr LCOF with policy sd,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZTLL,FTT-Fr LCOF logarithmic space with gamma,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZTDD,FTT-Fr log space with gamma sd,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
-ZEWG,FTT-Fr Capacity by technology (number of vehicles),No. vehicles,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
+ZEWG,FTT-Fr demand by technology,mln Tkm/y,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
+ZEWK,FTT-Fr Capacity by technology (number of vehicles),No. vehicles,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
+ZEWI,FTT-Fr New sales,No. vehicles,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWY,FTT-Fr Investment by Technology,No. vehicles,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZESD,FTT-Fr Difference between small and large truck shares,%,RTI,LODZ,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZESA,FTT-Fr Share of small trucks,%,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
