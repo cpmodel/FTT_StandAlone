@@ -72,6 +72,7 @@ from SourceCode.Power.ftt_p_lcoe import get_lcoe
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
+from SourceCode.Power.ftt_p_cmdem import cm_dem
 
 
 # %% main function
@@ -247,6 +248,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MCFC'][:, :, 0] = copy.deepcopy(data['MCFCX'][:, :, 0])
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:, :, 0])
         
+        data = cmdem(data, titles)
         data = get_lcoe(data, titles)
 
 
