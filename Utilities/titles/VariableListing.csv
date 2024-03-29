@@ -369,3 +369,4 @@ MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FT
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
 CMIN,FTT-Power Critical Minerals Requirements per Technology,kg/MW,NA,T2TI,MINERALS,NA,FTT-P,-,-,,,,
+CMDM,FTT-Power Critical Minerals Demand per Technology,kg,RTI,T2TI,MINERALS,TIME,FTT-P,-,-,,,,
