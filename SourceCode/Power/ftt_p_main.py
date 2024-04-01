@@ -487,11 +487,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
 
             # Learning-by-doing effects on investment
-    #        for tech in range(len(titles['T2TI'])):
-    #            if data['MEWW'][0, tech, 0] > 0.1:
-    #                data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = time_lag['BCET'][:, tech, c2ti['3 Investment ($/kW)']] * \
-    #                                                                       (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
-
+            if year > histend['BCET']:
+                for tech in range(len(titles['T2TI'])):
+                    if data['MEWW'][0, tech, 0] > 0.1:
+                        data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = time_lag['BCET'][:, tech, c2ti['3 Investment ($/kW)']] * \
+                                                                                (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                        data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = time_lag['BCET'][:, tech, c2ti['4 std ($/MWh)']] * \
+                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                        data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = time_lag['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] * \
+                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                        data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = time_lag['BCET'][:, tech, c2ti['8 std ($/MWh)']] * \
+                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+            
             # Investment in terms of power technologies:
             for r in range(len(titles['RTI'])):
                 data['MWIY'][r, :, 0] = time_lag['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*data['BCET'][r, :, c2ti['3 Investment ($/kW)']]/1.33
