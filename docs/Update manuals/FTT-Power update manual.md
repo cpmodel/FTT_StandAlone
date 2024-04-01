@@ -33,9 +33,12 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 
 ## Less frequent updates
 ### Costs
-1. Update the costs of CAPEX, OPEX and the  standard deviation of both using the IEA's [Projected Cost of Generating Electricity](https://www.iea.org/reports/projected-costs-of-generating-electricity-2020) file. An [xlsx file can be found](https://iea.blob.core.windows.net/assets/2df33f6b-eba0-4639-926a-bc1c3d3e3268/IEA-NEAProjectedCostsofGeneratingElectricity2020-Datafile.xlsx) with this data at the IEA data server (**how??**) xlsx file at ). We take the standard deviation as the sample standard deviation of the project by country. This data is updated every 5 years, which is suboptimal, so let the team know if you know a different data set. Updates are manual.
-3. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies.
-4. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J5 from 2016 to 2020 after you've updated the cost data. 
+1. Update the costs of CAPEX, OPEX and the standard deviation of both using the IEA's [Projected Cost of Generating Electricity](https://www.iea.org/reports/projected-costs-of-generating-electricity-2020) file. An [xlsx file can be found](https://iea.blob.core.windows.net/assets/2df33f6b-eba0-4639-926a-bc1c3d3e3268/IEA-NEAProjectedCostsofGeneratingElectricity2020-Datafile.xlsx) with this data at the IEA data server (**how??**) xlsx file at ). We take the standard deviation as the sample standard deviation of the project by country. This data is updated every 5 years, which is suboptimal, so let the team know if you know a different data set. Updates are manual.
+2. Update the fuel costs
+    1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
+    2.  Higher-quality update: from the [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh.
+4. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies.
+5. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J5 from 2016 to 2020 after you've updated the cost data. 
 
 ### Technical parameters
 5. Update the technical potential. The last update for the technical potential for onshore, offshore and solar was done early 2022. 

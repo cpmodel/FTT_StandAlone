@@ -4,14 +4,7 @@
 ftt_p_lcoe.py
 =========================================
 Power LCOE FTT module.
-#################################
 
-Local library imports:
-
-    Support functions:
-
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - get_lcoe
@@ -20,23 +13,16 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
-# Local library imports
-from SourceCode.support.divide import divide
 
 
-# %% lcot
+# %% lcoe
 # -----------------------------------------------------------------------------
-# --------------------------- LCOT function -----------------------------------
+# --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
 def get_lcoe(data, titles):
     """
@@ -64,7 +50,12 @@ def get_lcoe(data, titles):
 
     Notes
     ---------
-    Additional notes if required.
+    Additional notes.
+    BCET = cost matrix 
+    MEWL = Average capacity factor
+    MEWT = Subsidies
+    MTFT = Fuel tax
+    
     """
 
     # Categories for the cost matrix (BCET)
@@ -75,24 +66,23 @@ def get_lcoe(data, titles):
         # Cost matrix
         bcet = data['BCET'][r, :, :]
 
-        # plant lifetime
+        # Plant lifetime
         lt = bcet[:, c2ti['9 Lifetime (years)']]
         bt = bcet[:, c2ti['10 Lead Time (years)']]
         max_lt = int(np.max(bt+lt))
-        # max_bt = int(np.max(bt))
+        
+        # Define (matrix) masks to turn off cost components before or after contruction 
         full_lt_mat = np.linspace(np.zeros(len(titles['T2TI'])), max_lt-1,
                                   num=max_lt, axis=1, endpoint=True)
-        lt_max_mat = np.concatenate(int(max_lt)*[(lt+bt-1)[:, np.newaxis]], axis=1)
-
-        bt_max_mat = np.concatenate(int(max_lt)*[(bt-1)[:, np.newaxis]], axis=1)
+        lt_max_mat = np.concatenate(int(max_lt) * [(lt+bt-1)[:, np.newaxis]], axis=1)
+        bt_max_mat = np.concatenate(int(max_lt) * [(bt-1)[:, np.newaxis]], axis=1)
+        
         bt_mask = full_lt_mat <= bt_max_mat
-        # bt_mat = np.where(bt_mask, full_lt_mat, 0)
-
         bt_mask_out = full_lt_mat > bt_max_mat
         lt_mask_in = full_lt_mat <= lt_max_mat
         lt_mask = np.where(lt_mask_in == bt_mask_out, True, False)
         
-        # capacity factor of marginal unit (for decision-making)
+        # Capacity factor of marginal unit (for decision-making)
         cf_mu = bcet[:, c2ti['11 Decision Load Factor']].copy()
         # Trap for very low CF
         cf_mu[cf_mu<0.000001] = 0.000001
@@ -218,28 +208,28 @@ def get_lcoe(data, titles):
         npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator
 
         # 1-levelised cost variants in $/pkm
-        # 1.1-Bare LCOT
+        # 1.1-Bare LCOE
         lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOT including policy costs
+        # 1.2-LCOE including policy costs
         tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
         # 1.3 LCOE excluding policy, including co2 price
         lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOT of policy costs
+        # 1.3-LCOE of policy costs
         # lcoe_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
-        # Standard deviation of LCOT
+        # Standard deviation of LCOE
         dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOE augmented with gamma values
         tlcoeg = tlcoe+data['MGAM'][r, :, 0]
 
         # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOT without taxes
+        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOE without taxes
         data['MECW'][r, :, 0] = copy.deepcopy(lcoeco2)  # The real bare LCOE with taxes
         data['METC'][r, :, 0] = copy.deepcopy(tlcoeg)   # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOT distribution
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOE distribution
 
         # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])   # As seen by consumer (generalised cost)
-        # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOT distribution
+        # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOE distribution
 
 
         # Output variables
