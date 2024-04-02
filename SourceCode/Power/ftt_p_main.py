@@ -666,9 +666,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
 
             # =================================================================
-            # Second-hand batteries
+            # Second-hand batteries. Only run at first timestep
             # =================================================================
-            data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
+            if t == 0: 
+                data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
 
             # =================================================================
             # Residual load-duration curve

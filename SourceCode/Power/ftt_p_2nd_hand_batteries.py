@@ -22,8 +22,8 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
         data dictionary with updated battery capacity in GWh
         # Todo: check if units still correct
     """
-    utilisation_rate = 0.5  # Share of car batteries getting a second life in power
-    yearly_decay = 0.98  # Assumption, very roughly based on Xu, but not really
+    utilisation_rate = 0.5      # Share of car batteries getting a second life in power
+    yearly_decay = 0.98         # Assumption, very roughly based on Xu, but not really
     starting_degredation = 0.74 # Starting capacity of the batteries according to Xu et al.
 
     # Categories for the cost matrix (BTTC)
@@ -35,11 +35,12 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     summed_prior_battery_capacity = np.sum(battery_capacity_last_year, axis=1)/1000
     summed_battery_capacity = summed_prior_battery_capacity * starting_degredation
     used_battery_capacity = summed_battery_capacity * utilisation_rate
-    # Move all batteries one year up
     
-    data['Second-hand batteries by age'][..., :-1] = np.copy(time_lag['Second-hand battery stock'][..., 1:]) * yearly_decay
-    data['Second-hand batteries by age'][..., -1] = used_battery_capacity
-    data['Second-hand battery stock'] = np.sum(data['Second-hand batteries by age'], axis=-1)
+    # Move all batteries one year up
+    data['Second-hand batteries by age'][:, :-1, :] = np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) * yearly_decay
+    data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
+    data['Second-hand battery stock'] = np.sum(data['Second-hand batteries by age'], axis=-2, keepdims=True)
+    
     br = 1
 
     return data
