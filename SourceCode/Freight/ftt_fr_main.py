@@ -161,9 +161,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data_dt[var] = copy.deepcopy(time_lag[var])
 
         # Find if there is a regulation and if it is exceeded
-
-        division = divide((data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]), data_dt['ZREG'][:, :, 0]) # 0 when dividing by 0
-        isReg = 0.5 + 0.5*np.tanh(1.5 + 10*division)
+        division = divide((time_lag['ZEWS'][:, :, 0] - data['ZREG'][:, :, 0]),
+                           data['ZREG'][:, :, 0]) # 0 when dividing by 0
+        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
@@ -247,6 +247,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #                        dSik[b1, b2] = S_i*S_k* (Aik*F[b1, b2] - Aki*F[b2, b1])*dt#*data['ZCEZ'][r, 0, 0]
 #                        dSik[b2, b1] = -dSik[b1, b2]
 
+                # Calculate temporary market shares and temporary capacity from endogenous results
+                endo_shares = data_dt['ZEWS'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_capacity = endo_shares * Utot[r, np.newaxis]
+
                 # Add in exogenous sales figures. These are blended with
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
@@ -255,54 +259,41 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 dUk = np.zeros([len(titles['FTTI'])])
                 dUkTK = np.zeros([len(titles['FTTI'])])
                 dUkREG = np.zeros([len(titles['FTTI'])])
-
-                # Check that exogenous capacity is smaller than rgulated capacity
-                # Regulations have priority over exogenous capacity
-                reg_vs_exog = ((data['ZWSA'][r, :, 0] + data_dt['ZEWK'][r, :, 0]) > data['ZREG'][r, :, 0]) \
-                             & (data['ZREG'][r, :, 0] >= 0.0)
-                data['ZWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['ZWSA'][r, :, 0])
                 ZWSA_scalar = 1.0
 
                 # Check that exogenous sales additions aren't too large
                 # As a proxy it can't be greater than 80% of the fleet size
-                # divided by 13 (the average lifetime of vehicles)
-                if (data['ZWSA'][r, :, 0].sum() > 0.8 * D[r] / 13):
-                    ZWSA_scalar = data['ZWSA'][r, :, 0].sum() / (0.8 * D[r] / 13)
+                # divided by 13 (the average lifetime of freight vehicles)
+                if (data['ZWSA'][r, :, 0].sum() > 0.8 * Utot[r] / 13):
+            
+                    ZWSA_scalar = data['ZWSA'][r, :, 0].sum() / (0.8 * Utot[r] / 13)
 
-                ZWSA_gt_null = data['ZWSA'][r, :, 0] >= 0.0
-                if t == no_it-1:
-                    dUkTK = np.where(ZWSA_gt_null, data['ZWSA'][r, :, 0] / ZWSA_scalar, 0.0)
-                else:
-                    dUkTK = 0
-                
-                # Correct for regulations
-                # Share of UED * change in UED * isReg i.e. change in UED split into technologies times isReg
-                if time_lag['RFLZ'][r, 0, 0] > 0.0 and Utot_d > 0.0 and (Utot_d - time_lag['RFLZ'][r, 0, 0]) > 0.0:
+                # Check that exogenous capacity is smaller than regulated capacity
+                # Regulations have priority over exogenous capacity
+                reg_vs_exog = ((data['ZWSA'][r, :, 0] / ZWSA_scalar / no_it + endo_capacity) 
+                > data['ZREG'][r, :, 0]) & (data['ZREG'][r, :, 0] >= 0.0)
 
-                    dUkREG = -data_dt['ZEWK'][r, :, 0] * ( (D[r] - time_lag['RFLZ'][r, 0, 0]) /
-                                 time_lag['RFLZ'][r, 0, 0]) * isReg[r, :].reshape([len(titles['FTTI'])])
+                ## OLD CODE
+                # reg_vs_exog = ((data['ZWSA'][r, :, 0] + data_dt['ZEWK'][r, :, 0]) > data['ZREG'][r, :, 0]) \
+                #              & (data['ZREG'][r, :, 0] >= 0.0)
+                # data['ZWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['ZWSA'][r, :, 0])
                 
-                # Sum effect of exogenous sales additions (if any) with
-                # effect of regulations
+                # ZWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                dUkTK =  np.where(reg_vs_exog, 0.0, data['ZWSA'][r, :, 0] / ZWSA_scalar / no_it)
+
+                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
+                # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # if rflz (i.e. total vehicles) had not grown.
+                dUkREG = -(endo_capacity - endo_shares * Utot[r,np.newaxis]) * isReg[r, :].reshape([len(titles['FTTI'])])
+                                           
+                # Sum effect of exogenous sales additions (if any) with effect of regulations. 
                 dUk = dUkTK + dUkREG
                 dUtot = np.sum(dUk)
-                
-                # Convert to market shares and make sure sum is zero
-                # dSk = dUk/Utot_d - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot_d) \
-                      - time_lag['ZEWK'][r, :, 0] / np.sum(time_lag['ZEWK'][r, :, 0]) * np.divide(dUtot, Utot_d)
 
-                try:
-                    data['ZEWS'][r, :, 0] = data_dt['ZEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
-                except ValueError as e:
-                    print(f'shape dUK is {np.shape(dUk)}')
-                    print( 'shape of ')
-                    print(f"shape data['ZEWS'][r, :, 0]: {np.shape(data['ZEWS'][r, :, 0])}")
-                    print(f"shape data_dt['ZEWS'][r, :, 0]: {np.shape(data_dt['ZEWS'][r, :, 0])}")
-                    print(f"shape np.sum(dSik, axis=1): {np.shape(np.sum(dSik, axis=1))}")
-                    print(f'shape dSk {np.shape(dSk)}')
-                    print(e)
-
+                # Calaculate changes to endogenous capacity, and use to find new market shares
+                # Zero capacity will result in zero shares
+                # All other capacities will be streched
+                data['ZEWS'][r, :, 0] = (endo_capacity + dUk)/(np.sum(endo_capacity)+dUtot)
 
                 if ~np.isclose(np.sum(data['ZEWS'][r, :, 0]), 1.0, atol = 1e-5):
                     msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
