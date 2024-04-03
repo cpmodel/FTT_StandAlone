@@ -41,6 +41,7 @@ import numpy as np
 # Local library imports
 from SourceCode.Freight.ftt_fr_lcof import get_lcof
 from SourceCode.support.divide import divide
+from SourceCode.Freight.ftt_fr_sales import get_sales
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -109,10 +110,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Calculate demand per technology, defined as total mln tkm driven
         data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] \
                                 * data['RVKZ'][:, 0, 0, np.newaxis]
+        
+        #Set cumulative capacities variable
+        data['ZEWW'][0, :, 0] = data['ZCET'][0, :, c6ti['11 Cumulative seats']]
 
         if year == histend["RVKZ"]:
             # Calculate levelised cost
             data = get_lcof(data, titles)
+
 
 #
 ##        for veh in range(len(titles['FTTI'])):
@@ -136,8 +141,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #        data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1**6)
 #
 #
-#        #Set cumulative capacities variable
-#        data['ZEWW'][0, :, 0] = data['ZCET'][0, :, c6ti['11 Cumulative seats']]
 
 
     "Model Dynamics"
@@ -263,11 +266,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 # Check that exogenous sales additions aren't too large
                 # As a proxy it can't be greater than 80% of the fleet size
-                # divided by 13 (the average lifetime of freight vehicles)
-                if (data['ZWSA'][r, :, 0].sum() * Utot[r] > 0.8 * Utot[r] / 13):
+                # divided by 15 (the average lifetime of freight vehicles)
+                if (data['ZWSA'][r, :, 0].sum() * Utot[r] > 0.8 * Utot[r] / 15):
             
                     ZWSA_scalar = data['ZWSA'][r, :, 0].sum() * Utot[r] \
-                                  / (0.8 * Utot[r] / 13)
+                                  / (0.8 * Utot[r] / 15)
 
                 # Check that exogenous capacity is smaller than regulated capacity
                 # Regulations have priority over exogenous capacity
@@ -327,16 +330,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # This is number of trucks by technology
                 data['ZEWK'][r, :, 0] = data['ZEWS'][r, :, 0] * Utot[r, 0, 0]
 
-                # Investment (sales) = new capacity created
-                veh_diff = data['ZEWK'][r, :, 0] - data_dt['ZEWK'][r, :, 0]
-                veh_dprctn = data_dt['ZEWK'][r, :, 0] / data['ZCET'][r, :, c6ti['8 service lifetime (y)']]
-                data['ZEWY'][r, :, 0] = np.where(veh_diff > 0.0, 
-                                               veh_diff/dt + veh_dprctn, 
-                                               veh_dprctn)
+            # Investment (sales) = new capacity created
+            # zewi_t is new additions at current timestep/iteration
+            data, zewi_t = get_sales(data, data_dt, time_lag, titles, dt, c6ti, t)
+            
+            # Reopen country loop
+            for r in range(len(titles['RTI'])):
 
+                if D[r] == 0.0:
+                    continue
+                
                 # Emissions
-                data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1E6)
-
+                data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0] * data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']] \
+                                        * (1 - data['ZBFM'][r, 0, 0]) / (1e6)
                 zjet = copy.deepcopy(data['ZJET'][0, :, :])
                 for veh in range(len(titles['FTTI'])):
                     for fuel in range(len(titles['JTI'])):
@@ -361,8 +367,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative investment, not in region loop as it is global
             bi = np.zeros((len(titles['RTI']), len(titles['FTTI'])))
             for r in range(len(titles['RTI'])):
-                bi[r, :] = np.matmul(data['ZEWB'][0, :, :], data['ZEWY'][r, :, 0])
-            dw = np.sum(bi, axis = 0)*dt
+                bi[r, :] = np.matmul(data['ZEWB'][0, :, :], zewi_t[r, :, 0])
+
+            dw = np.sum(bi, axis = 0)
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
 
             # Calculate demand per technology, defined as total mln tkm driven
