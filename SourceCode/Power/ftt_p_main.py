@@ -532,6 +532,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
+            data = cmdem(data, titles)
             bidon = 0
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
