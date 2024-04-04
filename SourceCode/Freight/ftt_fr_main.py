@@ -376,8 +376,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] \
                                     * data['RVKZ'][:, 0, 0, np.newaxis]
 
-#                data['ZCET'][:, :, c6ti['11 Cumulative seats']] = data_dt['ZCET'][:, :, c6ti['11 Cumulative seats']]
-#                 + np.sum(data['ZEWB'][0, :, :]*data['ZEWY'][:, :, 0], axis = 1)*dt
                 
             # Reopen region loop 
             # Learning-by-doing effects on investment
@@ -393,7 +391,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Calculate total investment by technology in terms of truck purchases
             for r in range(len(titles['RTI'])):
                 data['ZWIY'][r, :, 0] = data_dt['ZWIY'][r, :, 0] + \
-                data['ZEWY'][r, :, 0]*dt*data['ZCET'][r, :, c6ti['1 Price of vehicles (USD/vehicle)']]*1.263
+                data['ZWIY'][r, :, 0]*dt*data['ZCET'][r, :, c6ti['1 Price of vehicles (USD/vehicle)']]*1.263
 
             # Calculate levelised cost again
             data = get_lcof(data, titles)
