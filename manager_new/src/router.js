@@ -5,6 +5,7 @@ import Run from './components/Run.vue'
 import Metadata from './components/Metadata.vue'
 import Front from './components/Front.vue'
 import Results from './components/Results.vue'
+import Results_alt from './components/Results_alt.vue'
 import Extract from './components/Extract.vue'
 import Gamma from './components/Gamma.vue'
 import Exit from './components/Exit.vue'
@@ -33,6 +34,10 @@ export default new Router({
         {
           path: 'results',
           component: Results
+        },
+        {
+          path: 'results_new',
+          component: Results_alt
         },
         {
           path: 'Extract',

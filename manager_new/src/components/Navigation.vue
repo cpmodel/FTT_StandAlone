@@ -15,6 +15,7 @@
                     <td v-bind:class="{ active: isActive('/') }"><router-link to="/" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="Home">HOME</a></router-link></td>
                                        <td v-bind:class="{ active: isActive('/run') }"><router-link to="/run" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="Run the model">RUN</a></router-link></td>
                     <td v-bind:class="{ active: isActive('/results') }"><router-link to="/results" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="View model results">RESULTS</a></router-link></td>
+                    <td v-bind:class="{ active: isActive('/results_new') }"><router-link to="/results_new" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="View model results">RESULTS (Beta)</a></router-link></td>
                     <td v-bind:class="{ active: isActive('/Extract') }"><router-link to="/Extract" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="Extract multiple variables">EXTRACT</a></router-link></td> 
                     <td v-bind:class="{ active: isActive('/Gamma') }"><router-link to="/Gamma" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="Update Gamma values">GAMMA</a></router-link></td> 
                     <td v-bind:class="{ active: isActive('/Metadata') }"><router-link to="/Metadata" class='nav-item'><a class="nav-link" :class="{ 'text-light': isDark }" v-b-tooltip.hover title="Display model classifications">CLASSIFICATIONS</a></router-link></td>
@@ -22,8 +23,8 @@
                   </tr>
                 </table>
             </div>
-            <b-modal id="modal-exit" ref="modal_exit" title="Closing WEM" ok-title="Quit" @ok="exit_">
-              Are you sure you want to close the World Energy Model interface?<br>
+            <b-modal id="modal-exit" ref="modal_exit" title="Closing model" ok-title="Quit" @ok="exit_">
+              Are you sure you want to close the Model interface?<br>
               If the modelling process is still running changes may be lost.
             </b-modal>
     </nav>

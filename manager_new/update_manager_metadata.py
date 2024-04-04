@@ -15,13 +15,14 @@ import pandas as pd
 var_meta = pd.read_csv("../utilities/titles/VariableListing.csv", index_col=0)
 var_meta = var_meta.reset_index()
 var_meta = var_meta.fillna("None")
-var_meta = var_meta.rename(columns={"Variable name":"Variable",
-                         "Variable description":"label",
-                         "Unit":"unit",
-                         "Domain":"Group"})
+var_meta = var_meta.rename(columns={"Variable name": "Variable",
+                                    "Variable description": "label",
+                                    "Unit": "unit",
+                                    "Domain": "Group"})
 var_meta["label_short"] = var_meta["label"]
-fields = ["Variable","label","unit","Group","Dim1","Dim2","Dim3","Dim4","Summary","Detailed"]
-var_meta = var_meta.loc[:,fields]
+fields = ["Variable", "label", "unit", "Group", "Dim1",
+          "Dim2", "Dim3", "Dim4", "Summary", "Detailed"]
+var_meta = var_meta.loc[:, fields]
 
 var_meta = var_meta.set_index("Variable")
 
@@ -30,14 +31,14 @@ labels = var_meta.to_dict("index")
 
 var_indicies = var_meta.copy().reset_index()
 
-var_indicies = var_indicies.loc[:,["Variable","label"]]
-var_indicies.columns = ["id","label"]
+var_indicies = var_indicies.loc[:, ["Variable", "label"]]
+var_indicies.columns = ["id", "label"]
 indicies = var_indicies.to_dict("records")
 
 groups = [[x] for x in var_meta.index]
 
 
-## Load variables metadata
+# Load variables metadata
 #assum_meta = pd.read_csv("Assumption_description.csv",index_col=0)
 #
 #assum_indicies = assum_meta.copy().reset_index()
@@ -46,18 +47,18 @@ groups = [[x] for x in var_meta.index]
 #assum = assum_indicies.to_dict("records")
 #
 #
-##Read in master list of specification definitions
-#spec_desc = pd.read_csv("Specification_Descriptions.csv",
+# Read in master list of specification definitions
+# spec_desc = pd.read_csv("Specification_Descriptions.csv",
 #                        index_col=[0,1],
 #                        keep_default_na=False)
 
 # Get valid specifications
 #specs_dict = {}
 #config = configparser.ConfigParser()
-#config.read('../settings.ini')
+# config.read('../settings.ini')
 #spec_no = int(config.get('settings', 'specno'))
 #specs_indicies = []
-#for i in range(spec_no):
+# for i in range(spec_no):
 #    var = config.get('settings', 'spec{}'.format(i+1)).split(' - ')[0]
 #    var = var.lower()
 #    if var == "bqxx":
@@ -87,13 +88,13 @@ out_dict["labels"] = labels
 
 # title dimensions
 class_map = var_meta.copy().reset_index()
-class_map = class_map.rename(columns={"Dim1":"title",
-                                      "Dim2":"title2",
-                                      "Dim3":"title3",
-                                      "Dim4":"title4",
-                                      "Variable":"Var"
+class_map = class_map.rename(columns={"Dim1": "title",
+                                      "Dim2": "title2",
+                                      "Dim3": "title3",
+                                      "Dim4": "title4",
+                                      "Variable": "Var"
                                       })
-class_map = class_map.loc[:,["Var","title","title2","title3","title4"]]
+class_map = class_map.loc[:, ["Var", "title", "title2", "title3", "title4"]]
 class_map = class_map.set_index("Var")
 class_map_dict = class_map.to_dict("index")
 
@@ -108,13 +109,13 @@ colour_list['rgb'] = colour_list['rgb'].apply(lambda x: f"rgb({x})")
 colour_list = colour_list['rgb'].values
 out_dict["chart_colours"] = colour_list.tolist()
 
-#Update sector groupings
+# Update sector groupings
 var_grouping = var_meta.copy().reset_index()
-var_grouping_summary = var_grouping[var_grouping["Summary"]=="Y"]
-var_grouping_detailed = var_grouping[var_grouping["Detailed"]=="Y"]
-var_grouping = var_grouping.loc[:,["Group","Variable","label"]]
-var_grouping_summary = var_grouping_summary.loc[:,["Group","Variable","label"]]
-var_grouping_detailed = var_grouping_detailed.loc[:,["Group","Variable","label"]]
+var_grouping_summary = var_grouping[var_grouping["Summary"] == "Y"]
+var_grouping_detailed = var_grouping[var_grouping["Detailed"] == "Y"]
+var_grouping = var_grouping.loc[:, ["Group", "Variable", "label"]]
+var_grouping_summary = var_grouping_summary.loc[:, ["Group", "Variable", "label"]]
+var_grouping_detailed = var_grouping_detailed.loc[:, ["Group", "Variable", "label"]]
 grouping_dict = {}
 
 #grouping_dict = pd.read_excel("../utilities/titles/Grouping.xlsx",sheet_name=None)
@@ -135,24 +136,23 @@ for key, agg in grouping_dict.items():
 
     for g in groups:
         if key in ["Variables", "Variables_Summary", "Variables_Detailed"]:
-            agg_dict[g] = list(agg.loc[agg["Group"]==g,"Variable"].values)
-            agg_dict_labels[g] = list(agg.loc[agg["Group"]==g,"label"].values)
+            agg_dict[g] = list(agg.loc[agg["Group"] == g, "Variable"].values)
+            agg_dict_labels[g] = list(agg.loc[agg["Group"] == g, "label"].values)
         else:
             agg_mask = agg[g] == 1
-            agg_dict[g] = list(agg.loc[agg_mask,g].index)
+            agg_dict[g] = list(agg.loc[agg_mask, g].index)
             agg_dict_labels[g] = agg_dict[g]
 
-
-        #Covert to json format
+        # Covert to json format
         sub_dict = OrderedDict()
         sub_dict["id"] = g
         sub_dict["label"] = g
         if len(agg_dict[g]) > 1:
             sub_dict["children"] = []
-            for v,var in enumerate(agg_dict[g]):
+            for v, var in enumerate(agg_dict[g]):
                 child_dict = OrderedDict()
                 child_dict["id"] = var
-                child_dict["label"] = agg_dict_labels[g][v]
+                child_dict["label"] = f'{var} - {agg_dict_labels[g][v]}'
                 sub_dict["children"].append(child_dict)
         agg_json.append(sub_dict)
     if "Hierachy" in agg.index:
@@ -167,7 +167,7 @@ for key, agg in grouping_dict.items():
             hier_dict["children"] = []
             children_mask = hierachy == i
             children = list(hierachy[children_mask].index)
-            if len(children) >1:
+            if len(children) > 1:
                 for c in children:
                     hier_dict["children"].append(agg_json_children[groups.index(c)])
             agg_json.append(hier_dict)
