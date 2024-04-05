@@ -53,11 +53,7 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
 import pandas as pd
@@ -224,6 +220,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Capacities
             data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
+            
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
             
@@ -599,7 +596,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #        data['MWIA'][:, 0, 0][data['MEWKA'][:, 0, 0] < 0.0] = 0.0
 
         # Factor used to create quarterly data from annual figures
-        no_it = int(data['noit'][0,0,0])
+        no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
         # store exogenous load factors in local variable
@@ -832,7 +829,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             dw = np.zeros(len(titles["T2TI"]))
             
             for i in range(len(titles["T2TI"])):
-                dw_temp = copy.deepcopy(mewi0)*dt
+                dw_temp = copy.deepcopy(mewi0) * dt
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 

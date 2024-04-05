@@ -1,18 +1,18 @@
-﻿Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment,Summary,Detailed
+Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment,Summary,Detailed
 PRSCX,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 PRSC15,Price levels in 2015 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 RPOP,Population by age and gender,Thousands,RTI,NA,NA,TIME,General,1970,-,2001,-,,Y
-PFRE,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRC,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRO,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
-PFRM,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRB,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
-PFRH,Price of electricity (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
+PFRE,Price of electricity use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRC,Price of coal use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRO,Price of heavy oil use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
+PFRM,Price of middle distillates [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRB,Price of biofuel use (incl taxes) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRH,Endogenous energy price with tax [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
 PRSC13,Price levels in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWMC,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWLO,FTT:Power optimal/initial load factors,%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWKA,FTT:Power exogenous capacity levels (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
-MWIY,FTT:Power investment,m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MWIY,FTT:Power investment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWICX,Exogenous FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWIC,FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWG6,Generation load band 6,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -31,7 +31,7 @@ MSSPX,Exogenous MSSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,F
 MSSP,FTT:Power short-term storage costs (2013$/GWh) ,$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSMX,Exogenous MSSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MSSM,FTT:Power short-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MSSI,FTT:Power short-term storage investment (2010 mEuro),m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MSSI,FTT:Power short-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSG,FTT:Power short-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSF,FTT:Power short-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSE,Short-term storage round-trop efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2011,,,Y
@@ -50,7 +50,7 @@ MLSPX,Exogenous MLSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,F
 MLSP,FTT:Power long-term storage costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSMX,Exogenous MLSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MLSI,FTT:Power long-term storage investment (2010 mEuro),m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSF,FTT:Power long-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSE,Long-term storage round-trip efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2010,,,Y
@@ -63,7 +63,6 @@ MLB1,Normalised residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,,
 MLB0,Cumulative residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,,,Y
 MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 FRET,Energy supply,ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,,,Y
-MEWD,Demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,,,Y
 MJET,FTT:Power technology to fuel use conversion matrix excl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,,Y
 MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -86,7 +85,6 @@ MEWG,FTT-P Generation by technology (GWh),GWh,RTI,T2TI,NA,TIME,FTT-P,-,2018,2001
 MEWE,FTT:Power CO2 emissions,MtCO2/y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWDX,Exogenous demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-,,Y
-FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,From E3ME results,,Y
 MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
@@ -95,7 +93,7 @@ RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,General,-,-,2010,Fro
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
 METCX,Exogenous METC (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MESC,FTT:Power cost of early scrapping power equipment,m€2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MERCX,Exogenous MERC (from E3ME run),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
@@ -120,74 +118,84 @@ HJET,FTT-Heat Tech to fuel conversion matrix,,NA,HTTI,JTI,NA,FTT-H,,,,,,
 HJFC,FTT-Heat Fraction of energy use for heating in households,,RTI,JTI,NA,NA,FTT-H,,,,,,
 HEWA,FTT-Heat Substitution matrix,,NA,HTTI,HTTI,NA,FTT-H,,,,,,
 HEWB,FTT-Heat Technology spill-over matrix,,NA,HTTI,HTTI,NA,FTT-H,,,,,,
-HEWW,FTT-Heat Global cumulative investment,,NA,HTTI,NA,TIME,FTT-H,,2014,2014,,,
-HFIN,FTT-Heat Interest rates,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
-HFFC,FTT-Heat Fuel price rates,,RTI,JTI,NA,TIME,FTT-H,,,2001,,,
-HEWF,FTT-Heat Final energy demand for heat generation,,RTI,HTTI,NA,TIME,FTT-H,,2014,1990,,,
-RHUD,FTT-Heat Useful energy demand,,RTI,NA,NA,TIME,FTT-H,,,2001,,,
-HTVS,FTT-Heat Subsidy on investment cost,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
-HTRT,FTT-Heat Subsidy/tax on fuel use,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HEWW,FTT-Heat Global cumulative investment,GW,NA,HTTI,NA,TIME,FTT-H,,2014,2014,,,
+HFIN,FTT-Heat Interest rates,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HFFC,FTT-Heat Fuel price rates,%,RTI,JTI,NA,TIME,FTT-H,,,2001,,,
+HEWF,FTT-Heat Final energy demand for heat generation,GWh/y,RTI,HTTI,NA,TIME,FTT-H,,2020,1990,,Y,Y
+RHUD,FTT-Heat Useful energy demand,GWh/y,RTI,NA,NA,TIME,FTT-H,,,2001,,,
+HTVS,FTT-Heat Subsidy on investment cost,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HTRT,FTT-Heat Subsidy/tax on fuel use,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HREG,FTT-Heat Regulations on heating technologies,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
-HWSA,FTT-Heat Exogenous market share changes,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
-HEFI,FTT-Heat Feed-in-tariff,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
-HETR,FTT-Heat Turn-over rate,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HWSA,FTT-Heat Exogenous market share changes,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HEFI,FTT-Heat Feed-in-tariff,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HETR,FTT-Heat Turn-over rate,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 BHTC,FTT-Heat Cost matrix,,RTI,HTTI,C4TI,NA,FTT-H,,,2014,,,
-HEWG,FTT-Heat Useful heat by boiler,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HEWE,FTT-Heat Emissions,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HJHF,FTT-Heat Fuel use for heating,GWh,RTI,JTI,NA,TIME,FTT-H,,,2014,,,
+HEWG,FTT-Heat Useful heat by boiler,GWh/y,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
+HEWE,FTT-Heat Emissions,Mt/y,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
+HJHF,FTT-Heat Fuel use for heating,GWh,RTI,JTI,NA,TIME,FTT-H,,,2014,,Y,Y
 HEWP,FTT-Heat Price rates by boiler,,RTI,HTTI,NA,TIME,FTT-H,,,2010,,,
-HEWK,FTT-Heat Capacity,,RTI,HTTI,NA,TIME,FTT-H,,,,,,
-HEWI,FTT-Heat Capacity Additions,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HEWC,FTT-Heat LC,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HETC,FTT-Heat LC,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGC1,FTT-Heat LC,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HWCD,FTT-Heat LCSD,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGC2,FTT-Heat MC,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGD2,FTT-Heat MCSD,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGC3,FTT-Heat PC,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGD3,FTT-Heat PCSD,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HEWK,FTT-Heat Capacity,GW,RTI,HTTI,NA,TIME,FTT-H,,,,,Y,Y
+HEWI,FTT-Heat Capacity Additions,GW/y,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
+HEWC,FTT-Heat LCOH no policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
+HETC,FTT-Heat LCOH all policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
+HGC1,FTT-Heat LCOH w policies & Gamma,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HWCD,FTT-Heat LCOH no policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGC2,"FTT-Heat Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGD2,"FTT-Heat SD Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGC3,"FTT-Heat Payback cost w policies, Gamma, for endogenous scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGD3,"FTT-Heat SD Payback cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGAM,FTT-Heat Gamma values,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HEWS,FTT-Heat Market Shares,,RTI,HTTI,NA,TIME,FTT-H,,2014,2014,,,
-HJEF,FTT-Heat Residential fuel use,,RTI,JTI,NA,TIME,FTT-H,,,2014,,,
-TWSA,FTT-Transport Exogenous vehicle sales,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
-TWIY,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TVFP,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TTVT,FTT-Transport Vehicle tax,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
-TTRT,FTT-Transport Road tax,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
-TREG,FTT-Transport Regulations,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+HEWS,FTT-Heat Market Shares,,RTI,HTTI,NA,TIME,FTT-H,,2014,2014,,Y,Y
+HJEF,FTT-Heat Residential fuel use,th toe,RTI,JTI,NA,TIME,FTT-H,,,2014,,,
+HWIC,FTT-H Technology investment costs,Eur/kW,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,Y
+HEFF,FTT-H Technology efficiency,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,Y
+TWSA,FTT-Transport Exogenous vehicle sales (must sum to zero),th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+TWIY,FTT-Transport Investment in private vehicles,2000$M (Correct year?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TVFP,FTT-Transport,$2012/vkm (?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TTVT,FTT-Transport Vehicle tax,th $/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+TTRT,FTT-Transport Road tax,$/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+TREG,FTT-Transport Regulations,share of technology,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 TLCD,FTT-Transport log(levelised costs),,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TJET,FTT-Transport Fuel converter,,NA,VTTI,JTI,NA,FTT-Tr,,,,,,
-TJEF,FTT-Transport fuel use,th toe,RTI,JTI,NA,TIME,FTT-Tr,,,2017,,,
+TJEF,FTT-Transport fuel use,th toe,RTI,JTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TGAM,FTT-Transport Gamma Values,,RTI,VTTI,NA,TIME,FTT-Tr,,,2014,,,
-TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
-TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2017,1990,,,
-TEWK,FTT-Transport fleet size,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TEWI,FTT-Transport sales,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TEWG,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TEWE,FTT-Transport emissions,Mt/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TEWC,FTT-Transport levelised costs,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,Y,Y
+TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2019,1990,,Y,Y
+TEWK,FTT-Transport fleet size,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
+TEWI,FTT-Transport sales,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
+TEWG,FTT-Transport demand by technology,mln km/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
+TEWE,FTT-Transport emissions,Mt/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
+TEWC,FTT-Transport levelised costs (no taxes),$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWB,FTT-Transport Technology spill-over matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
 TEWA,FTT-Transport Technology substitution matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,,,
-PFRG,Price of gas (€/toe) [E3ME],€/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
+PFRG,Price of gas (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
 TETH,FTT-Transport Efficiency ,,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
-TETC,FTT-Transport levelised costs with taxes,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TESH,FTT-Transport Vehicle sales,,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
-TESF,FTT-Transport Survival function,,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
-TELC,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TEGC,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TEFF,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TECD,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-TE3P,Fuel Prices ,2013 €/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
-RVKM,FTT-Transport Passenger road driving demand,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
-RTFT,FTT-Transport Fuel tax,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 RTFS,FTT-Transport Fuel subsidy,,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
-RTCO,FTT-Transport Registration tax,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
-RLTA,FTT-Transport,,RTI,VTTI,VYTI,TIME,FTT-Tr,,,2017,,,
-RHSM,FTT-Transport Hydrogen blending mandate,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
-RFLT,FTT-Transport Fleet stocks,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
-REVS,FTT-Transport,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
-RBFM,FTT-Transport Biofuel blending mandate,,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+TETC,FTT-Transport levelised costs with taxes,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,Y
+TESH,FTT-Transport Vehicle sales,th-veh,RTI,VYTI,NA,NA,FTT-Tr,,,,,Y,Y
+TESF,FTT-Transport Survival function,th-veh,RTI,VYTI,NA,NA,FTT-Tr,,,,,,
+TELC,"FTT-Transport Generalised cost of transport, with tax + non-pecuniary, lognormal space",,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TEGC,FTT-Transport Levelised cost of transport with tax + non-pecuniary,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TEFF,FTT-Transport ,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TECD,FTT-Transport Levelised cost of transport variations ,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+TE3P,FTT-Tr Fuel Prices ,2013 $/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
+TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+TWWB,FTT-Tr starting cumulative battery capacity,MWh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
+TEBC,FTT-Tr battery cost,USD/kWh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
+TWIC,FTT-Tr Vehicle purchase price,USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
+TWFC,FTT-Tr Fuel cost component,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
+RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+RTFT,FTT-Transport Fuel tax,cents/litre,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+RTCO,FTT-Transport Registration tax,$/gCO2/km,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+RLTA,FTT-Transport age-tracking matrix,th-veh,RTI,VTTI,VYTI,TIME,FTT-Tr,,,2017,,,
+RHSM,FTT-Transport Hydrogen blending mandate,share H2 in freight,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+RFLT,FTT-Transport Fleet stocks in use (from survival),th-veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+REVS,FTT-Transport vehicle scrappage,th-veh/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
+RBFM,FTT-Transport Biofuel blending mandate,%,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 BTTC,FTT-Transport Cost matrix,,RTI,VTTI,C3TI,NA,FTT-Tr,,,2014,,,
+BTCI,FTT-Transport  initial cost matrix,,RTI,VTTI,C3TI,NA,FTT-Tr,,,2014,,,
+TDA1,FTT-Tr last year of shares data,,RTI,NA,NA,NA,FTT-Tr,,,,,,
+TDA2,FTT-Tr last year of cost data,,RTI,NA,NA,NA,FTT-Tr,,,,,,
 IUD1,FTT-IH-CHI useful energy demand (GWh),GWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,1970,2015,1970,,Y,Y
 ISC1,FTT-IH-CHI market share caps,%,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2015,-,Y,Y
 IWW1,FTT-IH-CHI cumulative capacities (EU28),GW,NA,ITTI,NA,TIME,FTT-IH-CHI,-,-,2015,,Y,Y
@@ -300,12 +308,12 @@ ZCET,FTT-Fr Matrix of Cost Components,Various,RTI,FTTI,C6TI,NA,FTT-Fr,,,,,Y,Y
 ZEWSB,FTT-Fr Matrix B,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,Y,Y
 ZEWA,FTT-Fr Exchange matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,Y,Y
 ZEWB,FTT-Fr Spillover matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,Y,Y
-ZLER,FTT-Fr Learning Rates,,NA,FTTI,NA,TIME,FTT-Fr,,,2019,,Y,Y
+ZLER,FTT-Fr Learning Rates,,FTTI,NA,NA,NA,FTT-Fr,,,,,,
 RVHH,FTT-Fr Sales History,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,Y,Y
 ZESF,FTT-Fr Survival function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,Y,Y
 ZSFD,FTT-Fr Survival Function Age Derivative,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,Y,Y
 ZLOD,FTT-Fr Load Factors,t/v,RTI,LODZ,NA,NA,FTT-Fr,,,,,Y,Y
-ZSLR,FTT-Fr Small large ratio,,RTI,NA,NA,TIME,FTT-Fr,,,2019,,Y,Y
+ZSLR,FTT-Fr Small large ratio,ratio,RTI,NA,NA,NA,FTT-Fr,,,,,Y,Y
 ZJTT,FTT-Fr Tech Change Function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,Y,Y
 ZJET,FTT-Fr Technology to fuel user conversion matrix,,NA,FTTI,JTI,NA,FTT-Fr,,,,,Y,Y
 ZCEZ,FTT-Fr T-Scaling,,RTI,NA,NA,TIME,FTT-Fr,,,2019,,Y,Y
@@ -327,6 +335,7 @@ ZJNJ,FTT-Fr Fuel use by fuel type,ktoe,RTI,JTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWE,FTT-Fr emissions,MTCO2,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZWIY,FTT-Fr Investment by Technology (monetary value),2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
+ZGAM,FTT-Fr Gamma values,,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,
 noit,Number of iterations per year,,NA,NA,NA,NA,General,,,2000,,,
 IHF1,FTT-IH-CHI final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-CHI,,,2000,,,
 IHF2,FTT-IH-FBT final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-FBT,,,2000,,,
@@ -353,7 +362,7 @@ MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh/y,RTI,T2TI,
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh/y,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
+FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,General,-,-,2010,From E3ME results,Y,Y
 EXX,Exchange rate (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 EX13,Exchange rate in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 BCET,FTT:Power matrix of technology costs,various,RTI,T2TI,C2TI,NA,FTT-P,-,-,2001,-,Y,Y
