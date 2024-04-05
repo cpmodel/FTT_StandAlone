@@ -8,10 +8,10 @@ Created on Fri Mar 29 14:25:47 2024
 import numpy as np
 
 
-def cm_dem(data, titles):
+def cmdem(data, titles):
     
 
-    data['CDEM'] = data['CMIN'] * np.broadcast_to(data['MEWI'], data['CMIN'].shape)
+    data['CMDEM'] = data['CMIN'] * np.broadcast_to(data['MEWI'], data['CMIN'].shape)
     
     return data
 

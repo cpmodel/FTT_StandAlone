@@ -68,7 +68,7 @@ from SourceCode.Power.ftt_p_lcoe import get_lcoe
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
-from SourceCode.Power.ftt_p_cmdem import cm_dem
+from SourceCode.Power.ftt_p_cmdem import cmdem
 
 
 # %% main function
