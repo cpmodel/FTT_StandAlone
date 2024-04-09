@@ -2,6 +2,11 @@
 """
 Created on Fri Apr  5 16:18:52 2024
 
+## Script for extracting saved Gamma values from pickle file produced at the frontend and
+## writing to masterfile or individual csvs as desired
+
+
+## BUG: Save function currently removes years of placeholders??
 @author: pv + ib
 """
 
@@ -17,6 +22,7 @@ import sys
 import time
 from threading import Timer, Thread
 import webbrowser
+from openpyxl import load_workbook
 
 from bottle import (route, run, request, response, static_file)
 import numpy as np
@@ -74,8 +80,22 @@ if __name__ == '__main__':
                                            index=titles["T2TI"], 
                                            columns=tl)    
 
-#%%
+#%% Writing to master/csv files
+# This could do with a tqdm bar
 
+# We don't need all of this directory stuff, simplify. Or do we?
+dir_excel_S0 = os.path.join(model_to_change, "Inputs\_Masterfiles\FTT-P\FTT-P-24x71_2023_S0.xlsx")
+
+
+# Switch on for printing, having both is pointless
+write_to_master = True
+write_to_csvs = False
+
+# Activate the writer outside loop for efficiency
+if write_to_master:
+    writer = pd.ExcelWriter(dir_excel_S0, mode='a', engine='openpyxl', if_sheet_exists='overlay')
+
+# Loop through regions and print to section of MGAM sheet
 for r, reg in enumerate(titles["RTI"]):
 
     country = titles['RTI_short'][r]
@@ -89,9 +109,31 @@ for r, reg in enumerate(titles["RTI"]):
     merged_df = merged_df.ffill(axis=1)
     merged_df = merged_df.bfill(axis=1) 
     
-    # Save the merged DataFrame to a CSV file
-    file_path = f'Inputs/S0/FTT-P/MGAM_{country}.csv'
-    merged_df.to_csv(file_path, index=True)
+
+    
+    if write_to_master:
+        #Removing after testing
+        #MGAM_excel[4+(r*36):4+(r*36) +24, 2:] = merged_df.values
+
+        # Write generation and capacity to excel sheets
+        # Use directories at start and loop to generalise to other scenarios
+        print(f"Writing Gamma values for Region: {reg} to masterfile")
+        merged_df.to_excel(writer, sheet_name="MGAM", startcol=2, startrow=5 + (r*36), header=False, index=False)
+
+                
+                
+    if write_to_csvs:
+        # # Save the merged DataFrame to a CSV file
+        file_path = f'Inputs/S0/FTT-P/MGAM_{country}.csv'
+        merged_df.to_csv(file_path, index=True)
+    
+# Close the ExcelWriter after the loop
+if write_to_master:
+    writer.close()
+    
+
+    
+    
 
 
 #%% Save to masterfile
@@ -110,12 +152,11 @@ offshore_ind = 22
 solar_ind = 23
 thermal_ind = 24
 
-print_to_excel  = True
+print_to_excel  = False
 if print_to_excel:
     print("Writing data to excel files, overwriting old files")
  
-    for dir_excel in excel_sheets_to_change:
-        book = load_workbook(dir_excel)    
+    for dir_excel in excel_sheets_to_change:   
         
 
         MGAM_excel = np.array(pd.read_excel(dir_excel, sheet_name='MGAM'))
