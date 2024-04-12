@@ -23,7 +23,7 @@ def load_dims():
     dims_file = 'VariableListing.csv'
 
     # Check that classification titles file exists
-    dims_path = os.path.join('utilities', 'titles', dims_file)
+    dims_path = os.path.join('Utilities', 'titles', dims_file)
     if not os.path.isfile(dims_path):
         print('Dimensions name file not found.')
 
@@ -36,10 +36,10 @@ def load_dims():
     domain = {}
     
     for index, row in dims_data.iterrows():
-        dims_dict[row[0]] = row[3:7].tolist() if len(row) > 7 else []
-        domain[row[0]] = row[7] if len(row) > 7 else None
-        histend[row[0]] = int(row[9]) if row[9] not in ['-', ''] else ['']
-        forstart[row[0]] = row[10] if len(row) > 10 else None
+        dims_dict[row.iloc[0]] = row.iloc[3:7].tolist() if len(row) > 7 else []
+        domain[row.iloc[0]] = row.iloc[7] if len(row) > 7 else None
+        histend[row.iloc[0]] = int(row.iloc[9]) if row.iloc[9] not in ['-', ''] else ['']
+        forstart[row.iloc[0]] = row.iloc[10] if len(row) > 10 else None
     
     # Return titles dictionary
     return dims_dict, histend, domain, forstart

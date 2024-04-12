@@ -53,11 +53,7 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
 import pandas as pd
@@ -231,6 +227,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Capacities
             data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
+            
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
             
@@ -500,11 +497,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
             # Learning-by-doing effects on investment
-    #        for tech in range(len(titles['T2TI'])):
-    #            if data['MEWW'][0, tech, 0] > 0.1:
-    #                data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = time_lag['BCET'][:, tech, c2ti['3 Investment ($/kW)']] * \
-    #                                                                       (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
-
+            if year > histend['BCET']:
+                for tech in range(len(titles['T2TI'])):
+                    if data['MEWW'][0, tech, 0] > 0.1:
+                        data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = time_lag['BCET'][:, tech, c2ti['3 Investment ($/kW)']] * \
+                                                                                (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                        data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = time_lag['BCET'][:, tech, c2ti['4 std ($/MWh)']] * \
+                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                        data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = time_lag['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] * \
+                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                        data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = time_lag['BCET'][:, tech, c2ti['8 std ($/MWh)']] * \
+                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+            
             # Investment in terms of power technologies:
             for r in range(len(titles['RTI'])):
                 data['MWIY'][r, :, 0] = time_lag['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*data['BCET'][r, :, c2ti['3 Investment ($/kW)']]/1.33
@@ -613,7 +617,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #        data['MWIA'][:, 0, 0][data['MEWKA'][:, 0, 0] < 0.0] = 0.0
 
         # Factor used to create quarterly data from annual figures
-        no_it = int(data['noit'][0,0,0])
+        no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
         # store exogenous load factors in local variable
@@ -846,7 +850,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             dw = np.zeros(len(titles["T2TI"]))
             
             for i in range(len(titles["T2TI"])):
-                dw_temp = copy.deepcopy(mewi0)*dt
+                dw_temp = copy.deepcopy(mewi0) * dt
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 

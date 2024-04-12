@@ -4,9 +4,9 @@
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
 
 * FTT:Power (Mercure, 2012) - data up to 2019, update to 2021 expected in October
-* FTT:Heat (Knobloch et al, 2017) data up to 2014, update to 2020 data expected in November
+* FTT:Heat (Knobloch et al, 2017) data up to 2020
 * FTT:Industrial heat *under construction*
-* FTT:Transport (Mercure et al, 2018) *under construction*
+* FTT:Transport (Mercure et al, 2018) - data up to 2022
 * FTT:Freight *under construction*
 
 ## Theoretical background
@@ -15,8 +15,10 @@ The FTT family of models are based on [evolutionary economics](https://en.wikipe
 ## FTT and E3ME
 This repository contains the public standalone version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
 
-## How to run
-You can run the front-end of the model by starting the FTT_Stand_Alone_Launcher.cmd. Alternatively, you can run the model from the run_file.py script. The basic settings can be edited in the settings file.
+## Installation and running the model
+1. Run the install_ce_conda_3.9_external_users.cmd script in _Python_installation to install the prerequisite packages. On top of Anaconda's standard packages, bottle and paste are required. 
+2. You can run the front-end of the model by starting the FTT_Stand_Alone_Launcher.cmd. Alternatively, you can run the model from the run_file.py script for development, but this does not save the data. The basic settings can be edited in the settings.ini file.
+    1. The first time you run the model, csv input files will be created. This takes a few additional minutes. 
 
 ## References
 * Knobloch, F., Pollitt H., Chewpreecha U., Daioglou V. and Mercure J-F. (2018) ‘[Simulating the deep decarbonisation of residential heating for limiting global warming to 1.5°C](https://link.springer.com/article/10.1007/s12053-018-9710-0)’, Energy Efficiency **12**, Issue 2, pp 521–550.
