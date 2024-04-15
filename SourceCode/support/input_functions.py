@@ -164,6 +164,17 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                         except ValueError as e:
                                             input_functions_message(scen, var, dims, read)
                                             raise(e)
+                                    # if dims_length[1] > 1:
+                                    #     try: 
+                                    #         if data[scen][var][:, :, 0, 0].shape == read.shape:  # Check if shapes match
+                                    #             data[scen][var][:, :, 0, 0] = read
+                                    #         else:
+                                    #             print(f"Error setting variable '{var}': Shapes do not match")
+                                    #     except ValueError as e:
+                                    #         input_functions_message(scen, var, dims, read)
+                                    #         print(f"Error setting variable '{var}': {e}")  # Print variable name along with error message
+                                    #         raise e
+
                                     
                                     # If there is a third dimension only
                                     elif dims_length[2] > 1:

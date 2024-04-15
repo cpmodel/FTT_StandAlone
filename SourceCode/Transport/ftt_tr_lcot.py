@@ -100,10 +100,15 @@ def get_lcot(data, titles, year):
         vtt = np.zeros([len(titles['VTTI']), int(max_lt)])
         vtt[:, 0, np.newaxis] = (data['TTVT'][r, :, 0, np.newaxis]+data['RTCO'][r, 0, 0]*bttc[:,c3ti['14 CO2Emissions'], np.newaxis])/ns/ff/cf/1000
 
-        # Average fuel costs
+        # Average fuel costs- Jasleen modified
         ft = np.ones([len(titles['VTTI']), int(max_lt)])
-        ft = ft * bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis]/ns/ff
+        ft = ft * (bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis] + bttc[:,c3ti['18 Fuel subsidy (USD/km)'], np.newaxis]) /ns/ff
         ft = np.where(mask, ft, 0)
+
+        # Fuel subsidies- Jasleen new logic
+        fs = np.ones([len(titles['VTTI']), int(max_lt)])
+        fs = fs * data['RTFS'][r, :, 0, np.newaxis]/ns/ff
+        fs = np.where(mask, fs, 0)
 
         # Stadard deviation of fuel costs
         dft = np.ones([len(titles['VTTI']), int(max_lt)])
@@ -144,10 +149,10 @@ def get_lcot(data, titles, year):
         denominator = (1+dr)**lt_mat
 
         # 1-Expenses
-        # 1.1-Without policy costs
-        npv_expenses1 = (it+ft+omt)/denominator
-        # 1.2-With policy costs
-        npv_expenses2 = (it+vtt+ft+fft+omt+rtt)/denominator
+        # 1.1-Without policy costs (Jasleen modified)
+        npv_expenses1 = (it+ft-fs+omt)/denominator
+        # 1.2-With policy costs (Jasleen modified)
+        npv_expenses2 = (it+vtt+ft-fs+fft+omt+rtt)/denominator
         # 1.3-Only policy costs
         npv_expenses3 = (vtt+fft+rtt)/denominator
         # 2-Utility
