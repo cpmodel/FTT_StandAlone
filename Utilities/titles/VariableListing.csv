@@ -305,7 +305,6 @@ RTFZ1,FTT-Fr Fuel tax ,$/litre,RTI,NA,NA,TIME,FTT-Fr,,2019,2018,,,Y
 ZCET,FTT-Fr Matrix of Cost Components,Various,RTI,FTTI,C6TI,NA,FTT-Fr,,,,,,
 ZEWA,FTT-Fr Substitution matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,,
 ZEWB,FTT-Fr Spillover matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,,
-ZLER,FTT-Fr Learning Rates,,FTTI,NA,NA,NA,FTT-Fr,,,,,,
 RVHH,FTT-Fr Sales History,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZESF,FTT-Fr Survival function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZSFD,FTT-Fr Survival Function Age Derivative,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,

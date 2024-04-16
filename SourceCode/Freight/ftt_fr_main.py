@@ -384,8 +384,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 if data['ZEWW'][0, tech, 0] > 0.1:
 
                     data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
-                            data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] * \
-                            (1.0 + data['ZLER'][tech] * dw[tech]/data['ZEWW'][0, tech, 0])
+                            data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
+                            * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                            * dw[tech]/data['ZEWW'][0, tech, 0])
 
 
             # Calculate total investment by technology in terms of truck purchases
