@@ -61,6 +61,14 @@ def get_lcof(data, titles):
     # Categories for the cost matrix (ZCET)
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
 
+    # Taxable categories for fuel - not all fuels subject to fuel tax
+    tf = np.ones([len(titles['FTTI']), 1])
+    # Make vehicles that do not use petrol/diesel exempt
+    tf[8:10] = 0   # CNG
+    tf[12:14] = 0   # Electric
+    tf[18:20] = 0   # Hydrogen
+    taxable_fuels = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
+
     NTT=20 # number of technologies
 
     for r in range(len(titles['RTI'])):
@@ -78,6 +86,9 @@ def get_lcof(data, titles):
         LF_max_mat = np.concatenate(int(max_LF)*[LF[:, np.newaxis]], axis=1)
         mask = LF_mat < LF_max_mat
         LF_mask = np.where(mask, LF_mat, 0)
+
+        # Taxable fuels
+        taxable_fuels[r,:] = tf[:]
 
         # Discount rate
         rM = zcet[:,c6ti['7 Discount rate'], np.newaxis]
@@ -120,13 +131,10 @@ def get_lcof(data, titles):
 
        # fuel tax/subsidies
         fft = np.ones([len(titles['FTTI']), int(max_LF)])
-        fft = fft * data['ZTFT'][r, :, 0, np.newaxis]
+        fft = fft * data['RZFT'][r, :, 0, np.newaxis] \
+              * zcet[:, c6ti["9 energy use (MJ/vkm)"], np.newaxis] \
+              * taxable_fuels[r, :]
         fft = np.where(mask, fft, 0)
-
-        # Lifetime vector of fuel taxes to be added
-        #FtFT = np.ones([len(titles['FTTI']), int(max_LF)])
-        #FtFT = FtFT * zcet[:, c6ti['9 energy use (MJ/vkm)'], np.newaxis] * FT
-        #FtFT = np.where(mask, FtFT, 0)
 
         # O&M costs
         OMt = np.ones([len(titles['FTTI']), int(max_LF)])
@@ -187,4 +195,15 @@ def get_lcof(data, titles):
         data['ZTLL'][r, :, 0] = LTLCOF*1.263
         data['ZTDD'][r, :, 0] = dLTLCOF*1.263
 
+        # Vehicle price components for front end ($/veh)
+        data["ZWIC"][r, :, 0] = zcet[:, c6ti['1 Price of vehicles (USD/vehicle)']] \
+                                + data["ZTVT"][r, :, 0] \
+                                + zcet[:, c6ti["14 CO2Emissions (gCO2/km)"]] \
+                                * data["RZCO"][r, 0, 0]
+        
+        # Vehicle fuel price components for front end ($/km)
+        data["ZWFC"][r, :, 0] = zcet[:, c6ti["3 fuel cost (USD/km)"]] \
+                                + data['RZFT'][r, 0, 0] \
+                                * zcet[:, c6ti["9 energy use (MJ/vkm)"]] \
+                                * taxable_fuels[r, :, 0]
     return data

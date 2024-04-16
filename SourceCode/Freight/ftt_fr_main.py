@@ -174,12 +174,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         for t in range(1, no_it + 1):
         # Interpolations to avoid staircase profile
 
-            RTCO = time_lag['RZCO'][:, :, :] + (data['RZCO'][:, :, :] - time_lag['RZCO'][:, :, :]) * t * dt
-            FuT = time_lag['RTFZ0'][:, :, :] + (data['RTFZ0'][:, :, :] - time_lag['RTFZ0'][:, :, :]) * t * dt
-            #TJET = time_lag['ZJET'][:, :, :] + (data['ZJET'][:, :, :] - time_lag['ZJET'][:, :, :]) * t * dt
             D = time_lag['RVKZ'][:, :, :] + (data['RVKZ'][:, :, :] - time_lag['RVKZ'][:, :, :]) * t * dt
             Utot = time_lag['RFLZ'][:, :, :] + (data['RFLZ'][:, :, :] - time_lag['RFLZ'][:, :, :]) * t * dt
-            BFM = time_lag['ZBFM'][:, :, :] + (data['ZBFM'][:, :, :] - time_lag['ZBFM'][:, :, :]) * t * dt
 
             for r in range(len(titles['RTI'])):
 
