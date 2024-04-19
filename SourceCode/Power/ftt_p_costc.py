@@ -395,7 +395,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
                     # Note: the curve is in the form of an inverse capacity factor in BCSC
                     X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
-                    if X0> 0.0:
+                    if X0 > 0.0:
                         Y0, Ind = interp(X, Y, X0, L)
                     MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
                     # TODO: SET Exog MERC
@@ -405,7 +405,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     # For variable renewables (e.g. wind, solar, wave)
                     # the overall (average) capacity factor decreases as new units have lower and lower CFs
 
-                    if(MEWG[r, j, 0] > 0.01 and Ind > 1 and X0 > 0):
+                    if(MEWG[r, j, 0] > 0.01 and Ind >= 1 and X0 > 0):
 
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
                         CFvar[1:Ind + 1] = 1.0/(Y[1:Ind + 1] + 0.000001)/(Ind)
@@ -413,8 +413,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                         if CFvar2 > 0:
 
                             MEWL[r, j, 0] = CFvar2
-
-
+                      
                     # Fix: CSP is more efficient than PV by a factor 2
                     if j == 19 :
                         BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
