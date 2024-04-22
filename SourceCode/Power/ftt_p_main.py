@@ -13,7 +13,7 @@ electricity**, which leads to changes in the market shares of different technolo
 
 After market shares are determined, the rldc function is called, which calculates
 **residual load duration curves**. This function estimates how much power needs to be
-supplied by flexible or dispatchable technologies to meet electricity demand at all times.
+supplied by flexible or baseload technologies to meet electricity demand at all times.
 This function also returns load band heights, curtailment, and storage information,
 including storage costs and marginal costs for wind and solar.
 
@@ -54,6 +54,7 @@ Functions included:
 
 # Standard library imports
 import copy
+import warnings
 
 # Third party imports
 import pandas as pd
@@ -68,7 +69,10 @@ from SourceCode.Power.ftt_p_lcoe import get_lcoe
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
-from SourceCode.Power.ftt_p_2nd_hand_batteries import second_hand_batteries
+from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
+
+from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
+
 
 
 # %% main function
@@ -245,7 +249,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MCFC'][:, :, 0] = copy.deepcopy(data['MCFCX'][:, :, 0])
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:, :, 0])
         
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles)                                  # Get the levelised costs
+        data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3) # Get the marginal fuel prices
+
 
 
     #%%
@@ -296,8 +302,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             #if year == 2013: data = get_lcoe(data, titles)
 
             # Second, estimate RLDC parameters
-            bidon = 0
+            
             data = rldc(data, time_lag, iter_lag, year, titles)
+
 
             # Change currency from EUR2015 to USD2013
             if year >= 2015:
@@ -474,6 +481,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 
+
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
 
@@ -531,7 +539,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
-            bidon = 0
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3) 
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -664,19 +672,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
                 
                 print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
-
+            
             # =================================================================
             # Second-hand batteries. Only run at first timestep
             # =================================================================
             if t == 0: 
                 data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
-
+            
             # =================================================================
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, time_lag, iter_lag, year, titles)
-            bidon = 0
+
             # Change currency from EUR2015 to USD2013
 
             if year >= 2015:
@@ -832,6 +840,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # additions (PG_CA) we can estimate total global spillover of similar
             # techicals
             bi = np.zeros((len(titles['RTI']),len(titles['T2TI'])))
+
             mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
             
@@ -896,24 +905,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             data = get_lcoe(data, titles)
-            bidon = 0
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)
 
             # =================================================================
             # Update the time-loop variables
             # =================================================================
 
             # Update time loop variables:
-#            print(year)
-            # print(f'MEWS: {data["MEWS"][1, 18, 0]:.7f}\n'
-            #  f'MWSLt: {data_dt["MEWS"][1, 18, 0]:.7f}\n' \
-            #  f'MEWG: {data["MEWG"][1, 18, 0]:.0f}\n' \
-            #  f'MEWK: {data["MEWK"][1, 18, 0]:.4f}\n' \
-            #  f'MEWL: {data["MEWL"][1, 18, 0]:.7f}\n' \
-            #  f'METC: {data["METC"][1, 18, 0]:.7f}\n'\
-            #  f'MWMC: {data_dt["MWMC"][1, 18, 0]:.7f}\n' \
-            #  f'MMCD: {data_dt["MMCD"][1, 18, 0]:.5f}\n' \
-            #  f'MLSP: {data["MLSP"][1, 18, 0]:.5f}\n' \
-            #  f'MSSP: {data["MSSP"][1, 18, 0]:.5f}\n')
+
             for var in data_dt.keys():
 
                 if domain[var] == 'FTT-P':

@@ -378,3 +378,4 @@ ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
 Second-hand batteries by age,Second-hand batteries from transport and freight,GWh,RTI,battery_ages,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 Second-hand battery stock,Sum of second-hand batteries,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2010,-,Y,Y
+MPRI,FTT:Power,"Switch for electricity price calculation (1=Double weighted LCOE, 2=Merit order approach)",RTI,NA,NA,NA,FTT-P,-,-,-,-,Y,Y
