@@ -35,10 +35,10 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
     # Units - REVS: 1000 cars, BTTC - kWh
-    battery_capacity_last_year = time_lag["REVS"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    battery_capacity_lag = time_lag["REVS"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
     
     # Sum battery capacity in GWh
-    summed_prior_battery_capacity = np.sum(battery_capacity_last_year, axis=1)/1000
+    summed_prior_battery_capacity = np.sum(battery_capacity_lag, axis=1)/1000
     summed_battery_capacity = summed_prior_battery_capacity * starting_degredation
     used_battery_capacity = summed_battery_capacity * utilisation_rate
     
