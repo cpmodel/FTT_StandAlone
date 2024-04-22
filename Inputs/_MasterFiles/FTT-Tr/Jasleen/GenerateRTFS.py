@@ -9,7 +9,7 @@ import csv
 import os
 
 # Load the Excel file into a pandas DataFrame
-file_path = "./RTFS_All_Countries.xlsx" 
+file_path = r"C:\Users\wb614170\FTT_StandAlone\Inputs\_MasterFiles\FTT-Tr\Jasleen\RTFS_All_Countries.xlsx"
 df = pd.read_excel(file_path)
 
 
