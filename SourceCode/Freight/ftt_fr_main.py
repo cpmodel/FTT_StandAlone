@@ -149,7 +149,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     if year > histend['RVKZ']:
 
         data_dt = {}
-        data_dt['ZWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+        data_dt['ZWIY'] = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
 
         for var in time_lag.keys():
 
