@@ -34,6 +34,7 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
+from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
 
 
 # Support modules
@@ -92,7 +93,7 @@ class ModelRun:
     model_end: int
         Final year of model timeline
     current: int
-        Curernt/active year of solution
+        Current/active year of solution
     years: tuple of (int, int)
         Bookend years of model_timeline
     timeline: list of int
@@ -222,10 +223,7 @@ class ModelRun:
         # Iteration loop here
         for itereration in range(max_iter):
 
-            if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+            
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
@@ -265,13 +263,22 @@ class ModelRun:
                                         self.titles, self.histend, tl[y],
                                         self.domain)
                 
+            if "FTT-P" in self.ftt_modules:
+                variables = ftt_p.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+            
+            if "FTT-P" in self.ftt_modules:
+                if year > 2022:
+                    variables = electricity_price_feedback(variables, time_lags)
+                
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
 
             # Third, solve energy supply
             # Overwrite iter_lags to be used in the next iteration round
             iter_lags = copy.deepcopy(variables)
-#        # Print any diagnstics
+#        # Print any diagnostics
 #
         return variables, time_lags
 

@@ -47,6 +47,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             shares_old = (data["MEWK"][r, :, 0] - data["MEWI"][r, :, 0]) / np.sum(data["MEWK"][r, :, 0])
             shares_old[shares_old < 0.0] = 0.0
             shares_old = shares_old / np.sum(shares_old)
+            
 
             weighted_lcoe_new = np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0])  \
                                 / np.sum(shares_new * data["MEWL"][r, :, 0])
@@ -105,6 +106,8 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                 
             data["MEWP"][r, 7, 0] = vre_weight[r] * data["MLBP"][r, 5, 0] + \
                                     (1.0 - vre_weight[r]) * non_vre_price[r] 
-
-
+            
+            
+    print(f'data[MEWP] is: {data["MEWP"][0, 7, 0]}')
+    print(f'weight_new: {weight_new}')
     return data
