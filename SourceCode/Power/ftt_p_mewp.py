@@ -108,6 +108,6 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                                     (1.0 - vre_weight[r]) * non_vre_price[r] 
             
             
-    print(f'data[MEWP] is: {data["MEWP"][0, 7, 0]}')
-    print(f'weight_new: {weight_new}')
+    #print(f'data[MEWP] is: {data["MEWP"][0, 7, 0]}')
+    #print(f'weight_new: {weight_new}')
     return data

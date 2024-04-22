@@ -2,9 +2,14 @@
 """
 Created on Tue May 23 14:55:17 2023
 
-@author: Femke Nijsse
+@author: Femke & authors referee projects
 """
+# Standard library imports
+import os
+
+# Third-party imports
 import numpy as np
+import pandas as pd
 import copy
 
 def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
@@ -48,6 +53,41 @@ def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
             data["MEWD"][r, 7, 0] = np.sum(data["FRET"][r, :, 0]) * 41.868/1000 #/3.6 electricity
     else:
         print("FTT-P not included, so MEWD unaffected")    
+        
+    return data
+
+
+
+
+def electricity_demand_feedback(data, year, titles, units):
+    """
+        Calculate change in electricity demand from Base S0 scenario from other models
+    """
+
+    jti = titles["JTI"]
+    elec_index = jti.index("8 Electricity")
+    
+    # Electricity mapping for each model
+    elec_map = pd.read_csv(os.path.join('Utilities', 'mappings',
+                                        "Electricity_demand_mapping.csv"),
+                           index_col=0)
+    unit_conversion = pd.read_csv(os.path.join('Utilities', 'mappings', "Energy_unit_conversions.csv"),
+                                  index_col=0)
+    demand_unit = units["MEWD"]
+    for model in elec_map.index:
+    
+        demand_var = elec_map.loc[model, "fuel_var"]
+        print(demand_var)
+        
+        # convert to same unit as MEWD
+        unit = units[demand_var]
+        conversion_factor = unit_conversion.loc[unit, demand_unit]
+        print(output["S0"][demand_var].shape)
+        base_demand = output["S0"][demand_var][:, elec_index, 0, year]
+        new_demand = data[demand_var][:, elec_index, 0]
+        elec_change = new_demand - base_demand
+        elec_change = elec_change * conversion_factor
+        data["MEWDX"][:, elec_index, 0] += elec_change
         
     return data
 

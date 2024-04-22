@@ -35,6 +35,8 @@ import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
 from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
+from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
+
 
 
 # Support modules
@@ -140,7 +142,7 @@ class ModelRun:
         self.titles = titles_f.load_titles()
 
         # Load variable dimensions
-        self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
+        self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Set up csv files if they do not exist yet
         initialise_csv_files(self.ftt_modules, self.scenarios)
@@ -263,6 +265,10 @@ class ModelRun:
                                         self.titles, self.histend, tl[y],
                                         self.domain)
                 
+            if scenario != "S0":
+                if year > 2022:
+                    variables = electricity_demand_feedback(variables, y, self.unit)
+            
             if "FTT-P" in self.ftt_modules:
                 variables = ftt_p.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
