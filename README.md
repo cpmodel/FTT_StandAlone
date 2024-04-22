@@ -4,7 +4,7 @@
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
 
 * FTT:Power (Mercure, 2012) - data up to 2019, update to 2021 expected in October
-* FTT:Heat (Knobloch et al, 2017) data up to 2014, update to 2020 data expected in November
+* FTT:Heat (Knobloch et al, 2017) data up to 2020
 * FTT:Industrial heat *under construction*
 * FTT:Transport (Mercure et al, 2018) - data up to 2022
 * FTT:Freight *under construction*

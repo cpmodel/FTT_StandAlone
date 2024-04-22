@@ -226,7 +226,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # %% Simulation of stock and energy specs
 
     if year > np.min(data["TDA1"][:, 0, 0]): 
-        # Regions have different start dates (TDA1) 
+        # Regions have different start dates (TDA1); regions with historical data are later skipped
 
         # Create a local dictionary for timeloop variables
         # It contains values between timeloop interations in the FTT core
