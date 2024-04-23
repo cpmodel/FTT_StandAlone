@@ -267,7 +267,9 @@ class ModelRun:
                 
             if scenario != "S0":
                 if year > 2022:
-                    variables = electricity_demand_feedback(variables, y, self.unit)
+                    variables = electricity_demand_feedback(variables, 
+                                        self.output["S0"], y, self.titles,
+                                        self.unit)
             
             if "FTT-P" in self.ftt_modules:
                 variables = ftt_p.solve(variables, time_lags, iter_lags,

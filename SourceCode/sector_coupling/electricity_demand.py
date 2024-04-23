@@ -59,7 +59,7 @@ def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
 
 
 
-def electricity_demand_feedback(data, year, titles, units):
+def electricity_demand_feedback(data, data_baseline, year, titles, units):
     """
         Calculate change in electricity demand from Base S0 scenario from other models
     """
@@ -82,8 +82,10 @@ def electricity_demand_feedback(data, year, titles, units):
         # convert to same unit as MEWD
         unit = units[demand_var]
         conversion_factor = unit_conversion.loc[unit, demand_unit]
-        print(output["S0"][demand_var].shape)
-        base_demand = output["S0"][demand_var][:, elec_index, 0, year]
+        
+        # Compute change from baseline
+        print(data_baseline[demand_var].shape)
+        base_demand = data_baseline[demand_var][:, elec_index, 0, year]
         new_demand = data[demand_var][:, elec_index, 0]
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
