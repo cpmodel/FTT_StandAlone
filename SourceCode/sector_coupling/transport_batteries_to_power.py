@@ -39,18 +39,21 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     battery_capacity_lag = time_lag["REVS"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
     
     # Sum battery capacity in GWh
-    summed_prior_battery_capacity = np.sum(battery_capacity_lag, axis=1)/1000
-    summed_battery_capacity = summed_prior_battery_capacity * starting_degredation
+    battery_capacity_lag_sum = np.sum(battery_capacity_lag, axis=1)/1000
+    summed_battery_capacity = battery_capacity_lag_sum * starting_degredation
     used_battery_capacity = summed_battery_capacity * utilisation_rate
     
     # Move all batteries one year up
-    data['Second-hand batteries by age'][:, :-1, :] = np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) * yearly_decay
+    data['Second-hand batteries by age'][:, :-1, :] = \
+            np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) * yearly_decay
     
     # Add newly scrapped vehicle batteries to tracking matrix
     data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
     
     # All all batteries together
-    data['Second-hand battery stock'] = np.sum(data['Second-hand batteries by age'], axis=1, keepdims=True)
+    data['Second-hand battery stock'] = \
+            np.sum(data['Second-hand batteries by age'], axis=1, keepdims=True)
+                        
     
     return data
 

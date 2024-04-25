@@ -615,7 +615,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Start of the quarterly time-loop
         # =====================================================================
 
-        #Start the computation of shares
+        # Start the computation of shares
         for t in range(1, no_it+1):
 
             # Electricity demand is exogenous at the moment
@@ -640,7 +640,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             MWDL = copy.deepcopy(time_lag['MEWDX'][:, 7, 0])
             
             # For checking
-            if t==4:
+            if t == 4:
                 data["MEWD"] = copy.deepcopy(data['MEWDX'])
 
             # =================================================================
@@ -676,7 +676,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Second-hand batteries. Only run at first timestep
             # =================================================================
-            if t == 0: 
+            if t == 1: 
                 data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
             
             # =================================================================
