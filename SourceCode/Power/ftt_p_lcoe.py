@@ -212,6 +212,7 @@ def get_lcoe(data, titles):
         lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
         # 1.2-LCOE including policy costs
         tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1) - data['MEFI'][r, :, 0]
+
         # 1.3 LCOE excluding policy, including co2 price
         lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
         # 1.3-LCOE of policy costs
