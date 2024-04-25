@@ -951,10 +951,11 @@ def retrieve_region_titles():
 @route('/api/gamma/chart/<model>/<region>/<start_year>/<type_>', method=['GET'])
 @enable_cors
 def construct_gamma_graphic_data(model, region, start_year, type_):
+
     # TODO: Still to review for cross-platform compatibility
     graphics = pd.read_excel(f'{rootdir}\\Utilities\\Titles\\ReportGraphics.xlsx',
-                         sheet_name="Gamma_chart",index_col="ref")
-    settings = graphics.loc[model]
+                         sheet_name="Gamma_chart", index_col="ref")
+    settings = graphics.loc[model].fillna('None')
     command = settings.loc["Vars"].split("|")
 
     vars = command[1].split(",")
@@ -1043,14 +1044,14 @@ def construct_gamma_graphic_data(model, region, start_year, type_):
                             data_filter.append(data[var][dims_pos[d1],dims2_pos[d2],dims3_pos[d3],:])
         data_filter = np.vstack(data_filter)
 
-        df = pd.DataFrame(data_filter,columns=years)
+        df = pd.DataFrame(data_filter, columns=years)
         df["dimension"] = pd.Categorical(dims_list,dims)
         if len(dims2) >1:
-            df["dimension2"] = pd.Categorical(dims2_list,dims2)
+            df["dimension2"] = pd.Categorical(dims2_list, dims2)
         else:
             df["dimension2"] = dims2_list
         if len(dims3) >1:
-            df["dimension3"] = pd.Categorical(dims3_list,dims3)
+            df["dimension3"] = pd.Categorical(dims3_list, dims3)
         else:
             df["dimension3"] = dims3_list
 
