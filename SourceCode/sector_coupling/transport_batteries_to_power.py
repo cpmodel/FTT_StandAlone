@@ -57,7 +57,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     
     return data
 
-def update_storage_cost_using_reporposed_batteries(data):
+def share_repurposed_batteries(data, year):
     """
     Estimate the total storage demand (GWh) from capacity (GW). The original 
     Ueckerdt paper does not contain this information. We therefore estimate
@@ -69,14 +69,31 @@ def update_storage_cost_using_reporposed_batteries(data):
 
     Returns
     -------
-    Battery capacity in GWh.
-
+    Share repurposed batteries compared to short-term storage needs
+    
     """
     # Convert from GW to GWh (estimate)
     storage_from_transport = data["Second-hand battery stock"] * 4.3
-    storage_ratio = storage_from_transport / data["MSCC"]
+    storage_ratio = storage_from_transport / data["MSSC"]
+    print(f"Stock storage repurposed batteries in {year}: {np.sum(storage_from_transport)/1000:.3f} TWh")
     print(f"Storage ratio is {storage_ratio[0]}")
+    print(f"Storage demand in the power sector: {np.sum(data['MSSC'])/1000:.3f} TWh")
     
-    return data
+    return storage_ratio
 
+def compute_new_costs(data, year):
+    """
+    Compute the new costs for storage. Repurposing batteries have costs
+    of roughly 20-80% of new batteries, or 30% to 70%, according to:
+        https://www.sciencedirect.com/science/article/pii/S2589004223012725
+        
+    We take a mid-point value of 50%.
+    
+    Returns
+    -------
+    Battery costs and new marginal costs
+    
+    """ 
+    
+    pass
     

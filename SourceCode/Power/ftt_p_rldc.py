@@ -27,6 +27,8 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.sector_coupling.transport_batteries_to_power import share_repurposed_batteries
+
 
 #%% FEQS
 def feqs(a):
@@ -652,6 +654,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
             
     # %%
     r_int = 0
+    storage_ratio = share_repurposed_batteries(data, year)
     
     check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
     check_mewl = pd.DataFrame(data['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
