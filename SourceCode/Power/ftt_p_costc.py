@@ -408,7 +408,9 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     if(MEWG[r, j, 0] > 0.01 and Ind >= 1 and X0 > 0):
 
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
+
                         CFvar[1:Ind + 1] = 1.0 / (Y[1:Ind + 1] + 0.000001) / Ind
+
                         CFvar2 = sum(CFvar[1:Ind + 1])
                         if CFvar2 > 0:
 
