@@ -54,6 +54,7 @@
                     :options="variables"
                     :alwaysOpen="true"
                     :clearable="false"
+                    :disableFuzzyMatching="true"
                     :appendToBody="false"
                     openDirection="below"
                     :maxHeight="95"
@@ -586,7 +587,7 @@ export default {
       dimensions2_drawn: [],
       dimensions3_drawn: [],
       scenarios_drawn: ["S0"],
-      chart_type: ["bar", "line", "stacked-bar"],
+      chart_type: ["line","bar", "stacked-bar"],
       title_old: "null",
       title2_old: "null",
       title3_old: "null",
@@ -612,7 +613,7 @@ export default {
         calculation: "Levels",
         scen_index: [0],
         unit: "model unit",
-        chart_type:"bar",
+        chart_type:"line",
         start_year:0,
         end_year:0
       },
