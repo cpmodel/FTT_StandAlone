@@ -47,7 +47,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             shares_old = (data["MEWK"][r, :, 0] - data["MEWI"][r, :, 0]) / np.sum(data["MEWK"][r, :, 0])
             shares_old[shares_old < 0.0] = 0.0
             shares_old = shares_old / np.sum(shares_old)
-            
+
 
             weighted_lcoe_new = np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0])  \
                                 / np.sum(shares_new * data["MEWL"][r, :, 0])
@@ -61,11 +61,10 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
 
             glb_dict = {0: data["MWG1"][r, :, 0], 1: data["MWG2"][r, :, 0], 2: data["MWG3"][r, :, 0],
                         3: data["MWG4"][r, :, 0], 4: data["MWG5"][r, :, 0], 5: data["MWG6"][r, :, 0]}
-            NLB = len(glb3[0])                          # NLB is the number of load bands
-            
+            n_loadbands = len(glb3[0])
 
             # We loop over our load bands
-            for LB in range(NLB):
+            for LB in range(n_loadbands):
                 mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])  # Initialize marginal costs array
                 
 
@@ -83,14 +82,11 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                 else:
                     data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
 
-            if LB == 5:         # To reflect increased costs due to start-up and switch off
-                data["MLBP"][r, LB, 0] *= 1.25 
-            if LB == 4:          # Same as above but there is less intermittency
-                data["MLBP"][r, LB, 0] *= 1.1
-            if LB == 3:          # Same
-                data["MLBP"][r, LB, 0] *= 1.05
-            if LB == 6:          # Reflecting higher transmission costs for VRE
-                data["MLBP"][r, LB, 0] *= 1.3
+                   
+            data["MLBP"][r, 4, 0] *= 1.25 # To reflect increased costs due to start-up and switch off
+            data["MLBP"][r, 3, 0] *= 1.1  # Same as above but there is less intermittency
+            data["MLBP"][r, 2, 0] *= 1.05
+            data["MLBP"][r, 5, 0] *= 1.3  # Reflecting higher transmission costs for VRE
 
             vre_weight = np.zeros((len(titles['RTI'])))
             non_vre_price =  np.zeros((len(titles['RTI'])))
@@ -98,16 +94,17 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             # Estimate prices as a weighted average of marginal costs
             # Above 25% VRE penetration, we assume that at certain moments
             # electricity prices are completely determined by VRE technologies.
+            
             if np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :]) > 0.25:
-                vre_weight[r] = (1.0 / 0.75) * np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :, 0]) - (1.0 / 3.0)
+                vre_weight[r] = \
+                    (1.0 / 0.75) * np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) \
+                    / np.sum(data["MEWG"][r, :, 0]) - (1.0 / 3.0)
     
-            if np.sum(np.array([glb_dict[LB] for LB in range(NLB-1)])) > 0.0:
-                non_vre_price[r] = np.sum(data["MLBP"][r, :NLB-1, 0] * non_vre_lb_weight)
+            if np.sum(np.array([glb_dict[LB] for LB in range(n_loadbands-1)])) > 0.0:
+                non_vre_price[r] = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
                 
             data["MEWP"][r, 7, 0] = vre_weight[r] * data["MLBP"][r, 5, 0] + \
                                     (1.0 - vre_weight[r]) * non_vre_price[r] 
             
             
-    #print(f'data[MEWP] is: {data["MEWP"][0, 7, 0]}')
-    #print(f'weight_new: {weight_new}')
     return data

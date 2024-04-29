@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import copy
 
+from SourceCode.support.divide import divide
 
 def electricity_price_feedback(data, time_lag):
     """ "This function takes as input the electricity price from FTT-P, and 
@@ -24,7 +25,8 @@ def electricity_price_feedback(data, time_lag):
         Calculation is done year on year based on the lag (previous year solution)
     """
     variables = copy.deepcopy(data)
-    mewp_growth = data["MEWP"] / time_lag["MEWP"]
+    
+    mewp_growth = divide(data["MEWP"], time_lag["MEWP"])
     elec_mewp_growth = mewp_growth[:, 7, 0][np.newaxis].T
 
     # Update each fuel cost variable
