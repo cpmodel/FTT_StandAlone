@@ -201,11 +201,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         elif dims_length[3] == 1:
                             data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
 
-
-    data_return = copy.deepcopy(data)
-
-    # Return data
-    return data_return
+    return data
 
 
 def results_instructions():
