@@ -1,0 +1,6 @@
+,Mean,Min,Max,Source,Notes
+Utilisation rate,0.5,,,https://www.nature.com/articles/s41467-022-35393-0,
+Yearly decay,0.98,,,https://www.nature.com/articles/s41467-022-35393-0,
+Starting degredation,0.74,,,https://www.nature.com/articles/s41467-022-35393-0,
+Cost savings,0.5,0.2,0.8,https://www.sciencedirect.com/science/article/pii/S2589004223012725,
+GW_to_GWh,4.3,3.8,4.8,https://energy.mit.edu/research/future-of-energy-storage/,"In table 6.13, in 5 gCO2 scenario, there is a factor 3.8 between the two.     In table C12, in the 5 gCO2 scenario, there is a factor 4.8. Average is 4.3"

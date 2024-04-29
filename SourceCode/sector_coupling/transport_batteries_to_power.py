@@ -10,6 +10,8 @@ Second-hand batteries repurposing module
 
 import numpy as np 
 
+from SourceCode.support.read_assumptions import read_sc_assumptions
+
 def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     """
     This function estimates the size of the second-hand battery market
@@ -25,7 +27,10 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     Returns:
         data dictionary with updated battery capacity in GWh
         # Todo: check if units still correct
+        
     """
+    
+    assumptions = read_sc_assumptions()
     utilisation_rate = 0.5       # Share of car batteries getting a second life in power
     yearly_decay = 0.98          # Assumption, very roughly based on Xu, but not really
     
@@ -75,13 +80,15 @@ def share_repurposed_batteries(data, year):
     # Convert from GW to GWh (estimate)
     storage_from_transport = data["Second-hand battery stock"] * 4.3
     storage_ratio = storage_from_transport / data["MSSC"]
-    print(f"Stock storage repurposed batteries in {year}: {np.sum(storage_from_transport)/1000:.3f} TWh")
-    print(f"Storage ratio is {storage_ratio[0]}")
-    print(f"Storage demand in the power sector: {np.sum(data['MSSC'])/1000:.3f} TWh")
+    
+    if year%10 == 0:
+        print(f"Stock storage repurposed batteries in {year}: {np.sum(storage_from_transport)/1000:.3f} TWh")
+        print(f"Storage ratio is {storage_ratio[0]}")
+        print(f"Storage demand in the power sector: {np.sum(data['MSSC'])/1000:.3f} TWh")
     
     return storage_ratio
 
-def compute_new_costs(data, year):
+def compute_new_costs(data, storage_ratio, year):
     """
     Compute the new costs for storage. Repurposing batteries have costs
     of roughly 20-80% of new batteries, or 30% to 70%, according to:
@@ -94,6 +101,11 @@ def compute_new_costs(data, year):
     Battery costs and new marginal costs
     
     """ 
+    share_repurposed = np.clip(storage_ratio, max=1)
+    cost_savings = 0.5
+    remaining_costs_fraction = ((1-share_repurposed) + share_repurposed * (1-cost_savings))   
+    data["MSSP"] = data["MSSP"] * remaining_costs_fraction
+    data["MSSM"] = data["MSSM"] * remaining_costs_fraction
     
-    pass
+    return data
     
