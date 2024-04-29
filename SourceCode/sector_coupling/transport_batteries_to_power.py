@@ -88,7 +88,7 @@ def share_repurposed_batteries(data, year):
     
     return storage_ratio
 
-def compute_new_costs(data, storage_ratio, year):
+def update_costs_from_repurposing(data, storage_ratio, year):
     """
     Compute the new costs for storage. Repurposing batteries have costs
     of roughly 20-80% of new batteries, or 30% to 70%, according to:
@@ -101,11 +101,12 @@ def compute_new_costs(data, storage_ratio, year):
     Battery costs and new marginal costs
     
     """ 
-    share_repurposed = np.clip(storage_ratio, max=1)
+    share_repurposed = np.minimum(storage_ratio, 1)
     cost_savings = 0.5
-    remaining_costs_fraction = ((1-share_repurposed) + share_repurposed * (1-cost_savings))   
-    data["MSSP"] = data["MSSP"] * remaining_costs_fraction
-    data["MSSM"] = data["MSSM"] * remaining_costs_fraction
+    remaining_costs_fraction = ((1-share_repurposed) + share_repurposed * (1-cost_savings))
+    print(f"In year {year}, the remaining_cost_fraction is {remaining_costs_fraction[0]}")
+    #data["MSSP"] = data["MSSP"] * remaining_costs_fraction
+    #data["MSSM"] = data["MSSM"] * remaining_costs_fraction
     
     return data
     

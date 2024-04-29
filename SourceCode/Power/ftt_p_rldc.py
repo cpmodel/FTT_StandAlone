@@ -27,7 +27,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.sector_coupling.transport_batteries_to_power import share_repurposed_batteries
+from SourceCode.sector_coupling.transport_batteries_to_power import share_repurposed_batteries, update_costs_from_repurposing
 
 
 #%% FEQS
@@ -655,6 +655,8 @@ def rldc(data, time_lag, iter_lag, year, titles):
     # %%
     r_int = 0
     storage_ratio = share_repurposed_batteries(data, year)
+    data = update_costs_from_repurposing(data, storage_ratio, year)
+
     
     check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
     check_mewl = pd.DataFrame(data['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
@@ -669,7 +671,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
     check_mssm = pd.DataFrame(data['MSSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
 
     # %%
-
+    
     # Store the storage capacities in 2020
     if year == 2020:
         data['MSSC2020'] = copy.deepcopy(data['MSSC'])
