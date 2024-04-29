@@ -240,11 +240,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
         # Create the regulation variable
-        division = divide((time_lag['TEWS'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
+        division = divide((time_lag['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
-
 
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0,0,0])
