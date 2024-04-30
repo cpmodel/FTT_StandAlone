@@ -164,7 +164,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data_dt[var] = copy.deepcopy(time_lag[var])
 
         # Find if there is a regulation and if it is exceeded
-        division = divide((time_lag['ZEWS'][:, :, 0] - data['ZREG'][:, :, 0]),
+        division = divide((time_lag['ZEWK'][:, :, 0] - data['ZREG'][:, :, 0]),
                            data['ZREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
@@ -263,14 +263,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Check that exogenous sales additions aren't too large
                 # As a proxy it can't be greater than 80% of the fleet size
                 # divided by 15 (the average lifetime of freight vehicles)
-                if (data['ZWSA'][r, :, 0].sum() * Utot[r] > 0.8 * Utot[r] / 15):
+                if (data['ZWSA'][r, :, 0].sum() > 0.8 * Utot[r] / 15):
             
-                    ZWSA_scalar = data['ZWSA'][r, :, 0].sum() * Utot[r] \
+                    ZWSA_scalar = data['ZWSA'][r, :, 0].sum() \
                                   / (0.8 * Utot[r] / 15)
 
                 # Check that exogenous capacity is smaller than regulated capacity
                 # Regulations have priority over exogenous capacity
-                reg_vs_exog = ((data['ZWSA'][r, :, 0] / ZWSA_scalar / no_it + endo_shares) 
+                reg_vs_exog = ((data['ZWSA'][r, :, 0] / ZWSA_scalar / no_it + endo_capacity) 
                               > data['ZREG'][r, :, 0]) & (data['ZREG'][r, :, 0] >= 0.0)
              
                 # ZWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
@@ -290,7 +290,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Calaculate changes to endogenous capacity, and use to find new market shares
                 # Zero capacity will result in zero shares
                 # All other capacities will be streched
-                data['ZEWS'][r, :, 0] = (endo_shares + dUk)/(np.sum(endo_shares)+dUtot)
+                data['ZEWS'][r, :, 0] = (endo_capacity + dUk)/(np.sum(endo_capacity)+dUtot)
 
                 if ~np.isclose(np.sum(data['ZEWS'][r, :, 0]), 1.0, atol = 1e-5):
                     msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
