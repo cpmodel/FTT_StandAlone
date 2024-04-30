@@ -47,7 +47,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     """
 
     # Read titles and assign time dimension
-    titles = titles
     titles['TIME'] = timeline
 
     # Load dimensions
@@ -61,22 +60,34 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     modules_enabled += ['General']
 
     # Create container with the correct dimensions
-    data = {scen : { var : np.zeros([len(titles[dims[var][0]]), len(titles[dims[var][1]]),
-                                     len(titles[dims[var][2]]), len(titles[dims[var][3]])]) for var in dims}
-                    for scen in scenario_list}
+    data = {
+        scen : {
+            var : np.zeros([
+                len(titles[dims[var][0]]),
+                len(titles[dims[var][1]]),
+                len(titles[dims[var][2]]),
+                len(titles[dims[var][3]])
+            ]) for var in dims
+        } for scen in scenario_list
+    }
 
 
     for scen in data:
         if scen != 'S0':
             data[scen] = copy.deepcopy(data['S0'])
 
+
         for ftt in modules_enabled:
 
             # Start reading csv files
             directory = os.path.join('Inputs', scen, ftt)
 
-            # Get a list of all CSV files in the directory
-            csv_files = [f for f in os.listdir(directory) if f.endswith(".csv")]
+            # Check if the directory exists (skipping General for some scenarios)
+            if not os.path.isdir(directory):
+                csv_files = []
+            else:
+                # Get a list of all CSV files in the directory
+                csv_files = [f for f in os.listdir(directory) if f.endswith(".csv")]
 
             # Get a set of variables in generated from VariableListing
             valid_vars = set(var.split('_')[0] for var in data[scen].keys())
