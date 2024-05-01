@@ -654,8 +654,8 @@ def rldc(data, time_lag, iter_lag, year, titles):
             
     # %%
     r_int = 0
-    storage_ratio = share_repurposed_batteries(data, year)
-    data = update_costs_from_repurposing(data, storage_ratio, year)
+    storage_ratio = share_repurposed_batteries(data, year, titles)
+    data = update_costs_from_repurposing(data, storage_ratio, year, titles)
 
     
     check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])

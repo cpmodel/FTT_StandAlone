@@ -10,8 +10,13 @@ Second-hand batteries repurposing module
 
 import numpy as np 
 
-from SourceCode.support.read_assumptions import read_sc_assumptions
-
+def get_sector_coupling_dict(data, titles):
+    sector_coupling_assumps = dict(zip(
+                list(titles['SCA']),
+                data["SectorCouplingAssumps"][0, :, 0]
+                ))
+    return sector_coupling_assumps
+    
 def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     """
     This function estimates the size of the second-hand battery market
@@ -29,14 +34,10 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
         # Todo: check if units still correct
         
     """
+    sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+    print("Sector coupling assumptoins keys")
+    print(sector_coupling_assumps.keys())
     
-    assumptions = read_sc_assumptions()
-    utilisation_rate = 0.5       # Share of car batteries getting a second life in power
-    yearly_decay = 0.98          # Assumption, very roughly based on Xu, but not really
-    
-    # Starting capacity of the batteries according to Xu et al. Conservative assumption
-    starting_degredation = 0.74  
-
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
@@ -44,13 +45,19 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     battery_capacity_lag = time_lag["REVS"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
     
     # Sum battery capacity in GWh
-    battery_capacity_lag_sum = np.sum(battery_capacity_lag, axis=1)/1000
-    summed_battery_capacity = battery_capacity_lag_sum * starting_degredation
-    used_battery_capacity = summed_battery_capacity * utilisation_rate
+    battery_capacity_lag_sum = np.sum(battery_capacity_lag, axis=1) / 1000
+    summed_battery_capacity = (battery_capacity_lag_sum  
+                               * sector_coupling_assumps["Starting degradation"]
+                              )
+    used_battery_capacity = (summed_battery_capacity 
+                            * sector_coupling_assumps["Utilisation rate"] 
+                            )
     
     # Move all batteries one year up
-    data['Second-hand batteries by age'][:, :-1, :] = \
-            np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) * yearly_decay
+    data['Second-hand batteries by age'][:, :-1, :] = (
+            np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) 
+            * sector_coupling_assumps["Yearly decay"] 
+            )
     
     # Add newly scrapped vehicle batteries to tracking matrix
     data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
@@ -62,7 +69,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     
     return data
 
-def share_repurposed_batteries(data, year):
+def share_repurposed_batteries(data, year, titles):
     """
     Estimate the total storage demand (GWh) from capacity (GW). The original 
     Ueckerdt paper does not contain this information. We therefore estimate
@@ -77,18 +84,25 @@ def share_repurposed_batteries(data, year):
     Share repurposed batteries compared to short-term storage needs
     
     """
+    
+    sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+
     # Convert from GW to GWh (estimate)
-    storage_from_transport = data["Second-hand battery stock"] * 4.3
+    storage_from_transport = (data["Second-hand battery stock"] 
+                              * sector_coupling_assumps["GW to GWh"]
+                              )
     storage_ratio = storage_from_transport / data["MSSC"]
     
     if year%10 == 0:
-        print(f"Stock storage repurposed batteries in {year}: {np.sum(storage_from_transport)/1000:.3f} TWh")
+        print(f"Stock storage repurposed batteries in {year}: "
+              f"{np.sum(storage_from_transport)/1000:.3f} TWh")
         print(f"Storage ratio is {storage_ratio[0]}")
-        print(f"Storage demand in the power sector: {np.sum(data['MSSC'])/1000:.3f} TWh")
+        print("Storage demand in the power sector:"
+              f" {np.sum(data['MSSC'])/1000:.3f} TWh")
     
     return storage_ratio
 
-def update_costs_from_repurposing(data, storage_ratio, year):
+def update_costs_from_repurposing(data, storage_ratio, year, titles):
     """
     Compute the new costs for storage. Repurposing batteries have costs
     of roughly 20-80% of new batteries, or 30% to 70%, according to:
@@ -101,9 +115,13 @@ def update_costs_from_repurposing(data, storage_ratio, year):
     Battery costs and new marginal costs
     
     """ 
+    
+    sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+    
     share_repurposed = np.minimum(storage_ratio, 1)
-    cost_savings = 0.5
-    remaining_costs_fraction = ((1-share_repurposed) + share_repurposed * (1-cost_savings))
+    remaining_costs_fraction = ((1-share_repurposed)
+                                + share_repurposed 
+                                * (1-sector_coupling_assumps["Cost savings"]))
     print(f"In year {year}, the remaining_cost_fraction is {remaining_costs_fraction[0]}")
     #data["MSSP"] = data["MSSP"] * remaining_costs_fraction
     #data["MSSM"] = data["MSSM"] * remaining_costs_fraction
