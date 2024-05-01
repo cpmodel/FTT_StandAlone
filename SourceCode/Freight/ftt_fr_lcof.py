@@ -154,10 +154,6 @@ def get_lcof(data, titles):
         RT = np.ones([len(titles['FTTI']), int(max_LF)])
         RT = RT * data['ZTRT'][r, :, 0, np.newaxis]
         RT = np.where(mask, RT, 0)
-
-        # Gamma values
-        Gam = np.ones([len(titles['FTTI']), int(max_LF)])
-        Gam = Gam * zcet[:, c6ti['13 Gam (USD/pkm)'], np.newaxis]
         
         # Calculate LCOF without policy, and find standard deviation
         npv_expenses1 = (It+FT+OMt)/Lfactor
@@ -182,7 +178,7 @@ def get_lcof(data, titles):
         # Introduce Gamma Values
 
         # Convert costs into logarithmic space - applying a log-normal distribution
-        LTLCOF = np.log10((TLCOF**2)/np.sqrt((dTLCOF**2)+(TLCOF**2))) + Gam[:,0]
+        LTLCOF = np.log10((TLCOF**2)/np.sqrt((dTLCOF**2)+(TLCOF**2))) + data['ZGAM'][r, :, 0]
 
         dLTLCOF = np.sqrt(np.log10(1+(dTLCOF**2)/(TLCOF**2)))
 
