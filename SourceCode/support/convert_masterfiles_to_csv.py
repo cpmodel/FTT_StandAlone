@@ -429,10 +429,12 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
             
-            # Overwrite existing csv files when masterfile has more recently been updated
-            overwrite_existing = overwrite_when_masterfile_updated(
-                    vars_to_convert, out_dir, models, model, scen, dir_masterfiles
-                    )
+            # Check if masterfiles are updated since last csv update (unless explicitly overwriting)
+            if not overwrite_existing: 
+                # Overwrite existing csv files when masterfile has more recently been updated
+                overwrite_existing = overwrite_when_masterfile_updated(
+                        vars_to_convert, out_dir, models, model, scen, dir_masterfiles
+                        )
             
             # Remove the variables for which csv files exist (except if they need overwriting)
             vars_to_convert[model], gamma_options = \
