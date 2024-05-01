@@ -3,7 +3,7 @@
 Created on Wed Jan 16 17:10:10 2019
 
 This script extracts all the data from FTT excel sheets in the
-"/In/FTTAssumptions/[model]" folders and and saves them in separate csv files.
+"/In/FTTAssumptions/[model]" folders and saves them in separate csv files.
 
 The user can select one or more scenarios to convert from the excel sheet. The 
 script overwrites when called directly, but does not when called from the run_file
@@ -19,6 +19,8 @@ import sys
 
 import pandas as pd
 import numpy as np
+
+import datetime
 
 # Get the absolute path of the current script
 current_script_path = os.path.abspath(__file__)
@@ -54,7 +56,8 @@ def csv_exists(filename):
     return os.path.isfile(filename)
 
 def read_data(models, model, dir_masterfiles, scen, sheets):
-    """Read the masterfiles
+    """
+    Read the masterfiles
     
     Returns:
         raw_data: the dataframe with all the excel data"""
@@ -100,13 +103,67 @@ def get_sheets_to_convert(var_dict, model, scen):
     sheets = ['Titles'] + vars_to_convert
 
     return vars_to_convert, sheets
+def overwrite_when_masterfile_updated(vars_to_convert, out_dir, models, \
+                                      model, scen, dir_masterfiles):
+    """
+    Find which files were last modified. If masterfile is newest then newest
+    csv files, overwrite all csv files.
+    """
+    
+    def find_last_time_csv_modified(vars_to_convert, out_dir):
+        """
+        For a given module and scenario, compares the most recent date
+        a csv file was last updated
+        """
+        # Take old time to compare to
+        last_time_modified = datetime.datetime(2021, 1, 1)
+        
+        for var in vars_to_convert:
+            out_fn = os.path.join(out_dir, f"{var}.csv")
+            out_fn_reg = os.path.join(out_dir, f"{var}_BE.csv")
+            if csv_exists(out_fn):
+                time_modified = os.path.getmtime(out_fn)
+            elif csv_exists(out_fn_reg):
+                time_modified = os.path.getmtime(out_fn_reg)
+            else:
+                print(f"var does not exist: {var}")
+                print(f"vars_to_convert: {vars_to_convert}")
+                continue
+            
+            time_modified =  datetime.datetime.fromtimestamp(time_modified)
+            if time_modified > last_time_modified:
+                last_time_modified = time_modified
+        
+        return last_time_modified
+    
+    def find_last_time_masterfile_modified(models, model, scen, dir_masterfiles):
+        """
+        For a given module and scenario, compares the most recent date
+        a csv file was last updated
+        """
+        # Check whether the excel files exist
+        raw_f = models[model][1]
+        raw_p = os.path.join(dir_masterfiles, model, f'{raw_f}_S{scen}.xlsx')
+        time_modified = os.path.getmtime(raw_p)
+        time_modified = datetime.datetime.fromtimestamp(time_modified)
+        return time_modified
+    
+    csv_time_mod = find_last_time_csv_modified(vars_to_convert[model], out_dir)
+    master_time_mod = find_last_time_masterfile_modified(models, model, scen, dir_masterfiles)
+    
+    if master_time_mod > csv_time_mod:
+        print("There are new updates to the Masterfile, so csv files will be updated")
+    return master_time_mod > csv_time_mod
 
 def get_remaining_variables(vars_to_convert, out_dir, model, \
                             var_dict, gamma_options, overwrite_existing):
-
-    """Remove variables that already exist from list to convert"""
+    """
+    Remove variables from list to convert if two conditions are met:
+        * Condition 1: csv files already exist
+        * Condition 2: The newest csv file is older than the masterfile
+    """
+    
     if overwrite_existing:
-
         for var in vars_to_convert:
 
             # We want to double check if the user wants to overwrite gamma values
@@ -115,24 +172,30 @@ def get_remaining_variables(vars_to_convert, out_dir, model, \
                     gamma_input_on_overwrite(out_dir, var, gamma_options)
         
         return vars_to_convert, gamma_options
+    
     vars_to_convert_remaining = []
-    for var in vars_to_convert:
-        
+    for var in vars_to_convert:     
         out_fn = os.path.join(out_dir, f"{var}.csv")
         out_fn_reg = os.path.join(out_dir, f"{var}_BE.csv")
+        
+        # Condition 1
         exists = (csv_exists(out_fn) or csv_exists(out_fn_reg))
                 
         if not exists:
             vars_to_convert_remaining.append(var)
+            
+    
     return vars_to_convert_remaining, gamma_options
 
 
 def gamma_input_on_overwrite(out_dir, var, gamma_options):
-    """ When the script is run as a script, and
+    """
+    When the script is run as a script, and
     the gamma csv files already exist, confirm with
     the user if you want to overwrite, given that
     the user may not want to lose their calibrated gamma
-    values """
+    values 
+    """
     
     costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
     var_gamma = costvar_to_gam_dict[var]
@@ -187,7 +250,6 @@ def set_up_cols(model, var, var_dict, dims, timeline_dict):
     return cdim, col_title
 
 
-    
 def write_to_csv(data, row_title, col_title, var, out_dir, reg=None):
     """Write the variables to a csv file, or to multiple csv files for 3D vars"""
     if reg:
@@ -366,13 +428,18 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
             out_dir = os.path.join(dir_inputs, f'S{scen}', model)
             if not os.path.exists(out_dir):
                 os.makedirs(out_dir)
-                        
+            
+            # Overwrite existing csv files when masterfile has more recently been updated
+            overwrite_existing = overwrite_when_masterfile_updated(
+                    vars_to_convert, out_dir, models, model, scen, dir_masterfiles
+                    )
+            
             # Remove the variables for which csv files exist (except if they need overwriting)
             vars_to_convert[model], gamma_options = \
                     get_remaining_variables(vars_to_convert[model], out_dir, model, \
                                             var_dict, gamma_options, overwrite_existing)
             
-            if len(vars_to_convert[model])==0:
+            if len(vars_to_convert[model]) == 0:
                 print("All variables already exist, no need to create CSV files")
                 continue
             
