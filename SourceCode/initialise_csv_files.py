@@ -1,10 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+This script makes preperation to extract data from FTT masterfiles in the
+"/In/FTTAssumptions/[model]" folders and save them in separate csv files.
+
+@author: Femke
+"""
+
 import os
 import glob
-import re
 
-
+# Local library imports
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
-#from convert_masterfiles_to_csv import convert_masterfiles_to_csv
 
 
 def initialise_csv_files(ftt_modules, scenarios):
@@ -29,7 +35,6 @@ def initialise_csv_files(ftt_modules, scenarios):
     # Convert masterfiles to csv
     convert_masterfiles_to_csv(model_list)
     
-    #convert_masterfiles_to_csv(models)
 
 def get_masterfile(ftt_module, scenario):
     """Find the matching file name 
@@ -85,5 +90,4 @@ def generate_model_list(ftt_modules, scenarios):
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
     return models
-
     
