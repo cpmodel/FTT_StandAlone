@@ -24,6 +24,7 @@ import pandas as pd
 from numba import njit
 
 from SourceCode.support.debug_messages import input_functions_message
+from SourceCode.support.read_assumptions import read_sc_assumptions
 
 #@njit(nopython=False)
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
@@ -96,8 +97,8 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
             for file in csv_files:
                 var = file[:-4].split('_')[0]
                 if var not in valid_vars:
-                    warnings.warn(f'Variable {var} is present in the folder as a csv but is not included \
-                                in VariableListing, so it will be ignored')
+                    warnings.warn(f'Variable {var} is present in the folder as a csv, \
+                                  but is not included in VariableListing, so it will be ignored')
             
             # Filter the list to include only the files that correspond to variables in data[scen].keys()
             csv_files = [f for f in csv_files if f[:-4].split('_')[0] in valid_vars]
@@ -211,7 +212,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         # If there is no time dimension (fourth dimension)
                         elif dims_length[3] == 1:
                             data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
-
+                            
     return data
 
 

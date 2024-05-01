@@ -171,20 +171,19 @@ class ModelRun:
         # Define output container
         self.output = {scen: {var: np.full_like(self.input[scen][var], 0) \
                               for var in self.input[scen]} for scen in self.input}
-        # self.output = copy.deepcopy(self.input)
 
         # Clear any previous instances of the progress bar
         try:
             tqdm._instances.clear()
         except AttributeError:
             pass
+        
         for scen in self.input:
 
             # Create progress bar:
             with tqdm(self.timeline) as pbar:
 
-            # Call solve_year method for each year of the simulation period
-#                for year_index, year in enumerate(self.timeline):
+                # Call solve_year method for each year of the simulation period
                 for y, year in enumerate(self.timeline):
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
