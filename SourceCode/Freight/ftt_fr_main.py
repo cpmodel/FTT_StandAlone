@@ -122,6 +122,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 1, 0]
                 data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
                                         / (1 / (data['ZSLR'][r, 0, 0] + 1))
+                
+            for veh in range(len(titles['FTTI'])):
+                for fuel in range(len(titles['JTI'])):
+                    if titles['JTI'][fuel] == '11 Biofuels'  and data['ZJET'][0, veh, fuel] == 1:
+                        # No biofuel blending mandate in the historical period
+                        zjet[veh, fuel] = 0
 
             # Find fuel use
             data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
