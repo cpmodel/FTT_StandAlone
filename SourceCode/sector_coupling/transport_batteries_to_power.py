@@ -35,8 +35,6 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
         
     """
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
-    print("Sector coupling assumptoins keys")
-    print(sector_coupling_assumps.keys())
     
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
