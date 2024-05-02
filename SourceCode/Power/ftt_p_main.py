@@ -654,7 +654,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MEWK'], data['MEWR'],
                                             data_dt['MEWL'], data_dt['MEWS'],
                                             data['MWLO'], MWDL,
-                                            len(titles['RTI']), len(titles['T2TI']),no_it)
+                                            len(titles['RTI']), len(titles['T2TI']), no_it)
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
@@ -662,11 +662,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bidon = 0
             
             if np.any(np.isnan(data['MEWS'])):
-                print("NaNs found in MEWS in {}".format(year))
+                print(f"NaNs found in MEWS in {year}")
             if ~np.any(np.isclose(data['MEWS'][:,:,0].sum(axis=1), 1.0)):
-                print("Sum of MEWS does not add up to 1 in {}".format(year))
+                print(f"Sum of MEWS does not add up to 1 in {year}")
             if np.any(data['MEWS'][:,:,0]< 0.0):
-                print("Negative MEWS found in {}".format(year))
+                print(f"Negative MEWS found in {year}")
                 r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
                 
                 print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
