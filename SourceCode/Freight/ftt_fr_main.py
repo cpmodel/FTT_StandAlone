@@ -102,14 +102,38 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     and np.sum(data['ZEWS'][r, :, 0]) > 0.0):
                         data['ZEWS'][r, :, 0] = np.divide(data['ZEWS'][r, :, 0],
                                                 np.sum(data['ZEWS'][r, :, 0]))
+            
+            # Find total service area
+            data['ZESG'][r, :, 0] = data["RVKZ"][r, 0, 0] / data['ZLOD'][r, 0, 0]
+
+            # ZESD is share difference between small and large trucks
+            data['ZESD'][r, 0, 0] = data['ZEWS'][r, 0, 0] + data['ZEWS'][r, 2, 0] + data['ZEWS'][r, 4, 0] \
+            + data['ZEWS'][r, 6, 0] + data['ZEWS'][r, 8, 0] + data['ZEWS'][r, 10, 0] + data['ZEWS'][r, 12, 0] \
+            + data['ZEWS'][r, 14, 0] + data['ZEWS'][r, 16, 0] + data['ZEWS'][r, 18, 0]
+
+            data['ZESD'][r, 1, 0] = 1 - data['ZESD'][r, 0, 0]
+
+            # Find service area
+            for x in range(0, 20, 2):
+                data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 0, 0]
+                data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
+                                        / (1 - 1 / (data['ZSLR'][r, 0, 0] + 1))
+            for x in range(1, 21, 2):
+                data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 1, 0]
+                data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
+                                        / (1 / (data['ZSLR'][r, 0, 0] + 1))
+
+            # Find fuel use
+            data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
+                                        data['ZCET'][r, :, c6ti['9 energy use (MJ/vkm)']])) / 41.868
+
+            # Emissions 
+            data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0] * data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']] \
+                        * (1 - data['ZBFM'][r, 0, 0]) / (1e6)
         
         # Calculate number of vehicles per technology
         data['ZEWK'][:, :, 0] = data['ZEWS'][:, :, 0] \
                                 * data['RFLZ'][:, np.newaxis, 0, 0]
-        
-        # Calculate demand per technology, defined as total mln tkm driven
-        data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] \
-                                * data['RVKZ'][:, 0, 0, np.newaxis]
         
         #Set cumulative capacities variable
         data['ZEWW'][0, :, 0] = data['ZCET'][0, :, c6ti['11 Cumulative seats']]
@@ -117,30 +141,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year == histend["RVKZ"]:
             # Calculate levelised cost
             data = get_lcof(data, titles)
-
-
-#
-##        for veh in range(len(titles['FTTI'])):
-##            for fuel in range(len(titles['JTI'])):
-##                if titles['JTI'][fuel] == '5 Middle distillates' and data['ZJET'][0, veh, fuel]  == 1:  # Middle distillates
-##
-##                            # Mix with biofuels if there's a biofuel mandate
-##                    zjet[veh, fuel] = zjet[veh, fuel] * (1.0 - data['ZBFM'][r, 0, 0])
-##
-##                            # Emission correction factor
-##                    emis_corr[r, veh] = 1.0 - data['ZBFM'][r, 0, 0]
-##
-##                elif titles['JTI'][fuel] == '11 Biofuels'  and data['ZJET'][0, veh, fuel] == 1:
-##
-##                    zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r, 0, 0]
-#
-#        data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0]*\
-#                                        data['ZCET'][r, :, c6ti['9 energy use (MJ/vkm)']]))/0.041868
-#
-#        #Emissions, E is ZEWE
-#        data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1**6)
-#
-#
 
 
     "Model Dynamics"
@@ -367,11 +367,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             dw = np.sum(bi, axis = 0)
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
-
-            # Calculate demand per technology, defined as total mln tkm driven
-            data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] \
-                                    * data['RVKZ'][:, 0, 0, np.newaxis]
-
                 
             # Reopen region loop 
             # Learning-by-doing effects on investment
