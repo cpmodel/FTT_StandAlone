@@ -180,7 +180,8 @@ def get_lcoe(data, titles):
         else:
             stor_cost = stor_cost * 0
             marg_stor_cost = marg_stor_cost * 0
-
+            
+       
         stor_cost = np.where(lt_mask, stor_cost, 0)
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
 
@@ -250,6 +251,6 @@ def get_lcoe(data, titles):
                                         bcet[:, 7]*bcet[:, 7])
 
         if r == 1:
-            x = 1+1
+            print(f"Storage costs are: {stor_cost.shape}")
 
     return data
