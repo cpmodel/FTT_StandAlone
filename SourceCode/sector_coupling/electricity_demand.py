@@ -77,14 +77,12 @@ def electricity_demand_feedback(data, data_baseline, year, titles, units):
     for model in elec_map.index:
     
         demand_var = elec_map.loc[model, "fuel_var"]
-        print(demand_var)
         
         # convert to same unit as MEWD
         unit = units[demand_var]
         conversion_factor = unit_conversion.loc[unit, demand_unit]
         
         # Compute change from baseline
-        print(data_baseline[demand_var].shape)
         base_demand = data_baseline[demand_var][:, elec_index, 0, year]
         new_demand = data[demand_var][:, elec_index, 0]
         elec_change = new_demand - base_demand

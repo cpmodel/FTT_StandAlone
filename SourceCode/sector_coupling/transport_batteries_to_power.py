@@ -121,8 +121,8 @@ def update_costs_from_repurposing(data, storage_ratio, year, titles):
                                 + share_repurposed 
                                 * (1-sector_coupling_assumps["Cost savings"]))
     print(f"In year {year}, the remaining_cost_fraction is {remaining_costs_fraction[0]}")
-    #data["MSSP"] = data["MSSP"] * remaining_costs_fraction
-    #data["MSSM"] = data["MSSM"] * remaining_costs_fraction
+    data["MSSP"] = data["MSSP"] * remaining_costs_fraction
+    data["MSSM"] = data["MSSM"] * remaining_costs_fraction
     
     return data
     
