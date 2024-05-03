@@ -155,10 +155,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             try:
                                 data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                             except ValueError as e:
-                                input_functions_message(scen, var, dims, read)
+                                input_functions_message(scen, var, dims, read, reg_index)
                                 raise(e)
                             
-                            data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
+                            data[scen][var][reg_index, i, :, 0] = read.iloc[i, :] # why is this repeated??
                             
 
                 # If the file does not have a region key like _BE
@@ -169,15 +169,18 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                     if (dims[var][0] == 'RTI') or (var == "ZLER"):
                         # If there are only regions
                         if all(dim_length == 1 for dim_length in dims_length[1:]):
-                            data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
-
-                        
+                            try:
+                                data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
+                            except ValueError as e:
+                                input_functions_message(scen, var, dims, read)
+                                raise(e)
+      
                         # If there is a second dimension # TODO: check if this is correct
                         if dims_length[1] > 1:
                             try: 
                                 data[scen][var][:, :, 0, 0] = read
                             except ValueError as e:
-                                input_functions_message(scen, var, dims, read)
+                                input_functions_message(scen, var, dims, read, reg_index)
                                 raise(e)
                         
                         # If there is a third dimension only
@@ -192,13 +195,20 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         
                         # If there is a fourth dimension only (time)
                         elif dims_length[3] > 1:
-                            data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                            try:
+                                data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                            except ValueError as e:
+                                input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
+                                raise(e)
 
                     # If the first dimension is not regions
                     else:
                         # If there is only one number
                         if all(dim_length == 1 for dim_length in dims_length):
-                            data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
+                            try: 
+                                data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
+                            except ValueError as e:
+                                input_functions_message(scen, var, dims, read)
 
                         # If there is no third dimension
                         elif dims_length[2] == 1:
@@ -210,8 +220,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                         # If there is no time dimension (fourth dimension)
                         elif dims_length[3] == 1:
-                            data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
-
+                            try:
+                                data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
+                            except ValueError as e:
+                                input_functions_message(scen, var, dims, read)
     return data
 
 
