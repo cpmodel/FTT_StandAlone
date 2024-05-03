@@ -120,7 +120,12 @@ def update_costs_from_repurposing(data, storage_ratio, year, titles):
     remaining_costs_fraction = ((1-share_repurposed)
                                 + share_repurposed 
                                 * (1-sector_coupling_assumps["Cost savings"]))
-    print(f"In year {year}, the remaining_cost_fraction is {remaining_costs_fraction[0]}")
+    if year%10 == 0:
+        print(f"In {year}, the remaining_cost_fraction is {remaining_costs_fraction[1]}")
+        print(f"In {year}, region with the highest remaining fraction is {np.argmax(remaining_costs_fraction)}"
+              f"at {remaining_costs_fraction[np.argmax(remaining_costs_fraction)]}")
+
+    
     data["MSSP"] = data["MSSP"] * remaining_costs_fraction
     data["MSSM"] = data["MSSM"] * remaining_costs_fraction
     

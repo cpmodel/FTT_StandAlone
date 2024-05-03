@@ -161,9 +161,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             except ValueError as e:
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)
-                            
-                            data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
-                            
+                                                        
 
                 # If the file does not have a region key like _BE
                 else:

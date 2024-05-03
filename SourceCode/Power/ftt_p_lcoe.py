@@ -251,6 +251,7 @@ def get_lcoe(data, titles):
                                         bcet[:, 7]*bcet[:, 7])
 
         if r == 1:
-            print(f"Storage costs are: {stor_cost.shape}")
+            x = 1
+            #print(f"Storage costs are: {stor_cost.shape}")
 
     return data
