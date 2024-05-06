@@ -13,18 +13,20 @@ Functions included:
 """
 
 # Standard library imports
-import copy
+from copy import deepcopy as dc
 
 # Third party imports
 import numpy as np
 
+# Local library imports
+from SourceCode.support.divide import divide
 
 
 # %% lcoe
 # -----------------------------------------------------------------------------
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
-def get_lcoe(data, titles):
+def get_lcoe(data, titles, histend, year):
     """
     Calculate levelized costs.
 
@@ -62,6 +64,27 @@ def get_lcoe(data, titles):
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
 
     for r in range(len(titles['RTI'])):
+        
+        # Value factor section
+        if year > histend['DPVF']: 
+            # Calculate generation share change compared to histend
+            share_change = divide(data['MPGS'][r,:,0], data['MPGS2023'][r,:,0])-1
+            
+            # Calculate value factor
+            data['DPVF'][r,:,0] = data['DPVF2023'][r,:,0] * data['DVFE'][r,:,0] * share_change
+            
+        else:
+            data['DPVF'][r,:,0] = dc(data['DPVF2023'][r,:,0])
+            
+        # WACC section
+        if year > histend['DCOC']: 
+            
+            # Calculate WACC rate
+            data['DCOC'][r,:,0] =  data['DCOC2015'][r,:,0] - data['RLR2015'][r,0,0] + data['RLR'][r,0,0]
+            
+        else:
+            data['DCOC'][r,:,0] = dc(data['DCOC2015'][r,:,0])        
+            
 
         # Cost matrix
         bcet = data['BCET'][r, :, :]
@@ -98,7 +121,7 @@ def get_lcoe(data, titles):
 
         # Discount rate
         # dr = bcet[6]
-        dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
+        dr = data['DCOC'][r, :, 0, None] #bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
 
         # Initialse the levelised cost components
         # Average investment cost of marginal unit
@@ -183,10 +206,20 @@ def get_lcoe(data, titles):
 
         stor_cost = np.where(lt_mask, stor_cost, 0)
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
+        
+        # Debt repayment costs
+        dbt = (it_av+fft+st+ft+ct+omt+stor_cost)*(data['DPDR'][r, :, :]*data['RLR'][r, 0, 0])
 
         # Net present value calculations
         # Discount rate
         denominator = (1+dr)**full_lt_mat
+        
+        # Only investment component of LCOE
+        npv_investcomp_av = (it_av+st)/denominator
+        npv_investcomp_mu = (it_mu+st)/denominator
+        
+        # Only debt cost component of LCOE
+        npv_debt = dbt/denominator
 
         # 1-Expenses
         # 1.1-Without policy costs
@@ -206,6 +239,7 @@ def get_lcoe(data, titles):
         # npv_utility[:,0] = 1
         # 3-Standard deviation (propagation of error)
         npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator
+        
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOE
@@ -218,24 +252,31 @@ def get_lcoe(data, titles):
         # lcoe_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
         # Standard deviation of LCOE
         dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
+        
+        # Store investment component of LCOE (includes subsidies)
+        data['DCPU'][r, :, 0] = np.sum(npv_investcomp_mu, axis=1)/np.sum(npv_utility, axis=1)
+        data['DPCI'][r, :, 0] = divide(data['DCPU'][r, :, 0], tlcoe)
+        
+        # Store debt cost compoentn of LCOE (includes all policies)
+        data['DPDC'][r, :, 0] = np.sum(npv_debt, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOE augmented with gamma values
         tlcoeg = tlcoe+data['MGAM'][r, :, 0]
 
         # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOE without taxes
-        data['MECW'][r, :, 0] = copy.deepcopy(lcoeco2)  # The real bare LCOE with taxes
-        data['METC'][r, :, 0] = copy.deepcopy(tlcoeg)   # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOE distribution
+        data['MEWC'][r, :, 0] = dc(lcoe)     # The real bare LCOE without taxes
+        data['MECW'][r, :, 0] = dc(lcoeco2)  # The real bare LCOE with taxes
+        data['METC'][r, :, 0] = dc(tlcoeg)   # As seen by consumer (generalised cost)
+        data['MTCD'][r, :, 0] = dc(dlcoe)    # Variation on the LCOE distribution
 
         # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])   # As seen by consumer (generalised cost)
         # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOE distribution
 
 
         # Output variables
-        data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, 2])
-        data['MWFC'][r, :, 0] = copy.deepcopy(bcet[:, 4])
-        data['MCOC'][r, :, 0] = copy.deepcopy(bcet[:, 0])
+        data['MWIC'][r, :, 0] = dc(bcet[:, 2])
+        data['MWFC'][r, :, 0] = dc(bcet[:, 4])
+        data['MCOC'][r, :, 0] = dc(bcet[:, 0])
 
         if np.rint(data['MSAL'][r, 0, 0]) > 1:
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
@@ -248,8 +289,31 @@ def get_lcoe(data, titles):
         data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1]*bcet[:, 1] +
                                         bcet[:, 5]*bcet[:, 5] +
                                         bcet[:, 7]*bcet[:, 7])
-
-        if r == 1:
-            x = 1+1
+        
+        # Calculate leverage for use elsewhere
+        data['DLEV'][r, :, 0] = 1+(data['DPDR'][r, :, 0]/(1 - data['DPDR'][r, :, 0]))
+        
+        
+        # Revenue = electricity price * value factor
+        data['DRPU'][r, :, 0] = data['DAEP'][r,0,0]*data['DPVF'][r,:,0]
+        
+        # Profit per unit (includes gamma value calibration)
+        data['DPPU'][r, :, 0] = data['DRPU'][r, :, 0] - data['METC'][r, :, 0]
+        
+        # Profit rate
+        data['DPPR'][r, :, 0] = divide(data['DPPU'][r, :, 0] , 
+                                       data['DCPU'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
+        
+        # Risk adjustment factor
+        data['DRAF'][r, :, 0] = np.where((1 - data['DCOC'][r, :, 0] * data['DLEV'][r, :, 0]) > 0.0,
+                                         1 / (1 - data['DCOC'][r, :, 0] * data['DLEV'][r, :, 0]),
+                                         1.0)
+        
+        # Risk adjusted profit rate
+        data['DRPR'][r, :, 0] = data['DPPR'][r, :, 0] * data['DRAF'][r, :, 0]
+        
+        # Rought approximation of the stand. dev. of the profit rate
+        data['DPRD'][r, :, 0] = data['DPPR'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
+        
 
     return data

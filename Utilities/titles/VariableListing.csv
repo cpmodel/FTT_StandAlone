@@ -377,3 +377,30 @@ MTCDX,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3M
 MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
+DAEP,FTT:Power Average electricity price,$/MWh,RTI,NA,NA,TIME,FTT-P,2015,2023,2010,-,Y,Y
+DPVF,FTT:Power value factor,,RTI,T2TI,NA,TIME,FTT-P,2015,2023,2001,-,Y,Y
+DPIR,FTT:Power interest rate,,RTI,NA,NA,TIME,FTT-P,2015,2022,2001,-,Y,Y
+DCOC,FTT:Power WACC,,RTI,T2TI,NA,TIME,FTT-P,2015,2022,2001,-,Y,Y
+DCOD,FTT:Power CoD,,RTI,T2TI,NA,TIME,FTT-P,2015,2022,2001,-,Y,Y
+DPDR,FTT:Power Debt ratio,,RTI,T2TI,NA,NA,FTT-P,-,-,-,-,Y,Y
+DRPR,FTT:Power Risk-adjusted profit rate,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DLEV,FTT:Power Leverage,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DRPU,FTT:Power Revenue per unit,$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DPPU,FTT:Power Profit per unit,$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DCPU,FTT:Power Capital per unit,$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DPPR,FTT:Power Profit rate,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DPCI,FTT:Power Capital intensity before leverage,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DPPM,FTT:Power Profit margin before leverage,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+DVFE,FTT:Power Value factor estimates,,RTI,T2TI,NA,NA,FTT-P,-,-,-,-,,
+DPIR2015,FTT:Power interest rate in 2019,,RTI,NA,NA,NA,FTT-P,-,-,-,-,,
+DCOC2015,FTT:Power WACC in 2015,,RTI,T2TI,NA,NA,FTT-P,-,-,-,-,,
+DPVF2023,FTT:Power VF in 2019,,RTI,T2TI,NA,NA,FTT-P,-,-,-,-,,
+DCCE,FTT:Power estimates for fossil fuels change in WACC with share,,RTI,T2TI,NA,NA,FTT-P,-,-,-,-,,
+MLCI,FTT:Power Investment component share of LCOE,-,RTI,T2TI,NA,TIME,FTT-P,-,-,-,-,,
+MPGS,FTT:Power generation share by tech,-,RTI,T2TI,NA,TIME,FTT-P,-,-,-,-,,
+DPDC,FTT:Power Discounted debt repayment costs,$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,-,-,,
+MPGS2023,FTT:Power generation shares in 2023,-,RTI,T2TI,NA,TIME,FTT-P,-,-,-,-,,
+RLR,Interest rate projections,-,RTI,NA,NA,TIME,FTT-P,-,-,2015,-,,
+DRAF,Risk adjustment factor,-,RTI,T2TI,NA,TIME,FTT-P,-,-,-,-,,
+RLR2015,Interest rate in 2015,-,RTI,NA,NA,NA,FTT-P,-,-,-,-,,
+DPRD,SD of profit rate (proxied by %SD of LCOE),-,RTI,T2TI,NA,TIME,FTT-P,-,-,-,-,,

@@ -23,7 +23,7 @@ from SourceCode.support.divide import divide
 @njit(fastmath=True)
 def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
-           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti,no_it):
+           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti,no_it, elec_price, profit_rate, profit_rate_sd):
 
     """
     Function to calculate market share dynamics
@@ -114,11 +114,23 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                 # Aik = mewa[r, t1, t2]
                 # Aki = mewa[r, t2, t1]
 
-                # Propagating width of variations in perceived costs
-                dFik = np.sqrt(2) * np.sqrt(mtcd_dt[r, t1, 0]*mtcd_dt[r, t1, 0] + mtcd_dt[r, t2, 0]*mtcd_dt[r, t2, 0])
+                # Caclulate market share dynamics on the basis of profit margins
+                # This is only executed if electricity prices are fed into the system
+                if elec_price[r] > 0.0:
+ 
+                    # Propagating width of variations in perceived costs
+                    dFik = np.sqrt(2) * np.sqrt(profit_rate_sd[r, t1, 0]*profit_rate_sd[r, t1, 0] + profit_rate_sd[r, t2, 0]*profit_rate_sd[r, t2, 0])
 
-                # Consumer preference incl. uncertainty
-                Fik = 0.5*(1+np.tanh(1.25*(metc_dt[r, t2, 0]-metc_dt[r, t1, 0])/dFik))
+                    # Consumer preference incl. uncertainty
+                    Fik = 0.5*(1+np.tanh(1.25*(profit_rate[r, t1, 0]-profit_rate[r, t2, 0])/dFik))
+                
+                # Otherwise, apply the default approach of comparing LCOEs
+                else:
+                    # Propagating width of variations in perceived costs
+                    dFik = np.sqrt(2) * np.sqrt(mtcd_dt[r, t1, 0]*mtcd_dt[r, t1, 0] + mtcd_dt[r, t2, 0]*mtcd_dt[r, t2, 0])
+    
+                    # Consumer preference incl. uncertainty
+                    Fik = 0.5*(1+np.tanh(1.25*(metc_dt[r, t2, 0]-metc_dt[r, t1, 0])/dFik))
 
                 # Preferences are then adjusted for regulations
                 F[t1, t2] = Fik*(1.0-isReg[r, t1]) * (1.0 - isReg[r, t2]) + isReg[r, t2]*(1.0-isReg[r, t1]) + 0.5*(isReg[r, t1]*isReg[r, t2])

@@ -172,7 +172,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRED'] = mred
         data['MRES'] = mres
 
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, histend, year)
         data = rldc(data, time_lag, iter_lag, year, titles)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
@@ -224,6 +224,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
             
+            # Calculate generation shares
+            data['MPGS'][r, :, 0] = data['MEWG'][r, :, 0] / data['MEWG'][r, :, 0].sum()
+            
 
             # Investment (eq 8 Mercure EP48 2012)
 #                data['MEWI'][r, :, 0] = (np.minimum(data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0], np.zeros(len(titles['T2TI']))) +
@@ -244,7 +247,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MCFC'][:, :, 0] = copy.deepcopy(data['MCFCX'][:, :, 0])
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:, :, 0])
         
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, histend, year)
 
 
     #%%
@@ -283,10 +286,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
                                           where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
+        
+        # Calculate generation shares
+        data['MPGS'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWG'][:, :, 0].sum(axis=1)[:, None])
 
         # If first year, get initial MC, dMC for DSPCH
         if not time_lag['MMCD'][:, :, 0].any():
-            time_lag = get_lcoe(data, titles)
+            time_lag = get_lcoe(data, titles, histend, year)
         # Call RLDC function for capacity and load factor by LB, and storage costs
         if year >= 2013:
 
@@ -529,7 +535,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, histend, year)
             bidon = 0
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
@@ -629,6 +635,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             MWDLt = copy.deepcopy(data_dt['MEWDX'][:,7,0])
             MWDL = copy.deepcopy(time_lag['MEWDX'][:, 7, 0])
+            elec_price = data['DAEP'][:,0,0]
             
             # For checking
             if t==4:
@@ -647,7 +654,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MEWK'], data['MEWR'],
                                             data_dt['MEWL'], data_dt['MEWS'],
                                             data['MWLO'], MWDL,
-                                            len(titles['RTI']), len(titles['T2TI']),no_it)
+                                            len(titles['RTI']), len(titles['T2TI']),no_it, elec_price,
+                                            data_dt['DRPR'], data_dt['DPRD'])
+            
+            # Implement profit rate based calculation here (only applies to
+            # regions with non-zero electricity price inputs)
+            
+            
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
@@ -768,6 +781,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
                                            denominator) #TODO: should this be here? + data['MADG'][:, 0, 0, np.newaxis]
 
+            # Calculate generation shares
+            data['MPGS'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWG'][:, :, 0].sum(axis=1)[:, None])
+
             # Update capacities
             data['MEWK']= divide(data['MEWG'], data['MEWL']) / 8766
             # Update emissions
@@ -858,7 +874,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] * \
                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] * \
-                                                                          (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                                                                          (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])                                                   
             # Investment in terms of car purchases:
             for r in range(len(titles['RTI'])):
 
@@ -884,11 +900,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MRED'] = mred
                 data['MRES'] = mres
 
+            
             # =================================================================
             # Update LCOE
             # =================================================================
 
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, histend, year)
             bidon = 0
 
             # =================================================================

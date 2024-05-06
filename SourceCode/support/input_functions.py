@@ -92,6 +92,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         # Split file name
                         file_split = file[:-4].split('_')
                         var = file_split[0]
+                        print(var)
 
                         if len(file_split) == 1:
                             key = None
