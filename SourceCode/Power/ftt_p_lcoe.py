@@ -140,10 +140,7 @@ def get_lcoe(data, titles):
 
         # fuel tax/subsidies
         fft = np.ones([len(titles['T2TI']), int(max_lt)])
-        # fft = ft * data['MTFT'][r, :, 0, np.newaxis]
-        fft = np.zeros([len(titles['T2TI']), int(max_lt)]) # TODO: put this back
-        if r==0:
-            print(f"fft: {fft[6]}")
+        fft = fft * data['MTFT'][r, :, 0, np.newaxis]
         fft = np.where(lt_mask, fft, 0)
 
         # Average operation & maintenance cost
@@ -198,9 +195,6 @@ def get_lcoe(data, titles):
         npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator 
         npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
         npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st) / denominator 
-        if r == 0:
-            print(f"the carbon tax is {ct[6, :30]}")
-            print(f'the fuel tax is {fft[6, :30]}')
         
         # 1b – Expenses – average LCOEs
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
