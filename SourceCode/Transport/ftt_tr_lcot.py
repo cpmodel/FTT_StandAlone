@@ -53,9 +53,13 @@ def get_lcot(data, titles, year):
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
+    # Taxable categories for fuel - not all fuels subject to fuel tax
     tf = np.ones([len(titles['VTTI']), 1])
-    tf[12:15] = 0
-    tf[18:21] = 0
+    # Make vehicles that do not use petrol/diesel exempt
+    tf[12:15] = 0   # CNG
+    tf[18:21] = 0   # EVs
+    tf[24:27] = 0   # Hydrogen
+    taxable_fuels = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
     for r in range(len(titles['RTI'])):
 
@@ -90,49 +94,55 @@ def get_lcot(data, titles, year):
         # Initialse the levelised cost components
         # Average investment cost
         it = np.zeros([len(titles['VTTI']), int(max_lt)])
-        it[:, 0, np.newaxis] = bttc[:, c3ti['1 Prices cars (USD/veh)'], np.newaxis]/ns/ff/cf/1000
+        it[:, 0, np.newaxis] = bttc[:, c3ti['1 Prices cars (USD/veh)'], 
+                                     np.newaxis] / ns / ff / cf / 1000
 
         # Standard deviation of investment cost
         dit = np.zeros([len(titles['VTTI']), int(max_lt)])
-        dit[:, 0, np.newaxis] = bttc[:, c3ti['2 Std of price'], np.newaxis]/ns/ff/cf/1000
+        dit[:, 0, np.newaxis] = bttc[:, c3ti['2 Std of price'], 
+                                     np.newaxis] / ns / ff / cf / 1000
 
         # Vehicle tax at purchase
         vtt = np.zeros([len(titles['VTTI']), int(max_lt)])
-        vtt[:, 0, np.newaxis] = (data['TTVT'][r, :, 0, np.newaxis]+data['RTCO'][r, 0, 0]*bttc[:,c3ti['14 CO2Emissions'], np.newaxis])/ns/ff/cf/1000
-
+        vtt[:, 0, np.newaxis] = (data['TTVT'][r, :, 0, np.newaxis] \
+                                 + data['RTCO'][r, 0, 0] \
+                                 * bttc[:,c3ti['14 CO2Emissions'], np.newaxis]) \
+                                 / ns / ff / cf / 1000
+        
         # Average fuel costs- Jasleen modified
         ft = np.ones([len(titles['VTTI']), int(max_lt)])
-        ft = ft * (bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis] + bttc[:,c3ti['18 Fuel subsidy (USD/km)'], np.newaxis]) /ns/ff
+        ft = ft * (bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis] + bttc[:,c3ti['23 Fuel Subsidy (USD/km)'], np.newaxis]) /ns / ff
         ft = np.where(mask, ft, 0)
 
         # Fuel subsidies- Jasleen new logic
         fs = np.ones([len(titles['VTTI']), int(max_lt)])
-        fs = fs * data['RTFS'][r, :, 0, np.newaxis]/ns/ff
+        fs = fs * data['RTFS'][r, :, 0, np.newaxis] / ns / ff
         fs = np.where(mask, fs, 0)
 
         # Stadard deviation of fuel costs
         dft = np.ones([len(titles['VTTI']), int(max_lt)])
-        dft = dft * bttc[:, c3ti['4 std fuel cost'], np.newaxis]/ns/ff
+        dft = dft * bttc[:, c3ti['4 std fuel cost'], np.newaxis] / ns / ff
         dft = np.where(mask, dft, 0)
 
         # Fuel tax costs
         fft = np.ones([len(titles['VTTI']), int(max_lt)])
-        fft = fft * data['RTFT'][r, :, 0, np.newaxis]*en/ns/ff
+        fft = fft * data['RTFT'][r, :, 0, np.newaxis] * en / ns / ff \
+              * taxable_fuels[r, :]
         fft = np.where(mask, fft, 0)
         
         # Average operation & maintenance cost
         omt = np.ones([len(titles['VTTI']), int(max_lt)])
-        omt = omt * bttc[:, c3ti['5 O&M costs (USD/km)'], np.newaxis]/ns/ff
+        omt = omt * bttc[:, c3ti['5 O&M costs (USD/km)'], np.newaxis] / ns / ff
         omt = np.where(mask, omt, 0)
 
         # Standard deviation of operation & maintenance cost
         domt = np.ones([len(titles['VTTI']), int(max_lt)])
-        domt = domt * bttc[:, c3ti['6 std O&M'], np.newaxis]/ns/ff
+        domt = domt * bttc[:, c3ti['6 std O&M'], np.newaxis] / ns / ff
         domt = np.where(mask, domt, 0)
 
         # Road tax cost
         rtt = np.ones([len(titles['VTTI']), int(max_lt)])
-        rtt = rtt * data['TTRT'][r, :, 0, np.newaxis]/cf/ns/ff/1000
+        rtt = rtt * data['TTRT'][r, :, 0, np.newaxis] / cf / ns / ff / 1000
         rtt = np.where(mask, rtt, 0)
 
         # Vehicle price components for front end ($/veh)
@@ -146,39 +156,41 @@ def get_lcot(data, titles, year):
 
         # Net present value calculations
         # Discount rate
-        denominator = (1+dr)**lt_mat
+        denominator = (1 + dr)**lt_mat
 
         # 1-Expenses
-        # 1.1-Without policy costs (Jasleen modified)
-        npv_expenses1 = (it+ft-fs+omt)/denominator
-        # 1.2-With policy costs (Jasleen modified)
-        npv_expenses2 = (it+vtt+ft-fs+fft+omt+rtt)/denominator
+        # 1.1-Without policy costs
+        npv_expenses1 = (it + ft + omt) / denominator
+        # 1.2-With policy costs
+        npv_expenses2 = (it + vtt + ft + fft + omt + rtt) / denominator
         # 1.3-Only policy costs
-        npv_expenses3 = (vtt+fft+rtt)/denominator
+        npv_expenses3 = (vtt + fft + rtt) / denominator
         # 2-Utility
         npv_utility = 1/denominator
         #Remove 1s for tech with small lifetime than max
-        npv_utility[npv_utility==1] = 0
-        npv_utility[:,0] = 1
+        npv_utility[npv_utility == 1] = 0
+        npv_utility[:, 0] = 1
         # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
+        npv_std = np.sqrt(dit**2 + dft**2 + domt**2) / denominator
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOT
-        lcot = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
+        lcot = np.sum(npv_expenses1, axis = 1) / np.sum(npv_utility, axis = 1)
         # 1.2-LCOT including policy costs
-        tlcot = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
+        tlcot = np.sum(npv_expenses2, axis = 1) / np.sum(npv_utility, axis = 1)
         # 1.3-LCOT of policy costs
-        lcot_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
+        lcot_pol = np.sum(npv_expenses3, axis = 1) \
+                   / np.sum(npv_utility, axis = 1)
         # Standard deviation of LCOT
-        dlcot = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
+        dlcot = np.sum(npv_std, axis = 1) / np.sum(npv_utility, axis = 1)
 
         # LCOT augmented with non-pecuniary costs
-        tlcotg = tlcot*(1+data['TGAM'][r, :, 0])
+        tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])
 
         # Transform into lognormal space
-        logtlcot = np.log(tlcot*tlcot/np.sqrt(dlcot*dlcot + tlcot*tlcot)) + data['TGAM'][r, :, 0]
-        dlogtlcot = np.sqrt(np.log(1.0 + dlcot*dlcot/(tlcot*tlcot)))
+        logtlcot = np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot)) \
+                   + data['TGAM'][r, :, 0]
+        dlogtlcot = np.sqrt(np.log(1.0 + dlcot * dlcot / (tlcot * tlcot)))
 
         # Pass to variables that are stored outside.
         data['TEWC'][r, :, 0] = lcot           # The real bare LCOT without taxes

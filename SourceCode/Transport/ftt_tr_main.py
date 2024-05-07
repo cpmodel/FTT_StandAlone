@@ -245,7 +245,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
 
-
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0,0,0])
         dt = 1 / float(no_it)
