@@ -140,8 +140,11 @@ def get_lcoe(data, titles):
 
         # fuel tax/subsidies
         fft = np.ones([len(titles['T2TI']), int(max_lt)])
-        fft = ft * data['MTFT'][r, :, 0, np.newaxis]
-        fft = np.where(lt_mask, ft, 0)
+        # fft = ft * data['MTFT'][r, :, 0, np.newaxis]
+        fft = np.zeros([len(titles['T2TI']), int(max_lt)]) # TODO: put this back
+        if r==0:
+            print(f"fft: {fft[6]}")
+        fft = np.where(lt_mask, fft, 0)
 
         # Average operation & maintenance cost
         omt = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -157,6 +160,7 @@ def get_lcoe(data, titles):
         ct = np.ones([len(titles['T2TI']), int(max_lt)])
         ct = ct * bcet[:, c2ti['1 Carbon Costs ($/MWh)'], np.newaxis]
         ct = np.where(lt_mask, ct, 0)
+        
 
         # Energy production over the lifetime (incl. buildtime)
         # No generation during the buildtime, so no benefits
@@ -194,6 +198,9 @@ def get_lcoe(data, titles):
         npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator 
         npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
         npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st) / denominator 
+        if r == 0:
+            print(f"the carbon tax is {ct[6, :30]}")
+            print(f'the fuel tax is {fft[6, :30]}')
         
         # 1b – Expenses – average LCOEs
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
@@ -225,7 +232,7 @@ def get_lcoe(data, titles):
         data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # Bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # Lcoe with policy, without CO2 costs
         data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!)
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!) #TODO
 
 
         # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])    # As seen by consumer (generalised cost)
