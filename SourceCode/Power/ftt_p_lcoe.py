@@ -68,10 +68,12 @@ def get_lcoe(data, titles, histend, year):
         # Value factor section
         if year > histend['DPVF']: 
             # Calculate generation share change compared to histend
-            share_change = divide(data['MPGS'][r,:,0], data['MPGS2023'][r,:,0])-1
+            share_change = np.where(data['MPGS'][r,:,0]>0.0, 
+                                    divide(data['MPGS'][r,:,0], data['MPGS2023'][r,:,0])-1,
+                                    0.0)
             
             # Calculate value factor
-            data['DPVF'][r,:,0] = data['DPVF2023'][r,:,0] * data['DVFE'][r,:,0] * share_change
+            data['DPVF'][r,:,0] = data['DPVF2023'][r,:,0] + data['DVFE'][r,:,0] * share_change
             
         else:
             data['DPVF'][r,:,0] = dc(data['DPVF2023'][r,:,0])

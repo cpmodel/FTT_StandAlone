@@ -783,6 +783,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Calculate generation shares
             data['MPGS'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWG'][:, :, 0].sum(axis=1)[:, None])
+            
+            if year == histend['DPVF']:
+                
+                data['MPGS2023'][:, :, 0] = copy.deepcopy(data['MPGS'][:, :, 0])
+                
+            elif year > histend['DPVF']:
+                
+                data['MPGS2023'][:, :, 0] = copy.deepcopy(time_lag['MPGS2023'][:, :, 0])
 
             # Update capacities
             data['MEWK']= divide(data['MEWG'], data['MEWL']) / 8766
