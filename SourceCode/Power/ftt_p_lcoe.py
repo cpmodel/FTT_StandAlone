@@ -141,7 +141,7 @@ def get_lcoe(data, titles):
         # fuel tax/subsidies
         fft = np.ones([len(titles['T2TI']), int(max_lt)])
         fft = ft * data['MTFT'][r, :, 0, np.newaxis]
-        fft = np.where(lt_mask, ft, 0)
+        fft = np.where(lt_mask, fft, 0)
 
         # Average operation & maintenance cost
         omt = np.ones([len(titles['T2TI']), int(max_lt)])
