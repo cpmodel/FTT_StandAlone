@@ -402,8 +402,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # New additions (TEWI)
-            data, tewi_t = get_sales(data, data_dt, time_lag, 
-                                     titles, dt, c3ti, t)
+            data, tewi_t = get_sales(data, data_dt, time_lag, dt, c3ti, t)
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
