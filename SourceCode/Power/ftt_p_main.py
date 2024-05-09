@@ -655,7 +655,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MEWL'], data_dt['MEWS'],
                                             data['MWLO'], MWDL,
                                             len(titles['RTI']), len(titles['T2TI']),no_it, elec_price,
-                                            data_dt['DRPR'], data_dt['DPRD'])
+                                            data_dt['DRPR2'], data_dt['DPRD2'])
             
             # Implement profit rate based calculation here (only applies to
             # regions with non-zero electricity price inputs)
@@ -883,6 +883,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] * \
                                                                           (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])                                                   
+                    
+                    # if Svar[0, tech] == 1:
+                    #     data['DCOD'][:, tech, 0] =  (data_dt['DCOD'][:, tech, 0] - old_interest_rate + new_interest_rate) * (1.0 - 0.05 * dw[tech]/data['MRWW'][:, tech, 0])            
+            
             # Investment in terms of car purchases:
             for r in range(len(titles['RTI'])):
 

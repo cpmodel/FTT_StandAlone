@@ -188,6 +188,11 @@ def get_lcoe(data, titles, histend, year):
         # No generation during the buildtime, so no benefits
         et = np.ones([len(titles['T2TI']), int(max_lt)])
         et = np.where(lt_mask, et, 0)
+        
+        # Grid costs
+        gridcost = np.ones([len(titles['T2TI']), int(max_lt)])
+        gridcost = data['DTGC'][r, :, 0, None] * conv_mu[:, np.newaxis]
+        gridcost = np.where(bt_mask, gridcost, 0)
 
         # Storage costs and marginal costs (lifetime only)
         stor_cost = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -225,17 +230,19 @@ def get_lcoe(data, titles, histend, year):
 
         # 1-Expenses
         # 1.1-Without policy costs
-        npv_expenses1 = (it_av+ft+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses1 = (it_av+ft+omt+stor_cost+marg_stor_cost+gridcost)/denominator
         # 1.2-With policy costs
         # npv_expenses2 = (it+st+fft+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
-        npv_expenses2 = (it_av+fft+st+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses2 = (it_av+fft+st+ft+ct+omt+stor_cost+marg_stor_cost+gridcost)/denominator
         # 1.3-Without policy, with co2p
         # TODO: marg_stor_cost?
-        npv_expenses3 = (it_mu+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses3 = (it_mu+ft+ct+omt+stor_cost+marg_stor_cost+gridcost)/denominator
         # 1.3-Only policy costs
         # npv_expenses3 = (ct+fft+st)/denominator
         # 2-Utility
         npv_utility = (et)/denominator
+        
+        npv_benefits = (data['DAEP'][r,0,0] * data['DPVF'][r, :, 0])/denominator
         #Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility==1] = 0
         # npv_utility[:,0] = 1
@@ -259,7 +266,7 @@ def get_lcoe(data, titles, histend, year):
         data['DCPU'][r, :, 0] = np.sum(npv_investcomp_mu, axis=1)/np.sum(npv_utility, axis=1)
         data['DPCI'][r, :, 0] = divide(data['DCPU'][r, :, 0], tlcoe)
         
-        # Store debt cost compoentn of LCOE (includes all policies)
+        # Store debt cost compoentn of LCOE (includes all policies) - $/MWh
         data['DPDC'][r, :, 0] = np.sum(npv_debt, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOE augmented with gamma values
@@ -279,6 +286,7 @@ def get_lcoe(data, titles, histend, year):
         data['MWIC'][r, :, 0] = dc(bcet[:, 2])
         data['MWFC'][r, :, 0] = dc(bcet[:, 4])
         data['MCOC'][r, :, 0] = dc(bcet[:, 0])
+    
 
         if np.rint(data['MSAL'][r, 0, 0]) > 1:
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
@@ -299,12 +307,20 @@ def get_lcoe(data, titles, histend, year):
         # Revenue = electricity price * value factor
         data['DRPU'][r, :, 0] = data['DAEP'][r,0,0]*data['DPVF'][r,:,0]
         
+        data['DRPU2'][r, :, 0] = dc(npv_benefits)
+        
         # Profit per unit (includes gamma value calibration)
         data['DPPU'][r, :, 0] = data['DRPU'][r, :, 0] - data['METC'][r, :, 0]
+        
+        # Proft per unit as cost benefit
+        data['DPPU2'][r, :, 0] = npv_benefits - npv_expenses2
         
         # Profit rate
         data['DPPR'][r, :, 0] = divide(data['DPPU'][r, :, 0] , 
                                        data['DCPU'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
+        
+        data['DPPR2'][r, :, 0] = divide(data['DPPU2'][r, :, 0] , 
+                                       data['DPPU2'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
         
         # Risk adjustment factor
         data['DRAF'][r, :, 0] = np.where((1 - data['DCOC'][r, :, 0] * data['DLEV'][r, :, 0]) > 0.0,
@@ -314,8 +330,11 @@ def get_lcoe(data, titles, histend, year):
         # Risk adjusted profit rate
         data['DRPR'][r, :, 0] = data['DPPR'][r, :, 0] * data['DRAF'][r, :, 0]
         
+        data['DRPR2'][r, :, 0] = data['DPPR2'][r, :, 0] * data['DRAF'][r, :, 0]
+        
         # Rought approximation of the stand. dev. of the profit rate
         data['DPRD'][r, :, 0] = data['DPPR'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
         
+        data['DPRD2'][r, :, 0] = data['DRPR2'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
 
     return data
