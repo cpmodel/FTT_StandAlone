@@ -157,6 +157,7 @@ def get_lcoe(data, titles):
         ct = np.ones([len(titles['T2TI']), int(max_lt)])
         ct = ct * bcet[:, c2ti['1 Carbon Costs ($/MWh)'], np.newaxis]
         ct = np.where(lt_mask, ct, 0)
+        
 
         # Energy production over the lifetime (incl. buildtime)
         # No generation during the buildtime, so no benefits
@@ -225,7 +226,7 @@ def get_lcoe(data, titles):
         data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # Bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # Lcoe with policy, without CO2 costs
         data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!)
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!) #TODO
 
 
         # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])    # As seen by consumer (generalised cost)
