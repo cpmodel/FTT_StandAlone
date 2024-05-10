@@ -69,7 +69,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     time_lag: type
-        Description
+        Model variables in previous year
     iter_lag: type
         Description
     titles: dictionary of lists
@@ -400,9 +400,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # New additions (TEWI)
             data["TEWI"], tewi_t = get_sales(
-                data["TEWK"], data_dt["TEWK"], time_lag["TEWK"], data["TEWS"],
-                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt, t)
-
+                data["TEWK"], data_dt["TEWK"], time_lag["TEWK"], data["TEWS"], 
+                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt)
+            
+           
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             CO2_corr = np.ones(len(titles['RTI']))
@@ -528,6 +529,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         # Learning on the EV/PHEV (seperate from battery)
                         i_cost[:, veh, 0] = data["TEVC"][:, veh, 0] * ((np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1))
                                                                        ** (data["BTTC"][:, veh, c3ti['16 Learning exponent']]/2))
+
 
                         # Calculate new costs (seperate treatments for ICE vehicles and EVs/PHEVs)
                         if 17 < veh < 24:

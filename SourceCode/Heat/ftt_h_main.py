@@ -60,7 +60,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     time_lag: type
-        Description
+        Model variables in previous year
     iter_lag: type
         Description
     titles: dictionary of lists
@@ -511,17 +511,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 if data['HEWW'][0, b, 0] > 0.0001:
 
-                    data['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/Kw)']] = (data_dt['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/Kw)']]  \
-                                                                             *(1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b]/data['HEWW'][0, b, 0]))
-                    data['BHTC'][:, b, c4ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']]  \
-                                                                             *(1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b]/data['HEWW'][0, b, 0]))
-                    data['BHTC'][:, b, c4ti['9 Conversion efficiency']] = (data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']] \
-                                                                            * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
+                    data['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/Kw)']] = (
+                            data_dt['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/Kw)']]  
+                            * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b, 0]))
+                    data['BHTC'][:, b, c4ti['2 Inv Cost SD']] = (
+                            data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']] 
+                            * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b, 0]))
+                    data['BHTC'][:, b, c4ti['9 Conversion efficiency']] = (
+                            data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']] 
+                            * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
 
 
-            #Total investment in new capacity in a year (m 2014 euros):
-              #HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-              #BHTC(:,:,1) are the investment costs (2014Euro/kW)
+            # Total investment in new capacity in a year (m 2014 euros):
+            # HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
+            # BHTC are the investment costs (2014Euro/kW)
             data['HWIY'][:,:,0] = data['HWIY'][:,:,0] + data['HEWI'][:,:,0]*dt*data['BHTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
             # Save investment cost for front end
             data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/Kw)']]
