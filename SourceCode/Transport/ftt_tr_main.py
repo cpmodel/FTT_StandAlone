@@ -72,7 +72,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     time_lag: type
-        Description
+        Model variables in previous year
     iter_lag: type
         Description
     titles: dictionary of lists
@@ -405,7 +405,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # New additions (TEWI)
             data["TEWI"], tewi_t = get_sales(
                 data["TEWK"], data_dt["TEWK"], time_lag["TEWK"], data["TEWS"], 
-                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt, t)
+                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt)
             
            
 
@@ -461,7 +461,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # bi = np.matmul(data['TEWI'][:, :, 0], data['TEWB'][0, :, :])
             # dw = np.sum(bi, axis=0)*dt
                 
-            # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (KWh)  
+            # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (kWh)  
             new_bat = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
             new_bat[:, :, 0] = tewi_t[:, :, 0] * data["BTTC"][:, :, c3ti["18 Battery cap (kWh)"]]  
             
@@ -525,8 +525,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     id_cost[:, veh, 0] = (data['BTCI'][:, veh, c3ti['1 Prices cars (USD/veh)']] 
                                * 0.15 * 0.993**(year - 2022))
                     # Learning on the EV/PHEV (seperate from battery)
-                    i_cost[:, veh, 0] = data["TEVC"][:,veh,0] * ((np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1)) 
-                                                      ** (data["BTTC"][:, veh, c3ti['16 Learning exponent']]/2))
+                    i_cost[:, veh, 0] = (data["TEVC"][:, veh, 0] 
+                                        * ((np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1)) 
+                                        ** (data["BTTC"][:, veh, c3ti['16 Learning exponent']]/2))
+                                        )
                     
                     # Calculate new costs (seperate treatments for ICE vehicles and EVs/PHEVs)
                     if 17 < veh < 24:
