@@ -49,7 +49,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
     """
     # Find capacity and share growth since last time step
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
-    share_growth = shares[:, :, 0] - shares_dt[:, :, 0]
+    share_growth_dt = shares[:, :, 0] - shares_dt[:, :, 0]
     cap_growth_dt = cap[:, :, 0] - cap_dt[:, :, 0]
 
     # Calculate share_depreciation
@@ -60,12 +60,12 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
     # if the depreciation > capacity loss
     conditions = [
         (cap_growth >= 0.0),
-        (-share_depreciation < share_growth) & (share_growth < 0)
+        (-share_depreciation < share_growth_dt) & (share_growth_dt < 0)
     ]
 
     outputs = [
         cap_dt[:, :, 0] * dt / timescales,
-        (share_growth + share_depreciation) * cap_lag[:, :, 0] 
+        (share_growth_dt + share_depreciation) * cap_lag[:, :, 0] 
     ]
 
     # Thee end-of-life (eol) replacement options, depending on conditions
@@ -152,8 +152,6 @@ def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, t
     # If capacity has grown, additions equal the difference +
     # eol replacement from the previous year.
     # Otherwise, additions just equal eol replacement.
-        
-    # Add additions at iteration t to total annual additions
     sales_or_investment = copy.deepcopy(sales_or_investment_in)
     sales_or_investment[:, :, 0] = np.where(cap_growth[:, :] > 0.0,
                                 cap_growth[:, :] + eol_replacements[:, :, 0],
