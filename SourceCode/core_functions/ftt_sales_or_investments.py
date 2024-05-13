@@ -50,6 +50,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
     # Find capacity and share growth since last time step
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
     share_growth = shares[:, :, 0] - shares_dt[:, :, 0]
+    cap_growth_dt = cap[:, :, 0] - cap_dt[:, :, 0]
 
     # Calculate share_depreciation
     share_depreciation = shares_dt[:, :, 0] * dt / timescales
@@ -64,7 +65,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
 
     outputs = [
         cap_dt[:, :, 0] * dt / timescales,
-        (share_growth + share_depreciation) * cap_lag[:, :, 0]
+        (share_growth + share_depreciation) * cap_lag[:, :, 0] 
     ]
 
     # Thee end-of-life (eol) replacement options, depending on conditions
@@ -76,18 +77,18 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
 
     # Find total additions at time t
     # If capacity has grown, additions equal the difference +
-    # depreciation from the previous year.
-    # Otherwise, additions just equal depreciations.
-    tewi_t = np.zeros(sales_or_investment_in.shape)
-    tewi_t[:, :, 0] = np.where(cap_growth[:, :] > 0.0,
-                                cap_growth[:, :] + eol_replacements[:, :, 0],
+    # eol replacements from the previous year.
+    # Otherwise, additions just equal replacements.
+    sales_dt = np.zeros(sales_or_investment_in.shape)
+    sales_dt[:, :, 0] = np.where(cap_growth_dt[:, :] > 0.0,
+                                cap_growth_dt[:, :] + eol_replacements[:, :, 0], 
                                 eol_replacements[:, :, 0])
         
     # Add additions at iteration t to total annual additions
     sales_or_investment = copy.deepcopy(sales_or_investment_in)
-    sales_or_investment[:, :, 0] = sales_or_investment[:, :, 0] + tewi_t[:, :, 0]
-
-    return sales_or_investment, tewi_t
+    sales_or_investment[:, :, 0] = sales_or_investment[:, :, 0] + sales_dt[:, :, 0]
+    
+    return sales_or_investment, sales_dt
 
 
 def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, timescales):
