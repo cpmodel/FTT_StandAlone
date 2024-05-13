@@ -114,14 +114,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['ZESD'][r, 1, 0] = 1 - data['ZESD'][r, 0, 0]
 
             # Find service area
-            for x in range(0, 20, 2):
-                data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 0, 0]
-                data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
-                                        / (1 - 1 / (data['ZSLR'][r, 0, 0] + 1))
-            for x in range(1, 21, 2):
-                data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 1, 0]
-                data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
-                                        / (1 / (data['ZSLR'][r, 0, 0] + 1))
+
+            if data['ZESD'][r, 0, 0] > 0:
+                for x in range(0, 20, 2):  
+                    data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 0, 0]
+                    data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
+                                            / (1 - 1 / (data['ZSLR'][r, 0, 0] + 1))
+            if data['ZESD'][r, 1, 0] > 0:
+                for x in range(1, 21, 2):
+                    data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0] / data['ZESD'][r, 1, 0]
+                    data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0] * data['ZESA'][r, x, 0] \
+                                            / (1 / (data['ZSLR'][r, 0, 0] + 1))
                 
             for veh in range(len(titles['FTTI'])):
                 for fuel in range(len(titles['JTI'])):
@@ -320,14 +323,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 data['ZESD'][r, 1, 0] = 1 - data['ZESD'][r, 0, 0]
 
-                for x in range(0, 20, 2):
-                    data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0]/data['ZESD'][r, 0, 0]
-                    data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0]*data['ZESA'][r, x, 0]/(1-1/(data['ZSLR'][r, 0, 0] + 1))
-                    data['ZEST'][r, x, 0] = data['ZEVV'][r, x, 0]*data['ZLOD'][r, 1, 0]
-                for x in range(1, 21, 2):
-                    data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0]/data['ZESD'][r, 1, 0]
-                    data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0]*data['ZESA'][r, x, 0]/(1/(data['ZSLR'][r, 0, 0] + 1))
-                    data['ZEST'][r, x, 0] = data['ZEVV'][r, x, 0]*data['ZLOD'][r, 1, 0]
+                if data['ZESD'][r, 0, 0] > 0:
+                    for x in range(0, 20, 2):
+                        data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0]/data['ZESD'][r, 0, 0]
+                        data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0]*data['ZESA'][r, x, 0]/(1-1/(data['ZSLR'][r, 0, 0] + 1))
+                        data['ZEST'][r, x, 0] = data['ZEVV'][r, x, 0]*data['ZLOD'][r, 1, 0]
+                
+                if data['ZESD'][r, 1, 0] > 0:
+                    for x in range(1, 21, 2):
+                        data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0]/data['ZESD'][r, 1, 0]
+                        data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0]*data['ZESA'][r, x, 0]/(1/(data['ZSLR'][r, 0, 0] + 1))
+                        data['ZEST'][r, x, 0] = data['ZEVV'][r, x, 0]*data['ZLOD'][r, 1, 0]
 
                 # This is number of trucks by technology
                 data['ZEWK'][r, :, 0] = data['ZEWS'][r, :, 0] * Utot[r, 0, 0]
