@@ -59,7 +59,6 @@ import warnings
 # Third party imports
 import pandas as pd
 import numpy as np
-from numba import njit
 
 # Local library imports
 from SourceCode.support.divide import divide
@@ -607,12 +606,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #                                   + tot_eol)
 #        data['MWIA'][:, 0, 0][data['MEWKA'][:, 0, 0] < 0.0] = 0.0
 
-        # Factor used to create quarterly data from annual figures
+        # Number of timesteps no_it and timestep size dt
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
-        # store exogenous load factors in local variable
-        loadfac = copy.deepcopy(data['MWLO'][:, :, 0])
 
         # =====================================================================
         # Start of the quarterly time-loop
@@ -791,27 +788,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
-
-             
-            cap_diff = (data['MEWK'][:, :, 0] - data_dt['MEWK'][:, :, 0])/dt
-            cap_dprctn = data_dt['MEWK'][:, :, 0] / time_lag['BCET'][:, :, c2ti['9 Lifetime (years)']]
-            data['MEWI'][:, :, 0] = np.where(cap_diff > 0.0,
-                                             cap_diff + cap_dprctn,
-                                             cap_dprctn)
-            
-            
-            test_mewi, mewi_t = get_sales(
+            # Update investment. Note that sum(mewi_t) not exactly mewi, as MKWA overly abrupt
+            _, mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
                 data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
-                
             
             data["MEWI"] = get_sales_yearly(
                 data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
                 data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-            
-            if t == no_it:
-                print(f"The old MEWI estimate for belgian nuclear was {data['MEWI'][0, 0, 0]}")
-                print(f"The new MEWI estimate for belgian nuclear is {test_mewi[0, 0, 0]}")
             
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
@@ -855,21 +839,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
             # additions (PG_CA) we can estimate total global spillover of similar
             # technologies
-            
-            # TODO: check if this is correct
-            # I don't think it is, as MEWI is the investment up to time t
-            # So multiplying it by dt in the dw_temp line would underestimate learning?
-            mewi0_old = np.sum(data['MEWI'][:, :, 0], axis=0)
             mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
-            dw_old = np.zeros(len(titles["T2TI"]))
 
             
             for i in range(len(titles["T2TI"])):
-                dw_temp_old = copy.deepcopy(mewi0_old) * dt
-                dw_temp_old[dw_temp_old > dw_temp_old[i]] = dw_temp_old[i]
-                dw_old[i] = np.dot(dw_temp_old, data['MEWB'][0, i, :])
-               
                 dw_temp = copy.deepcopy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
@@ -904,10 +878,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = (
                             data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] 
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
-            # Investment in terms of car purchases:
-            for r in range(len(titles['RTI'])):
-
-                data['MWIY'][r, :, 0] = data_dt['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*dt*data['BCET'][r, :, c2ti['3 Investment ($/kW)']]/1.33
+            
+            
+            # Investment (1.33 probably an exchange rate factor, code differs from FORTRAN)
+            data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
+                                     + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
+            
 
             # =================================================================
             # Cost-Supply curves
