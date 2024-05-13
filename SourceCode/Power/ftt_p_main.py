@@ -800,7 +800,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                              cap_dprctn)
             
             
-            _, mewi_t = get_sales(
+            test_mewi, mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
                 data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
                 
@@ -809,10 +809,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
                 data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
             
-            
-            #print(f"The old MEWI estimate for belgian nuclear was {data['MEWI'][0, 0, 0]}")
-            #print(f"The new MEWI estimate for belgian nuclear is {test[0, 0, 0]}")
-            
+            if t == no_it:
+                print(f"The old MEWI estimate for belgian nuclear was {data['MEWI'][0, 0, 0]}")
+                print(f"The new MEWI estimate for belgian nuclear is {test_mewi[0, 0, 0]}")
             
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
@@ -826,12 +825,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         earlysc[r, tech] = 0.0
                         lifetsc[r, tech] = copy.deepcopy(data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']])
-                        data['MESC'][r,tech,0] = 0.0
+                        data['MESC'][r, tech, 0] = 0.0
 
                     else:
 
                         earlysc[r, tech] = data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0]
-                        lifetsc[r, tech] = (1.0 - data['MEWK'][r, tech, 0]/np.sum(data['MEWK'][r, :, 0])) * (data['MEWK'][r, tech, 0] / earlysc[r, tech]) * 5
+                        lifetsc[r, tech] = ((1.0 - data['MEWK'][r, tech, 0]/np.sum(data['MEWK'][r, :, 0])) 
+                                            * (data['MEWK'][r, tech, 0] / earlysc[r, tech]) * 5 )
 
                     if (lifetsc[r, tech]-data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]) < 0.0:
 
@@ -854,8 +854,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative global learning
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
             # additions (PG_CA) we can estimate total global spillover of similar
-            # techicals
-
+            # technologies
             
             # TODO: check if this is correct
             # I don't think it is, as MEWI is the investment up to time t
@@ -875,8 +874,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 
-            
-            print(f"Comparing old and new dw: {dw_old[18]:.3f} and {dw[18]:.2f} in {year}")
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
 
@@ -895,15 +892,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 if data['MEWW'][0, tech, 0] > 0.1:
 
-                    data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = data_dt['BCET'][:, tech, c2ti['3 Investment ($/kW)']] * \
-                                (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
-                    data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['4 std ($/MWh)']] * \
-                                (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
-                    data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] * \
-                                (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
+                    data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = (
+                            data_dt['BCET'][:, tech, c2ti['3 Investment ($/kW)']] 
+                            * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
+                    data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = (
+                            data_dt['BCET'][:, tech, c2ti['4 std ($/MWh)']] 
+                             *  (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
+                    data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = (
+                            data_dt['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] 
+                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = (
-                            data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] * 
-                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
+                            data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] 
+                            * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
             # Investment in terms of car purchases:
             for r in range(len(titles['RTI'])):
 
