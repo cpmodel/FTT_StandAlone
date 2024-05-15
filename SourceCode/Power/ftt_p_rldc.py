@@ -656,7 +656,15 @@ def rldc(data, time_lag, iter_lag, year, titles):
     r_int = 0
     storage_ratio = share_repurposed_batteries(data, year, titles)
     data = update_costs_from_repurposing(data, storage_ratio, year, titles)
-
+    
+    
+    # Ad hoc correction for exchange rate and inflation
+    # TODO: check if these corrections actually make sense
+    data["MSSP"] = data["MSSP"] * 1.34
+    data["MLSP"] = data["MLSP"] * 1.34
+    data["MSSM"] = data["MSSM"] * 1.34
+    data["MLSM"] = data["MLSM"] * 1.34
+    data["MSSR"] = data["MSSR"] * 1.34
     
     check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
     check_mewl = pd.DataFrame(data['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
