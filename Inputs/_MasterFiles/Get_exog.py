@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     # %% From MRE
 
-    with MRE(os.path.join(dirp_mre, 'DAN_MES_nsMGAM_MEWW_MCTN_noit4.mre')) as mre:
+    with MRE(os.path.join(dirp_mre, 'DAN1.mre')) as mre:
 
         # MRE timeline:
         tl = np.arange(2010, 2070+1)
