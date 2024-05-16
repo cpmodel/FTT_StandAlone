@@ -23,39 +23,39 @@ from SourceCode.support.divide import divide
 @njit(fastmath=True)
 def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
-           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti,no_it):
+           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti, no_it):
 
     """
-    Function to calculate market share dynamics
+    Function to calculate market share dynamics.
 
-    This function calculates market shares based on market shares of the
-    previous iteration
-
+   This function calculates market shares based on market shares of the
+   previous iteration.
+    
     Parameters
-    -----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-    time_lag: dictionary
-        Time_lag is a container that holds all cross-sectional (of time) data
-        for all variables of the previous year.
-        Variable names are keys and the values are 3D NumPy arrays.
-    titles: dictionary
-        Titles is a container of all permissible dimension titles of the model.
+    ----------
+    dt : float
+        The time step size.
+    t : int
+        The current time step.
+    T_Scal : float
+        Timescale parameter
+    mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, mewl_dt, mews_lag, mwlo, mwdl : ndarray
+        These are input arrays used in the calculation of market shares. The exact meaning of these parameters would depend on the specific context of the model.
+    rti : float
+        Some parameter related to the model.
+    t2ti : float
+        Some parameter related to the model.
+    no_it : int
+        Number of iterations.
 
     Returns
-    ----------
-    data: type
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
+    -------
+    ndarray
+        The updated market shares mews, load factor mewl, generation mewg and capacity mewk
 
     Notes
-    ---------
-    Additional notes if required.
+    -----
+    This function is decorated with `@njit(fastmath=True)` for performance optimization.
     """
 
     # Values to return
@@ -69,10 +69,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         if mewdt[r] == 0.0:
             continue
 
-        if r==1:
-            x = 1+1
-#            print('BE')
-
+      
         # Initialise variables related to market share dynamics
         # DSiK contains the change in shares
         dSik = np.zeros((t2ti, t2ti))
@@ -146,6 +143,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # Copy over load factors that do not change
         # Only applies to baseload and variable technologies
         mewl[r, :, 0] = mewl_dt[r, :, 0].copy()
+        
         # new_capacity_idx = np.logical_and(mews_lag[r, :, 0]==0, mews[r, :, 0] > 0)
         for tech_idx in range(t2ti):
             if np.logical_and(mews_lag[r, tech_idx, 0]==0, endo_shares[tech_idx] > 0):
@@ -164,8 +162,6 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # Regulations have priority over exogenous capacity
         reg_vs_exog = ((mwka[r, :, 0]) > mewr[r, :, 0]) & (mewr[r, :, 0] >= 0.0)
         mwka[r, :, 0] = np.where(reg_vs_exog, -1.0, mwka[r, :, 0])
-        MWKA_scalar = 1.0
-
 
 
         # Correct for regulations using difference between endogenous capacity and capacity from last time step with endo shares
@@ -183,8 +179,24 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         if (dUkTK.sum() > 0.95 * Utot):
 
             MWKA_scalar = dUkTK.sum() / (0.95 * Utot)
-
             dUkTK = dUkTK / MWKA_scalar
+
+        
+
+
+        # # If MWKA is a ban or removal, base removal on endogenous capacity after regulation to ensure no negative shares
+        # condition1 = mwka < endo_capacity
+        # dUkMK = np.where(condition1, (mwka - (endo_capacity + dUkREG)) * (t / no_it), 0)
+        
+        # # If MWKA is a target beyond the last year's capacity, treat as a kick-start.
+        # # Small additions will help the target be met.
+        # # Only do for MWKA > MWKL to prevent oscillations
+        # condition2 = (mwka > endo_capacity) & (mwka > mewk_lag)
+        # dUkMK = np.where(condition2, (mwka - endo_capacity) * (t / no_it), dUkMK)
+        
+        # # Regulations have priority over exogenous capacity
+        # condition3 = (mwka < 0) | ((mewr >= 0.0) & (mwka > mewr))
+        # dUkMK = np.where(condition3, 0.0, dUkMK)
 
 
         # Sum effect of exogenous sales additions (if any) with
@@ -202,7 +214,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
         # New market shares
        
-        mews[r, :, 0] = (endo_capacity + dUk)/(np.sum(endo_capacity)+dUtot)
+        mews[r, :, 0] = (endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
 
         # Copy over load factors that do not change
         # Only applies to baseload and variable technologies
