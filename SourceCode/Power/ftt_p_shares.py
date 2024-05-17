@@ -15,8 +15,7 @@ Functions included:
 import numpy as np
 from numba import njit
 
-# Local library imports
-from SourceCode.support.divide import divide
+
 
 # %% JIT-compiled shares equation
 # -----------------------------------------------------------------------------
@@ -85,8 +84,8 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
             if not (mews_dt[r, t1, 0] > 0.0 and
                     metc_dt[r, t1, 0] != 0.0 and
-                    mtcd_dt[r, t1, 0] != 0.0 and
-                    mwka[r, t1, 0] < 0.0):
+                    mtcd_dt[r, t1, 0] != 0.0): 
+                    #and mwka[r, t1, 0] < 0.0):
                 continue
 
             Gijmax[t1] = np.tanh(1.25*(mes1_dt[r, t1, 0] - mews_dt[r, t1, 0])/0.1)
@@ -97,10 +96,10 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
             for t2 in range(t1):
 
-                if not (mews_dt[r, t1, 0] > 0.0 and
-                        metc_dt[r, t1, 0] != 0.0 and
-                        mtcd_dt[r, t1, 0] != 0.0 and
-                        mwka[r, t1, 0] < 0.0):
+                if not (mews_dt[r, t2, 0] > 0.0 and
+                        metc_dt[r, t2, 0] != 0.0 and
+                        mtcd_dt[r, t2, 0] != 0.0): 
+                        # and mwka[r, t2, 0] < 0.0):
                     continue
 
                 S_k = mews_dt[r, t2, 0]
@@ -132,7 +131,6 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                 dSik[t2, t1] = -dSik[t1, t2]
 
 
-        dSk = np.zeros((t2ti))
         dUk = np.zeros((t2ti))
         dUkTK = np.zeros((t2ti))
         dUkREG = np.zeros((t2ti))
@@ -160,14 +158,18 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
         # PV: Added a term to check that exogenous capacity is smaller than regulated capacity.
         # Regulations have priority over exogenous capacity
-        reg_vs_exog = ((mwka[r, :, 0]) > mewr[r, :, 0]) & (mewr[r, :, 0] >= 0.0)
-        mwka[r, :, 0] = np.where(reg_vs_exog, -1.0, mwka[r, :, 0])
+        
+        #reg_vs_exog = ((mwka[r, :, 0]) > mewr[r, :, 0]) & (mewr[r, :, 0] >= 0.0)
+        #mwka[r, :, 0] = np.where(reg_vs_exog, -1.0, mwka[r, :, 0])
 
 
         # Correct for regulations using difference between endogenous capacity and capacity from last time step with endo shares
             
         dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
 
+        
+        # =====================================================================
+        # Old calculations. If we ensure that these are scaled with (t / no_it), they are more accurate.
         # Calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
 
         dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
@@ -184,24 +186,24 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         
 
 
-        # # If MWKA is a ban or removal, base removal on endogenous capacity after regulation to ensure no negative shares
-        # condition1 = mwka < endo_capacity
-        # dUkMK = np.where(condition1, (mwka - (endo_capacity + dUkREG)) * (t / no_it), 0)
+        # If MWKA is a ban or removal, base removal on endogenous capacity after regulation to ensure no negative shares
+        condition1 = mwka[r, :, 0] < endo_capacity
+        dUkMK = np.where(condition1, (mwka[r, :, 0] - (endo_capacity + dUkREG)) * (t / no_it), 0)
         
-        # # If MWKA is a target beyond the last year's capacity, treat as a kick-start.
-        # # Small additions will help the target be met.
-        # # Only do for MWKA > MWKL to prevent oscillations
-        # condition2 = (mwka > endo_capacity) & (mwka > mewk_lag)
-        # dUkMK = np.where(condition2, (mwka - endo_capacity) * (t / no_it), dUkMK)
+        # If MWKA is a target beyond the last year's capacity, treat as a kick-start.
+        # Small additions will help the target be met.
+        # Only do for MWKA > MWKL to prevent oscillations
+        condition2 = (mwka[r, :, 0] > endo_capacity) & (mwka[r, :, 0] > mewk_lag[r, :, 0])
+        dUkMK = np.where(condition2, (mwka[r, :, 0] - endo_capacity) * (t / no_it), dUkMK)
         
-        # # Regulations have priority over exogenous capacity
-        # condition3 = (mwka < 0) | ((mewr >= 0.0) & (mwka > mewr))
-        # dUkMK = np.where(condition3, 0.0, dUkMK)
+        # Regulations have priority over exogenous capacity
+        condition3 = (mwka[r, :, 0] < 0) | ((mewr[r, :, 0] >= 0.0) & (mwka[r, :, 0] > mewr[r, :, 0]))
+        dUkMK = np.where(condition3, 0.0, dUkMK)
 
 
         # Sum effect of exogenous sales additions (if any) with
         # effect of regulations
-        dUk = dUkTK + dUkREG
+        dUk = dUkREG + dUkMK
 
         dUtot = np.sum(dUk)
  
@@ -213,9 +215,10 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, MWKA is fairly accurate
 
         # New market shares
-       
-        mews[r, :, 0] = (endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
+        if np.sum(endo_capacity) + dUtot > 0:
+            mews[r, :, 0] = (endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
 
+            
         # Copy over load factors that do not change
         # Only applies to baseload and variable technologies
         mewl[r, :, 0] = mewl_dt[r, :, 0].copy()
@@ -228,8 +231,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
        
         mewg[r, :, 0] = mews[r, :, 0] * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(mews[r, :, 0] * mewl[r, :, 0])
         mewk[r, :, 0] = mewg[r, :, 0] / mewl[r, :, 0] / 8766
-
-        if r == 2:
-            x = 1+1
+        
+     
 
     return mews, mewl, mewg, mewk

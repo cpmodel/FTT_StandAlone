@@ -631,7 +631,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data["MEWD"] = copy.deepcopy(data['MEWDX'])
 
             # =================================================================
-            # Share equation
+            # Shares equation
             # =================================================================
             bidon = 0
             #
