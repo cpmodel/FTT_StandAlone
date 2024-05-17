@@ -87,9 +87,12 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                     mtcd_dt[r, t1, 0] != 0.0): 
                     #and mwka[r, t1, 0] < 0.0):
                 continue
-
-            Gijmax[t1] = np.tanh(1.25*(mes1_dt[r, t1, 0] - mews_dt[r, t1, 0])/0.1)
-            Gijmin[t1] = np.tanh(1.25*(-mes2_dt[r, t1, 0] + mews_dt[r, t1, 0])/0.1)
+            
+            # Grid limits from RLDC are turned off:
+            #Gijmax[t1] = np.tanh(1.25*(mes1_dt[r, t1, 0] - mews_dt[r, t1, 0])/0.1)
+            #Gijmin[t1] = np.tanh(1.25*(-mes2_dt[r, t1, 0] + mews_dt[r, t1, 0])/0.1)
+            Gijmax[t1] = 1 
+            Gijmin[t1] = 1
             dSik[t1, t1] = 0
             S_i = mews_dt[r, t1, 0]
 #                    Aki = 0.5 * data['PG_EOL'][r, t1, 0] / time_lag['MEWK'][r, t1, 0]
@@ -151,7 +154,6 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
         endo_capacity = endo_gen / mewl[r, :, 0] / 8766
 
-        Utot = np.sum(endo_capacity)
         
 
 
@@ -171,17 +173,19 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # =====================================================================
         # Old calculations. If we ensure that these are scaled with (t / no_it), they are more accurate.
         # Calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
+        
+        #Utot = np.sum(endo_capacity)
 
-        dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
-        dUkTK[mwka[r, :, 0] < 0.0] = 0.0
+        # dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
+        # dUkTK[mwka[r, :, 0] < 0.0] = 0.0
 
-        # Check that exogenous capacity isn't too large
-        # As a proxy, the sum of exogenous capacities can't be greater
-        # than 95% of last year's capacity level.
-        if (dUkTK.sum() > 0.95 * Utot):
+        # # Check that exogenous capacity isn't too large
+        # # As a proxy, the sum of exogenous capacities can't be greater
+        # # than 95% of last year's capacity level.
+        # if (dUkTK.sum() > 0.95 * Utot):
 
-            MWKA_scalar = dUkTK.sum() / (0.95 * Utot)
-            dUkTK = dUkTK / MWKA_scalar
+        #     MWKA_scalar = dUkTK.sum() / (0.95 * Utot)
+        #     dUkTK = dUkTK / MWKA_scalar
 
         
 
