@@ -629,7 +629,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data["MEWD"] = copy.deepcopy(data['MEWDX'])
 
             # =================================================================
-            # Share equation
+            # Shares equation
             # =================================================================
             bidon = 0
             #
@@ -641,7 +641,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MEWK'], data['MEWR'],
                                             data_dt['MEWL'], data_dt['MEWS'],
                                             data['MWLO'], MWDL,
-                                            len(titles['RTI']), len(titles['T2TI']),no_it)
+                                            len(titles['RTI']), len(titles['T2TI']), no_it)
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
