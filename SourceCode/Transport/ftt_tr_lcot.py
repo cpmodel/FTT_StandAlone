@@ -123,8 +123,8 @@ def get_lcot(data, titles, year):
 
         # Fuel tax costs
         fft = np.ones([len(titles['VTTI']), int(max_lt)])
-        fft = fft * data['RTFT'][r, :, 0, np.newaxis] * en / ns / ff \
-              * taxable_fuels[r, :]
+        fft = (fft * data['RTFT'][r, :, 0, np.newaxis] * en / ns / ff
+              * taxable_fuels[r, :])
         fft = np.where(mask, fft, 0)
         
         # Average operation & maintenance cost
@@ -143,9 +143,9 @@ def get_lcot(data, titles, year):
         rtt = np.where(mask, rtt, 0)
 
         # Vehicle price components for front end ($/veh)
-        data["TWIC"][r, :, 0] = bttc[:, c3ti['1 Prices cars (USD/veh)']] \
-                              + data["TTVT"][r, :, 0] + data["RTCO"][r, 0, 0] \
-                              * bttc[:,c3ti['14 CO2Emissions']]
+        data["TWIC"][r, :, 0] = (bttc[:, c3ti['1 Prices cars (USD/veh)']] 
+                               + data["TTVT"][r, :, 0] + data["RTCO"][r, 0, 0] 
+                               * bttc[:,c3ti['14 CO2Emissions']])
         
         # Fuel cost components for front end
         data["TWFC"][r, :, 0] = bttc[:,c3ti['3 fuel cost (USD/km)']] / ns[:,0] / ff[:,0] \

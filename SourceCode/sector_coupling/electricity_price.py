@@ -16,11 +16,7 @@ import copy
 from SourceCode.support.divide import divide
 
 def electricity_price_feedback(data, time_lag):
-    """ "This function takes as input the electricity price from FTT-P, and 
-    returns the relative price of electricity at year x"""
-    
-    
-    """
+    """    
         Use MEWP from FTT-Power to grow fuel costs for electricity in each FTT model
         Calculation is done year on year based on the lag (previous year solution)
     """
@@ -44,7 +40,7 @@ def electricity_price_feedback(data, time_lag):
 
     return variables
 
-pass
+
 
 def electricity_demand_price_elasticity(data, titles, histend, year, ftt_modules):
     """

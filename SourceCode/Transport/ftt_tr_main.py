@@ -111,6 +111,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data['TE3P'][:, jti["8 Electricity"], 0] = iter_lag['PFRE'][:, sector_index, 0] / 1.33
     data['TE3P'][:, jti["11 Biofuels"], 0] = iter_lag['PFRB'][:, sector_index, 0] / 1.33
 #    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
+    
+    print(f"Variables: {data['BTTC'][0, 18, 2]}")
+    print(f"tiem_lag: {time_lag['BTTC'][0, 18, 2]}")
 
     if year == 2012:
         start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
