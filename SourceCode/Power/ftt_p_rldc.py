@@ -11,7 +11,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
+        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - rldc
@@ -310,6 +310,9 @@ def rldc(data, time_lag, iter_lag, year, titles):
     Snotvar = 1-data['MWDD'][0, :, 5]
 
     for r in range(len(titles['RTI'])):
+        if Sw[r] + Ss[r] == 0:
+            print(f"No wind or solar in region {r}")
+            continue
 
         # SHORT-TERM STORAGE
         # Multidimensional polynomial from Ueckerdt et al. (2017)
