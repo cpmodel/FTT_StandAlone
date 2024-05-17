@@ -13,7 +13,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
     data["MPRI"][:] = 1
 
 
-    non_vre_lb_weight = [0] * 5  # Initialize the non_vre_lb_weight array with 5 elements
+    non_vre_lb_weight = [0] * 5  # Initialize array with 5 elements
 
     non_vre_lb_weight[4] = 80.0 / 8766.0
     non_vre_lb_weight[3] = (700.0 - 80.0) / 8766.0
@@ -22,10 +22,10 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
     non_vre_lb_weight[0] = (8766.0 - 4400.0) / 8766.0
     
 
-    data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]  # Hard coal
-    data["MEWP"][:, 1, 0] = data["MERC"][:, 2, 0]  # Soft coal
-    data["MEWP"][:, 2, 0] = data["MERC"][:, 1, 0]  # Crude oil
-    data["MEWP"][:, 3, 0] = data["MERC"][:, 3, 0]  # Natural gas
+    data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]   # Hard coal
+    data["MEWP"][:, 1, 0] = data["MERC"][:, 2, 0]   # Soft coal
+    data["MEWP"][:, 2, 0] = data["MERC"][:, 1, 0]   # Crude oil
+    data["MEWP"][:, 3, 0] = data["MERC"][:, 3, 0]   # Natural gas
     data["MEWP"][:, 10, 0] = data["MERC"][:, 4, 0]  # Biomass
 
 
