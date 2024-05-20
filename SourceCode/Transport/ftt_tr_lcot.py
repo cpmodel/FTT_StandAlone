@@ -4,23 +4,16 @@
 ftt_tr_lcot.py
 =========================================
 Passenger road transport FTT module.
-####################################
+ 
 
 This is the main file for FTT: Transport, which models technological
 diffusion of passenger vehicle types due to simulated consumer decision making.
-Consumers compare the **levelised cost of heat**, which leads to changes in the
+Consumers compare the **levelised cost of transport**, which leads to changes in the
 market shares of different technologies.
 
 The outputs of this module include sales, fuel use, and emissions.
 
 Local library imports:
-
-    Support functions:
-
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
-    - `estimation <econometrics_functions.html>`__
-        Predict future values according to the estimated coefficients.
 
 Functions included:
     - solve
@@ -75,7 +68,7 @@ def get_lcot(data, titles, year):
         mask = lt_mat < lt_max_mat
         lt_mat = np.where(mask, lt_mat, 0)
 
-        # Capacity factor used in decisions (constant), not actual capacity factor
+        # Capacity factor
         cf = bttc[:, c3ti['12 Cap_F (Mpkm/kseats-y)'], np.newaxis]
 
         # Discount rate
@@ -163,8 +156,8 @@ def get_lcot(data, titles, year):
         # 1.3-Only policy costs
         npv_expenses3 = (vtt + fft + rtt) / denominator
         # 2-Utility
-        npv_utility = 1/denominator
-        #Remove 1s for tech with small lifetime than max
+        npv_utility = 1 / denominator
+        # Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility == 1] = 0
         npv_utility[:, 0] = 1
         # 3-Standard deviation (propagation of error)
@@ -176,8 +169,7 @@ def get_lcot(data, titles, year):
         # 1.2-LCOT including policy costs
         tlcot = np.sum(npv_expenses2, axis = 1) / np.sum(npv_utility, axis = 1)
         # 1.3-LCOT of policy costs
-        lcot_pol = np.sum(npv_expenses3, axis = 1) \
-                   / np.sum(npv_utility, axis = 1)
+        lcot_pol = np.sum(npv_expenses3, axis = 1) / np.sum(npv_utility, axis = 1)
         # Standard deviation of LCOT
         dlcot = np.sum(npv_std, axis = 1) / np.sum(npv_utility, axis = 1)
 
@@ -185,13 +177,13 @@ def get_lcot(data, titles, year):
         tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])
 
         # Transform into lognormal space
-        logtlcot = np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot)) \
-                   + data['TGAM'][r, :, 0]
+        logtlcot = ( np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot)) 
+                   + data['TGAM'][r, :, 0] )
         dlogtlcot = np.sqrt(np.log(1.0 + dlcot * dlcot / (tlcot * tlcot)))
 
         # Pass to variables that are stored outside.
         data['TEWC'][r, :, 0] = lcot           # The real bare LCOT without taxes
-        data['TETC'][r, :, 0] = tlcot          # The real bare LCOE with taxes
+        data['TETC'][r, :, 0] = tlcot          # The real bare LCOT with taxes
         data['TEGC'][r, :, 0] = tlcotg         # As seen by consumer (generalised cost)
         data['TELC'][r, :, 0] = logtlcot       # In lognormal space
         data['TECD'][r, :, 0] = dlcot          # Variation on the LCOT distribution
