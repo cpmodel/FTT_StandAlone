@@ -1382,7 +1382,7 @@ if __name__ == '__main__':
     if not success:
         raise IOError('Failed to open a port, the front end will not start.')
 
-    port = 5000
+    #port = 5000
     addr = 'http://localhost:%s' % port
     if PRODUCTION:
 

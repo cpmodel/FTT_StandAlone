@@ -91,12 +91,12 @@ def share_repurposed_batteries(data, year, titles):
                               )
     storage_ratio = storage_from_transport / data["MSSC"]
     
-    if year%10 == 0:
-        print(f"Stock storage repurposed batteries in {year}: "
-              f"{np.sum(storage_from_transport)/1000:.3f} TWh")
-        print(f"Storage ratio is {storage_ratio[0]}")
-        print("Storage demand in the power sector:"
-              f" {np.sum(data['MSSC'])/1000:.3f} TWh")
+    # if year%10 == 0:
+    #     print(f"Stock storage repurposed batteries in {year}: "
+    #           f"{np.sum(storage_from_transport)/1000:.3f} TWh")
+    #     print(f"Storage ratio is {storage_ratio[0]}")
+    #     print("Storage demand in the power sector:"
+    #           f" {np.sum(data['MSSC'])/1000:.3f} TWh")
     
     return storage_ratio
 
@@ -120,10 +120,10 @@ def update_costs_from_repurposing(data, storage_ratio, year, titles):
     remaining_costs_fraction = ((1-share_repurposed)
                                 + share_repurposed 
                                 * (1-sector_coupling_assumps["Cost savings"]))
-    if year%10 == 0:
-        print(f"In {year}, the remaining_cost_fraction is {remaining_costs_fraction[1]}")
-        print(f"In {year}, region with the highest remaining fraction is {np.argmax(remaining_costs_fraction)}"
-              f"at {remaining_costs_fraction[np.argmax(remaining_costs_fraction)]}")
+    # if year%10 == 0:
+    #     print(f"In {year}, the remaining_cost_fraction is {remaining_costs_fraction[1]}")
+    #     print(f"In {year}, region with the highest remaining fraction is {np.argmax(remaining_costs_fraction)}"
+    #           f"at {remaining_costs_fraction[np.argmax(remaining_costs_fraction)]}")
 
     
     data["MSSP"] = data["MSSP"] * remaining_costs_fraction

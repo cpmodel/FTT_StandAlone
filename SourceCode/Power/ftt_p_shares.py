@@ -88,7 +88,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                     #and mwka[r, t1, 0] < 0.0):
                 continue
             
-            # Grid limits from RLDC are turned off:
+            # Grid limits from RLDC:
             Gijmax[t1] = np.tanh(1.25*(mes1_dt[r, t1, 0] - mews_dt[r, t1, 0])/0.1)
             Gijmin[t1] = np.tanh(1.25*(-mes2_dt[r, t1, 0] + mews_dt[r, t1, 0])/0.1)
             dSik[t1, t1] = 0

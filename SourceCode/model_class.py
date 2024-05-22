@@ -303,7 +303,7 @@ class ModelRun:
         data_to_model = cs(self.input, self.dims, year, y, scenario)
 
         # LB TODO: to improve the treatment of lags to include also historical data
-        if y == 0: # If year is the first year, lags equal variables in starting year
+        if y == 0: # In the first year, lags equal variables in starting year
             lags = cs(self.input, self.dims, year, y, scenario)
         else:
             #lags = cs(self.variables, self.dims, year-1)

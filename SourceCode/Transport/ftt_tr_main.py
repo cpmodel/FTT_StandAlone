@@ -27,7 +27,8 @@ Functions included:
         Calculate levelised cost of transport
     - get_sales
         Calculate new sales/additions in FTT-Transport 
-        
+    - survival_function
+        Computes yearly scrappage based on survival chance per age bracket
 """
 
 # Standard library imports
@@ -111,22 +112,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data['TE3P'][:, jti["8 Electricity"], 0] = iter_lag['PFRE'][:, sector_index, 0] / 1.33
     data['TE3P'][:, jti["11 Biofuels"], 0] = iter_lag['PFRB'][:, sector_index, 0] / 1.33
 #    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
+    if year > histend["MEWG"]:
+        data["BTTC"] = copy.deepcopy(time_lag["BTTC"])
+        
+    if year in [2025, 2026, 2027]:
+        print("")
+        print(f"time_lag BTTC fuel cost: {time_lag['BTTC'][0, 18, 2]:.4f} in {year}")
+        print(f"data     BTTC fuel cos: {data['BTTC'][0, 18, 2]:.4f} in {year}")
     
-    print(f"Variables: {data['BTTC'][0, 18, 2]}")
-    print(f"tiem_lag: {time_lag['BTTC'][0, 18, 2]}")
 
     if year == 2012:
         start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
         for veh in range(len(titles['VTTI'])):
             if 17 < veh < 24:
                 # Starting EV/PHEV cost (without battery)
-                start_i_cost[:,veh,0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']]
+                start_i_cost[:, veh, 0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']]
                                          / data['BTTC'][:, veh, c3ti['20 Markup factor']]
                                          - data['BTTC'][:, veh, c3ti['18 Battery cap (kWh)']]
                                          * data['BTTC'][:, veh, c3ti['19 Battery cost ($/kWh)']]
                                          - data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] * 0.15)
             else:
-                start_i_cost[:,veh,0] = 0
+                start_i_cost[:, veh, 0] = 0
         # TEVC is 'Start_ICost' in the Fortran model
         data["TEVC"] = start_i_cost
     elif year > 2012:
@@ -241,6 +247,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data_dt[var] = copy.deepcopy(time_lag[var])
 
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+        if year in [2025, 2026, 2027]:
+            print(f"data_dt  BTTC fuel cost: {data_dt['BTTC'][0, 18, 2]:.4f} in {year}")
 
         # Create the regulation variable
         division = divide((time_lag['TEWS'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
