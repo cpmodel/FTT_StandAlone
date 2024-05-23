@@ -111,6 +111,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     ---------
     survival_function is currently unused.
     """
+    
+    if year == 2030:
+        print("")
+        print(f"In {year}, MEWDX[0, 7, 0] is:")
+        print(data["MEWDX"][0, 7, 0])
+    
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
     # jti = {category: index for index, category in enumerate(titles['JTI'])}
@@ -636,7 +642,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             lag_demand = time_lag['MEWDX'][:, 7, 0] * 1000/3.6
             e_demand_step = e_demand - lag_demand           
             
-            MWDLt = copy.deepcopy(data_dt['MEWDX'][:,7,0])
+            MWDLt = copy.deepcopy(data_dt['MEWDX'][:, 7, 0])
             MWDL = copy.deepcopy(time_lag['MEWDX'][:, 7, 0])
             
             # For checking
@@ -721,9 +727,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             for r in range(len(titles['RTI'])):
                 # Generation by tech x load band is share of total electricity demand
-                glb3 = data['MSLB'][r,:,:]*data['MLLB'][r,:,:]*tot_elec_dem[r]
+                glb3 = data['MSLB'][r,:,:] * data['MLLB'][r,:,:] * tot_elec_dem[r]
                 # Capacity by tech x load band
-                klb3 = glb3/data['MLLB'][r,:,:]
+                klb3 = glb3 / data['MLLB'][r,:,:]
                 # Load factors
                 data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
                 nonzero_cap = np.sum(klb3, axis=1)>0

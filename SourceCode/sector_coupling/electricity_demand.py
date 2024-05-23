@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import copy
 
+
 def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
     """ Energy demand (FRET in E3ME-FTT),
     as a function of the heat, freight and transport sector

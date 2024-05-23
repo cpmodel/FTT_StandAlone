@@ -105,9 +105,9 @@ def get_lcot(data, titles, year):
                                  / ns / ff / cf / 1000
 
         # Average fuel costs
-        ft = np.zeros([len(titles['VTTI']), int(max_lt)])
-        #ft = ft * bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis] / ns / ff
-        #ft = np.where(mask, ft, 0)
+        ft = np.ones([len(titles['VTTI']), int(max_lt)])
+        ft = ft * bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis] / ns / ff
+        ft = np.where(mask, ft, 0)
 
         # Stadard deviation of fuel costs
         dft = np.ones([len(titles['VTTI']), int(max_lt)])
