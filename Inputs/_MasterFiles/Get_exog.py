@@ -28,8 +28,8 @@ if __name__ == '__main__':
     dirp_inputs = Path(dirp).parents[0]
     dirp_db = os.path.join(dirp, 'databank')
     dirp_mre = os.path.join(dirp, 'MREs')
-    dirp_out_ftt = os.path.join(dirp_inputs, 'S0', 'FTT-P')
-    dirp_out_gen = os.path.join(dirp_inputs, 'S0', 'General')
+    dirp_out_ftt = os.path.join(dirp_inputs, 'S2', 'FTT-P')
+    dirp_out_gen = os.path.join(dirp_inputs, 'S2', 'General')
 
 
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     # %% From MRE
 
-    with MRE(os.path.join(dirp_mre, 'Dan1.mre')) as mre:
+    with MRE(os.path.join(dirp_mre, 'Dan_1-5c.mre')) as mre:
 
         # MRE timeline:
         tl = np.arange(2010, 2070+1)
