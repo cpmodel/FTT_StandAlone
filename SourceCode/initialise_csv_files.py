@@ -46,19 +46,25 @@ def get_masterfile(ftt_module, scenario):
     # Printing warnings in case multiple files are found
     if len(matching_file) == 0:
         print(f"Warning: No files matched the pattern for module {ftt_module} and scenario {scenario}.")
+        print(f"This means {ftt_module}: {scenario} will rely only on pre-specified csv files.")
+        matching_file = None
+        file_root = None
+        return matching_file, file_root
+        
     elif len(matching_file) > 1:
         print(f"Warning: Multiple files matched the pattern for module {ftt_module} and scenario {scenario}.")
     
     # Select part of the filename without the scenario or xlsx extension
     try:
         base_name = os.path.basename(matching_file[0]) # file name without directory
+        end_index = base_name.index(f'_{scenario}.xlsx')
+        file_root = base_name[:end_index]
     except IndexError as e:
         print("An error occurred while reading in the masterfile.")
         print(f"the ftt model and scenario: {ftt_module}, {scenario}")
         print(f"The file that triggered the error: {matching_file}")
         raise e
-    end_index = base_name.index(f'_{scenario}.xlsx')
-    file_root = base_name[:end_index]
+    
 
     return matching_file, file_root
 
