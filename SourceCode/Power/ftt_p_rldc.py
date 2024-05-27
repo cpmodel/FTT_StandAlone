@@ -256,7 +256,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
     vre_gr_sol = 0.005 * np.ones(len(titles['RTI']))
     vre_gr_sol = np.maximum((divide(data['MEWS'][:, 18, 0] * data['MEWL'][:, 18, 0],
                                time_lag['MEWS'][:, 18, 0] * time_lag['MEWL'][:, 18, 0])
-                               -1.0)*data['MEWS'][:, 18, 0],
+                               - 1.0) * data['MEWS'][:, 18, 0],
                                 0.005)
     
     vre_ggr_sol = 0.002 * data['MEWG'][:, 18, 0]
@@ -628,12 +628,12 @@ def rldc(data, time_lag, iter_lag, year, titles):
             #------------------------------------------------------------- 
                         
             # 0.262 is a ratio between storage capacity (in relation to peak demand) and stored electricity discharged (in relation to annual electricity demand) 
-            output_sol = rldc_prod_solar[1] * 0.262 * e_dem[r]
+            output_sol = rldc_prod_solar[1] * 0.262 * np.sum(data['MEWG'][r, :, 0])
             output_sol = output_sol + max(cap_needed_solar - cap_notvre, 0.0) * (1.0 - seasonality_index[r]) / 0.175e-3 * 0.262    # Add extra output from peak load sufficiency
             #output_sol = output_sol + total_output_solar_l # add short-term storage from capacity needs
             input_sol = output_sol / data['MSSE'][r, 0, 0]  
 
-            output_wind = rldc_prod_wind[1] * 0.262 * e_dem[r]
+            output_wind = rldc_prod_wind[1] * 0.262 * np.sum(data['MEWG'][r, :, 0])
             output_wind = output_wind + max(cap_needed_wind - cap_notvre, 0.0) * (1.0 - seasonality_index[r]) / 0.175e-3 * 0.262   # Add extra output from peak load sufficiency
             # output_wind = output_wind + total_output_wind_l # add short-term storage from capacity  needs
             input_wind = output_wind / data['MSSE'][r, 0, 0]            
@@ -647,7 +647,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
             elif np.rint(data['MSAL'][r, 0, 0]) in [5]:
                 marg_cost_sol_ss = output_sol * data['MSCC'][r,0,0] / (vre + vre_ggr_sol[r]) * SSs - data['MSSP'][r, 18, 0] 
                 marg_cost_wind_ss = output_wind * data['MSCC'][r,0,0] / (vre + vre_ggr_wind[r]) * SSw  - data['MSSP'][r, 16, 0] 
-            
+                    
             data['MSSM'][r,:,0] = 0.0
             data['MSSM'][r,16,0] = marg_cost_wind_ss
             data['MSSM'][r,17,0] = marg_cost_wind_ss
