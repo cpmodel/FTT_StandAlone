@@ -189,12 +189,11 @@ def get_lcoe(data, titles):
         # Discount rate
         denominator = (1+dr)**full_lt_mat
         
-        # TODO: marg_stor_cost?
-        
+       
         # 1a – Expenses – marginal units
-        npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator 
+        npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost) / denominator 
         npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
-        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st) / denominator 
+        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st + marg_stor_cost) / denominator 
         
         # 1b – Expenses – average LCOEs
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
@@ -224,7 +223,7 @@ def get_lcoe(data, titles):
         # Pass to variables that are stored outside.
         data['MEWC'][r, :, 0] = copy.deepcopy(lcoe_mu_no_policy)    # The real bare LCOE without taxes
         data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # Bare LCOE with CO2 costs
-        data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # Lcoe with policy, without CO2 costs
+        data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # LCOE with policy, without CO2 costs
         data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
         data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!) #TODO
 
