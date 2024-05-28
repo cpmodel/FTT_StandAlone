@@ -152,7 +152,7 @@ def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, t
     # If capacity has grown, additions equal the difference +
     # eol replacement from the previous year.
     # Otherwise, additions just equal eol replacement.
-    sales_or_investment = copy.deepcopy(sales_or_investment_in)
+    sales_or_investment = np.zeros((sales_or_investment_in.shape))
     sales_or_investment[:, :, 0] = np.where(cap_growth[:, :] > 0.0,
                                 cap_growth[:, :] + eol_replacements[:, :, 0],
                                 eol_replacements[:, :, 0])
