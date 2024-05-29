@@ -356,8 +356,8 @@ MCRT,FTT:Power curtailment of VRE (% of generation),%,RTI,NA,NA,TIME,FTT-P,-,-,2
 MCRG,Curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCOCX,Carbon costs by technology from E3ME,2013$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,T2TI,NA,TIME,FTT-P,,,2001,,Y,Y
-MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,T2TI,NA,TIME,FTT-P,,,2001,,Y,Y
+MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
+MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
