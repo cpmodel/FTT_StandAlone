@@ -158,6 +158,11 @@ def get_lcoe(data, titles):
         ct = ct * bcet[:, c2ti['1 Carbon Costs ($/MWh)'], np.newaxis]
         ct = np.where(lt_mask, ct, 0)
         
+        # Standard deviation carbon costs (set to zero for now)
+        dct = np.ones([len(titles['T2TI']), int(max_lt)])
+        dct = dct * bcet[:, c2ti['2 std ($/MWh)'], np.newaxis]
+        dct = np.where(lt_mask, dct, 0)
+        
 
         # Energy production over the lifetime (incl. buildtime)
         # No generation during the buildtime, so no benefits
@@ -183,6 +188,8 @@ def get_lcoe(data, titles):
 
         stor_cost = np.where(lt_mask, stor_cost, 0)
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
+        
+        dstor_cost = 0.2 * stor_cost         # Assume a standard deviation of 20%
 
         # Net present value calculations
         
@@ -205,7 +212,7 @@ def get_lcoe(data, titles):
         utility_tot = np.sum(npv_utility, axis=1) 
         
         # 3 – Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator  
+        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2) / denominator  
         
         # 4a – levelised cost – marginal units 
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
@@ -225,7 +232,7 @@ def get_lcoe(data, titles):
         data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # Bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # LCOE with policy, without CO2 costs
         data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!) #TODO
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE 
 
 
         # data['METC'][r, :, 0] = data['METCX'][r, :, 0]    # As seen by consumer (generalised cost)
