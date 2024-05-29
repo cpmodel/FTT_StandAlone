@@ -129,7 +129,6 @@ def get_lcoe(data, titles):
         conv_av = 1/bt / cf_av/8766*1000        
 
         # Discount rate
-        # dr = bcet[6]
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
 
         # Initialse the levelised cost components

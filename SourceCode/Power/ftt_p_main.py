@@ -4,7 +4,7 @@
 ftt_p_main.py
 =========================================
 Power generation FTT module.
-############################
+
 
 This is the main file for the power module, FTT: Power. The power
 module models technological replacement of electricity generation technologies due
@@ -56,7 +56,6 @@ Functions included:
 import copy
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
 # Local library imports
@@ -199,10 +198,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'][r, nonzero_cap, 0] =  np.sum(glb3[nonzero_cap, :], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
                                                             
 
-            # TODO: Remove once tested:
-            #data['MEWL'] = copy.deepcopy(data['MEWLX'])
-
-
             # Generation by load band
             data['MWG1'][r, :, 0] = glb3[:, 0]
             data['MWG2'][r, :, 0] = glb3[:, 1]
@@ -216,7 +211,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # TODO: Given faulty code in the EEIST, exogenous load factors are
             # used here
-            data['MEWL'][r, :, 0] = copy.deepcopy(data['MEWLX'][r, :, 0])
+            data['MEWL'][r, :, 0] = data['MEWLX'][r, :, 0] 
 
             # Capacities
             data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
@@ -237,8 +232,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         
         # TODO: Given faulty code in the EEIST, exogenous load factors are
         # used here
-        data['MCFC'][:, :, 0] = copy.deepcopy(data['MCFCX'][:, :, 0])
-        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:, :, 0])
+        data['MCFC'][:, :, 0] = data['MCFCX'][:, :, 0]
+        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0]
         
         data = get_lcoe(data, titles)
 
@@ -345,9 +340,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 nonzero_cap = np.sum(klb3, axis=1)>0
                 data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1)/np.sum(klb3[nonzero_cap,:], axis=1)
 
-                # TODO: Remove once tested:
-                #data['MEWL'] = copy.deepcopy(data['MEWLX'])
-
 
                 # Generation by load band
                 data['MWG1'][r, :, 0] = glb3[:, 0]
@@ -363,18 +355,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
                 # Gross Curtailed electricity
                 data['MCGA'][r, 0, 0] = data['MCRT'][r,0,0] * np.sum(Svar[r, :] * data['MEWG'][r,:,0])
-                #gross_curt(J) = SUM(MGCT(:,J) * MEWG(:,J))
+
                 # Net curtailed generation
                 # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
                 # On average 45% of curtailed electricity can be reused for long-term storage:
                 # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r,0,0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
+                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
                 # Impact of net curtailment on load factors for VRE technologies
                 # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-                data['MCTN'][r,:,0] = data['MCTG'][r,:,0] * data['MCNA'][r,:,0] / data['MCGA'][r,0,0]
+                data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * data['MCNA'][r, 0, 0] / data['MCGA'][r, 0, 0]
                 
                 
-                # #Adjust load factors to correctely represent VRE not being able to deliver to the grid due to net curtailment
+                # #Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
                 # data['MEWL'][r,:,0] = np.where(np.isclose(Svar[r, :], 1.0),
                 #                                data['MEWL'][r,:,0] * (1.0*data['MCTN'][r,:,0]),
                 #                                data['MEWL'][r,:,0])    
@@ -397,7 +389,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['BCET'][r, :, c2ti['11 Decision Load Factor']] = data['MCFCX'][r, :, 0] 
                 
                 # Total additional electricity that needs to be generated
-                data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r,0,0] + data['MSSG'][r,0,0]
+                data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r, 0, 0] + data['MSSG'][r,0,0]
                 
                 data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
                 
@@ -492,7 +484,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Investment in terms of power technologies:
             for r in range(len(titles['RTI'])):
-                data['MWIY'][r, :, 0] = time_lag['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*data['BCET'][r, :, c2ti['3 Investment ($/kW)']]/1.33
+                data['MWIY'][r, :, 0] = time_lag['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*data['BCET'][r, :, c2ti['3 Investment ($/kW)']] / 1.33
 
             # =====================================================================
             # Cost-supply curve
@@ -513,17 +505,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MRED'] = mred
             data['MRES'] = mres
             
-            check_mewl = pd.Series(data["MEWL"][70,:,0], index=titles['T2TI'])
-            check_new_mewl = pd.Series(data["BCET"][70,:,c2ti['11 Decision Load Factor']], index=titles['T2TI'])
-            check_mwmc = pd.Series(data["MWMC"][70,:,0], index=titles["T2TI"])
-            check_mwg1 = pd.Series(data["MWG1"][70,:,0], index=titles["T2TI"])
-            check_mwg2 = pd.Series(data["MWG2"][70,:,0], index=titles["T2TI"])
-            check_mwg3 = pd.Series(data["MWG3"][70,:,0], index=titles["T2TI"])
-            check_mwg4 = pd.Series(data["MWG4"][70,:,0], index=titles["T2TI"])
-            check_mwg5 = pd.Series(data["MWG5"][70,:,0], index=titles["T2TI"])
-            check_mwg6 = pd.Series(data["MWG6"][70,:,0], index=titles["T2TI"])
-
-
+          
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
@@ -533,17 +515,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Hereafter, the lagged variable will have these values stored
             # We assume that the values do not change throughout simulation.
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
-            
-            # print(f'MEWS: {data["MEWS"][1, 18, 0]:.7f}\n'
-            #  f'MWSLt: {data["MEWS"][1, 18, 0]:.7f}\n' \
-            #  f'MEWG: {data["MEWG"][1, 18, 0]:.0f}\n' \
-            #  f'MEWK: {data["MEWK"][1, 18, 0]:.4f}\n' \
-            #  f'MEWL: {data["MEWL"][1, 18, 0]:.7f}\n' \
-            #  f'METC: {data["METC"][1, 18, 0]:.7f}\n'\
-            #  f'MWMC: {data["MWMC"][1, 18, 0]:.7f}\n' \
-            #  f'MMCD: {data["MMCD"][1, 18, 0]:.5f}\n' \
-            #  f'MLSP: {data["MLSP"][1, 18, 0]:.5f}\n' \
-            #  f'MSSP: {data["MSSP"][1, 18, 0]:.5f}\n')
+    
 
 # %% Simulation of stock and energy specs
 
@@ -720,25 +692,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #                data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0])/8766
 
             # =============================================================
-            #  Update variables
+            #  Update variables wrt curtailment
             # =============================================================
 
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
             data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
-            #gross_curt(J) = SUM(MGCT(:,J) * MEWG(:,J))
+
             # Net curtailed generation
             # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
             # On average 45% of curtailed electricity can be reused for long-term storage:
             # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-            data['MCNA'][:,0,0] = np.maximum(data['MCGA'][:,0,0] - 0.45*2*data['MLSG'][:,0,0], 0.55*data['MCGA'][:,0,0])
+            data['MCNA'][:, 0, 0] = np.maximum(data['MCGA'][:, 0, 0] - 0.45*2*data['MLSG'][:,0,0], 0.55*data['MCGA'][:,0,0])
             # Impact of net curtailment on load factors for VRE technologies
             # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-            data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:,:,0],
-                                                               data['MCGA'][:,None,0,0])
+            data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:, :, 0],
+                                                               data['MCGA'][:, None,0,0])
             
             
-            #Adjust load factors to correctely represent VRE not being able to deliver to the grid due to net curtailment
+            # Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
             data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
                                            data['MEWL'][:,:,0] * (1.0-data['MCTN'][:,:,0]),
                                            data['MEWL'][:,:,0])            
@@ -751,21 +723,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                            data['MEWL'][:,:,0])
             
             # Total additional electricity that needs to be generated
-            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:,0,0]+data['MSSG'][:,0,0]
+            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0]+data['MSSG'][:,0,0]
             
             # Update generation
-            denominator = np.sum(data['MEWS'][:, :, 0]*data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
+            denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
             data['MEWG'][:, :, 0] = np.zeros((len(titles['RTI']), len(titles['T2TI'])))
             updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
             data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
                                            denominator) #TODO: should this be here? + data['MADG'][:, 0, 0, np.newaxis]
 
             # Update capacities
-            data['MEWK']= divide(data['MEWG'], data['MEWL']) / 8766
+            data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
-            # Update investment. Note that sum(mewi_t) not exactly mewi, as MKWA overly abrupt
+            # Update investment. Note that sum(mewi_t) not exactly mewi
             _, mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
                 data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
@@ -794,14 +766,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                         lifetsc[r, tech] = ((1.0 - data['MEWK'][r, tech, 0]/np.sum(data['MEWK'][r, :, 0])) 
                                             * (data['MEWK'][r, tech, 0] / earlysc[r, tech]) * 5 )
 
-                    if (lifetsc[r, tech]-data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]) < 0.0:
+                    if (lifetsc[r, tech] - data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]) < 0.0:
 
                         data['MESC'][r, tech, 0] = -earlysc[r, tech] * (
                                 (data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] - lifetsc[r, tech]) /
                                 data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] *
                                 data_dt['BCET'][r, tech, c2ti['3 Investment ($/kW)']])
 
-                        data['MELF'][r,tech,0] = lifetsc[r, tech]
+                        data['MELF'][r, tech, 0] = lifetsc[r, tech]
 
                     else:
 
