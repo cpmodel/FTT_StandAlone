@@ -60,7 +60,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.core_functions.ftt_sales_or_investments import get_sales, get_sales_yearly
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
@@ -287,7 +287,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             #if year == 2013: data = get_lcoe(data, titles)
 
             # Second, estimate RLDC parameters
-            bidon = 0
             data = rldc(data, time_lag, iter_lag, year, titles)
 
             # Change currency from EUR2015 to USD2013
@@ -451,8 +450,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Cumulative global learning
             # Using a technological spill-over matrix (MEWB) together with capacity
-            # additions (MEWI) we can estimate total global spillover of similar
-            # techicals
+            # additions (MEWI) we can estimate total global spillover of similar techs
 
             mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
@@ -544,9 +542,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Create the regulation variable
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
-        np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0], \
+        np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0],
                   out=division, where=data['MEWR'][:, :, 0]>0)
-        isReg = 0.5 + 0.5*np.tanh(1.5+10* division)
+        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
        
 
         isReg[data['MEWR'][:, :, 0] == 0.0] = 1.0
@@ -604,7 +602,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Shares equation
             # =================================================================
-            bidon = 0
             mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt, MWDLt,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], data['MWKA'],
@@ -638,10 +635,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             if year >= 2015:
 
-                data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
-                data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
-                data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
-                data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
+                data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+                data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+                data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+                data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
 
             # TODO: This is not per se correct but it's how it is in E3ME
             else:
@@ -707,7 +704,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Impact of net curtailment on load factors for VRE technologies
             # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
             data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:, :, 0],
-                                                               data['MCGA'][:, None,0,0])
+                                                               data['MCGA'][:, :, 0])
             
             
             # Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
@@ -723,7 +720,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                            data['MEWL'][:,:,0])
             
             # Total additional electricity that needs to be generated
-            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0]+data['MSSG'][:,0,0]
+            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]
             
             # Update generation
             denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
@@ -786,8 +783,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Cumulative global learning
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
-            # additions (PG_CA) we can estimate total global spillover of similar
-            # technologies
+            # additions (PG_CA) we can estimate total global spillover of similar techs
             mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
 
@@ -829,7 +825,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
             
             
-            # Investment (1.33 probably an exchange rate factor, code differs from FORTRAN)
+            # Investment (1.33 an exchange rate factor, code differs from FORTRAN)
             data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
                                      + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
             
@@ -864,18 +860,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update the time-loop variables
             # =================================================================
 
-            # Update time loop variables:
-#            print(year)
-            # print(f'MEWS: {data["MEWS"][1, 18, 0]:.7f}\n'
-            #  f'MWSLt: {data_dt["MEWS"][1, 18, 0]:.7f}\n' \
-            #  f'MEWG: {data["MEWG"][1, 18, 0]:.0f}\n' \
-            #  f'MEWK: {data["MEWK"][1, 18, 0]:.4f}\n' \
-            #  f'MEWL: {data["MEWL"][1, 18, 0]:.7f}\n' \
-            #  f'METC: {data["METC"][1, 18, 0]:.7f}\n'\
-            #  f'MWMC: {data_dt["MWMC"][1, 18, 0]:.7f}\n' \
-            #  f'MMCD: {data_dt["MMCD"][1, 18, 0]:.5f}\n' \
-            #  f'MLSP: {data["MLSP"][1, 18, 0]:.5f}\n' \
-            #  f'MSSP: {data["MSSP"][1, 18, 0]:.5f}\n')
             for var in data_dt.keys():
 
                 if domain[var] == 'FTT-P':
