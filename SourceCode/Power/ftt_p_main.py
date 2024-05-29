@@ -526,7 +526,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
-            bidon = 0
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -549,7 +548,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Stock based solutions first
     elif year > histend['MEWG']:
         # TODO: Implement survival function to get a more accurate depiction of
-        # techicles being phased out and to be able to track the age of the fleet.
+        # technologies being phased out and to be able to track the age of the fleet.
         # This means that a new variable will need to be implemented which is
         # basically PG_VFLT with a third dimension (techicle age in years- up to 23y)
         # Reduced efficiences can then be tracked properly as well.
@@ -625,14 +624,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             MWDL = time_lag['MEWDX'][:, 7, 0]
             
             # For checking
-            if t==4:
+            if t == no_it:
                 data["MEWD"] = copy.deepcopy(data['MEWDX'])
 
             # =================================================================
             # Shares equation
             # =================================================================
             bidon = 0
-            #
             mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt, MWDLt,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], data['MWKA'],
@@ -646,14 +644,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'] = mewl
             data['MEWG'] = mewg
             data['MEWK'] = mewk
-            bidon = 0
             
             if np.any(np.isnan(data['MEWS'])):
-                print("NaNs found in MEWS in {}".format(year))
+                print(f"NaNs found in MEWS in {year}")
             if ~np.any(np.isclose(data['MEWS'][:,:,0].sum(axis=1), 1.0)):
-                print("Sum of MEWS does not add up to 1 in {}".format(year))
+                print(f"Sum of MEWS does not add up to 1 in {year}")
             if np.any(data['MEWS'][:,:,0]< 0.0):
-                print("Negative MEWS found in {}".format(year))
+                print(f"Negative MEWS found in {year}")
                 r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
                 
                 print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
@@ -663,7 +660,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, time_lag, iter_lag, year, titles)
-            bidon = 0
             # Change currency from EUR2015 to USD2013
 
             if year >= 2015:
@@ -706,7 +702,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Load factors
                 data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
                 nonzero_cap = np.sum(klb3, axis=1)>0
-                data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1)/np.sum(klb3[nonzero_cap,:], axis=1)
+                data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
                 # Generation by load band
                 data['MWG1'][r, :, 0] = glb3[:, 0]
                 data['MWG2'][r, :, 0] = glb3[:, 1]
@@ -868,7 +864,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cost-Supply curves
             # =================================================================
             if t == no_it:
-               #                print("Did we pass this point?")
+               
                 bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                     data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                     data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
@@ -889,7 +885,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
 
             data = get_lcoe(data, titles)
-            bidon = 0
 
             # =================================================================
             # Update the time-loop variables
@@ -912,6 +907,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 if domain[var] == 'FTT-P':
 
                     data_dt[var] = copy.deepcopy(data[var])
-
+        
+        if year == 2050 and t == no_it:
+            print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.3f}M")
 
     return data
