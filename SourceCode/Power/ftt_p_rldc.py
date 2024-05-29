@@ -4,7 +4,7 @@
 ftt_p_rldc.py
 =========================================
 Power generation RLDC FTT module.
-#################################
+
 
 Local library imports:
 
@@ -232,8 +232,8 @@ def rldc(data, time_lag, iter_lag, year, titles):
         # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
         # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
         
-        data['MSCC'][:,0,0] = 0.20 * 1e6 * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
-        data['MLCC'][:,0,0] = 0.32 * 1e6 * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
+        data['MSCC'][:,0,0] = 0.20 * 1e6 * (iter_lag['MSSC'][:, 0, 0].sum()/39.91390) ** learning_exp_ss
+        data['MLCC'][:,0,0] = 0.32 * 1e6 * (iter_lag['MLSC'][:, 0, 0].sum()/5.336314) ** learning_exp_ls
     
 
     # Wind and solar shares for all regions
@@ -331,8 +331,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
                              feqs(feqs(rldc_prod[0]) - feqs(rldc_prod_split_sol[0])) /
                              feqs(feqs(rldc_prod[0]) - feqs(rldc_prod_split_wind[0]))) 
                 
-        if r == 1:
-            x=1+1
+       
         # Estimate general curtailment rate and the splits for wind and solar
         data['MCRT'][r, 0, 0] = rldc_prod[0]
         curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r] + Ss[r]/ratio[r])
@@ -372,29 +371,29 @@ def rldc(data, time_lag, iter_lag, year, titles):
         CFLB[3] = 700.0/8766.0        # Peak load CF
         CFLB[4] = 80.0/8766.0         # Backup reserve CF
         CFLB[5] = CFvar               # Intermittent CF
-        #Capacity per load band (normalised so that total MGLB == 1, usually total MKLB > 1)
-        #Correction: Load-bands relate to load delivered by non-VRE load, i.e. capacity.
-        #SUM(MKLB(1:5,J) > 1.0 because of additional backup techs
-        #SUM(MKLB(.,J) >> 1.0 because of addition of VRE market shares
-        #Rescaling occurs after
+        # Capacity per load band (normalised so that total MGLB == 1, usually total MKLB > 1)
+        # Correction: Load-bands relate to load delivered by non-VRE load, i.e. capacity.
+        # SUM(MKLB(1:5,J) > 1.0 because of additional backup techs
+        # SUM(MKLB(.,J) >> 1.0 because of addition of VRE market shares
+        # Rescaling occurs after
         data['MLB1'][r,0,0]  = 7500.0/8766.0*max(data['MLB0'][r,0,0],0.0)
         data['MLB1'][r,1,0]  = max(data['MLB0'][r,1,0],0.0) - max(data['MLB0'][r,0,0],0.0)
         data['MLB1'][r,2,0]  = max(data['MLB0'][r,2,0],0.0) - max(data['MLB0'][r,1,0],0.0)
         data['MLB1'][r,3,0]  = max(data['MLB0'][r,3,0],0.0) - max(data['MLB0'][r,2,0],0.0)
         data['MLB1'][r,4,0]  = max(max(data['MLB0'][r,4,0],0.0) - max(data['MLB0'][r,3,0],0.0), 0.02)
-        #Normalise MKLB(1:5, J) by using non-VRE MEWS (they have to some to the same amount###)
-        #Given that MEWS adds to 1, so should MKLB do now# (CHECK#)
+        # Normalise MKLB(1:5, J) by using non-VRE MEWS (they have to some to the same amount###)
+        # Given that MEWS adds to 1, so should MKLB do now# (CHECK#)
         data['MKLB'][r,:5,0] = data['MLB1'][r,:5,0] / data['MLB1'][r,:5,0].sum()
         data['MKLB'][r,:5,0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
         data['MKLB'][r,5,0] = np.sum(Svar*data['MEWS'][r,:,0])
         
         check = data['MKLB'][r,:,0].sum()
         
-        #Generation shares
-        #Multiply load-bands by their respective LFs
-        #MGLB will always be < 1
-        #Correct for this by using the average load factor
-        #CHECK THAT MGLB NOW ALSO SUMS TO 1#
+        # Generation shares
+        # Multiply load-bands by their respective LFs
+        # MGLB will always be < 1
+        # Correct for this by using the average load factor
+        # CHECK THAT MGLB NOW ALSO SUMS TO 1#
         data['MGLB'][r,:,0] = data['MKLB'][r,:,0] * CFLB / np.sum(data['MEWS'][r,:,0] * data['MEWL'][r,:,0])
         check = data['MGLB'][r,:,0].sum()  
         
@@ -524,8 +523,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
         # MSSG variable, so that's why this update is after MSSG is calculated
         total_input = total_output / data['MSSE'][r, 0, 0]
         
-        #Storage cost
-        CostStor = rldc_prod[2]
+        
         # Storage cost are overwritten here:
         # Assumed levelised cost of storage: 0.20 EURO/kWh initially
         # in reality the capacity/energy discharged ratio changes due to demand-supply mismatches.
@@ -550,11 +548,11 @@ def rldc(data, time_lag, iter_lag, year, titles):
             SSs = (Sw[r] + Ss[r]) / (Sw[r]*ratio_ss[r] + Ss[r])
             
             # Assign price values
-            data['MSSP'][r,:,0] = 0.0
-            data['MSSP'][r,16,0] = data['MSSR'][r,0,0] * SSw
-            data['MSSP'][r,17,0] = data['MSSR'][r,0,0] * SSw
-            data['MSSP'][r,21,0] = data['MSSR'][r,0,0] * SSw
-            data['MSSP'][r,18,0] = data['MSSR'][r,0,0] * SSs
+            data['MSSP'][r, :,0] = 0.0
+            data['MSSP'][r, 16,0] = data['MSSR'][r,0,0] * SSw
+            data['MSSP'][r, 17,0] = data['MSSR'][r,0,0] * SSw
+            data['MSSP'][r, 21,0] = data['MSSR'][r,0,0] * SSw
+            data['MSSP'][r, 18,0] = data['MSSR'][r,0,0] * SSs
         # For option 4, all VRE pay the equal amount
         elif np.rint(data['MSAL'][r, 0, 0]) in [4]:
             data['MSSP'][r,:,0] = 0.0
@@ -567,7 +565,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
             data['MSSP'][r,:,0] = data['MLSR'][r,0,0]       
 
         #-------------------------------------------------------------
-        #---------------- Marginal costs (where applicable------------
+        #-------------- Marginal costs (where applicable) ------------
         #-------------------------------------------------------------       
         if np.rint(data['MSAL'][r, 0, 0]) in [3, 4, 5]:
             
@@ -655,11 +653,9 @@ def rldc(data, time_lag, iter_lag, year, titles):
             data['MSSM'][r,18,0] = marg_cost_sol_ss 
             
     # %%
-    r_int = 0
-    
     
     # Ad hoc correction for exchange rate and inflation
-    # TODO: check if these corrections actually make sense
+    # TODO: check if these corrections actually make sense. The FORTRAN conversions have been changed, so we likely need to copy that. 
     data["MSSP"] = data["MSSP"] * 1.34
     data["MLSP"] = data["MLSP"] * 1.34
     data["MSSM"] = data["MSSM"] * 1.34

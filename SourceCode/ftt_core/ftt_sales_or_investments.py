@@ -68,7 +68,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
         (share_growth_dt + share_depreciation) * cap_lag[:, :, 0] 
     ]
 
-    # Thee end-of-life (eol) replacement options, depending on conditions
+    # Three end-of-life (eol) replacement options, depending on conditions
     eol_replacements = np.select(conditions, outputs, default=0)
             
     # Ensure no negative values
@@ -85,8 +85,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
                                 eol_replacements[:, :, 0])
         
     # Add additions at iteration t to total annual additions
-    sales_or_investment = copy.deepcopy(sales_or_investment_in)
-    sales_or_investment[:, :, 0] = sales_or_investment[:, :, 0] + sales_dt[:, :, 0]
+    sales_or_investment = sales_or_investment_in + sales_dt
     
     return sales_or_investment, sales_dt
 
@@ -142,7 +141,7 @@ def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, t
         (share_growth + share_depreciation) * cap_lag[:, :, 0]
     ]
 
-    # Thee end-of-life (eol) replacement options, depending on conditions
+    # Three end-of-life (eol) replacement options, depending on conditions
     eol_replacements = np.select(conditions, outputs, default=0)
             
     # Ensure no negative values
