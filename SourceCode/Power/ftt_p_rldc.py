@@ -334,7 +334,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
         if r == 1:
             x=1+1
         # Estimate general curtailment rate and the splits for wind and solar
-        data['MCRT'][r, 0, 0] = copy.deepcopy(rldc_prod[0])
+        data['MCRT'][r, 0, 0] = rldc_prod[0]
         curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r] + Ss[r]/ratio[r])
         curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r]*ratio[r] + Ss[r])
         
@@ -404,7 +404,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
         #-------------------------------------------------------------        
         
         # Residual peak-demand height
-        Hp = copy.deepcopy(data['MLB0'][r, 4, 0])
+        Hp = data['MLB0'][r, 4, 0]
         
         # Non-VRE capacity (or firm capacity)
         cap_notvre = np.sum(Snotvar*data['MEWK'][r, :, 0])
@@ -424,14 +424,14 @@ def rldc(data, time_lag, iter_lag, year, titles):
             # Now estimate the capacity needed due to split responibility
             
             # Wind
-            Hp_split_wind = copy.deepcopy(rldc_prod_split_wind[7])
+            Hp_split_wind = rldc_prod_split_wind[7]
             cap_needed_0_split_wind = Hp_split_wind * e_dem[r] * 0.175e-3  
             smoothing_fn_split_wind = 0.5*np.tanh(15*(Hp_split_wind-1.0))
             cap_needed_split_wind = (0.5 + smoothing_fn_split_wind) * cap_needed_1 + (0.5 - smoothing_fn_split_wind)*cap_needed_0_split_wind
             mlsc_split_wind = max(cap_needed_split_wind - cap_notvre , 0.0) * seasonality_index[r] 
             
             # Solar
-            Hp_split_solar = copy.deepcopy(rldc_prod_split_sol[7])
+            Hp_split_solar = rldc_prod_split_sol[7]
             cap_needed_0_split_solar = Hp_split_solar*e_dem[r]*0.175e-3  
             smoothing_fn_split_solar = 0.5*np.tanh(15*(Hp_split_solar-1.0))
             cap_needed_split_solar = (0.5 + smoothing_fn_split_solar) * cap_needed_1 + (0.5 - smoothing_fn_split_solar)*cap_needed_0_split_solar
@@ -588,14 +588,14 @@ def rldc(data, time_lag, iter_lag, year, titles):
             vre_long = vre + data['MEWG'][r, 19, 0]
             
             # Wind (note we're using a different rldc outcome!)
-            Hp_wind = copy.deepcopy(rldc_prod_wind[7])
+            Hp_wind = rldc_prod_wind[7]
             cap_needed_0_wind = Hp_wind*e_dem[r]*0.175e-3  
             smoothing_fn_wind = 0.5*np.tanh(15*(Hp_wind-1.0))
             cap_needed_wind = (0.5 + smoothing_fn_wind)*cap_needed_1 + (0.5 - smoothing_fn_wind)*cap_needed_0_wind
             mlsc_wind = max(cap_needed_wind - cap_notvre , 0.0) * seasonality_index[r] 
             
             # Solar
-            Hp_solar = copy.deepcopy(rldc_prod_solar[7])
+            Hp_solar = rldc_prod_solar[7]
             cap_needed_0_solar = Hp_solar*e_dem[r]*0.175e-3  
             smoothing_fn_solar = 0.5*np.tanh(15*(Hp_solar-1.0))
             cap_needed_solar = (0.5 + smoothing_fn_solar)*cap_needed_1 + (0.5 - smoothing_fn_solar)*cap_needed_0_solar

@@ -174,10 +174,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
-            fuel_converter = np.zeros(
-                [len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = data['TJET'][0, :, :]
 
+        
             if data['RFLT'][r, 0, 0] > 0.0:
                 CO2_corr[r] = (data['TESH'][r, :, 0] * data['TESF'][r, :, 0] *
                                data['TETH'][r, :, 0]).sum() / (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]).sum()
@@ -407,10 +406,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             CO2_corr = np.ones(len(titles['RTI']))
-            emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
-            fuel_converter = np.zeros(
-                [len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
+            fuel_converter = data['TJET'][0, :, :]
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
