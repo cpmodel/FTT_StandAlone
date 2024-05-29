@@ -110,9 +110,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
 
-    # fuelvars = ['FR_1', 'FR_2', 'FR_3', 'FR_4', 'FR_5', 'FR_6',
-    #             'FR_7', 'FR_8', 'FR_9', 'FR_10', 'FR_11', 'FR_12']
-
 
     # Conditional vectors concerning technology properties
     # (same for all regions, we use 1-USA)
@@ -120,7 +117,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     Sflex = data['BCET'][:, :, c2ti['19 Flexible (0 or 1)']]
     Sbase = data['BCET'][:, :, c2ti['20 Baseload (0 or 1)']]
 
-    # TODO: THis is a generic survival function
+    # TODO: This is a generic survival function
     HalfLife = data['BCET'][:, :, c2ti['9 Lifetime (years)']]/2
     dLifeT = HalfLife/10
 
@@ -132,10 +129,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     # Store gamma values in the cost matrix (in case it varies over time)
     # TODO: Correct the title classification or delete?
-    data['BCET'][:, :, c2ti['21 Empty']] = copy.deepcopy(data['MGAM'][:, :, 0])
+    data['BCET'][:, :, c2ti['21 Empty']] = data['MGAM'][:, :, 0]
 
     # Add in carbon costs due to EU ETS
-    data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
+    data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = data['MCOCX'][:, :, 0]
 
     # Copy over PRSC/EX values
 
@@ -190,15 +187,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         for r in range(len(titles['RTI'])):
 
             # Generation by tech x load band is share of total electricity demand
-            glb3 = data['MSLB'][r,:,:]*data['MLLB'][r,:,:]*tot_elec_dem[r]
+            glb3 = data['MSLB'][r,:,:] * data['MLLB'][r,:,:] * tot_elec_dem[r]
             # Capacity by tech x load band
-            klb3 = glb3/data['MLLB'][r,:,:]
+            klb3 = glb3 / data['MLLB'][r,:,:]
+            
             # Load factors
-
             data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
 
             nonzero_cap = np.sum(klb3, axis=1)>0
-            data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1)/np.sum(klb3[nonzero_cap,:], axis=1)
+            data['MEWL'][r, nonzero_cap, 0] =  np.sum(glb3[nonzero_cap, :], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
+                                                            
 
             # TODO: Remove once tested:
             #data['MEWL'] = copy.deepcopy(data['MEWLX'])
@@ -214,6 +212,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # To avoid division by 0 if 0 shares
             zero_lf = data['MEWL'][r,:,0]==0
             data['MEWL'][r, zero_lf, 0] = copy.deepcopy(data['MWLO'][r, zero_lf, 0])
+            
             # TODO: Given faulty code in the EEIST, exogenous load factors are
             # used here
             data['MEWL'][r, :, 0] = copy.deepcopy(data['MEWLX'][r, :, 0])
@@ -263,9 +262,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #            loadfac = data['MWLO'][:, :, 0]
 #        data['MEWL'][:, :, 0] = copy.deepcopy(loadfac)
 
-        if year >2013: data['MEWL'][:, :, 0] = copy.deepcopy(time_lag['MEWL'][:, :, 0])
+        if year > 2013: 
+            data['MEWL'][:, :, 0] = time_lag['MEWL'][:, :, 0]
 
-        cond=np.logical_and(data['MEWL'][:, :, 0] < 0.01, data['MWLO'][:, :, 0]>0.0)
+        cond = np.logical_and(data['MEWL'][:, :, 0] < 0.01, data['MWLO'][:, :, 0] > 0.0)
         data['MEWL'][:, :, 0] = np.where(cond,
                                  data['MWLO'][:, :, 0],
                                  data['MEWL'][:, :, 0])
@@ -356,8 +356,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MWG5'][r, :, 0] = glb3[:, 4]
                 data['MWG6'][r, :, 0] = glb3[:, 5]
                 # To avoid division by 0 if 0 shares
-                zero_lf = data['MEWL'][r,:,0]==0
-                data['MEWL'][r, zero_lf, 0] = copy.deepcopy(data['MWLO'][r, zero_lf, 0])
+                zero_lf = data['MEWL'][r,:,0] == 0
+                data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
                 
                 # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
                 # Gross Curtailed electricity
@@ -380,7 +380,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
                 #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
                 #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
-                # data['BCET'][:,:,c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:,:,0])                
+                # data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:,:,0]                
                 
                 # # data['BCET'][r,:,c2ti['11 Decision Load Factor']] = np.where(np.isclose(Svar[r, :], 1.0),
                 # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']] * (1.0*data['MCTN'][r,:,0]),
@@ -391,12 +391,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 
                 # TODO: Given faulty code in the EEIST, exogenous load factors are
                 # used here
-                data['MEWL'][r, :, 0] = copy.deepcopy(data['MEWLX'][r, :, 0]) 
-                data['MCFC'][r, :, 0] = copy.deepcopy(data['MCFCX'][r, :, 0]) 
-                data['BCET'][r, :, c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFCX'][r, :, 0]) 
+                data['MEWL'][r, :, 0] = data['MEWLX'][r, :, 0]
+                data['MCFC'][r, :, 0] = data['MCFCX'][r, :, 0] 
+                data['BCET'][r, :, c2ti['11 Decision Load Factor']] = data['MCFCX'][r, :, 0] 
                 
                 # Total additional electricity that needs to be generated
-                data['MADG'][r,0,0] = data['MCGA'][r,0,0]-data['MCNA'][r,0,0]+data['MSSG'][r,0,0]
+                data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r,0,0] + data['MSSG'][r,0,0]
                 
                 data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
                 
@@ -428,7 +428,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     if data['MEWK'][r, t, 0] - time_lag['MEWK'][r, t, 0] >= 0.0:
 
                         earlysc[r, t] = 0.0
-                        lifetsc[r, t] = copy.deepcopy(time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']])
+                        lifetsc[r, t] = time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']]
                         data['MESC'][r,t,0] = 0.0
 
                     else:
@@ -443,12 +443,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                 lifetsc[r, t]/data['BCET'][r, t, c2ti['9 Lifetime (years)']]*
                                 time_lag['BCET'][r, t, c2ti['3 Investment ($/kW)']])
 
-                        data['MELF'][r,t,0] = copy.deepcopy(lifetsc[r,t])
+                        data['MELF'][r,t,0] = lifetsc[r, t]
 
                     else:
 
                         data['MESC'][r,t,0] = 0.0
-                        data['MELF'][r,t,0] = copy.deepcopy(time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']])
+                        data['MELF'][r,t,0] = time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']]
 
 
 
@@ -473,14 +473,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:17] = copy.deepcopy(time_lag['BCET'][:, :, 1:17])
+            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17]
 
             # Store gamma values in the cost matrix (in case it varies over time)
             # TODO: Correct the title classification or delete?
-            data['BCET'][:, :, c2ti['21 Empty']] = copy.deepcopy(data['MGAM'][:, :, 0])
+            data['BCET'][:, :, c2ti['21 Empty']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs due to EU ETS
-            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
+            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = data['MCOCX'][:, :, 0]
 
             # Learning-by-doing effects on investment
     #        for tech in range(len(titles['T2TI'])):
@@ -621,8 +621,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             lag_demand = time_lag['MEWDX'][:, 7, 0] * 1000/3.6
             e_demand_step = e_demand - lag_demand           
             
-            MWDLt = copy.deepcopy(data_dt['MEWDX'][:,7,0])
-            MWDL = copy.deepcopy(time_lag['MEWDX'][:, 7, 0])
+            MWDLt = data_dt['MEWDX'][:, 7, 0]
+            MWDL = time_lag['MEWDX'][:, 7, 0]
             
             # For checking
             if t==4:
@@ -747,7 +747,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
-            data['BCET'][:,:,c2ti['11 Decision Load Factor']] = copy.deepcopy(data['MCFC'][:,:,0])
+            data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0]
             data['MEWL'][:,:,0] = np.where(np.isclose(data['MEWL'][:,:,0] , 0.0),
                                            data['MWLO'][:,:,0] ,
                                            data['MEWL'][:,:,0])
@@ -787,7 +787,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     if data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0] >= 0.0:
 
                         earlysc[r, tech] = 0.0
-                        lifetsc[r, tech] = copy.deepcopy(data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']])
+                        lifetsc[r, tech] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
                         data['MESC'][r, tech, 0] = 0.0
 
                     else:
@@ -803,12 +803,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                 data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] *
                                 data_dt['BCET'][r, tech, c2ti['3 Investment ($/kW)']])
 
-                        data['MELF'][r,tech,0] = copy.deepcopy(lifetsc[r,tech])
+                        data['MELF'][r,tech,0] = lifetsc[r, tech]
 
                     else:
 
                         data['MESC'][r, tech, 0] = 0.0
-                        data['MELF'][r, tech, 0] = copy.deepcopy(data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']])
+                        data['MELF'][r, tech, 0] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
 
             # =============================================================
             # Learning-by-doing
@@ -831,14 +831,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:17] = copy.deepcopy(time_lag['BCET'][:, :, 1:17])
+            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17]
 
             # Store gamma values in the cost matrix (in case it varies over time)
             # TODO: Correct the title classification or delete?
-            data['BCET'][:, :, c2ti['21 Empty']] = copy.deepcopy(data['MGAM'][:, :, 0])
+            data['BCET'][:, :, c2ti['21 Empty']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs due to EU ETS
-            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
+            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = data['MCOCX'][:, :, 0]
 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):

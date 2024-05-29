@@ -123,7 +123,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Market shares (based on useful energy demand)
                 data['HEWS'][r, :, 0] = data['HEWG'][r, :, 0] / data['RHUD'][r, 0, 0]
                 # Shares of final energy demand (without electricity)
-                #data['HESR'][:, :, 0] = copy.deepcopy(data['HEWF'][:, :, 0])
+                #data['HESR'][:, :, 0] = data['HEWF'][:, :, 0]
                 #data['HESR'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["19 RES calc"]] / np.sum(data['HEWF'] * data['BHTC'][r, :, c4ti["19 RES calc"]])
 
                 # CORRECTION TO MARKET SHARES
@@ -178,7 +178,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # If switch is set to 1, then an exogenous price rate is used
         # Otherwise, the price rates are set to endogenous
 
-        #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
+        #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 
         # Now transform price rates by fuel to price rates by boiler
         #data['HEWP'][:, :, 0] = np.matmul(data['HFFC'][:, :, 0], data['HJET'][0, :, :].T)
@@ -465,7 +465,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data, hewi_t = get_sales(data, data_dt, time_lag, titles, dt, t, endo_eol)
 
             # TODO: HEWP = HFPR not HFFC
-            #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
+            #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 
             data['HEWP'][:, 0, 0] = data['HFFC'][:, 4, 0]
             data['HEWP'][:, 1, 0] = data['HFFC'][:, 4, 0]

@@ -228,13 +228,13 @@ def get_lcoe(data, titles):
         data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!) #TODO
 
 
-        # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])    # As seen by consumer (generalised cost)
-        # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOE distribution
+        # data['METC'][r, :, 0] = data['METCX'][r, :, 0]    # As seen by consumer (generalised cost)
+        # data['MTCD'][r, :, 0] = data['MTCDX'][r, :, 0]    # Variation on the LCOE distribution
 
         # Output variables
-        data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, 2])  # Investment cost component LCOE ($/kW)
-        data['MWFC'][r, :, 0] = copy.deepcopy(bcet[:, 4])  # Fuel cost component of the LCOE ($/MWh)
-        data['MCOC'][r, :, 0] = copy.deepcopy(bcet[:, 0])  # Carbon cost component of the LCOE ($/MWh)
+        data['MWIC'][r, :, 0] = bcet[:, 2]  # Investment cost component LCOE ($/kW)
+        data['MWFC'][r, :, 0] = bcet[:, 4]  # Fuel cost component of the LCOE ($/MWh)
+        data['MCOC'][r, :, 0] = bcet[:, 0]  # Carbon cost component of the LCOE ($/MWh)
 
         # MWMC: FTT Marginal costs power generation ($/MWh)
         if np.rint(data['MSAL'][r, 0, 0]) > 1: # rint rounds to nearest int
@@ -245,8 +245,8 @@ def get_lcoe(data, titles):
         # TODO: Temporarily replace fuel costs with MWFCX
         # data['MWMC'][r, :, 0] = bcet[:, 0] + data['MWFCX'][r, :, 0] + bcet[:, 6]
 
-        data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1]*bcet[:, 1] +
-                                        bcet[:, 5]*bcet[:, 5] +
-                                        bcet[:, 7]*bcet[:, 7])
+        data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1] * bcet[:, 1] +
+                                        bcet[:, 5] * bcet[:, 5] +
+                                        bcet[:, 7] * bcet[:, 7])
 
     return data
