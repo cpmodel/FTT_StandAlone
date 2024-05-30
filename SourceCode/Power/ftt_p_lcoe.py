@@ -268,9 +268,9 @@ def get_lcoe(data, titles):
         # data['MTCD'][r, :, 0] = data['MTCDX'][r, :, 0]    # Variation on the LCOE distribution
 
         # Output variables
-        data['MWIC'][r, :, 0] = bcet[:, 2]  # Investment cost component LCOE ($/kW)
-        data['MWFC'][r, :, 0] = bcet[:, 4]  # Fuel cost component of the LCOE ($/MWh)
-        data['MCOC'][r, :, 0] = bcet[:, 0]  # Carbon cost component of the LCOE ($/MWh)
+        data['MWIC'][r, :, 0] = bcet[:, 2].copy()    # Investment cost component LCOE ($/kW)
+        data['MWFC'][r, :, 0] = bcet[:, 4].copy()    # Fuel cost component of the LCOE ($/MWh)
+        data['MCOC'][r, :, 0] = bcet[:, 0].copy()    # Carbon cost component of the LCOE ($/MWh)
 
         # MWMC: FTT Marginal costs power generation ($/MWh)
         if np.rint(data['MSAL'][r, 0, 0]) > 1: # rint rounds to nearest int
