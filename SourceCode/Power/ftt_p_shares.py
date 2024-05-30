@@ -133,7 +133,6 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
 
         dUk = np.zeros((t2ti))
-        dUkTK = np.zeros((t2ti))
         dUkREG = np.zeros((t2ti))
 
 
@@ -173,7 +172,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # Calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
         
         #Utot = np.sum(endo_capacity)
-
+        # dUkTK = np.zeros((t2ti))
         # dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
         # dUkTK[mwka[r, :, 0] < 0.0] = 0.0
 
