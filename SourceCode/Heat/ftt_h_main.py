@@ -35,7 +35,6 @@ Functions included:
 """
 # Standard library imports
 from math import sqrt
-import copy
 import warnings
 
 # Third party imports
@@ -92,9 +91,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     sector = 'residential'
     #sector_index = titles['Sectors_short'].index(sector)
 
-    data['PRSC14'] = copy.deepcopy(time_lag['PRSC14'] )
+    data['PRSC14'] = np.copy(time_lag['PRSC14'] )
     if year == 2014:
-        data['PRSC14'] = copy.deepcopy(data['PRSCX'])
+        data['PRSC14'] = np.copy(data['PRSCX'])
 
     # Calculate the LCOH for each heating technology
     # Call the function
@@ -213,7 +212,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
 
         
         # Create the regulation variable
@@ -504,7 +503,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BHTC'] = copy.deepcopy(data_dt['BHTC'])
+            data['BHTC'] = np.copy(data_dt['BHTC'])
 
             # Learning-by-doing effects on investment and efficiency
             for b in range(len(titles['HTTI'])):
@@ -541,7 +540,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #Update time loop variables:
             for var in data_dt.keys():
 
-                data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = np.copy(data[var])
 
 
     return data

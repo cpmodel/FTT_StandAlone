@@ -227,11 +227,11 @@ def get_lcoe(data, titles):
 
 
         # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe_mu_no_policy)    # The real bare LCOE without taxes
-        data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # Bare LCOE with CO2 costs
-        data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # LCOE with policy, without CO2 costs
-        data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE 
+        data['MEWC'][r, :, 0] = lcoe_mu_no_policy       # The real bare LCOE without taxes
+        data['MECW'][r, :, 0] = lcoe_mu_only_co2        # Bare LCOE with CO2 costs
+        data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
+        data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
+        data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
 
 
         # data['METC'][r, :, 0] = data['METCX'][r, :, 0]    # As seen by consumer (generalised cost)

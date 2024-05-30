@@ -128,7 +128,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data["TEVC"] = start_i_cost
     elif year > 2012:
         # Copy over TEVC values
-        data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
+        data['TEVC'] = np.copy(time_lag['TEVC'] )
 
 
     for r in range(len(titles['RTI'])):
@@ -160,7 +160,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         if year == data["TDA1"][r, 0, 0]: 
             # Define starting battery capacity
-            start_bat_cap = copy.deepcopy(data["TEWW"])
+            start_bat_cap = np.copy(data["TEWW"])
             for veh in range(len(titles['VTTI'])):
                 if (veh < 18) or (veh > 23):
                     # Set starting cumulative battery capacities to 0 for ICE vehicles
@@ -169,7 +169,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data["TWWB"] = start_bat_cap
 
             # Save initial cost matrix (BTCLi from FORTRAN model)
-            data["BTCI"] = copy.deepcopy(data["BTTC"])
+            data["BTCI"] = np.copy(data["BTTC"])
 
             # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
             CO2_corr = np.ones(len(titles['RTI']))
@@ -235,7 +235,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
 
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
 
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
@@ -465,11 +465,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             dwev = np.sum(new_bat, axis=0)    
 
             # Copy over TWWB values
-            data['TWWB'] = copy.deepcopy(time_lag['TWWB'])
+            data['TWWB'] = np.copy(time_lag['TWWB'])
 
             # Cumulative capacity for batteries first
             data['TEWW'][0, :, 0] = data_dt['TEWW'][0, :, 0] + dwev[:, 0]
-            bat_cap = copy.deepcopy(data["TEWW"])
+            bat_cap = np.copy(data["TEWW"])
 
             # Cumulative capacity for ICE vehicles
             for veh in range(len(titles['VTTI'])):
@@ -480,9 +480,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Copy over the technology cost categories that do not change 
             # (all except prices which are updated through learning-by-doing below)
-            data['BTTC'] = copy.deepcopy(data_dt['BTTC'])
+            data['BTTC'] = np.copy(data_dt['BTTC'])
             # Copy over the initial cost matrix
-            data["BTCI"] = copy.deepcopy(data_dt['BTCI'])
+            data["BTCI"] = np.copy(data_dt['BTCI'])
 
 
             # Battery learning
@@ -552,7 +552,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Update time loop variables:
             for var in data_dt.keys():
 
-                data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = np.copy(data[var])
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
