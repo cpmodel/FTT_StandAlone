@@ -124,8 +124,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
 
     # Store gamma values in the cost matrix (in case it varies over time)
-    # TODO: Correct the title classification or delete?
-    data['BCET'][:, :, c2ti['21 Empty']] = data['MGAM'][:, :, 0]
+    data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
    
 
@@ -464,8 +463,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17]
 
             # Store gamma values in the cost matrix (in case it varies over time)
-            # TODO: Correct the title classification or delete?
-            data['BCET'][:, :, c2ti['21 Empty']] = data['MGAM'][:, :, 0]
+            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
@@ -566,8 +564,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
-        data["MWDL"] = time_lag["MEWDX"] # Save so that you can access twice lagged demand
+        data["MWDL"] = time_lag["MEWDX"]             # Save so that you can access twice lagged demand
         growth_rate = 1 + (time_lag["MEWDX"][:, 7, 0] - time_lag["MWDL"][:, 7, 0])/time_lag["MWDL"][:, 7, 0]
+        
         # =====================================================================
         # Start of the quarterly time-loop
         # =====================================================================
@@ -578,29 +577,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Electricity demand is exogenous at the moment
             # TODO: Replace, using price elasticities and feedback from other
             # FTT modules
-            # lag_demand = time_lag['MEWDX'][:, 7, 0] * 1000/3.6
-
-            # e_demand = (lag_demand + (data['MEWDX'][:,7,0] * 1000/3.6 - lag_demand) * t * dt) + data_dt['MADG'][:,0,0]
-
-            # e_demand_step = ((e_demand - lag_demand) * dt)
-            
-            # data['MEWDX'][:,7,0] += data_dt['MADG'][:,0,0] * 0.0036
             
             # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
             MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
-            # Given that we know the demand at the end of the year, we can alternatively cheat
+            # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
             #MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
-            #print("Testing demand elements:")
+
             
-            if year in [2019, 2020, 2021, 2022]:
-                print(f"At {year}:{t}, data['MEWD'][0, 7]: {data['MEWD'][0, 7, 0]:.3f}")
-                print(f"At {year}:{t}, MEWDt:              {MEWDt[0]:.3f}")
-                print(f'At {year}:{t}, growth_rate:        {growth_rate[0]:.3f}')
-                
             # For checking
             if t == no_it:
                 data["MEWD"] = np.copy(data['MEWDX'])
@@ -820,8 +807,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17]
 
             # Store gamma values in the cost matrix (in case it varies over time)
-            # TODO: Correct the title classification or delete?
-            data['BCET'][:, :, c2ti['21 Empty']] = data['MGAM'][:, :, 0]
+            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
