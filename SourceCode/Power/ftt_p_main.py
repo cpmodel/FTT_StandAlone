@@ -206,7 +206,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MWG6'][r, :, 0] = glb3[:, 5]
             # To avoid division by 0 if 0 shares
             zero_lf = data['MEWL'][r,:,0]==0
-            data['MEWL'][r, zero_lf, 0] = copy.deepcopy(data['MWLO'][r, zero_lf, 0])
+            data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
             
             # TODO: Given faulty code in the EEIST, exogenous load factors are
             # used here
@@ -596,6 +596,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # For checking
             if t == no_it:
                 data["MEWD"] = copy.deepcopy(data['MEWDX'])
+            
+            
+            if year in [2049, 2050]:
+                 print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
+                 #print(f'MEWL in {year}:{t} is {np.sum(data_dt["MEWL"][:, 18]):.0f}')
+                 pass
 
             # =================================================================
             # Shares equation
@@ -613,6 +619,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'] = mewl
             data['MEWG'] = mewg
             data['MEWK'] = mewk
+            
+            if year in [2049, 2050]:
+                print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
+                #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             
             if np.any(np.isnan(data['MEWS'])):
                 print(f"NaNs found in MEWS in {year}")
@@ -707,7 +717,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
             data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                           data['MEWL'][:,:,0] * (1.0-data['MCTN'][:,:,0]),
+                                           data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
                                            data['MEWL'][:,:,0])            
             data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
@@ -830,24 +840,29 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # =================================================================
             # Cost-Supply curves
-            # =================================================================
-            if t == no_it:
-               
-                bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
-                    data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
-                    data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                    titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
-                    )
+            # =================================================================  
+           
+            bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
+                data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
+                data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                )
 
-                data['BCET'] = bcet
-                data['MCSC'] = bcsc
-                data['MEWL'] = mewl
-                data['MEPD'] = mepd
-                data['MERC'] = merc
-                data['RERY'] = rery
-                data['MRED'] = mred
-                data['MRES'] = mres
-
+            data['BCET'] = bcet
+            data['MCSC'] = bcsc
+            data['MEWL'] = mewl
+            data['MEPD'] = mepd
+            data['MERC'] = merc
+            data['RERY'] = rery
+            data['MRED'] = mred
+            data['MRES'] = mres
+            
+           
+            # Take into account curtailment again:
+            data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
+            data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
+            
+            
             # =================================================================
             # Update LCOE
             # =================================================================
