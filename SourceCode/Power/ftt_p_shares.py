@@ -20,9 +20,9 @@ from numba import njit
 # %% JIT-compiled shares equation
 # -----------------------------------------------------------------------------
 @njit(fastmath=True)
-def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
+def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
-           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti, no_it):
+           mewl_dt, mews_lag, mwlo, rti, t2ti, no_it):
 
     """
     Function to calculate market share dynamics.
@@ -38,12 +38,12 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         The current time step.
     T_Scal : float
         Timescale parameter
-    mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, mewl_dt, mews_lag, mwlo, mwdl : ndarray
-        These are input arrays used in the calculation of market shares. The exact meaning of these parameters would depend on the specific context of the model.
+    mewdt, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, mewl_dt, mews_lag, mwlo : ndarray
+        These are input arrays used in the calculation of market shares. 
     rti : float
-        Some parameter related to the model.
+        Number of countries
     t2ti : float
-        Some parameter related to the model.
+        Number of technologies.
     no_it : int
         Number of iterations.
 
