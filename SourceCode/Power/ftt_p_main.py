@@ -392,7 +392,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                   where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
 
                 # C02 emissions for carbon costs (MtC02)
-                data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0]*data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
+                data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
 
                 # Capacities
                 #data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
@@ -498,7 +498,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MRED'] = mred
             data['MRES'] = mres
             
-          
+            # Take into account curtailment again:
+            data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
+            data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
+            
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
@@ -508,7 +511,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Hereafter, the lagged variable will have these values stored
             # We assume that the values do not change throughout simulation.
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
-    
+            data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
 
 # %% Simulation of stock and energy specs
 
@@ -561,7 +564,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
-
+        data["MWDL"] = time_lag["MEWDX"] # Save so that you can access twice lagged demand
+        growth_rate = 1 + (time_lag["MEWDX"][:, 7, 0] - time_lag["MWDL"][:, 7, 0])/time_lag["MWDL"][:, 7, 0]
         # =====================================================================
         # Start of the quarterly time-loop
         # =====================================================================
@@ -580,45 +584,50 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # data['MEWDX'][:,7,0] += data_dt['MADG'][:,0,0] * 0.0036
             
+            # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
+            MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
-            MEWDt = data_dt['MEWDX'][:,7,0] + (data['MEWDX'][:,7,0] - data_dt['MEWDX'][:,7,0]) * t/no_it
+            # Given that we know the demand at the end of the year, we can alternatively cheat
+            #MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
-            lag_demand = time_lag['MEWDX'][:, 7, 0] * 1000/3.6
-            e_demand_step = e_demand - lag_demand           
+            #print("Testing demand elements:")
             
-            MWDLt = data_dt['MEWDX'][:, 7, 0]
-            MWDL = time_lag['MEWDX'][:, 7, 0]
-            
+            if year in [2019, 2020, 2021, 2022]:
+                print(f"At {year}:{t}, data['MEWD'][0, 7]: {data['MEWD'][0, 7, 0]:.3f}")
+                print(f"At {year}:{t}, MEWDt:              {MEWDt[0]:.3f}")
+                print(f'At {year}:{t}, growth_rate:        {growth_rate[0]:.3f}')
+                
             # For checking
             if t == no_it:
                 data["MEWD"] = np.copy(data['MEWDX'])
             
             
             if year in [2049, 2050]:
-                 print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
+                 #print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
                  #print(f'MEWL in {year}:{t} is {np.sum(data_dt["MEWL"][:, 18]):.0f}')
                  pass
 
             # =================================================================
             # Shares equation
             # =================================================================
-            mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt, MWDLt,
+            mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], data['MWKA'],
                                             data_dt['MES1'], data_dt['MES2'],
                                             data['MEWA'], isReg, data_dt['MEWK'],
                                             data_dt['MEWK'], data['MEWR'],
                                             data_dt['MEWL'], data_dt['MEWS'],
-                                            data['MWLO'], MWDL,
+                                            data['MWLO'],
                                             len(titles['RTI']), len(titles['T2TI']), no_it)
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
             data['MEWK'] = mewk
             
-            if year in [2049, 2050]:
-                print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
+            # if year in [2049, 2050]:
+            #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             
             if np.any(np.isnan(data['MEWS'])):
@@ -713,12 +722,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             
             # Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
+            # TODO: this seems to be done twice both here and in FORTRAN. Also directly after rldc at bottom. 
             data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                           data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
-                                           data['MEWL'][:,:,0])            
+                                            data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
+                                            data['MEWL'][:,:,0])            
             data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                           data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
-                                           data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
+                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
+            # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+            #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']],
+            #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])      # TODO: test
             data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0]
             data['MEWL'][:,:,0] = np.where(np.isclose(data['MEWL'][:,:,0] , 0.0),
                                            data['MWLO'][:,:,0] ,

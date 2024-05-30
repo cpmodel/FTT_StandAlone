@@ -12,9 +12,6 @@ Functions included:
 
 """
 
-# Standard library imports
-import copy
-
 # Third party imports
 import numpy as np
 
