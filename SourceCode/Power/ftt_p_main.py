@@ -52,9 +52,6 @@ Functions included:
         Main solution function for the module
 """
 
-# Standard library imports
-import copy
-
 # Third party imports
 import numpy as np
 
@@ -241,7 +238,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     #%%
     # Up to the last year of historical market share data
     elif year <= histend['MEWG']:
-        if year == 2015: data['PRSC15'] = copy.deepcopy(data['PRSCX'])
+        if year == 2015: data['PRSC15'] = np.copy(data['PRSCX'])
 
 
         # Set starting values for MERC
@@ -256,7 +253,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #        loadfac = data['MEWLX'][:, :, 0]
 #        if not loadfac.any():
 #            loadfac = data['MWLO'][:, :, 0]
-#        data['MEWL'][:, :, 0] = copy.deepcopy(loadfac)
+#        data['MEWL'][:, :, 0] = np.copy(loadfac)
 
         if year > 2013: 
             data['MEWL'][:, :, 0] = time_lag['MEWL'][:, :, 0]
@@ -456,7 +453,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             dw = np.zeros(len(titles["T2TI"]))
             
             for i in range(len(titles["T2TI"])):
-                dw_temp = copy.deepcopy(mewi0)
+                dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 
@@ -536,7 +533,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             if domain[var] == 'FTT-P':
 
-                data_dt[var] = copy.deepcopy(time_lag[var])
+                data_dt[var] = np.copy(time_lag[var])
 
         data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
 
@@ -597,7 +594,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # For checking
             if t == no_it:
-                data["MEWD"] = copy.deepcopy(data['MEWDX'])
+                data["MEWD"] = np.copy(data['MEWDX'])
             
             
             if year in [2049, 2050]:
@@ -799,7 +796,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             
             for i in range(len(titles["T2TI"])):
-                dw_temp = copy.deepcopy(mewi0)
+                dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 

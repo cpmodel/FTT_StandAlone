@@ -136,9 +136,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data["BTCI"] = copy.deepcopy(data["BTTC"])
     elif year > 2012:
         # Copy over TEVC and TWWB values
-        data['TEVC'] = copy.deepcopy(time_lag['TEVC'])
-        data['TWWB'] = copy.deepcopy(time_lag['TWWB'])
-        data["BTCI"] = copy.deepcopy(time_lag['BTCI'])
+        data['TEVC'] = np.copy(time_lag['TEVC'])
+        data['TWWB'] = np.copy(time_lag['TWWB'])
+        data["BTCI"] = np.copy(time_lag['BTCI'])
 
     for r in range(len(titles['RTI'])):
         # %% Initialise
@@ -166,6 +166,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # "Emissions", Factor 1.2 approx fleet efficiency factor, corrected later with CO2_corr
             data['TEWE'][:, :, 0] = data['TEWG'][:, :, 0] * \
                 data['BTTC'][:, :, c3ti['14 CO2Emissions']]/1e6*1.2
+
+        if year == data["TDA1"][r, 0, 0]: 
+            # Define starting battery capacity
+            start_bat_cap = np.copy(data["TEWW"])
+            for veh in range(len(titles['VTTI'])):
+                if (veh < 18) or (veh > 23):
+                    # Set starting cumulative battery capacities to 0 for ICE vehicles
+                    start_bat_cap[0,veh,0] = 0
+            # TWWB is 'StartBatCap' in the FORTRAN model
+            data["TWWB"] = start_bat_cap
+
+            # Save initial cost matrix (BTCLi from FORTRAN model)
+            data["BTCI"] = np.copy(data["BTTC"])
 
         if year == data["TDA1"][r, 0, 0]:
             # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
@@ -232,7 +245,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
 
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
 
         data_dt['TWIY'] = np.zeros(
             [len(titles['RTI']), len(titles['VTTI']), 1])
