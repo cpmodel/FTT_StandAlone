@@ -107,11 +107,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
 
 
-    # Conditional vectors concerning technology properties
-    # (same for all regions, we use 1-USA)
+    # Conditional vector concerning technology properties
+    # (same for all regions)
     Svar = data['BCET'][:, :, c2ti['18 Variable (0 or 1)']]
-    Sflex = data['BCET'][:, :, c2ti['19 Flexible (0 or 1)']]
-    Sbase = data['BCET'][:, :, c2ti['20 Baseload (0 or 1)']]
+
 
     # TODO: This is a generic survival function
     HalfLife = data['BCET'][:, :, c2ti['9 Lifetime (years)']]/2
@@ -228,7 +227,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # TODO: Given faulty code in the EEIST, exogenous load factors are
         # used here
         data['MCFC'][:, :, 0] = data['MCFCX'][:, :, 0]
-        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0]
+        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
         data = get_lcoe(data, titles)
 
@@ -254,7 +253,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #        data['MEWL'][:, :, 0] = np.copy(loadfac)
 
         if year > 2013: 
-            data['MEWL'][:, :, 0] = time_lag['MEWL'][:, :, 0]
+            data['MEWL'][:, :, 0] = time_lag['MEWL'][:, :, 0].copy()
 
         cond = np.logical_and(data['MEWL'][:, :, 0] < 0.01, data['MWLO'][:, :, 0] > 0.0)
         data['MEWL'][:, :, 0] = np.where(cond,
@@ -459,7 +458,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17]
+            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
 
             # Store gamma values in the cost matrix (in case it varies over time)
             data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
@@ -591,8 +590,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data["MEWD"] = np.copy(data['MEWDX'])
             
             
-            if year in [2049, 2050]:
-                 #print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
+            if year in [2019, 2020]:
+                 print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
                  #print(f'MEWL in {year}:{t} is {np.sum(data_dt["MEWL"][:, 18]):.0f}')
                  pass
 
@@ -634,20 +633,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data = rldc(data, time_lag, iter_lag, year, titles)
             # Change currency from EUR2015 to USD2013
 
-            if year >= 2015:
+            
+            data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+            data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+            data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+            data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
 
-                data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-                data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-                data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-                data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-
-            # TODO: This is not per se correct but it's how it is in E3ME
-            else:
-
-                data['MSSP'][:, :, 0] = 0.0
-                data['MLSP'][:, :, 0] = 0.0
-                data['MSSM'][:, :, 0] = 0.0
-                data['MLSM'][:, :, 0] = 0.0
 
             # =================================================================
             # Dispatch routine
@@ -718,7 +709,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
             # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
             #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']],
-            #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])      # TODO: test
+            #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
             data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0]
             data['MEWL'][:,:,0] = np.where(np.isclose(data['MEWL'][:,:,0] , 0.0),
                                            data['MWLO'][:,:,0] ,
@@ -802,7 +793,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17]
+            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
 
             # Store gamma values in the cost matrix (in case it varies over time)
             data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
