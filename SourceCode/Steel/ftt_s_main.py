@@ -98,7 +98,38 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
         # Calculate fuel use (SJEF)
+        #Set
+        og_base = 1.0
+        sewg_sum = np.sum(SEWG, axis=1)
+        og_base[SEWG_sum > 0.0] = np.sum(SEWG[0:7,:], axis=1) / sewg_sum[SEWG_sum > 0.0]
+        og_sim = og_base
+        ccs_share = 0.0
+        data['SJEF']= 0.0
+        data['SJCO']= 0.0
         
+        for r in range(len(titles['RTI'])):
+            for i in range(len(titles['STTI'])):
+            # Calculate fuel consumption
+                data['SJEF'][r,0,0] += data ['BSTC'][r,i,c5ti["Hard Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][11,0,0] * 1/41868
+                data['SJEF'][r,1,0] += data ['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][12,0,0] * 1/41868
+                data['SJEF'][r,6,0] += data ['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][13,0,0] * 1/41868
+                data['SJEF'][r,7,0] += data ['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][14,0,0] * 1/41868
+                data['SJEF'][r,10,0] += ((data ['BSTC'][r,i,c5ti["Biocharcoal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][18,0,0] * 1/41868) + (data ['BSTC'][r,i,c5ti["Biogas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][19,0,0] * 1/41868))
+                data['SJEF'][r,11,0] += data ['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][17,0,0] * 1/41868
+                if data['BSTC'][r,i,21] == 1:
+                   data['SJCO'][r,0,0] += 0.1 * data['BSTC'][r,i,c5ti["Hard Coal"]]*data['SEWG'][r,i,0]* 1000 * data['SMED'][11,0,0]*1/41868
+                   data['SJCO'][r,1,0] += 0.1 * data ['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][12,0,0] * 1/41868
+                   data['SJCO'][r,6,0] += 0.1 * data ['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][13,0,0] * 1/41868
+                   data['SJCO'][r,7,0] += data ['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][14,0,0] * 1/41868
+                   data['SJCO'][r,10,0] += -0.9 * ((data ['BSTC'][r,i,c5ti["Biocharcoal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][18,0,0] * 1/41868) + (data ['BSTC'][r,i,c5ti["Biogas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][19,0,0] * 1/41868))
+                   data['SJCO'][r,11,0] += data ['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][17,0,0] * 1/41868
+                else:
+                   data['SJCO'][r,0,0] += data['BSTC'][r,i,c5ti["Hard Coal"]]*data['SEWG'][r,i,0]* 1000 * data['SMED'][11,0,0]*1/41868
+                   data['SJCO'][r,1,0] += data ['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][12,0,0] * 1/41868
+                   data['SJCO'][r,6,0] += data ['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][13,0,0] * 1/41868
+                   data['SJCO'][r,7,0] += ['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][14,0,0] * 1/41868
+                   data['SJCO'][r,10,0] += 0.0
+                   data['SJCO'][r,11,0] += data ['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][17,0,0] * 1/41868
         
         # Calculate cumulative capacities (SEWW)
 
@@ -108,7 +139,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Useful energy demand by boilers
         # The historical data contains final energy demand
-        data['SEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
+      data['SEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
         for r in range(len(titles['RTI'])):
 
