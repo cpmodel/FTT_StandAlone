@@ -94,7 +94,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     if year <= histend['SEWG']:
         # Useful energy demand by boilers
         # The historical data contains final energy demand
-        data['HEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
+        data['SEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
         for r in range(len(titles['RTI'])):
 
