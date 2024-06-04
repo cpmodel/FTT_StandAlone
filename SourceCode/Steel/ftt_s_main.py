@@ -82,32 +82,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     This function should be broken up into more elements in development.
     """
 
-     # Categories for the cost matrix (BHTC)
-    c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
+    # Categories for the cost matrix (BSTC)
+    c5ti = {category: index for index, category in enumerate(titles['C5TI'])}
+    # Fuels
     jti = {category: index for index, category in enumerate(titles['JTI'])}
 
-    fuelvars = ['FR_1', 'FR_2', 'FR_3', 'FR_4', 'FR_5', 'FR_6',
-                'FR_7', 'FR_8', 'FR_9', 'FR_10', 'FR_11', 'FR_12']
+    sector = 'steel'
 
-    sector = 'residential'
-    #sector_index = titles['Sectors_short'].index(sector)
-
-    data['PRSC14'] = copy.deepcopy(time_lag['PRSC14'] )
-    if year == 2014:
-        data['PRSC14'] = copy.deepcopy(data['PRSCX'])
-
-    # Calculate the LCOH for each heating technology
-    # Call the function
-    data = get_lcos(data, titles)
-
-    # %% First initialise if necessary
-    # Initialise in case of stock solution specification
-    #if np.any(specs[sector]) < 5:
-
-    # Up to the last year of historical useful energy demand by boiler
-    # Historical data ends in 2020, so we need to initialise data
-    # when it's 2021 to make sure the model runs.
-    if year <= histend['HEWF']:
+    # Historical data currently ends in 2019, so we need to initialise data
+    # Simulation period starts in 2020
+    if year <= histend['SEWG']:
         # Useful energy demand by boilers
         # The historical data contains final energy demand
         data['HEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
