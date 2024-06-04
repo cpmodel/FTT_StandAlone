@@ -92,6 +92,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # Historical data currently ends in 2019, so we need to initialise data
     # Simulation period starts in 2020
     if year <= histend['SEWG']:
+
+
+        # Calculate capacities (SEWK)
+
+
+        # Calculate fuel use (SJEF)
+        
+        
+        # Calculate cumulative capacities (SEWW)
+
+
+
+
+
         # Useful energy demand by boilers
         # The historical data contains final energy demand
         data['SEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
