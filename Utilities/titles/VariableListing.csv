@@ -475,3 +475,4 @@ SPRL,Average price of steel sum(LTLCOS*S) - LAG,,RTI,NA,NA,TIME,FTT-S,-,-,2001,-
 SSSR,Scrap availability parameters - Sectoral split - Endogenous when possible,,RTI,XPTI,NA,TIME,FTT-S,-,-,2001,-,,
 SWAP,"Aij exchange matrix, FTT:Steel - for premature replacements",,NA,STTI,STTI,NA,FTT-S,-,-,2001,-,,
 BSTC,FTT:Steel cost components matrix,,RTI,STTI,C5TI,NA,FTT-S,-,-,2014,-,,
+SEIA,FTT:Steel regional average energy intensity ,GJ/tcs,RTI,NA,NA,NA,FTT-S,-,-,2014,-,,

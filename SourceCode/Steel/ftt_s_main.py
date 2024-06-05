@@ -122,14 +122,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['SEWE'][r, :, 0] = data['SEWG'][r, :, 0] * data['BSTC'][r, :, c5ti["EF"]] / 1000
         
             # Regional average energy intensity (GJ/tcs) 
-            data['STEI'] [r, :, 0] = data['BSTC'][r, :, c5ti["Energy Intensity"]]
+            data['STEI'][r, :, 0] = data['BSTC'][r, :, c5ti["Energy Intensity"]]
             data['SEIA'][r, 0, 0] = sum(data['STEI'][r, :, 0] * data['SEWS'][r, :, 0])
 
         # Calculate fuel use (SJEF)
         #Set
-        og_base = 1.0
         sewg_sum = np.sum(data["SEWG"], axis=1)
-        og_base[sewg_sum > 0.0] = np.sum(data["SEWG"][0:7,:], axis=1) / sewg_sum[sewg_sum > 0.0]
+        og_base = np.zeros_like(sewg_sum)
+
+        og_base[sewg_sum > 0.0] = np.sum(data["SEWG"][:, 0:7], axis=1)[sewg_sum > 0.0] / sewg_sum[sewg_sum > 0.0]
         og_sim = og_base
         ccs_share = 0.0
         data['SJEF']= 0.0
