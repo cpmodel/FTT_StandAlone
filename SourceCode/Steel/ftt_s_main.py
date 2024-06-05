@@ -90,16 +90,48 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     sector = 'steel'
 
     # Historical data currently ends in 2019, so we need to initialise data
-    # Simulation period starts in 2020
+    # Simulation period starts in 2020   # Calculate capacities (SEWK)
     if year <= histend['SEWG']:
 
-
-        # Calculate capacities (SEWK)
-
-
+        for r in range(len(titles['RTI'])):
+        # data['SEWG'] is in historic sheets, so no need to calculate that.
+        
+        # Capacity (kton) (11th are capacity factors) 
+            data['SEWK'][r, :, 0] = 0.0
+            data['SEWK'][r, :, 0] = data['SEWG'][r, :, 0] / data['BSTC'][r, :, c5ti["CF"]]
+            data['SPSA'][r, 0, 0] = sum(data['SEWG'][r, :, 0])
+        
+        # 'Historical' employment in th FTE 
+            data['SEMS'][r, :, 0] = data['SEWK'][r, :, 0] * data['BSTC'][r, :, c5ti["Employment"]] * 1.1
+        
+        # In this preliminary model SPSP is historical production while SPSA is exogenous future production (based on E3ME baseline)
+        # Total steel production by region (kton/y) = demand
+        # SPSP[j] = sum(data['SEWG'][:, j])
+        
+        # Market capacity shares of steelmaking technologies: 
+            data['SEWS'][r, :, 0] = 0
+            data['SEWS'] [r, :, 0] = np.divide (data['SEWK'][r, :, 0], np.sum(data['SEWK'][r, :, 0]),
+                                                where =(data['SPSP'][r, 0, 0] > 0.0) and (data['SEWK'][r, :, 0] > 0.0)) 
+                
+        
+        # Emissions (MtCO2/y) (13th is emissions factors tCO2/tcs)
+        # A crude backwards calculation of emissions using simple emission factors keep
+            data['SEWE'][r, :, 0] = data['SEWG'][r, :, 0] * data['BSTC'][r, :, c5ti["EF"]] / 1000
+        
+        # Regional average energy intensity (GJ/tcs) 
+            data['STEI'] [r, :, 0] = data['BSTC'][r, :, c5ti["Energy Intensity"]]
+            data['SEIA'][r, 0, 0] = sum(data['STEI'][r, :, 0] * data['SEWS'][r, :, 0])
+        
+    if year < 2019:
+        return
+    #Connect historical data to future projections (only for DATE == 2014)
+    if year == 2019:
+        data['SPSA'] = data['SPSP']
+    
+    
         # Calculate fuel use (SJEF)
         
-        
+
         # Calculate cumulative capacities (SEWW)
 
 
