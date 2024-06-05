@@ -134,7 +134,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     the user may not want to lose their calibrated gamma
     values """
     
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM", "BSTC": "SGAM"}
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
@@ -201,17 +201,22 @@ def write_to_csv(data, row_title, col_title, var, out_dir, reg=None):
 
 def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     """
-    In Tr, H and Fr, gamma values are not saved separately, but instead
+    In Tr, H, Fr, S, gamma values are not saved separately, but instead
     part of the cost variable. Here, those values are extracted to ensure the
     gamma values are defined for each year.
     """
 
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
-    gamma_index = {"BTTC": 14, "BHTC": 13, "ZCET": 14}
-    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM", "BSTC": "SGAM"}
+    gamma_index = {"BTTC": 14, "BHTC": 13, "ZCET": 14, "BSTC": 11}
+    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI", "BSTC": "STTI"}
     gamma_var = costvar_to_gam_dict[var]
     gamma_1D = data[gamma_index[var]]
-    col_names = timeline_dict[gamma_var]
+    try:
+        col_names = timeline_dict[gamma_var]
+    except KeyError as e:
+        print(timeline_dict.keys())
+        print(gamma_var)
+        raise e
 
     # Make data 2D with np.tile
     data = pd.DataFrame(np.tile(gamma_1D.values.T, (len(col_names), 1)).T)
@@ -222,6 +227,7 @@ def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     col_title = col_names
     
     write_to_csv(data, row_title, col_title, gamma_var, out_dir, reg=reg)
+    print(f"Data for {gamma_var} saved to CSV")
 
 def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
     """ Some variables (e.g. TEWW, MEWW), are 1D in the excel sheets. 
@@ -451,7 +457,7 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
                     var_dict[model][var]['Data'][scen] = np.array(data.astype(np.float32))
                     write_to_csv(data, row_title, col_title, var, out_dir)
                     
-                print(f"Data for {var} saved to CSV. Model: {model}")
+                
     return var_dict
 
 if __name__ == '__main__':
@@ -464,9 +470,9 @@ if __name__ == '__main__':
     # ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 
     models = {#'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023'],
-              'FTT-P': [[0, 2], 'FTT-P-24x71_2022']}
+              #'FTT-P': [[0, 2], 'FTT-P-24x71_2022']}
             #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
-            #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
+              'FTT-S': [[0], 'FTT-S-26x71_2022']}
 
     # models = {'FTT-IH-CHI': [[0], 'FTT-IH-CHI-13x70_2022'],
     #           'FTT-IH-FBT': [[0], 'FTT-IH-FBT-13x70_2022'],
