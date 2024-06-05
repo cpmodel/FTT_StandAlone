@@ -90,23 +90,87 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     sector = 'steel'
 
     # Historical data currently ends in 2019, so we need to initialise data
-    # Simulation period starts in 2020
+    # Simulation period starts in 2020   # Calculate capacities (SEWK)
     if year <= histend['SEWG']:
 
-
-        # Calculate capacities (SEWK)
-
-
+        for r in range(len(titles['RTI'])):
+        # data['SEWG'] is in historic sheets, so no need to calculate that.
+        
+        # Capacity (kton) (11th are capacity factors) 
+            data['SEWK'][r, :, 0] = 0.0
+            data['SEWK'][r, :, 0] = data['SEWG'][r, :, 0] / data['BSTC'][r, :, c5ti["CF"]]
+            data['SPSA'][r, 0, 0] = sum(data['SEWG'][r, :, 0])
+        
+        # 'Historical' employment in th FTE 
+            data['SEMS'][r, :, 0] = data['SEWK'][r, :, 0] * data['BSTC'][r, :, c5ti["Employment"]] * 1.1
+        
+        # In this preliminary model SPSP is historical production while SPSA is exogenous future production (based on E3ME baseline)
+        # Total steel production by region (kton/y) = demand
+        # SPSP[j] = sum(data['SEWG'][:, j])
+        
+        # Market capacity shares of steelmaking technologies: 
+            data['SEWS'][r, :, 0] = 0
+            data['SEWS'] [r, :, 0] = np.divide (data['SEWK'][r, :, 0], np.sum(data['SEWK'][r, :, 0]),
+                                                where =(data['SPSP'][r, 0, 0] > 0.0) and (data['SEWK'][r, :, 0] > 0.0)) 
+                
+        
+        # Emissions (MtCO2/y) (13th is emissions factors tCO2/tcs)
+        # A crude backwards calculation of emissions using simple emission factors keep
+            data['SEWE'][r, :, 0] = data['SEWG'][r, :, 0] * data['BSTC'][r, :, c5ti["EF"]] / 1000
+        
+        # Regional average energy intensity (GJ/tcs) 
+            data['STEI'] [r, :, 0] = data['BSTC'][r, :, c5ti["Energy Intensity"]]
+            data['SEIA'][r, 0, 0] = sum(data['STEI'][r, :, 0] * data['SEWS'][r, :, 0])
+        
+    if year < 2019:
+        return
+    #Connect historical data to future projections (only for DATE == 2014)
+    if year == 2019:
+        data['SPSA'] = data['SPSP']
+    
+    
         # Calculate fuel use (SJEF)
+        #Set
+        og_base = 1.0
+        sewg_sum = np.sum(SEWG, axis=1)
+        og_base[SEWG_sum > 0.0] = np.sum(SEWG[0:7,:], axis=1) / sewg_sum[SEWG_sum > 0.0]
+        og_sim = og_base
+        ccs_share = 0.0
+        data['SJEF']= 0.0
+        data['SJCO']= 0.0
         
+        for r in range(len(titles['RTI'])):
+            for i in range(len(titles['STTI'])):
+            # Calculate fuel consumption
+                data['SJEF'][r,0,0] += data ['BSTC'][r,i,c5ti["Hard Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][11,0,0] * 1/41868
+                data['SJEF'][r,1,0] += data ['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][12,0,0] * 1/41868
+                data['SJEF'][r,6,0] += data ['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][13,0,0] * 1/41868
+                data['SJEF'][r,7,0] += data ['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][14,0,0] * 1/41868
+                data['SJEF'][r,10,0] += ((data ['BSTC'][r,i,c5ti["Biocharcoal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][18,0,0] * 1/41868) + (data ['BSTC'][r,i,c5ti["Biogas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][19,0,0] * 1/41868))
+                data['SJEF'][r,11,0] += data ['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][17,0,0] * 1/41868
+                if data['BSTC'][r,i,21] == 1:
+                   data['SJCO'][r,0,0] += 0.1 * data['BSTC'][r,i,c5ti["Hard Coal"]]*data['SEWG'][r,i,0]* 1000 * data['SMED'][11,0,0]*1/41868
+                   data['SJCO'][r,1,0] += 0.1 * data ['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][12,0,0] * 1/41868
+                   data['SJCO'][r,6,0] += 0.1 * data ['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][13,0,0] * 1/41868
+                   data['SJCO'][r,7,0] += data ['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][14,0,0] * 1/41868
+                   data['SJCO'][r,10,0] += -0.9 * ((data ['BSTC'][r,i,c5ti["Biocharcoal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][18,0,0] * 1/41868) + (data ['BSTC'][r,i,c5ti["Biogas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][19,0,0] * 1/41868))
+                   data['SJCO'][r,11,0] += data ['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][17,0,0] * 1/41868
+                else:
+                   data['SJCO'][r,0,0] += data['BSTC'][r,i,c5ti["Hard Coal"]]*data['SEWG'][r,i,0]* 1000 * data['SMED'][11,0,0]*1/41868
+                   data['SJCO'][r,1,0] += data ['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][12,0,0] * 1/41868
+                   data['SJCO'][r,6,0] += data ['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][13,0,0] * 1/41868
+                   data['SJCO'][r,7,0] += ['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][14,0,0] * 1/41868
+                   data['SJCO'][r,10,0] += 0.0
+                   data['SJCO'][r,11,0] += data ['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data ['SMED'][17,0,0] * 1/41868
         
+
         # Calculate cumulative capacities (SEWW)
         bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
-        for r in range(len(titles['RTI'])):
-            bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
-            data['SEWW'] = np.sum (bi, axis = 2)
-            data['SICA'][:, :, 0] = 0.0
-     
+
+        bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
+        data['SEWW'] = np.sum (bi, axis = 2)
+        data['SICA'][:, :, 0] = 0.0
+    
     for t1 in range(len(titles['SSTI'])): 
         for t2 in range(len(titles['STTI'])):
              if data['STIM'][0, t1, t2] == 1:
