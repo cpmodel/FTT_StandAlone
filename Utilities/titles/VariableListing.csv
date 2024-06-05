@@ -1,4 +1,4 @@
-Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment,Summary,Detailed
+Variable NAme,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment,Summary,Detailed
 PRSCX,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 PRSC15,Price levels in 2015 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 RPOP,Population by age and gender,Thousands,RTI,NA,NA,TIME,General,1970,-,2001,-,,Y
@@ -9,7 +9,7 @@ PFRM,Price of middle distillates [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,201
 PFRB,Price of biofuel use (incl taxes) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results,,Y
 PFRH,Endogenous energy price with tax [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results,,Y
 PRSC13,Price levels in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWMC,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MWMC,FTT:Power margiNAl costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWLO,FTT:Power optimal/initial load factors,%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWKA,FTT:Power exogenous capacity levels (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWIY,FTT:Power investment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -23,58 +23,58 @@ MWG2,Generation load band 2,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MWG1,Generation load band 1,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWFCX,Exogenous FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWFC,FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWDT,Matrix of tech top load band NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-,,Y
-MWDD,Matrix of load band tech suitability NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-,,Y
+MWDT,Matrix of tech top load band NETxNLB,NA,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-,,Y
+MWDD,Matrix of load band tech suitability NETxNLB,NA,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-,,Y
 MTCD,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSR,FTT:Power short-term storage raw costs (2013$/GWh),2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,,Y
 MSSPX,Exogenous MSSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MSSP,FTT:Power short-term storage costs (2013$/GWh) ,$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSMX,Exogenous MSSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MSSM,FTT:Power short-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MSSM,FTT:Power short-term storage margiNAl costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSI,FTT:Power short-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MSSG,FTT:Power short-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
+MSSG,FTT:Power short-term storage additioNAl electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSF,FTT:Power short-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSE,Short-term storage round-trop efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2011,,,Y
 MSSC2020,FTT:Power short-term storage capacity (GW) in 2020,GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSC,FTT:Power short-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSRV,FTT:Power survival function (Created inside code),%,RTI,T2TI,TYTI,NA,FTT-P,-,-,2001,-,,Y
-MSLB,FTT:Power shares of capacity by tech x load band,na,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-,,Y
+MSLB,FTT:Power shares of capacity by tech x load band,NA,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-,,Y
 MSCC,Short-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2013,,,Y
-MSAL,"Switch for storage cost and investment allocation (0=No, 1=G, 2=C, 3=M)",na,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
+MSAL,"Switch for storage cost and investment allocation (0=No, 1=G, 2=C, 3=M)",NA,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MRES,Fossil reserves and REN remaining technical potentials (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MRED,Natural resources and REN full technical potentials (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MPTR,Extraction rate of resources,na,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MMCD,FTT:Power standard deviation of marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MPTR,Extraction rate of resources,NA,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
+MMCD,FTT:Power standard deviation of margiNAl costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSR,FTT:Power long-term storage raw costs (2013$/GWh),2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,,,,Y
 MLSPX,Exogenous MLSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MLSP,FTT:Power long-term storage costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSMX,Exogenous MLSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLSM,FTT:Power long-term storage margiNAl costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLSG,FTT:Power long-term storage additioNAl electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSF,FTT:Power long-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSE,Long-term storage round-trip efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2010,,,Y
 MLSC2020,FTT:Power long-term storage capacity (GW) in 2020,GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSC,FTT:Power long-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLLB,FTT:Power load factors (%) by tech x load band,%,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-,,Y
 MLCC,Long-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2012,,,Y
-MLBP,FTT:Power Maximum marginal costs per load band (serves as the price),,RTI,LBTI,NA,TIME,FTT-P,,,2001,,,Y
+MLBP,FTT:Power Maximum margiNAl costs per load band (serves as the price),,RTI,LBTI,NA,TIME,FTT-P,,,2001,,,Y
 MLB1,Normalised residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,,,Y
 MLB0,Cumulative residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,,,Y
 MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 FRET,Energy supply,ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,,,Y
-MJET,FTT:Power technology to fuel use conversion matrix excl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,,Y
-MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MJET,FTT:Power technology to fuel use conversion matrix excl CCS,NA,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,,Y
+MJEP,FTT:Power margiNAl cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MJEF,FTT-P FiNAl energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGAMX,Exogenous MGAM (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MGAM,FTT:Power Gamma values ($2013/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,2016,2001,-,,Y
-MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEWS,FTT:Power shares of capacity by tech,NA,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,2016,2001,-,,Y
-MEWP,FTT:Power marginal costs of fuels ($2013/GJ),$2013/GJ,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEWP,FTT:Power margiNAl costs of fuels ($2013/GJ),$2013/GJ,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWLX,Exogenous MEWL (from E3ME run),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWL,FTT:Power load factors (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWKX,Exogenous MEWK (from E3ME run),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
@@ -94,8 +94,8 @@ DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,F
 METCX,Exogenous METC (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MES2,FTT:Power market share limitation 2,NA,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MES1,FTT:Power market share limitation 1,NA,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MERCX,Exogenous MERC (from E3ME run),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MERC,FTT Resource prices or costs (2013$/GJ or 2013$/MWh),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEPD,FTT:Power total primary energy demand by resource type (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -121,7 +121,7 @@ HEWB,FTT-Heat Technology spill-over matrix,,NA,HTTI,HTTI,NA,FTT-H,,,,,,
 HEWW,FTT-Heat Global cumulative investment,GW,NA,HTTI,NA,TIME,FTT-H,,2014,2014,,,
 HFIN,FTT-Heat Interest rates,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HFFC,FTT-Heat Fuel price rates,%,RTI,JTI,NA,TIME,FTT-H,,,2001,,,
-HEWF,FTT-Heat Final energy demand for heat generation,GWh/y,RTI,HTTI,NA,TIME,FTT-H,,2020,1990,,Y,Y
+HEWF,FTT-Heat FiNAl energy demand for heat generation,GWh/y,RTI,HTTI,NA,TIME,FTT-H,,2020,1990,,Y,Y
 RHUD,FTT-Heat Useful energy demand,GWh/y,RTI,NA,NA,TIME,FTT-H,,,2001,,,
 HTVS,FTT-Heat Subsidy on investment cost,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HTRT,FTT-Heat Subsidy/tax on fuel use,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
@@ -140,8 +140,8 @@ HEWC,FTT-Heat LCOH no policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
 HETC,FTT-Heat LCOH all policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,Y,Y
 HGC1,FTT-Heat LCOH w policies & Gamma,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HWCD,FTT-Heat LCOH no policies,Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGC2,"FTT-Heat Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGD2,"FTT-Heat SD Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGC2,"FTT-Heat MargiNAl cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
+HGD2,"FTT-Heat SD MargiNAl cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGC3,"FTT-Heat Payback cost w policies, Gamma, for endogenous scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGD3,"FTT-Heat SD Payback cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGAM,FTT-Heat Gamma values,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
@@ -204,7 +204,7 @@ IWA1,FTT-IH-CHI substitution matrix,rate,NA,ITTI,ITTI,NA,FTT-IH-CHI,-,-,,,Y,Y
 BIC1,FTT-IH-CHI cost matrix,various,RTI,ITTI,CTTI,NA,FTT-IH-CHI,-,-,,,Y,Y
 IWS1,FTT-IH-CHI market shares,%,RTI,ITTI,NA,TIME,FTT-IH-CHI,2000,2015,2000,,Y,Y
 IWB1,FTT-IH-CHI learning spillover matrix,%,NA,ITTI,ITTI,NA,FTT-IH-CHI,-,-,,,Y,Y
-IFD1,FTT-IH-CHI final energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,,Y,Y
+IFD1,FTT-IH-CHI fiNAl energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,,Y,Y
 ILC1,FTT-IH-CHI The real bare LC without taxes,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,,Y,Y
 ILG1,FTT-IH-CHI LC as seen by consumer,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,,Y,Y
 ILD1,FTT-IH-CHI LC standard deviation,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,,Y,Y
@@ -223,7 +223,7 @@ IWA2,FTT-IH-FBT substitution matrix,rate,NA,ITTI,ITTI,NA,FTT-IH-FBT,-,-,,,Y,Y
 BIC2,FTT-IH-FBT cost matrix,various,RTI,ITTI,CTTI,NA,FTT-IH-FBT,-,-,,,Y,Y
 IWS2,FTT-IH-FBT market shares,%,RTI,ITTI,NA,TIME,FTT-IH-FBT,2000,2015,2000,,Y,Y
 IWB2,FTT-IH-FBT learning spillover matrix,%,NA,ITTI,ITTI,NA,FTT-IH-FBT,-,-,,,Y,Y
-IFD2,FTT-IH-FBT final energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,,Y,Y
+IFD2,FTT-IH-FBT fiNAl energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,,Y,Y
 ILC2,FTT-IH-FBT The real bare LC without taxes,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,,Y,Y
 ILG2,FTT-IH-FBT LC as seen by consumer,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,,Y,Y
 ILD2,FTT-IH-FBT LC standard deviation,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,,Y,Y
@@ -242,7 +242,7 @@ IWA3,FTT-IH-MTM substitution matrix,rate,NA,ITTI,ITTI,NA,FTT-IH-MTM,-,-,,,Y,Y
 BIC3,FTT-IH-MTM cost matrix,various,RTI,ITTI,CTTI,NA,FTT-IH-MTM,-,-,,,Y,Y
 IWS3,FTT-IH-MTM market shares,%,RTI,ITTI,NA,TIME,FTT-IH-MTM,2000,2015,2000,,Y,Y
 IWB3,FTT-IH-MTM learning spillover matrix,%,NA,ITTI,ITTI,NA,FTT-IH-MTM,-,-,,,Y,Y
-IFD3,FTT-IH-MTM final energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,,Y,Y
+IFD3,FTT-IH-MTM fiNAl energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,,Y,Y
 ILC3,FTT-IH-MTM The real bare LC without taxes,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,,Y,Y
 ILG3,FTT-IH-MTM LC as seen by consumer,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,,Y,Y
 ILD3,FTT-IH-MTM LC standard deviation,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,,Y,Y
@@ -261,7 +261,7 @@ IWA4,FTT-IH-NMM substitution matrix,rate,NA,ITTI,ITTI,NA,FTT-IH-NMM,-,-,,,Y,Y
 BIC4,FTT-IH-NMM cost matrix,various,RTI,ITTI,CTTI,NA,FTT-IH-NMM,-,-,,,Y,Y
 IWS4,FTT-IH-NMM market shares,%,RTI,ITTI,NA,TIME,FTT-IH-NMM,2000,2015,2000,,Y,Y
 IWB4,FTT-IH-NMM learning spillover matrix,%,NA,ITTI,ITTI,NA,FTT-IH-NMM,-,-,,,Y,Y
-IFD4,FTT-IH-NMM final energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,,Y,Y
+IFD4,FTT-IH-NMM fiNAl energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,,Y,Y
 ILC4,FTT-IH-NMM The real bare LC without taxes,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,,Y,Y
 ILG4,FTT-IH-NMM LC as seen by consumer,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,,Y,Y
 ILD4,FTT-IH-NMM LC standard deviation,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,,Y,Y
@@ -280,7 +280,7 @@ IWA5,FTT-IH-OIS substitution matrix,rate,NA,ITTI,ITTI,NA,FTT-IH-OIS2,-,-,,,Y,Y
 BIC5,FTT-IH-OIS cost matrix,various,RTI,ITTI,CTTI,NA,FTT-IH-OIS2,-,-,,,Y,Y
 IWS5,FTT-IH-OIS market shares,%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,2000,2015,2000,,Y,Y
 IWB5,FTT-IH-OIS learning spillover matrix,%,NA,ITTI,ITTI,NA,FTT-IH-OIS2,-,-,,,Y,Y
-IFD5,FTT-IH-OIS final energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,,Y,Y
+IFD5,FTT-IH-OIS fiNAl energy demand,GWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,,Y,Y
 ILC5,FTT-IH-OIS The real bare LC without taxes,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,,Y,Y
 ILG5,FTT-IH-OIS LC as seen by consumer,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,,Y,Y
 ILD5,FTT-IH-OIS LC standard deviation,Meuros/MWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,,Y,Y
@@ -336,11 +336,11 @@ ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,
 ZWIY,FTT-Fr Investment by Technology (monetary value),2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZGAM,FTT-Fr Gamma values,,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,
 noit,Number of iterations per year,,NA,NA,NA,NA,General,,,2000,,,
-IHF1,FTT-IH-CHI final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-CHI,,,2000,,,
-IHF2,FTT-IH-FBT final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-FBT,,,2000,,,
-IHF3,FTT-IH-MTM final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-MTM,,,2000,,,
-IHF4,FTT-IH-NMM final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-NMM,,,2000,,,
-IHF5,FTT-IH-OIS final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
+IHF1,FTT-IH-CHI fiNAl fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-CHI,,,2000,,,
+IHF2,FTT-IH-FBT fiNAl fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-FBT,,,2000,,,
+IHF3,FTT-IH-MTM fiNAl fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-MTM,,,2000,,,
+IHF4,FTT-IH-NMM fiNAl fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-NMM,,,2000,,,
+IHF5,FTT-IH-OIS fiNAl fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 IJT1,FTT-IH-CHI Tech to fuel conversion matrix (fuel x technology),,NA,JTI,ITTI,NA,FTT-IH-CHI,,,,,,
 IJT2,FTT-IH-FBT Tech to fuel conversion matrix (fuel x technology),,NA,JTI,ITTI,NA,FTT-IH-FBT,,,,,,
 IJT3,FTT-IH-MTM Tech to fuel conversion matrix (fuel x technology),,NA,JTI,ITTI,NA,FTT-IH-MTM,,,,,,
@@ -351,7 +351,7 @@ PRSC14,Price levels in 2014 (2010=100),index,RTI,NA,NA,TIME,FTT-H,-,-,2001,-,,Y
 MCTG,FTT:Power Gross curtailment rate by technology (-),%,RTI,T2TI,NA,TIME,FTT-P,,,2001,,,
 FU14A,Fuel demand for heating in 2014,GWh,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 FU14B,Fuel demand for heating in 2014,th toe,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
-MCSC,FTT:Power cost-supply curves,na,RTI,ERTI,CSCTI,NA,FTT-P,-,-,2001,-,Y,Y
+MCSC,FTT:Power cost-supply curves,NA,RTI,ERTI,CSCTI,NA,FTT-P,-,-,2001,-,Y,Y
 MCRT,FTT:Power curtailment of VRE (% of generation),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCRG,Curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCOCX,Carbon costs by technology from E3ME,2013$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
@@ -359,8 +359,8 @@ MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,
 MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,T2TI,NA,TIME,FTT-P,,,2001,,Y,Y
 MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,T2TI,NA,TIME,FTT-P,,,2001,,Y,Y
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
-MADG,Additional generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,NA,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
+MADG,AdditioNAl generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,General,-,-,2010,From E3ME results,Y,Y
 EXX,Exchange rate (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 EX13,Exchange rate in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -370,51 +370,51 @@ IFT2,FTT-IH-FBT Fuel tax (2010 Euros/MWh),2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH
 IFT3,FTT-IH-MTM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,-,Y,Y
 IFT4,FTT-IH-NMM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,-,Y,Y
 IFT5,FTT-IH-OIS Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,-,Y,Y
-MEWSX,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MWMCX,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MMCDX,FTT:Power standard deviation of marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
+MEWSX,FTT:Power shares of capacity by tech,NA,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
+MWMCX,FTT:Power margiNAl costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
+MMCDX,FTT:Power standard deviation of margiNAl costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MTCDX,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
-MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
-SEWA,"Aij exchange matrix, FTT:Steel - for end of lifetime replacements",,NA,STTI,STTI,NA,FTT-S,,,,,,
-SEWB,"Bij spillover matrix, FTT:Steel",,NA,STTI,STTI,NA,FTT-S,,,,,,
-STIM,Interaction matrix between integrated steel routes and individual plant types,,NA,STTI,SSTI,NA,FTT-S,,,,,,
-SEWS,Steelmaking technology shares by capacity,%,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWSL,Lagged steelmaking technology shares by capacity,%,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SEWG,Steel production by technology,kton/y,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SEWW,Cumulative global steel production capacity by technology,kton,NA,STTI,NA,TIME,FTT-S,,,,,,
-SWWL,Lagged cumulative global steel production capacity by technology ,kton,NA,STTI,NA,TIME,FTT-S,,,,,,
-SEWK,Steel production capacity by technology ,kton/y,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWKL,Lagged steel production capacity by technology ,kton/y,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SEDW,Capacity changes by technology ,kton/y,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SEWI,(Positive) capacity additions ,kton/y,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SEWE,Total emissions by technology ,MtCO2/y,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWIY,Investments by technology ,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWYL,Lagged investments by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWII,Investments made by industry by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWIL,Lagged investments made by industry by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWIG,Investments made by government by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWGL,Lagged investments made by government by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,,,,,,
-SEWC,Levelised cost of steelmaking without policies,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SETC,Levelised cost of steelmaking including policies,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SGC1,Levelised cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SGC2,Marginal cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SGC3,Payback cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SG1L,Lagged levelised cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SDWC,SD of LCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SGD1,SD of TLCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SGD2,SD of SGC2,,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SGD3,SD of SGC3,,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWIC,Investment cost component of TLCOS,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SWFC,Material consumption cost component of TLCOS,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SOMC,O&M cost component of TLCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SCOC,CO2 tax cost component of TLCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,,,,,,
-SXSC,Exogenous scrap availabilty ,kton,RTI,NA,NA,TIME,FTT-S,,,,,,
-SXSF,Exogenous future scrap availability ,kton,RTI,NA,NA,TIME,FTT-S,,,,,,
-SXSR,Difference between consumed and total scrap demand,kton,RTI,NA,NA,TIME,FTT-S,,,,,,
-STRT,Subsidy or tax on materials,(% of price of materials,RTI,SMTI,NA,TIME,FTT-S,,,,,,
-SEWT,Technology subsidy of tax ,% of investment cost,RTI,STTI,NA,TIME,FTT-S,,,,,,
+MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,
+SEWA,"Aij exchange matrix, FTT:Steel - for end of lifetime replacements",,NA,STTI,STTI,NA,FTT-S,-,-,1990,-,,
+SEWB,"Bij spillover matrix, FTT:Steel",,NA,STTI,STTI,NA,FTT-S,-,-,2001,-,,
+STIM,Interaction matrix between integrated steel routes and individual plant types,,NA,STTI,SSTI,NA,FTT-S,-,-,2001,-,,
+SEWS,Steelmaking technology shares by capacity,%,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWSL,Lagged steelmaking technology shares by capacity,%,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEWG,Steel production by technology,kton/y,RTI,STTI,NA,TIME,FTT-S,-,-,1990,-,,
+SEWW,Cumulative global steel production capacity by technology,kton,NA,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWWL,Lagged cumulative global steel production capacity by technology ,kton,NA,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEWK,Steel production capacity by technology ,kton/y,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWKL,Lagged steel production capacity by technology ,kton/y,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEDW,Capacity changes by technology ,kton/y,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEWI,(Positive) capacity additions ,kton/y,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEWE,Total emissions by technology ,MtCO2/y,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWIY,Investments by technology ,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWYL,Lagged investments by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWII,Investments made by industry by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWIL,Lagged investments made by industry by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWIG,Investments made by government by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWGL,Lagged investments made by government by technology,Mln $(2008),RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEWC,Levelised cost of steelmaking without policies,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SETC,Levelised cost of steelmaking including policies,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SGC1,Levelised cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SGC2,MargiNAl cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SGC3,Payback cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SG1L,Lagged levelised cost of steelmaking including policies and gamma value ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SDWC,SD of LCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SGD1,SD of TLCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SGD2,SD of SGC2,,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SGD3,SD of SGC3,,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWIC,Investment cost component of TLCOS,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SWFC,Material consumption cost component of TLCOS,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SOMC,O&M cost component of TLCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SCOC,CO2 tax cost component of TLCOS ,$(2008)/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SXSC,Exogenous scrap availabilty ,kton,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
+SXSF,Exogenous future scrap availability ,kton,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
+SXSR,Difference between consumed and total scrap demand,kton,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
+STRT,Subsidy or tax on materials,(% of price of materials,RTI,SMTI,NA,TIME,FTT-S,-,-,2001,-,,
+SEWT,Technology subsidy of tax ,% of investment cost,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SEWR,Technology capacity share regulation (-),,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SWSA,Exogenous capacity share additions (-),,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SWKA,Exogenous capacity additions,kton/y,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
@@ -428,29 +428,29 @@ STC,"FTT:Steel, goes with BSTC",,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SEEM,FTT:Steel Material efficiency interaction matrix for learning,,NA,SMTI,SSTI,NA,FTT-S,-,-,2001,-,,
 SRDI,"FTT:Steel, R&D investments",,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SEEI,"FTT:Steel, energy efficiency investments",,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
-SDIS,FTT:Steel - direct subsidies,,RTI,,NA,TIME,FTT-S,-,-,2001,-,,
+SDIS,FTT:Steel - direct subsidies,,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
 SCFA ,"FTT:Steel, capacity factor adjustments",,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SCMM,"FTT:Steel Cost/material matrix all plants, used for reduction in EE",,NA,SMTI,SSTI,NA,FTT-S,-,-,2001,-,,
 SMED,FTT:Steel Material specific energy density,,NA,SMTI,NA,NA,FTT-S,-,-,2001,-,,
 SCOT,FTT:Steel CO2 costs,$2008/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SMEF,FTT:Steel Material specific emission factors,,NA,SMTI,NA,NA,FTT-S,-,-,2001,-,,
 SD1L,FTT:Steel SD of TLCOS,$2008/tcs,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
-SG2L,FTT:Steel Marginal costs of steelmaking alternatives,$2008/tcs ,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
-SG3L,FTT:Steel Payback costs of steelmaking alternatives,$2008/tcs ,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SG2L,FTT:Steel MargiNAl costs of steelmaking alterNAtives,$2008/tcs ,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+SG3L,FTT:Steel Payback costs of steelmaking alterNAtives,$2008/tcs ,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SD2L,FTT:Steel SD of TMC,$2008/tcs ,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SD3L,FTT:Steel SD of TPB,$2008/tcs ,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SCML,"FTT:Steel Cost/material matrix all plants, used for reduction in EE LAG",,NA,SMTI,SSTI,NA,FTT-S,-,-,2001,-,,
 SJCO,Total consumption of materials  for E3ME emission calculation,in ktoe,RTI,JTI,NA,TIME,FTT-S,-,-,2001,-,,
 SPSL,Lagged steel demand,ktcs/y,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
-RSIY,Exogenous difference in investment demand for the iron and steel sector,na,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
+RSIY,Exogenous difference in investment demand for the iron and steel sector,NA,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
 SPRC,Average price of steel sum(LCOS*S),$/tcs,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
 SPCL,Average price of steel sum(LCOS*S),$/tcs,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
 SXSS,Scrap availability parameters - Sectoral split - Exogenous,,RTI,XPTI,NA,NA,FTT-S,-,-,2001,-,,
 SXLT,Scrap availability parameters - Product group lifetime,,RTI,XPTI,NA,NA,FTT-S,-,-,2001,-,,
 SXLR,Scrap availability parameters - Loss Rates,,RTI,XPTI,NA,NA,FTT-S,-,-,2001,-,,
 SXRR,Scrap availability parameters - Recycling rates,,RTI,XPTI,NA,NA,FTT-S,-,-,2001,-,,
-SICA,Global installed capacity of intermediate plants,,na,SSTI,NA,NA,FTT-S,-,-,2001,-,,
-SICL,Global installed capacity of intermediate plants - LAG,,na,SSTI,NA,NA,FTT-S,-,-,2001,-,,
+SICA,Global installed capacity of intermediate plants,,NA,SSTI,NA,NA,FTT-S,-,-,2001,-,,
+SICL,Global installed capacity of intermediate plants - LAG,,NA,SSTI,NA,NA,FTT-S,-,-,2001,-,,
 SEMR,FTT:Steel bottom up employment y-o-y growth rates,,RTI,NA,NA,NA,FTT-S,-,-,2001,-,,
 SEMS,FTT:Steel bottom up absolute employment by technology in FTE,,RTI,STTI,NA,NA,FTT-S,-,-,2001,-,,
 SKST,"Exogenous kick start of technologies, in terms of market shares (-)",,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
@@ -471,7 +471,7 @@ SXS1,Scrap availability parameters - Sectoral split - Endogenous calculation - T
 SXS2,Scrap availability parameters - Sectoral split - Endogenous calculation - Machinery,,RTI,Y1TI,NA,TIME,FTT-S,-,-,2001,-,,
 SXS3,Scrap availability parameters - Sectoral split - Endogenous calculation - Construction,,RTI,Y1TI,NA,TIME,FTT-S,-,-,2001,-,,
 SXS4,Scrap availability parameters - Sectoral split - Endogenous calculation - Products (household and others),,RTI,Y1TI,NA,TIME,FTT-S,-,-,2001,-,,
-SPRL,Average price of steel sum(LTLCOS*S) - LAG,,RTI,Y1TI,NA,TIME,FTT-S,-,-,2001,-,,
-SSSR,Scrap availability parameters - Sectoral split - Endogenous when possible,,RTI,XTPI,NA,TIME,FTT-S,-,-,2001,-,,
+SPRL,Average price of steel sum(LTLCOS*S) - LAG,,RTI,NA,NA,TIME,FTT-S,-,-,2001,-,,
+SSSR,Scrap availability parameters - Sectoral split - Endogenous when possible,,RTI,XPTI,NA,TIME,FTT-S,-,-,2001,-,,
 SWAP,"Aij exchange matrix, FTT:Steel - for premature replacements",,STTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 BSTC,FTT:Steel cost components matrix,,RTI,STTI,C5TI,NA,FTT-S,-,-,2014,-,,
