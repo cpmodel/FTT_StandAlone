@@ -180,7 +180,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     if (t2 < 8): 
                         data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][0, t1, 0] * np.sum(data['BSTC'][:, t1, 25+t2])/np.count_nonzero(data['SPSA'][:, :, 0])
                    
-=======
         # Initialise global installed capacity of intermediate plants
         data['SICA'][:, :, 0] = 0.0
 
