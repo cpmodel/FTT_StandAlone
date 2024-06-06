@@ -14,15 +14,15 @@ import numpy as np
 
 def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     metalinput = 0.0
-    maxscrapdemand = 0.0
-    maxscrapdemand_p = 0.0
-    scraplimittrade = 0.0
-    scrapcost = 0.0
+    maxscrapdemand = np.zeroes
+    maxscrapdemand_p = np.zeroes
+    scraplimittrade = np.zeroes
+    scrapcost = np.zeroes
     # pig-iron (or DRI) to crude steel ratio. Rationale: pig iron/DRI
     pitcsr = 1.1
     # has higher carbon content which is removed in steel making
     # process (to about 0.0001 - 0.005%wt)
-    sxsf = 0.0
+    sxsf = np.zeroes
     
     # Simple treatment of scrap trade. Flows are only a function of scrap shortages
     # for the secondary steelmaking route.
@@ -33,11 +33,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     scraplimittrade = scrapcost[25, :, :] * data['SEWG'][25, :, :]
     
     if t == 1:
-        scrapshortage = 0.0
-        scrapabundance = 0.0
-        sxim = 0.0
-        sxex = 0.0
-        sxsr = 0.0
+        scrapshortage = np.zeroes
+        scrapabundance = np.zeroes
+        sxim = np.zeroes
+        sxex = np.zeroes
+        sxsr = np.zeroes
         
         if np.any(data['SXSC'][:, 0, 0] < scraplimittrade):
             scrapshortage = scraplimittrade - data['SXSC'][:, :, 0]
@@ -68,35 +68,35 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         if data['SPSA'][r, 0 , 0] > 0.0:
                 for path in range(len(titles['STTI'])-2):
                     # There's enough scrap to meet the maximum scrap demand
-                    if data ['SXSR'][r, 0, 0] >= MaxScrapDemand[r, 0, 0]:
-                        MetalInput[path,0] = (1.0 - 0.09 - MSSPP[path,r]) * PITCSR 
-                        MetalInput[path,1] = 0.0
-                        MetalInput[path,2] = MSSPP[path,r] +0.09
-                        MetalInput[25,0] = 0.0
-                        MetalInput[25,1] = 0.0
-                        MetalInput[25,2] = MSSPP[25,r] +0.09
+                    if data ['SXSR'][r, 0, 0] >= maxscrapdemand[r, 0, 0]:
+                        metalinput[path,0] = (1.0 - 0.09 - scrapcost[path,r]) * pitcsr 
+                        metalinput[path,1] = 0.0
+                        metalinput[path,2] = scrapcost[path,r] +0.09
+                        metalinput[25,0] = 0.0
+                        metalinput[25,1] = 0.0
+                        metalinput[25,2] = scrapcost[25,r] +0.09
                 #There's not enough scrap to feed into all the technologies, but there's 
                 #enough scrap to feed into the Scrap-EAF route.             
-                    elif ((data['SXSR'][r, 0, 0] < MaxScrapDemand[r, 0, 0]) and (data['SXSR'][r, 0, 0] >= ScraplimitTrade[r, 0, 0])): 
-                        MetalInput[path, 1] = 0.0
+                    elif ((data['SXSR'][r, 0, 0] < maxscrapdemand[r, 0, 0]) and (data['SXSR'][r, 0, 0] >= scraplimittrade[r, 0, 0])): 
+                        metalinput[path, 1] = 0.0
                    
-                        if (sum (data ['SEWG'][1:24,r] * MSSPP[1:24,r]) > 0.0):
-                            MetalInput[path,2] = 0.09 + (data['SXSR'][r,0,0]-ScraplimitTrade[r, 0, 0])/MaxScrapDemandP[r, 0, 0] * MSSPP[path,r]
+                        if (sum (data ['SEWG'][1:24,r] * scrapcost[1:24,r]) > 0.0):
+                            metalinput[path,2] = 0.09 + (data['SXSR'][r,0,0]-scraplimittrade[r, 0, 0])/maxscrapdemand_p[r, 0, 0] * scrapcost[path,r]
                         else:
-                            MetalInput[path,2] = MSSPP[path,r]/2 +0.09
+                            metalinput[path,2] = scrapcost[path,r]/2 +0.09
                     
-                        MetalInput [path,0] = (1.0 - MetalInput[path,2]) * PITCSR
-                        MetalInput[25,0] = 0.0
-                        MetalInput[25,1] = 0.0
-                        MetalInput[25,2] = MSSPP[26,r] +0.09
+                        metalinput [path,0] = (1.0 - metalinput[path,2]) * pitcsr
+                        metalinput[25,0] = 0.0
+                        metalinput[25,1] = 0.0
+                        metalinput[25,2] = scrapcost[26,r] +0.09
      
                 #There's not enough scrap available to meet the demand, so all available
                 #scrap will be fed into the Scrap-EAF route.    
-                    elif ((data['SXSR'][r,0,0] < MaxScrapDemand [r,0,0]) and (data[SXSR][r,0,0] < data['SEWG'][25,r,0]*(1-0.09))):
-                        MetalInput[path,0] = PITCSR * (1.0 - 0.09)
-                        MetalInput[path,1] = 0.0
-                        MetalInput[path,2] = 0.09
+                    elif ((data['SXSR'][r,0,0] < maxscrapdemand [r,0,0]) and (data['SXSR'][r,0,0] < data['SEWG'][25,r,0]*(1-0.09))):
+                        metalinput[path,0] = pitcsr * (1.0 - 0.09)
+                        metalinput[path,1] = 0.0
+                        metalinput[path,2] = 0.09
      
-                        MetalInput[25,0] = 0.0
-                        MetalInput[25,1] = (1 - 0.09 - data['SXSR'][r,0,0] / data['SEWG'][25,r])*PITCSR
-                        MetalInput[25,2] = 0.09 + data['SXSR'][r, 0, 0] / SEWG[25,r]  
+                        metalinput[25,0] = 0.0
+                        metalinput[25,1] = (1 - 0.09 - data['SXSR'][r,0,0] / data['SEWG'][25,r])*pitcsr
+                        metalinput[25,2] = 0.09 + data['SXSR'][r, 0, 0] / data['SEWG'][25,r]  
