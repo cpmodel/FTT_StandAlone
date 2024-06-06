@@ -95,6 +95,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # Simulation period starts in 2020   # Calculate capacities (SEWK)
     if year <= histend['SEWG']:
 
+
+
+
         
         # Connect historical data to future projections (only for DATE == 2014)
         if year == 2019:
@@ -141,7 +144,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         for r in range(len(titles['RTI'])):
             for i in range(len(titles['STTI'])):
             # Calculate fuel consumption
-                
+              
                 data['SJEF'][r,0,0] += data['BSTC'][r, i,c5ti["Hard Coal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,11,0] * 1/41868
                 data['SJEF'][r,1,0] += data['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,12,0] * 1/41868
                 data['SJEF'][r,6,0] += data['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,13,0] * 1/41868
@@ -162,11 +165,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                    data['SJCO'][r,7,0] += data['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,14,0] * 1/41868
                    data['SJCO'][r,10,0] += 0.0
                    data['SJCO'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
-
         
-
         # Calculate cumulative capacities (SEWW)
         bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
+
         for r in range(len(titles['RTI'])):
             bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
             data['SEWW'] = np.sum (bi, axis = 0)
@@ -178,6 +180,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     if (t2 < 8): 
                         data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][0, t1, 0] * np.sum(data['BSTC'][:, t1, 25+t2])/np.count_nonzero(data['SPSA'][:, :, 0])
                    
+=======
+        # Initialise global installed capacity of intermediate plants
+        data['SICA'][:, :, 0] = 0.0
+
+        for r in range(len(titles['RTI'])):
+
+            bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
+            data['SEWW'] = np.sum (bi, axis = 2)
+            
+    
+        for t1 in range(len(titles['SSTI'])): 
+            for t2 in range(len(titles['STTI'])):
+                if data['STIM'][0, t1, t2] == 1:
+                    if (t2 < 8): 
+                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][:, t1, 0] * np.sum(data['BSTC'][:, :, 0])/np.count(data['SPSA'][r, :, 0])
                     elif (t2 > 7 and t2 < 21):
                             data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][: , t1 , 0] 
                     # Estimate installed capacities of steelmaking plants
@@ -186,7 +203,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     # Estimate installed capacities of finishing plants. 
                     # Note that after this step it's not crude steel anymore. Therefore it is divided by 1.14  
                     elif (t2 == 27):
-                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0]/1.14 
+                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0] /1.14 
+
                                              
 
 #         # Useful energy demand by boilers

@@ -24,7 +24,7 @@ from tqdm import tqdm
 import SourceCode.Power.ftt_p_main as ftt_p
 import SourceCode.Transport.ftt_tr_main as ftt_tr
 import SourceCode.Heat.ftt_h_main as ftt_h
-#import SourceCode.Steel.ftt_s_main as ftt_s
+import SourceCode.Steel.ftt_s_main as ftt_s
 #import SourceCode.Agri.ftt_agri_main as ftt_agri
 import SourceCode.Freight.ftt_fr_main as ftt_fr
 #import SourceCode.Flex.ftt_flex_main as ftt_flex
@@ -236,7 +236,9 @@ class ModelRun:
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-S" in self.ftt_modules:
-                print("Module needs to be created")
+                variables = ftt_s.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
             if "FTT-IH-CHI" in self.ftt_modules:
                 variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
