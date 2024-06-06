@@ -180,20 +180,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     if (t2 < 8): 
                         data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][0, t1, 0] * np.sum(data['BSTC'][:, t1, 25+t2])/np.count_nonzero(data['SPSA'][:, :, 0])
                    
-        # Initialise global installed capacity of intermediate plants
-        data['SICA'][:, :, 0] = 0.0
-
-        for r in range(len(titles['RTI'])):
-
-            bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
-            data['SEWW'] = np.sum (bi, axis = 0)
-            
-    
-        for t1 in range(len(titles['SSTI'])): 
-            for t2 in range(len(titles['STTI'])):
-                if data['STIM'][0, t1, t2] == 1:
-                    if (t2 < 8): 
-                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][:, t1, 0] * np.sum(data['BSTC'][:, :, 0])/np.count(data['SPSA'][r, :, 0])
                     elif (t2 > 7 and t2 < 21):
                             data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][: , t1 , 0] 
                     # Estimate installed capacities of steelmaking plants
