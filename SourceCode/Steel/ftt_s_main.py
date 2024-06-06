@@ -45,6 +45,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Steel.ftt_s_sales import get_sales
 from SourceCode.Steel.ftt_s_lcos import get_lcos
+from SourceCode.Steel.ftt_s_scrap import scrap_calc
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -88,39 +89,103 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     jti = {category: index for index, category in enumerate(titles['JTI'])}
 
     sector = 'steel'
+    data = scrap_calc(data, time_lag, titles, year)
 
     # Historical data currently ends in 2019, so we need to initialise data
     # Simulation period starts in 2020
     if year <= histend['SEWG']:
 
-
-        # Calculate capacities (SEWK)
-
+        
+        # Connect historical data to future projections (only for DATE == 2014)
+        if year == 2019:
+            data['SPSA'] = data['SPSP']
+    
+        for r in range(len(titles['RTI'])):
+            # data['SEWG'] is in historic sheets, so no need to calculate that.
+        
+            # Capacity (kton) (11th are capacity factors) 
+            data['SEWK'][r, :, 0] = 0.0
+            data['SEWK'][r, :, 0] = data['SEWG'][r, :, 0] / data['BSTC'][r, :, c5ti["CF"]]
+            data['SPSA'][r, 0, 0] = sum(data['SEWG'][r, :, 0])
+        
+            # 'Historical' employment in th FTE 
+            data['SEMS'][r, :, 0] = data['SEWK'][r, :, 0] * data['BSTC'][r, :, c5ti["Employment"]] * 1.1
+        
+            # In this preliminary model SPSP is historical production while SPSA is exogenous future production (based on E3ME baseline)
+            # Total steel production by region (kton/y) = demand
+            # SPSP[j] = sum(data['SEWG'][:, j])
+            
+            # Market capacity shares of steelmaking technologies: 
+            data['SEWS'][r, :, 0] = 0
+            data['SEWS'] [r, :, 0] = np.divide (data['SEWK'][r, :, 0], np.sum(data['SEWK'][r, :, 0]),
+                                                where =(data['SPSP'][r, 0, 0] > 0.0) and (data['SEWK'][r, :, 0] > 0.0)) 
+                
+            # Emissions (MtCO2/y) (13th is emissions factors tCO2/tcs)
+            # A crude backwards calculation of emissions using simple emission factors keep
+            data['SEWE'][r, :, 0] = data['SEWG'][r, :, 0] * data['BSTC'][r, :, c5ti["EF"]] / 1000
+        
+            # Regional average energy intensity (GJ/tcs) 
+            data['STEI'][r, :, 0] = data['BSTC'][r, :, c5ti["Energy Intensity"]]
+            data['SEIA'][r, 0, 0] = sum(data['STEI'][r, :, 0] * data['SEWS'][r, :, 0])
 
         # Calculate fuel use (SJEF)
+        #Set
+        sewg_sum = np.sum(data["SEWG"], axis=1)
+        og_base = np.zeros_like(sewg_sum)
+
+        og_base[sewg_sum > 0.0] = np.sum(data["SEWG"][:, 0:7], axis=1)[sewg_sum > 0.0] / sewg_sum[sewg_sum > 0.0]
+        og_sim = og_base
+        #ccs_share = 0.0
+       
         
+        for r in range(len(titles['RTI'])):
+            for i in range(len(titles['STTI'])):
+            # Calculate fuel consumption
+                
+                data['SJEF'][r,0,0] += data['BSTC'][r, i,c5ti["Hard Coal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,11,0] * 1/41868
+                data['SJEF'][r,1,0] += data['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,12,0] * 1/41868
+                data['SJEF'][r,6,0] += data['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,13,0] * 1/41868
+                data['SJEF'][r,7,0] += data['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,14,0] * 1/41868
+                data['SJEF'][r,10,0] += ((data['BSTC'][r,i,c5ti["Biocharcoal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,18,0] * 1/41868) + (data['BSTC'][r,i,c5ti["Biogas"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,19,0] * 1/41868))
+                data['SJEF'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
+                if data['BSTC'][r,i,21] == 1:
+                   data['SJCO'][r,0,0] += 0.1 * data['BSTC'][r,i,c5ti["Hard Coal"]]*data['SEWG'][r,i,0]* 1000 * data['SMED'][0,11,0]*1/41868
+                   data['SJCO'][r,1,0] += 0.1 * data['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,12,0] * 1/41868
+                   data['SJCO'][r,6,0] += 0.1 * data['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,13,0] * 1/41868
+                   data['SJCO'][r,7,0] += data['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,14,0] * 1/41868
+                   data['SJCO'][r,10,0] += -0.9 * ((data['BSTC'][r,i,c5ti["Biocharcoal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,14,0] * 1/41868) + (data['BSTC'][r,i,c5ti["Biogas"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,19,0] * 1/41868))
+                   data['SJCO'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
+                else:
+                   data['SJCO'][r,0,0] += data['BSTC'][r,i,c5ti["Hard Coal"]]*data['SEWG'][r,i,0]* 1000 * data['SMED'][0,11,0]*1/41868
+                   data['SJCO'][r,1,0] += data['BSTC'][r,i,c5ti["Other Coal"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,12,0] * 1/41868
+                   data['SJCO'][r,6,0] += data['BSTC'][r,i,c5ti["Natural Gas"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,13,0] * 1/41868
+                   data['SJCO'][r,7,0] += data['BSTC'][r,i,c5ti["Electricity"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,14,0] * 1/41868
+                   data['SJCO'][r,10,0] += 0.0
+                   data['SJCO'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
+
         
         # Calculate cumulative capacities (SEWW)
         bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
         for r in range(len(titles['RTI'])):
             bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
-            data['SEWW'] = np.sum (bi, axis = 2)
-            data['SICA'][:, :, 0] = 0.0
-     
-    for t1 in range(len(titles['SSTI'])): 
-        for t2 in range(len(titles['STTI'])):
-             if data['STIM'][0, t1, t2] == 1:
-                 if (t2 < 8): 
-                     data['SICA'][:, t2, 0] = data ['SICA'][:, t2, 0] + 1.1 * data['SEWW'][:, t1, 0] * np.sum(data['BSTC'][:, :, 0])/np.count(data['SPSA'][r, :, 0])
-                 elif (t2 > 7 and t2 < 21):
-                         data['SICA'][:, t2, 0] = data ['SICA'][:, t2, 0] + 1.1 * data['SEWW'][: , t1 , 0] 
-        # Estimate installed capacities of steelmaking plants
-                 elif (t2 > 20 and t2 < 27): 
-                     data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0] 
-        # Estimate installed capacities of finishing plants. 
-        # NOTE: That after this step it's not crude steel anymore. Therefore it is divided by 1.14  
-                 elif (t2 == 27):
-                     data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0] /1.14 
+            data['SEWW'] = np.sum (bi, axis = 0)
+        data['SEWW'] = data['SEWW'][None, :, None]
+    
+        for t1 in range(len(titles['STTI'])): 
+            for t2 in range(len(titles['SSTI'])):
+                if data['STIM'][0, t1, t2] == 1:
+                    if (t2 < 8): 
+                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][0, t1, 0] * np.sum(data['BSTC'][:, t1, 25+t2])/np.count_nonzero(data['SPSA'][:, :, 0])
+                   
+                    elif (t2 > 7 and t2 < 21):
+                            data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + 1.1 * data['SEWW'][: , t1 , 0] 
+                    # Estimate installed capacities of steelmaking plants
+                    elif (t2 > 20 and t2 < 27): 
+                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0] 
+                    # Estimate installed capacities of finishing plants. 
+                    # Note that after this step it's not crude steel anymore. Therefore it is divided by 1.14  
+                    elif (t2 == 27):
+                        data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0]/1.14 
                                              
 
 #         # Useful energy demand by boilers
