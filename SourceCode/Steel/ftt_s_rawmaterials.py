@@ -12,7 +12,7 @@ import warnings
 # Third party imports
 import numpy as np
 
-def solve(data, time_lag, iter_lag, titles, histend, year, specs):
+def raw_material_distr(data, titles, year, t):
     metalinput = 0.0
     maxscrapdemand = np.zeroes
     maxscrapdemand_p = np.zeroes
@@ -101,41 +101,97 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         metalinput[25,1] = (1 - 0.09 - data['SXSR'][r,0,0] / data['SEWG'][25,r])*pitcsr
                         metalinput[25,2] = 0.09 + data['SXSR'][r, 0, 0] / data['SEWG'][25,r]  
     
-    inventory = np.zeroes
-    #Select the correct ironmaking technology. Not applicable for techs 25 and 26
-    for a in range(len(titles['STTI'])):
-        for b in range(len(titles['SSTI'])):
-            if ((data['STIM'][0,a,b]==1) and b>7 and b<21):
-                if (a<25):
-                    data['SLCI'][0,:,2]= data['SCMM'][0,:,b]
-                else:
-                    data['SLCI'][0,:,2]=0.0
-            if(data['STIM'][0,a,b]==1 and b>20 and b<27):
-                #Now select the correct steelmaking technology.
-                data['SLCI'][0,:,0] = data['SCMM'][0,:,b]
-                data['SLCI'][0,1,0] = metalinput[0,a,0]
-                data['SLCI'][0,2,0] = metalinput[0,a,1]
-                data['SLCI'][0,3,0] = metalinput[0,a,2]
+        inventory = np.zeroes
+        #Select the correct ironmaking technology. Not applicable for techs 25 and 26
+        for a in range(len(titles['STTI'])):
+            for b in range(len(titles['SSTI'])):
+                if ((data['STIM'][0,a,b]==1) and b>7 and b<21):
+                    if (a<25):
+                        data['SLCI'][0,:,2]= data['SCMM'][0,:,b]
+                    else:
+                        data['SLCI'][0,:,2]=0.0
+                if(data['STIM'][0,a,b]==1 and b>20 and b<27):
+                    #Now select the correct steelmaking technology.
+                    data['SLCI'][0,:,0] = data['SCMM'][0,:,b]
+                    data['SLCI'][0,1,0] = metalinput[0,a,0]
+                    data['SLCI'][0,2,0] = metalinput[0,a,1]
+                    data['SLCI'][0,3,0] = metalinput[0,a,2]
+            
+            #The inventory matrix (SLCI) is now completely filled. Now calculate the inventory vector per technology.
+            #First, we add the steelmaking step to the inventory vector. 
+            inventory[0,:,a] = data['SLCI'][0,:,1]
+            #Add ironmaking step scaled to the need of PIP
+            inventory[0,:,a] += data['SLCI'][0,2,1]*data['SLCI'][0,:,2]
+            #Add Sinter and Pellet inventory
+            inventory[0,:,a] += inventory[0,7,a] * data['SCMM'][0,:,3] + inventory[0,8,a] * data['SCMM'][0,:,4] + inventory[0,9,a] * data['SCMM'][0,:,5] + inventory[0,10,a] * data['SCMM'][0,:,6]
+            #Add coke inventory
+            inventory[0,:,a] += inventory[0,5,a] * data['SCMM'][0,:,1] + inventory[0,6,a] * data['SCMM'][0,:,2]
+            #Add oxygen inventory
+            inventory[0,:,a] += inventory[0,11,a] * data['SCMM'][0,:,7]
+            #Add finishing step
+            inventory[0,:,a] += (data['SCMM'][0,:,27])/1.14
+            
+            #Material based emission intensity
+            ef = np.sum(Inventory[0,:,a]*data['SMEF'][0,:,0])
+            ef_fossil = np.sum(inventory[0,1:15,a]*data['SMEF'][0,1:15,0])
+            ef_biobased = np.sum(inventory(0,16:24,a)*data['SMEF'][0,16:24,0])
+
+            #From here on: Put the results of the inventory calculation into the CostMatrix
+            #Material based Energy Intensity
+            data['BSTC'][r,a,15]= np.sum(inventory[0,:,a]*data['SMED'][0;:,0])
+            data['STEI'][r,a,0]= data['BSTC'][r,a,15]
+            data['STSC'][r,a,0]= inventory[0,4,a]
+
+            for mat in range(len['SMTI'])
+                data['BSTC'][r,a,21]= inventory[0,21,a]
+            
+            #Select CCS technologies
+            if (data['BSTC'][r,a,22]==1):
+                #Increase fuel consumption
+                inventory[0, 12:15, a] *= 1.1
+                inventory[0, 18:20, a] *= 1.1
+                #capital investment costs
+                if (year == 2017)
+                    data['SCIN'][r, a, 0] = inventory[0,20,a]
+                
+                #Adjust O&M Costs due to CO2 transport and storage
+                data['BSTC'][r,a,2]= inventory[0,21,a]+ 5.0*0.9*ef
+                data['BSTC'][r,a,3]= data[r,a,2]*0.3
+
+                #Adjust EF for CCS utilising technologies
+                data['BSTC'][r,a,13] = 0.1 * ef - ef_biobased
+                data['STEF'][r,a,,0] = 0.1 * ef - ef_biobased
+                data['BSTC'][r,a,14] = data['BSTC'][r,a,13]*0.1
+
+                #Adjust total Employment for complete steelmaking route (increase by 5% due to CCS)
+                data['BSTC'][r,a,4] = 1.05 * inventory[0,23,a]
+                data['SEPF'][r,a,0] = 1.05 * inventory[0,23,a]
+
+                #Adjust electricity consumption due to CCS use
+                data['BSTC'][r,a,36] *= 1.1
+            
+            else
+                #capital investment costs
+                if (year == 2017)
+                    data['SCIN'][r, a, 0] = inventory[0,20,a]
+                
+                #OM and dOM
+                data['BSTC'][r,a,2]= inventory[0,21,a]
+                data['BSTC'][r,a,3]= data['BSTC'][r,a,3]*0.3
+
+                #EF and dEF
+                data['BSTC'][r,a,13]= ef-ef_biobased
+                data['STEF'][r,a,0]= ef-ef_biobased
+                data['BSTC'][r,a,14]= data['BSTC'][r,a,13]*0.1
+
+                #Employment
+                data['BSTC'][r,a,4] = inventory[0.23.a]
+                data['SEPF'][r,a,0] = inventory[0,23,a]
         
-        #The inventory matrix (SLCI) is now completely filled. Now calculate the inventory vector per technology.
-        #First, we add the steelmaking step to the inventory vector. 
-        inventory[0,:,a] = data['SLCI'][0,:,1]
-        #Add ironmaking step scaled to the need of PIP
-        inventory[0,:,a] += data['SLCI'][0,2,1]*data['SLCI'][0,:,2]
-        #Add Sinter and Pellet inventory
-        inventory[0,:,a] += inventory[0,7,a] * data['SCMM'][0,:,3] + inventory[0,8,a] * data['SCMM'][0,:,4] + inventory[0,9,a] * data['SCMM'][0,:,5] + inventory[0,10,a] * data['SCMM'][0,:,6]
-        #Add coke inventory
-        inventory[0,:,a] += inventory[0,5,a] * data['SCMM'][0,:,1] + inventory[0,6,a] * data['SCMM'][0,:,2]
-        #Add oxygen inventory
-        inventory[0,:,a] += inventory[0,11,a] * data['SCMM'][0,:,7]
-        #Add finishing step
-        inventory[0,:,a] += (data['SCMM'][0,:,27])/1.14
-        
-        #Material based emission intensity
-        ef = np.sum(Inventory[0,:,a]*data['SMEF'][0,:,0])
-        ef_fossil = np.sum(inventory[0,1:15,a]*data['SMEF'][0,1:15,0])
-        ef_biobased = np.sum(inventory(0,16:24,a)*data['SMEF'][0,16:24,0])
-        
-        #From here on: Put the results of the inventory calculation into the CostMatrix
-        #Material based Energy Intensity
-        
+        ef2= data['BSTC'][r,:,13]
+        om= data['BSTC'][r,:,2]
+        empl= inventory[0,23,:]
+
+
+
+
