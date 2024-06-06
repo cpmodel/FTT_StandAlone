@@ -177,13 +177,14 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)
       
-                        # If there is a second dimension # TODO: check if this is correct
-                        if dims_length[1] > 1:
+                        # If there is a second dimension only
+                        if dims_length[1] > 1 and all(dim_length == 1 for dim_length in dims_length[2:]):
                             try: 
                                 data[scen][var][:, :, 0, 0] = read
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read, reg_index = reg_index)
                                 raise(e)
+                        
                         
                         # If there is a third dimension only
                         elif dims_length[2] > 1:

@@ -186,7 +186,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         for r in range(len(titles['RTI'])):
 
             bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
-            data['SEWW'] = np.sum (bi, axis = 2)
+            data['SEWW'] = np.sum (bi, axis = 0)
             
     
         for t1 in range(len(titles['SSTI'])): 
