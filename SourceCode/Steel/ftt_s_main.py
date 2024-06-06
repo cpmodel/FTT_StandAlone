@@ -92,7 +92,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data = scrap_calc(data, time_lag, titles, year)
 
     # Historical data currently ends in 2019, so we need to initialise data
-    # Simulation period starts in 2020
+    # Simulation period starts in 2020   # Calculate capacities (SEWK)
     if year <= histend['SEWG']:
 
         
@@ -164,6 +164,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                    data['SJCO'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
 
         
+
         # Calculate cumulative capacities (SEWW)
         bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
         for r in range(len(titles['RTI'])):
