@@ -63,3 +63,40 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         sxex[mask] = np.sum(data['SXIM']) * (scrapabundance[mask] / np.sum(scrapabundance))
 
     data['SXSR']= data['SXSC'] + data['SXIM'] - data['SXEX']
+    
+    for r in range(len(titles['RTI'])):
+        if data['SPSA'][r, 0 , 0] > 0.0:
+                for path in range(len(titles['STTI'])-2):
+                    # There's enough scrap to meet the maximum scrap demand
+                    if data ['SXSR'][r, 0, 0] >= MaxScrapDemand[r, 0, 0]:
+                        MetalInput[path,0] = (1.0 - 0.09 - MSSPP[path,r]) * PITCSR 
+                        MetalInput[path,1] = 0.0
+                        MetalInput[path,2] = MSSPP[path,r] +0.09
+                        MetalInput[25,0] = 0.0
+                        MetalInput[25,1] = 0.0
+                        MetalInput[25,2] = MSSPP[25,r] +0.09
+                #There's not enough scrap to feed into all the technologies, but there's 
+                #enough scrap to feed into the Scrap-EAF route.             
+                    elif ((data['SXSR'][r, 0, 0] < MaxScrapDemand[r, 0, 0]) and (data['SXSR'][r, 0, 0] >= ScraplimitTrade[r, 0, 0])): 
+                        MetalInput[path, 1] = 0.0
+                   
+                        if (sum (data ['SEWG'][1:24,r] * MSSPP[1:24,r]) > 0.0):
+                            MetalInput[path,2] = 0.09 + (data['SXSR'][r,0,0]-ScraplimitTrade[r, 0, 0])/MaxScrapDemandP[r, 0, 0] * MSSPP[path,r]
+                        else:
+                            MetalInput[path,2] = MSSPP[path,r]/2 +0.09
+                    
+                        MetalInput [path,0] = (1.0 - MetalInput[path,2]) * PITCSR
+                        MetalInput[25,0] = 0.0
+                        MetalInput[25,1] = 0.0
+                        MetalInput[25,2] = MSSPP[26,r] +0.09
+     
+                #There's not enough scrap available to meet the demand, so all available
+                #scrap will be fed into the Scrap-EAF route.    
+                    elif ((data['SXSR'][r,0,0] < MaxScrapDemand [r,0,0]) and (data[SXSR][r,0,0] < data['SEWG'][25,r,0]*(1-0.09))):
+                        MetalInput[path,0] = PITCSR * (1.0 - 0.09)
+                        MetalInput[path,1] = 0.0
+                        MetalInput[path,2] = 0.09
+     
+                        MetalInput[25,0] = 0.0
+                        MetalInput[25,1] = (1 - 0.09 - data['SXSR'][r,0,0] / data['SEWG'][25,r])*PITCSR
+                        MetalInput[25,2] = 0.09 + data['SXSR'][r, 0, 0] / SEWG[25,r]  
