@@ -134,15 +134,15 @@ def raw_material_distr(data, titles, year, t):
             #Material based emission intensity
             ef = np.sum(Inventory[0,:,a]*data['SMEF'][0,:,0])
             ef_fossil = np.sum(inventory[0,1:15,a]*data['SMEF'][0,1:15,0])
-            ef_biobased = np.sum(inventory(0,16:24,a)*data['SMEF'][0,16:24,0])
+            ef_biobased = np.sum(inventory[0, 16:24, a] * data['SMEF'][0,16:24,0])
 
             #From here on: Put the results of the inventory calculation into the CostMatrix
             #Material based Energy Intensity
-            data['BSTC'][r,a,15]= np.sum(inventory[0,:,a]*data['SMED'][0;:,0])
+            data['BSTC'][r,a,15] = np.sum(inventory[0, :, a] * data['SMED'][0, :, 0])
             data['STEI'][r,a,0]= data['BSTC'][r,a,15]
             data['STSC'][r,a,0]= inventory[0,4,a]
 
-            for mat in range(len['SMTI'])
+            for mat in range(len['SMTI']):
                 data['BSTC'][r,a,21]= inventory[0,21,a]
             
             #Select CCS technologies
@@ -151,7 +151,7 @@ def raw_material_distr(data, titles, year, t):
                 inventory[0, 12:15, a] *= 1.1
                 inventory[0, 18:20, a] *= 1.1
                 #capital investment costs
-                if (year == 2017)
+                if year == 2017:
                     data['SCIN'][r, a, 0] = inventory[0,20,a]
                 
                 #Adjust O&M Costs due to CO2 transport and storage
@@ -160,7 +160,7 @@ def raw_material_distr(data, titles, year, t):
 
                 #Adjust EF for CCS utilising technologies
                 data['BSTC'][r,a,13] = 0.1 * ef - ef_biobased
-                data['STEF'][r,a,,0] = 0.1 * ef - ef_biobased
+                data['STEF'][r,a,0] = 0.1 * ef - ef_biobased
                 data['BSTC'][r,a,14] = data['BSTC'][r,a,13]*0.1
 
                 #Adjust total Employment for complete steelmaking route (increase by 5% due to CCS)
@@ -170,9 +170,9 @@ def raw_material_distr(data, titles, year, t):
                 #Adjust electricity consumption due to CCS use
                 data['BSTC'][r,a,36] *= 1.1
             
-            else
+            else:
                 #capital investment costs
-                if (year == 2017)
+                if year == 2017:
                     data['SCIN'][r, a, 0] = inventory[0,20,a]
                 
                 #OM and dOM
