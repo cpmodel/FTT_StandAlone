@@ -3,7 +3,7 @@
 ftt_p_costc.py
 =========================================
 Power cost-supply curves module.
-################################
+
 
 Cost-supply curves give the cost of a resource as a function of its quantity, and
 hence provide the **marginal cost** of each resource. For example, if a fossil fuel

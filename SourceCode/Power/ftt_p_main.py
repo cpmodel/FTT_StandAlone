@@ -27,6 +27,10 @@ curves. **Cost-supply curves** are recalculated at the end of the routine.
 
 Local library imports:
 
+    FTT: Core functions:
+    - `get_sales <get_sales_or_investment.htlm>
+        Generic investment function (new plus end-of-life replacement)
+        
     FTT: Power functions:
 
     - `rldc <ftt_p_rldc.html>`__
@@ -80,7 +84,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     Parameters
     -----------
     data: dictionary of NumPy arrays
-        Model variables for the given year of solution
+        Model variables for the current year
     time_lag: type
         Model variables in previous year
     iter_lag: type
@@ -88,9 +92,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
-        Final year of histrorical data by variable
+        Final year of historical data by variable
     year: int
-        Curernt/active year of solution
+        Current/active year of solution
     Domain: dictionary of lists
         Pairs variables to domains
 
@@ -593,7 +597,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             
             if year in [2019, 2020]:
-                 print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
+                 #print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
                  #print(f'MEWL in {year}:{t} is {np.sum(data_dt["MEWL"][:, 18]):.0f}')
                  pass
 
