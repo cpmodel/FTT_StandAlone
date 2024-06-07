@@ -30,9 +30,9 @@ def get_lcoe(data, titles):
 
     Parameters
     -----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) for all
-        variables. Variable names are keys and the values are 3D NumPy arrays.
+    data: dictionary of NumPy arrays
+        Model variables for the current year.
+        Variable names are keys and the values are 3D NumPy arrays.
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
 
