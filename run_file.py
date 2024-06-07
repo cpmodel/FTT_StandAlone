@@ -17,18 +17,13 @@ Local library imports:
     - `ModelRun <model_class.html>`__
         Creates a new instance of the ModelRun class
 
-    Support functions:
-
-    - `paths_append <paths_append.html>`__
-        Appends file path to sys path to enable import
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 """
 
 
 # Local library imports
 from SourceCode.model_class import ModelRun
+from SourceCode.support.output_functions import save_all
 
 # Instantiate the run
 model = ModelRun()
@@ -55,3 +50,4 @@ model.run()
 output_all = model.output
 
 #
+save_all(output_all)

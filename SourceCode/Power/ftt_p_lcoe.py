@@ -4,14 +4,7 @@
 ftt_p_lcoe.py
 =========================================
 Power LCOE FTT module.
-#################################
 
-Local library imports:
-
-    Support functions:
-
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - get_lcoe
@@ -20,18 +13,11 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
-# Local library imports
-from SourceCode.support.divide import divide
 
 
 # %% lcoe
@@ -64,7 +50,11 @@ def get_lcoe(data, titles):
 
     Notes
     ---------
-    Additional notes if required.
+    BCET = cost matrix 
+    MEWL = Average capacity factor
+    MEWT = Subsidies
+    MTFT = Fuel tax
+    
     """
 
     # Categories for the cost matrix (BCET)
@@ -75,24 +65,23 @@ def get_lcoe(data, titles):
         # Cost matrix
         bcet = data['BCET'][r, :, :]
 
-        # plant lifetime
+        # Plant lifetime
         lt = bcet[:, c2ti['9 Lifetime (years)']]
         bt = bcet[:, c2ti['10 Lead Time (years)']]
         max_lt = int(np.max(bt+lt))
-        # max_bt = int(np.max(bt))
+        
+        # Define (matrix) masks to turn off cost components before or after contruction 
         full_lt_mat = np.linspace(np.zeros(len(titles['T2TI'])), max_lt-1,
                                   num=max_lt, axis=1, endpoint=True)
-        lt_max_mat = np.concatenate(int(max_lt)*[(lt+bt-1)[:, np.newaxis]], axis=1)
-
-        bt_max_mat = np.concatenate(int(max_lt)*[(bt-1)[:, np.newaxis]], axis=1)
+        lt_max_mat = np.concatenate(int(max_lt) * [(lt+bt-1)[:, np.newaxis]], axis=1)
+        bt_max_mat = np.concatenate(int(max_lt) * [(bt-1)[:, np.newaxis]], axis=1)
+        
         bt_mask = full_lt_mat <= bt_max_mat
-        # bt_mat = np.where(bt_mask, full_lt_mat, 0)
-
         bt_mask_out = full_lt_mat > bt_max_mat
         lt_mask_in = full_lt_mat <= lt_max_mat
         lt_mask = np.where(lt_mask_in == bt_mask_out, True, False)
         
-        # capacity factor of marginal unit (for decision-making)
+        # Capacity factor of marginal unit (for decision-making)
         cf_mu = bcet[:, c2ti['11 Decision Load Factor']].copy()
         # Trap for very low CF
         cf_mu[cf_mu<0.000001] = 0.000001
@@ -111,12 +100,12 @@ def get_lcoe(data, titles):
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
 
         # Initialse the levelised cost components
-        # Average investment cost of marginal unit
+        # Average investment cost of marginal unit (new investments)
         it_mu = np.ones([len(titles['T2TI']), int(max_lt)])
         it_mu = it_mu * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis] * conv_mu[:, np.newaxis]
         it_mu = np.where(bt_mask, it_mu, 0)
         
-        # Average investment costs of across all units
+        # Average investment costs of across all units (electricity price)
         it_av = np.ones([len(titles['T2TI']), int(max_lt)])
         it_av = it_av * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis] * conv_av[:, np.newaxis]
         it_av = np.where(bt_mask, it_av, 0)       
@@ -151,8 +140,8 @@ def get_lcoe(data, titles):
 
         # fuel tax/subsidies
         fft = np.ones([len(titles['T2TI']), int(max_lt)])
-        fft = ft * data['MTFT'][r, :, 0, np.newaxis]
-        fft = np.where(lt_mask, ft, 0)
+        fft = fft * data['MTFT'][r, :, 0, np.newaxis]
+        fft = np.where(lt_mask, fft, 0)
 
         # Average operation & maintenance cost
         omt = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -168,11 +157,12 @@ def get_lcoe(data, titles):
         ct = np.ones([len(titles['T2TI']), int(max_lt)])
         ct = ct * bcet[:, c2ti['1 Carbon Costs ($/MWh)'], np.newaxis]
         ct = np.where(lt_mask, ct, 0)
+        
 
         # Energy production over the lifetime (incl. buildtime)
         # No generation during the buildtime, so no benefits
-        et = np.ones([len(titles['T2TI']), int(max_lt)])
-        et = np.where(lt_mask, et, 0)
+        energy_prod = np.ones([len(titles['T2TI']), int(max_lt)])
+        energy_prod = np.where(lt_mask, energy_prod, 0)
 
         # Storage costs and marginal costs (lifetime only)
         stor_cost = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -180,13 +170,13 @@ def get_lcoe(data, titles):
 
         if np.rint(data['MSAL'][r, 0, 0]) in [2]:
             stor_cost = stor_cost * (data['MSSP'][r, :, 0, np.newaxis] +
-                                     data['MLSP'][r, :, 0, np.newaxis])/1000
+                                     data['MLSP'][r, :, 0, np.newaxis]) / 1000
             marg_stor_cost = marg_stor_cost * 0
         elif np.rint(data['MSAL'][r, 0, 0]) in [3, 4, 5]:
             stor_cost = stor_cost * (data['MSSP'][r, :, 0, np.newaxis] +
-                                     data['MLSP'][r, :, 0, np.newaxis])/1000
+                                     data['MLSP'][r, :, 0, np.newaxis]) / 1000
             marg_stor_cost = marg_stor_cost * (data['MSSM'][r, :, 0, np.newaxis] +
-                                          data['MLSM'][r, :, 0, np.newaxis])/1000
+                                          data['MLSM'][r, :, 0, np.newaxis]) / 1000
         else:
             stor_cost = stor_cost * 0
             marg_stor_cost = marg_stor_cost * 0
@@ -195,59 +185,61 @@ def get_lcoe(data, titles):
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
 
         # Net present value calculations
+        
         # Discount rate
         denominator = (1+dr)**full_lt_mat
-
-        # 1-Expenses
-        # 1.1-Without policy costs
-        npv_expenses1 = (it_av+ft+omt+stor_cost+marg_stor_cost)/denominator
-        # 1.2-With policy costs
-        # npv_expenses2 = (it+st+fft+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
-        npv_expenses2 = (it_av+fft+st+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
-        # 1.3-Without policy, with co2p
+        
         # TODO: marg_stor_cost?
-        npv_expenses3 = (it_mu+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
-        # 1.3-Only policy costs
-        # npv_expenses3 = (ct+fft+st)/denominator
-        # 2-Utility
-        npv_utility = (et)/denominator
-        #Remove 1s for tech with small lifetime than max
-        npv_utility[npv_utility==1] = 0
-        # npv_utility[:,0] = 1
-        # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator
+        
+        # 1a – Expenses – marginal units
+        npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator 
+        npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
+        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st) / denominator 
+        
+        # 1b – Expenses – average LCOEs
+        npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
+        npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
+        
+        # 2 – Utility
+        npv_utility = energy_prod / denominator
+        npv_utility[npv_utility==1] = 0 # Remove 1s for tech with smaller lifetime than max
+        utility_tot = np.sum(npv_utility, axis=1) 
+        
+        # 3 – Standard deviation (propagation of error)
+        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator  
+        
+        # 4a – levelised cost – marginal units 
+        lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
+        lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
+        lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
+        # TODO make gamma values relative!!!
+        lcoe_mu_gamma           = lcoe_mu_all_policies*(1 + data['MGAM'][r, :, 0])
 
-        # 1-levelised cost variants in $/pkm
-        # 1.1-Bare LCOE
-        lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOE including policy costs
-        tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
-        # 1.3 LCOE excluding policy, including co2 price
-        lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOE of policy costs
-        # lcoe_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
+        # 4b levelised cost – average units 
+        lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
+        
         # Standard deviation of LCOE
-        dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
+        dlcoe                   = np.sum(npv_std, axis=1) / utility_tot
 
-        # LCOE augmented with gamma values
-        tlcoeg = tlcoe+data['MGAM'][r, :, 0]
 
         # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe)     # The real bare LCOE without taxes
-        data['MECW'][r, :, 0] = copy.deepcopy(lcoeco2)  # The real bare LCOE with taxes
-        data['METC'][r, :, 0] = copy.deepcopy(tlcoeg)   # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)    # Variation on the LCOE distribution
+        data['MEWC'][r, :, 0] = copy.deepcopy(lcoe_mu_no_policy)    # The real bare LCOE without taxes
+        data['MECW'][r, :, 0] = copy.deepcopy(lcoe_mu_only_co2)     # Bare LCOE with CO2 costs
+        data["MECC"][r, :, 0] = copy.deepcopy(lcoe_all_but_co2)     # Lcoe with policy, without CO2 costs
+        data['METC'][r, :, 0] = copy.deepcopy(lcoe_mu_gamma)        # As seen by consumer (generalised cost)
+        data['MTCD'][r, :, 0] = copy.deepcopy(dlcoe)                # Standard deviation LCOE (incomplete!) #TODO
 
-        # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])   # As seen by consumer (generalised cost)
+
+        # data['METC'][r, :, 0] = copy.deepcopy(data['METCX'][r, :, 0])    # As seen by consumer (generalised cost)
         # data['MTCD'][r, :, 0] = copy.deepcopy(data['MTCDX'][r, :, 0])    # Variation on the LCOE distribution
 
-
         # Output variables
-        data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, 2])
-        data['MWFC'][r, :, 0] = copy.deepcopy(bcet[:, 4])
-        data['MCOC'][r, :, 0] = copy.deepcopy(bcet[:, 0])
+        data['MWIC'][r, :, 0] = copy.deepcopy(bcet[:, 2])  # Investment cost component LCOE ($/kW)
+        data['MWFC'][r, :, 0] = copy.deepcopy(bcet[:, 4])  # Fuel cost component of the LCOE ($/MWh)
+        data['MCOC'][r, :, 0] = copy.deepcopy(bcet[:, 0])  # Carbon cost component of the LCOE ($/MWh)
 
-        if np.rint(data['MSAL'][r, 0, 0]) > 1:
+        # MWMC: FTT Marginal costs power generation ($/MWh)
+        if np.rint(data['MSAL'][r, 0, 0]) > 1: # rint rounds to nearest int
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
         else:
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6]
@@ -258,8 +250,5 @@ def get_lcoe(data, titles):
         data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1]*bcet[:, 1] +
                                         bcet[:, 5]*bcet[:, 5] +
                                         bcet[:, 7]*bcet[:, 7])
-
-        if r == 1:
-            x = 1+1
 
     return data
