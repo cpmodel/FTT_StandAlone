@@ -53,11 +53,7 @@ Functions included:
 """
 
 # Standard library imports
-from math import sqrt
-import os
 import copy
-import sys
-import warnings
 
 # Third party imports
 import pandas as pd
@@ -66,12 +62,14 @@ from numba import njit
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.core_functions.ftt_sales_or_investments import get_sales
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
+
 
 
 # %% main function
@@ -228,16 +226,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
             
-
-            # Investment (eq 8 Mercure EP48 2012)
-#                data['MEWI'][r, :, 0] = (np.minimum(data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0], np.zeros(len(titles['T2TI']))) +
-#                                         time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']])
-
+            
             cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
             cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
             data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
                                              cap_diff + cap_drpctn,
                                              cap_drpctn)
+            # test, dummy = get_sales(
+            #     data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
+            #     data_dt["MEWS"], data["MEWI"], data['BETC'][:, :, c3ti['8 lifetime']], dt, t)
             
         # Copy MEWL to the cost matrix for all techs. This essentially
         # fixes the load factor for decision-making for non-VRE techs
@@ -287,6 +284,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
                                           where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
+        
+        # Calculate rate of change of shares (for gamma value automation)
+        if year > 2001:
+            data['MSRC'][:,:,0] = data['MEWS'][:, :, 0] - time_lag['MEWS'][:, :, 0]
 
         # If first year, get initial MC, dMC for DSPCH
         if not time_lag['MMCD'][:, :, 0].any():
@@ -735,6 +736,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             #  Update variables
             # =============================================================
 
+            # Calculate rate of change of shares (for gamma value automation)
+            data['MSRC'][:, :, 0] = data['MEWS'][:, :, 0] - time_lag['MEWS'][:, :, 0]
+
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
             data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
@@ -763,7 +767,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                            data['MEWL'][:,:,0])
             
             # Total additional electricity that needs to be generated
-            data['MADG'][:,0,0] = data['MCGA'][:,0,0]-data['MCNA'][:,0,0]+data['MSSG'][:,0,0]
+            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:,0,0]+data['MSSG'][:,0,0]
             
             # Update generation
             denominator = np.sum(data['MEWS'][:, :, 0]*data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
@@ -776,12 +780,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWK']= divide(data['MEWG'], data['MEWL']) / 8766
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
-            # Investment (eq 8 Mercure EP48 2012)
-#            data['MEWI'][:, :, 0] = (np.minimum(data['MEWK'][:, :, 0] - data_dt['MEWK'][:, :, 0], np.zeros((len(titles['RTI']), len(titles['T2TI'])))) +
-#                                     data_dt['MEWK'][:, :, 0] / data['BCET'][:, :, c2ti['9 Lifetime (years)']])
+            
 
-            #cap_diff = data['MEWK'][:, :, 0] - time_lag['MEWK'][:, :, 0]
-            #cap_drpctn = time_lag['MEWK'][:, :, 0] / time_lag['BCET'][:, :, c2ti['9 Lifetime (years)']]
+            data["MEWI"], 
             cap_diff = (data['MEWK'][:, :, 0] - data_dt['MEWK'][:, :, 0])/dt
             cap_dprctn = data_dt['MEWK'][:, :, 0] / time_lag['BCET'][:, :, c2ti['9 Lifetime (years)']]
             data['MEWI'][:, :, 0] = np.where(cap_diff > 0.0,
