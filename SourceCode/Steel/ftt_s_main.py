@@ -168,8 +168,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                    data['SJCO'][r,10,0] += 0.0
                    data['SJCO'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
         
-        # Calculate cumulative capacities (SEWW)
-        bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
+            # Calculate cumulative capacities (SEWW)
+            bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
 
         for r in range(len(titles['RTI'])):
             bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
@@ -255,16 +255,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 #         # Investment (= capacity additions) by technology (in GW/y)
 #         if year > 2014:
-#             data["HEWI"][:, :, 0] = ((data["HEWK"][:, :, 0] - time_lag["HEWK"][:, :, 0])
+#             data["SEWI"][:, :, 0] = ((data["HEWK"][:, :, 0] - time_lag["HEWK"][:, :, 0])
 #                                         + time_lag["HEWK"][:, :, 0] * data["HETR"][:, :, 0])
-#             # Prevent HEWI from going negative
-#             data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
+#             # Prevent SEWI from going negative
+#             data['SEWI'][:, :, 0] = np.where(data['SEWI'][:, :, 0] < 0.0,
 #                                                 0.0,
-#                                                 data['HEWI'][:, :, 0])
+#                                                 data['SEWI'][:, :, 0])
             
 #             bi = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
 #             for r in range(len(titles['RTI'])):
-#                 bi[r,:] = np.matmul(data['HEWB'][0, :, :], data['HEWI'][r, :, 0])
+#                 bi[r,:] = np.matmul(data['HEWB'][0, :, :], data['SEWI'][r, :, 0])
 #             dw = np.sum(bi, axis=0)
 #             data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
 
@@ -323,7 +323,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     
 #         # Factor used to create quarterly data from annual figures
 #         no_it = int(data['noit'][0, 0, 0])
-#         dt = 1 / float(no_it)
+            dt = 1 / float(no_it)
 
 #         ############## Computing new shares ##################
 
@@ -552,8 +552,42 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #             # EmissionsFis
 #             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
-#             # New additions (HEWI)
-#             data, hewi_t = get_sales(data, data_dt, time_lag, titles, dt, t, endo_eol)
+            # New additions (SEWI)
+            data, sewi_t = get_sales(data['SEWK'], data_dt['SEWK'], time_lag['SEWK'], data['SEWS'], data_dt['SEWS'], data['SEWI'], data['BSTC'][:, :, c5ti['Lifetime']], dt)
+            ############## Learning-by-doing ##################
+
+            # Cumulative global learning
+            # Using a technological spill-over matrix (HEWB) together with capacity
+            # additions (SEWI) we can estimate total global spillover of similar
+            # technologies
+            bi = np.zeros((len(titles['RTI']),len(titles['STTI'])))
+            for r in range(len(titles['RTI'])):
+                 bi[r,:] = np.matmul(data['SEWB'][0, :, :],sewi_t[r, :, 0])
+            dw = np.sum(bi, axis=0)
+
+            # Cumulative capacity incl. learning spill-over effects
+            data['SEWW'][0, :, 0] = data_dt['SEWW'][0, :, 0] + dw
+
+            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
+            data['BSTC'] = copy.deepcopy(data_dt['BSTC'])
+
+            # Learning-by-doing effects on investment and efficiency
+            for b in range(len(titles['STTI'])):
+
+                if data['SEWW'][0, b, 0] > 0.0001:
+
+                    data['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']] = (data_dt['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']]  \
+                                                                              *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
+                    data['BSTC'][:, b, c5ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c5ti['2 Inv Cost SD']]  \
+                                                                              *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
+
+            #Total investment in new capacity in a year (m 2014 euros):
+              #SEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
+              #BHTC(:,:,1) are the investment costs (2014Euro/kW)
+            data['SWIY'][:,:,0] = data['HWIY'][:,:,0] + data['SEWI'][:,:,0]*dt*data['BSTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
+            # Save investment cost for front end
+            data["SWIC"][:, :, 0] = data["BSTC"][:, :, c5ti['1 Inv cost mean (EUR/Kw)']]
+            
 
 #             # TODO: HEWP = HFPR not HFFC
 #             #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
@@ -580,44 +614,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #                 if data['HJFC'][r, fuel, 0] > 0.0:
 #                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
-#             ############## Learning-by-doing ##################
-
-#             # Cumulative global learning
-#             # Using a technological spill-over matrix (HEWB) together with capacity
-#             # additions (HEWI) we can estimate total global spillover of similar
-#             # technologies
-#             bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
-#             for r in range(len(titles['RTI'])):
-#                 bi[r,:] = np.matmul(data['HEWB'][0, :, :],hewi_t[r, :, 0])
-#             dw = np.sum(bi, axis=0)
-
-#             # Cumulative capacity incl. learning spill-over effects
-#             data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
-
-#             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-#             data['BHTC'] = copy.deepcopy(data_dt['BHTC'])
-
-#             # Learning-by-doing effects on investment and efficiency
-#             for b in range(len(titles['HTTI'])):
-
-#                 if data['HEWW'][0, b, 0] > 0.0001:
-
-#                     data['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/Kw)']] = (data_dt['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/Kw)']]  \
-#                                                                              *(1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b]/data['HEWW'][0, b, 0]))
-#                     data['BHTC'][:, b, c4ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']]  \
-#                                                                              *(1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b]/data['HEWW'][0, b, 0]))
-#                     data['BHTC'][:, b, c4ti['9 Conversion efficiency']] = (data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']] \
-#                                                                             * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
-
-
-#             #Total investment in new capacity in a year (m 2014 euros):
-#               #HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-#               #BHTC(:,:,1) are the investment costs (2014Euro/kW)
-#             data['HWIY'][:,:,0] = data['HWIY'][:,:,0] + data['HEWI'][:,:,0]*dt*data['BHTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
-#             # Save investment cost for front end
-#             data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/Kw)']]
-#             # Save efficiency for front end
-#             data["HEFF"][:, :, 0] = data["BHTC"][:, :, c4ti['9 Conversion efficiency']]
+             
 
             #  =================================================================
             # Update the time-loop variables
