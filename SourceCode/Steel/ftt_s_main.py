@@ -43,7 +43,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.Steel.ftt_s_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_s_sales_or_investments import get_sales
 from SourceCode.Steel.ftt_s_lcos import get_lcos
 from SourceCode.Steel.ftt_s_scrap import scrap_calc
 from SourceCode.Steel.ftt_s_rawmaterials import raw_material_distr
