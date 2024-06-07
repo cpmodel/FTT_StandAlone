@@ -46,6 +46,7 @@ from SourceCode.support.divide import divide
 from SourceCode.Steel.ftt_s_sales import get_sales
 from SourceCode.Steel.ftt_s_lcos import get_lcos
 from SourceCode.Steel.ftt_s_scrap import scrap_calc
+from SourceCode.Steel.ftt_s_rawmaterials import raw_material_distr
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -89,12 +90,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     jti = {category: index for index, category in enumerate(titles['JTI'])}
 
     sector = 'steel'
+    no_it = data["noit"][0, 0, 0]
+
     data = scrap_calc(data, time_lag, titles, year)
 
     # Historical data currently ends in 2019, so we need to initialise data
     # Simulation period starts in 2020   # Calculate capacities (SEWK)
     if year <= histend['SEWG']:
-
 
 
 
@@ -191,7 +193,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0] /1.14 
 
                                              
-
+        if year > histend["SEWG"]:
+            for t in range(1, no_it):
+                raw_material_distr(data, titles, year, t)
 #         # Useful energy demand by boilers
 #         # The historical data contains final energy demand
 #         data['SEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c5ti["9 Conversion efficiency"]]
