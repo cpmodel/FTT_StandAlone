@@ -43,7 +43,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.Steel.ftt_s_sales import get_sales
+from SourceCode.Steel.ftt_s_sales_or_investments import get_sales
 from SourceCode.Steel.ftt_s_lcos import get_lcos
 from SourceCode.Steel.ftt_s_scrap import scrap_calc
 from SourceCode.Steel.ftt_s_rawmaterials import raw_material_distr
@@ -195,7 +195,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                              
         if year > histend["SEWG"]:
             for t in range(1, no_it):
+                
+                # Create a local dictionary for timeloop variables
+                # It contains values between timeloop interations in the FTT core
+                data_dt = {}
+
+                # First, fill the time loop variables with the their lagged equivalents
+                for var in time_lag.keys():
+                    data_dt[var] = copy.deepcopy(time_lag[var])
                 raw_material_distr(data, titles, year, t)
+
 #         # Useful energy demand by boilers
 #         # The historical data contains final energy demand
 #         data['SEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c5ti["9 Conversion efficiency"]]
@@ -295,13 +304,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #     # Endogenous calculation takes over from here
 #     if year > histend['HEWF']:
 
-#         # Create a local dictionary for timeloop variables
-#         # It contains values between timeloop interations in the FTT core
-#         data_dt = {}
-
-#         # First, fill the time loop variables with the their lagged equivalents
-#         for var in time_lag.keys():
-#             data_dt[var] = copy.deepcopy(time_lag[var])
+#         
 
         
 #         # Create the regulation variable
@@ -624,9 +627,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # data = get_lcos(data, titles)
 
             #Update time loop variables:
-            # for var in data_dt.keys():
+            for var in data_dt.keys():
 
-            #     data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = copy.deepcopy(data[var])
 
 
     return data
