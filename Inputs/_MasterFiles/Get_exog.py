@@ -29,8 +29,8 @@ if __name__ == '__main__':
     dirp_inputs = Path(dirp).parents[0]
     dirp_db = os.path.join(dirp, 'databank')
     dirp_mre = os.path.join(dirp, 'MREs')
-    dirp_out_ftt = os.path.join(dirp_inputs, 'S2', 'FTT-P')
-    dirp_out_gen = os.path.join(dirp_inputs, 'S2', 'General')
+    dirp_out_ftt = os.path.join(dirp_inputs, 'S0', 'FTT-P')
+    dirp_out_gen = os.path.join(dirp_inputs, 'S0', 'General')
 
 
 
@@ -175,17 +175,19 @@ if __name__ == '__main__':
 
 
     for region in regions_short:
+
+        mewlx[region].to_csv(os.path.join(dirp_out_ftt, "MEWLX_{}.csv".format(region)))
         pass
         #mewlx[region].to_csv(os.path.join(dirp_out_ftt, "MEWLX_{}.csv".format(region)))
         # mercx[region].to_csv(os.path.join(dirp_out_ftt, "MERCX_{}.csv".format(region)))
-        #mewdx[region].to_csv(os.path.join(dirp_out_ftt, "MEWDX_{}.csv".format(region)))
-        #metcx[region].to_csv(os.path.join(dirp_out_ftt, "METCX_{}.csv".format(region)))
+        mewdx[region].to_csv(os.path.join(dirp_out_ftt, "MEWDX_{}.csv".format(region)))
+        # metcx[region].to_csv(os.path.join(dirp_out_ftt, "METCX_{}.csv".format(region)))
         # mtcdx[region].to_csv(os.path.join(dirp_out_ftt, "MTCDX_{}.csv".format(region)))
         # mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAMX_{}.csv".format(region)))
         # mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAM_{}.csv".format(region)))
-        #mewgx[region].to_csv(os.path.join(dirp_out_ftt, "MEWGX_{}.csv".format(region)))
-        #mewkx[region].to_csv(os.path.join(dirp_out_ftt, "MEWKX_{}.csv".format(region)))
-        #mewsx[region].to_csv(os.path.join(dirp_out_ftt, "MEWSX_{}.csv".format(region)))
+        mewgx[region].to_csv(os.path.join(dirp_out_ftt, "MEWGX_{}.csv".format(region)))
+        mewkx[region].to_csv(os.path.join(dirp_out_ftt, "MEWKX_{}.csv".format(region)))
+        mewsx[region].to_csv(os.path.join(dirp_out_ftt, "MEWSX_{}.csv".format(region)))
         # mssmx[region].to_csv(os.path.join(dirp_out_ftt, "MSSMX_{}.csv".format(region)))
         # mlsmx[region].to_csv(os.path.join(dirp_out_ftt, "MLSMX_{}.csv".format(region)))
         # fretx[region].to_csv(os.path.join(dirp_out_ftt, "FRETX_{}.csv".format(region)))
@@ -199,6 +201,7 @@ if __name__ == '__main__':
         # mwkax[region].to_csv(os.path.join(dirp_out_ftt, "MWKA_{}.csv".format(region)))
         #mcfcx[region].to_csv(os.path.join(dirp_out_ftt, "MCFCX_{}.csv".format(region)))
         #mes2x[region].to_csv(os.path.join(dirp_out_ftt, "MES2X_{}.csv".format(region)))
+        mcfcx[region].to_csv(os.path.join(dirp_out_ftt, "MCFCX_{}.csv".format(region)))
 
         # pfrb[region].to_csv(os.path.join(dirp_out_gen, "PFRB_{}.csv".format(region)))
         # pfrc[region].to_csv(os.path.join(dirp_out_gen, "PFRC_{}.csv".format(region)))
