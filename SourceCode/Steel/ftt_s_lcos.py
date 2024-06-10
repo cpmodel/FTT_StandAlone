@@ -2,20 +2,17 @@
 """
 Created on Wed Feb 21 11:54:30 2024
 
-@author: AE
+@author: Varun
 
 =========================================
-ftt_h_lcoh.py
+ftt_s_lcos.py
 =========================================
 Domestic Heat FTT module.
 ####################################
 
-This is the main file for FTT: Heat, which models technological
-diffusion of domestic heat technologies due to consumer decision making. 
-Consumers compare the **levelised cost of heat**, which leads to changes in the
-market shares of different technologies.
+This is the LOOS file for FTT: Steel, which calculates levelized cost of steel production
 
-The outputs of this module include levelised cost of heat technologies
+The outputs of this module include levelised cost of steel production technologies
 
 Local library imports:
 
@@ -26,26 +23,18 @@ Local library imports:
     - `estimation <econometrics_functions.html>`__
         Predict future values according to the estimated coefficients.
 
-Functions included:
-    - get_lcoh
-        Calculate levelised cost of transport
-        
-variables: 
-cf = capacity factor
-ce = conversion efficiency
-
-
 """
 
 # Third party imports
 import numpy as np
+import math
 
 # Local library imports
 from SourceCode.support.divide import divide
 
-# %% LOCH
+# %% LCOS
 # --------------------------------------------------------------------------
-# -------------------------- LCOH function ---------------------------------
+# -------------------------- LCOS function ---------------------------------
 # --------------------------------------------------------------------------
 
 def get_lcos(data, titles):
@@ -56,14 +45,361 @@ def get_lcos(data, titles):
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
-    # Categories for the cost matrix (BHTC)
-    c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
-
+    # Categories for the cost matrix (BSTC)
+    c5ti = {category: index for index, category in enumerate(titles['C5TI'])}
+    #Calculate cost of Imaking, price of I production, inventory, emission factors
+    
     for r in range(len(titles['RTI'])):
+        if data['SPSA'][r,0,0] > 0:
+            inputprices_taxes = (1 + data['STRT'][r,:,0] * data['SPMT'][r,:,0])
+            mkt_shares = data['SEWS'][r,:,0]
+            #LCOI Calculation starts here
+            #initializing intermediate variables
+            #TotCost_I = np.zeros(len(titles['STTI'])) #Total cost due to material/fuel consumption
+            #TaxTotCost_I = np.zeros(len(titles['STTI']))          #Total cost due to material/fuel consumption inc. additional tax/subsidies on materials
+            #IC_I = np.zeros(len(titles['STTI']))                  #Investment costs 
+            #OM_I = np.zeros(len(titles['STTI']))                  #O&M costs
+            #EF_I = np.zeros(len(titles['STTI']))                  #Emission factors - total
+            #EF_I_Fossil = np.zeros(len(titles['STTI']))           #Emission factors - fossils only
+            #EF_I_Biobased = np.zeros(len(titles['STTI']))         #Emission factors - biobased only
+            #EI_I = np.zeros(len(titles['STTI']))                  #Energy intensity
+            #CF_I = np.zeros(len(titles['STTI']))                  #Capacity factors
+            #r_I = np.zeros(len(titles['STTI']))                   #Discount rate
+            #L_I = np.zeros(len(titles['STTI']))                   #Lifetime
+            #B_I = np.zeros(len(titles['STTI']))                   #Leadtime
+            #Sub_I = np.zeros(len(titles['STTI']))                 #Subsidies/tax on investment costs
+        
+            for path in range(len(titles['STTI'])):
+                for plant in range (len(titles['SSTI'])):
+                    #Not all integrated steelmaking routes have an Iron making step and the condition below skips those routes.
+                    #Also, only a specific range of the NSS classification is required
+                    if data['STIM'][path, plant] == 1 and plant >= 8 and plant <= 20:
+                        #First, add Ironmaking
+                        #inv_mat_I = np.zeros (len(titles['SMTI']), len(titles['SSTI']))
+                        inv_mat_I = data['SCMM'][:,plant]
+                        #Second, add sinter and pellet
+                        inv_mat_I [:] = inv_mat_I [:] + inv_mat_I [6] * data['SCMM'] [:,2] + inv_mat_I [7] * data['SCMM'] [:,3] + inv_mat_I [8] * data['SCMM'] [:,4] + inv_mat_I [9] * data['SCMM'] [:,5]
+                        #Third, add coke
+                        inv_mat_I [:] = inv_mat_I [:] + inv_mat_I [4] * data['SCMM'] [:,0] + inv_mat_I [5] * data['SCMM'] [:,1]
+                        #Fourth, add oxygen
+                        inv_mat_I [:] = inv_mat_I [:] + inv_mat_I [10] * data['SCMM'] [:,6] 
+                        
+                        #Increase fuel consumption if CCS
+                        if data['BSTC'] [r,path,21] == 1:
+                            inv_mat_I [11:14] = 1.1 * inv_mat_I [11:14]
+                            inv_mat_I [17:19] = 1.1 * inv_mat_I [17:19]
+                        
+                        IC_I = data ['SCMM'] [20, plant]
+                        OM_I = data ['SCMM'] [21, plant]
+                        EF_I = np.sum (inv_mat_I * data['SMEF'])
+                        EF_I_Fossil = np.sum (inv_mat_I[0:14] * data['SMEF'][0:14])
+                        EF_I_Biobased = np.sum (inv_mat_I[15:23] * data['SMEF'][15:23])
+                        data['SIEI'][r, path] = np.sum (inv_mat_I * data['SMED'])
+                        CF_I = 0.9    
+                        TotCost_I = np.sum (inv_mat_I * data['SPMT'][r, :])
+                        TaxTotCost_I = np.sum (inv_mat_I * inputprices_taxes)   
+                        r_I = data['BSTC'][r,path,9]
+                        L_I = data['BSTC'][r,path,5]
+                        B_I = data['BSTC'][r,path,6]
+                        Sub_I = data['SEWT'] [r,path]    
+                        data['SWGI'][r, path] = data['SEWG'][r, path] * CF_I[path]
+                        
+                        if data['BSTC'][r, path, 21] == 1:
+                            data['SIEF'][r, path] = 0.1 * EF_I [path] - EF_I_Biobased [path]
+                        else:
+                            data['SIEF'][r, path] = EF_I_Fossil [path]
+                        
+                        #Calculation of levelised cost starts here
+                        if data['SPSA'][r] > 0.0:
+                            
+                            NPV1p_I = 0.0
+                            NPV2p_I = 0.0
+                            
+                            for t in range (B_I[path] + L_I [path]):
+                                if t < B_I[path]:
+                                   #Investment costs are divided over each building year
+                                   It_I = IC_I[path] / (CF_I[path] * B_I[path])
+                                   #Tech-specific subsidy or tax
+                                   St_I = Sub_I[path] * It_I
+                                   #No material cost, tax/subsidy, O&M costs, CO2 tax during construction
+                                   Ft_I = 0.0
+                                   FTt_I = 0.0
+                                   OMt_I = 0.0
+                                   #data['SCOI'][r,path] = 0.0 
+                                else:
+                                   #No Investment costs or subsidy or tax after construction
+                                   It_I = 0.0
+                                   St_I = 0.0
+                                   #Material costs
+                                   Ft_I = TotCost_I[path]
+                                   #Subsidy or tax on materials
+                                   FTt_I = TaxTotCost_I[path]
+                                   #Operation and maintenance costs
+                                   OMt_I = OM_I[path]
+                                   #Costs due to CO2 tax 
+                                   #NEW CALCULATION OF SCOT FOR PI!!!!!
+                                   #SCOI(Q,J) = EF_I(Q) *(REPP(J)*FETS(4,J) + RTCA(J,DATE-2000)*FEDS(4,J))  * REX13(34) / (PRSC(J)*EX13(J)/(PRSC13(J)*EX(J))) /3.66  
+                                
+                                NPV1p_I = NPV1p_I + (It_I + St_I + FTt_I + OMt_I) / (1 + r_I[path]) ** t
+                                NPV2p_I = NPV2p_I + 1 / (1 + r_I[path]) ** t 
+                            
+                            data['SITC'][r, path] = NPV1p_I / NPV2p_I #Levelised cost of ironmaking, this is used to determine the cost of pig iron which may be used in the Scrap-EAF route
+                            
+                        else:
+                            data ['SITC'] = 0.0
+            
+            #The average price of pig iron is the levelised costs of ironmaking times the share of each ironmaking technology
+            data['SIPR'][r] = 0.0
+            
+            #Total production of intermediate iron product
+            data['STGI'][r] = np.sum (data['SWGI'] [r, :])
+            if data['STGI'][r] > 0.0:
+                data['SIPR'][r] = np.sum(data['SITC'] [r, :] * data['SWGI'] [r, :]) / np.sum(data['SWGI'] [r,:])
+            
+    #Global average price:
+    mean_price_I = np.sum(data['SIPR'] * data ['STGI'] / np.sum(data['STGI']))
+    local_average_price = np.zeros(len(titles['RTI']))  
+    iron_demand = np.zeros(len(titles['RTI'])) 
+    iron_supply = np.zeros(len(titles['RTI']))               
+    
+    #Global average EF for intermediate iron (to connect to imported iron by Scrap - EAF route)
+    mean_EF_I = np.sum(data['SIEF'] * data['SWGI']) / np.sum (data['STGI']) 
+    
+    for r in range(len(titles['RTI'])):
+        if (data['SPSA'] [r] > 0.0):
+            inputprices_taxes = (1 + data['STRT'] [r,:]) * data['SPMT'] [r,:]
+            iron_demand [r] = data['BSTC'] [r, 25, 25] * data['SEWG'][r, 25]
+            if data['STGI'][r] > np.sum (data['BSTC'][r, :, 23] * data['SEWG'] [r, :]):
+                iron_supply[r] = data['STGI'][r] - np.sum (data['BSTC'][r, :, 23] * data['SEWG'][r,:])
+            
+            if iron_demand[r] > 0.0:
+                #The price of intermediate iron can only be used directly if there's enough iron production 
+                if data['SIPR'][r] > 0.0 and data['SIPR'][r] < 3 * data['SPMT'][r, 2] and iron_supply[r] >= iron_demand[r]:
+                    data['SPMT'][r, 2] = data['SIPR'][r]
+                #If there isn't enough domestic supply of iron, then a part of the price has to be calculated from global price and global EF of iron production resp.  
+                elif data['SIPR'][r] > 0.0 and data['SIPR'][r] < 3 * data['SPMT'][r, 2] and iron_supply[r] > 0.0 and iron_demand[r] > iron_supply[r]:
+                    local_average_price[r] = ((iron_demand[r] - iron_supply[r]) * mean_price_I + iron_supply[r] * data ['SIPR'][r]) / iron_demand[r]
+                    data['SPMT'][r, 2] = local_average_price[r]
+                #If there's no iron production (only MOE or Scrap-EAF present) or local price is ridiculously high, then take global average.
+                else:
+                    data['SPMT'][r, 2] =  mean_price_I
+            
+                #Emissions related to iron production that is used in the Scrap-EAF route need to be allocated to this route
+                #There's enough domestic supply to cover the domestic demand
+                if iron_supply[r] >= iron_demand[r]:
+                    EF_sec_route = np.sum (data['SIEF'][r, :] * data['SWGI'][r, :] / data['STGI'][r])
+                #If there's some iron supply, but not enough demand,partly use the global mean    
+                elif iron_supply[r] < iron_demand[r] and iron_supply[r] > 0.0:         
+                    EF_sec_route = ((iron_demand[r] - iron_supply[r]) * mean_EF_I + np.sum (data['SIEF'][r, :] * data['SWGI'] [r, :] / data['STGI'][r]) * iron_supply[r]) / iron_demand[r]
+                #If there's no iron supply at all, use global mean completely.
+                else:
+                    EF_sec_route = mean_EF_I
+                    
+            #LCOS Calculation starts here
+            for path in range(len(titles['STTI'])):
+                if data['SPSA'][r] > 0.0:
+                    #Initialize CostMatrix variables
+                    IC = data ['BSTC'] [r, path, 0]
+                    dIC = data ['BSTC'] [r, path, 1]
+                    OM = data ['BSTC'] [r, path, 2]
+                    dOM = data ['BSTC'] [r, path, 3]
+                    L = data ['BSTC'] [r, path, 5]
+                    B = data ['BSTC'] [r, path, 6]
+                    r = data ['BSTC'] [r, path, 9]
+                    Gam = data ['BSTC'] [r, path, 10]
+                    CF = data ['BSTC'] [r, path, 11]
+                    dCF = data ['BSTC'] [r, path, 12]
+                    
+                    #Adjust emission factor for Scrap-EAF due to emissions.
+                    if path == 25:
+                        data['STEF'] [r, path] = data['BSTC'] [r, path, 13] + data['BSTC'] [r, path, 24] * EF_sec_route
+                    
+                    EF = data['STEF'] [r, path]
+                    dEF = data['BSTC'] [r, path, 14]
+                    TotCost = np.zeros(len(titles['STTI']))  
+                    dTotCost = np.zeros(len(titles['STTI']))  
+                    TaxTotCost = np.zeros(len(titles['STTI']))
+                    
+                    for materialindex in range(len(titles['SMTI'] - 4)):
+                        TotCost = TotCost + data['BSTC'][r, path, 22 + materialindex] * data['SPMT'][r, materialindex]
+                        TaxTotCost[path] = TaxTotCost + data['BSTC'][r, path, 22 + materialindex] * inputprices_taxes[materialindex]
+                        dTotCost = dTotCost + 0.1 * data['BSTC'][r, path, 22 + materialindex] * data['SPMT'][r, materialindex]
+                        
+                    #It = 0.0 #investment cost ($(2008)/tcs)), mean
+                    #dIt = 0.0 #investment cost ($(2008)/tcs)), SD
+                    #St = 0.0  #upfront subsidy/tax on investment cost ($(2008)/tcs))
+                    #Ft = 0.0 #fuel cost ($(2008)/tcs)), mean
+                    #dFt = 0.0 #fuel cost ($(2008)/tcs)), SD
+                    #FTt = 0.0 #fuel tax/subsidy (($(2008)/tcs)))
+                    #OMt = 0.0 #O&M cost (($(2008)/tcs))), mean
+                    #dOMt = 0.0 #O&M cost ($(2008)/tcs)), SD
+                    #CO2t = 0.0 #CO2 cost ($(2008)/tcs)), mean
+                    #dCO2t = 0.0 #CO2 cost ($(2008)/tcs)), SD
+                    #Pt = 0.0 #Production of steel (0 during leadtime, 1 during lifetime)
+                    NPV1 = 0.0 #Discounted costs for the LCOS calculation
+                    NPV2 = 0.0 #Denominator for the LCOS calculation 
+                    NPV1o = 0.0
+                    NPV1p = 0.0 #Discounted costs for the TLCOS/LTLCOS calculation
+                    NPV2p = 0.0 #Denominator for the TLCOS/LTLCOS calculation
+                    dNPV = 0.0 #SD for the TLCOS/LTLCOS calculation
+                    dNPVp = 0.0 #SD for the TLCOS/LTLCOS calculation
+                    ICC = 0.0 #Investment cost component of LTLCOS
+                    FCC = 0.0 #Fuel/Material cost component of LTLCOS
+                    OMC = 0.0 #O&M cost component of LTLCOS
+                    CO2C = 0.0 #CO2 tax cost component of LTLCOS
+                    
+                    for t in range (B+L):
+                        if t < B:
+                            #Investment costs are divided over each building year
+                            It = IC / (CF * B)
+                            dIt = dIC / (CF * B)
+                            #Tech-specific subsidy or tax
+                            St = data['SEWT'][r, path] * It
+                            #No material cost, tax/subsidy, O&M costs, CO2 tax during construction
+                            Ft = 0.0
+                            dFt = 0.0
+                            FTt = 0.0
+                            OMt = 0.0
+                            dOMt = 0.0
+                            CO2t = 0.0
+                            dCO2t = 0.0
+                            Pt = 1.0 #No production
+                        else:
+                            #No Investment costs or subsidy or tax after construction
+                            It = 0
+                            dIt = 0
+                            St = 0
+                            #Material costs
+                            Ft = TotCost
+                            dFt = dTotCost
+                            #Material subsidy or tax
+                            FTt = TaxTotCost[path]
+                            #Operation and maintenance
+                            OMt = OM
+                            dOMt = dOM
+                            #CO2 tax
+                            #NOTE: We use the emission factors stored in BSTC rather than the ones stored in STEF. 
+                            #EFs in STEF are altered to take into account the emissions due to iron production that is used in the scrap-EAF route.
+                            #These emissions do not take place directly in the Scrap-EAF route and therefore this technology does not bare the costs.
+                            #data['SCOT'][r, path] = data['BSTC'][r, path, 13] * (REPP(J)*FETS(4,J) + RTCA(J,DATE-2000)*FEDS(4,J)) * REX13(34) / (PRSC(J)*EX13(J)/(PRSC13(J)*EX(J))) /3.66
+                            #dCO2t(I) = 0.1 * SCOT(I,J) 
+                            Pt = 1.0    
+                            
+                        NPV1 = NPV1 + (It + Ft + OMt) / (1+r) ** t
+                        NPV1p = NPV1p + (It + St + FTt + OMt) / (1+r) ** t #CO2 tax not added yet. SCOT(I,J)
+                        NPV1o = NPV1o + (It + St + FTt + OMt) / (1+r) ** t
+                   
+                        dNPV = dNPV + math.sqrt (dIt ** 2 + dFt ** 2 + dOMt ** 2) / (1+r) ** t
+                        dNPVp = dNPVp + math.sqrt (dIt ** 2 + dFt ** 2 + dOMt ** 2)/ (1+r) ** t # CO2 tax not added yet. dCO2t(I)**2
+                    
+                        ICC = ICC + (It + St) / (1+r) ** t
+                        FCC = FCC + FTt / (1+r) ** t
+                        OMC = OMC + OMt / (1+r) ** t
+                        #CO2C = CO2C + (SCOT(I,J))/(1+r)**t
+                    
+                        NPV2 = NPV2 + Pt / (1+r) ** t
+                        NPV2p = NPV2p + Pt / (1+r) ** t
+                        
+                    LCOS = NPV1/NPV2
+                    dLCOS = dNPV/NPV2
+                    LCOSprice = NPV1o/NPV2
+                    TLCOS = NPV1p/NPV2p
+                    dTLCOS = dNPVp/NPV2p
+                    LTLCOS = TLCOS + Gam
+                    
+                    #Variables for endogenous scrapping
+                    PB = data['BSTC'][r, path, 19] #payback threshold
+                    dPB = 0.3* PB
+                    It = data['BSTC'][r, path, 0] / CF 
+                    dIt = data['BSTC'][r, path, 1] / CF
+                    St = data['SEWT'][r, path] * It
+                    FTt = TaxTotCost[path]
+                    dFt = dTotCost
+                    OMt = OM
+                    #dCO2t(I) = 0.1 * SCOT(I,J) 
+            
+                    #Marginal cost calculation (for endogenous scrapping) (fuel cost+OM cost+fuel and CO2 tax policies)   
+                    TMC = Ft + OMt + FTt # + SCOT(I,J)
+                    dTMC = math.sqrt (dFt ** 2 + dOMt ** 2)
+            
+                    #Payback cost calculation (for endogenous scrapping) (TMC+(investment cost+investment subsidy)/payback threshold)   
+                    TPB = TMC + (It + St) / PB
+                    dTPB = math.sqrt (dFt ** 2 + dOMt ** 2 + dIt ** 2 / PB ** 2 + (It ** 2 / PB ** 4) * dPB ** 2)
+                    
+                    data['SGC2'] [r, path] = TMC + Gam
+                    data['SGC3'] [r, path] = TPB + Gam
+                    data['SGD2'] [r, path] = dTMC
+                    data['SGD3'] [r, path] = dTPB
+                    
+                    #For the cost components we exclude the gamma value as we assume the gamma value is accordingly distributed over the cost components
+                    data['SWIC'][r, path] = ICC/NPV2p  # Investment cost component of TLCOS
+                    data['SWFC'][r, path] = FCC/NPV2p  # Material cost component of TLCOS
+                    data['SOMC'][r, path] = OMC/NPV2p  # O&M cost component of TLCOS
+                    #data['SCOC'][r, path] = CO2C/NPV2p # CO2 cost component of TLCOS
+                
+                    data['SEWC'][r, path] = LCOS
+                    data['SETC'][r, path] = LCOSprice
+                    data['SGC1'][r, path] = LTLCOS
 
-        # Cost matrix
-        #bhtc = data['BHTC'][r, :, :]
+                    data['SDWC'][r, path] = dLCOS
+                    data['SGD1'][r, path] = dTLCOS
+                    
+                else:
+                    LCOS = 0
+                    dLCOS = 0
+                    TLCOS = 0
+                    dTLCOS = 0
+                    LTLCOS = 0
+                
+                    data['SGC2'] [r, path] = 0
+                    data['SGC3'] [r, path] = 0
+                    data['SGD2'] [r, path] = 0
+                    data['SGD3'] [r, path] = 0
+                    
+                   
+                    data['SWIC'][r, path] = 0
+                    data['SWFC'][r, path] = 0
+                    data['SOMC'][r, path] = 0 
+                    #data['SCOC'][r, path] = CO2C/NPV2p # CO2 cost component of TLCOS
+                
+                    data['SEWC'][r, path] = 0
+                    data['SETC'][r, path] = 0
+                    data['SGC1'][r, path] = 0
 
+                    data['SDWC'][r, path] = 0
+                    data['SGD1'][r, path] = 0
+            
+            if (data['SPSA'][r] > 0.0):
+               PLCOS = np.where(data['SGC1'][r, :] != 0.0, data['SGC1'][r, :])
+               data['SPRI'][r] = sum(PLCOS * mkt_shares) / sum(mkt_shares)
+               PLCOS = np.where(data['SETC'][r, :] != 0.0, data['SETC'][r, :])
+               data['SPRC'][r] = sum(PLCOS * mkt_shares) / sum(mkt_shares)
+    
+    return data
+
+
+               
+               
+               
+                   
+            
+              
+             
+               
+                    
+                        
+                        
+                    
+                    
+                   
+                        
+                 
+                  
+    
+                            
+                            
+    """ 
+    #FTT heat code 
         # Boiler lifetime
         lt = data['BHTC'][r,:, c4ti['5 Lifetime']]
         max_lt = int(np.max(lt))
@@ -193,3 +529,4 @@ def get_lcos(data, titles):
         data['HGD3'][r, :, 0] = dtpb          # SD of Total payback costs
 
     return data
+"""
