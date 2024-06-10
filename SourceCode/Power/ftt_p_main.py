@@ -49,7 +49,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Element-wise divide which replaces divide-by-zeros with zeros
+        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -357,27 +357,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
                 # On average 45% of curtailed electricity can be reused for long-term storage:
                 # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45 * 2 * data['MLSG'][r,0,0], 0.55 * data['MCGA'][r,0,0])
+                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
                 # Impact of net curtailment on load factors for VRE technologies
                 # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
                 data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * data['MCNA'][r, 0, 0] / data['MCGA'][r, 0, 0]
                 
                 
-                # #Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
-                # data['MEWL'][r,:,0] = np.where(np.isclose(Svar[r, :], 1.0),
-                #                                data['MEWL'][r,:,0] * (1.0*data['MCTN'][r,:,0]),
-                #                                data['MEWL'][r,:,0])    
-                # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
-                #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
-                # data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:,:,0]                
+                #Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
+                data['MEWL'][r,:,0] = np.where(np.isclose(Svar[r, :], 1.0),
+                                                data['MEWL'][r,:,0] * (1.0*data['MCTN'][r,:,0]),
+                                                data['MEWL'][r,:,0])    
+                data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+                                                data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+                                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
+                data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:,:,0]                
                 
-                # # data['BCET'][r,:,c2ti['11 Decision Load Factor']] = np.where(np.isclose(Svar[r, :], 1.0),
-                # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']] * (1.0*data['MCTN'][r,:,0]),
-                # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']])            
-                # data['MEWL'][r,:,0] = np.where(np.isclose(data['MEWL'][r,:,0] , 0.0),
-                #                                data['MWLO'][r,:,0] ,
-                #                                data['MEWL'][r,:,0])
+                # data['BCET'][r,:,c2ti['11 Decision Load Factor']] = np.where(np.isclose(Svar[r, :], 1.0),
+                #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']] * (1.0*data['MCTN'][r,:,0]),
+                #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']])            
+                data['MEWL'][r,:,0] = np.where(np.isclose(data['MEWL'][r,:,0] , 0.0),
+                                                data['MWLO'][r,:,0] ,
+                                                data['MEWL'][r,:,0])
                 
                 # TODO: Given faulty code in the EEIST, exogenous load factors are
                 # used here
@@ -618,6 +618,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # if year in [2049, 2050]:
             #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
+            #     #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
+            # if year in [2049, 2050]:
+            #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             
             if np.any(np.isnan(data['MEWS'])):
@@ -704,13 +707,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             
             # Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
-            # TODO: this seems to be done twice both here and in FORTRAN. Also directly after rldc at bottom. 
-            data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                            data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
-                                            data['MEWL'][:,:,0])            
-            data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
-                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
+            # # TODO: this seems to be done twice both here and in FORTRAN. Also directly after rldc at bottom. 
+            # data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+            #                                 data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
+            #                                 data['MEWL'][:,:,0])            
+            # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+            #                                 data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+            #                                 data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
             # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
             #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']],
             #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
@@ -718,6 +721,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'][:,:,0] = np.where(np.isclose(data['MEWL'][:,:,0] , 0.0),
                                            data['MWLO'][:,:,0] ,
                                            data['MEWL'][:,:,0])
+            
+            if year == 2050 and t == no_it:
+                print(f"Total solar MEWL in 2050 is: {np.sum(data['MEWL'][:70, 18, 0]):.4f}")
+
             
             # Total additional electricity that needs to be generated
             data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]
@@ -734,20 +741,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
-            # # Update investment. Note that sum(mewi_t) not exactly mewi
-            # _, mewi_t = get_sales(
-            #     data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
-            #     data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
+            # Update investment. Note that sum(mewi_t) not exactly mewi
+            _, mewi_t = get_sales(
+                data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
+                data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
             
-            # data["MEWI"] = get_sales_yearly(
-            #     data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
-            #     data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-            
-            cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
-            cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
-            data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
-                                             cap_diff + cap_drpctn,
-                                             cap_drpctn)
+            data["MEWI"] = get_sales_yearly(
+                data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
+                data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
             
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
@@ -790,9 +791,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative global learning
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
             # additions (PG_CA) we can estimate total global spillover of similar techs
-            mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
-
-            #mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
+            mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
 
             
@@ -804,7 +803,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
 
-            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
+            # Copy over the technology cost categories. We update the investment and capacity factors below
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
 
             # Store gamma values in the cost matrix (in case it varies over time)
@@ -844,7 +843,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt, data['MERCX']
                 )
 
             data['BCET'] = bcet
@@ -856,10 +855,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MRED'] = mred
             data['MRES'] = mres
             
-           
-            # Take into account curtailment again:
+            
+            # Take into account curtailment, computed above:
             data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
             data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
+            data['MCFC'] = data['BCET'][:, :, c2ti['11 Decision Load Factor']].copy()
             
             
             # =================================================================
@@ -869,7 +869,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data = get_lcoe(data, titles)
 
             # =================================================================
-            # Update the time-loop variables
+            # Update the time-loop variables data_dt
             # =================================================================
 
             for var in data_dt.keys():
@@ -880,5 +880,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         
         if year == 2050 and t == no_it:
             print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.3f}M")
+            print(f"Final total solar MEWL in 2050 is: {np.sum(data['MEWL'][:70, 18, 0]):.4f}")
+
 
     return data
