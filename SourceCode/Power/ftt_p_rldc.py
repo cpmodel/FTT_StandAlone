@@ -305,7 +305,7 @@ def rldc(data, time_lag, iter_lag, year, titles):
     
     # Bool to indicate which tech is VRE and which is not
     Svar = data['MWDD'][0, :, 5]
-    Snotvar = 1-data['MWDD'][0, :, 5]
+    Snotvar = 1 - data['MWDD'][0, :, 5]
 
     for r in range(len(titles['RTI'])):
         if Sw[r] + Ss[r] == 0:
