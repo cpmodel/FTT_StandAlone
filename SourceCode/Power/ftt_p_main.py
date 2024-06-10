@@ -364,21 +364,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * data['MCNA'][r, 0, 0] / data['MCGA'][r, 0, 0]
                 
                 
-                # #Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
-                # data['MEWL'][r,:,0] = np.where(np.isclose(Svar[r, :], 1.0),
-                #                                data['MEWL'][r,:,0] * (1.0*data['MCTN'][r,:,0]),
-                #                                data['MEWL'][r,:,0])    
-                # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
-                #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
-                # data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:,:,0]                
+                #Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
+                data['MEWL'][r,:,0] = np.where(np.isclose(Svar[r, :], 1.0),
+                                                data['MEWL'][r,:,0] * (1.0*data['MCTN'][r,:,0]),
+                                                data['MEWL'][r,:,0])    
+                data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+                                                data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+                                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])            
+                data['BCET'][:,:,c2ti['11 Decision Load Factor']] = data['MCFC'][:,:,0]                
                 
-                # # data['BCET'][r,:,c2ti['11 Decision Load Factor']] = np.where(np.isclose(Svar[r, :], 1.0),
-                # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']] * (1.0*data['MCTN'][r,:,0]),
-                # #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']])            
-                # data['MEWL'][r,:,0] = np.where(np.isclose(data['MEWL'][r,:,0] , 0.0),
-                #                                data['MWLO'][r,:,0] ,
-                #                                data['MEWL'][r,:,0])
+                # data['BCET'][r,:,c2ti['11 Decision Load Factor']] = np.where(np.isclose(Svar[r, :], 1.0),
+                #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']] * (1.0*data['MCTN'][r,:,0]),
+                #                                                              data['BCET'][r,:,c2ti['11 Decision Load Factor']])            
+                data['MEWL'][r,:,0] = np.where(np.isclose(data['MEWL'][r,:,0] , 0.0),
+                                                data['MWLO'][r,:,0] ,
+                                                data['MEWL'][r,:,0])
                 
                 # TODO: Given faulty code in the EEIST, exogenous load factors are
                 # used here
@@ -706,13 +706,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             
             # Adjust load factors to represent VRE not being able to deliver to the grid due to net curtailment
-            # TODO: this seems to be done twice both here and in FORTRAN. Also directly after rldc at bottom. 
-            data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                            data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
-                                            data['MEWL'][:,:,0])            
-            data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
-                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
-                                            data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
+            # # TODO: this seems to be done twice both here and in FORTRAN. Also directly after rldc at bottom. 
+            # data['MEWL'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+            #                                 data['MEWL'][:,:,0] * (1.0 - data['MCTN'][:, :, 0]),
+            #                                 data['MEWL'][:,:,0])            
+            # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
+            #                                 data['BCET'][:,:,c2ti['11 Decision Load Factor']] * (1.0-data['MCTN'][:,:,0]),
+            #                                 data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
             # data['MCFC'][:,:,0] = np.where(np.isclose(Svar, 1.0),
             #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']],
             #                                data['BCET'][:,:,c2ti['11 Decision Load Factor']])     
@@ -720,6 +720,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'][:,:,0] = np.where(np.isclose(data['MEWL'][:,:,0] , 0.0),
                                            data['MWLO'][:,:,0] ,
                                            data['MEWL'][:,:,0])
+            
+            if year == 2050 and t == no_it:
+                print(f"Total solar MEWL in 2050 is: {np.sum(data['MEWL'][:70, 18, 0]):.4f}")
+
             
             # Total additional electricity that needs to be generated
             data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]
@@ -798,7 +802,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
 
-            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
+            # Copy over the technology cost categories. We update the investment and capacity factors below
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
 
             # Store gamma values in the cost matrix (in case it varies over time)
