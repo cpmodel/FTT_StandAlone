@@ -49,7 +49,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Element-wise divide which replaces divide-by-zeros with zeros
+        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -357,7 +357,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
                 # On average 45% of curtailed electricity can be reused for long-term storage:
                 # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45 * 2 * data['MLSG'][r,0,0], 0.55 * data['MCGA'][r,0,0])
+                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
                 # Impact of net curtailment on load factors for VRE technologies
                 # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
                 data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * data['MCNA'][r, 0, 0] / data['MCGA'][r, 0, 0]
@@ -734,20 +734,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
-            # # Update investment. Note that sum(mewi_t) not exactly mewi
-            # _, mewi_t = get_sales(
-            #     data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
-            #     data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
+            # Update investment. Note that sum(mewi_t) not exactly mewi
+            _, mewi_t = get_sales(
+                data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
+                data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
             
-            # data["MEWI"] = get_sales_yearly(
-            #     data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
-            #     data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-            
-            cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
-            cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
-            data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
-                                             cap_diff + cap_drpctn,
-                                             cap_drpctn)
+            data["MEWI"] = get_sales_yearly(
+                data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
+                data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
             
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
@@ -790,9 +784,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Cumulative global learning
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
             # additions (PG_CA) we can estimate total global spillover of similar techs
-            mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
-
-            #mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
+            mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
 
             
