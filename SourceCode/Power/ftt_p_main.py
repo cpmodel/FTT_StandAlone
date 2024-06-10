@@ -618,6 +618,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # if year in [2049, 2050]:
             #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
+            #     #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
+            # if year in [2049, 2050]:
+            #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             
             if np.any(np.isnan(data['MEWS'])):
@@ -840,7 +843,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt, data['MERCX']
                 )
 
             data['BCET'] = bcet
@@ -865,7 +868,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data = get_lcoe(data, titles)
 
             # =================================================================
-            # Update the time-loop variables
+            # Update the time-loop variables data_dt
             # =================================================================
 
             for var in data_dt.keys():
