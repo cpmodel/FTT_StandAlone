@@ -73,54 +73,55 @@ def get_lcos(data, titles):
                 for plant in range (len(titles['SSTI'])):
                     #Not all integrated steelmaking routes have an Iron making step and the condition below skips those routes.
                     #Also, only a specific range of the NSS classification is required
-                    if data['STIM'][path, plant] == 1 and plant >= 8 and plant <= 20:
+                    if data['STIM'][0, path, plant] == 1 and plant >= 8 and plant <= 20:
                         #First, add Ironmaking
                         #inv_mat_I = np.zeros (len(titles['SMTI']), len(titles['SSTI']))
-                        inv_mat_I = data['SCMM'][:,plant]
+                        inv_mat_I = data['SCMM'][0, :, plant]
+                    
                         #Second, add sinter and pellet
-                        inv_mat_I [:] = inv_mat_I [:] + inv_mat_I [6] * data['SCMM'] [:,2] + inv_mat_I [7] * data['SCMM'] [:,3] + inv_mat_I [8] * data['SCMM'] [:,4] + inv_mat_I [9] * data['SCMM'] [:,5]
+                        inv_mat_I = inv_mat_I [:] + inv_mat_I [6] * data['SCMM'] [0,:,2] + inv_mat_I [7] * data['SCMM'] [0,:,3] + inv_mat_I [8] * data['SCMM'] [0,:,4] + inv_mat_I [9] * data['SCMM'] [0,:,5]
                         #Third, add coke
-                        inv_mat_I [:] = inv_mat_I [:] + inv_mat_I [4] * data['SCMM'] [:,0] + inv_mat_I [5] * data['SCMM'] [:,1]
+                        inv_mat_I = inv_mat_I [:] + inv_mat_I [4] * data['SCMM'] [0,:,0] + inv_mat_I [5] * data['SCMM'] [0,:,1]
                         #Fourth, add oxygen
-                        inv_mat_I [:] = inv_mat_I [:] + inv_mat_I [10] * data['SCMM'] [:,6] 
+                        inv_mat_I = inv_mat_I [:] + inv_mat_I [10] * data['SCMM'] [0,:,6] 
                         
                         #Increase fuel consumption if CCS
                         if data['BSTC'] [r,path,21] == 1:
                             inv_mat_I [11:14] = 1.1 * inv_mat_I [11:14]
                             inv_mat_I [17:19] = 1.1 * inv_mat_I [17:19]
                         
-                        IC_I = data ['SCMM'] [20, plant]
-                        OM_I = data ['SCMM'] [21, plant]
-                        EF_I = np.sum (inv_mat_I * data['SMEF'])
-                        EF_I_Fossil = np.sum (inv_mat_I[0:14] * data['SMEF'][0:14])
-                        EF_I_Biobased = np.sum (inv_mat_I[15:23] * data['SMEF'][15:23])
-                        data['SIEI'][r, path] = np.sum (inv_mat_I * data['SMED'])
+                        IC_I = data ['SCMM'] [0, 20, plant]
+                        OM_I = data ['SCMM'] [0, 21, plant]
+                        EF_I = np.sum (inv_mat_I * data['SMEF'][0, :, 0])
+                        EF_I_Fossil = np.sum (inv_mat_I[0:14] * data['SMEF'][0, 0:14, 0])
+                        EF_I_Biobased = np.sum (inv_mat_I[15:23] * data['SMEF'][0, 15:23, 0])
+                        data['SIEI'][r, path, 0] = np.sum (inv_mat_I * data['SMED'][0, :, 0])
                         CF_I = 0.9    
-                        TotCost_I = np.sum (inv_mat_I * data['SPMT'][r, :])
+                        TotCost_I = np.sum (inv_mat_I * data['SPMT'][r, :, 0])
                         TaxTotCost_I = np.sum (inv_mat_I * inputprices_taxes)   
                         r_I = data['BSTC'][r,path,9]
                         L_I = data['BSTC'][r,path,5]
                         B_I = data['BSTC'][r,path,6]
-                        Sub_I = data['SEWT'] [r,path]    
-                        data['SWGI'][r, path] = data['SEWG'][r, path] * CF_I[path]
+                        Sub_I = data['SEWT'] [r,path,0]    
+                        data['SWGI'][r, path,0] = data['SEWG'][r, path, 0] * CF_I
                         
                         if data['BSTC'][r, path, 21] == 1:
-                            data['SIEF'][r, path] = 0.1 * EF_I [path] - EF_I_Biobased [path]
+                            data['SIEF'][r, path, 0] = 0.1 * EF_I - EF_I_Biobased
                         else:
-                            data['SIEF'][r, path] = EF_I_Fossil [path]
+                            data['SIEF'][r, path, 0] = EF_I_Fossil
                         
                         #Calculation of levelised cost starts here
-                        if data['SPSA'][r] > 0.0:
+                        if data['SPSA'][r, 0, 0] > 0.0:
                             
                             NPV1p_I = 0.0
                             NPV2p_I = 0.0
                             
-                            for t in range (B_I[path] + L_I [path]):
-                                if t < B_I[path]:
+                            for t in range (int(B_I) + int(L_I)):
+                                if t < B_I:
                                    #Investment costs are divided over each building year
-                                   It_I = IC_I[path] / (CF_I[path] * B_I[path])
+                                   It_I = IC_I / (CF_I * B_I)
                                    #Tech-specific subsidy or tax
-                                   St_I = Sub_I[path] * It_I
+                                   St_I = Sub_I * It_I
                                    #No material cost, tax/subsidy, O&M costs, CO2 tax during construction
                                    Ft_I = 0.0
                                    FTt_I = 0.0
@@ -131,22 +132,22 @@ def get_lcos(data, titles):
                                    It_I = 0.0
                                    St_I = 0.0
                                    #Material costs
-                                   Ft_I = TotCost_I[path]
+                                   Ft_I = TotCost_I
                                    #Subsidy or tax on materials
-                                   FTt_I = TaxTotCost_I[path]
+                                   FTt_I = TaxTotCost_I
                                    #Operation and maintenance costs
-                                   OMt_I = OM_I[path]
+                                   OMt_I = OM_I
                                    #Costs due to CO2 tax 
                                    #NEW CALCULATION OF SCOT FOR PI!!!!!
                                    #SCOI(Q,J) = EF_I(Q) *(REPP(J)*FETS(4,J) + RTCA(J,DATE-2000)*FEDS(4,J))  * REX13(34) / (PRSC(J)*EX13(J)/(PRSC13(J)*EX(J))) /3.66  
                                 
-                                NPV1p_I = NPV1p_I + (It_I + St_I + FTt_I + OMt_I) / (1 + r_I[path]) ** t
-                                NPV2p_I = NPV2p_I + 1 / (1 + r_I[path]) ** t 
+                                NPV1p_I = NPV1p_I + (It_I + St_I + FTt_I + OMt_I) / (1 + r_I) ** t
+                                NPV2p_I = NPV2p_I + 1 / (1 + r_I) ** t 
                             
-                            data['SITC'][r, path] = NPV1p_I / NPV2p_I #Levelised cost of ironmaking, this is used to determine the cost of pig iron which may be used in the Scrap-EAF route
+                            data['SITC'][r, path, 0] = NPV1p_I / NPV2p_I #Levelised cost of ironmaking, this is used to determine the cost of pig iron which may be used in the Scrap-EAF route
                             
                         else:
-                            data ['SITC'] = 0.0
+                            data ['SITC'][r, path, 0] = 0.0
             
             #The average price of pig iron is the levelised costs of ironmaking times the share of each ironmaking technology
             data['SIPR'][r] = 0.0
@@ -169,6 +170,7 @@ def get_lcos(data, titles):
         if (data['SPSA'] [r] > 0.0):
             inputprices_taxes = (1 + data['STRT'] [r,:]) * data['SPMT'] [r,:]
             iron_demand [r] = data['BSTC'] [r, 25, 25] * data['SEWG'][r, 25]
+            EF_sec_route = 0.0
             if data['STGI'][r] > np.sum (data['BSTC'][r, :, 23] * data['SEWG'] [r, :]):
                 iron_supply[r] = data['STGI'][r] - np.sum (data['BSTC'][r, :, 23] * data['SEWG'][r,:])
             
@@ -205,24 +207,24 @@ def get_lcos(data, titles):
                     dOM = data ['BSTC'] [r, path, 3]
                     L = data ['BSTC'] [r, path, 5]
                     B = data ['BSTC'] [r, path, 6]
-                    r = data ['BSTC'] [r, path, 9]
+                    dr = data ['BSTC'] [r, path, 9]
                     Gam = data ['BSTC'] [r, path, 10]
                     CF = data ['BSTC'] [r, path, 11]
                     dCF = data ['BSTC'] [r, path, 12]
                     
                     #Adjust emission factor for Scrap-EAF due to emissions.
-                    if path == 25:
-                        data['STEF'] [r, path] = data['BSTC'] [r, path, 13] + data['BSTC'] [r, path, 24] * EF_sec_route
+                    #if path == 25:
+                        #data['STEF'] [r, path] = data['BSTC'] [r, path, 13] + data['BSTC'] [r, path, 24] * EF_sec_route
                     
-                    EF = data['STEF'] [r, path]
-                    dEF = data['BSTC'] [r, path, 14]
-                    TotCost = np.zeros(len(titles['STTI']))  
-                    dTotCost = np.zeros(len(titles['STTI']))  
-                    TaxTotCost = np.zeros(len(titles['STTI']))
+                    #EF = data['STEF'] [r, path]
+                    #dEF = data['BSTC'] [r, path, 14]
+                    TotCost = 0.0  
+                    dTotCost = 0.0  
+                    TaxTotCost = 0.0 #np.zeros(len(titles['STTI']))
                     
-                    for materialindex in range(len(titles['SMTI'] - 4)):
+                    for materialindex in range(len(titles['SMTI']) - 4):
                         TotCost = TotCost + data['BSTC'][r, path, 22 + materialindex] * data['SPMT'][r, materialindex]
-                        TaxTotCost[path] = TaxTotCost + data['BSTC'][r, path, 22 + materialindex] * inputprices_taxes[materialindex]
+                        TaxTotCost = TaxTotCost + data['BSTC'][r, path, 22 + materialindex] * inputprices_taxes[materialindex]
                         dTotCost = dTotCost + 0.1 * data['BSTC'][r, path, 22 + materialindex] * data['SPMT'][r, materialindex]
                         
                     #It = 0.0 #investment cost ($(2008)/tcs)), mean
@@ -248,7 +250,7 @@ def get_lcos(data, titles):
                     OMC = 0.0 #O&M cost component of LTLCOS
                     CO2C = 0.0 #CO2 tax cost component of LTLCOS
                     
-                    for t in range (B+L):
+                    for t in range (int(B+L)):
                         if t < B:
                             #Investment costs are divided over each building year
                             It = IC / (CF * B)
@@ -273,7 +275,7 @@ def get_lcos(data, titles):
                             Ft = TotCost
                             dFt = dTotCost
                             #Material subsidy or tax
-                            FTt = TaxTotCost[path]
+                            FTt = TaxTotCost
                             #Operation and maintenance
                             OMt = OM
                             dOMt = dOM
@@ -285,27 +287,38 @@ def get_lcos(data, titles):
                             #dCO2t(I) = 0.1 * SCOT(I,J) 
                             Pt = 1.0    
                             
-                        NPV1 = NPV1 + (It + Ft + OMt) / (1+r) ** t
-                        NPV1p = NPV1p + (It + St + FTt + OMt) / (1+r) ** t #CO2 tax not added yet. SCOT(I,J)
-                        NPV1o = NPV1o + (It + St + FTt + OMt) / (1+r) ** t
+                        NPV1 = NPV1 + (It + Ft + OMt) / (1+dr) ** t
+                        NPV1p = NPV1p + (It + St + FTt + OMt) / (1+dr) ** t #CO2 tax not added yet. SCOT(I,J)
+                        NPV1o = NPV1o + (It + St + FTt + OMt) / (1+dr) ** t
                    
-                        dNPV = dNPV + math.sqrt (dIt ** 2 + dFt ** 2 + dOMt ** 2) / (1+r) ** t
-                        dNPVp = dNPVp + math.sqrt (dIt ** 2 + dFt ** 2 + dOMt ** 2)/ (1+r) ** t # CO2 tax not added yet. dCO2t(I)**2
+                        dNPV = dNPV + math.sqrt (dIt ** 2 + dFt ** 2 + dOMt ** 2) / (1+dr) ** t
+                        dNPVp = dNPVp + math.sqrt (dIt ** 2 + dFt ** 2 + dOMt ** 2)/ (1+dr) ** t # CO2 tax not added yet. dCO2t(I)**2
                     
-                        ICC = ICC + (It + St) / (1+r) ** t
-                        FCC = FCC + FTt / (1+r) ** t
-                        OMC = OMC + OMt / (1+r) ** t
+                        ICC = ICC + (It + St) / (1+dr) ** t
+                        FCC = FCC + FTt / (1+dr) ** t
+                        OMC = OMC + OMt / (1+dr) ** t
                         #CO2C = CO2C + (SCOT(I,J))/(1+r)**t
                     
-                        NPV2 = NPV2 + Pt / (1+r) ** t
-                        NPV2p = NPV2p + Pt / (1+r) ** t
+                        NPV2 = NPV2 + Pt / (1+dr) ** t
+                        NPV2p = NPV2p + Pt / (1+dr) ** t
                         
-                    LCOS = NPV1/NPV2
-                    dLCOS = dNPV/NPV2
-                    LCOSprice = NPV1o/NPV2
-                    TLCOS = NPV1p/NPV2p
-                    dTLCOS = dNPVp/NPV2p
-                    LTLCOS = TLCOS + Gam
+                    try:
+                        LCOS = NPV1/NPV2
+                        dLCOS = dNPV/NPV2
+                        LCOSprice = NPV1o/NPV2
+                    except ZeroDivisionError:
+                        LCOS = 0
+                        dLCOS = 0
+                        LCOSprice = 0
+                    try:  
+                        TLCOS = NPV1p/NPV2p
+                        dTLCOS = dNPVp/NPV2p
+                        
+                    except ZeroDivisionError:
+                        TLCOS = 0
+                        dTLCOS = 0
+                    
+                    LTLCOS = TLCOS + Gam  
                     
                     #Variables for endogenous scrapping
                     PB = data['BSTC'][r, path, 19] #payback threshold
@@ -313,7 +326,7 @@ def get_lcos(data, titles):
                     It = data['BSTC'][r, path, 0] / CF 
                     dIt = data['BSTC'][r, path, 1] / CF
                     St = data['SEWT'][r, path] * It
-                    FTt = TaxTotCost[path]
+                    FTt = TaxTotCost
                     dFt = dTotCost
                     OMt = OM
                     #dCO2t(I) = 0.1 * SCOT(I,J) 
@@ -332,10 +345,15 @@ def get_lcos(data, titles):
                     data['SGD3'] [r, path] = dTPB
                     
                     #For the cost components we exclude the gamma value as we assume the gamma value is accordingly distributed over the cost components
-                    data['SWIC'][r, path] = ICC/NPV2p  # Investment cost component of TLCOS
-                    data['SWFC'][r, path] = FCC/NPV2p  # Material cost component of TLCOS
-                    data['SOMC'][r, path] = OMC/NPV2p  # O&M cost component of TLCOS
-                    #data['SCOC'][r, path] = CO2C/NPV2p # CO2 cost component of TLCOS
+                    try:  
+                        data['SWIC'][r, path] = ICC/NPV2p  # Investment cost component of TLCOS
+                        data['SWFC'][r, path] = FCC/NPV2p  # Material cost component of TLCOS
+                        data['SOMC'][r, path] = OMC/NPV2p  # O&M cost component of TLCOS
+                        #data['SCOC'][r, path] = CO2C/NPV2p # CO2 cost component of TLCOS
+                    except ZeroDivisionError:
+                        data['SWIC'][r, path] = 0
+                        data['SWFC'][r, path] = 0
+                        data['SOMC'][r, path] = 0
                 
                     data['SEWC'][r, path] = LCOS
                     data['SETC'][r, path] = LCOSprice
@@ -370,10 +388,10 @@ def get_lcos(data, titles):
                     data['SGD1'][r, path] = 0
             
             if (data['SPSA'][r] > 0.0):
-               PLCOS = np.where(data['SGC1'][r, :] != 0.0, data['SGC1'][r, :])
-               data['SPRI'][r] = sum(PLCOS * mkt_shares) / sum(mkt_shares)
-               PLCOS = np.where(data['SETC'][r, :] != 0.0, data['SETC'][r, :])
-               data['SPRC'][r] = sum(PLCOS * mkt_shares) / sum(mkt_shares)
+               PLCOS = np.where(data['SGC1'][r, :] != 0.0, data['SGC1'][r, :], 0.0)
+               data['SPRI'][r] = np.sum(PLCOS * mkt_shares) / np.sum(mkt_shares)
+               PLCOS = np.where(data['SETC'][r, :] != 0.0, data['SETC'][r, :], 0.0)
+               data['SPRC'][r] = np.sum(PLCOS * mkt_shares) / np.sum(mkt_shares)
     
     return data
 
