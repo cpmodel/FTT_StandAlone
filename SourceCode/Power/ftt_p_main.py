@@ -857,10 +857,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MRED'] = mred
             data['MRES'] = mres
             
-           
-            # Take into account curtailment again:
+            
+            # Take into account curtailment, computed above:
             data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
             data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
+            data['MCFC'] = data['BCET'][:, :, c2ti['11 Decision Load Factor']].copy()
             
             
             # =================================================================
