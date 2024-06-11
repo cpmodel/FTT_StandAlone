@@ -210,25 +210,292 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         
                                              
         if year > histend["SEWG"]:
+            
+            no_it = int(data['noit'][0, 0, 0])
+            dt = 1 / float(no_it)
+            invdt = no_it
+            tScaling = 10.0
+            isReg = np.zeros((len(titles['RTI']), len(titles['STTI'])))
+            
             for t in range(1, no_it):
                 
-                # Create a local dictionary for timeloop variables
-                # It contains values between timeloop interations in the FTT core
+            # Create a local dictionary for timeloop variables
+            # It contains values between timeloop interations in the FTT core
                 data_dt = {}
 
-                # First, fill the time loop variables with the their lagged equivalents
-                for var in time_lag.keys():
-                    data_dt[var] = copy.deepcopy(time_lag[var])
-                raw_material_distr(data, titles, year, t)
-                # Market share calculation : What Shruti has done
-                # Check what investment and learning thing comes here from line 800 to 844 in Fortran
-                # Bring up the investment LBD from bottom to here
-                # Add lines 884 to 905 from Fortran (LBD)
-                # Call the capacity function
-                #Calculate levelised cost again
-                data = get_lcos(data, titles)
-                ftt_s_fuel_consumption(data['BSTC'], data['SEWG'], data['SMED'], len(titles['RTI']), len(titles['STTI']), c5ti, len(titles['JTI']))
-                # Code ends at 1048 for Fortran
+            # First, fill the time loop variables with the their lagged equivalents
+            for var in time_lag.keys():
+                data_dt[var] = copy.deepcopy(time_lag[var])
+            raw_material_distr(data, titles, year, t)
+            
+            # Market share calculation : What Shruti has done
+            # --------------------------------------------------------------------------
+            # !--------------FTT SIMULATION-----------------------------------------------
+            # !---------------------------------------------------------------------------
+            # !------TIME LOOP!!: we calculate quarterly: t=1 means the end of the first quarter            
+                 
+            if (iter==1):  
+                    for t in range(0, (invdt - 1)):
+                        data_dt['SPSA'][0, 0, 0] = 0.0
+                                        
+                # Time-step of steel demand
+            data_dt['SPSA'][:, 0, 0] = data['SPSL'][:, 0, 0] + data['SPSA'][:, 0, 0] - data['SPSL'][:, 0, 0] * t/invdt
+            data_dt['SPSA'][:, 0, 0] = data['SPSL'][:, 0, 0] + data['SPSA'][:, 0, 0] - data['SPSL'][:, 0, 0] * (t-1)/invdt
+                            
+            primary_iron_supply = 0.0
+            primary_iron_demand = 0.0
+            #primary_iron_supply = SUM( SWGI(:,J) * (0.9 - BSTC(:,J,12)) )
+            #primary_iron_demand = (1-BSTC(26,J,25)/1.1) * SWKL(26,J) * BSTC(26,J,12)
+            
+            #If there's not enough scrap to supply the scrap route or there's not enough iron supply to meet the gap of scrap supply, then regulate scrap. 
+            #This is more of a weak regulation. 
+                        
+            # Calculate the condition for the first WHERE statement
+            condition1 = (~(data['SEWR'][:, 25, 0] > data_dt['SWKL'][:, 25, 0])) & (data['SEWR'][:, 25, 0] > -1.0)
+
+            # Apply the first WHERE statement
+            isReg[:, 25] = np.where(condition1, 1.0 - np.tanh(2 * 1.25 * data_dt['BSTC'][:, c5ti['Scrap'], c5ti['Scrap']] - 0.5) / 0.5, isReg[:, 25])
+
+            # Calculate the condition for the second WHERE statement
+            condition2 = (isReg[:, 25] > 1.0)
+
+            # Apply the second WHERE statement
+            isReg[:, 25] = np.where(condition2, 1.0, isReg[:, 25])
+                               
+                            
+            condition = (~(data['SEWR'][:, 25, 0] > data_dt['SWKL'][:, 25, 0])) & (data['SEWR'][:, 25, 0] > -1.0)
+            isReg[25, :] = np.where(condition, 1.0 - np.tanh(((2 * 1.25 * data_dt['BSTC'][:, 25, 25] - 0.5) / 0.5)))        
+            isReg[25, :] = np.where(isReg[25,:] > 1.0, 1.0)
+                                
+                            
+############################ FTT ##################################
+#                        t3 = time.time()
+#                        print("Solving {}".format(titles["RTI"][r]))
+# Initialise variables related to market share dynamics
+# DSij contains the change in shares           
+            for r in range(len(titles['RTI'])):    
+                dSij = np.zeros([len(titles['STTI']), len(titles['STTI'])])   
+                F = np.ones([len(titles['STTI']), len(titles['STTI'])]) * 0.5
+                FE = np.ones([len(titles['STTI']), len(titles['STTI'])]) * 0.5
+                            
+                for b1 in range(len(titles['STTI'])): 
+                       if  not (data['SEWS'][r, b1, 0] > 0.0 and
+                                data['SGC1'][r, b1, 0] != 0.0 and
+                                data['SEWC'][r, b1, 0] != 0.0):
+                                continue
+                            
+                       S_i = data['SEWS'][r, b1, 0]
+                            
+                       for b2 in range(b1):                 
+                              if not (data['SEWS'][r, b2, 0] > 0.0 and
+                                      data['SGC1'][r, b2, 0] != 0.0 and 
+                                      data['SEWC'][r, b2, 0] != 0.0): 
+                                  continue                      
+                               
+                              S_k = data['SEWS'][r, b2, 0]
+                            
+                # Propagating width of variations in perceived costs
+                dFij = 1.414 * sqrt((data_dt['SEWC'][r, b1, 0] * data_dt['SEWC'][r, b1, 0] 
+                                     + data_dt['SEWC'][r, b2, 0] * data_dt['SEWC'][r, b2, 0]))
+                        
+                # Consumer preference incl. uncertainty
+                Fij = 0.5 * (1 + np.tanh(1.25 * (data_dt['SGC1'][r, b2, 0]
+                             - data_dt['SGC1'][r, b1, 0])) / dFij)
+                        
+                 # Preferences are then adjusted for regulations
+                F[b1, b2] = Fij * (1.0 - isReg[r, b1]) * (1.0 - isReg) + isReg[r, b2] \
+                                            * (1.0 - isReg[r, b1]) + 0.5 * (isReg[r, b1] * isReg[r, b2])
+                F[b2, b1] = (1.0 - Fij) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
+                                            * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
+                        
+                #Runge-Kutta market share dynamiccs
+                k_1 = S_i * S_k * (data['SEWA'][0, b1, b2] * F[b1,b2] - data['SEWA'][0, b2, b1]* F[b2,b1])
+                k_2 = (S_i + dt * k_1/2) * (S_k - dt * k_1/2) * (data['SEWA'][0, b1, b2] * F[b1,b2] - data['SEWA'][0, b2, b1] * F[b2,b1])
+                k_3 = (S_i + dt * k_2/2) * (S_k - dt * k_2/2) * (data['SEWA'][0, b1, b2] * F[b1,b2]- data['SEWA'][0, b2, b1]  * F[b2,b1])
+                k_4 = (S_i + dt * k_3) * (S_k - dt * k_3) * (data['SEWA'][0, b1, b2] * F[b1,b2] - data['SEWA'][0, b2, b1] * F[b2,b1])
+                        
+                dSij[b1, b2] = dt * (k_1+2*k_2+2*k_3+k_4)/6/tScaling
+                dSij[b2, b1] = -dSij[b1, b2]
+                
+                # -----------------------------------------------------
+                # Step 2: Endogenous premature replacements
+                # -----------------------------------------------------
+                # Initialise variables related to market share dynamics
+                #  DSiK contains the change in shares
+                # !This is due to more plants being eligible for scrapping. However, the investor preference should be much lower than the one from above.
+                SR = np.zeros(len(titles['RTI']))
+                SR = 1/data['BSTC'][r, :, c5ti['Payback period']] - 1/data['BSTC'][r, :, c5ti['Lifetime']]
+                    
+                # Constant used to reduce the magnitude of premature scrapping 
+                SR_C = 2.5
+                #!Only calculate for non-zero shares (SWSLt>0), only if scrapping decision rate > 0
+                dSEij = np.zeros([len(titles['STTI']), len(titles['STTI'])])
+        
+                # F contains the preferences
+                FE = np.ones([len(titles['STTI']), len(titles['STTI'])])*0.5
+                                  
+                for b1 in range(len(titles['STTI'])):       
+                       if not (data_dt['SEWS'][r, b1, 0] > 0.0 and
+                               data_dt['SGC2'][r, b1, 0] != 0.0 and
+                               data_dt['SGD2'][r, b1, 0] != 0.0 and
+                               data_dt['SGC3'][r, b1, 0] != 0.0 and
+                               data_dt['SGD3'][r, b1, 0] != 0.0 and
+                               SR[b1] > 0.0):
+                           continue
+    
+                       SE_i = data_dt['SEWS'][r, b1, 0]
+            
+                       for b2 in range(b1):       
+                              if not (data_dt['SEWS'][r, b2, 0] > 0.0 and
+                                      data_dt['SGC2'][r, b2, 0] != 0.0 and
+                                      data_dt['SGD2'][r, b2, 0] != 0.0 and
+                                      data_dt['SGC3'][r, b2, 0] != 0.0 and
+                                      data_dt['SGD3'][r, b2, 0] != 0.0 and
+                                      SR[b2] > 0.0):
+                                  continue
+        
+                              SE_k = data_dt['SEWS'][r, b2, 0]
+        
+                            
+                        
+            # Only calculate for non-zero shares (SWSLt>0), only if scrapping decision rate > 0
+            if data['SWSL'][r, b1, 0] > 0:
+                          dSEij = 0
+            # Propagating width of variations in perceived costs
+            dFEij = 1.414 * sqrt((data_dt['SGD3'][r, b1, 0] * data_dt['SGD3'][r, b1, 0] + data_dt['SGD2'][r, b2, 0] * data_dt['SGD2'][r, b2, 0]))
+            dFEji = 1.414 * sqrt((data_dt['SGD2'][r, b1, 0] * data_dt['SGD3'][r, b1, 0] + data_dt['SGD3'][r, b2, 0] * data_dt['SGD3'][r, b2, 0]))
+                
+            # Preferences based on cost differences by technology pairs (asymmetric!)
+            FEij = 0.5*(1+np.tanh(1.25*(data_dt['SGC2'][r, b2, 0] - data_dt['SGC3'][r, b1, 0])/dFEij))
+            FEji = 0.5*(1+np.tanh(1.25*(data_dt['SGC2'][r, b1, 0] - data_dt['SGC3'][r, b2, 0])/dFEji))
+    
+            # Preferences are either from investor choices (FEij) or enforced by regulations (HREG)
+            FE[b1, b2] = FEij*(1.0-isReg[r, b1])
+            FE[b2, b1] = FEji*(1.0-isReg[r, b2])
+                                
+            # -------Shares equation!! Core of the model!!------------------ 
+            # dSEij(I,K) = SWSLt(I,J)*SWSLt(K,J)*(SWAP(I,K)*FE(I,K)*SR(K,J)/SR_C - SWAP(K,I)*FE(K,I)*SR(I,J)/SR_C)*dt
+            # ------Runge-Kutta Algorithm (RK4) implemented by RH 5/10/22, do not remove the divide-by-6!--------!
+            kE_1 = SE_i * SE_k * (data['SWAP'][0, b1, b2] * FE[b1,b2] * SR[b2]/SR_C - data['SWAP'][0, b2, b1] * FE[b2, b1] * SR[b1]/SR_C)
+            kE_2 = (SE_i + dt * kE_1/2) * (SE_k - dt * kE_1/2) * (data['SWAP'][0, b1, b2] * FE[b1,b2] * SR[b2]/SR_C - data['SWAP'][0, b2, b1] * FE[b2,b1]*SR[b1]/SR_C)
+            kE_3 = (SE_i + dt * kE_2/2) * (SE_k - dt * kE_2/2) * (data['SWAP'][0, b1, b2] * FE[b1,b2] * SR[b2]/SR_C - data['SWAP'][0, b2, b1] * FE[b2,b1]*SR[b1]/SR_C)
+            kE_4 = (SE_i + dt * kE_3) * (SE_k - dt * kE_3) * (data['SWAP'][0, b1, b2] * FE[b1,b2] * SR[b2]/SR_C - data['SWAP'][0, b2, b1] * FE[b2,b1]*SR[b1]/SR_C)
+                                      
+            dSEij[b1, b2] = dt * (kE_1+2*kE_2+2*kE_3+kE_4)/6/tScaling
+            dSEij[b2, b1] = -dSEij[b1, b2]
+                                          
+            #  !------End of RK4 Alogrithm!------------------------------------------------------------------------!                                             
+            # Calulate endogenous shares!
+                
+            endo_shares = data_dt['SWSL'][r, :, 0] + np.sum(dSij, axis=1) + np.sum(dSEij, axis=1)
+            endo_eol =  np.sum(dSij, axis=1) 
+            endo_capacity = data_dt['SPSA'][r, :, 0]/np.sum(endo_shares * data['BSTC'][r, :, c5ti['CF']]) * endo_shares
+            # Note: for steel, shares are shares of generation
+            endo_gen = endo_capacity * data['BSTC'][r, :, c5ti['CF']]                                       
+            demand_weight = np.sum(endo_shares * (data['BSTC'][r, :, c5ti['CF']]))
+                                
+                                                
+            Utot = np.sum(endo_shares * demand_weight)
+            dUk = np.zeros([len(titles['STTI'])])
+            dUkSK = np.zeros([len(titles['STTI'])])
+            dUkREG = np.zeros([len(titles['STTI'])])
+            #dUkKST = np.zeros([len(titles['STTI'])])
+                                        
+                            
+            # Kickstart in terms of SPSAt
+            dUkKST = np.where(data['SWKA'][r, :, 0] < 0,
+                              data['SKST'][r, :, 0] * Utot * dt, 0)
+                                       
+            # Regulations have priority over kickstarts
+            dUkKST = np.where(((dUkKST / data['BSTC'][r, :, c5ti['CF']]) + endo_capacity > data['SEWR'][r, :, 0]) & (data['SEWR'][r, :, 0] >= 0.0),
+                              0,
+                              dUkKST)
+            # Shares are shares of demand, divided by average capacity factor 
+            # Regulation is done in terms of shares of raw demand (no weighting)
+            # Correct for regulations using difference between endogenous demand and demand from last time step with endo shares
+            dUkREG = np.where((endo_capacity * demand_weight - (endo_shares * data['SPSA'][r, 0, 0])) > 0, 
+                              - ((endo_capacity * demand_weight) - endo_shares * data['SPSA'][r, 0, 0]) * isReg[r, :],
+                              0)                                                
+            # Calculate demand subtractions based on exogenous capacity after regulations and kickstart, to prevent subtractions being too large and causing negatve shares.
+            # Convert to direct shares of SPSAt - no weighting!
+            dUkSK = np.where((data['SWKA'][r, :, 0] > endo_capacity) & (data['SWKA'][r, :, 0] > data ['SWKL'][r, :, 0]),
+                              ((data['SWKA'][r, :, 0] - endo_capacity) * demand_weight - dUkREG - dUkKST) * (t/invdt),
+                              0)                                    
+            # If SWKA is a target and is larger than the previous year's capacity, treat as a kick-start based on previous year's capacity. Small additions will help the target be met. 
+            dUkSK = np.where((data['SWKA'][r, :, 0] > endo_capacity) & (data['SWKA'][r, :, 0] > data ['SWKL'][r, :, 0]),
+                            (data['SWKA'][r, :, 0] - endo_capacity) * demand_weight * (t/invdt),
+                             dUkSK)                                                                        
+            # Regulations have priority over exogenous capacity
+            dUkSK = np.where((data['SWKA'][r, :, 0] < 0) | (data['SEWR'][r, :, 0] >= 0) & (data['SWKA'][r, :, 0] > data['SEWR'][r, :, 0]),
+                            0, dUkSK)
+        
+                                                               
+            dUk = dUkREG + dUkSK + dUkKST
+            dUtot  = np.sum(dUk)
+                                        
+                                            
+            #!Use modified shares of demand and total modified demand to recalulate market shares
+            #!This method will mean any capacities set to zero will result in zero shares
+            #!It avoids negative shares
+            #!All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity/demand
+            #!If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, SWKA is fairly accurate
+        
+            #!Market share changes due to exogenous settings and regulations
+            if np.sum((endo_capacity * demand_weight) + dUk) > 0:
+                data['SWSA'][r, :, 0] = dUk/np.sum((endo_capacity * demand_weight) + dUk)
+                           
+            #!New market shares
+            if np.sum((endo_capacity * demand_weight) + dUk) > 0:
+                data['SEWS'][r, :, 0] = (((endo_capacity * demand_weight) + dUk)/np.sum(endo_capacity * demand_weight) + dUk)
+                                      
+            #!Changes due to end-of-lifetime replacements
+            data['SEOL'][r, :, 0] = np.sum(dSij, axis = 1)
+            #!Changes due to premature scrapping
+            data['SBEL'][r, :, 0] = np.sum(dSEij,axis = 1)
+            
+            #!--Main variables once we have new shares:--
+            #!Steel production capacity per technology (kton)
+            data['SEWK'][r, :, 0] = (data['SPSA'][r, :, 0])/np.sum(data['SEWS'][r, :, 0] * data['BSTC'][r, :, c5ti['CF']] * data['SEWS'][r, :, 0])
+            #!Actual steel production per technology (kton) (capacity factors column 12)
+            data['SEWG'][r, :, 0] = (data['SEWK'][r, :, 0] * data['BSTC'][r, :, c5ti['CF']])
+            #!Emissions (MtCO2/y) (14th is emissions factors tCO2/tcs)
+            #data['SEWE'][r, :, 0] = (data['SEWG'][r, :, 0] * data ['STEF'][r, :, 0])/1e3
+            
+                            
+                   
+            #!EOL replacements based on shares growth
+            eol_replacements_t = np.zeros([len(titles['RTI'])])
+            eol_replacements = np.zeros([len(titles['RTI'])])
+            
+            if (iter==1):  
+                for t in range(0, (invdt - 1)):
+                    data['SEWI'][r, :, 0] = 0.0
+                    data_dt['SEWI'][r, :, 0] = 0.0
+            
+                                                 
+            eol_replacements_t = np.where((endo_eol >= 0 & (data['BSTC'][r, :, c5ti['Lifetime']] > 0), 
+                                           (data['SWKL'][r, :, 0] * dt/data['BSTC'][r, :, c5ti['Lifetime']])), 0)
+            
+            eol_replacements_t = np.where(((data['SWSL'][r, :, 0]) * dt/data['BSTC'][r, :, c5ti['Lifetime']] < endo_eol < 0) & data['BSTC'][r, :, c5ti['Lifetime']] > 0, 
+                                           (data['SEWS'][r, :, 0] - data['SWSL'][r, :, 0] + data['SWSL'][r, :, 0] * dt/data['BSTC'][r, :, c5ti['Lifetime']]) * data['SWKL'][r, :, 0], eol_replacements_t) 
+            
+            # Capacity growth
+            if (data['SEWK'][r, :, 0] - data['SWKL'][r, :, 0]) > 0 :
+                 data['SEWI'][r, :, 0] = data['SEWK'][r, :, 0] - data['SWKL'][r, :, 0] + eol_replacements_t
+            else:
+                 data['SEWI'][r, :, 0] = eol_replacements_t
+            
+            # Capacity growth, add each time step to get total at end of loop
+            data['SEWI'][r, :, 0] = data['SEWI'][r, :, 0] + data['SEWI'][r, :, 0]             
+                        
+            # Check what investment and learning thing comes here from line 800 to 844 in Fortran
+            # Bring up the investment LBD from bottom to here
+            # Add lines 884 to 905 from Fortran (LBD)
+            # Call the capacity function
+            #Calculate levelised cost again
+            data = get_lcos(data, titles)
+            ftt_s_fuel_consumption(data['BSTC'], data['SEWG'], data['SMED'], len(titles['RTI']), len(titles['STTI']), c5ti, len(titles['JTI']))
+            # Code ends at 1048 for Fortran
 
 #         # Useful energy demand by boilers
 #         # The historical data contains final energy demand
@@ -348,7 +615,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     
 #         # Factor used to create quarterly data from annual figures
 #         no_it = int(data['noit'][0, 0, 0])
-            dt = 1 / float(no_it)
+            #dt = 1 / float(no_it)
 
 #         ############## Computing new shares ##################
 
@@ -578,41 +845,41 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
             # New additions (SEWI)
-            data, sewi_t = get_sales(data['SEWK'], data_dt['SEWK'], time_lag['SEWK'], data['SEWS'], data_dt['SEWS'], data['SEWI'], data['BSTC'][:, :, c5ti['Lifetime']], dt)
-            ############## Learning-by-doing ##################
+            #data, sewi_t = get_sales(data['SEWK'], data_dt['SEWK'], time_lag['SEWK'], data['SEWS'], data_dt['SEWS'], data['SEWI'], data['BSTC'][:, :, c5ti['Lifetime']], dt)
+        ############## Learning-by-doing ##################
 
-            # Cumulative global learning
-            # Using a technological spill-over matrix (HEWB) together with capacity
-            # additions (SEWI) we can estimate total global spillover of similar
-            # technologies
+        # Cumulative global learning
+        # Using a technological spill-over matrix (HEWB) together with capacity
+        # additions (SEWI) we can estimate total global spillover of similar
+        # technologies
             bi = np.zeros((len(titles['RTI']),len(titles['STTI'])))
             for r in range(len(titles['RTI'])):
-                 bi[r,:] = np.matmul(data['SEWB'][0, :, :],sewi_t[r, :, 0])
+                 bi[r,:] = np.matmul(data['SEWB'][0, :, :], data_dt['SEWI'][r, :, 0])
             dw = np.sum(bi, axis=0)
 
             # Cumulative capacity incl. learning spill-over effects
             data['SEWW'][0, :, 0] = data_dt['SEWW'][0, :, 0] + dw
-
+    
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
             data['BSTC'] = copy.deepcopy(data_dt['BSTC'])
 
             # Learning-by-doing effects on investment and efficiency
             for b in range(len(titles['STTI'])):
-
+    
                 if data['SEWW'][0, b, 0] > 0.0001:
-
+    
                     data['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']] = (data_dt['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']]  \
                                                                               *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
                     data['BSTC'][:, b, c5ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c5ti['2 Inv Cost SD']]  \
                                                                               *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
-
+    
             #Total investment in new capacity in a year (m 2014 euros):
               #SEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
               #BHTC(:,:,1) are the investment costs (2014Euro/kW)
             data['SWIY'][:,:,0] = data['SWIY'][:,:,0] + data['SEWI'][:,:,0]*dt*data['BSTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
             # Save investment cost for front end
             data["SWIC"][:, :, 0] = data["BSTC"][:, :, c5ti['1 Inv cost mean (EUR/Kw)']]
-            
+                
 
 #             # TODO: HEWP = HFPR not HFFC
 #             #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
@@ -647,7 +914,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             #Update time loop variables:
             for var in data_dt.keys():
-
+    
                 data_dt[var] = copy.deepcopy(data[var])
 
 
