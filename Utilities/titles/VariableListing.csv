@@ -454,7 +454,7 @@ SICL,Global installed capacity of intermediate plants - LAG,,NA,SSTI,NA,NA,FTT-S
 SEMR,FTT:Steel bottom up employment y-o-y growth rates,,RTI,NA,NA,NA,FTT-S,-,-,2001,-,,
 SEMS,FTT:Steel bottom up absolute employment by technology in FTE,,RTI,STTI,NA,NA,FTT-S,-,-,2001,-,,
 SKST,"Exogenous kick start of technologies, in terms of market shares (-)",,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
-STEF ,FTT:Steel technology specific emission factor,,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
+STEF,FTT:Steel technology specific emission factor,,RTI,STTI,NA,TIME,FTT-S,-,-,2001,-,,
 SLT2,Scrap availability parameters - Product group lifetime (used for intermediate calc.),,RTI,C5TI,NA,NA,FTT-S,-,-,2001,-,,
 SMPT,FTT:Steel exogenous material price trends,,RTI,SMTI,NA,TIME,FTT-S,-,-,2001,-,,
 SHS1,Historical steel production 1918 - 2017,ktcs/y,RTI,Y1TI,NA,TIME,FTT-S,-,-,2001,-,,
