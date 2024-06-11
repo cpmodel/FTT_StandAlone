@@ -221,10 +221,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data_dt[var] = copy.deepcopy(time_lag[var])
                 raw_material_distr(data, titles, year, t)
                 # Market share calculation : What Shruti has done
-                # Check what investment and learning thing comes here from line 800 to 857 in Fortran
+                # Check what investment and learning thing comes here from line 800 to 844 in Fortran
+                # Bring up the investment LBD from bottom to here
+                # Add lines 884 to 905 from Fortran (LBD)
                 # Call the capacity function
-                # ftt_s_fuel_consumption(data['BSTC'], data['SEWG'], data['SMED'], len(titles['RTI']), len(titles['STTI']), c5ti, len(titles['JTI']))
-                
+                #Calculate levelised cost again
+                data = get_lcos(data, titles)
+                ftt_s_fuel_consumption(data['BSTC'], data['SEWG'], data['SMED'], len(titles['RTI']), len(titles['STTI']), c5ti, len(titles['JTI']))
+                # Code ends at 1048 for Fortran
 
 #         # Useful energy demand by boilers
 #         # The historical data contains final energy demand
@@ -605,7 +609,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #Total investment in new capacity in a year (m 2014 euros):
               #SEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
               #BHTC(:,:,1) are the investment costs (2014Euro/kW)
-            data['SWIY'][:,:,0] = data['HWIY'][:,:,0] + data['SEWI'][:,:,0]*dt*data['BSTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
+            data['SWIY'][:,:,0] = data['SWIY'][:,:,0] + data['SEWI'][:,:,0]*dt*data['BSTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
             # Save investment cost for front end
             data["SWIC"][:, :, 0] = data["BSTC"][:, :, c5ti['1 Inv cost mean (EUR/Kw)']]
             
@@ -640,9 +644,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #  =================================================================
             # Update the time-loop variables
             # =================================================================
-
-            #Calculate levelised cost again
-            # data = get_lcos(data, titles)
 
             #Update time loop variables:
             for var in data_dt.keys():
