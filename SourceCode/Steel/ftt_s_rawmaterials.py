@@ -60,15 +60,15 @@ def raw_material_distr(data, titles, year, t):
    
      for r in range(len(titles['RTI'])):
          if data['SPSA'][r, 0 , 0] > 0.0:
-                 for path in range(len(titles['STTI'])-2):
+                 for path in range(len(titles['STTI'])):
                      # There's enough scrap to meet the maximum scrap demand
-                     if (np.any(data ['SXSR'][r, 0, 0] >= maxscrapdemand)):
-                         metalinput[path,0] = (1.0 - 0.09 - scrapcost[path, r]) * pitcsr 
-                         metalinput[path,1] = 0.0
-                         metalinput[path,2] = scrapcost[path,r] +0.09
+                     if (np.any(data['SXSR'][r, 0, 0] >= maxscrapdemand)):
+                         metalinput[path-1,0] = (1.0 - 0.09 - scrapcost[r, path-1]) * pitcsr 
+                         metalinput[path-1,1] = 0.0
+                         metalinput[path-1,2] = scrapcost[r, path-1] +0.09
                          metalinput[25,0] = 0.0
                          metalinput[25,1] = 0.0
-                         metalinput[25,2] = scrapcost[25,r] +0.09
+                         metalinput[25,2] = scrapcost[r, 25] +0.09
                  #There's not enough scrap to feed into all the technologies, but there's 
                  #enough scrap to feed into the Scrap-EAF route.             
                      elif ((data['SXSR'][r, 0, 0] < maxscrapdemand[r, 0, 0]) and (data['SXSR'][r, 0, 0] >= scraplimittrade[r, 0, 0])): 
@@ -117,27 +117,28 @@ def raw_material_distr(data, titles, year, t):
              #Add ironmaking step scaled to the need of PIP
              inventory[:,a] += data['SLCI'][0,2,1]*data['SLCI'][0,:,2]
              #Add Sinter and Pellet inventory
-             inventory[:,a] += inventory[7,a] * data['SCMM'][0,:,3] + inventory[8,a] * data['SCMM'][0,:,4] + inventory[9,a] * data['SCMM'][0,:,5] + inventory[10,a] * data['SCMM'][:,6]
+             inventory[:,a] += inventory[7,a] * data['SCMM'][0,:,3] + inventory[8,a] * data['SCMM'][0,:,4] + inventory[9,a] * data['SCMM'][0,:,5] + inventory[10,a] * data['SCMM'][0, :,6]
              #Add coke inventory
-             inventory[:,a] += inventory[5,a] * data['SCMM'][:,1] + inventory[6,a] * data['SCMM'][0,:,2]
+             inventory[:,a] += inventory[5,a] * data['SCMM'][0,:,1] + inventory[6,a] * data['SCMM'][0,:,2]
              #Add oxygen inventory
              inventory[:,a] += inventory[11,a] * data['SCMM'][0,:,7]
              #Add finishing step
-             inventory[:,a] += (data['SCMM'][:,27])/1.14
+             inventory[:,a] += (data['SCMM'][0,:,27])/1.14
             
              #Material based emission intensity
-             ef = np.sum(inventory[0,:,a]*data['SMEF'][0,:,0])
+             ef = np.sum(inventory[:,a]*data['SMEF'][0,:,0])
              #ef_fossil = np.sum(inventory[0,1:15,a]*data['SMEF'][0,1:15,0])
-             ef_biobased = np.sum(inventory[0, 16:24, a] * data['SMEF'][0,16:24,0])
+             ef_biobased = np.sum(inventory[16:24, a] * data['SMEF'][0,16:24,0])
 
              #From here on: Put the results of the inventory calculation into the CostMatrix
              #Material based Energy Intensity
-             data['BSTC'][r,a,15] = np.sum(inventory[0, :, a] * data['SMED'][0, :, 0])
+             data['BSTC'][r,a,15] = np.sum(inventory[:, a] * data['SMED'][0, :, 0])
              data['STEI'][r,a,0]= data['BSTC'][r,a,15]
-             data['STSC'][r,a,0]= inventory[0,4,a]
+             data['STSC'][r,a,0]= inventory[4,a]
 
-             for mat in range(len['SMTI']):
-                 data['BSTC'][r,a,21]= inventory[0,21,a]
+             for mat in range(len(titles['SMTI'])):
+                 data['BSTC'][r,a,21]= inventory[21,a]
+
             
              #Select CCS technologies
              if (data['BSTC'][r,a,22]==1):
