@@ -171,17 +171,22 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #             data['SJCO'][r,10,0] += 0.0
             #             data['SJCO'][r,11,0] += data['BSTC'][r,i,c5ti["Hydrogen"]] * data['SEWG'][r, i, 0]* 1000 * data['SMED'][0,17,0] * 1/41868
             
-                #Call the LCOS function within the year==2019 conditional statement
+            data['SJFR'] = data['SJEF']
+           
+            #Call the LCOS function within the year==2019 conditional statement
+            data = get_lcos(data, titles)
                 
             # Calculate cumulative capacities (SEWW)
+
+            
             bi = np.zeros((len(titles['RTI']), len(titles['STTI'])))
 
             for r in range(len(titles['RTI'])):
                 bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])
                 data['SEWW'] = np.sum (bi, axis = 0)
+            
             data['SEWW'] = data['SEWW'][None, :, None]
 
-            
             #This needs to be in the year==2019 conditional statement
             #These 2 loops happen twice. Let's just make it a separate function and call it here and in year > histend
             for t1 in range(len(titles['STTI'])): 
