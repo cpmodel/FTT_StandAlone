@@ -67,14 +67,17 @@ def get_lcoe(data, titles, histend, year):
         
         # Value factor section
         if year > histend['DPVF']: 
-            # Calculate generation share change compared to histend
-            share_change = np.where(data['MPGS'][r,:,0]>0.0, 
-                                    divide(data['MPGS'][r,:,0], data['MPGS2023'][r,:,0])-1,
-                                    0.0)
+            # Calculate capacity share change compared to histend
+            share_change = data['MEWS'][r,:,0] - data['MPGS2023'][r,:,0]
             
             # Calculate value factor
-            data['DPVF'][r,:,0] = data['DPVF2023'][r,:,0] + data['DVFE'][r,:,0] * share_change
-            
+            data['DPVF'][r,:,0] = data['DPVF2023'][r,:,0] * (1 + data['DVFE'][r,:,0] * share_change)
+        
+            share_change_wind = data['MEWS'][r,[16,17],0].sum() - data['MPGS2023'][r,[16,17],0].sum()
+        
+            # Calculate value factor wind (because generation data not divided in onshore and offshore)
+            data['DPVF'][r,[16,17],0] = data['DPVF2023'][r,[16,17],0] * (1 + data['DVFE'][r,16,0] * share_change_wind)
+        
         else:
             data['DPVF'][r,:,0] = dc(data['DPVF2023'][r,:,0])
             
@@ -122,9 +125,14 @@ def get_lcoe(data, titles, histend, year):
         conv_av = 1/bt / cf_av/8766*1000        
 
         # Discount rate
-        # dr = bcet[6]
-        dr = data['DCOC'][r, :, 0, None] #bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
-
+        #uniform discount rate
+        #dr = bcet[6]
+        #dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
+        
+        #WACC as discount rate
+        dr = data['DCOC'][r, :, 0, None]
+        
+        
         # Initialse the levelised cost components
         # Average investment cost of marginal unit
         it_mu = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -134,7 +142,7 @@ def get_lcoe(data, titles, histend, year):
         # Average investment costs of across all units
         it_av = np.ones([len(titles['T2TI']), int(max_lt)])
         it_av = it_av * bcet[:, c2ti['3 Investment ($/kW)'], np.newaxis] * conv_av[:, np.newaxis]
-        it_av = np.where(bt_mask, it_av, 0)       
+        it_av = np.where(bt_mask, it_av, 0)     
 
         # Standard deviation of investment cost - marginal unit
         dit_mu = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -188,10 +196,10 @@ def get_lcoe(data, titles, histend, year):
         # No generation during the buildtime, so no benefits
         et = np.ones([len(titles['T2TI']), int(max_lt)])
         et = np.where(lt_mask, et, 0)
-        
-        # Grid costs
+
+        # Grid costs (minimal impact)
         gridcost = np.ones([len(titles['T2TI']), int(max_lt)])
-        gridcost = data['DTGC'][r, :, 0, None] * conv_mu[:, np.newaxis]
+        gridcost = data['DPGC'][r, :, 0, None] * conv_mu[:, np.newaxis]
         gridcost = np.where(bt_mask, gridcost, 0)
 
         # Storage costs and marginal costs (lifetime only)
@@ -214,7 +222,7 @@ def get_lcoe(data, titles, histend, year):
         stor_cost = np.where(lt_mask, stor_cost, 0)
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
         
-        # Debt repayment costs
+        # Debt repayment costs (total cost x debt rate x interest rate (should be replaced by CoD))
         dbt = (it_av+fft+st+ft+ct+omt+stor_cost)*(data['DPDR'][r, :, :]*data['RLR'][r, 0, 0])
 
         # Net present value calculations
@@ -222,29 +230,31 @@ def get_lcoe(data, titles, histend, year):
         denominator = (1+dr)**full_lt_mat
         
         # Only investment component of LCOE
-        npv_investcomp_av = (it_av+st)/denominator
-        npv_investcomp_mu = (it_mu+st)/denominator
+        npv_investcomp_av = (it_av+st+gridcost)/denominator
+        npv_investcomp_mu = (it_mu+st+gridcost)/denominator
         
         # Only debt cost component of LCOE
         npv_debt = dbt/denominator
-
+        
         # 1-Expenses
         # 1.1-Without policy costs
-        npv_expenses1 = (it_av+ft+omt+stor_cost+marg_stor_cost+gridcost)/denominator
+        npv_expenses1 = (it_av+ft+omt+stor_cost+marg_stor_cost+dbt+gridcost)/denominator
         # 1.2-With policy costs
-        # npv_expenses2 = (it+st+fft+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
-        npv_expenses2 = (it_av+fft+st+ft+ct+omt+stor_cost+marg_stor_cost+gridcost)/denominator
+        #npv_expenses2 = (it+st+fft+ft+ct+omt+stor_cost+marg_stor_cost)/denominator
+        npv_expenses2 = (it_mu+fft+st+ft+ct+omt+stor_cost+marg_stor_cost+dbt+gridcost)/denominator
         # 1.3-Without policy, with co2p
         # TODO: marg_stor_cost?
-        npv_expenses3 = (it_mu+ft+ct+omt+stor_cost+marg_stor_cost+gridcost)/denominator
+        npv_expenses3 = (it_av+ft+ct+omt+stor_cost+marg_stor_cost+gridcost)/denominator
         # 1.3-Only policy costs
         # npv_expenses3 = (ct+fft+st)/denominator
         # 2-Utility
         npv_utility = (et)/denominator
-        
-        npv_benefits = (data['DAEP'][r,0,0] * data['DPVF'][r, :, 0])/denominator
+        utility = et
+        #discounting revenue (no longer in LCOE)
+        npv_benefits = (data['DAEP'][r,0,0] * data['DPVF'][r,:,:])/denominator
         #Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility==1] = 0
+        #utility[utility==1] = 0        
         # npv_utility[:,0] = 1
         # 3-Standard deviation (propagation of error)
         npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2)/denominator
@@ -252,23 +262,36 @@ def get_lcoe(data, titles, histend, year):
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOE
-        lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
+        #lcoe = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
+        lcoe = np.sum(npv_expenses1, axis=1)/np.sum(utility, axis=1)
         # 1.2-LCOE including policy costs
-        tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1) - data['MEFI'][r, :, 0]
+        #tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1) - data['MEFI'][r, :, 0]
+        tlcoe = np.sum(npv_expenses2, axis=1)/np.sum(utility, axis=1) - data['MEFI'][r, :, 0]            
         # 1.3 LCOE excluding policy, including co2 price
-        lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
+        #lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
+        lcoeco2 = np.sum(npv_expenses3, axis=1)/np.sum(utility, axis=1)          
         # 1.3-LCOE of policy costs
         # lcoe_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)+data['MEFI'][r, :, 0]
         # Standard deviation of LCOE
-        dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
+        #dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
+        dlcoe = np.sum(npv_std, axis=1)/np.sum(utility, axis=1)          
         
         # Store investment component of LCOE (includes subsidies)
-        data['DCPU'][r, :, 0] = np.sum(npv_investcomp_mu, axis=1)/np.sum(npv_utility, axis=1)
+        
+        #to get all capital cost equal to 1 in combo with DCPU_FR file
+        #data['DCPU'][r, :, 0] = np.sum(npv_investcomp_mu, axis=1)/np.sum(npv_utility, axis=1)
+        #mask = data['DCPU'][r, :, 0] != 1
+        #capital_per_unit = np.sum(npv_investcomp_mu, axis=1)/np.sum(utility, axis=1)   
+        #data['DCPU'][r, mask, 0] = capital_per_unit[mask]
+        
+        #data['DCPU'][r, :, 0] = np.sum(npv_investcomp_mu, axis=1)/np.sum(npv_utility, axis=1)  
+        data['DCPU'][r, :, 0] = np.sum(npv_investcomp_mu, axis=1)/np.sum(utility, axis=1)           
         data['DPCI'][r, :, 0] = divide(data['DCPU'][r, :, 0], tlcoe)
         
-        # Store debt cost compoentn of LCOE (includes all policies) - $/MWh
-        data['DPDC'][r, :, 0] = np.sum(npv_debt, axis=1)/np.sum(npv_utility, axis=1)
-
+        # Store debt cost component of LCOE (includes all policies)
+        #data['DPDC'][r, :, 0] = np.sum(npv_debt, axis=1)/np.sum(npv_utility, axis=1)
+        data['DPDC'][r, :, 0] = np.sum(npv_debt, axis=1)/np.sum(utility, axis=1)        
+        
         # LCOE augmented with gamma values
         tlcoeg = tlcoe+data['MGAM'][r, :, 0]
 
@@ -286,7 +309,7 @@ def get_lcoe(data, titles, histend, year):
         data['MWIC'][r, :, 0] = dc(bcet[:, 2])
         data['MWFC'][r, :, 0] = dc(bcet[:, 4])
         data['MCOC'][r, :, 0] = dc(bcet[:, 0])
-    
+
 
         if np.rint(data['MSAL'][r, 0, 0]) > 1:
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
@@ -300,41 +323,58 @@ def get_lcoe(data, titles, histend, year):
                                         bcet[:, 5]*bcet[:, 5] +
                                         bcet[:, 7]*bcet[:, 7])
         
-        # Calculate leverage for use elsewhere
+        # Calculate leverage (frontend output, can be removed)
         data['DLEV'][r, :, 0] = 1+(data['DPDR'][r, :, 0]/(1 - data['DPDR'][r, :, 0]))
         
-        
         # Revenue = electricity price * value factor
-        data['DRPU'][r, :, 0] = data['DAEP'][r,0,0]*data['DPVF'][r,:,0]
+        #data['DRPU'][r, :, 0] = data['DAEP'][r,0,0]*data['DPVF'][r,:,0]
+        #to have the correctly discounted profit rate as an output
+        data['DRPU'][r, :, 0] = dc(np.sum(npv_benefits,axis=1))  
+        #data['DRPU'][r, :, 0] = dc(np.sum(npv_benefits,axis=1)/np.sum(utility, axis=1)) #per unit
         
-        data['DRPU2'][r, :, 0] = dc(npv_benefits)
+        data['DRPU2'][r, :, 0] = dc(np.sum(npv_benefits,axis=1))
+        #data['DRPU2'][r, :, 0] = dc(np.sum(npv_benefits,axis=1)/np.sum(utility, axis=1))   #per unit
+        
         
         # Profit per unit (includes gamma value calibration)
-        data['DPPU'][r, :, 0] = data['DRPU'][r, :, 0] - data['METC'][r, :, 0]
-        
+        #data['DPPU'][r, :, 0] = data['DRPU'][r, :, 0] - data['METC'][r, :, 0]
+        data['DPPU'][r, :, 0] = data['DRPU2'][r, :, 0] - dc(np.sum(npv_expenses2, axis=1)) #to have correctly discounted output        
+        #data['DPPU'][r, :, 0] = data['DRPU2'][r, :, 0] - dc(np.sum(npv_expenses2, axis=1)/np.sum(utility, axis=1))   #per unit
+
         # Proft per unit as cost benefit
-        data['DPPU2'][r, :, 0] = npv_benefits - npv_expenses2
-        
+        data['DPPU2'][r, :, 0] = data['DRPU2'][r, :, 0] - dc(np.sum(npv_expenses2, axis=1))
+        #data['DPPU2'][r, :, 0] = data['DRPU2'][r, :, 0] - dc(np.sum(npv_expenses2, axis=1))/np.sum(utility, axis=1)    #cost per unit
+        #data['DPPU2'][r, :, 0] = npv_benefits - npv_expenses2
+           
         # Profit rate
-        data['DPPR'][r, :, 0] = divide(data['DPPU'][r, :, 0] , 
-                                       data['DCPU'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
-        
+        #data['DPPR'][r, :, 0] = divide(data['DPPU'][r, :, 0] , 
+        #                                  data['DCPU'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
+        #to have correct profit rate
+        data['DPPR'][r, :, 0] = divide(data['DPPU2'][r, :, 0] , 
+                                           data['DCPU'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
+        #data['DPPR2'][r, :, 0] = divide(data['DPPU2'][r, :, 0] , 
+        #                                  data['DPPU2'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
         data['DPPR2'][r, :, 0] = divide(data['DPPU2'][r, :, 0] , 
-                                       data['DPPU2'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
+                                           data['DCPU'][r, :, 0]*(1-data['DPDR'][r, :, 0]))
         
+        
+        # Rought approximation of the stand. dev. of the profit rate
+        #data['DPRD'][r, :, 0] = data['DPPR'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
+        data['DPRD'][r, :, 0] = data['DPPR2'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
+           
+        data['DPRD2'][r, :, 0] = data['DPPR2'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
+        
+        
+        #not performed in the model
         # Risk adjustment factor
         data['DRAF'][r, :, 0] = np.where((1 - data['DCOC'][r, :, 0] * data['DLEV'][r, :, 0]) > 0.0,
-                                         1 / (1 - data['DCOC'][r, :, 0] * data['DLEV'][r, :, 0]),
-                                         1.0)
+                                            1 / (1 - data['DCOC'][r, :, 0] * data['DLEV'][r, :, 0]),
+                                            1.0)
         
         # Risk adjusted profit rate
         data['DRPR'][r, :, 0] = data['DPPR'][r, :, 0] * data['DRAF'][r, :, 0]
-        
+           
         data['DRPR2'][r, :, 0] = data['DPPR2'][r, :, 0] * data['DRAF'][r, :, 0]
-        
-        # Rought approximation of the stand. dev. of the profit rate
-        data['DPRD'][r, :, 0] = data['DPPR'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
-        
-        data['DPRD2'][r, :, 0] = data['DRPR2'][r, :, 0] * divide(data['MTCD'][r, :, 0], data['MEWC'][r, :, 0])
+           
 
     return data

@@ -655,7 +655,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MEWL'], data_dt['MEWS'],
                                             data['MWLO'], MWDL,
                                             len(titles['RTI']), len(titles['T2TI']),no_it, elec_price,
-                                            data_dt['DRPR2'], data_dt['DPRD2'])
+                                            data_dt['DPPR2'], data_dt['DPRD2'])
             
             # Implement profit rate based calculation here (only applies to
             # regions with non-zero electricity price inputs)
@@ -780,18 +780,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
             data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
                                            denominator) #TODO: should this be here? + data['MADG'][:, 0, 0, np.newaxis]
-
+            
             # Calculate generation shares
             data['MPGS'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWG'][:, :, 0].sum(axis=1)[:, None])
             
             if year == histend['DPVF']:
                 
-                data['MPGS2023'][:, :, 0] = copy.deepcopy(data['MPGS'][:, :, 0])
+                data['MPGS2023'][:, :, 0] = copy.deepcopy(data['MEWS'][:, :, 0])
                 
             elif year > histend['DPVF']:
                 
                 data['MPGS2023'][:, :, 0] = copy.deepcopy(time_lag['MPGS2023'][:, :, 0])
-
+            
+            
             # Update capacities
             data['MEWK']= divide(data['MEWG'], data['MEWL']) / 8766
             # Update emissions
@@ -883,10 +884,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                                                            (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] * \
                                                                           (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])                                                   
-                    
-                    # if Svar[0, tech] == 1:
-                    #     data['DCOD'][:, tech, 0] =  (data_dt['DCOD'][:, tech, 0] - old_interest_rate + new_interest_rate) * (1.0 - 0.05 * dw[tech]/data['MRWW'][:, tech, 0])            
-            
             # Investment in terms of car purchases:
             for r in range(len(titles['RTI'])):
 
