@@ -433,36 +433,36 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             dUtot  = np.sum(dUk)
                                         
                                             
-            #!Use modified shares of demand and total modified demand to recalulate market shares
-            #!This method will mean any capacities set to zero will result in zero shares
-            #!It avoids negative shares
-            #!All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity/demand
-            #!If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, SWKA is fairly accurate
+            #Use modified shares of demand and total modified demand to recalulate market shares
+            #This method will mean any capacities set to zero will result in zero shares
+            #It avoids negative shares
+            #All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity/demand
+            #If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, SWKA is fairly accurate
         
-            #!Market share changes due to exogenous settings and regulations
+            #Market share changes due to exogenous settings and regulations
             if np.sum((endo_capacity * demand_weight) + dUk) > 0:
                 data['SWSA'][r, :, 0] = dUk/np.sum((endo_capacity * demand_weight) + dUk)
                            
-            #!New market shares
+            #New market shares
             if np.sum((endo_capacity * demand_weight) + dUk) > 0:
                 data['SEWS'][r, :, 0] = (((endo_capacity * demand_weight) + dUk)/np.sum(endo_capacity * demand_weight) + dUk)
                                       
-            #!Changes due to end-of-lifetime replacements
+            #Changes due to end-of-lifetime replacements
             data['SEOL'][r, :, 0] = np.sum(dSij, axis = 1)
-            #!Changes due to premature scrapping
+            #Changes due to premature scrapping
             data['SBEL'][r, :, 0] = np.sum(dSEij,axis = 1)
             
-            #!--Main variables once we have new shares:--
-            #!Steel production capacity per technology (kton)
+            #--Main variables once we have new shares:--
+            #Steel production capacity per technology (kton)
             data['SEWK'][r, :, 0] = (data['SPSA'][r, :, 0])/np.sum(data['SEWS'][r, :, 0] * data['BSTC'][r, :, c5ti['CF']] * data['SEWS'][r, :, 0])
-            #!Actual steel production per technology (kton) (capacity factors column 12)
+            #Actual steel production per technology (kton) (capacity factors column 12)
             data['SEWG'][r, :, 0] = (data['SEWK'][r, :, 0] * data['BSTC'][r, :, c5ti['CF']])
-            #!Emissions (MtCO2/y) (14th is emissions factors tCO2/tcs)
+            #Emissions (MtCO2/y) (14th is emissions factors tCO2/tcs)
             #data['SEWE'][r, :, 0] = (data['SEWG'][r, :, 0] * data ['STEF'][r, :, 0])/1e3
             
                             
                    
-            #!EOL replacements based on shares growth
+            #EOL replacements based on shares growth
             eol_replacements_t = np.zeros([len(titles['RTI'])])
             eol_replacements = np.zeros([len(titles['RTI'])])
             
@@ -488,13 +488,92 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['SEWI'][r, :, 0] = data['SEWI'][r, :, 0] + data['SEWI'][r, :, 0]             
                         
             # Check what investment and learning thing comes here from line 800 to 844 in Fortran
-            # Bring up the investment LBD from bottom to here
+            # Cumulative investment for learning cost reductions
+            # (Learning knowledge is global Therefore we sum over regions)
+            # BI = MATMUL(SEWB,SEWIt)          Investment spillover: spillover matrix B
+            # dW = SUM(BI,dim=2)         Total new investment dW (see after eq 3 Mercure EP48)
+
+            sewi0= np.sum(sewi_t, axis=1)
+            for path in range(len(titles['STTI'])):
+                dw_temp = sewi0
+                dw[path] = np.matmul(dw_temp, data['SEWB'][:, path, :])
+            
+            #Cumulative capacity for learning
+            data['SEWW'] = data_dt['SWWL'] + dw
+
+            #Update technology costs for both the carbon price and for learning
+            #Some costs do not change
+
+            data['BSTC'][: , : , 0:21] = data_dt['BSTL'][: , : , 0:21]
+            data['SCMM']= data_dt['SCML']
+
+            # for j in range(len(titles['RTI'])):
+            #     #Switch: Do governments feedback xx% of their carbon tax revenue as energy efficiency investments?
+            #     #Government income due to carbon tax in mln$(2008) 13/3/23 RSH: is this 2008 or 2013 as the conversion suggests?
+            # Lines 820 to 844 relate to E3ME variables
+            # New additions (SEWI)
+            data, sewi_t = get_sales(data['SEWK'], data_dt['SEWK'], time_lag['SEWK'], data['SEWS'], data_dt['SEWS'], data['SEWI'], data['BSTC'][:, :, c5ti['Lifetime']], dt)
+            ############## Learning-by-doing ##################
+
+            # Cumulative global learning
+            # Using a technological spill-over matrix (HEWB) together with capacity
+            # additions (SEWI) we can estimate total global spillover of similar
+            # technologies
+            bi = np.zeros((len(titles['RTI']),len(titles['STTI'])))
+            for r in range(len(titles['RTI'])):
+                 bi[r,:] = np.matmul(data['SEWB'][0, :, :],sewi_t[r, :, 0])
+            dw = np.sum(bi, axis=0)
+
+            # Cumulative capacity incl. learning spill-over effects
+            data['SEWW'][0, :, 0] = data_dt['SEWW'][0, :, 0] + dw
+
+            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
+            data['BSTC'] = copy.deepcopy(data_dt['BSTC'])
+
+            # Learning-by-doing effects on investment and efficiency
+            for b in range(len(titles['STTI'])):
+
+                if data['SEWW'][0, b, 0] > 0.0001:
+
+                    data['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']] = (data_dt['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']]  \
+                                                                              *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
+                    data['BSTC'][:, b, c5ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c5ti['2 Inv Cost SD']]  \
+                                                                              *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
+
+            #Total investment in new capacity in a year (m 2014 euros):
+              #SEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
+              #BHTC(:,:,1) are the investment costs (2014Euro/kW)
+            data['SWIY'][:,:,0] = data['SWIY'][:,:,0] + data['SEWI'][:,:,0]*dt*data['BSTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
+            # Save investment cost for front end
+            data["SWIC"][:, :, 0] = data["BSTC"][:, :, c5ti['1 Inv cost mean (EUR/Kw)']]
+            
             # Add lines 884 to 905 from Fortran (LBD)
+            sica_lr = -0.015
+            #Calculate learning in terms of energy/material consumption
+            for mat in range(len(titles['SMTI'])):
+                 for plant in range(len(titles['SSTI'])):
+                      if(data['SICA'][0, plant, 0] > 0.0):
+                           data['SCMM'][0, mat, plant] = (data_dt['SCML'][0, mat, plant] - data['SEEM'][0, mat, plant]) * (1.0 + (sica_lr[0,plant]) * ((data['SICA'][0, plant, 0]-data_dt['SICL'][0, plant, 0])/data_dt['SICL'][0, plant, 0])) + data['SEEM'][0, mat, plant]
+
+            #Update material and cost input output matrix
+            data['SLCI'][:, 4, 10] = data['SCMM'][:, 0, 6]
+
+            #Redistribute materials
+            if (iter < 10 and t == invdt):
+                raw_material_distr(data, titles, year, t)
+
+            #Regional average energy intensity (G/tcs)
+            data['SEIA'] = np.sum((data['STEI'] * data['SEWS']), axis = 0)
+
+            #Calculate bottom-up employment growth rates
+            data['SEMS'] = data['SEWK'] * data['BSTC'][ :, : , 4] * 1.1
+            data['SEMR'] = np.where((np.sum(data_dt['SMPL']) > 0.0), (np.sum(data['SEMS'])/np.sum(data['SMPL'])), 0.0)
+            
             # Call the capacity function
-            #Calculate levelised cost again
+            # Calculate levelised cost again
             data = get_lcos(data, titles)
             ftt_s_fuel_consumption(data['BSTC'], data['SEWG'], data['SMED'], len(titles['RTI']), len(titles['STTI']), c5ti, len(titles['JTI']))
-            # Code ends at 1048 for Fortran
+            
                 
 
 #         # Useful energy demand by boilers
@@ -613,9 +692,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #         isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
 #         isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
     
-#         # Factor used to create quarterly data from annual figures
-#         no_it = int(data['noit'][0, 0, 0])
-            dt = 1 / float(no_it)
+        #  # Factor used to create quarterly data from annual figures
+        #  no_it = int(data['noit'][0, 0, 0])
+        #     dt = 1 / float(no_it)
 
 #         ############## Computing new shares ##################
 
@@ -843,43 +922,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 #             # EmissionsFis
 #             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
-
-            # New additions (SEWI)
-            data, sewi_t = get_sales(data['SEWK'], data_dt['SEWK'], time_lag['SEWK'], data['SEWS'], data_dt['SEWS'], data['SEWI'], data['BSTC'][:, :, c5ti['Lifetime']], dt)
-            ############## Learning-by-doing ##################
-
-            # Cumulative global learning
-            # Using a technological spill-over matrix (HEWB) together with capacity
-            # additions (SEWI) we can estimate total global spillover of similar
-            # technologies
-            bi = np.zeros((len(titles['RTI']),len(titles['STTI'])))
-            for r in range(len(titles['RTI'])):
-                 bi[r,:] = np.matmul(data['SEWB'][0, :, :],sewi_t[r, :, 0])
-            dw = np.sum(bi, axis=0)
-
-            # Cumulative capacity incl. learning spill-over effects
-            data['SEWW'][0, :, 0] = data_dt['SEWW'][0, :, 0] + dw
-
-            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BSTC'] = copy.deepcopy(data_dt['BSTC'])
-
-            # Learning-by-doing effects on investment and efficiency
-            for b in range(len(titles['STTI'])):
-
-                if data['SEWW'][0, b, 0] > 0.0001:
-
-                    data['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']] = (data_dt['BSTC'][:, b, c5ti['1 Inv cost mean (EUR/Kw)']]  \
-                                                                              *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
-                    data['BSTC'][:, b, c5ti['2 Inv Cost SD']] = (data_dt['BHTC'][:, b, c5ti['2 Inv Cost SD']]  \
-                                                                              *(1.0 + data['BSTC'][:, b, c5ti['7 Investment LR']] * dw[b]/data['SEWW'][0, b, 0]))
-
-            #Total investment in new capacity in a year (m 2014 euros):
-              #SEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-              #BHTC(:,:,1) are the investment costs (2014Euro/kW)
-            data['SWIY'][:,:,0] = data['SWIY'][:,:,0] + data['SEWI'][:,:,0]*dt*data['BSTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
-            # Save investment cost for front end
-            data["SWIC"][:, :, 0] = data["BSTC"][:, :, c5ti['1 Inv cost mean (EUR/Kw)']]
-            
 
 #             # TODO: HEWP = HFPR not HFFC
 #             #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
