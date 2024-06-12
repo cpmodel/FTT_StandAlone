@@ -511,7 +511,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             #     #Switch: Do governments feedback xx% of their carbon tax revenue as energy efficiency investments?
             #     #Government income due to carbon tax in mln$(2008) 13/3/23 RSH: is this 2008 or 2013 as the conversion suggests?
             # Lines 820 to 844 relate to E3ME variables
-            # Bring up the investment LBD from bottom to here (845 to 857 in Fortran)
             # New additions (SEWI)
             data, sewi_t = get_sales(data['SEWK'], data_dt['SEWK'], time_lag['SEWK'], data['SEWS'], data_dt['SEWS'], data['SEWI'], data['BSTC'][:, :, c5ti['Lifetime']], dt)
             ############## Learning-by-doing ##################
