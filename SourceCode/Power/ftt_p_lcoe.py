@@ -271,6 +271,7 @@ def get_lcoe(data, titles):
         data['MWIC'][r, :, 0] = bcet[:, 2].copy()    # Investment cost component LCOE ($/kW)
         data['MWFC'][r, :, 0] = bcet[:, 4].copy()    # Fuel cost component of the LCOE ($/MWh)
         data['MCOC'][r, :, 0] = bcet[:, 0].copy()    # Carbon cost component of the LCOE ($/MWh)
+        data['MCFC'][r, :, 0] = bcet[:, c2ti['11 Decision Load Factor']].copy() # The (marginal) capacity factor 
 
         # MWMC: FTT Marginal costs power generation ($/MWh)
         if np.rint(data['MSAL'][r, 0, 0]) > 1: # rint rounds to nearest int
