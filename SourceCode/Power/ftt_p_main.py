@@ -527,7 +527,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Create the regulation variable
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
         np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0],
-                  out=division, where=data['MEWR'][:, :, 0]>0)
+                  out=division, where=data['MEWR'][:, :, 0] > 0)
         isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
        
 
@@ -565,10 +565,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # FTT modules
             
             # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
-            #MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
-            MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            # MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
@@ -587,8 +587,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MTCD'], data['MWKA'],
                                             data_dt['MES1'], data_dt['MES2'],
                                             data['MEWA'], isReg, data_dt['MEWK'],
-                                            data_dt['MEWK'], data['MEWR'],
-                                            data_dt['MEWL'], data_dt['MEWS'],
+                                            time_lag['MEWK'], data['MEWR'],
+                                            data_dt['MEWL'], time_lag['MEWS'],
                                             data['MWLO'],
                                             len(titles['RTI']), len(titles['T2TI']), no_it)
             data['MEWS'] = mews
@@ -597,7 +597,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWK'] = mewk
             
             if year in [2021, 2022]:
-                print(f'Belgium MEWD {year}:{t} is {data["MEWD"][0, 7, 0]:.0f} after shares')
+                print(f'Belgium MEWD {year}:{t} is {data["MEWD"][1, 7, 0]:.0f} after shares')
                 print(f'Belgium MEWDt {year}:{t} is {MEWDt[0]:.0f} after shares')
                 print(f'Belgium solar MEWG in {year}:{t} is {data["MEWG"][0, 18, 0]:.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
