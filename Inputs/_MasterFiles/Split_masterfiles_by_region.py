@@ -30,12 +30,12 @@ models = {'FTT-Tr': [[0], 'FTT-Tr_25x70_2021'],
           'FTT-H': [[0], 'FTT-H-13x70_2021'],
           'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
-# models = {'FTT-IH-CHI': [[0], 'FTT-IH-CHI-13x70_2022'],
-#           'FTT-IH-FBT': [[0], 'FTT-IH-FBT-13x70_2022'],
-#           'FTT-IH-MTM': [[0], 'FTT-IH-MTM-13x70_2022'],
-#           'FTT-IH-NMM': [[0], 'FTT-IH-NMM-13x70_2022'],
-#           'FTT-IH-OIS': [[0], 'FTT-IH-OIS-13x70_2022'],
-# }
+models = {'FTT-IH-CHI': [[0], 'FTT-IH-CHI-13x70_2022'],
+          'FTT-IH-FBT': [[0], 'FTT-IH-FBT-13x70_2022'],
+          'FTT-IH-MTM': [[0], 'FTT-IH-MTM-13x70_2022'],
+          'FTT-IH-NMM': [[0], 'FTT-IH-NMM-13x70_2022'],
+          'FTT-IH-OIS': [[0], 'FTT-IH-OIS-13x70_2022'],
+}
 
 #%%
 if __name__ == '__main__':
@@ -54,6 +54,8 @@ if __name__ == '__main__':
     for i, var in enumerate(time_horizon_df['Variable name']):
         if time_horizon_df.loc[i, 'Time horizon'] == 'tl_1990':
             tl_dict[var] = list(range(1990, 2100+1))
+        elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_2000':
+            tl_dict[var] = list(range(2000, 2100+1))
         elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_2001':
             tl_dict[var] = list(range(2001, 2100+1))
         elif time_horizon_df.loc[i, 'Time horizon'] == 'tl_1918':

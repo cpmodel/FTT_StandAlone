@@ -142,8 +142,8 @@ def get_lcoih(data, titles, year):
 
         #fuel tax/subsidies
         ftt = np.ones([len(titles['ITTI']), int(max_lt)])
-        ftt = ftt * data['IFT1'][r,:, 0, np.newaxis]/ce
-        ftt = np.where(mask, ft, 0)
+        ftt = ftt * data['IFT'][:,0, 0, np.newaxis]/ce
+        ftt = np.where(mask, ftt, 0)
         # Fixed operation & maintenance cost - variable O&M available but not included
         omt = np.ones([len(titles['ITTI']), int(max_lt)])
         omt = omt * data['BIC1'][r,:, ctti['3 O&M cost mean (Euros/MJ/s/year)'], np.newaxis]*conv #(euros per MW) in a year
