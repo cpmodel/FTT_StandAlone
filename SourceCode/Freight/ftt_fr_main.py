@@ -44,7 +44,7 @@ import numpy as np
 from SourceCode.Freight.ftt_fr_lcof import get_lcof
 from SourceCode.support.divide import divide
 
-# Main function
+#Main function
 
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
@@ -78,9 +78,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     """
 
-    # Factor used to create intermediate data from annual figures
+    # Factor used to create quarterly data from annual figures
     no_it = int(data['noit'][0, 0, 0])
     dt = 1 / float(no_it)
+
+    # T_Scal = 5      # Time scaling factor used in the share dynamics
 
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
 
@@ -93,7 +95,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     if year <= histend["RVKZ"]:
 
         # U (ZEWG) is number of vehicles by technology
-        data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] * data['RFLZ'][:, np.newaxis, 0, 0]
+        data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0]*data['RFLZ'][:, np.newaxis, 0, 0]
 
         if year == histend["RVKZ"]:
             # Calculate levelised cost
@@ -257,6 +259,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Check that exogenous sales additions aren't too large
                 # As a proxy it can't be greater than 80% of the fleet size
                 # divided by 13 (the average lifetime of vehicles)
+                # TODO: move this into if-statement
                 if (data['ZWSA'][r, :, 0].sum() > 0.8 * D[r] / 13):
                     ZWSA_scalar = data['ZWSA'][r, :, 0].sum() / (0.8 * D[r] / 13)
 
@@ -287,7 +290,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data['ZEWS'][r, :, 0] = data_dt['ZEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
                 except ValueError as e:
                     print(f'shape dUK is {np.shape(dUk)}')
-                    print( 'shape of ')
+                    print(f'shape of ')
                     print(f"shape data['ZEWS'][r, :, 0]: {np.shape(data['ZEWS'][r, :, 0])}")
                     print(f"shape data_dt['ZEWS'][r, :, 0]: {np.shape(data_dt['ZEWS'][r, :, 0])}")
                     print(f"shape np.sum(dSik, axis=1): {np.shape(np.sum(dSik, axis=1))}")
@@ -387,7 +390,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                     data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
                             data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] * \
-                            (1.0 + data['ZLER'][tech] * dw[tech]/data['ZEWW'][0, tech, 0])
+                            (1.0 + data['ZLER'][0, tech, 0] * dw[tech]/data['ZEWW'][0, tech, 0])
 
 
             # Calculate total investment by technology in terms of truck purchases

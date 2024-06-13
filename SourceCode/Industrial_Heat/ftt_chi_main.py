@@ -259,7 +259,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
         # Create the regulation variable #Regulate capacity #no regulations yet, isReg full of zeros
         division = divide((data_dt['IWK1'][:, :, 0] - data['IRG1'][:, :, 0]),
-               data_dt['IRG1'][:, :, 0])  # divide gives 0 when dividing by 0 
+               data_dt['IRG1'][:, :, 0])  # divide gives 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5+10*division)
         isReg[data['IRG1'][:, :, 0] == 0.0] = 1.0
         isReg[data['IRG1'][:, :, 0] == -1.0] = 0.0
@@ -316,8 +316,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                     Gijmax[b1] = np.tanh(1.25*(data_dt['ISC1'][r, b1, 0] - data_dt['IWS1'][r, b1, 0])/0.1)
                     #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
 
-
-
                     S_i = data_dt['IWS1'][r, b1, 0]
 
 
@@ -360,7 +358,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
 
                 #calculate temportary market shares and temporary capacity from endogenous results
-                endo_shares = data_dt['IWS1'][r, :, 0] + np.sum(dSik, axis=1) 
+                endo_shares = data_dt['IWS1'][r, :, 0] + np.sum(dSik, axis=1)
                 endo_ued = endo_shares * IUD1t[r, np.newaxis]
 
 
@@ -374,7 +372,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = IUD1t[r]
-                
+
                 dSk = np.zeros((len(titles['ITTI'])))
                 dUk = np.zeros((len(titles['ITTI'])))
                 dUkTK = np.zeros((len(titles['ITTI'])))
@@ -407,7 +405,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 indirect_shares = divide((endo_ued[:indirect_cut_off] + dUk[:indirect_cut_off]),(np.sum(endo_ued[:indirect_cut_off])+dUtot_indirect))
                 direct_shares = divide((endo_ued[indirect_cut_off:] + dUk[indirect_cut_off:]),(np.sum(endo_ued[indirect_cut_off:])+dUtot_direct))
                 indirect_weighting = np.sum(endo_shares[:indirect_cut_off])
-                
+
 
                 # Calaculate changes to endogenous ued, and use to find new market shares
                 # Zero ued will result in zero shares
