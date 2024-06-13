@@ -155,7 +155,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
                 )
 
         data['BCET'] = bcet
@@ -328,15 +328,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             for r in range(len(titles['RTI'])):
 
                 # Generation by tech x load band is share of total electricity demand
-                glb3 = data['MSLB'][r,:,:]*data['MLLB'][r,:,:]*tot_elec_dem[r]
+                glb3 = data['MSLB'][r,:,:] * data['MLLB'][r,:,:] * tot_elec_dem[r]
                 # Capacity by tech x load band
-                klb3 = glb3/data['MLLB'][r,:,:]
+                klb3 = glb3/data['MLLB'][r, :, :]
                 # Load factors
 
                 data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
 
                 nonzero_cap = np.sum(klb3, axis=1)>0
-                data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1)/np.sum(klb3[nonzero_cap,:], axis=1)
+                data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
 
 
                 # Generation by load band
@@ -472,7 +472,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MERCX']
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
                 )
 
             data['BCET'] = bcet
@@ -500,7 +500,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
 
 # %% Simulation of stock and energy specs
-
+    
     # Stock based solutions first
     elif year > histend['MEWG']:
         # TODO: Implement survival function to get a more accurate depiction of
@@ -558,7 +558,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # =====================================================================
 
         # Start the computation of shares
-        for t in range(1, no_it+1):
+        for t in range(1, no_it + 1):
 
             # Electricity demand is exogenous at the moment
             # TODO: Replace, using price elasticities and feedback from other
@@ -578,11 +578,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             if t == no_it:
                 data["MEWD"] = np.copy(data['MEWDX'])
             
-            
-            if year in [2019, 2020]:
-                 #print(f'Starting data_dt MEWL in {year}:{t} is {data_dt["MEWL"][0, 18, 0]:.4f} before shares')
-                 #print(f'MEWL in {year}:{t} is {np.sum(data_dt["MEWL"][:, 18]):.0f}')
-                 pass
 
             # =================================================================
             # Shares equation
@@ -699,7 +694,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Update generation
             denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            data['MEWG'][:, :, 0] = np.zeros((len(titles['RTI']), len(titles['T2TI'])))
+            data['MEWG'][:, :, 0] = np.zeros((len(titles['RTI']), len(titles['T2TI']))) # Remove line?
             updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
             data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
                                            denominator) #TODO: should this be here? + data['MADG'][:, 0, 0, np.newaxis]
@@ -761,15 +756,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # additions (PG_CA) we can estimate total global spillover of similar techs
             mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
             dw = np.zeros(len(titles["T2TI"]))
-
+            
             
             for i in range(len(titles["T2TI"])):
                 dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
 
+
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"][0, :, 0] = data_dt['MEWW'][0, :, 0] + dw
+           
 
             # Copy over the technology cost categories. We update the investment and capacity factors below
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
@@ -811,7 +808,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt, data['MERCX']
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt
                 )
 
             data['BCET'] = bcet
