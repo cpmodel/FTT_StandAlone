@@ -39,7 +39,7 @@ def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
     T_Scal : float
         Timescale parameter
     mewdt, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, mewl_dt, mews_lag, mwlo : ndarray
-        These are input arrays used in the calculation of market shares. 
+        Input arrays used in the calculation of market shares. 
     rti : float
         Number of countries
     t2ti : float
@@ -164,7 +164,7 @@ def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
 
         # Correct for regulations using difference between endogenous capacity and capacity from last time step with endo shares
             
-        dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
+        dUkREG = -(endo_capacity - endo_shares * np.sum(mewk_dt[r, :, 0])) * isReg[r, :] 
 
         
         # =====================================================================
