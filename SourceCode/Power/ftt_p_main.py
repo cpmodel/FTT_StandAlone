@@ -565,10 +565,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # FTT modules
             
             # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
-            MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            #MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
-            #MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
@@ -596,9 +596,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWG'] = mewg
             data['MEWK'] = mewk
             
-            # if year in [2049, 2050]:
-            #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
-            #     #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
+            if year in [2021, 2022]:
+                print(f'Belgium MEWD {year}:{t} is {data["MEWD"][0, 7, 0]:.0f} after shares')
+                print(f'Belgium MEWDt {year}:{t} is {MEWDt[0]:.0f} after shares')
+                print(f'Belgium solar MEWG in {year}:{t} is {data["MEWG"][0, 18, 0]:.0f} after shares')
+                #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             # if year in [2049, 2050]:
             #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
@@ -618,9 +620,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, time_lag, iter_lag, year, titles)
-            # Change currency from EUR2015 to USD2013
-
             
+            # Change currency from EUR2015 to USD2013
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
             data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
             data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
@@ -631,7 +632,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Dispatch routine
             # =================================================================
             # Call DSPCH function to dispatch flexible capacity based on MC
-            # data = dspch(data, time_lag, titles)
 
             mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                            data['MEWL'], data_dt['MWMC'], data_dt['MMCD'],
@@ -651,7 +651,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 klb3 = glb3/data['MLLB'][r,:,:]
                 # Load factors
                 data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
-                nonzero_cap = np.sum(klb3, axis=1)>0
+                nonzero_cap = np.sum(klb3, axis=1) > 0
                 data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
                 # Generation by load band
                 data['MWG1'][r, :, 0] = glb3[:, 0]
@@ -829,7 +829,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Update LCOE
             # =================================================================
-
             data = get_lcoe(data, titles)
 
             # =================================================================
