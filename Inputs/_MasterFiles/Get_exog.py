@@ -3,12 +3,14 @@ Created on 18-10-2021
 
 @author: RH
 
-Exogenous electricity demand projections for FTT python
+Exogenous variables for the standalone version. 
+
+This includes exogenous price and electricity demand. 
+You can also convert variables for model intercomparison. 
 """
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import copy
 import os
 from pathlib import Path
@@ -17,7 +19,6 @@ import celib
 # help(celib)
 
 from celib import DB1, MRE, fillmat as fm
-from numpy import nan
 
 
 
@@ -121,6 +122,7 @@ if __name__ == '__main__':
         # # Please add MWMC and MWMD to the DAN1.idiom file!
         # mwmcx = {}
         # mmcdx = {}
+        mes2x = {}
         
         # mtcdx = {}
         
@@ -153,6 +155,7 @@ if __name__ == '__main__':
             # mlspx[region] = pd.DataFrame(mre['MLSP'][r], index=t2ti, columns=tl)
             # mwkax[region] = pd.DataFrame(mre['MWKA'][r], index=t2ti, columns=tl)
             mcfcx[region] = pd.DataFrame(mre['MCFC'][r], index=t2ti, columns=tl)
+            mes2x[region] = pd.DataFrame(mre['MES2'][r], index=t2ti, columns=tl)
             # pfrb[region] = pd.DataFrame(mre["PFRB"][r], index=fuel_users, columns=tl)
             # pfrc[region] = pd.DataFrame(mre["PFRC"][r], index=fuel_users, columns=tl)
             # pfro[region] = pd.DataFrame(mre["PFRO"][r], index=fuel_users, columns=tl)
@@ -165,20 +168,20 @@ if __name__ == '__main__':
 
     for region in regions_short:
 
-        mewlx[region].to_csv(os.path.join(dirp_out_ftt, "MEWLX_{}.csv".format(region)))
+        #mewlx[region].to_csv(os.path.join(dirp_out_ftt, "MEWLX_{}.csv".format(region)))
         # mercx[region].to_csv(os.path.join(dirp_out_ftt, "MERCX_{}.csv".format(region)))
-        mewdx[region].to_csv(os.path.join(dirp_out_ftt, "MEWDX_{}.csv".format(region)))
+        #mewdx[region].to_csv(os.path.join(dirp_out_ftt, "MEWDX_{}.csv".format(region)))
         # metcx[region].to_csv(os.path.join(dirp_out_ftt, "METCX_{}.csv".format(region)))
         # mtcdx[region].to_csv(os.path.join(dirp_out_ftt, "MTCDX_{}.csv".format(region)))
         # mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAMX_{}.csv".format(region)))
         # mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAM_{}.csv".format(region)))
-        mewgx[region].to_csv(os.path.join(dirp_out_ftt, "MEWGX_{}.csv".format(region)))
-        mewkx[region].to_csv(os.path.join(dirp_out_ftt, "MEWKX_{}.csv".format(region)))
-        mewsx[region].to_csv(os.path.join(dirp_out_ftt, "MEWSX_{}.csv".format(region)))
+        #mewgx[region].to_csv(os.path.join(dirp_out_ftt, "MEWGX_{}.csv".format(region)))
+        #mewkx[region].to_csv(os.path.join(dirp_out_ftt, "MEWKX_{}.csv".format(region)))
+        #mewsx[region].to_csv(os.path.join(dirp_out_ftt, "MEWSX_{}.csv".format(region)))
         # mssmx[region].to_csv(os.path.join(dirp_out_ftt, "MSSMX_{}.csv".format(region)))
         # mlsmx[region].to_csv(os.path.join(dirp_out_ftt, "MLSMX_{}.csv".format(region)))
         # fretx[region].to_csv(os.path.join(dirp_out_ftt, "FRETX_{}.csv".format(region)))
-        mcocx[region].to_csv(os.path.join(dirp_out_ftt, "MCOCX_{}.csv".format(region)))
+        #mcocx[region].to_csv(os.path.join(dirp_out_ftt, "MCOCX_{}.csv".format(region)))
         # mwicx[region].to_csv(os.path.join(dirp_out_ftt, "MWICX_{}.csv".format(region)))
         # mwfcx[region].to_csv(os.path.join(dirp_out_ftt, "MWFCX_{}.csv".format(region)))
         # mwmcx[region].to_csv(os.path.join(dirp_out_ftt, "MWMCX_{}.csv".format(region)))
@@ -186,7 +189,8 @@ if __name__ == '__main__':
         # msspx[region].to_csv(os.path.join(dirp_out_ftt, "MSSPX_{}.csv".format(region)))
         # mlspx[region].to_csv(os.path.join(dirp_out_ftt, "MLSPX_{}.csv".format(region)))
         # mwkax[region].to_csv(os.path.join(dirp_out_ftt, "MWKA_{}.csv".format(region)))
-        mcfcx[region].to_csv(os.path.join(dirp_out_ftt, "MCFCX_{}.csv".format(region)))
+        #mcfcx[region].to_csv(os.path.join(dirp_out_ftt, "MCFCX_{}.csv".format(region)))
+        mes2x[region].to_csv(os.path.join(dirp_out_ftt, "MES2X_{}.csv".format(region)))
 
         # pfrb[region].to_csv(os.path.join(dirp_out_gen, "PFRB_{}.csv".format(region)))
         # pfrc[region].to_csv(os.path.join(dirp_out_gen, "PFRC_{}.csv".format(region)))

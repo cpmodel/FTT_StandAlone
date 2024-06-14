@@ -89,8 +89,7 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
 
     for r in range(rti):
 
-        if r == 70:
-            x = 1+1
+       
         p_tech = np.zeros((t2ti, lbti))
         p_grid = np.zeros((t2ti, lbti))
         #slb = np.zeros((t2ti, lbti))
@@ -136,9 +135,9 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
         while (s_i.sum() > crit and q < 50):
 
             for i in range(lbti - 1): # NOT intermittent renewables
-
-                sig = np.sqrt(np.sum(dd[:,i]*MMCD_lag[r, :, 0]**2*MEWS[r, :, 0]))
-                exponent = -(MWMC_lag[r, :, 0]-m0)/sig
+                # TODO: In FORTRAN, MMC1 is chosen (which does not include negative carbon prices for BECCS). Switch either. 
+                sig = np.sqrt(np.sum(dd[:,i] * MMCD_lag[r, :, 0]**2 * MEWS[r, :, 0]))
+                exponent = -(MWMC_lag[r, :, 0] - m0) / sig
                 fn = np.zeros((t2ti))
                 # Approximate exponential
                 fn[np.abs(exponent) < 20] = np.exp(exponent[np.abs(exponent) < 20])
@@ -146,7 +145,7 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
                 fn[exponent <= -20] = 1e-9
                 
                 # Multinomial logit or simplification
-                if (np.sum(dd[:,i]*s_i) > 0 and sig > 0.001 and np.sum(dd[:,i]*s_i*fn) > 0):
+                if (np.sum(dd[:,i] * s_i) > 0 and sig > 0.001 and np.sum(dd[:,i] * s_i * fn) > 0):
 
                     p_tech[:, i] = dd[:,i]*s_i*fn / np.sum(dd[:,i]*s_i*fn)
 

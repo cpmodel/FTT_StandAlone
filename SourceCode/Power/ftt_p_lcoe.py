@@ -125,8 +125,6 @@ def get_lcoe(data, titles):
         # Average fuel costs
         ft = np.ones([len(titles['T2TI']), int(max_lt)])
         ft = ft * bcet[:, c2ti['5 Fuel ($/MWh)'], np.newaxis]
-        # TODO: Temporarily get MWFC from E3ME run
-        # ft2 = ft * data['MWFCX'][r, :, :]
         ft = np.where(lt_mask, ft, 0)
 
         # Standard deviation of fuel costs
@@ -231,9 +229,6 @@ def get_lcoe(data, titles):
         data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
 
 
-        # data['METC'][r, :, 0] = data['METCX'][r, :, 0]    # As seen by consumer (generalised cost)
-        # data['MTCD'][r, :, 0] = data['MTCDX'][r, :, 0]    # Variation on the LCOE distribution
-
         # Output variables
         data['MWIC'][r, :, 0] = bcet[:, 2].copy()    # Investment cost component LCOE ($/kW)
         data['MWFC'][r, :, 0] = bcet[:, 4].copy()    # Fuel cost component of the LCOE ($/MWh)
@@ -246,8 +241,6 @@ def get_lcoe(data, titles):
         else:
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6]
 
-        # TODO: Temporarily replace fuel costs with MWFCX
-        # data['MWMC'][r, :, 0] = bcet[:, 0] + data['MWFCX'][r, :, 0] + bcet[:, 6]
 
         data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1] * bcet[:, 1] +
                                         bcet[:, 5] * bcet[:, 5] +
