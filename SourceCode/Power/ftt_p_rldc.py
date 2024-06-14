@@ -18,9 +18,6 @@ Functions included:
         Calculate residual load duration curves
 """
 
-# Standard library imports
-import copy
-
 # Third party imports
 import pandas as pd
 import numpy as np
@@ -78,8 +75,8 @@ def rldc(data, time_lag, data_dt, year, titles):
     seasonality_index[seasonality_index > 1.0] = 1.0
 
     # Mapping of NWR = 53 world regions to 8 available RLDC regions:
-    # 1 = Europe, 2 = Latin America, 3 = India, 4 = USA, 5 = Japan, 6 = Middle
-    # East and North Africa, 7 = Sub-Saharan Africa, 8 = China
+    # 0 = Europe, 1 = Latin America, 2 = India, 3 = USA, 4 = Japan, 5 = Middle
+    # East and North Africa, 6 = Sub-Saharan Africa, 7 = China
     rldc_regmap = np.zeros(len(titles['RTI']), dtype=int)
     rldc_regmap[0:33] = 0 # Europe
     rldc_regmap[33] = 3 # USA
@@ -100,7 +97,7 @@ def rldc(data, time_lag, data_dt, year, titles):
     rldc_regmap[59:61] = 2  # Malaysia,Kazakhstan (India as proxy)
     rldc_regmap[61:69] = 6  # Rest of African regions (Africa as proxy)
     rldc_regmap[69] = 5  # UAE (MENA as proxy)
-    rldc_regmap[70] = 5  # Placeholder (MENA as proxy)
+    rldc_regmap[70] = 5  # Pakistan (MENA as proxy)
 
     # Define matrices with polynomial coefficients for 8 RLDC regions
     # 10 input parameters (shares of generation of wind and solar in a
@@ -216,18 +213,15 @@ def rldc(data, time_lag, data_dt, year, titles):
     
     if year > 2020: 
         
-        # data['MSSC2020'] = copy.deepcopy(time_lag['MSSC2020'])
-        # data['MLSC2020'] = copy.deepcopy(time_lag['MLSC2020'])        
+        data['MSSC2020'] = time_lag['MSSC2020'].copy()
+        data['MLSC2020'] = time_lag['MLSC2020'].copy()        
         
-        # Apply learning rate to levelised cost of storage (MSCC and MLCC)
-        # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/data['MSSC2020'][:,0,0].sum()) ** learning_exp_ss
-        # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/data['MLSC2020'][:,0,0].sum()) ** learning_exp_ls
-
         # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
         # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
         
-        data['MSCC'][:,0,0] = 0.20 * 1e6 * (data_dt['MSSC'][:, 0, 0].sum()/39.91390) ** learning_exp_ss
-        data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum()/5.336314) ** learning_exp_ls
+        # Apply learning rate to levelised cost of storage (MSCC and MLCC)
+        data['MSCC'][:,0,0] = 0.20 * 1e6 * (data_dt['MSSC'][:, 0, 0].sum() / data['MSSC2020']) ** learning_exp_ss
+        data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / data['MLSC2020']) ** learning_exp_ls
     
 
     # Wind and solar shares for all regions
@@ -369,13 +363,13 @@ def rldc(data, time_lag, data_dt, year, titles):
         # SUM(MKLB(1:5,J) > 1.0 because of additional backup techs
         # SUM(MKLB(.,J) >> 1.0 because of addition of VRE market shares
         # Rescaling occurs after
-        data['MLB1'][r,0,0] = 7500.0 / 8766.0 * max(data['MLB0'][r,0,0],0.0)
+        data['MLB1'][r,0,0] = 7500.0 / 8766.0 * max(data['MLB0'][r,0,0], 0.0)
         data['MLB1'][r,1,0] = max(data['MLB0'][r,1,0], 0.0) - max(data['MLB0'][r,0,0], 0.0)
         data['MLB1'][r,2,0] = max(data['MLB0'][r,2,0], 0.0) - max(data['MLB0'][r,1,0], 0.0)
         data['MLB1'][r,3,0] = max(data['MLB0'][r,3,0], 0.0) - max(data['MLB0'][r,2,0], 0.0)
-        data['MLB1'][r,4,0] = max(max(data['MLB0'][r,4,0], 0.0) - max(data['MLB0'][r,3,0],0.0), 0.02)
+        data['MLB1'][r,4,0] = max(max(data['MLB0'][r,4,0], 0.0) - max(data['MLB0'][r,3,0], 0.0), 0.02)
         # Normalise MKLB[r, :5] by using non-VRE MEWS (they have to sum to the same amount)
-        # Given that MEWS adds to 1, so should MKLB do now # 
+        # Given that MEWS adds to 1, so should MKLB do now 
         data['MKLB'][r, :5, 0] = data['MLB1'][r,:5,0] / data['MLB1'][r,:5,0].sum()
         data['MKLB'][r, :5, 0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
         data['MKLB'][r, 5, 0] = np.sum(Svar * data['MEWS'][r,:,0])
@@ -408,13 +402,13 @@ def rldc(data, time_lag, data_dt, year, titles):
         
         # Hp, peak height, is equal to residual peak load (without LT storage)
         # For LT storage to fill this in, we need MLSC = Hp*(tot_peak_load) - MEWK_non_vre
-        cap_needed_0 = Hp*e_dem[r]*0.175e-3                                            # 0.175e-3 is a rough estimate to find out peak-load based on demand (MEWD)
-        cap_needed_1 = copy.deepcopy(cap_notvre)                                    # Installed capacity of non-VRE technologies.
+        cap_needed_0 = Hp * e_dem[r] * 0.175e-3                # 0.175e-3 is a rough estimate to find out peak-load based on demand (MEWD)
+        cap_needed_1 = cap_notvre                              # Installed capacity of non-VRE technologies.
         # Smoothing function
         smoothing_fn = 0.5*np.tanh(15*(Hp-1.0))
         # Firm capacity needed (= non-VRE capacity + long-term storage)
         # Apply smoothing here
-        cap_needed = (0.5 + smoothing_fn)*cap_needed_1 + (0.5 - smoothing_fn)*cap_needed_0
+        cap_needed = (0.5 + smoothing_fn) * cap_needed_1 + (0.5 - smoothing_fn) * cap_needed_0
         data['MLSC'][r, 0, 0] = max(cap_needed - cap_notvre , 0.0) * seasonality_index[r]        
         
         if np.rint(data['MSAL'][r, 0, 0]) == 5:
@@ -429,7 +423,7 @@ def rldc(data, time_lag, data_dt, year, titles):
             
             # Solar
             Hp_split_solar = rldc_prod_split_sol[7]
-            cap_needed_0_split_solar = Hp_split_solar*e_dem[r]*0.175e-3  
+            cap_needed_0_split_solar = Hp_split_solar*e_dem[r] * 0.175e-3  
             smoothing_fn_split_solar = 0.5*np.tanh(15*(Hp_split_solar-1.0))
             cap_needed_split_solar = (0.5 + smoothing_fn_split_solar) * cap_needed_1 + (0.5 - smoothing_fn_split_solar)*cap_needed_0_split_solar
             mlsc_split_solar = max(cap_needed_split_solar - cap_notvre , 0.0) * seasonality_index[r] 
@@ -445,7 +439,7 @@ def rldc(data, time_lag, data_dt, year, titles):
         # The marginal effect comes through from marginal changes in storage needs
         # Typically, 100 MW, 70 GWh/cycle. Assume 2 cycles, so 100 MW capacity for every 140 GWh discharched 
         # Or 1400 GWh for 1 GW cap
-        total_output_l = data['MLSC'][r, 0, 0]*1400
+        total_output_l = data['MLSC'][r, 0, 0] * 1400
         total_input_l = total_output_l/data['MLSE'][r, 0, 0]
         
         # Extra demand due to storage losses (in GWh/y)
@@ -502,7 +496,6 @@ def rldc(data, time_lag, data_dt, year, titles):
         # RLDCProd(2,RLDCregmap(J)) is Short-term Storage capacity in relation to total installed capacity / peak load
         # MSSC(J) is total short-term storage capacity in GW
         # The source for the estimates of capacity needs is: https://doi.org/10.1016/j.eneco.2016.05.012 (SI, 3rd excel file)
-        data['MSSC'][r,0,0] = rldc_prod[1] * e_dem[r] *0.175e-3 # 0.175e-3 is a rough estimate to find out peak-load based on demand (MEWD)
         # Short therm storage output delivered back to the grid in relation to total annual demand and inclusive of round-trip efficiency losses
         # 80% round trip efficiency (0.80 is roundtrip efficiency estimate (https://www.pnnl.gov/sites/default/files/media/file/Final%20-%20ESGC%20Cost%20Performance%20Report%2012-11-2020.pdf, average Li-ion, Vanadium)
         # 26.2% is a very rough estimation of the ratio between battery capacity [share peak demand] and storage output [share annual demand]
@@ -511,7 +504,7 @@ def rldc(data, time_lag, data_dt, year, titles):
         total_output = rldc_prod[1] * 0.262 * data['MEWG'][r, :, 0].sum()                            # Electricity delivered back to the grid
         # Adjust total_output due to seasonality
         total_output = total_output + max(cap_needed - cap_notvre, 0.0) * (1.0-seasonality_index[r]) # Double conversion (capacity/generation ratio different for long + short) 
-        data['MSSC'][r,0,0] = rldc_prod[1] * e_dem[r] *0.175e-3 + max(cap_needed - cap_notvre, 0.0) * (1.0-seasonality_index[r])
+        data['MSSC'][r,0,0] = rldc_prod[1] * e_dem[r] * 0.175e-3 + max(cap_needed - cap_notvre, 0.0) * (1.0 - seasonality_index[r])
         
         # MSSG =  the additional electricity that needs be generated due to roundtrip efficiency losses
         data['MSSG'][r,0,0] = total_input - total_output
@@ -676,7 +669,7 @@ def rldc(data, time_lag, data_dt, year, titles):
 
     # Store the storage capacities in 2020
     if year == 2020:
-        data['MSSC2020'] = copy.deepcopy(data['MSSC'])
-        data['MLSC2020']  = copy.deepcopy(data['MLSC'])          
+        data['MSSC2020'] = np.sum(data['MSSC']).copy()
+        data['MLSC2020']  = np.sum(data['MLSC']).copy()         
 
     return data
