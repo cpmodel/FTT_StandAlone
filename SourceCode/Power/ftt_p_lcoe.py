@@ -39,11 +39,10 @@ def get_lcoe(data, titles):
     Returns
     ----------
     data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
+        Updated values:
+            The different LCOE variants (METC, MECW ..)
+            The standard deviation of LCOE (MTCD)
+            The components of LCOE (MCFC, MWIC)
 
     Notes
     ---------
