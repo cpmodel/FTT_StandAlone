@@ -567,10 +567,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # FTT modules
             
             # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
-            MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            # MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
-            # MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
@@ -621,7 +621,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
-            data = rldc(data, time_lag, iter_lag, year, titles)
+            data = rldc(data, time_lag, data_dt, year, titles)
             
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]

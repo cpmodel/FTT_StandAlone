@@ -36,7 +36,7 @@ def feqs(a):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def rldc(data, time_lag, iter_lag, year, titles):
+def rldc(data, time_lag, data_dt, year, titles):
     """
     Calculate RLDCs.
 
@@ -226,8 +226,8 @@ def rldc(data, time_lag, iter_lag, year, titles):
         # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
         # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
         
-        data['MSCC'][:,0,0] = 0.20 * 1e6 * (iter_lag['MSSC'][:, 0, 0].sum()/39.91390) ** learning_exp_ss
-        data['MLCC'][:,0,0] = 0.32 * 1e6 * (iter_lag['MLSC'][:, 0, 0].sum()/5.336314) ** learning_exp_ls
+        data['MSCC'][:,0,0] = 0.20 * 1e6 * (data_dt['MSSC'][:, 0, 0].sum()/39.91390) ** learning_exp_ss
+        data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum()/5.336314) ** learning_exp_ls
     
 
     # Wind and solar shares for all regions
