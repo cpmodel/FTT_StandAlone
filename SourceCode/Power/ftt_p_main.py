@@ -615,7 +615,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 print(f"Negative MEWS found in {year}")
                 r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
                 
-                print(data['MEWS'][r_err,t_err,0], titles['RTI'][r_err], titles["T2TI"][t_err])
+                print(data['MEWS'][r_err, t_err, 0], titles['RTI'][r_err], titles["T2TI"][t_err])
 
             # =================================================================
             # Residual load-duration curve
@@ -623,7 +623,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, time_lag, iter_lag, year, titles)
             
-            # Change currency from EUR2015 to USD2013
+            # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
             data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
             data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]

@@ -47,12 +47,10 @@ def rldc(data, time_lag, iter_lag, year, titles):
     Parameters
     -----------
     data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
+        data is a dictionary with data of current year.
         Variable names are keys and the values are 3D NumPy arrays.
     time_lag: dictionary
-        Time_lag is a container that holds all cross-sectional (of time) data
-        for all variables of the previous year.
+        time_lag is the same, but with data for last year.
         Variable names are keys and the values are 3D NumPy arrays.
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
@@ -60,15 +58,11 @@ def rldc(data, time_lag, iter_lag, year, titles):
     Returns
     ----------
     data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
+    Updated variables are MCRT (curtailment), MCTG (gross curtailment per tech),
+    MKLB (capacity by load band), 
+    Four categories of storage costs (long-term vs short-term, normal vs marginal)
+    
 
-    Notes
-    ---------
-    None.
     """
     
     # This is computed in a separate python file, using the centroid from the geopandas package
@@ -351,51 +345,55 @@ def rldc(data, time_lag, iter_lag, year, titles):
         data['MCTG'][r, 18, 0] = curt_s[r]
         
         # %% Load band heights
-        #Heights of the load bands
+        # Heights of the load bands
         data['MLB0'][r,3,0] = rldc_prod[3]
         data['MLB0'][r,2,0] = rldc_prod[4]
         data['MLB0'][r,1,0] = rldc_prod[5]
         data['MLB0'][r,0,0] = rldc_prod[6]
         data['MLB0'][r,4,0] = rldc_prod[7]
         if np.sum(Svar*data['MEWS'][r,:,0]) > 0.0:
-            CFvar = np.sum(Svar * data['MEWS'][r,:,0] * data['MEWL'][r,:,0])/np.sum(Svar*data['MEWS'][r,:,0])
+            CFvar = np.sum(Svar * data['MEWS'][r,:,0] * data['MEWL'][r,:,0]) / np.sum(Svar*data['MEWS'][r,:,0])
         else:
             CFvar = 1.0
             
-        #CFvar(J) = CFvar(J) * (1 - MCRT(J))
-        #Capacity factors by load band (load bands are defined by these)
+        # Capacity factors by load band (load bands are defined by these)
         CFLB = np.ones(len(titles['LBTI']))
-        CFLB[0] = 7500.0/8766.0       # Baseload CF
-        CFLB[1] = 4400.0/8766.0       # Lower mid-load CF
-        CFLB[2] = 2200.0/8766.0       # Upper mid-load CF
-        CFLB[3] = 700.0/8766.0        # Peak load CF
-        CFLB[4] = 80.0/8766.0         # Backup reserve CF
+        CFLB[0] = 7500.0 / 8766.0       # Baseload CF
+        CFLB[1] = 4400.0 / 8766.0       # Lower mid-load CF
+        CFLB[2] = 2200.0 / 8766.0       # Upper mid-load CF
+        CFLB[3] = 700.0 / 8766.0        # Peak load CF
+        CFLB[4] = 80.0 / 8766.0         # Backup reserve CF
         CFLB[5] = CFvar               # Intermittent CF
         # Capacity per load band (normalised so that total MGLB == 1, usually total MKLB > 1)
         # Correction: Load-bands relate to load delivered by non-VRE load, i.e. capacity.
         # SUM(MKLB(1:5,J) > 1.0 because of additional backup techs
         # SUM(MKLB(.,J) >> 1.0 because of addition of VRE market shares
         # Rescaling occurs after
-        data['MLB1'][r,0,0]  = 7500.0/8766.0*max(data['MLB0'][r,0,0],0.0)
-        data['MLB1'][r,1,0]  = max(data['MLB0'][r,1,0],0.0) - max(data['MLB0'][r,0,0],0.0)
-        data['MLB1'][r,2,0]  = max(data['MLB0'][r,2,0],0.0) - max(data['MLB0'][r,1,0],0.0)
-        data['MLB1'][r,3,0]  = max(data['MLB0'][r,3,0],0.0) - max(data['MLB0'][r,2,0],0.0)
-        data['MLB1'][r,4,0]  = max(max(data['MLB0'][r,4,0],0.0) - max(data['MLB0'][r,3,0],0.0), 0.02)
-        # Normalise MKLB(1:5, J) by using non-VRE MEWS (they have to some to the same amount###)
-        # Given that MEWS adds to 1, so should MKLB do now# (CHECK#)
-        data['MKLB'][r,:5,0] = data['MLB1'][r,:5,0] / data['MLB1'][r,:5,0].sum()
-        data['MKLB'][r,:5,0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
-        data['MKLB'][r,5,0] = np.sum(Svar*data['MEWS'][r,:,0])
+        data['MLB1'][r,0,0] = 7500.0 / 8766.0 * max(data['MLB0'][r,0,0],0.0)
+        data['MLB1'][r,1,0] = max(data['MLB0'][r,1,0], 0.0) - max(data['MLB0'][r,0,0], 0.0)
+        data['MLB1'][r,2,0] = max(data['MLB0'][r,2,0], 0.0) - max(data['MLB0'][r,1,0], 0.0)
+        data['MLB1'][r,3,0] = max(data['MLB0'][r,3,0], 0.0) - max(data['MLB0'][r,2,0], 0.0)
+        data['MLB1'][r,4,0] = max(max(data['MLB0'][r,4,0], 0.0) - max(data['MLB0'][r,3,0],0.0), 0.02)
+        # Normalise MKLB[r, :5] by using non-VRE MEWS (they have to sum to the same amount)
+        # Given that MEWS adds to 1, so should MKLB do now # 
+        data['MKLB'][r, :5, 0] = data['MLB1'][r,:5,0] / data['MLB1'][r,:5,0].sum()
+        data['MKLB'][r, :5, 0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
+        data['MKLB'][r, 5, 0] = np.sum(Svar * data['MEWS'][r,:,0])
         
-        check = data['MKLB'][r,:,0].sum()
+        if not np.isclose(data['MKLB'][r, :, 0].sum(), 1.0, atol=10e-6):  # MKLB should sum to ~1
+            print(f"Warning: Sum of MKLB for region {r} is not approximately 1. Current sum: {data['MKLB'][r, :, 0].sum()}")
         
         # Generation shares
         # Multiply load-bands by their respective LFs
         # MGLB will always be < 1
         # Correct for this by using the average load factor
-        # CHECK THAT MGLB NOW ALSO SUMS TO 1#
+        # TODO: figure out why this does not sum to 1 (usually 1-5% deviation, sometimes much more)
+        # It does not seem MGLB is used elsewhere in the model. 
         data['MGLB'][r,:,0] = data['MKLB'][r,:,0] * CFLB / np.sum(data['MEWS'][r,:,0] * data['MEWL'][r,:,0])
-        check = data['MGLB'][r,:,0].sum()  
+        # if not np.isclose(data['MGLB'][r, :, 0].sum(), 1.0, atol=0.05): # MGLB should sum to ~1
+        #     print(f"Warning: Sum of MGLB for region {r} is not approximately 1. Current sum: {data['MGLB'][r, :, 0].sum()}")
+        
+        
         
         # %%
         #-------------------------------------------------------------
