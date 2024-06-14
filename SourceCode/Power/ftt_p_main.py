@@ -177,6 +177,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MLLB'] = mllb
         data['MES1'] = mes1
         data['MES2'] = mes2
+        
         # Total electricity demand
         tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
 
@@ -662,8 +663,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MWG4'][r, :, 0] = glb3[:, 3]
                 data['MWG5'][r, :, 0] = glb3[:, 4]
                 data['MWG6'][r, :, 0] = glb3[:, 5]
-                # To avoid division by 0 if 0 shares
-                zero_lf = data['MEWL'][r,:,0]==0
+                # To avoid division by 0 or near 0, if very low shares
+                zero_lf = data['MEWL'][r,:,0] <= 0.0001
                 data['MEWL'][r, zero_lf, 0] = data["MWLO"][r, zero_lf, 0]
 
                 # Re-calculate capacities
@@ -696,10 +697,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Update generation
             denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            data['MEWG'][:, :, 0] = np.zeros((len(titles['RTI']), len(titles['T2TI']))) # Remove line?
             updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
             data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
-                                           denominator) #TODO: should this be here? + data['MADG'][:, 0, 0, np.newaxis]
+                                           denominator) 
 
             # Update capacities
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
@@ -782,7 +782,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):
 
-                if data['MEWW'][0, tech, 0] > 0.1:
+                if data['MEWW'][0, tech, 0] > 0.001:
 
                     data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = (
                             data_dt['BCET'][:, tech, c2ti['3 Investment ($/kW)']] 
