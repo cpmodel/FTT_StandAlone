@@ -208,9 +208,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             zero_lf = data['MEWL'][r,:,0]==0
             data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
             
-            # TODO: Given faulty code in the EEIST, exogenous load factors are
-            # used here
-            data['MEWL'][r, :, 0] = data['MEWLX'][r, :, 0] 
+            
 
             # Capacities
             data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
@@ -225,13 +223,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                              cap_diff + cap_drpctn,
                                              cap_drpctn)
             
-        # Copy MEWL to the cost matrix for all techs. This essentially
-        # fixes the load factor for decision-making for non-VRE techs
-        # It's not perfect, but it is what it is
-        
-        # TODO: Given faulty code in the EEIST, exogenous load factors are
-        # used here
-        data['MCFC'][:, :, 0] = data['MCFCX'][:, :, 0]
+
+       
+        data['MEWL'][:, :, 0] = data['MWLO'][:, :, 0].copy()
+        data['MCFC'][:, :, 0] = data['MWLO'][:, :, 0].copy()
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
         data = get_lcoe(data, titles)
@@ -273,22 +268,32 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         else:
             data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
 
-        data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
-                                          where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
+        data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis])
 
-        # If first year, get initial MC, dMC for DSPCH
+        # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
         # Call RLDC function for capacity and load factor by LB, and storage costs
         if year >= 2013:
 
-
-            # First, estimate marginal costs:
-            #if year == 2013: data = get_lcoe(data, titles)
-
-            # Second, estimate RLDC parameters
+            # 1 and 2 -- Estimate RLDC and storage parameters
             data = rldc(data, time_lag, iter_lag, year, titles)
 
+            # 3--- Call dispatch routine to connect market shares to load bands
+            # Call DSPCH function to dispatch flexible capacity based on MC
+            if year == 2013:
+                mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
+                                        data['MEWL'], data['MWMC'], data['MMCD'],
+                                        len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
+            else:
+                mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
+                                        data['MEWL'], time_lag['MWMC'], time_lag['MMCD'],
+                                        len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
+            data['MSLB'] = mslb
+            data['MLLB'] = mllb
+            data['MES1'] = mes1
+            data['MES2'] = mes2
+            
             # Change currency from EUR2015 to USD2013
             if year >= 2015:
 
@@ -305,27 +310,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MSSM'][:, :, 0] = 0.0
                 data['MLSM'][:, :, 0] = 0.0
 
-            # Third, call dispatch routine to connect market shares to load bands
-            # Call DSPCH function to dispatch flexible capacity based on MC
-            if year == 2013:
-                mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
-                                        data['MEWL'], data['MWMC'], data['MMCD'],
-                                        len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
-            else:
-                mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
-                                        data['MEWL'], time_lag['MWMC'], time_lag['MMCD'],
-                                        len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
-            data['MSLB'] = mslb
-            data['MLLB'] = mllb
-            data['MES1'] = mes1
-            data['MES2'] = mes2
-
             # Total electricity demand
             tot_elec_dem = data['MEWDX'][:, 7, 0] * 1000/3.6
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
             lifetsc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-
+            
+            # 4--- Calculate average capacity factors according to load bands
             for r in range(len(titles['RTI'])):
 
                 # Generation by tech x load band is share of total electricity demand
@@ -363,14 +354,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Impact of net curtailment on load factors for VRE technologies
                 # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
                 data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * data['MCNA'][r, 0, 0] / data['MCGA'][r, 0, 0]
-                
-                
-                # TODO: Given faulty code in the EEIST, exogenous load factors are
-                # used here
-                data['MEWL'][r, :, 0] = data['MEWLX'][r, :, 0]
-                data['MCFC'][r, :, 0] = data['MCFCX'][r, :, 0] 
-                data['BCET'][r, :, c2ti['11 Decision Load Factor']] = data['MCFCX'][r, :, 0] 
-                
+                                
                 # Total additional electricity that needs to be generated
                 data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r, 0, 0] + data['MSSG'][r,0,0]
                 
@@ -390,8 +374,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #                                         time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']])
 
                 cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
-                if year == 2013:    # FN: does starting MEWW contain 2013 values already? If so, count only depreciation, like Fortran code
-                    cap_diff = data['MEWK'][r, :, 0] - data["MEWK"][r, :, 0]
                 cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
                 data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
                                                  cap_diff + cap_drpctn,
@@ -499,6 +481,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # We assume that the values do not change throughout simulation.
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
             data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
+            print("")
+            print(f"In year {year}, MERC onshore is {data['MERC'][0, 9, 0]:5f}")
+            print(f"In year {year}, MCTN onshore is {data['MCTN'][0, 16, 0]:5f}")
+            print(f"In year {year}, MEWL onshore is {data['MEWL'][0, 16, 0]:5f}")
+            print(f"In year {year}, MEWW onshore is {data['MEWW'][0, 16, 0]:5f}")
 
 # %% Simulation of stock and energy specs
     
@@ -584,7 +571,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Shares equation
             # =================================================================
             mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt,
-                                            data_dt['MEWS'], data_dt['METC'],
+                                            data_dt['MEWS'], data_dt['METCX'],
                                             data_dt['MTCD'], data['MWKA'],
                                             data_dt['MES1'], data_dt['MES2'],
                                             data['MEWA'], isReg, data_dt['MEWK'],
@@ -597,10 +584,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWG'] = mewg
             data['MEWK'] = mewk
             
-            if year in [2021, 2022]:
-                print(f'Belgium MEWD {year}:{t} is {data["MEWD"][1, 7, 0]:.0f} after shares')
-                print(f'Belgium MEWDt {year}:{t} is {MEWDt[0]:.0f} after shares')
-                print(f'Belgium solar MEWG in {year}:{t} is {data["MEWG"][0, 18, 0]:.0f} after shares')
+            # if year in [2021, 2022]:
+            #     print(f'Belgium MEWD {year}:{t} is {data["MEWD"][1, 7, 0]:.0f} after shares')
+            #     print(f'Belgium MEWDt {year}:{t} is {MEWDt[0]:.0f} after shares')
+            #     print(f'Belgium solar MEWG in {year}:{t} is {data["MEWG"][0, 18, 0]:.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             # if year in [2049, 2050]:
             #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
