@@ -96,13 +96,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
             for file in csv_files:
                 var = file[:-4].split('_')[0]
                 if var not in valid_vars:
-<<<<<<< HEAD
                     warnings.warn(f'Variable {var} is present in the folder as a csv, '
                                   'but is not included in VariableListing, so it will be ignored')
-=======
-                    warnings.warn(f'Variable {var} is present in the folder as a csv but is not included \
-                                in VariableListing, so it will be ignored')
->>>>>>> explore_differences_fttp
+
             
             # Filter the list to include only the files that correspond to variables in data[scen].keys()
             csv_files = [f for f in csv_files if f[:-4].split('_')[0] in valid_vars]
@@ -155,28 +151,24 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                         # Distinction whether the last dimension is time or not
                         if dims_length[3] > 1:
-<<<<<<< HEAD
                             try: 
                                 data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
                             except IndexError as e:
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
                                 raise(e)
-=======
+
                             data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
->>>>>>> explore_differences_fttp
+
                         else:
                             try:
                                 data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                             except ValueError as e:
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)
-<<<<<<< HEAD
-                                                        
-=======
+
                             
                             data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                             
->>>>>>> explore_differences_fttp
 
                 # If the file does not have a region key like _BE
                 else:
@@ -217,19 +209,14 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         if all(dim_length == 1 for dim_length in dims_length):
                             data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
 
-<<<<<<< HEAD
+
                         # If there is time, but no 3rd dimension
                         elif dims_length[2] == 1 and dims_length[3] != 1:
-=======
-                        # If there is no third dimension
-                        elif dims_length[2] == 1:
->>>>>>> explore_differences_fttp
                             try:
                                 data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
                             except ValueError as e:
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
                                 raise(e)
-<<<<<<< HEAD
                         
                         # If there is no time dimension (fourth dimension)
                         elif dims_length[3] == 1:
@@ -246,13 +233,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             except ValueError as e:
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)
-=======
 
-                        # If there is no time dimension (fourth dimension)
-                        elif dims_length[3] == 1:
-                            data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
-
->>>>>>> explore_differences_fttp
     return data
 
 

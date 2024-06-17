@@ -200,7 +200,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # Stock based solutions first
 #    if np.any(specs[sector] < 5):
     # TODO: change this to start year FTT:H (also in update??)
-    data["FU14A"] = copy.deepcopy(data['HJHF'])
+    data["FU14A"] = np.copy(data['HJHF'])
     data['FU14B'] = data["HJEF"] * data["HJFC"]
     
     # Endogenous calculation takes over from here

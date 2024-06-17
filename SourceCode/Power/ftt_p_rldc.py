@@ -415,7 +415,7 @@ def rldc(data, time_lag, data_dt, year, titles):
             # Now estimate the capacity needed due to split responibility
             
             # Wind
-            Hp_split_wind = copy.deepcopy(rldc_prod_split_wind[7])
+            Hp_split_wind = np.copy(rldc_prod_split_wind[7])
             cap_needed_0_split_wind = Hp_split_wind * e_dem[r] * 0.175e-3  
             smoothing_fn_split_wind = 0.5*np.tanh(15*(Hp_split_wind-1.0))
             cap_needed_split_wind = (0.5 + smoothing_fn_split_wind) * cap_needed_1 + (0.5 - smoothing_fn_split_wind)*cap_needed_0_split_wind
