@@ -313,8 +313,6 @@ def rldc(data, time_lag, data_dt, year, titles):
         rldc_prod_split_sol = np.dot(vre_powers_split_sol[r], rldc_coeff[rldc_regmap[r]])
          
         # Estimate geometric mean of the ratio based on wind/sol excl. and the ratio of marg. wind/sol
-        # Ratio(J) = SQRT(FEQS(RLDCProd_split_wind(1,RLDCregmap(J))) / FEQS(RLDCProd_split_sol(1,RLDCregmap(J))) * FEQS(RLDCProd_wind(1,RLDCregmap(J))) / FEQS(RLDCProd_sol(1,RLDCregmap(J))))
-        # NEW: Use ratio ((a/b)*((c-b)/(c-a)))^(1/2)        
         ratio[r] = np.sqrt(feqs(rldc_prod_split_wind[0]) / feqs(rldc_prod_split_sol[0]) * 
                              feqs(feqs(rldc_prod[0]) - feqs(rldc_prod_split_sol[0])) /
                              feqs(feqs(rldc_prod[0]) - feqs(rldc_prod_split_wind[0]))) 
