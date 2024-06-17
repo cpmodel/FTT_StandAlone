@@ -20,9 +20,9 @@ from numba import njit
 # %% JIT-compiled shares equation
 # -----------------------------------------------------------------------------
 @njit(fastmath=True)
-def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
+def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
-           mewl_dt, mews_lag, mwlo, mwdl, rti, t2ti, no_it):
+           mewl_dt, mews_lag, mwlo, rti, t2ti, no_it):
 
     """
     Function to calculate market share dynamics.
@@ -38,12 +38,12 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         The current time step.
     T_Scal : float
         Timescale parameter
-    mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, mewl_dt, mews_lag, mwlo, mwdl : ndarray
-        These are input arrays used in the calculation of market shares. The exact meaning of these parameters would depend on the specific context of the model.
+    mewdt, mews_dt, metc_dt, mtcd_dt, mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr, mewl_dt, mews_lag, mwlo : ndarray
+        Input arrays used in the calculation of market shares. 
     rti : float
-        Some parameter related to the model.
+        Number of countries
     t2ti : float
-        Some parameter related to the model.
+        Number of technologies.
     no_it : int
         Number of iterations.
 
@@ -88,9 +88,9 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                     #and mwka[r, t1, 0] < 0.0):
                 continue
             
-            # Grid limits from RLDC:
-            Gijmax[t1] = np.tanh(1.25*(mes1_dt[r, t1, 0] - mews_dt[r, t1, 0])/0.1)
-            Gijmin[t1] = np.tanh(1.25*(-mes2_dt[r, t1, 0] + mews_dt[r, t1, 0])/0.1)
+            Gijmax[t1] = np.tanh(1.25*(mes1_dt[r, t1, 0] - mews_dt[r, t1, 0]) / 0.1)
+            Gijmin[t1] = 0.5 + 0.5*np.tanh(1.25*(-mes2_dt[r, t1, 0] + mews_dt[r, t1, 0]) / 0.1)
+          
             dSik[t1, t1] = 0
             S_i = mews_dt[r, t1, 0]
 #                    Aki = 0.5 * data['PG_EOL'][r, t1, 0] / time_lag['MEWK'][r, t1, 0]
@@ -124,16 +124,15 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
                 
                 # Runge-Kutta market share dynamics (do not remove the divide-by-6, it is part of the algorithm)
                 k_1 = S_i*S_k * (mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
-                k_2 = (S_i+dt*k_1/2)* (S_k-dt*k_1/2)*(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
-                k_3 = (S_i+dt*k_2/2)* (S_k-dt*k_2/2)*(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
-                k_4 = (S_i+dt*k_3)*(S_k-dt*k_3)  *(mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+                k_2 = (S_i+dt*k_1/2) * (S_k-dt*k_1/2) * (mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+                k_3 = (S_i+dt*k_2/2) * (S_k-dt*k_2/2) * (mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
+                k_4 = (S_i+dt*k_3) * (S_k-dt*k_3) * (mewa[r, t1, t2]*F[t1, t2]*Gijmax[t1]*Gijmin[t2] - mewa[r, t2, t1]*F[t2, t1]*Gijmax[t2]*Gijmin[t1])
 
-                dSik[t1, t2] = (k_1+2*k_2+2*k_3+k_4)*dt/T_Scal/6
+                dSik[t1, t2] = (k_1 + 2*k_2 + 2*k_3 + k_4) * dt / T_Scal / 6
                 dSik[t2, t1] = -dSik[t1, t2]
 
 
         dUk = np.zeros((t2ti))
-        dUkTK = np.zeros((t2ti))
         dUkREG = np.zeros((t2ti))
 
 
@@ -165,7 +164,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
 
         # Correct for regulations using difference between endogenous capacity and capacity from last time step with endo shares
             
-        dUkREG = -(endo_capacity - endo_shares*np.sum(mewk_dt[r, :, 0]))* isReg[r, :] 
+        dUkREG = -(endo_capacity - endo_shares * np.sum(mewk_dt[r, :, 0])) * isReg[r, :] 
 
         
         # =====================================================================
@@ -173,7 +172,7 @@ def shares(dt, t, T_Scal, mewdt, mwdlt, mews_dt, metc_dt, mtcd_dt,
         # Calculate capacity additions or subtractions after regulations, to prevent subtractions being too large and causing negatve shares.
         
         #Utot = np.sum(endo_capacity)
-
+        # dUkTK = np.zeros((t2ti))
         # dUkTK = mwka[r, :, 0] - (endo_capacity + dUkREG)
         # dUkTK[mwka[r, :, 0] < 0.0] = 0.0
 

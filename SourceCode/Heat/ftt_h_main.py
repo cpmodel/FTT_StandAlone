@@ -35,7 +35,6 @@ Functions included:
 """
 # Standard library imports
 from math import sqrt
-import copy
 import warnings
 
 # Third party imports
@@ -88,9 +87,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     sector = 'residential'
 
-    data['PRSC14'] = copy.deepcopy(time_lag['PRSC14'] )
+    data['PRSC14'] = np.copy(time_lag['PRSC14'] )
     if year == 2014:
-        data['PRSC14'] = copy.deepcopy(data['PRSCX'])
+        data['PRSC14'] = np.copy(data['PRSCX'])
 
     # Calculate the LCOH for each heating technology
     # Call the function
@@ -119,7 +118,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Market shares (based on useful energy demand)
                 data['HEWS'][r, :, 0] = data['HEWG'][r, :, 0] / data['RHUD'][r, 0, 0]
                 # Shares of final energy demand (without electricity)
-                #data['HESR'][:, :, 0] = copy.deepcopy(data['HEWF'][:, :, 0])
+                #data['HESR'][:, :, 0] = data['HEWF'][:, :, 0]
                 #data['HESR'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["19 RES calc"]] / np.sum(data['HEWF'] * data['BHTC'][r, :, c4ti["19 RES calc"]])
 
                 # CORRECTION TO MARKET SHARES
@@ -175,7 +174,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # If switch is set to 1, then an exogenous price rate is used
         # Otherwise, the price rates are set to endogenous
 
-        #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
+        #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 
         # Now transform price rates by fuel to price rates by boiler
         #data['HEWP'][:, :, 0] = np.matmul(data['HFFC'][:, :, 0], data['HJET'][0, :, :].T)
@@ -213,7 +212,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
             
             data["FU14A"] = time_lag["FU14A"]
             data["FU14B"] = time_lag["FU14B"]
@@ -467,7 +466,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data, hewi_t = get_sales(data, data_dt, time_lag, titles, dt, t, endo_eol)
 
             # TODO: HEWP = HFPR not HFFC
-            #data['HFPR'][:, :, 0] = copy.deepcopy(data['HFFC'][:, :, 0])
+            #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 
             data['HEWP'][:, 0, 0] = data['HFFC'][:, 4, 0]
             data['HEWP'][:, 1, 0] = data['HFFC'][:, 4, 0]
@@ -504,7 +503,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BHTC'] = copy.deepcopy(data_dt['BHTC'])
+            data['BHTC'] = np.copy(data_dt['BHTC'])
 
             # Learning-by-doing effects on investment and efficiency
             for b in range(len(titles['HTTI'])):
@@ -541,7 +540,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Update time loop variables:
             for var in data_dt.keys():
 
-                data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = np.copy(data[var])
 
 
     return data

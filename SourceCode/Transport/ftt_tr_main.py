@@ -42,7 +42,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
-from SourceCode.core_functions.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
 
@@ -137,7 +137,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data["TEVC"] = start_i_cost
     elif year > 2012:
         # Copy over TEVC values
-        data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
+        data['TEVC'] = np.copy(time_lag['TEVC'] )
 
 
     for r in range(len(titles['RTI'])):
@@ -169,7 +169,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         if year == data["TDA1"][r, 0, 0]: 
             # Define starting battery capacity
-            start_bat_cap = copy.deepcopy(data["TEWW"])
+            start_bat_cap = np.copy(data["TEWW"])
             for veh in range(len(titles['VTTI'])):
                 if (veh < 18) or (veh > 23):
                     # Set starting cumulative battery capacities to 0 for ICE vehicles
@@ -178,7 +178,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data["TWWB"] = start_bat_cap
 
             # Save initial cost matrix (BTCLi from FORTRAN model)
-            data["BTCI"] = copy.deepcopy(data["BTTC"])
+            data["BTCI"] = np.copy(data["BTTC"])
 
             # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
             CO2_corr = np.ones(len(titles['RTI']))
@@ -187,7 +187,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = data['TJET'][0, :, :]
 
         
             if data['RFLT'][r, 0, 0] > 0.0:
@@ -244,18 +244,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
 
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
 
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
         if year in [2025, 2026, 2027]:
             print(f"data_dt  BTTC fuel cost: {data_dt['BTTC'][0, 18, 2]:.4f} in {year}")
 
         # Create the regulation variable
-        division = divide((time_lag['TEWS'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
+        division = divide((time_lag['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
         isReg = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
         isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
-
 
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
@@ -414,7 +413,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             CO2_corr = np.ones(len(titles['RTI']))
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = data['TJET'][0, :, :]
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
@@ -477,11 +476,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             dwev = np.sum(new_bat, axis=0)    
 
             # Copy over TWWB values
-            data['TWWB'] = copy.deepcopy(time_lag['TWWB'])
+            data['TWWB'] = np.copy(time_lag['TWWB'])
 
             # Cumulative capacity for batteries first
             data['TEWW'][0, :, 0] = data_dt['TEWW'][0, :, 0] + dwev[:, 0]
-            bat_cap = copy.deepcopy(data["TEWW"])
+            bat_cap = np.copy(data["TEWW"])
 
             # Cumulative capacity for ICE vehicles
             for veh in range(len(titles['VTTI'])):
@@ -492,9 +491,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Copy over the technology cost categories that do not change 
             # (all except prices which are updated through learning-by-doing below)
-            data['BTTC'] = copy.deepcopy(data_dt['BTTC'])
+            data['BTTC'] = np.copy(data_dt['BTTC'])
             # Copy over the initial cost matrix
-            data["BTCI"] = copy.deepcopy(data_dt['BTCI'])
+            data["BTCI"] = np.copy(data_dt['BTCI'])
 
 
             # Battery learning
@@ -564,9 +563,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Update time loop variables:
             for var in data_dt.keys():
 
-                data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = np.copy(data[var])
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
+        if year == 2050:
+            print(f"Total electric cars in 2050: {np.sum(data['TEWK'][:, 18, 0] + data['TEWK'][:, 19, 0] + data['TEWK'][:, 20, 0])}")
         
     return data
