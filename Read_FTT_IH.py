@@ -17,6 +17,7 @@ import os
 from celib import DB1
 from pathlib import Path
 import SourceCode.support.dimensions_functions as dims_f
+import SourceCode.support.titles_functions as titles_f
 
 """
 Structure of dict:
@@ -46,10 +47,11 @@ if __name__ == '__main__':
     # Define paths, directories and subfolders
     dirp = os.path.dirname(os.path.realpath(__file__))
     dirp_up = Path(dirp).parents[0]
-    # dirpdb = os.path.join(dirp, 'databank')
+    dirp_in = os.path.join(dirp, 'Inputs')
+    dirp_master = os.path.join(dirp_in, "_MasterFiles")
 
     # Time horizons
-    time_horizon_df = pd.read_excel(os.path.join(dirp, 'FTT_variables.xlsx'),
+    time_horizon_df = pd.read_excel(os.path.join(dirp_master, 'FTT_variables.xlsx'),
                                     sheet_name='Time_Horizons')
     tl_dict = {}
     for i, var in enumerate(time_horizon_df['Variable name']):
@@ -67,10 +69,63 @@ if __name__ == '__main__':
             tl_dict[var] = list(range(2018, 2100+1))
             
     # Get classifications
+    titles = titles_f.load_titles()
+    
+    # Get variable dimensions
     dims, histend, domain, forstart = dims_f.load_dims()
 
-
     # for model, meta in models.items():
+    # titles_in_sheet = 
+    
+    output_ixs = {}
+    
+    eu_regs = [reg for r, reg in enumerate(titles['RTI_short']) if r < 27 or r == 30]
+    
+    
+    
+    for m, model in enumerate(models.keys()):
+        
+        var_to_extract = "IXS{}".format(m+1)
+        output_ixs[model] = {}
+        dir_out = os.path.join(dirp_in, 'S0', model)
+        
+        scen_nos = models[model][0]
+        for scen_no in scen_nos:
+            master_file_name = models[model][1]
+            xlsx_path = os.path.join(dirp_master, model, "{}_S{}.xlsx".format(master_file_name, scen_no))
+            
+            raw_data = pd.read_excel(xlsx_path, sheet_name=var_to_extract)
+            raw_titles = pd.read_excel(xlsx_path, sheet_name="Titles")
+            itti_raw = list(raw_titles['ITTI'])[:20]
+            
+            row_start = 4
+            col_start = 2
+            col_end = col_start + len(list(range(2000, 2060+1)))
+            
+            for r, reg in enumerate(titles["RTI_short"]):
+                
+                if reg in eu_regs:
+                    row_end = row_start+len(titles["ITTI"])
+                    
+                    output_ixs[model][reg] = pd.DataFrame(raw_data.iloc[row_start:row_end, col_start:col_end].values,
+                                     index=titles["ITTI"],
+                                     columns = list(range(2000, 2060+1)))
+                        
+                    dir_out_fn = os.path.join(dir_out, "{}_{}.csv".format(var_to_extract, reg))
+                    output_ixs[model][reg].to_csv(dir_out_fn) 
+                
+                row_start += len(itti_raw)+1
+                
+
+                
+                
+                
+                
+                
+            
+            
+            
+        
         
         
 

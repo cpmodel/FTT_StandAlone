@@ -129,10 +129,12 @@ def get_lcoih(data, titles, year):
         st[:, 0, np.newaxis] = (data['BIC1'][r,:, ctti['1 Investment cost mean (MEuro per MW)'], np.newaxis]
              * data['ISB1'][r, :, 0,np.newaxis] *conv)*(1000000)
 
-
+        # Fuel price rates by technology (rather than by fuel)
+        # fuel_rate = np.matmul(data['IJT1'][0,:,:], data['IRFT'][r,:,0, None]) 
+        
         # Average fuel costs 2010Euros/toe to euros/MWh 1 toe = 11.63 MWh
         ft = np.ones([len(titles['ITTI']), int(max_lt)])
-        ft = ft * data['BIC1'][r,:, ctti['10 Fuel cost mean'], np.newaxis]/11.63/ce
+        ft = ft * data['BIC1'][r,:, ctti['10 Fuel cost mean'], np.newaxis]/11.63/ce *data['IRFT'][r,:,0, None] 
         ft = np.where(mask, ft, 0)
 
         # Standard deviation of fuel costs
@@ -162,7 +164,7 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
+        npv_expenses2 = (it-st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
