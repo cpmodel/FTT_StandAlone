@@ -215,7 +215,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         # Consumer preference incl. uncertainty
                         Fik = 0.5*(1 + np.tanh(1.25*(data_dt['ZTLL'][r, b2, 0]-data_dt['ZTLL'][r, b1, 0])/dFik))
-                        Fki = 1-Fik
 
                         # Preferences are then adjusted for regulations
                         F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])

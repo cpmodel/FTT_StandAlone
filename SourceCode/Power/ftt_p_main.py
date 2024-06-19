@@ -114,10 +114,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     survival_function is currently unused.
     """
     
-    if year == 2030:
-        print("")
-        print(f"In {year}, MEWDX[0, 7, 0] is:")
-        print(data["MEWDX"][0, 7, 0])
     
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
@@ -504,11 +500,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # We assume that the values do not change throughout simulation.
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
             data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
-            print("")
-            print(f"In year {year}, MERC onshore is {data['MERC'][0, 9, 0]:5f}")
-            print(f"In year {year}, MCTN onshore is {data['MCTN'][0, 16, 0]:5f}")
-            print(f"In year {year}, MEWL onshore is {data['MEWL'][0, 16, 0]:5f}")
-            print(f"In year {year}, MEWW onshore is {data['MEWW'][0, 16, 0]:5f}")
+            
 
 # %% Simulation of stock and energy specs
     
@@ -862,7 +854,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         
         if year == 2050 and t == no_it:
             print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.3f}M")
-            print(f"Final total solar MEWL in 2050 is: {np.sum(data['MEWL'][:70, 18, 0]):.4f}")
 
 
     return data

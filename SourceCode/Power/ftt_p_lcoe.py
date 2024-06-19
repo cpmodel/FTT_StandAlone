@@ -200,6 +200,9 @@ def get_lcoe(data, titles):
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
         npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
         
+        # 1c - Operation costs
+        npv_operation                 = (ft + omt + stor_cost + marg_stor_cost + ct + fft)
+        
         # 2 – Utility
         npv_utility = energy_prod / denominator
         npv_utility[npv_utility==1] = 0 # Remove 1s for tech with smaller lifetime than max
@@ -213,9 +216,13 @@ def get_lcoe(data, titles):
         lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
         lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
+        
 
         # 4b levelised cost – average units 
         lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
+        
+        # 4c - Operational costs
+        lcoo                    = np.sum(npv_operation, axis=1) / utility_tot      # Levelised cost of operation
         
         # Standard deviation of LCOE
         dlcoe                   = np.sum(npv_std, axis=1) / utility_tot
@@ -226,6 +233,7 @@ def get_lcoe(data, titles):
         data['MECW'][r, :, 0] = lcoe_mu_only_co2        # Bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
         data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
+        data['MLCO'][r, :, 0] = lcoo                    # Levelised cost of operation
         data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
 
 

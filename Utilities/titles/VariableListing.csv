@@ -95,6 +95,7 @@ RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,General,-,-,2010,Fro
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
 METCX,Exogenous METC (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLCO,Levelised costs of operation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y

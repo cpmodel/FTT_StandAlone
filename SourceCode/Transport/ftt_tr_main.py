@@ -115,10 +115,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     if year > histend["MEWG"]:
         data["BTTC"] = copy.deepcopy(time_lag["BTTC"])
         
-    if year in [2025, 2026, 2027]:
-        print("")
-        print(f"time_lag BTTC fuel cost: {time_lag['BTTC'][0, 18, 2]:.4f} in {year}")
-        print(f"data     BTTC fuel cos: {data['BTTC'][0, 18, 2]:.4f} in {year}")
+    
     
 
     if year == 2012:
@@ -247,8 +244,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data_dt[var] = np.copy(time_lag[var])
 
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
-        if year in [2025, 2026, 2027]:
-            print(f"data_dt  BTTC fuel cost: {data_dt['BTTC'][0, 18, 2]:.4f} in {year}")
+        
 
         # Create the regulation variable
         division = divide((time_lag['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
@@ -568,6 +564,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
         if year == 2050:
-            print(f"Total electric cars in 2050: {np.sum(data['TEWK'][:, 18, 0] + data['TEWK'][:, 19, 0] + data['TEWK'][:, 20, 0])}")
+            print(f"Total electric cars in 2050: {np.sum(data['TEWK'][:, 18, 0] + data['TEWK'][:, 19, 0] + data['TEWK'][:, 20, 0])/10e3:.0f}k")
         
     return data

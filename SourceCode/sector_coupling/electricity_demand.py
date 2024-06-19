@@ -62,7 +62,7 @@ def energy_demand_from_sectors(data, titles, histend, year, ftt_modules):
 
 def electricity_demand_feedback(data, data_baseline, year, titles, units):
     """
-        Calculate change in electricity demand from Base S0 scenario from other models
+        Calculate change in electricity demand from baseline S0 scenario from other models
     """
 
     jti = titles["JTI"]
@@ -89,6 +89,8 @@ def electricity_demand_feedback(data, data_baseline, year, titles, units):
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
         data["MEWDX"][:, elec_index, 0] += elec_change
+        if model == "FTT-Fr" and year == 2025:
+            breakie = 1
         
     return data
 
