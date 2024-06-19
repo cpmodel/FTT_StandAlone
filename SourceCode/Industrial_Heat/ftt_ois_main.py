@@ -144,7 +144,7 @@ def get_lcoih(data, titles, year):
 
         #fuel tax/subsidies
         ftt = np.ones([len(titles['ITTI']), int(max_lt)])
-        ftt = ftt * data['IFT'][:,0, 0, np.newaxis]/ce
+        ftt = ftt * data['IFT'][0,:, 0, np.newaxis]/ce
         ftt = np.where(mask, ftt, 0)
 
         # Fixed operation & maintenance cost - variable O&M available but not included
@@ -468,10 +468,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
 
             #Final energy by technology
-            data['IFD5'][:, :, 0] = np.where(data['BIC5'][:, :, ctti["9 Conversion efficiency"]] !=0.0,
-                                             divide(data['IUD5'][:, :, 0],
-                                                    data['BIC5'][:, :, ctti["9 Conversion efficiency"]]),
-                                            0.0)
+            data['IFD5'][:, :, 0] = divide(data['IUD5'][:, :, 0], data['BIC5'][:, :, ctti["9 Conversion efficiency"]])
 
 
 

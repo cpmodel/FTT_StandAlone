@@ -125,7 +125,7 @@ if __name__ == '__main__':
     for m, model in enumerate(models.keys()):
         
         var_to_extract = "IHW{}".format(m+1)
-        output_ixs[model] = {}
+        output_ihw[model] = {}
         dir_out = os.path.join(dirp_in, 'S0', model)
         
         scen_nos = models[model][0]
@@ -142,15 +142,15 @@ if __name__ == '__main__':
             col_end = col_start + len(list(range(2000, 2060+1)))
             row_end = row_start + len(titles["ITTI"])
                     
-            output_ixs[model] = pd.DataFrame(raw_data.iloc[row_start:row_end, col_start:col_end].values,
+            output_ihw[model] = pd.DataFrame(raw_data.iloc[row_start:row_end, col_start:col_end].values,
                              index=titles["ITTI"],
                              columns = list(range(2000, 2060+1)))
             
             # Correction to direct biomass
-            output_ixs[model].loc['Indirect Heating Biomass', :] = 0.0
+            output_ihw[model].loc['Indirect Heating Biomass', :] = 0.0
                 
             dir_out_fn = os.path.join(dir_out, "{}.csv".format(var_to_extract))
-            output_ixs[model].to_csv(dir_out_fn) 
+            output_ihw[model].to_csv(dir_out_fn) 
                 
                 
     # %% write stragic deployment
@@ -212,8 +212,34 @@ if __name__ == '__main__':
                 output_strat[scen][model][reg].loc[techs_lowcarb, tl_policies_strat] = 0.0005
                 output_strat[scen][model][reg].to_csv(os.path.join(dir_out, "{}_{}.csv".format(var_strat, reg)))
     
-    # %% write phase-out regulations
+    # %% Read in BIC files
     
+    output_bic = {}
+    output_bic_fin = {}
+    
+    for m, model in enumerate(models.keys()):
+        
+        dir_csvs = os.path.join(dirp_in, 'S0', model)
+        output_bic[model] = {}
+        output_bic_fin[model] = {}
+        
+        for r, reg in enumerate(eu_regs):
+        
+            var = "BIC{}_{}".format(m+1, reg)
+            csv_fp = os.path.join(dir_csvs, var+'.csv')
+            read = pd.read_csv(csv_fp, index_col=0, header=0)
+            
+            output_bic[model][reg] = dc(read)
+            
+        output_bic_fin[model] = pd.concat(output_bic[model])
+        output_bic_fin[model].to_csv("BIC_{}.csv".format(model))
+        
+            
+        
+            
+            
+        
+        
                 
 
                 
