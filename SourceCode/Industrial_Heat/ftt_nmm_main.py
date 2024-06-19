@@ -167,7 +167,7 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it-st+ft+ftt+omt)/denominator
+        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
@@ -458,9 +458,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                 for tech in range(len(titles['ITTI'])):
                     if(data['IWK4'][r, tech, 0]-time_lag['IWK4'][r, tech, 0]) > 0:
                         data["IWI4"][r, tech, 0] = (data['IWK4'][r, tech, 0]-time_lag['IWK4'][r, tech, 0])
-            data["IWI4"][:, :, 0] = data["IWI4"][:, :, 0] + np.where(data['BIC4'][:, :, ctti['5 Lifetime (years)']] !=0.0,
-                                                                        divide(time_lag['IWK4'][:, :, 0],data['BIC4'][:, :, ctti['5 Lifetime (years)']]),
-                                                                        0.0)
+            data["IWI4"][:, :, 0] = data["IWI4"][:, :, 0] + divide(time_lag['IWK4'][:, :, 0],data['BIC4'][:, :, ctti['5 Lifetime (years)']])
 
             #Update emissions
             #IHW4 is the global average emissions per unit of UED (GWh). IHW4 has units of kt of CO2/GWh

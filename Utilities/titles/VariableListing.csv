@@ -368,3 +368,8 @@ ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
 IFT,FTT-IH-CHI Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,NA,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,-,Y,Y
 IRFT,FTT-IH fuel prices rates (relative to 2015 values),-,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2010,-,Y,Y
+IWY1,FTT-IH Investment (Meuro),Meuro,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,,,,
+IWY2,FTT-IH Investment (Meuro),Meuro,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,,,,
+IWY3,FTT-IH Investment (Meuro),Meuro,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,,,,
+IWY4,FTT-IH Investment (Meuro),Meuro,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,,,,
+IWY5,FTT-IH Investment (Meuro),Meuro,RTI,ITTI,NA,TIME,FTT-IH-OIS,-,-,,,,

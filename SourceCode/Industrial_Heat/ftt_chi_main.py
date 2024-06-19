@@ -164,7 +164,7 @@ def get_lcoih(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it-st+ft+ftt+omt)/denominator
+        npv_expenses2 = (it+st+ft+ftt+omt)/denominator
         # 1.3-Only policy costs
         #npv_expenses3 = (st+fft-fit)/denominator
         # 2-Utility
@@ -454,9 +454,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                     if(data['IWK1'][r, tech, 0]-time_lag['IWK1'][r, tech, 0]) > 0:
                         data["IWI1"][r, tech, 0] = (data['IWK1'][r, tech, 0]-data_dt['IWK1'][r, tech, 0])/dt
 
-            data["IWI1"][:, :, 0] = data["IWI1"][:, :, 0] + np.where(data['BIC1'][:, :, ctti['5 Lifetime (years)']] !=0.0,
-                                                            divide(data_dt['IWK1'][:, :, 0],
-                                                            data['BIC1'][:, :, ctti['5 Lifetime (years)']]),0.0)
+            data["IWI1"][:, :, 0] = data["IWI1"][:, :, 0] + divide(data_dt['IWK1'][:, :, 0],
+                                                            data['BIC1'][:, :, ctti['5 Lifetime (years)']])
 
             #Update emissions
             #IHW1 is the global average emissions per unit of UED (GWh). IHW1 has units of kt of CO2/GWh
@@ -504,6 +503,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
                     data['BIC1'][:, tech, ctti['1 Investment cost mean (MEuro per MW)']] = data_dt['BIC1'][:, tech, ctti['1 Investment cost mean (MEuro per MW)']] * \
                                                                            (1.0 + data['BIC1'][:, tech, ctti['15 Learning exponent']] * dw[tech]/data['IWW1'][0, tech, 0])
+
+            # Investments
+            data['IWI1'][r, :, 0] * data['BIC1'][r, :, ctti['1 Investment cost mean (MEuro per MW)']]
 
             # =================================================================
             # Update the time-loop variables

@@ -18,6 +18,7 @@ from celib import DB1
 from pathlib import Path
 import SourceCode.support.dimensions_functions as dims_f
 import SourceCode.support.titles_functions as titles_f
+from copy import deepcopy as dc
 
 """
 Structure of dict:
@@ -74,9 +75,10 @@ if __name__ == '__main__':
     # Get variable dimensions
     dims, histend, domain, forstart = dims_f.load_dims()
 
-    # for model, meta in models.items():
-    # titles_in_sheet = 
+    # timeline
+    tl = list(range(2000, 2060+1))
     
+    # %% Exog market share additions
     output_ixs = {}
     
     eu_regs = [reg for r, reg in enumerate(titles['RTI_short']) if r < 27 or r == 30]
@@ -115,6 +117,103 @@ if __name__ == '__main__':
                     output_ixs[model][reg].to_csv(dir_out_fn) 
                 
                 row_start += len(itti_raw)+1
+                
+    # %% Emission factors
+    
+    output_ihw = {}
+    
+    for m, model in enumerate(models.keys()):
+        
+        var_to_extract = "IHW{}".format(m+1)
+        output_ixs[model] = {}
+        dir_out = os.path.join(dirp_in, 'S0', model)
+        
+        scen_nos = models[model][0]
+        for scen_no in scen_nos:
+            master_file_name = models[model][1]
+            xlsx_path = os.path.join(dirp_master, model, "{}_S{}.xlsx".format(master_file_name, scen_no))
+            
+            raw_data = pd.read_excel(xlsx_path, sheet_name=var_to_extract)
+            raw_titles = pd.read_excel(xlsx_path, sheet_name="Titles")
+            itti_raw = list(raw_titles['ITTI'])[:20]
+            
+            row_start = 4
+            col_start = 2
+            col_end = col_start + len(list(range(2000, 2060+1)))
+            row_end = row_start + len(titles["ITTI"])
+                    
+            output_ixs[model] = pd.DataFrame(raw_data.iloc[row_start:row_end, col_start:col_end].values,
+                             index=titles["ITTI"],
+                             columns = list(range(2000, 2060+1)))
+            
+            # Correction to direct biomass
+            output_ixs[model].loc['Indirect Heating Biomass', :] = 0.0
+                
+            dir_out_fn = os.path.join(dir_out, "{}.csv".format(var_to_extract))
+            output_ixs[model].to_csv(dir_out_fn) 
+                
+                
+    # %% write stragic deployment
+    
+
+    
+    
+    # %% create new policy inputs
+    
+    techs_lowcarb = ['Indirect Heating Biomass', 'Indirect Heating Electric', 
+                     'Heat Pumps (Electricity)', 'Direct Heating Biomass', 
+                     'Direct Heating Electric']
+    
+    techs_highcarb = ['Indirect Heating Coal', 'Indirect Heating Oil',
+                      'Indirect Heating Gas', 'Direct Heating Coal',
+                      'Direct Heating Oil', 'Direct Heating Gas',]
+    
+    output_isb = {}
+    output_regs = {}
+    output_strat = {}
+    
+    scens = ["subs", "subs_ct", "subs_ct_reg"]
+    
+    tl_policies = list(range(2025, 2050+1))
+    tl_policies_strat = list(range(2025, 2030+1))
+    
+    for s, scen in enumerate(scens):
+        
+        output_isb[scen] = {}
+        output_regs[scen] = {}
+        output_strat[scen] = {}
+    
+        for m, model in enumerate(models.keys()):
+            
+            var_isb = "ISB{}".format(m+1)
+            output_isb[scen][model] = {}
+            
+            var_regs = "IRG{}".format(m+1)
+            output_regs[scen][model] = {}
+            
+            var_strat = "IXS{}".format(m+1)
+            output_strat[scen][model] = {}
+            
+            dir_out = os.path.join(dirp_in, scen, model)
+            
+            for reg in eu_regs:
+                
+                if "subs" in scen:
+                    output_isb[scen][model][reg] = pd.DataFrame(0.0, index=titles["ITTI"], columns=tl)
+                    output_isb[scen][model][reg].loc[techs_lowcarb, tl_policies] = -0.5
+                    output_isb[scen][model][reg].to_csv(os.path.join(dir_out, "{}_{}.csv".format(var_isb, reg)))
+                    
+                if "reg" in scen:
+                    output_regs[scen][model][reg] = pd.DataFrame(-1, index=titles["ITTI"], columns=tl)
+                    output_regs[scen][model][reg].loc[techs_highcarb, tl_policies] = 0.0
+                    output_regs[scen][model][reg].to_csv(os.path.join(dir_out, "{}_{}.csv".format(var_regs, reg)))
+                    
+                output_strat[scen][model][reg] = dc(output_ixs[model][reg])
+                output_strat[scen][model][reg].loc[techs_lowcarb, tl_policies_strat] = 0.0005
+                output_strat[scen][model][reg].to_csv(os.path.join(dir_out, "{}_{}.csv".format(var_strat, reg)))
+    
+    # %% write phase-out regulations
+    
                 
 
                 
