@@ -82,6 +82,7 @@ year = 2030
 models = {"FTT:P", "FTT:Tr", "FTT:H", "FTT:Fr"}
 price_names = {"FTT:P": "MECW", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
+operation_cost_name = {"FTT:P": "MLCO"}
 
 # Get names of the technologies of interest
 tech_titles = {"FTT:P": "T2TI", "FTT:Tr": "VTTI", "FTT:Fr": "FTTI", "FTT:H": "HTTI"}
@@ -152,24 +153,39 @@ def get_prices(output, year, model, biggest_technologies):
         prices[r] = output[price_var][regions[r], tech, 0, year - 2010 + 1]
     return prices
 
-def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_dirty):
+def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names):
     """ Get the year when the clean technology becomes cheaper than the dirty technology."""
     crossover_years = {}
     for r, ri in regions.items():
         tech_clean = biggest_techs_clean[r]
-        tech_dirty = biggest_techs_dirty[r]
+        tech_fossil = biggest_techs_fossil[r]
         try:
             price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
-            price_series_dirty = output[price_names[model]][ri, tech_dirty, 0, 10:]
-            crossover_years[r] = np.where(price_series_clean <= price_series_dirty)[0][0] + 2020
+            price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
+            crossover_years[r] = np.where(price_series_clean <= price_series_fossil)[0][0] + 2020
         except IndexError:
             crossover_years[r] = None
     return crossover_years
 
+def get_crossover_operational_vs_new(output, model, biggest_techs_clean, biggest_techs_fossil, price_names, op_cost_name):
+    crossover_years = {}
+    if model != "FTT:P":
+        for r, ri in regions.items():
+            crossover_years[r] = None
+        return crossover_years
+    
+    for r, ri in regions.items():
+        tech_clean = biggest_techs_clean[r]
+        tech_fossil = biggest_techs_fossil[r]
+        try:
+            price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
+            price_series_fossil = output[op_cost_name[model]][ri, tech_fossil, 0, 10:]
+            crossover_years[r] = np.where(price_series_clean <= price_series_fossil)[0][0] + 2020
+        except IndexError:
+            crossover_years[r] = None
+    return crossover_years
+  
 
-corss_overs = get_crossover_year(
-    output, "FTT:P", 
-    find_biggest_tech(output, clean_techs, year, "FTT:P", regions), find_biggest_tech(output, dirty_techs, year, "FTT:P", regions))
 
 
 rows = []
@@ -180,7 +196,8 @@ for model in models:
     fossil_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_fossil.items()}
     prices_clean = get_prices(output, year, model, biggest_techs_clean)
     prices_dirty = get_prices(output, year, model, biggest_techs_fossil)
-    crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil)
+    crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+    crossover_years_op = get_crossover_operational_vs_new(output, model, biggest_techs_clean, biggest_techs_fossil, price_names, operation_cost_name)
     for r in regions:
         row = {
         "Region": r, 
@@ -191,7 +208,8 @@ for model in models:
         "Fossil technology": biggest_techs_fossil[r], 
         "Fossil tech name": fossil_tech_names[r],
         "Fossil price (2030)": prices_dirty[r],
-        "Cross-over year": crossover_years[r]
+        "Cross-over year": crossover_years[r],
+        "Cross-over operational": crossover_years_op[r]
         }
         rows.append(row)
 
@@ -199,4 +217,4 @@ for model in models:
 df = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Clean technology", "Clean tech name", "Clean price (2030)", 
                                  "Fossil technology", "Fossil tech name", "Fossil price (2030)", 
-                                 "Cross-over year"])
+                                 "Cross-over year", "Cross-over year vs op"])
