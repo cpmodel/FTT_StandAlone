@@ -5,7 +5,7 @@ model_class.py
 =========================================
 
 Model Class file for FTT Stand alone.
-#####################################
+
 
 ModelRun class: main class for operation of model.
 
@@ -34,6 +34,9 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
+from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
+from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
+
 
 
 # Support modules
@@ -92,7 +95,7 @@ class ModelRun:
     model_end: int
         Final year of model timeline
     current: int
-        Curernt/active year of solution
+        Current/active year of solution
     years: tuple of (int, int)
         Bookend years of model_timeline
     timeline: list of int
@@ -139,7 +142,7 @@ class ModelRun:
         self.titles = titles_f.load_titles()
 
         # Load variable dimensions
-        self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
+        self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Set up csv files if they do not exist yet
         initialise_csv_files(self.ftt_modules, self.scenarios)
@@ -168,20 +171,19 @@ class ModelRun:
         # Define output container
         self.output = {scen: {var: np.full_like(self.input[scen][var], 0) \
                               for var in self.input[scen]} for scen in self.input}
-        # self.output = copy.deepcopy(self.input)
 
         # Clear any previous instances of the progress bar
         try:
             tqdm._instances.clear()
         except AttributeError:
             pass
+        
         for scen in self.input:
 
             # Create progress bar:
             with tqdm(self.timeline) as pbar:
 
-            # Call solve_year method for each year of the simulation period
-#                for year_index, year in enumerate(self.timeline):
+                # Call solve_year method for each year of the simulation period
                 for y, year in enumerate(self.timeline):
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
@@ -190,13 +192,16 @@ class ModelRun:
 
                     # Increment the progress bar by one step
                     pbar.update(1)
-
-                    # Populate output container
-                    for var in self.variables:
-                        if 'TIME' in self.dims[var]:
-                            self.output[scen][var][:, :, :, y] = self.variables[var]
-                        else:
-                            self.output[scen][var][:, :, :, 0] = self.variables[var]
+                    try:
+                        # Populate output container
+                        for var in self.variables:
+                            if 'TIME' in self.dims[var]:
+                                self.output[scen][var][:, :, :, y] = self.variables[var]
+                            else:
+                                self.output[scen][var][:, :, :, 0] = self.variables[var]
+                    except ValueError as e:
+                        print(f"Error in scenario {scen} and variable {var}")
+                        raise(e)
 
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
@@ -219,10 +224,7 @@ class ModelRun:
         # Iteration loop here
         for itereration in range(max_iter):
 
-            if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+            
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
@@ -262,13 +264,28 @@ class ModelRun:
                                         self.titles, self.histend, tl[y],
                                         self.domain)
                 
+            if scenario != "S0":
+                if year > 2022:
+                    variables = electricity_demand_feedback(variables, 
+                                        self.output["S0"], y, self.titles,
+                                        self.unit)
+            
+            if "FTT-P" in self.ftt_modules:
+                variables = ftt_p.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+            
+            if "FTT-P" in self.ftt_modules:
+                if year > 2022:
+                    variables = electricity_price_feedback(variables, time_lags)
+                
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
 
             # Third, solve energy supply
             # Overwrite iter_lags to be used in the next iteration round
             iter_lags = copy.deepcopy(variables)
-#        # Print any diagnstics
+#        # Print any diagnostics
 #
         return variables, time_lags
 
@@ -286,7 +303,7 @@ class ModelRun:
         data_to_model = cs(self.input, self.dims, year, y, scenario)
 
         # LB TODO: to improve the treatment of lags to include also historical data
-        if y == 0: # If year is the first year, lags equal variables in starting year
+        if y == 0: # In the first year, lags equal variables in starting year
             lags = cs(self.input, self.dims, year, y, scenario)
         else:
             #lags = cs(self.variables, self.dims, year-1)

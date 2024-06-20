@@ -8,7 +8,8 @@ This script extracts all the data from FTT excel sheets in the
 The user can select one or more scenarios to convert from the excel sheet. The 
 script overwrites when called directly, but does not when called from the run_file
 
-If running this code as a script, set the input files in the main bit of the code
+If you run this as a script, it will overwrite existing files. You can select
+the models at the end of this file (if __name__ == '__main__')
 
 @author: MM and Femke Nijsse
 """
@@ -464,7 +465,7 @@ if __name__ == '__main__':
     # ENTER SCENARIO NUMBERS HERE! This will dictate which sheets are read in.
 
     models = {#'FTT-Tr': [[0, 2], 'FTT-Tr_31x71_2023'],
-              'FTT-P': [[0, 2], 'FTT-P-24x71_2022']}
+              'FTT-P': [[0, 1, 2], 'FTT-P-24x71_2024']}
             #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
             #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
