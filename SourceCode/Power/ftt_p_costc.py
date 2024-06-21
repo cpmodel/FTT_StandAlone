@@ -115,11 +115,12 @@ def interp(X, Y, X0, L):
 
     return Y0, I
 
-# %% marginal cost of production of non renewable resources
+# %% marginal cost of production of non-renewable resources
 # -----------------------------------------------------------------------------
-# -------------------------- marginal calculation ------------------------------
+# -------------------------- marginal calculation -----------------------------
 # -----------------------------------------------------------------------------
-#@njit(fastmath=True)
+
+@njit(fastmath=True)
 def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt):
     '''
     Marginal cost of production of non renewable resources.

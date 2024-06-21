@@ -54,22 +54,10 @@ except ModuleNotFoundError as e:
 output = results['S0']
 
 # Define the regions and the region numbers of interest
-regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "UK": 14, "Germany": 2}
-
-# For the clean technology, we choose the clean technology with the largest share in 2030. We choose between:
-# FTT:P --> wind or solar (16/18)
-# FTT:Tr --> One of the three categories of electric transport (18, 19, 20)
-# FTT:H --> Either air-air heat pumps or water-air (10, 11)
-# FTT:Fr --> Only look at small trucks, 12 is the electric vehicle one. 
-
-# For the fossil technology, we similarly choose the dominant for with the largest market share in 2030. We choose between:
-# FTT:P --> coal, gas or nuclear (0, 2, 6)
-# FTT:Tr --> petrol vs diesel (0-11). Compare like to like, so if the biggest category is mid, compare with mid
-# FTT:H --> Gas everywhere, right? Or also electric heating and coal?
+regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "UK": 14, "Germany": 2, "France": 6}
 
 # Import classification titles from utilities
 titles = load_titles()
-
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
@@ -217,4 +205,4 @@ for model in models:
 df = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Clean technology", "Clean tech name", "Clean price (2030)", 
                                  "Fossil technology", "Fossil tech name", "Fossil price (2030)", 
-                                 "Cross-over year", "Cross-over year vs op"])
+                                 "Cross-over year", "Cross-over operational"])
