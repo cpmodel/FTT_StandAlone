@@ -21,21 +21,14 @@ def initialise_csv_files(ftt_modules, scenarios):
     None
     """
     # Get the masterfiles
-    if isinstance(ftt_modules, str):
-        ftt_modules = [ftt_modules]
-    else:
-        ftt_modules = ftt_modules.split(', ')
-    if isinstance(scenarios, str):
-        scenarios = [scenarios]
-    else:
-        scenarios = scenarios.split(', ')
+    ftt_modules = [item.strip() for item in ftt_modules.split(',')]
+    scenarios = [item.strip() for item in scenarios.split(',')]
     
     model_list = generate_model_list(ftt_modules, scenarios)
     
     # Convert masterfiles to csv
     convert_masterfiles_to_csv(model_list)
     
-    #convert_masterfiles_to_csv(models)
 
 def get_masterfile(ftt_module, scenario):
     """Find the matching file name 
@@ -94,10 +87,11 @@ def generate_model_list(ftt_modules, scenarios):
             if matching_file:
                 # TODO: rewrite this and other code to allow for other types of scenario names
                 module_scenarios.append(int(scenario[1:]))
+        
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
-        else:
-            models[module] = scenarios
+       
+    
     return models
 
     
