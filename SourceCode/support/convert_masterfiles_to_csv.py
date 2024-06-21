@@ -103,6 +103,7 @@ def get_sheets_to_convert(var_dict, model, scen):
     sheets = ['Titles'] + vars_to_convert
 
     return vars_to_convert, sheets
+
 def overwrite_when_masterfile_updated(vars_to_convert, out_dir, models, \
                                       model, scen, dir_masterfiles):
     """
@@ -159,7 +160,7 @@ def get_remaining_variables(vars_to_convert, out_dir, model, \
                             var_dict, gamma_options, overwrite_existing):
     """
     Remove variables from list to convert if two conditions are met:
-        * Condition 1: csv files already exist
+        * Condition 1: csv files already exist or
         * Condition 2: The newest csv file is older than the masterfile
     """
     
@@ -397,18 +398,25 @@ def get_model_classification(titles_path, variables_df):
 def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overwrite_existing=False):
     """
     The main function to convert masterfiles to csv files. 
-    Depending on how you run it, it can have two types of behaviour:
+    Depending on how you run it, it can have three types of behaviour:
         a) If you run it as a script, it will overwrite files. It will
         ask for confirmation before overwriting the gamma values
-        b) If you call it from another function, it will only generate
-        new file if the files do not yet exist.
+        - If you call it from another function
+            b) It will generate files if files don't exist yet
+            c) It will overwrite files if the masterfiles are newer than the csv files
+               This will include gamma values. 
     """
+    
     # Define paths, directories and subfolders
     dir_inputs, dir_masterfiles, titles_path = directories_setup()
     variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict = \
             variable_setup(dir_masterfiles, models)
+            
+    overwrite_existing_input = overwrite_existing
                
     for model in models.keys():
+        overwrite_existing = overwrite_existing_input    # Reset to input value for each model
+        
         variables_df = variables_df_dict[model]
         dims = get_model_classification(titles_path, variables_df)
         gamma_options = {"Overwrite possible": gamma_overwrite_pos, 
