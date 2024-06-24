@@ -694,9 +694,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:, :, 0],
                                                                data['MCGA'][:, :, 0])
             
-            if year == 2050 and t == no_it:
-                print(f"Total solar MEWL in 2050 is: {np.sum(data['MEWL'][:70, 18, 0]):.4f}")
-
             
             # Total additional electricity that needs to be generated
             data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]

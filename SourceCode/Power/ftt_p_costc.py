@@ -120,7 +120,7 @@ def interp(X, Y, X0, L):
 # -------------------------- marginal calculation -----------------------------
 # -----------------------------------------------------------------------------
 
-@njit(fastmath=True)
+#@njit(fastmath=True) # Doesn't work either
 def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt):
     '''
     Marginal cost of production of non renewable resources.

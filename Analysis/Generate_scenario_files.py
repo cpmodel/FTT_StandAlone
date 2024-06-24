@@ -127,10 +127,16 @@ def policy_change(df, policy):
         case "TREG strong":
             df.iloc[:15, 24:] = 0
         case "TWSA strong":
-            df.iloc[18:21, 24:] = -1 # (exogenous sales in k-veh) TODO: I will need to figure out what a reasonable mandate is. 
-        case "RTCO strong tax": # Note this is per country, not per technology. In code, this is multiplied by emissions. 
-            df.iloc[:71, 24:] = 0.3
+            df.iloc[18:21, 24:] = 0 # (exogenous sales in k-veh) TODO: I will need to figure out what a reasonable mandate is. 
         
+        case "TTVT strong tax": # TODO: create new variable that is not an absolute value
+            df.iloc[[0, 2, 4, 6, 8], 24:] = 1000
+        case "TTVT strong subsidy":
+            df.iloc[12, 24:] = - 1000
+        case "TTVT strong combo":
+            df.iloc[[0, 2, 4, 6, 8], 7:] = 1000
+            df.iloc[12, 24:] = -1000
+                   
             
         # Freight policies
         case "ZREG strong":
@@ -174,8 +180,8 @@ policies = pd.read_csv(os.path.join(current_dir, "policies.csv"))
 for row in policies.iterrows():
     policy = row[1]         # Get the row as a dictionary
     source_dir = get_source_dir(input_dir, "S0", policy["Model"])
-    copy_csv_files_to_scen(policy["Model"], policy["Variable"], "S0_001", source_dir)
-    change_csv_files(policy["Model"], "S0_001", source_dir, policy["Variable"], policy["Policy"])
+    copy_csv_files_to_scen(policy["Model"], policy["Variable"], f"S0_{policy['Model']}", source_dir)
+    change_csv_files(policy["Model"], f"S0_{policy['Model']}", source_dir, policy["Variable"], policy["Policy"])
         
 change_csv_files("FTT-P", "S0_001", source_dir, "RTCO", "RTCO strong subsidy")     
 
