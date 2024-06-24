@@ -11,24 +11,27 @@
 # modifies the frontend and not the global owner(s) will be requested for a review.
 /frontend/    @jp-camecon  # This is an inline comment.
 
+# The heat models, with mostly similar owners
 /SourceCode/Heat/ @AEdwards476 @idwesar-camecon @FAcamecon 
 /SourceCode/Industrial/ @idwesar-camecon @FAcamecon @rhayward1
 /Inputs/_Masterfiles/FTT-H/ @AEdwards476 @idwesar-camecon @FAcamecon 
-/docs/Update manuals/FTT-Heat update manual.md  @AEdwards476 @idwesar-camecon @FAcamecon 
+"/docs/Update manuals/FTT-Heat update manual.md" @AEdwards476 @idwesar-camecon @FAcamecon 
 
 # Note Marton Simo does not have an account yet!
 
+# The power sector model
 /SourceCode/Power/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
 /Inputs/_Masterfiles/FTT-P/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
-/docs/Update manuals/FTT-Power update manual.md  @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
+"/docs/Update manuals/FTT-Power update manual.md"  @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
 
 # Note Marton Simo does not have an account yet!
 
-/SourceCode/Transport/ @Cormacmlynch @sgulati26 
-/SourceCode/Freight/ @Cormacmlynch @sgulati26 
-/Inputs/_Masterfiles/FTT-Tr/ @Cormacmlynch @sgulati26 
-/Inputs/_Masterfiles/FTT-Fr/ @Cormaclynch @sgulati26
-/docs/Update manuals/FTT-Transport update manual.md @Cormacmlynch @sgulati26 
+# The transport models
+/SourceCode/Transport/ @cormacmlynch @sgulati26 
+/SourceCode/Freight/ @cormacmlynch @sgulati26 
+/Inputs/_Masterfiles/FTT-Tr/ @cormacmlynch @sgulati26 
+/Inputs/_Masterfiles/FTT-Fr/ @cormaclynch @sgulati26
+"/docs/Update manuals/FTT-Transport update manual.md" @cormacmlynch @sgulati26 
 # Note Barnabas does not have an account yet!
 
 /SourceCode/Steel/ @pv-camecon  
