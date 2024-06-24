@@ -71,15 +71,15 @@ MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGAMX,Exogenous MGAM (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MGAM,FTT:Power Gamma values ($2013/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,2016,2001,-,,Y
+MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,2016,2001,-,,Y
+MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWP,FTT:Power marginal costs of fuels ($2013/GJ),$2013/GJ,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWLX,Exogenous MEWL (from E3ME run),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWL,FTT:Power load factors (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWKX,Exogenous MEWK (from E3ME run),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWK,FTT-P Capacity by technology (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
-MEWI,FTT-P Installed capacity additions (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,2016,2001,-,,Y
+MEWI,FTT-P Installed capacity additions (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWGX,Exogenous MEWG (from E3ME run),GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWG,FTT-P Generation by technology (GWh),GWh,RTI,T2TI,NA,TIME,FTT-P,-,2021,2001,-,Y,Y
 MEWE,FTT:Power CO2 emissions,MtCO2/y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
