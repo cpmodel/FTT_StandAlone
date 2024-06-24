@@ -15,14 +15,14 @@
 /SourceCode/Heat/ @AEdwards476 @idwesar-camecon @FAcamecon 
 /SourceCode/Industrial/ @idwesar-camecon @FAcamecon @rhayward1
 /Inputs/_Masterfiles/FTT-H/ @AEdwards476 @idwesar-camecon @FAcamecon 
-/docs/Update manuals/FTT-Heat\ update\ manual.md @AEdwards476 @idwesar-camecon @FAcamecon 
+/docs/Update\ manuals/FTT-Heat\ update\ manual.md @AEdwards476 @idwesar-camecon @FAcamecon 
 
 # Note Marton Simo does not have an account yet!
 
 # The power sector model
 /SourceCode/Power/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
 /Inputs/_Masterfiles/FTT-P/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
-/docs/Update manuals/FTT-Power\ update\ manual.md  @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
+/docs/Update\ manuals/FTT-Power\ update\ manual.md  @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
 
 # Note Marton Simo does not have an account yet!
 
@@ -31,7 +31,7 @@
 /SourceCode/Freight/ @cormacmlynch @sgulati26 
 /Inputs/_Masterfiles/FTT-Tr/ @cormacmlynch @sgulati26 
 /Inputs/_Masterfiles/FTT-Fr/ @cormacmlynch @sgulati26
-/docs/Update manuals/FTT-Transport\ update\ manual.md" @cormacmlynch @sgulati26 
+/docs/Update\ manuals/FTT-Transport\ update\ manual.md" @cormacmlynch @sgulati26 
 # Note Barnabas does not have an account yet!
 
 /SourceCode/Steel/ @pv-camecon  
