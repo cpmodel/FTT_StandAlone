@@ -13,26 +13,26 @@
 
 /SourceCode/Heat/ @AEdwards476 @idwesar-camecon @FAcamecon 
 /SourceCode/Industrial/ @idwesar-camecon @FAcamecon @rhayward1
-/Inputs/_Masterfiles/FTT-H @AEdwards476 @idwesar-camecon @FAcamecon 
+/Inputs/_Masterfiles/FTT-H/ @AEdwards476 @idwesar-camecon @FAcamecon 
 /docs/Update manuals/FTT-Heat update manual.md  @AEdwards476 @idwesar-camecon @FAcamecon 
 
 # Note Marton Simo does not have an account yet!
 
 /SourceCode/Power/ @Femkemilene @idxib2 @FAcamecon @hartviga @sgulati26
-/Inputs/_Masterfiles/FTT-P @Femkemilene @idxib2 @FAcamecon @hartviga @sgulati26
+/Inputs/_Masterfiles/FTT-P/ @Femkemilene @idxib2 @FAcamecon @hartviga @sgulati26
 /docs/Update manuals/FTT-Power update manual.md  @Femkemilene @idxib2 @FAcamecon @hartviga @sgulati26
 
 # Note Marton Simo does not have an account yet!
 
 /SourceCode/Transport/ @Cormacmlynch @sgulati26 
 /SourceCode/Freight/ @Cormacmlynch @sgulati26 
-/Inputs/_Masterfiles/FTT-Tr @Cormacmlynch @sgulati26 
-/Inputs/_Masterfiles/FTT-Fr @Cormaclynch @sgulati26
+/Inputs/_Masterfiles/FTT-Tr/ @Cormacmlynch @sgulati26 
+/Inputs/_Masterfiles/FTT-Fr/ @Cormaclynch @sgulati26
 /docs/Update manuals/FTT-Transport update manual.md @Cormacmlynch @sgulati26 
 # Note Barnabas does not have an account yet!
 
 /SourceCode/Steel/ @pv-camecon  
-/Inputs/_Masterfiles/FTT-S @pv-camecon
+/Inputs/_Masterfiles/FTT-S/ @pv-camecon
 # Note: a second person is needed here
 
 /SourceCode/Hydrogen/ @hartviga @pv-camecon @sgulati26 
