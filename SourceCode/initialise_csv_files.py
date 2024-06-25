@@ -1,6 +1,5 @@
+from pathlib import Path
 import os
-import glob
-import re
 
 
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
@@ -40,8 +39,9 @@ def get_masterfile(ftt_module, scenario):
     """
 
     file_pattern = f"{ftt_module}*_{scenario}.xlsx"
-    matching_file = glob.glob(f'Inputs/_Masterfiles/{ftt_module}/{file_pattern}')
-    #matching_file = glob.glob(f'../Inputs/_Masterfiles/{ftt_module}/{file_pattern}')
+    matching_file = list(
+        (Path('Inputs') / '_MasterFiles' / ftt_module).glob(file_pattern)
+    )
 
     # Printing warnings in case multiple files are found
     if len(matching_file) == 0:
