@@ -191,6 +191,7 @@ TWFC,FTT-Tr Fuel cost component,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
 RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTFT,FTT-Transport Fuel tax,cents/litre,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RTCO,FTT-Transport Registration tax,$/gCO2/km,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
+Base registration rate,FTT-Transport Registration tax,share,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,Y
 RLTA,FTT-Transport age-tracking matrix,th-veh,RTI,VTTI,VYTI,TIME,FTT-Tr,,,2017,,,
 RHSM,FTT-Transport Hydrogen blending mandate,share H2 in freight,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
 RFLT,FTT-Transport Fleet stocks in use (from survival),th-veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,

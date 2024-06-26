@@ -59,7 +59,6 @@ def copy_csv_files_to_scen(model, variable, scen_name, source_dir):
     
     for file in file_list:
         # Create desti_dir if it does not exist
-        test=1
         if not os.path.exists(desti_dir):  
             os.makedirs(desti_dir)
         shutil.copy(file, desti_dir)
@@ -121,6 +120,8 @@ def policy_change(df, policy):
         case "MEWT strong":     # Subsidize all renewables, except for solar
             df.iloc[ 8:18, 24:] = -0.3
             df.iloc[19:22, 24:] = -0.3
+        case "MCOCX strong":  # Say, a linearly increasing price to $500 dollar per CO2, i.e.  
+            df.iloc[1:8, 24:] = df.iloc
        
         
         # Transport policies
@@ -129,13 +130,13 @@ def policy_change(df, policy):
         case "TWSA strong":
             df.iloc[18:21, 24:] = 0 # (exogenous sales in k-veh) TODO: I will need to figure out what a reasonable mandate is. 
         
-        case "TTVT strong tax": # TODO: create new variable that is not an absolute value
-            df.iloc[[0, 2, 4, 6, 8], 24:] = 1000
-        case "TTVT strong subsidy":
-            df.iloc[12, 24:] = - 1000
-        case "TTVT strong combo":
-            df.iloc[[0, 2, 4, 6, 8], 7:] = 1000
-            df.iloc[12, 24:] = -1000
+        case "BRR strong tax": 
+            df.iloc[:15, 24:] = 0.3
+        case "BRR strong subsidy":
+            df.iloc[18:21, 24:] = -0.3
+        case "BRR strong combo":
+            df.iloc[:15, 24:] = 0.3
+            df.iloc[18:21, 24:] = -0.3
                    
             
         # Freight policies

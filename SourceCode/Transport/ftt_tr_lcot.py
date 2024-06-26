@@ -99,14 +99,17 @@ def get_lcot(data, titles, year):
 
         # Vehicle tax at purchase
         vtt = np.zeros([len(titles['VTTI']), int(max_lt)])
-        vtt[:, 0, np.newaxis] = (data['TTVT'][r, :, 0, np.newaxis] \
-                                 + data['RTCO'][r, 0, 0] \
-                                 * bttc[:,c3ti['14 CO2Emissions'], np.newaxis]) \
+        vtt[:, 0, np.newaxis] = ( (data['TTVT'][r, :, 0, np.newaxis] 
+                                 + data['RTCO'][r, 0, 0] * bttc[:,c3ti['14 CO2Emissions'], np.newaxis] )
                                  / ns / ff / cf / 1000
+                                 + data["Base registration rate"][r, :, 0, np.newaxis] * it[:, 0, np.newaxis]
+                                )
+                                 
+        
 
         # Average fuel costs
         ft = np.ones([len(titles['VTTI']), int(max_lt)])
-        ft = ft * bttc[:,c3ti['3 fuel cost (USD/km)'], np.newaxis] / ns / ff
+        ft = ft * bttc[:, c3ti['3 fuel cost (USD/km)'], np.newaxis] / ns / ff
         ft = np.where(mask, ft, 0)
 
         # Stadard deviation of fuel costs
