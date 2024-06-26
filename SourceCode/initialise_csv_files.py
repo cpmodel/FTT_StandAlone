@@ -37,20 +37,22 @@ def get_masterfile(ftt_module, scenario):
     The filename that matches
     The middle bit of the file names for input to convert_masterfiles_to_cvs
     """
-
+    
+    # The * denotes the regionxtechnologies and last year updated part of the string
     file_pattern = f"{ftt_module}*_{scenario}.xlsx"
     matching_file = list(
         (Path('Inputs') / '_MasterFiles' / ftt_module).glob(file_pattern)
     )
 
-    # Printing warnings in case multiple files are found
+    # Printing warnings 1: in case there is no corresponding excel file
     if len(matching_file) == 0:
         print(f"Warning: No files matched the pattern for module {ftt_module} and scenario {scenario}.")
         print(f"This means {ftt_module}: {scenario} will rely only on pre-specified csv files.")
         matching_file = None
         file_root = None
         return matching_file, file_root
-
+    
+    # Printing warnings 2: in case multiple files are found
     elif len(matching_file) > 1:
         print(f"Warning: Multiple files matched the pattern for module {ftt_module} and scenario {scenario}.")
 
@@ -60,7 +62,7 @@ def get_masterfile(ftt_module, scenario):
         end_index = base_name.index(f'_{scenario}.xlsx')
         file_root = base_name[:end_index]
     except IndexError as e:
-        print("An error occurred while reading in the masterfile.")
+        print("An error occurred while finding the masterfile.")
         print(f"the ftt model and scenario: {ftt_module}, {scenario}")
         print(f"The file that triggered the error: {matching_file}")
         raise e
