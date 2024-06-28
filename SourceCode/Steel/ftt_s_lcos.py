@@ -172,7 +172,7 @@ def get_lcos(data, titles):
             iron_demand [r] = data['BSTC'] [r, 25, 25] * data['SEWG'][r, 25]
             EF_sec_route = 0.0
             if data['STGI'][r] > np.sum (data['BSTC'][r, :, 23] * data['SEWG'] [r, :]):
-                iron_supply[r] = data['STGI'][r] - np.sum (data['BSTC'][r, :, 23] * data['SEWG'][r,:])
+                iron_supply[r] = data['STGI'][r , 0, 0] - np.sum (data['BSTC'][r, :, 23] * data['SEWG'][r,:])
             
             if iron_demand[r] > 0.0:
                 #The price of intermediate iron can only be used directly if there's enough iron production 
