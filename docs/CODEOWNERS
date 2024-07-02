@@ -12,37 +12,27 @@
 /frontend/    @jp-camecon  # This is an inline comment.
 
 # The heat models, with mostly similar owners
-/SourceCode/Heat/ @AEdwards476 @idwesar-camecon @FAcamecon 
-/SourceCode/Industrial/ @idwesar-camecon @FAcamecon @rhayward1
-/Inputs/_Masterfiles/FTT-H/ @AEdwards476 @idwesar-camecon @FAcamecon 
-/docs/Update\ manuals/FTT-Heat\ update\ manual.md @AEdwards476 @idwesar-camecon @FAcamecon 
-
-# Note Marton Simo does not have an account yet!
+/SourceCode/Heat/ @AEdwards476 @idwesar-camecon @FAcamecon @msimo97
+/SourceCode/Industrial/ @idwesar-camecon @FAcamecon @rhayward1 @msimo97
+/Inputs/_Masterfiles/FTT-H/ @AEdwards476 @idwesar-camecon @FAcamecon @msimo97
+/docs/Update\ manuals/FTT-Heat\ update\ manual.md @AEdwards476 @idwesar-camecon @FAcamecon @msimo97
 
 # The power sector model
-/SourceCode/Power/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
-/Inputs/_Masterfiles/FTT-P/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
-/docs/Update\ manuals/FTT-Power\ update\ manual.md  @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26
-
-# Note Marton Simo does not have an account yet!
+/SourceCode/Power/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26 @msimo97
+/Inputs/_Masterfiles/FTT-P/ @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26 @msimo97
+/docs/Update\ manuals/FTT-Power\ update\ manual.md  @Femkemilene @ldxib2 @FAcamecon @hartviga @sgulati26 @msimo97
 
 # The transport models
-/SourceCode/Transport/ @cormacmlynch @sgulati26 
-/SourceCode/Freight/ @cormacmlynch @sgulati26 
-/Inputs/_Masterfiles/FTT-Tr/ @cormacmlynch @sgulati26 
-/Inputs/_Masterfiles/FTT-Fr/ @cormacmlynch @sgulati26
-/docs/Update\ manuals/FTT-Transport\ update\ manual.md" @cormacmlynch @sgulati26 
-# Note Barnabas does not have an account yet!
+/SourceCode/Transport/ @cormacmlynch @sgulati26 @bbenyak
+/SourceCode/Freight/ @cormacmlynch @sgulati26 @bbenyak
+/Inputs/_Masterfiles/FTT-Tr/ @cormacmlynch @sgulati26 @bbenyak
+/Inputs/_Masterfiles/FTT-Fr/ @cormacmlynch @sgulati26 @bbenyak
+/docs/Update\ manuals/FTT-Transport\ update\ manual.md" @cormacmlynch @sgulati26 @bbenyak
 
 /SourceCode/Steel/ @pv-camecon  
 /Inputs/_Masterfiles/FTT-S/ @pv-camecon
 # Note: a second person is needed here
 
-/SourceCode/Hydrogen/ @hartviga @pv-camecon @sgulati26 
-/Inputs/_Masterfiles/FTT-H2 @hartviga @pv-camecon @sgulati26 
-# Note Barnabas does not have an account yet!
-
-
-
-
+/SourceCode/Hydrogen/ @hartviga @pv-camecon @sgulati26 @msimo97
+/Inputs/_Masterfiles/FTT-H2 @hartviga @pv-camecon @sgulati26 @msimo97
 
