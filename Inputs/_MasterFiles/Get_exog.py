@@ -123,6 +123,7 @@ if __name__ == '__main__':
         # mwmcx = {}
         # mmcdx = {}
         mes2x = {}
+        repp = {}
         
         # mtcdx = {}
         
@@ -131,6 +132,7 @@ if __name__ == '__main__':
         # # 2D variables
         # prsc = pd.DataFrame(mre['PRSC'][0], index=regions_short, columns=tl)
         # ex = pd.DataFrame(mre['EX'][0], index=regions_short, columns=tl)
+        repp = pd.DataFrame(mre["REPP"][0], index=regions_short, columns=tl)
 
         for r, region in enumerate(regions_short):
 
@@ -165,13 +167,14 @@ if __name__ == '__main__':
 
     # prsc.to_csv(os.path.join(dirp_out_ftt, "PRSCX.csv"))
     # ex.to_csv(os.path.join(dirp_out_ftt, "EXX.csv"))
+    repp.to_csv(os.path.join(dirp_out_ftt, "REPPX.csv"))
 
     for region in regions_short:
-
+        pass
         #mewlx[region].to_csv(os.path.join(dirp_out_ftt, "MEWLX_{}.csv".format(region)))
         # mercx[region].to_csv(os.path.join(dirp_out_ftt, "MERCX_{}.csv".format(region)))
         #mewdx[region].to_csv(os.path.join(dirp_out_ftt, "MEWDX_{}.csv".format(region)))
-        metcx[region].to_csv(os.path.join(dirp_out_ftt, "METCX_{}.csv".format(region)))
+        #metcx[region].to_csv(os.path.join(dirp_out_ftt, "METCX_{}.csv".format(region)))
         # mtcdx[region].to_csv(os.path.join(dirp_out_ftt, "MTCDX_{}.csv".format(region)))
         # mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAMX_{}.csv".format(region)))
         # mgamx[region].to_csv(os.path.join(dirp_out_ftt, "MGAM_{}.csv".format(region)))
