@@ -1,20 +1,20 @@
-﻿Policy,Model,Variable,Description,,,
-MEWR strong,FTT-P,MEWR,No new fossil investment from 2024,,,
-MWKA strong,FTT-P,MWKA,Phase-out fossil fuels between 2024 and 2035,,,
-MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,
-MCOCX strong,General,REPP,Linearly increasing to $500 per tCO2,,,
-TREG strong,FTT-Tr,TREG,No new fossil cars from 2024,,,
-TWSA strong,FTT-Tr,TWSA,?,,,
-BRR strong tax,FTT-Tr,Base registration rate,30% purchase tax on fossil cars,,,
-BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,
-BRR strong combo,FTT-Tr,Base registration rate,30% purchase combi on fossil cars / Evs,,,
-ZREG strong,FTT-Fr,ZREG,No new small fossil trucks ,,,
-ZWSA strong,FTT-Fr,ZWSA,? - Mandate (absolute number of vehicles),,,
-ZTVT strong tax,FTT-Fr,ZTVT,30% purchase tax on fossil trucks,,,
-ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,
-ZTVT strong combo,FTT-Fr,ZTVT,30% purchase subsidy or tax,,,
-HREG strong,FTT-H,HREG,No new gas/coal boilers from 2024,,,
-HWSA strong,FTT-H,HWSA,"Exogenous market share changes --> 0.5% extra(?) for heat pumps, 0.5% less for gas",,,
-HTVS strong tax,FTT-H,HTVS,30% purchase tax on fossil boilers,,,
-HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,
-HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy,,,
+﻿Policy,Model,Variable,Description
+MEWR strong,FTT-P,MEWR,No new fossil investment from 2024
+MWKA strong,FTT-P,MWKA,Phase-out fossil fuels between 2024 and 2035
+MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar
+REPP strong,General,REPPX,Linearly increasing to €300 per tCO2 by 2050
+TREG strong,FTT-Tr,TREG,No new fossil cars from 2024
+TWSA strong,FTT-Tr,TWSA,?
+BRR strong tax,FTT-Tr,Base registration rate,30% purchase tax on fossil cars
+BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS
+BRR strong combo,FTT-Tr,Base registration rate,30% purchase combi on fossil cars / Evs
+ZREG strong,FTT-Fr,ZREG,No new small fossil trucks 
+ZWSA strong,FTT-Fr,ZWSA,? - Mandate (absolute number of vehicles)
+ZTVT strong tax,FTT-Fr,ZTVT,30% purchase tax on fossil trucks
+ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck
+ZTVT strong combo,FTT-Fr,ZTVT,30% purchase subsidy or tax
+HREG strong,FTT-H,HREG,No new gas/coal boilers from 2024
+HWSA strong,FTT-H,HWSA,"Exogenous market share changes --> 0.5% extra(?) for heat pumps, 0.5% less for gas"
+HTVS strong tax,FTT-H,HTVS,30% purchase tax on fossil boilers
+HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps
+HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy

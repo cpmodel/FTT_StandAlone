@@ -128,7 +128,13 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                 
                 # If the fourth dimension is time
                 if dims[var][3] == 'TIME':
-                    var_tl = list(range(int(forstart[var]), timeline[-1]+1))
+                    try:
+                        var_tl = list(range(int(forstart[var]), timeline[-1]+1))
+                    except ValueError as e:
+                        print(f'var is {var}')
+                        print(f'forstart[var] is {forstart[var]}')
+                        print(f'timeline is {timeline}')
+                        raise(e)
                     var_tl_fit = [year for year in var_tl if year in timeline]
                     var_tl_inds = [i for i, year in enumerate(timeline) if year in var_tl]
                     #print(csv.columns, var)

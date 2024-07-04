@@ -87,7 +87,7 @@ def save_new_file(model, scen_name, file, df):
 # 1. MEWT - Renewable subsidies (say 20% wind subsidies) or feed-in-tariffs
 # 2. MEWR - (100% renewables by 2035)
 # 3. MEWRb - Efficiency regulation (say regulation on coal only?) This is a bonus
-# 4. MCOCX - carbon tax
+# 4. REPP - carbon tax (originally in euro / tC)
 
 # In the transport & freight sectors, we would like to change the following policies:
 # 1. TREG and ZREG - Efficiency regulations (so going to advanced ones)
@@ -120,8 +120,18 @@ def policy_change(df, policy):
         case "MEWT strong":     # Subsidize all renewables, except for solar
             df.iloc[ 8:18, 24:] = -0.3
             df.iloc[19:22, 24:] = -0.3
-        case "MCOCX strong":  # Say, a linearly increasing price to $500 dollar per CO2, i.e.  
-            df.iloc[1:8, 24:] = df.iloc
+        case "REPP strong":  # A linearly increasing price to €300 per CO2, i.e.  
+            price_2050 = 300
+            price_2023 = df.iloc[:, 14] / 3.667 # Note, REPP is given per tC, rather than tCO2
+            
+            # Reshape the price_2023 to a column vector
+            price_2023 = price_2023.values.reshape(-1, 1)
+            
+            # Linearly increase the price from 2023 to 2050 values. 
+            df.iloc[:, 14:41] = ( price_2023 + (price_2050 - price_2023) / 27 * np.arange(27) ) * 3.667 
+            # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
+            df.iloc[:, 41:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667
+           
        
         
         # Transport policies
@@ -129,7 +139,7 @@ def policy_change(df, policy):
             df.iloc[:15, 24:] = 0
         case "TWSA strong":
             df.iloc[18:21, 24:] = 0 # (exogenous sales in k-veh) TODO: I will need to figure out what a reasonable mandate is. 
-        
+
         case "BRR strong tax": 
             df.iloc[:15, 24:] = 0.3
         case "BRR strong subsidy":
@@ -179,7 +189,9 @@ def policy_change(df, policy):
 policies = pd.read_csv(os.path.join(current_dir, "policies.csv"))
 
 for row in policies.iterrows():
+    
     policy = row[1]         # Get the row as a dictionary
+    print(policy["Model"])
     source_dir = get_source_dir(input_dir, "S0", policy["Model"])
     copy_csv_files_to_scen(policy["Model"], policy["Variable"], f"S0_{policy['Model']}", source_dir)
     change_csv_files(policy["Model"], f"S0_{policy['Model']}", source_dir, policy["Variable"], policy["Policy"])
