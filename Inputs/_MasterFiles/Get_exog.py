@@ -124,6 +124,7 @@ if __name__ == '__main__':
         # mmcdx = {}
         mes2x = {}
         repp = {}
+        fets = {}
         
         # mtcdx = {}
         
@@ -132,6 +133,8 @@ if __name__ == '__main__':
         # # 2D variables
         # prsc = pd.DataFrame(mre['PRSC'][0], index=regions_short, columns=tl)
         # ex = pd.DataFrame(mre['EX'][0], index=regions_short, columns=tl)
+        rex = pd.DataFrame(mre['REX'][0], index=regions_short, columns=tl)
+
         repp = pd.DataFrame(mre["REPP"][0], index=regions_short, columns=tl)
 
         for r, region in enumerate(regions_short):
@@ -167,7 +170,9 @@ if __name__ == '__main__':
 
     # prsc.to_csv(os.path.join(dirp_out_ftt, "PRSCX.csv"))
     # ex.to_csv(os.path.join(dirp_out_ftt, "EXX.csv"))
+    rex.to_csv(os.path.join(dirp_out_ftt, "REXX.csv"))
     repp.to_csv(os.path.join(dirp_out_ftt, "REPPX.csv"))
+
 
     for region in regions_short:
         pass

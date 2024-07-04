@@ -358,14 +358,16 @@ MCOCX,Carbon costs by technology from E3ME,2013$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,
 MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,T2TI,NA,TIME,FTT-P,,,2001,,Y,Y
 MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,T2TI,NA,TIME,FTT-P,,,2001,,Y,Y
-REPP,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,,,,
+REPPX,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,2010,,,
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,General,-,-,2010,From E3ME results,Y,Y
 EXX,Exchange rate (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 EX13,Exchange rate in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
-BCET,FTT:Power matrix of technology costs,various,RTI,T2TI,C2TI,NA,FTT-P,-,-,2001,-,Y,Y
+REXX,EU local currency per euro rates from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
+REX13,EU local currency per euro rates,index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
+BCET,FTT:Power matrix of technology costs,various,RTI,T2TI,C2TI,NA,FTT-P,-,2020,2001,-,Y,Y
 IFT1,FTT-IH-CHI Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,-,Y,Y
 IFT2,FTT-IH-FBT Fuel tax (2010 Euros/MWh),2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,-,Y,Y
 IFT3,FTT-IH-MTM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,-,Y,Y
