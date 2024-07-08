@@ -19,10 +19,10 @@ from numba import njit
 
 # %% JIT-compiled shares equation
 # -----------------------------------------------------------------------------
-@njit(fastmath=True)
+#@njit(fastmath=True)
 def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
-           mewl_dt, mews_lag, mwlo, rti, t2ti, no_it):
+           mewl_dt, mews_lag, mwlo, rti, t2ti, no_it, year):
 
     """
     Function to calculate market share dynamics.

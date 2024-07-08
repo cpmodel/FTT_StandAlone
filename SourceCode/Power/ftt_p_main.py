@@ -588,14 +588,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Shares equation
             # =================================================================
             mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt,
-                                            data_dt['MEWS'], data_dt['METCX'],
+                                            data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], data['MWKA'],
                                             data_dt['MES1'], data_dt['MES2'],
                                             data['MEWA'], isReg, data_dt['MEWK'],
                                             time_lag['MEWK'], data['MEWR'],
                                             data_dt['MEWL'], time_lag['MEWS'],
                                             data['MWLO'],
-                                            len(titles['RTI']), len(titles['T2TI']),  no_it)
+                                            len(titles['RTI']), len(titles['T2TI']),  no_it, year)
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
