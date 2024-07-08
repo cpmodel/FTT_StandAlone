@@ -1,20 +1,20 @@
-﻿Policy,Model,Variable,Description,,,,,,,
-MEWR strong,FTT-P,MEWR,No new fossil investment from 2024,,,,,,,Stated target like phase-in target around 3x renewables. 
-MWKA strong,FTT-P,MWKA,Phase-out fossil fuels between 2024 and 2035,,,,Phase-in,up to 5% market share?,,Phase-out of coal by year X
-MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,,
-REPP strong,General,REPPX,Linearly increasing to €300 per tCO2 by 2050,,,,,,,
-TREG strong,FTT-Tr,TREG,No new fossil cars from 2024,,,,,(we can do 2030 vs 2035 for extra realism),,
-TWSA strong,FTT-Tr,TWSA,?,,,,,,,
-BRR strong tax,FTT-Tr,Base registration rate,30% purchase tax on fossil cars,,,,,,,
-BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,,,,,
-BRR strong combo,FTT-Tr,Base registration rate,30% purchase combi on fossil cars / Evs,,,,,,,
-ZREG strong,FTT-Fr,ZREG,No new small fossil trucks ,,,,,,,
-ZWSA strong,FTT-Fr,ZWSA,? - Mandate (absolute number of vehicles),,,,,up to 5% of market share. ,,
-ZTVT strong tax,FTT-Fr,ZTVT,30% purchase tax on fossil trucks,,,,,,,
-ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,,
-ZTVT strong combo,FTT-Fr,ZTVT,30% purchase subsidy or tax,,,,,,,
-HREG strong,FTT-H,HREG,No new gas/coal boilers from 2024,,,,,,,
-HWSA strong,FTT-H,HWSA,"Exogenous market share changes --> 0.5% extra(?) for heat pumps, 0.5% less for gas",,,,,,,
-HTVS strong tax,FTT-H,HTVS,30% purchase tax on fossil boilers,,,,,,,
-HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,,,,,
-HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy,,,,,,,
+﻿Policy,Model,Variable,Description,,,,,,,,,,,,,,,,,,
+MEWR strong,FTT-P,MEWR,No new fossil investment from 2024,,,,,,,Stated target like phase-in target around 3x renewables. ,,,,,,,,,,,
+MWKA strong,FTT-P,MWKA,Phase-out fossil fuels between 2024 and 2035,,,,Phase-in,up to 5% market share?,,Phase-out of coal by year X,,,,,,,,,,,
+MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,,,,,,,,,,"Strip it, no distinction regulation: ",,,
+REPP strong,General,REPPX,Linearly increasing to €300 per tCO2 by 2050,,,,,,,,,,,,,,,ZEV mandate,,,(100% sales by 2035 sales)
+TREG strong,FTT-Tr,TREG,No new fossil cars from 2024,,,,,(we can do 2030 vs 2035 for extra realism),,,,,,,,,,Clean energy mandate,,,"Coal phase-out (100% to 2035 for developed, 2040 for emerging economies)"
+TWSA strong,FTT-Tr,TWSA,?,,,,,,,,,,,,,,,Freigth: ZEV mandate,,,(100% sales by 2040)
+BRR strong tax,FTT-Tr,Base registration rate,30% purchase tax on fossil cars,,,,,,,,,Clean power mandate in the power sector (generation),,,,,,Heat,,,Same as ZEV mandates (2035)
+BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,,,,,,,"Simon: as much as possible, do it the same across sectors",,,,,,,,,
+BRR strong combo,FTT-Tr,Base registration rate,30% purchase combi on fossil cars / Evs,,,,,,,,,100% mandate by 2035,,,,,,REPP,,,"Same carbon tax, in all the models"
+ZREG strong,FTT-Fr,ZREG,No new small fossil trucks ,,,,,,,,,"For trucks, it's more like 100% by 2040",,,,,,Tax,,,Carbon price
+ZWSA strong,FTT-Fr,ZWSA,? - Mandate (absolute number of vehicles),,,,,up to 5% of market share. ,,,,,,,,,,Subsidy,,,Upfront subsidy for technology
+ZTVT strong tax,FTT-Fr,ZTVT,30% purchase tax on fossil trucks,,,,,,,,,,,,,,,,,,
+ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,,,,,,,,,,More than one policy,,,
+ZTVT strong combo,FTT-Fr,ZTVT,30% purchase subsidy or tax,,,,,,,,,,,,,,,,,,
+HREG strong,FTT-H,HREG,No new gas/coal boilers from 2024,,,,,,,,,,,,,,,,,,
+HWSA strong,FTT-H,HWSA,"Exogenous market share changes --> 0.5% extra(?) for heat pumps, 0.5% less for gas",,,,,,,,,,,,,,,,,,
+HTVS strong tax,FTT-H,HTVS,30% purchase tax on fossil boilers,,,,,,,,,,,,,,,,,,
+HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,,,,,,,,,,,,,,,,
+HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy,,,,,,,,,,,,,,,,,,
