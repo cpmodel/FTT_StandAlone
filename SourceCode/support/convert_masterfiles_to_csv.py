@@ -151,33 +151,37 @@ def are_csvs_older_than_masterfiles(vars_to_convert, out_dir, models, \
 def get_remaining_variables(vars_to_convert, out_dir, model, \
                             var_dict, gamma_options, overwrite_existing_csvs):
     """
-    Remove variables from list to convert if either of two conditions are met:
-        * Condition 1: csv files already exist or
-        * Condition 2: The newest csv file is older than the masterfile
+    Remove variables from the to-convert list if:
+        a) We do not overwrite existing csv and
+        b) They already exist
+    
+    Returns:
+        * the remaining variables to convert
+        * the gamma user input (unchanged if not applicable)
     """
     
+    # Keep all variables (possibly excl gamma) in the to-convert list if:
     if overwrite_existing_csvs:
         
         for var in vars_to_convert:
 
-            # We want to check if the user wants to overwrite gamma values
+            # Check if the user wants to overwrite gamma values
             if var_dict[model][var]["Conversion?"] == "GAMMA" or var=="MGAM":
                 gamma_options["Overwrite user input"] = \
                     gamma_input_on_overwrite(out_dir, var, gamma_options)
         
         return vars_to_convert, gamma_options
     
+    # Remove variables from list if we do not overwrite AND they already exist
     vars_to_convert_remaining = []
     for var in vars_to_convert:     
         out_fn = os.path.join(out_dir, f"{var}.csv")
         out_fn_reg = os.path.join(out_dir, f"{var}_BE.csv")
         
-        # Condition 1
         exists = (csv_exists(out_fn) or csv_exists(out_fn_reg))
                 
         if not exists:
             vars_to_convert_remaining.append(var)
-            
     
     return vars_to_convert_remaining, gamma_options
 
