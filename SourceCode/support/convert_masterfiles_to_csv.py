@@ -160,7 +160,7 @@ def get_remaining_variables(vars_to_convert, out_dir, model, \
         
         for var in vars_to_convert:
 
-            # We want to double check if the user wants to overwrite gamma values
+            # We want to check if the user wants to overwrite gamma values
             if var_dict[model][var]["Conversion?"] == "GAMMA":
                 gamma_options["Overwrite user input"] = \
                     gamma_input_on_overwrite(out_dir, var, gamma_options)
@@ -193,8 +193,8 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
-    # Break if you can't overwrite
-    if not gamma_options["Overwrite possible"]:
+    # Break if no user input is required
+    if not gamma_options["Ask user input"]:
         return None
 
     if gamma_options["Overwrite user input"] is None:
@@ -387,7 +387,7 @@ def get_model_classification(titles_path, variables_df):
 #%%
 # Main function
 
-def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overwrite_existing_csvs=False):
+def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_csvs=False):
     """
     The main function to convert masterfiles to csv files. 
     Depending on how you run it, it can have three types of behaviour:
@@ -411,7 +411,7 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
         
         variables_df = variables_df_dict[model]
         dims = get_model_classification(titles_path, variables_df)
-        gamma_options = {"Overwrite possible": gamma_overwrite_pos, 
+        gamma_options = {"Ask user input": ask_user_input, 
                           "Overwrite user input": None}    
         
         ### ----------------------------------------------------------------------- ###
@@ -478,7 +478,7 @@ def convert_masterfiles_to_csv(models, gamma_overwrite_pos="not possible", overw
                 if ndims == 3:
                     
                     var_dict[model][var]['Data'][scen] = {}
-                    gamma_options["Overwrite user input"] = None  
+                    
                     for i, reg in enumerate(regs):          
                         ri = row_start + i*(rdim + sep)
                         data = extract_data(raw_data, sheet_name, ri, rdim, ci, cf)
@@ -531,8 +531,8 @@ if __name__ == '__main__':
     # Scenario 1 = 2-degree scenario (default)
     # Scenario 2 = 1.5-degree scenario (default)
 
-    models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023']}
-              #'FTT-P': [[0, 2], 'FTT-P-24x71_2022']}
+    models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023'],
+              'FTT-P': [[0], 'FTT-P-24x71_2022']}
             #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
             #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
@@ -544,4 +544,4 @@ if __name__ == '__main__':
     # }
 
     var_dict = convert_masterfiles_to_csv(
-        models, gamma_overwrite_pos="possible", overwrite_existing_csvs=True)
+        models, ask_user_input=True, overwrite_existing_csvs=True)
