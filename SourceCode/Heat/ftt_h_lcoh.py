@@ -47,6 +47,33 @@ from SourceCode.support.divide import divide
 # -------------------------- LCOH function ---------------------------------
 # --------------------------------------------------------------------------
 
+
+def set_carbon_tax(data, c4ti, year):
+    '''
+    Convert the carbon price in REPP from euro / tC to $2020 euros / kWhUD. 
+    Apply the carbon price to heat sector technologies based on their emission factors
+
+    Returns:
+        Carbon costs per country and technology (2D)
+    '''
+    
+    carbon_costs = (
+                    data['BHTC'][:, :, c4ti['Emission factor']]     # kg CO2 / MWh
+                    * data["REPPX"][:, :, 0]                        # Carbon price in euro / tC
+                    / 3.666 / 1000                                  # Conversion from C to CO2 and MWh to kWh 
+                    )
+    
+    
+    if np.isnan(carbon_costs).any():
+        print(f"Carbon price is nan in year {year}")
+        print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
+        print(f"Emissions intensity {data['BHTC'][:, :, c4ti['Emission factor']]}")
+        
+        raise ValueError
+                       
+    return carbon_costs
+
+
 def get_lcoh(data, titles):
     """
     Calculate levelized costs.

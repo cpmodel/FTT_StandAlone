@@ -26,12 +26,13 @@ def set_carbon_tax(data, c2ti, year):
     Convert the carbon price in REPP from euro / tC to $2013 dollars. 
     Apply the carbon price to power sector technologies based on their efficiencies
 
-    The function changes data.
-    
     REX --> EU local currency per euros rate (33 is US$)
     PRSC --> price index (local currency) consumer expenditure
     EX --> EU local currency per euro, 2005 == 1
-    The 13 part of the variable mean denotes 2013. 
+    The 13 part of the variable denotes 2013. 
+    
+    Returns:
+        Carbon costs per country and technology (2D), part of BCET
     '''
     
     carbon_costs = (
