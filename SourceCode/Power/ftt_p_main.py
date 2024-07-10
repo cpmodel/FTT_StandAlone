@@ -65,7 +65,7 @@ from SourceCode.support.divide import divide
 from SourceCode.core_functions.ftt_sales_or_investments import get_sales
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
-from SourceCode.Power.ftt_p_lcoe import get_lcoe
+from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
@@ -136,22 +136,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # TODO: Correct the title classification or delete?
     data['BCET'][:, :, c2ti['21 Empty']] = copy.deepcopy(data['MGAM'][:, :, 0])
 
-    # Add in carbon costs due to EU ETS
-    data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
+   
 
     # Copy over PRSC/EX values
 
-    data['PRSC13'] = copy.deepcopy(time_lag['PRSC13'] )
-    data['EX13'] = copy.deepcopy(time_lag['EX13'] )
-    data['PRSC15'] = copy.deepcopy(time_lag['PRSC15'] )
+    data['PRSC13'] = np.copy(time_lag['PRSC13'] )
+    data['EX13'] = np.copy(time_lag['EX13'] )
+    data['PRSC15'] = np.copy(time_lag['PRSC15'] )
+    data["REX13"] = np.copy(time_lag["REX13"])
     # %% First initialise if necessary
 
     T_Scal = 10      # Time scaling factor used in the share dynamics
 
     # Initialisation, which corresponds to lines 389 to 556 in fortran
     if year == 2013:
-        data['PRSC13'] = copy.deepcopy(data['PRSCX'])
-        data['EX13'] = copy.deepcopy(data['EXX'])
+        data['PRSC13'] = np.copy(data['PRSCX'])
+        data['EX13'] = np.copy(data['EXX'])
+        data['REX13'] = np.copy(data['REXX'])
 
         data['MEWL'][:, :, 0] = data["MWLO"][:, :, 0]
         data['MEWK'][:, :, 0] = np.divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0],
@@ -485,7 +486,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][:, :, c2ti['21 Empty']] = copy.deepcopy(data['MGAM'][:, :, 0])
 
             # Add in carbon costs due to EU ETS
-            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
+            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
+            stop = 1
 
             # Learning-by-doing effects on investment
     #        for tech in range(len(titles['T2TI'])):
@@ -841,8 +843,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # TODO: Correct the title classification or delete?
             data['BCET'][:, :, c2ti['21 Empty']] = copy.deepcopy(data['MGAM'][:, :, 0])
 
-            # Add in carbon costs due to EU ETS
-            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = copy.deepcopy(data['MCOCX'][:, :, 0])
+            # Add in carbon costs
+            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):
@@ -909,7 +911,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 if domain[var] == 'FTT-P':
 
-                    data_dt[var] = copy.deepcopy(data[var])
-
-
+                    data_dt[var] = np.copy(data[var])
+        
     return data
