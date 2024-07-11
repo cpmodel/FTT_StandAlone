@@ -48,7 +48,7 @@ from SourceCode.support.divide import divide
 # --------------------------------------------------------------------------
 
 
-def set_carbon_tax(data, c4ti, year):
+def set_carbon_tax(data, c4ti):
     '''
     Convert the carbon price in REPP from euro / tC to $2020 euros / kWhUD. 
     Apply the carbon price to heat sector technologies based on their emission factors
@@ -65,7 +65,7 @@ def set_carbon_tax(data, c4ti, year):
     
     
     if np.isnan(carbon_costs).any():
-        print(f"Carbon price is nan in year {year}")
+        #print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
         print(f"Emissions intensity {data['BHTC'][:, :, c4ti['Emission factor']]}")
         
@@ -202,7 +202,10 @@ def get_lcoh(data, titles):
         dtpb = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2 +
                        divide(dit[:, 0]**2, pb**2) +
                        divide(it[:, 0]**2, pb**4)*dpb**2)
-
+        
+        # Add carbon costs
+        carbon_costs = set_carbon_tax(data, c4ti)
+        
         # Add gamma values
         tmc = tmc + data['BHTC'][r, :, c4ti['12 Gamma value']]
         tpb = tpb + data['BHTC'][r, :, c4ti['12 Gamma value']]

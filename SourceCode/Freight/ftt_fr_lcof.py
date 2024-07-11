@@ -8,10 +8,6 @@ Freight LCOF FTT module.
 
 Local library imports:
 
-    Support functions:
-
-    - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - get_lcof
@@ -23,29 +19,29 @@ Functions included:
 # Third party imports
 import numpy as np
 
-def set_carbon_tax(data, c6ti, year):
+def set_carbon_tax(data, c6ti):
     '''
-    Convert the carbon price in REPP from euro / tC to 2012$/tkm 
+    Convert the carbon price in REPP from euro / tC to 2012$/t-km 
     Apply the carbon price to freight sector technologies based on their emission factors
 
     Returns:
         Carbon costs per country and technology (2D)
     '''
-        
+    # Load factors
+    Lfactor = data['ZCET'][:, c6ti['10 Loads (t/V)']]    
     
-    carbon_costs = (
-                    data['BTTC'][:, :, c6ti['Emission factor']]     # g CO2 / km (almost certainty)
-                    * data["REPPX"][:, :, 0]                        # Carbon price in euro / tC
-                    * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
-                    / ns / ff                                       # Conversion from per km to per pkm
+    carbon_costs = (data["REPPX"][:, :, 0]                          # Carbon price in euro / tC
+                    * data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
+                    # data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
+                    / Lfactor                                       # Conversion from per km to per t-km
                     / 3.666                                         # Conversion from C to CO2. 
                     )
     
     
     if np.isnan(carbon_costs).any():
-        print(f"Carbon price is nan in year {year}")
+        #print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
-        print(f"Emissions intensity {data['BTTC'][:, :, c3ti['Emission factor']]}")
+        print(f"Emissions intensity {data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]}")
         
         raise ValueError
                        
@@ -198,7 +194,10 @@ def get_lcof(data, titles):
         npv_expenses2 = npv_expenses2/denominator
         TLCOF = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
         dTLCOF=dLCOF
-
+         
+        # Add carbon costs
+        carbon_costs = set_carbon_tax(data, c6ti)
+        
         # Introduce Gamma Values
 
         # Convert costs into logarithmic space - applying a log-normal distribution

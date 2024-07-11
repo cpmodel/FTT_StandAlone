@@ -31,7 +31,7 @@ ns = number of seats
 import numpy as np
 
 
-def set_carbon_tax(data, c3ti, year):
+def set_carbon_tax(data, c3ti):
     '''
     Convert the carbon price in REPP from euro / tC to 2022$/pkm 
     Apply the carbon price to transport sector technologies based on their emission factors
@@ -48,16 +48,16 @@ def set_carbon_tax(data, c3ti, year):
     
     
     carbon_costs = (
-                    data['BTTC'][:, :, c3ti['Emission factor']]     # g CO2 / km (almost certainty)
-                    * data["REPPX"][:, :, 0]                        # Carbon price in euro / tC
-                    * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
-                    / ns / ff                                       # Conversion from per km to per pkm
-                    / 3.666                                         # Conversion from C to CO2. 
+                    data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
+                    * data["REPPX"][:, :, 0]                                # Carbon price in euro / tC
+                    # * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
+                    / ns / ff                                               # Conversion from per km to per pkm
+                    / 3.666                                                 # Conversion from C to CO2. 
                     )
     
     
     if np.isnan(carbon_costs).any():
-        print(f"Carbon price is nan in year {year}")
+        #print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
         print(f"Emissions intensity {data['BTTC'][:, :, c3ti['Emission factor']]}")
         
@@ -210,7 +210,10 @@ def get_lcot(data, titles, year):
         lcot_pol = np.sum(npv_expenses3, axis = 1) / np.sum(npv_utility, axis = 1)
         # Standard deviation of LCOT
         dlcot = np.sum(npv_std, axis = 1) / np.sum(npv_utility, axis = 1)
-
+        
+        # Add carbon costs
+        carbon_costs = set_carbon_tax(data, c3ti)
+        
         # LCOT augmented with non-pecuniary costs
         tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])
 
