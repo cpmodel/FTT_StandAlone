@@ -149,7 +149,7 @@ def get_lcof(data, titles):
 
         # Gamma values
         Gam = np.ones([len(titles['FTTI']), int(max_LF)])
-        Gam = Gam * zcet[:, c6ti['13 Gam (USD/pkm)'], np.newaxis]
+        Gam = Gam * zcet[:, c6ti['13 Gam (USD/t-km)'], np.newaxis]
         
         # Calculate LCOF without policy, and find standard deviation
         npv_expenses1 = (It+FT+OMt)/Lfactor
