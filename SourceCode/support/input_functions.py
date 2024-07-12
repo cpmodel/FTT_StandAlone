@@ -146,7 +146,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                 else:
                     read = csv
 
-                # If the csv file has a region key indicator (like _BE), it's 3D
+                # If the csv file has a region key indicator (like _BE)
                 if key in titles['RTI_short']:
 
                     # Take the index of the region
@@ -157,23 +157,18 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                         # Distinction whether the last dimension is time or not
                         if dims_length[3] > 1:
-                            try: 
+                            try:
                                 data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
-                            except IndexError as e:
-                                input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
+                            except (IndexError, ValueError) as e:
+                                input_functions_message(scen, var, dims, read, var_tl_fit, reg_index)
                                 raise(e)
-
-                            data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
-
                         else:
                             try:
                                 data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
-                            except ValueError as e:
-                                input_functions_message(scen, var, dims, read)
+                            except (IndexError, ValueError) as e:
+                                input_functions_message(scen, var, dims, read, reg_index = reg_index)
                                 raise(e)
 
-                            
-                            data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
                             
 
                 # If the file does not have a region key like _BE
@@ -184,15 +179,18 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                     if (dims[var][0] == 'RTI') or (var == "ZLER"):
                         # If there are only regions
                         if all(dim_length == 1 for dim_length in dims_length[1:]):
-                            data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
-
-                        
+                            try:
+                                data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
+                            except (IndexError, ValueError) as e:
+                                input_functions_message(scen, var, dims, read)
+                                raise(e)
+      
                         # If there is a second dimension # TODO: check if this is correct
                         if dims_length[1] > 1:
                             try: 
                                 data[scen][var][:, :, 0, 0] = read
-                            except ValueError as e:
-                                input_functions_message(scen, var, dims, read)
+                            except (IndexError, ValueError) as e:
+                                input_functions_message(scen, var, dims, read, reg_index = reg_index)
                                 raise(e)
                         
                         # If there is a third dimension only
@@ -201,26 +199,34 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             print("Test if this is ever used")
                             try:
                                 data[scen][var][:, 0, :, 0] = read
-                            except ValueError as e:
+                            except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)    
                         
                         # If there is a fourth dimension only (time)
                         elif dims_length[3] > 1:
-                            data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                            try:
+                                data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
+                            except (IndexError, ValueError) as e:
+                                input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
+                                raise(e)
 
                     # If the first dimension is not regions
                     else:
                         # If there is only one number
                         if all(dim_length == 1 for dim_length in dims_length):
-                            data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
+                            try: 
+                                data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
+                            except (IndexError, ValueError) as e:
+                                input_functions_message(scen, var, dims, read)
+                                raise(e)
 
 
                         # If there is time, but no 3rd dimension
                         elif dims_length[2] == 1 and dims_length[3] != 1:
                             try:
                                 data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
-                            except ValueError as e:
+                            except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
                                 raise(e)
                         
