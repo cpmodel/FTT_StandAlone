@@ -47,12 +47,11 @@ def set_carbon_tax(data, c3ti, year):
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
     
     
-    carbon_costs = (
-                    data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
-                    * data["REPPX"][:, :, 0]                                # Carbon price in euro / tC
+    carbon_costs = (data["REPPX"][:, :, 0]                                    # Carbon price in euro / tC
+                    * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
                     # * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
                     / ns / ff                                               # Conversion from per km to per pkm
-                    / 3.666                                                 # Conversion from C to CO2. 
+                    / 3.666 / 10**6                                         # Conversion from C to CO2 and grams to tonnes. 
                     )
     
     
@@ -69,7 +68,7 @@ def set_carbon_tax(data, c3ti, year):
 # -----------------------------------------------------------------------------
 # --------------------------- LCOT function -----------------------------------
 # -----------------------------------------------------------------------------
-def get_lcot(data, titles, year):
+def get_lcot(data, titles, carbon_costs, year):
     """
     Calculate levelized costs.
 
@@ -93,6 +92,7 @@ def get_lcot(data, titles, year):
 
         # Cost matrix
         bttc = data['BTTC'][r, :, :]
+        carbon_c = carbon_costs[r]
 
         # Vehicle lifetime
         lt = bttc[:, c3ti['8 lifetime']]
@@ -147,10 +147,15 @@ def get_lcot(data, titles, year):
         ft = ft * bttc[:, c3ti['3 fuel cost (USD/km)'], np.newaxis] / ns / ff
         ft = np.where(mask, ft, 0)
 
-        # Stadard deviation of fuel costs
+        # Standard deviation of fuel costs
         dft = np.ones([len(titles['VTTI']), int(max_lt)])
         dft = dft * bttc[:, c3ti['4 std fuel cost'], np.newaxis] / ns / ff
         dft = np.where(mask, dft, 0)
+        
+        # Average carbon costs
+        ct = np.ones([len(titles['VTTI']), int(max_lt)])
+        ct = ct * carbon_c[:, np.newaxis]
+        ct = np.where(mask, ct, 0)
 
         # Fuel tax costs
         fft = np.ones([len(titles['VTTI']), int(max_lt)])
@@ -190,9 +195,9 @@ def get_lcot(data, titles, year):
         # 1.1-Without policy costs
         npv_expenses1 = (it + ft + omt) / denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it + vtt + ft + fft + omt + rtt) / denominator
+        npv_expenses2 = (it + ct + vtt + ft + fft + omt + rtt) / denominator
         # 1.3-Only policy costs
-        npv_expenses3 = (vtt + fft + rtt) / denominator
+        npv_expenses3 = (vtt + ct + fft + rtt) / denominator
         # 2-Utility
         npv_utility = 1 / denominator
         # Remove 1s for tech with small lifetime than max
@@ -210,9 +215,6 @@ def get_lcot(data, titles, year):
         lcot_pol = np.sum(npv_expenses3, axis = 1) / np.sum(npv_utility, axis = 1)
         # Standard deviation of LCOT
         dlcot = np.sum(npv_std, axis = 1) / np.sum(npv_utility, axis = 1)
-        
-        # Add carbon costs
-        carbon_costs = set_carbon_tax(data, c3ti, year)
         
         # LCOT augmented with non-pecuniary costs
         tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])

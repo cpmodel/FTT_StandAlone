@@ -41,7 +41,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.Transport.ftt_tr_lcot import get_lcot
+from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
@@ -226,8 +226,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         
 
     # Calculate the LCOT for each vehicle type.
-    # Call the function
-    data = get_lcot(data, titles, year)
+    carbon_costs = set_carbon_tax(data, c3ti, year)
+    data = get_lcot(data, titles, carbon_costs, year)
 
     # %% Simulation of stock and energy specs
 
@@ -554,7 +554,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # =================================================================
 
             # Calculate levelised cost again
-            data = get_lcot(data, titles, year)
+            carbon_costs = set_carbon_tax(data, c3ti, year)
+            data = get_lcot(data, titles, carbon_costs, year)
 
             # Update time loop variables:
             for var in data_dt.keys():

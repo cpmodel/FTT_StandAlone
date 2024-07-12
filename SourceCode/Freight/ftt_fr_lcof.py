@@ -34,7 +34,7 @@ def set_carbon_tax(data, c6ti):
                     * data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
                     # data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
                     / Lfactor                                       # Conversion from per km to per t-km
-                    / 3.666                                         # Conversion from C to CO2. 
+                    / 3.666 / 10**6                                 # Conversion from C to CO2, and g to tonne
                     )
     
     
@@ -48,7 +48,7 @@ def set_carbon_tax(data, c6ti):
     return carbon_costs
 
 
-def get_lcof(data, titles):
+def get_lcof(data, titles, carbon_costs):
     """
     Calculate levelized costs.
 
@@ -97,6 +97,7 @@ def get_lcof(data, titles):
 
         #Cost matrix
         zcet = data['ZCET'][r, :, :]
+        carbon_c = carbon_costs[r]
 
         #First, mask for lifetime
         LF = zcet[:, c6ti['8 service lifetime (y)']]
@@ -148,6 +149,11 @@ def get_lcof(data, titles):
         dFT = np.ones([len(titles['FTTI']), int(max_LF)])
         dFT = dFT * zcet[:, c6ti['4 std fuel cost (USD/km)'], np.newaxis]
         dFT = np.where(mask, dFT, 0)
+        
+        # Average carbon costs
+        ct = np.ones([len(titles['FTTI']), int(max_LF)])
+        ct = ct * carbon_c[:, np.newaxis]
+        ct = np.where(mask, ct, 0)
 
        # fuel tax/subsidies
         fft = np.ones([len(titles['FTTI']), int(max_LF)])
@@ -191,13 +197,10 @@ def get_lcof(data, titles):
         dLCOF = np.sum(dnpv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
 
         # Calculate LCOF with policy, and find standard deviation
-        npv_expenses2 = (It+ItVT+FT+fft+OMt+RT) / Lfactor
+        npv_expenses2 = (It + ct + ItVT + FT + fft + OMt + RT) / Lfactor
         npv_expenses2 = npv_expenses2/denominator
         TLCOF = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
         dTLCOF = dLCOF
-         
-        # Add carbon costs
-        carbon_costs = set_carbon_tax(data, c6ti)
         
         # Introduce Gamma Values
 

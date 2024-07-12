@@ -57,10 +57,9 @@ def set_carbon_tax(data, c4ti):
         Carbon costs per country and technology (2D)
     '''
     
-    carbon_costs = (
-                    data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh
-                    * data["REPPX"][:, :, 0]                        # Carbon price in euro / tC
-                    / 3.666 / 1000                                  # Conversion from C to CO2 and MWh to kWh 
+    carbon_costs = (data["REPPX"][:, :, 0]                               # Carbon price in euro / tC
+                    * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
+                    / 3.666 / 1000 / 1000                                # Conversion from C to CO2 and MWh to kWh, kg to tonne 
                     )
     
     
@@ -74,7 +73,7 @@ def set_carbon_tax(data, c4ti):
     return carbon_costs
 
 
-def get_lcoh(data, titles):
+def get_lcoh(data, titles, carbon_costs):
     """
     Calculate levelized costs.
 
@@ -84,6 +83,7 @@ def get_lcoh(data, titles):
     """
     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
+    
 
     for r in range(len(titles['RTI'])):
 
@@ -104,7 +104,6 @@ def get_lcoh(data, titles):
 
         # Conversion efficiency
         ce = data['BHTC'][r,:, c4ti['9 Conversion efficiency'], np.newaxis]
-        #print("ce:", ce)
 
         # Discount rate
         dr = data['BHTC'][r,:, c4ti['8 Discount rate'], np.newaxis]
@@ -112,8 +111,6 @@ def get_lcoh(data, titles):
         # Initialse the levelised cost components
         # Average investment cost
         it = np.zeros([len(titles['HTTI']), int(max_lt)])
-        # print(it.shape)
-        # print(data['BHTC'][r,:, c4ti['1 Investment cost mean']].shape)
         it[:, 0,np.newaxis] = data['BHTC'][r,:, c4ti['1 Inv cost mean (EUR/Kw)'],np.newaxis]/(cf*1000)
 
 
@@ -135,12 +132,15 @@ def get_lcoh(data, titles):
         dft = dft * ft * data['BHTC'][r,:, c4ti['11 Fuel cost SD'], np.newaxis] 
         dft = np.where(mask, dft, 0)
         
+        # Average fuel costs
+        ct = np.ones([len(titles['HTTI']), int(max_lt)])
+        ct = ct * carbon_costs[r, :, np.newaxis]
+        ct = np.where(mask, ct, 0)
+        
         # Fuel tax costs
         fft = np.ones([len(titles['HTTI']), int(max_lt)])
         fft = fft* divide(data['HTRT'][r, :, 0, np.newaxis], ce)
         fft = np.where(mask, fft, 0)
-        #print("fft:", fft)
-        #print(fft.shape)
 
         # Average operation & maintenance cost
         omt = np.ones([len(titles['HTTI']), int(max_lt)])
@@ -165,9 +165,9 @@ def get_lcoh(data, titles):
         # 1.1-Without policy costs
         npv_expenses1 = (it+ft+omt)/denominator
         # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+fft+omt-fit)/denominator
+        npv_expenses2 = (it + ct + st+ft+fft+omt-fit)/denominator
         # 1.3-Only policy costs
-        npv_expenses3 = (st+fft-fit)/denominator
+        npv_expenses3 = (st + ct + fft - fit)/denominator
         # 2-Utility
         npv_utility = 1/denominator
         #Remove 1s for tech with small lifetime than max
@@ -202,9 +202,7 @@ def get_lcoh(data, titles):
         dtpb = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2 +
                        divide(dit[:, 0]**2, pb**2) +
                        divide(it[:, 0]**2, pb**4)*dpb**2)
-        
-        # Add carbon costs
-        carbon_costs = set_carbon_tax(data, c4ti)
+     
         
         # Add gamma values
         tmc = tmc + data['BHTC'][r, :, c4ti['12 Gamma value']]

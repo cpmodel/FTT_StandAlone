@@ -43,7 +43,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_sales import get_sales
-from SourceCode.Heat.ftt_h_lcoh import get_lcoh
+from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 from SourceCode.Heat.ftt_h_hjef import compute_hjef
 
 # -----------------------------------------------------------------------------
@@ -93,7 +93,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # Calculate the LCOH for each heating technology
     # Call the function
-    data = get_lcoh(data, titles)
+    carbon_costs = set_carbon_tax(data, c4ti)
+    data = get_lcoh(data, titles, carbon_costs)
 
     # %% First initialise if necessary
     # Initialise in case of stock solution specification
@@ -192,8 +193,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
         # Calculate the LCOH for each heating technology.
-        # Call the function
-        data = get_lcoh(data, titles)
+        carbon_costs = set_carbon_tax(data, c4ti)
+        data = get_lcoh(data, titles, carbon_costs)
 
 # %% Simulation of stock and energy specs
 #    t0 = time.time()
@@ -535,6 +536,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # =================================================================
 
             # Calculate levelised cost again
+            carbon_costs = set_carbon_tax(data, c4ti)
             data = get_lcoh(data, titles)
 
             # Update time loop variables:

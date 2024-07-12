@@ -35,7 +35,7 @@ import warnings
 import numpy as np
 
 # Local library imports
-from SourceCode.Freight.ftt_fr_lcof import get_lcof
+from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.support.divide import divide
 from SourceCode.Freight.ftt_fr_sales import get_sales
 
@@ -145,7 +145,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         if year == histend["RVKZ"]:
             # Calculate levelised cost
-            data = get_lcof(data, titles)
+            carbon_costs = set_carbon_tax(data, c6ti)
+            data = get_lcof(data, titles, carbon_costs)
 
 
     "Model Dynamics"
@@ -393,7 +394,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                         * data["ZCET"][r, :, c6ti['1 Price of vehicles (USD/vehicle)']]
 
             # Calculate levelised cost again
-            data = get_lcof(data, titles)
+            carbon_costs = set_carbon_tax(data, c6ti)
+            data = get_lcof(data, titles, carbon_costs)
 
 
             # Update time loop variables:
