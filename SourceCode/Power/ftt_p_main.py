@@ -71,6 +71,8 @@ from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
 from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
 
+from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
+
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
 
 
@@ -583,7 +585,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             if t == no_it:
                 data["MEWD"] = np.copy(data['MEWDX'])
             
-
+            data["MWKA"] = set_linear_coal_phase_out(data["coal phaseout"],
+                                                     data["MWKA"], time_lag["MWKA"], time_lag["MEWK"], year, n_years=11)
             # =================================================================
             # Shares equation
             # =================================================================

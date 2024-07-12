@@ -537,7 +537,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Calculate levelised cost again
             carbon_costs = set_carbon_tax(data, c4ti)
-            data = get_lcoh(data, titles)
+            data = get_lcoh(data, titles, carbon_costs)
 
             # Update time loop variables:
             for var in data_dt.keys():
