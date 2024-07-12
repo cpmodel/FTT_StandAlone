@@ -27,7 +27,8 @@ Functions included:
         Calculate levelised cost of transport
     - get_sales
         Calculate new sales/additions in FTT-Transport 
-        
+    - survival_function
+        Computes yearly scrappage based on survival chance per age bracket
 """
 
 # Standard library imports
@@ -41,9 +42,8 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
-from SourceCode.core_functions.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
-from SourceCode.Transport.ftt_tr_lbd import learning_by_doing_tr
 
 
 # %% Fleet size - under development
@@ -72,7 +72,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     time_lag: type
-        Description
+        Model variables in previous year
     iter_lag: type
         Description
     titles: dictionary of lists
@@ -112,24 +112,29 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data['TE3P'][:, jti["8 Electricity"], 0] = iter_lag['PFRE'][:, sector_index, 0] / 1.33
     data['TE3P'][:, jti["11 Biofuels"], 0] = iter_lag['PFRB'][:, sector_index, 0] / 1.33
 #    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
+    if year > histend["MEWG"]:
+        data["BTTC"] = copy.deepcopy(time_lag["BTTC"])
+        
+    
+    
 
     if year == 2012:
         start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
         for veh in range(len(titles['VTTI'])):
             if 17 < veh < 24:
                 # Starting EV/PHEV cost (without battery)
-                start_i_cost[:,veh,0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']]
+                start_i_cost[:, veh, 0] = (data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']]
                                          / data['BTTC'][:, veh, c3ti['20 Markup factor']]
                                          - data['BTTC'][:, veh, c3ti['18 Battery cap (kWh)']]
                                          * data['BTTC'][:, veh, c3ti['19 Battery cost ($/kWh)']]
                                          - data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] * 0.15)
             else:
-                start_i_cost[:,veh,0] = 0
+                start_i_cost[:, veh, 0] = 0
         # TEVC is 'Start_ICost' in the Fortran model
         data["TEVC"] = start_i_cost
     elif year > 2012:
         # Copy over TEVC values
-        data['TEVC'] = copy.deepcopy(time_lag['TEVC'] )
+        data['TEVC'] = np.copy(time_lag['TEVC'] )
 
 
     for r in range(len(titles['RTI'])):
@@ -161,7 +166,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         if year == data["TDA1"][r, 0, 0]: 
             # Define starting battery capacity
-            start_bat_cap = copy.deepcopy(data["TEWW"])
+            start_bat_cap = np.copy(data["TEWW"])
             for veh in range(len(titles['VTTI'])):
                 if (veh < 18) or (veh > 23):
                     # Set starting cumulative battery capacities to 0 for ICE vehicles
@@ -170,7 +175,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data["TWWB"] = start_bat_cap
 
             # Save initial cost matrix (BTCLi from FORTRAN model)
-            data["BTCI"] = copy.deepcopy(data["BTTC"])
+            data["BTCI"] = np.copy(data["BTTC"])
 
             # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
             CO2_corr = np.ones(len(titles['RTI']))
@@ -179,7 +184,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = data['TJET'][0, :, :]
 
         
             if data['RFLT'][r, 0, 0] > 0.0:
@@ -236,9 +241,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
 
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
 
         data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+        
 
         # Create the regulation variable
         division = divide((time_lag['TEWK'][:, :, 0] - data['TREG'][:, :, 0]), data['TREG'][:, :, 0]) # 0 when dividing by 0
@@ -302,8 +308,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                             continue
 
                         S_veh_k = data_dt['TEWS'][r, v2, 0]
-                        Aik = data['TEWA'][0, v1 , v2] * data['BTTC'][r, v1, c3ti['17 Turnover rate']]
-                        Aki = data['TEWA'][0, v2 , v1] * data['BTTC'][r, v2, c3ti['17 Turnover rate']]
+                        Aik = data['TEWA'][0, v1 , v2] / data['BTTC'][r, v1, c3ti['17 Turnover rate']]
+                        Aki = data['TEWA'][0, v2 , v1] / data['BTTC'][r, v2, c3ti['17 Turnover rate']]
 
                         # Propagating width of variations in perceived costs
                         dFik = 1.414 * sqrt((data_dt['TLCD'][r, v1, 0] * data_dt['TLCD'][r, v1, 0] 
@@ -394,7 +400,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # New additions (TEWI)
             data["TEWI"], tewi_t = get_sales(
                 data["TEWK"], data_dt["TEWK"], time_lag["TEWK"], data["TEWS"], 
-                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt, t)
+                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt)
             
            
 
@@ -403,7 +409,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             CO2_corr = np.ones(len(titles['RTI']))
             emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
+            fuel_converter = data['TJET'][0, :, :]
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
@@ -450,11 +456,97 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # bi = np.matmul(data['TEWI'][:, :, 0], data['TEWB'][0, :, :])
             # dw = np.sum(bi, axis=0)*dt
                 
-            # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (KWh)  
+            # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (kWh)  
             new_bat = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
-            new_bat[:, :, 0] = tewi_t[:, :, 0] * data["BTTC"][:, :, c3ti["18 Battery cap (kWh)"]]                
+            new_bat[:, :, 0] = tewi_t[:, :, 0] * data["BTTC"][:, :, c3ti["18 Battery cap (kWh)"]]  
             
-            data = learning_by_doing_tr(data, data_dt, time_lag, titles, year, c3ti, dt, tewi_t, new_bat)    
+            # Cumulative investment for learning cost reductions
+            bi = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+            for r in range(len(titles['RTI'])):
+                # Investment spillover
+                bi[r, :] = np.matmul(data['TEWB'][0, :, :], tewi_t[r, :, 0])
+            
+            # Total new investment
+            dw = np.sum(bi, axis=0)
+            # Total new battery investment (in MWh)
+            dwev = np.sum(new_bat, axis=0)    
+
+            # Copy over TWWB values
+            data['TWWB'] = np.copy(time_lag['TWWB'])
+
+            # Cumulative capacity for batteries first
+            data['TEWW'][0, :, 0] = data_dt['TEWW'][0, :, 0] + dwev[:, 0]
+            bat_cap = np.copy(data["TEWW"])
+
+            # Cumulative capacity for ICE vehicles
+            for veh in range(len(titles['VTTI'])):
+                if (veh < 18) or (veh > 23):
+                    data['TEWW'][0, veh, 0] = data_dt['TEWW'][0, veh, 0] + dw[veh]
+                    # Make sure bat_cap for ICE vehicles is 0
+                    bat_cap[0, veh, 0] = 0
+
+            # Copy over the technology cost categories that do not change 
+            # (all except prices which are updated through learning-by-doing below)
+            data['BTTC'] = np.copy(data_dt['BTTC'])
+            # Copy over the initial cost matrix
+            data["BTCI"] = np.copy(data_dt['BTCI'])
+
+
+            # Battery learning
+            for veh in range(len(titles['VTTI'])):
+                if 17 < veh < 24:
+                    # Battery cost as a result of learning
+                    # Battery cost = energy density over time*rare metal price trend over time
+                    data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] = (
+                        (data["BTTC"][:, veh, c3ti['22 Energy density']] ** (year - 2022)) 
+                        * (data["BTTC"][:, veh, c3ti['21 Rare metal price']] ** (year - 2022)) 
+                        * data['BTCI'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                        * (np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1))
+                        ** data["BTTC"][:, veh, c3ti['16 Learning exponent']])                 
+            
+            # Save battery cost
+            data["TEBC"] = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
+            data["TEBC"][:, :, 0] = data["BTTC"][:, :, c3ti['19 Battery cost ($/kWh)']]
+            
+            # Initialise variable for indirect EV/PHEV costs
+            id_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
+            # Initialise variable for cost of EV/PHEV - battery
+            i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
+            
+            # Learning-by-doing effects on investment
+            for veh in range(len(titles['VTTI'])):
+                if data['TEWW'][0, veh, 0] > 0.1:
+                    # Learning on indirect costs (only relevant for EVs and PHEVs)
+                    id_cost[:, veh, 0] = (data['BTCI'][:, veh, c3ti['1 Prices cars (USD/veh)']] 
+                               * 0.15 * 0.993**(year - 2022))
+                    # Learning on the EV/PHEV (seperate from battery)
+                    i_cost[:, veh, 0] = (data["TEVC"][:, veh, 0] 
+                                        * ((np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1)) 
+                                        ** (data["BTTC"][:, veh, c3ti['16 Learning exponent']]/2))
+                                        )
+                    
+                    # Calculate new costs (seperate treatments for ICE vehicles and EVs/PHEVs)
+                    if 17 < veh < 24:
+                        # EVs and PHEVs HERE     
+                        # Cost (excluding the cost of battery) + Updated cost of battery
+                        # + updated indirect cost) * Markup factor
+                        data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] =  \
+                                ((i_cost[:,veh,0] + (data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                                 * data["BTTC"][:, veh, c3ti['18 Battery cap (kWh)']]) + id_cost[:, veh, 0]) 
+                                 * data['BTTC'][:, veh, c3ti['20 Markup factor']])
+                    else:
+                        # ICE HERE
+                        data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] = \
+                            data_dt['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] \
+                            * (1.0 + data['BTTC'][:, veh, c3ti['16 Learning exponent']] \
+                            * dw[veh] / data['TEWW'][0, veh, 0])
+
+            # Investment in terms of car purchases:
+            for r in range(len(titles['RTI'])):
+
+                data['TWIY'][r, :, 0] = (data_dt['TWIY'][r, :, 0] + data['TEWI'][r, :, 0] * dt 
+                                        * data['BTTC'][r, :, c3ti['1 Prices cars (USD/veh)']] / 1.33
+                                        )
 
 
             # =================================================================
@@ -467,9 +559,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Update time loop variables:
             for var in data_dt.keys():
 
-                data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = np.copy(data[var])
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
+        if year == 2050:
+            print(f"Total electric cars in 2050: {np.sum(data['TEWK'][:, 18, 0] + data['TEWK'][:, 19, 0] + data['TEWK'][:, 20, 0])/10e3:.0f}k")
         
     return data
