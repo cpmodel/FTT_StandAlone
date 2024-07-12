@@ -22,10 +22,8 @@ def set_linear_coal_phase_out(coal_phaseout, mwka, mwka_lag, mewk_lag, year, n_y
         n = year - 2024
         if year == 2025:
             mwka[:, techs] = mewk_lag[:, techs] * (1 - frac * n)/(1 - frac * (n - 1))
-        elif year in range(2026, 2025 + n_years - 1):
+        elif year in range(2026, 2025 + n_years):
             mwka[:, techs] = mwka_lag[:, techs] * (1 - frac * n)/(1 - frac * (n - 1))
-            if year == 2035:
-                stop = 1
         elif year > 2025 + n_years - 1:
             mwka[:, techs] = np.zeros_like(mwka_lag[:, techs])
     
