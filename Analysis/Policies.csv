@@ -2,7 +2,8 @@
 MEWR strong,FTT-P,MEWR,No new fossil investment from 2024
 MWKA strong,FTT-P,MWKA,Phase-out fossil fuels between 2024 and 2035
 MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar
-REPP strong,General,REPPX,Linearly increasing to €300 per tCO2 by 2050
+REPP strong,General,REPPX,Linearly increasing to €200 per tCO2 by 2050
+Coal phase-out,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035; active phase-out
 TREG strong,FTT-Tr,TREG,No new fossil cars from 2024
 TWSA strong,FTT-Tr,TWSA,?
 BRR strong tax,FTT-Tr,Base registration rate,30% purchase tax on fossil cars

@@ -120,18 +120,21 @@ def policy_change(df, policy):
         case "MEWT strong":     # Subsidize all renewables, except for solar
             df.iloc[ 8:18, 24:] = -0.3
             df.iloc[19:22, 24:] = -0.3
-        case "REPP strong":  # A linearly increasing price to €300 per CO2, i.e.  
-            price_2050 = 300
+        case "REPP strong":  # A linearly increasing price to €200 per tonne CO2, i.e.  
+            price_2050 = 200
             price_2023 = df.iloc[:, 14] / 3.667 # Note, REPP is given per tC, rather than tCO2
             
             # Reshape the price_2023 to a column vector
             price_2023 = price_2023.values.reshape(-1, 1)
             
             # Linearly increase the price from 2023 to 2050 values. 
-            df.iloc[:, 14:41] = ( price_2023 + (price_2050 - price_2023) / 27 * np.arange(27) ) * 3.667 
+            df.iloc[:, 14:42] = ( price_2023 + (price_2050 - price_2023) / 27 * np.arange(28) ) * 3.667 
             # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
-            df.iloc[:, 41:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667
+            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667
            
+        case "Coal phase-out":
+            print(df)
+            df.iloc[0, 0] = 1       # The coal phase-out is coded as a function; this switch turns it on # TODO: make word 
        
         
         # Transport policies
