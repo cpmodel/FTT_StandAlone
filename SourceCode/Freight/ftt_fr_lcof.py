@@ -4,7 +4,7 @@
 ftt_fr_lcof.py
 =========================================
 Freight LCOF FTT module.
-########################
+
 
 Local library imports:
 
@@ -28,7 +28,7 @@ def set_carbon_tax(data, c6ti):
         Carbon costs per country and technology (2D)
     '''
     # Load factors
-    Lfactor = data['ZCET'][:, c6ti['10 Loads (t/V)']]    
+    Lfactor = data['ZCET'][:, :, c6ti['10 Loads (t/V)']]    
     
     carbon_costs = (data["REPPX"][:, :, 0]                          # Carbon price in euro / tC
                     * data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
@@ -185,15 +185,16 @@ def get_lcof(data, titles):
         npv_utility[:,0] = 1
         LCOF = np.sum(npv_expenses1, axis =1)/np.sum(npv_utility, axis=1)
 
-        dnpv_expenses1 = np.sqrt(((dIt**2)/(Lfactor**2)) + ((dFT**2)/(Lfactor**2))
-        + ((dOMt**2)/(Lfactor**2)))/denominator
+        dnpv_expenses1 = ( np.sqrt(
+            dIt**2 / Lfactor**2 + dFT**2 / Lfactor**2 + dOMt**2 / Lfactor**2) 
+                          / denominator )
         dLCOF = np.sum(dnpv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
 
         # Calculate LCOF with policy, and find standard deviation
-        npv_expenses2 = (It+ItVT+FT+fft+OMt+RT)/Lfactor
+        npv_expenses2 = (It+ItVT+FT+fft+OMt+RT) / Lfactor
         npv_expenses2 = npv_expenses2/denominator
         TLCOF = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        dTLCOF=dLCOF
+        dTLCOF = dLCOF
          
         # Add carbon costs
         carbon_costs = set_carbon_tax(data, c6ti)

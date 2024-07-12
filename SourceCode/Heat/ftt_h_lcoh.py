@@ -58,7 +58,7 @@ def set_carbon_tax(data, c4ti):
     '''
     
     carbon_costs = (
-                    data['BHTC'][:, :, c4ti['Emission factor']]     # kg CO2 / MWh
+                    data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh
                     * data["REPPX"][:, :, 0]                        # Carbon price in euro / tC
                     / 3.666 / 1000                                  # Conversion from C to CO2 and MWh to kWh 
                     )

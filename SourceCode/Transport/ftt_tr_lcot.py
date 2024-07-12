@@ -31,7 +31,7 @@ ns = number of seats
 import numpy as np
 
 
-def set_carbon_tax(data, c3ti):
+def set_carbon_tax(data, c3ti, year):
     '''
     Convert the carbon price in REPP from euro / tC to 2022$/pkm 
     Apply the carbon price to transport sector technologies based on their emission factors
@@ -44,7 +44,7 @@ def set_carbon_tax(data, c3ti):
     ns = data['BTTC'][:, :, c3ti['15 Seats/Veh']]
     
     # Occupancy rates
-    ff = data['BTTC'][:, c3ti['11 occupancy rate p/sea']]
+    ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
     
     
     carbon_costs = (
@@ -57,7 +57,7 @@ def set_carbon_tax(data, c3ti):
     
     
     if np.isnan(carbon_costs).any():
-        #print(f"Carbon price is nan in year {year}")
+        print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
         print(f"Emissions intensity {data['BTTC'][:, :, c3ti['Emission factor']]}")
         
@@ -212,7 +212,7 @@ def get_lcot(data, titles, year):
         dlcot = np.sum(npv_std, axis = 1) / np.sum(npv_utility, axis = 1)
         
         # Add carbon costs
-        carbon_costs = set_carbon_tax(data, c3ti)
+        carbon_costs = set_carbon_tax(data, c3ti, year)
         
         # LCOT augmented with non-pecuniary costs
         tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])

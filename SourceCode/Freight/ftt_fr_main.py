@@ -18,15 +18,11 @@ Local library imports:
     - `get_lcof <ftt_fr_lcof.html>`__
         Levelised cost calculation
 
-    Support functions:
-    - `divide <divide.html>`__
-        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
         Main solution function for the module
-    - get_lcof
-        Calculate levelised cost of freight
+
 
 """
 
