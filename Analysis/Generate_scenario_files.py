@@ -133,8 +133,13 @@ def policy_change(df, policy):
             df.iloc[:, 42:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667
            
         case "Coal phase-out":
+            
+            # if 'Unnamed: 0' in df.columns:
+            #     df.drop('Unnamed: 0', axis=1, inplace=True)
             print(df)
-            df.iloc[0, 0] = 1       # The coal phase-out is coded as a function; this switch turns it on # TODO: make word 
+            df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on # TODO: make work
+            # Ensure the data is saved as a 2x2 matrix with the column and row names being NA in both cases. So top-left is empty. 
+
        
         
         # Transport policies
