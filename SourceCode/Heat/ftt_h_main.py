@@ -45,6 +45,7 @@ from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_sales import get_sales
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 from SourceCode.Heat.ftt_h_hjef import compute_hjef
+from SourceCode.Heat.ftt_h_mandates import heat_pump_mandate
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -235,6 +236,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
+        
+        data["HWSA"] = heat_pump_mandate(data["hp mandate"],  data["HWSA"], time_lag["HEWS"], time_lag["HEWI"], year)
 
         ############## Computing new shares ##################
 
@@ -397,7 +400,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation. Otherwise, the corrections won't line up with the market shares.
 
 
-                # Convert exogenous shares to exogenous generation. Exogenous sharess no longer need to add up to 1. Beware removals!
+                # Convert exogenous shares to exogenous generation. Exogenous shares no longer need to add up to 1. Beware removals!
                 for b in range (len(titles['HTTI'])):
                     if data['HWSA'][r, b, 0] < 0.0:
                         data['HWSA'][r, b, 0] = 0.0

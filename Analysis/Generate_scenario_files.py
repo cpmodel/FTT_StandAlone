@@ -130,16 +130,9 @@ def policy_change(df, policy):
             # Linearly increase the price from 2023 to 2050 values. 
             df.iloc[:, 14:42] = ( price_2023 + (price_2050 - price_2023) / 27 * np.arange(28) ) * 3.667 
             # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
-            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667
-           
+            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667       
         case "Coal phase-out":
-            
-            # if 'Unnamed: 0' in df.columns:
-            #     df.drop('Unnamed: 0', axis=1, inplace=True)
-            print(df)
-            df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on # TODO: make work
-            # Ensure the data is saved as a 2x2 matrix with the column and row names being NA in both cases. So top-left is empty. 
-
+            df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on 
        
         
         # Transport policies
@@ -174,7 +167,7 @@ def policy_change(df, policy):
         case "HREG strong":
             df.iloc[:4, 24:] = 0
             df.iloc[6, 24:] = 0
-        case "HWSA strong": # To do: test this
+        case "HWSA strong": 
             df.iloc[10:12, 24:35] = 0.005     # Air-source heat pumps
             df.iloc[9, 24:35] = 0.002         # Ground-source heat pump
             df.iloc[2:4, 24:35] = -0.005      # Gas (note, that this probably won't work everywhere). TODO: Does the code already stop this?
@@ -188,6 +181,12 @@ def policy_change(df, policy):
             df.iloc[:4, 24:] = 0.3
             df.iloc[6, 24:] = 0.3
             df.iloc[9:12, 24:] = -0.3         # 30% subsidy on heat pumps
+        case "Heat pump mandate 2035 regulation":
+            df.iloc[:4, 35:] = 0
+            df.iloc[6, 35:] = 0
+        case "Heat pump mandate exogenous sales":
+            df.iloc[0, 1] = 1       # The heat pump mandates are coded as a function; this switch turns it on
+            
             
             
     return df

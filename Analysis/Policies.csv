@@ -19,3 +19,5 @@ HWSA strong,FTT-H,HWSA,"Exogenous market share changes --> 0.5% extra(?) for hea
 HTVS strong tax,FTT-H,HTVS,30% purchase tax on fossil boilers
 HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps
 HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy
+Heat pump mandate 2035 regulation,FTT-H,HREG,Regulate out fossilf fuels in 2035
+Heat pump mandate exogenous sales,FTT-H,hp mandate,"Linearly increasing sales of heat pump from 2024 to 2035, decrease fossil heating technologies (using switch)"
