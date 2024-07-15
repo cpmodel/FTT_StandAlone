@@ -69,8 +69,8 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
 
 def share_repurposed_batteries(data, year, titles):
     """
-    Estimate the total storage demand (GWh) from capacity (GW). The original 
-    Ueckerdt paper does not contain this information. We therefore estimate
+    Estimate the battery needs in power from GW to GWh, and compute ratio with transport.
+    The original Ueckerdt paper does not contain this information. We therefore estimate
     this from key numbers in the https://energy.mit.edu/research/future-of-energy-storage/
     
     In table 6.13, in 5 gCO2 scenario, there is a factor 3.8 between the two.
@@ -85,18 +85,11 @@ def share_repurposed_batteries(data, year, titles):
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
 
-    # Convert from GW to GWh (estimate)
-    storage_from_transport = (data["Second-hand battery stock"] 
-                              * sector_coupling_assumps["GW to GWh"]
-                              )
-    storage_ratio = storage_from_transport / data["MSSC"]
+    # Convert GW to GWh (estimate)
+    capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
     
-    # if year%10 == 0:
-    #     print(f"Stock storage repurposed batteries in {year}: "
-    #           f"{np.sum(storage_from_transport)/1000:.3f} TWh")
-    #     print(f"Storage ratio is {storage_ratio[0]}")
-    #     print("Storage demand in the power sector:"
-    #           f" {np.sum(data['MSSC'])/1000:.3f} TWh")
+    storage_ratio = data["Second-hand battery stock"]  / capacity_batteries_power
+    
     
     return storage_ratio
 
