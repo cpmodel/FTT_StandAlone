@@ -401,9 +401,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
                 # Convert exogenous shares to exogenous generation. Exogenous shares no longer need to add up to 1. Beware removals!
-                for b in range (len(titles['HTTI'])):
-                    if data['HWSA'][r, b, 0] < 0.0:
-                        data['HWSA'][r, b, 0] = 0.0
+                # for b in range (len(titles['HTTI'])):
+                #     if data['HWSA'][r, b, 0] < 0.0:
+                #         data['HWSA'][r, b, 0] = 0.0
                 
                 dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
 

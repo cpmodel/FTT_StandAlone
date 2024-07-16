@@ -38,6 +38,7 @@ import numpy as np
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.support.divide import divide
 from SourceCode.Freight.ftt_fr_sales import get_sales
+from SourceCode.Freight.ftt_fr_mandate import EV_truck_mandate
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -176,7 +177,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
-
+        
+        data["ZWSA"] = EV_truck_mandate(data["EV truck mandate"], data["ZWSA"], time_lag["ZEWS"], time_lag['RFLZ'], year)
+        
         for t in range(1, no_it + 1):
         # Interpolations to avoid staircase profile
 

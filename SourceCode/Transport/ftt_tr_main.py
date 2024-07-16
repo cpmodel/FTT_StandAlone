@@ -43,6 +43,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+from SourceCode.Transport.ftt_tr_mandate import EV_mandate
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
 
@@ -255,6 +256,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
+        
+        #data["TWSA"] = EV_mandate(data["EV mandate"], data["TWSA"], time_lag["TEWS"], time_lag['RFLT'], year)
 
         ############## Computing new shares ##################
 
@@ -367,7 +370,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUk = dUkTK + dUkREG
                 dUtot = np.sum(dUk)
 
-                # Calaculate changes to endogenous capacity, and use to find new market shares
+                # Calculate changes to endogenous capacity, and use to find new market shares
                 # Zero capacity will result in zero shares
                 # All other capacities will be streched
             

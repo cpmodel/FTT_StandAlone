@@ -148,6 +148,11 @@ def policy_change(df, policy):
         case "BRR strong combo":
             df.iloc[:15, 24:] = 0.3
             df.iloc[18:21, 24:] = -0.3
+            
+        case "EV mandate regulation":
+            df.iloc[:15, 35:] = 0
+        case "EV mandates exogenous sales":
+            df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
                    
             
         # Freight policies
