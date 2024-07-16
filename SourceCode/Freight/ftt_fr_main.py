@@ -415,6 +415,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data_dt[var] = copy.deepcopy(data[var])
         
         if year == 2050 and t == no_it:
-            print(f"Total small electric trucks in 2050 is: {np.sum(data['ZEWK'][:, 12, 0])/10**6:.3f} M trucks")
+            print(f"Total small electric trucks in 2050 is: {np.sum(data['ZEWK'][:, 12, 0])/10**6:.2f} M trucks")
 
     return data

@@ -13,6 +13,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Set global font size
+plt.rcParams.update({'font.size': 12})
+
 # Assuming your script is in a subdirectory of the project root, adjust the relative path accordingly.
 # For example, if your script is in 'src/scripts', you might use '../..' to reach the project root.
 project_root_relative_path = '..'  # Adjust this path to match your project structure
@@ -138,7 +141,15 @@ def get_prices(output, year, model, biggest_technologies):
     price_var = price_names[model]
     prices = {}
     for r, tech in biggest_technologies.items():
-        prices[r] = output[price_var][regions[r], tech, 0, year - 2010 + 1]
+        try:
+            prices[r] = output[price_var][regions[r], tech, 0, year - 2010]
+        except IndexError as e:
+            print(regions[r])
+            print(model)
+            #print(output[price_var])
+            print(tech)
+            print(r)
+            raise e
     return prices
 
 def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names):
@@ -175,7 +186,6 @@ def get_crossover_operational_vs_new(output, model, biggest_techs_clean, biggest
   
 
 
-
 rows = []
 for model in models:
     biggest_techs_clean = find_biggest_tech(output, clean_techs, year, model, regions)
@@ -206,3 +216,78 @@ df = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Clean technology", "Clean tech name", "Clean price (2030)", 
                                  "Fossil technology", "Fossil tech name", "Fossil price (2030)", 
                                  "Cross-over year", "Cross-over operational"])
+
+
+#%% Making a graph with four subplots for each sector.
+# Each graph should show the percentage difference between the clean and dirty technology in 2025, 2035 and 2050. 
+# The x-axis should the year and the y-axis the percentage difference.
+# The title should be the sector name. Each line in the subplot will have a different region. 
+
+
+# Define the years of interest
+years = [2025, 2035, 2050]
+
+# Define the percentage difference function
+def get_percentage_difference(clean_price, dirty_price):
+    return 100 * (clean_price - dirty_price) / dirty_price
+
+# Define the data for the plot
+def compute_percentage_difference(model, years):
+    """Compute percentage price difference per year per region in top techs."""
+    
+    biggest_techs_clean = find_biggest_tech(output, clean_techs, 2030, model, regions)
+    biggest_techs_fossil = find_biggest_tech_dirty(output, dirty_techs, biggest_techs_clean, 2030, model)
+    percentage_difference = np.zeros((len(regions), len(years)))
+    for ri, r in enumerate(regions):
+    
+        for yi, year in enumerate(years):
+            clean_prices = get_prices(output, year, model, biggest_techs_clean)
+            fossil_prices = get_prices(output, year, model, biggest_techs_fossil)
+               
+            percentage_difference[ri, yi] = get_percentage_difference(clean_prices[r], fossil_prices[r])
+    
+    return percentage_difference
+
+#%% Plot the figure
+fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+axs = axs.flatten()
+
+for mi, model in enumerate(models):
+    percentage_difference = compute_percentage_difference(model, years)      
+    ax = axs[mi]  
+    
+    for ri, r in enumerate(regions):
+        ax.plot(years, percentage_difference[ri], label=r, marker='o', markersize=8)
+    
+    ax.axhline(0, color='grey', linestyle='--', linewidth=2)  # Adding horizontal line at y=0
+    ax.set_title(f"{model}")
+    
+    if mi % 2 == 0:  # Add y-label only to the leftmost subplots
+        ax.set_ylabel("Levelised costs difference (%)")
+  
+    ax.set_xlabel("Year")
+    
+    # Remove the top and right frame
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+            
+# Extract handles and labels from the first subplot
+handles, labels = axs[0].get_legend_handles_labels()
+
+# Add a single legend for the entire figure, positioned beneath the graph
+fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.1), ncol=len(regions))
+
+plt.tight_layout()
+plt.tight_layout()
+plt.show()
+
+
+
+# Save the graph as an editable svg file
+output_path = os.path.join(project_root_absolute_path, "Output", "Figures")
+os.makedirs(output_path, exist_ok=True)
+output_file = os.path.join(output_path, "Figure1_baseline_price_differences.svg")
+plt.savefig(output_file, format="svg")
+
+
