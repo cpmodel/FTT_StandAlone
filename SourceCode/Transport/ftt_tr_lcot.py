@@ -87,6 +87,10 @@ def get_lcot(data, titles, carbon_costs, year):
     tf[18:21] = 0   # EVs
     tf[24:27] = 0   # Hydrogen
     taxable_fuels = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+    
+    tf_carbon = np.ones([len(titles['VTTI']), 1])
+    tf_carbon[18:21] = 0   # EVs
+    tf_carbon[24:27] = 0   # Hydrogen
 
     for r in range(len(titles['RTI'])):
 
@@ -159,7 +163,7 @@ def get_lcot(data, titles, carbon_costs, year):
         
         # Average carbon costs
         ct = np.ones([len(titles['VTTI']), int(max_lt)])
-        ct = ct * carbon_c[:, np.newaxis]
+        ct = ct * carbon_c[:, np.newaxis] * tf_carbon           #     Multiply by taxable fuel, as EV emissions separately taxed)
         ct = np.where(mask, ct, 0)
 
         # Fuel tax costs

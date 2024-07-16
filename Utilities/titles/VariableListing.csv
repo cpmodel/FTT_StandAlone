@@ -305,6 +305,7 @@ ZEWS,FTT-Fr Market Shares,%,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2001,,Y,Y
 RVEH,FTT-Fr Historical Vehicle Sales,k/y,RTI,NA,NA,TIME,FTT-Fr,,2019,1995,,,
 ZREG,FTT-Fr regulations,,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
 ZWSA,FTT-Fr Exogenous market share,%,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
+EV truck mandate,FTT_transport switch to turn on EV mandate,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 ZTVT,FTT-Fr vehicle tax,$,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
 ZTRT,FTT-Fr Annual road tax,$/vehicle-y,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
 ZBFM,FTT-Fr Biofuel blending mandate,%,RTI,NA,NA,TIME,FTT-Fr,,2019,2018,,,Y

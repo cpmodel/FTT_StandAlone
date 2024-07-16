@@ -31,8 +31,7 @@ def EV_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
             
             yearly_replacement = 1/13 * 0.8
             
-            
-            # In 2035, the sum should be 80% of sales are heat pump. Lifetime = 20y, so 0.05 ~= 100%
+            # In 2035, the sum should be 80% of sales.
             sum_twsa_share = np.full(twsa.shape[0], frac * n * yearly_replacement)   
             
             sum_ff = np.sum(tews[:, fossil_techs], axis=(1, 2))
@@ -43,8 +42,9 @@ def EV_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
             # Compute fractions for each heat pump, ff technique, based on fraction of shares
             # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_twsa to sum_ff)
             backup_shares = np.tile(np.array([0.3, 0.4, 0.3]), (twsa.shape[0], 1))
-            frac_EVs = np.where(sum_EV[:, None] > 0, tews[:, EV_techs, 0] / sum_EV[:, None], backup_shares) 
-            frac_fossils = np.where(sum_ff[:, None] > 0, tews[:, fossil_techs, 0] / sum_ff[:, None], tews[:, fossil_techs, 0])
+            # fraction of each EV type by region (backup_shares if dividing by zero)
+            frac_EVs = np.divide(tews[:, EV_techs, 0],  sum_EV[:, None], out=backup_shares, where=sum_EV[:, None] > 0)
+            frac_fossils =  np.divide(tews[:, fossil_techs, 0],  sum_ff[:, None])
 
             twsa[:, fossil_techs, 0] = -sum_twsa[:, None] * frac_fossils * rflt[:, :, 0]
             twsa[:, EV_techs, 0] = sum_twsa[:, None] * frac_EVs * rflt[:, :, 0]

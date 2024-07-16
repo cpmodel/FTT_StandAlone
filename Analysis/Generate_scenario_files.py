@@ -12,28 +12,6 @@ import os.path
 import numpy as np
 import pandas as pd
 
-from scipy.stats import poisson, binom, uniform, norm, randint
-np.random.seed(123)
-
-MSAL = binom(1, 0.5)                                 # Which MSAL switch to use
-WACC_range = uniform()                               # Scale between unequal and equal access to finance
-learning_rate_solar = norm(-0.303, 0.047)            # Learning rate solar
-learning_rate_wind = norm(-0.158, 0.045)             # Learning rate wind
-lifetime = randint(25, 35)                           # Lifetime of solar panel
-gamma = norm(loc=1, scale=0.2)                       # Scaling factor of gamma
-fuel_costs = norm(loc=1, scale=0.2)                  # Scaling factor of gamma
-grid_expansion_duration = poisson(0.6)               # The lead time of solar
-
-Nsample = 200
-
-MC_samples = np.vstack([MSAL.rvs(Nsample),     
-           WACC_range.rvs(Nsample),                             # BCET
-           learning_rate_solar.rvs(Nsample),                    # BCET
-           learning_rate_wind.rvs(Nsample),                     # BCET
-           lifetime.rvs(Nsample),                               # BCET & MEWA
-           gamma.rvs(Nsample),                                  # MGAM
-           fuel_costs.rvs(Nsample),                             # BCET
-           grid_expansion_duration.rvs(Nsample)+1]).transpose() # BCET & MEWA
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 # The input dir is found by going up a directly to the parent directory and then going to the Input folder
@@ -167,6 +145,10 @@ def policy_change(df, policy):
         case "ZTVT strong combo":
             df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3
             df.iloc[12, 7:] = -0.3
+        case "EV truck mandate regulation":
+            df.iloc[[0, 2, 4, 6, 8], 23:] = 0
+        case "EV truck mandate exogenous sales":
+            df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
             
         # Heat policies
         case "HREG strong":

@@ -9,7 +9,7 @@ Created on Tue Jul 16 11:13:09 2024
 
 import numpy as np
 
-def EV_truck_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
+def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=11):
     """ 
     Sets a mandate of growing exogenous sales to 2035. At that point, separately,
     regulations comes into play that outregulates fossil technologies. 
@@ -20,36 +20,37 @@ def EV_truck_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
     """
     
     
-    fossil_techs = list(range(10))
-    EV_techs = [12, 13]
+    fossil_techs = [0, 2, 4, 6, 8]
+    EV_techs = [12]
     
     
     if EV_mandate[0,0,0] == 1:
-        if year in range(2025, 2025 + n_years):
+        if year in range(2030, 2030 + n_years):
         
             frac = 1/n_years            # Fraction decrease per year
-            n = year - 2024
+            n = year - 2029
             
             yearly_replacement = 1/15 * 0.8
             
-            # In 2035, the sum should be 80% of sales. Lifetime = ~15y
-            sum_twsa = np.full(twsa.shape[0], frac * n * yearly_replacement)   
+            # In 2035, the sum should be 80% of sales.
+            sum_zwsa_share = np.full(zwsa.shape[0], frac * n * yearly_replacement)   
             
-            sum_ff = np.sum(tews[:, fossil_techs], axis=(1, 2))
-            sum_EV = np.sum(tews[:, EV_techs], axis=(1, 2))
-            sum_twsa = np.where(sum_ff < 1.8 * sum_twsa, 0, sum_twsa)          # Stop when there is too little fossil fuels to replace
-            sum_twsa = np.where(sum_EV > 1 - 2 * sum_twsa, 0, sum_twsa)        # Also stop if virtually all shares are heat pumps already
+            sum_ff = np.sum(zews[:, fossil_techs], axis=(1, 2))
+            sum_EV = np.sum(zews[:, EV_techs], axis=(1, 2))
+            sum_zwsa = np.where(sum_ff < 1.8 * sum_zwsa_share, 0, sum_zwsa_share)          # Stop when there is too little fossil fuels to replace
+            sum_zwsa = np.where(sum_EV > 1 - 2 * sum_zwsa_share, 0, sum_zwsa_share)        # Also stop if virtually all shares are heat pumps already
             
             # Compute fractions for each heat pump, ff technique, based on fraction of shares
-            # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_twsa to sum_ff)
-            backup_shares = np.tile(np.array([0.9, 0.1]), (twsa.shape[0], 1))
-            frac_EVs = np.where(sum_EV[:, None] > 0, tews[:, EV_techs, 0] / sum_EV[:, None], backup_shares) 
-            frac_fossils = np.where(sum_ff[:, None] > 0, tews[:, fossil_techs, 0] / sum_ff[:, None], tews[:, fossil_techs, 0])
+            # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_zwsa to sum_ff)
+            backup_shares = np.tile(np.array([1.0]), (zwsa.shape[0], 1))
+            # fraction of each EV type by region (backup_shares if dividing by zero)
+            frac_EVs = np.divide(zews[:, EV_techs, 0],  sum_EV[:, None], out=backup_shares, where=sum_EV[:, None] > 0)
+            frac_fossils =  np.divide(zews[:, fossil_techs, 0],  sum_ff[:, None])
 
-            twsa[:, fossil_techs, 0] = -sum_twsa[:, None] * frac_fossils * rflt[:, :, 0]
-            twsa[:, EV_techs, 0] = sum_twsa[:, None] * frac_EVs * rflt[:, :, 0]
+            zwsa[:, fossil_techs, 0] = -sum_zwsa[:, None] * frac_fossils * rflz[:, :, 0]
+            zwsa[:, EV_techs, 0] = sum_zwsa[:, None] * frac_EVs * rflz[:, :, 0]
             
             
             
     # Else: return hswa unchanged
-    return twsa
+    return zwsa

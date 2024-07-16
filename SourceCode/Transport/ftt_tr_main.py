@@ -568,6 +568,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
         if year == 2050:
-            print(f"Total electric cars in 2050: {np.sum(data['TEWK'][:, 18, 0] + data['TEWK'][:, 19, 0] + data['TEWK'][:, 20, 0])/10e3:.0f}k")
+            print(f"Total electric cars in 2050: {np.sum(data['TEWK'][:, 18, 0] + data['TEWK'][:, 19, 0] + data['TEWK'][:, 20, 0])/10e3:.0f} M cars")
         
     return data

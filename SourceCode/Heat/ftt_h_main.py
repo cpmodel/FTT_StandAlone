@@ -547,5 +547,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 data_dt[var] = np.copy(data[var])
 
+        
 
+        if year == 2050 and t == no_it:
+            print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12, 0])/10**6:.3f} M GWh")
+            
     return data
