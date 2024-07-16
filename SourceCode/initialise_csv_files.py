@@ -7,8 +7,7 @@ This script makes preperation to extract data from FTT masterfiles in the
 @author: Femke
 """
 
-import os
-import glob
+
 
 from pathlib import Path
 import os
@@ -97,11 +96,14 @@ def generate_model_list(ftt_modules, scenarios):
 
     for module in ftt_modules:
         module_scenarios = []
+        file_root = None
         for scenario in scenarios:
-            matching_file, file_root = get_masterfile(module, scenario)
+            matching_file, current_file_root = get_masterfile(module, scenario)
             if matching_file:
                 # TODO: rewrite this and other code to allow for other types of scenario names
                 module_scenarios.append(int(scenario[1:]))
+            if current_file_root:  # Only change file_root if there is a masterfile related to the scenario
+                file_root = current_file_root 
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
     return models
