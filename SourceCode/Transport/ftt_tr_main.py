@@ -257,7 +257,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
         
-        #data["TWSA"] = EV_mandate(data["EV mandate"], data["TWSA"], time_lag["TEWS"], time_lag['RFLT'], year)
+        data["TWSA"] = EV_mandate(data["EV mandate"], data["TWSA"], time_lag["TEWS"], time_lag['RFLT'], year)
 
         ############## Computing new shares ##################
 

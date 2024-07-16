@@ -158,8 +158,8 @@ def get_lcot(data, titles, carbon_costs, year):
         ct = np.where(mask, ct, 0)
         
         # Average carbon costs
-        ct = np.zeros([len(titles['VTTI']), int(max_lt)])
-        #ct = ct * carbon_c[:, np.newaxis]
+        ct = np.ones([len(titles['VTTI']), int(max_lt)])
+        ct = ct * carbon_c[:, np.newaxis]
         ct = np.where(mask, ct, 0)
 
         # Fuel tax costs
