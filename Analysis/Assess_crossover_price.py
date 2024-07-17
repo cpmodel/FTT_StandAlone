@@ -6,61 +6,21 @@ Created on Tue Jun 18 11:39:28 2024
 """
 
 # Import the results pickle file
-import pickle
 import os
-import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from preprocessing import preprocess_data
+
 # Set global font size
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 14})
 
-# Assuming your script is in a subdirectory of the project root, adjust the relative path accordingly.
-# For example, if your script is in 'src/scripts', you might use '../..' to reach the project root.
-project_root_relative_path = '..'  # Adjust this path to match your project structure
+output, titles, fig_dir, tech_titles = preprocess_data("Results_baseline.pickle", "S0")
 
-# Get the directory of the current script & the path to the pickle file
-script_dir = os.path.dirname(__file__)
-
-# Calculate the absolute path to the project root
-project_root_absolute_path = os.path.abspath(os.path.join(script_dir, project_root_relative_path))
-
-# Change the current working directory to the project root
-os.chdir(project_root_absolute_path)
-
-# # Add the SourceCode directory to Python's search path
-# source_code_path = os.path.join(project_root_absolute_path, 'SourceCode')
-# sys.path.append(source_code_path)
-
-pickle_path = os.path.join(project_root_absolute_path, 'Output\\Results.pickle') 
-
-with open(pickle_path, 'rb') as f:
-    results = pickle.load(f)
-
-
-# Attempt to import again
-try:
-    from SourceCode.support.titles_functions import load_titles
-    print("Import successful")
-except ModuleNotFoundError as e:
-    print(f"Import failed: {e}")
-    # Troubleshooting step 4: Use an absolute path for verification
-    sys.path.append(r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone_laptop_repos\FTT_StandAlone\SourceCode")
-    sys.path.append(r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\FTT_StandAlone\SourceCode")
-    from support.titles_functions import load_titles
-# Local library imports
-
-
-
-# Extract the results for S0
-output = results['S0']
 
 # Define the regions and the region numbers of interest
-regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "UK": 14, "Germany": 2, "France": 6}
-
-# Import classification titles from utilities
-titles = load_titles()
+regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "UK": 14, "Germany": 2}
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
@@ -75,8 +35,7 @@ price_names = {"FTT:P": "MECW", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZT
 shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
 
-# Get names of the technologies of interest
-tech_titles = {"FTT:P": "T2TI", "FTT:Tr": "VTTI", "FTT:Fr": "FTTI", "FTT:H": "HTTI"}
+
 
 # Construct a dataframe with the biggest clean and dirty technologies.
 # The dataframe will have the following columns:
@@ -84,8 +43,8 @@ tech_titles = {"FTT:P": "T2TI", "FTT:Tr": "VTTI", "FTT:Fr": "FTTI", "FTT:H": "HT
 # - Sector
 # - Clean technology
 # - Dirty technology
-# - Clean price (2020)
-# - Dirty price (2020)
+# - Clean price (2030)
+# - Dirty price (2030)
 # - Cross-over year if any
 
 # Find the biggest clean or fossil technology:
@@ -264,8 +223,10 @@ for mi, model in enumerate(models):
     
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
         ax.set_ylabel("Levelised costs difference (%)")
+    if mi > 1:  # Add y-label only to the leftmost subplots
+        ax.set_xlabel("Year")
   
-    ax.set_xlabel("Year")
+   
     
     # Remove the top and right frame
     ax.spines['top'].set_visible(False)
@@ -276,18 +237,16 @@ for mi, model in enumerate(models):
 handles, labels = axs[0].get_legend_handles_labels()
 
 # Add a single legend for the entire figure, positioned beneath the graph
-fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.1), ncol=len(regions))
+fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), ncol=3)
 
 plt.tight_layout()
 plt.tight_layout()
 plt.show()
 
 
-
 # Save the graph as an editable svg file
-output_path = os.path.join(project_root_absolute_path, "Output", "Figures")
-os.makedirs(output_path, exist_ok=True)
-output_file = os.path.join(output_path, "Figure1_baseline_price_differences.svg")
-plt.savefig(output_file, format="svg")
+
+output_file = os.path.join(fig_dir, "Figure1_baseline_price_differences.svg")
+fig.savefig(output_file, format="svg")
 
 

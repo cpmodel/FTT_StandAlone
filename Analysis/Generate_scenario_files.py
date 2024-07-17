@@ -43,7 +43,6 @@ def copy_csv_files_to_scen(model, variable, scen_name, source_dir):
 
 #%% Copying the policy files
 source_dir = get_source_dir(input_dir, "S0", "FTT-P")
-copy_csv_files_to_scen("FTT-P", "MEWR", "S0_001", source_dir)
 
 def save_new_file(model, scen_name, file, df):
     "Create destination directory, and save the file"
@@ -57,32 +56,11 @@ def save_new_file(model, scen_name, file, df):
     df.to_csv(dest_file_path, index=False)
 
 
-
-
-#%% define all the policies that we want to compare
-
-# In the power sector, we would like to change the following policies:
-# 1. MEWT - Renewable subsidies (say 20% wind subsidies) or feed-in-tariffs
-# 2. MEWR - (100% renewables by 2035)
-# 3. MEWRb - Efficiency regulation (say regulation on coal only?) This is a bonus
-# 4. REPP - carbon tax (originally in euro / tC)
-
-# In the transport & freight sectors, we would like to change the following policies:
-# 1. TREG and ZREG - Efficiency regulations (so going to advanced ones)
-# 2. TWSA and ZWSA - ZEV mandates (taking the same as the policy brief --> 2035 has 50% ZEV in slow, 100% in fast. Say 2040 for freigth). NOTE: freight has it in abs. values
-# 3. Fuel regulation --> it seems Aileen used this against all fossil cars?
-# 4. RTCO in % / TTVT abs and RZCO (registration tax per CO2) / ZTVT (absolute vehicle tax)
-# 5.  RTCO in % / TTVT abs and ZTVT (absolute vehicle tax)
-
-# In the heating sector, we would like to change the following policies:
-# To be determined
-
 def change_csv_files(model, scen_name, source_dir, variable, policy):
     file_list = create_file_list(variable, source_dir)
     for file in file_list:
         # Read in file
         df = pd.read_csv(file)
-        # Change the values of row 1 (python indexing) to row 7 (including) to 0
         df = policy_change(df, policy)
         save_new_file(model, scen_name, file, df)
 
@@ -141,6 +119,7 @@ def policy_change(df, policy):
         case "ZTVT strong tax":
             df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3
         case "ZTVT strong subsidy":
+            print("changing into strong subsidy")
             df.iloc[12, 7:] = -0.3
         case "ZTVT strong combo":
             df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3
@@ -182,14 +161,20 @@ def policy_change(df, policy):
 # Import policies from policies.csv in same folder
 policies = pd.read_csv(os.path.join(current_dir, "policies.csv"))
 
-for row in policies.iterrows():
-    
-    policy = row[1]         # Get the row as a dictionary
-    print(policy["Model"])
-    source_dir = get_source_dir(input_dir, "S0", policy["Model"])
-    copy_csv_files_to_scen(policy["Model"], policy["Variable"], f"S0_{policy['Model']}", source_dir)
-    change_csv_files(policy["Model"], f"S0_{policy['Model']}", source_dir, policy["Variable"], policy["Policy"])
+policy_packages = ["Carbon tax", "and_subsidies", "and_mandates"]
+
+for policy_package in policy_packages:
+    print(policy_package)
+    policies_turned_on = policies[policy_package]
+
+    for pi, row in enumerate(policies.iterrows()):
+        policy = row[1]         # Get the row as a dictionary
+
+        if policies_turned_on[pi]:
+            print(policy["Model"])
+            source_dir = get_source_dir(input_dir, "S0", policy["Model"])
+            copy_csv_files_to_scen(policy["Model"], policy["Variable"], policy_package, source_dir)
+            change_csv_files(policy["Model"], policy_package, source_dir, policy["Variable"], policy["Policy"])
         
-change_csv_files("FTT-P", "S0_001", source_dir, "RTCO", "RTCO strong subsidy")     
 
 

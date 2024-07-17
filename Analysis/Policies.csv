@@ -1,16 +1,16 @@
-﻿Policy,Model,Variable,Description
-MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar
-REPP strong,General,REPPX,Linearly increasing to €200 per tCO2 by 2050
-Coal phase-out,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035; active phase-out
-EV mandate regulation,FTT-Tr,TREG,No new fossil cars from 2035
-EV mandates exogenous sales,FTT-Tr,EV mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether"
-BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS
-BRR strong combo,FTT-Tr,Base registration rate,30% purchase combi on fossil cars / Evs
-ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck
-ZTVT strong combo,FTT-Fr,ZTVT,30% purchase subsidy or tax
-EV truck mandate regulation,FTT-Fr,ZREG,No new fossil cars from 2035
-EV truck mandates exogenous sales,FTT-Fr,EV truck mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether"
-HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps
-HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy
-Heat pump mandate 2035 regulation,FTT-H,HREG,Regulate out fossilf fuels in 2035
-Heat pump mandate exogenous sales,FTT-H,hp mandate,"Linearly increasing sales of heat pump from 2024 to 2035, decrease fossil heating technologies (using switch)"
+﻿Policy,Model,Variable,Description,,,,,,Carbon tax,and_subsidies,and_mandates
+MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,0,1,1
+REPP strong,General,REPPX,Linearly increasing to €200 per tCO2 by 2050,,,,,,1,1,1
+Coal phase-out,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035; active phase-out,,,,,,0,0,1
+EV mandate regulation,FTT-Tr,TREG,No new fossil cars from 2035,,,,,,0,0,1
+EV mandates exogenous sales,FTT-Tr,EV mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,0,1
+BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,,,,0,1,1
+BRR strong combo,FTT-Tr,Base registration rate,30% purchase combi on fossil cars / Evs,,,,,,0,0,0
+ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,0,1,1
+ZTVT strong combo,FTT-Fr,ZTVT,30% purchase subsidy or tax,,,,,,0,0,0
+EV truck mandate regulation,FTT-Fr,ZREG,No new fossil cars from 2035,,,,,,0,0,1
+EV truck mandates exogenous sales,FTT-Fr,EV truck mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,0,1
+HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,,,,0,1,1
+HTVS strong combo,FTT-H,HTVS,30% purchase tax or subsidy,,,,,,0,0,0
+Heat pump mandate 2035 regulation,FTT-H,HREG,Regulate out fossilf fuels in 2035,,,,,,0,0,1
+Heat pump mandate exogenous sales,FTT-H,hp mandate,"Linearly increasing sales of heat pump from 2024 to 2035, decrease fossil heating technologies (using switch)",,,,,,0,0,1
