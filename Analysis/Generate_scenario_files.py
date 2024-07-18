@@ -67,6 +67,29 @@ def change_csv_files(model, scen_name, source_dir, variable, policy):
 
 def policy_change(df, policy):
     match policy:
+        
+        case "REPP":  # A linearly increasing price to €200 per tonne CO2, i.e.  
+            price_2050 = 200.0
+            price_2023 = df.iloc[:, 14] / 3.667 # Note, REPP is given per tC, rather than tCO2
+            
+            # Reshape the price_2023 to a column vector
+            price_2023 = price_2023.values.reshape(-1, 1)
+            
+            # Linearly increase the price from 2023 to 2050 values. 
+            df.iloc[:, 14:42] = ( price_2023 + (price_2050 - price_2023) / 27.0 * np.arange(28) ) * 3.667 
+            # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
+            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) ) * 3.667      
+            
+        case "REPP2":  # A linearly increasing price to €200 per tonne CO2, i.e.  
+            price_2050 = 200.0
+                        
+            # Linearly increase to €200 per tonne CO2 
+            df.iloc[:, 14:42] = (price_2050) / 27.0 * np.arange(28) * 3.667 
+            # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
+            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) ) * 3.667       
+            
+        
+        
         # Power sector policies
         case "MEWR strong":     # Completely outregulate fossil technologies from 2024
             df.iloc[1:8, 24:] = 0
@@ -76,17 +99,7 @@ def policy_change(df, policy):
         case "MEWT strong":     # Subsidize all renewables, except for solar
             df.iloc[ 8:18, 24:] = -0.3
             df.iloc[19:22, 24:] = -0.3
-        case "REPP strong":  # A linearly increasing price to €200 per tonne CO2, i.e.  
-            price_2050 = 200
-            price_2023 = df.iloc[:, 14] / 3.667 # Note, REPP is given per tC, rather than tCO2
-            
-            # Reshape the price_2023 to a column vector
-            price_2023 = price_2023.values.reshape(-1, 1)
-            
-            # Linearly increase the price from 2023 to 2050 values. 
-            df.iloc[:, 14:42] = ( price_2023 + (price_2050 - price_2023) / 27 * np.arange(28) ) * 3.667 
-            # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
-            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27 * np.arange(20) ) * 3.667       
+       
         case "Coal phase-out":
             df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on 
        
@@ -119,7 +132,6 @@ def policy_change(df, policy):
         case "ZTVT strong tax":
             df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3
         case "ZTVT strong subsidy":
-            print("changing into strong subsidy")
             df.iloc[12, 7:] = -0.3
         case "ZTVT strong combo":
             df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3

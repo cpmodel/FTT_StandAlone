@@ -16,10 +16,16 @@ from preprocessing import preprocess_data
 # Set global font size
 plt.rcParams.update({'font.size': 12})
 
-output_S0, titles, fig_dir, tech_titles = preprocess_data("Results_baseline.pickle", "S0")
-output_ct, _, _, _  = preprocess_data("Results_ct.pickle", "S0_General")
-output_sub, _, _, _ = preprocess_data("Results_scens.pickle", "and_subsidies")
-output_man, _, _, _ = preprocess_data("Results_scens.pickle", "and_mandates")
+# Set global font size for tick labels
+plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
+
+
+output_file = "Results.pickle"
+
+output_S0, titles, fig_dir, tech_titles = preprocess_data(output_file, "S0")
+output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
+output_sub, _, _, _ = preprocess_data(output_file, "and_subsidies")
+output_man, _, _, _ = preprocess_data(output_file, "and_mandates")
 
 
 models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
@@ -29,12 +35,16 @@ tech_names = {}             # The titles of the technology names
 
 
 # Group the technologies in a coarser classification:
+    
+grouping_power = {"Coal and oil": [1, 2, 4], "Coal + CCS": [3, 5], "Gas": [6], "Gas + CCS": [7], 
+                  "Nuclear": [0], "Biomass + other": [8, 10, 12, 14, 20, 21, 22, 23], "Biomass + CCS": [9, 11, 13],
+                  "Hydropower": [15], "Wind": [16, 17], "Solar": [18, 19]}
+
+
 grouping_heat = { "Coal": [6], "Oil": [0, 1], "Gas": [2, 3], "Biomass": [4, 5],
                   "District heating": [7], "Electric": [8],
                   "Hydronic heat pump": [9, 10], "Air-air heat pump": [11], "Solar thermal": [12]}
-grouping_power = {"Coal and oil": [1, 2, 4], "Coal + CCS": [3, 5], "Gas": [6], "Gas + CCS": [7], 
-                  "Nuclear": [0], "Biomass + other": [8, 10, 12, 14, 20, 21, 22, 23], "Biomass + CCS": [9, 11, 13],
-                  "Wind": [16, 17], "Solar": [18, 19]}
+
 grouping_transport = {"Petrol": [0, 1, 2], "Petrol adv": [3, 4, 5], "Diesel": [6, 7, 8], 
                       "Diesel adv": [9, 10, 11], "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
                       "Plug-in hybrid": [21, 22, 23], "Electric": [18, 19, 20],  "Hydrogen": [24, 25, 26]
@@ -53,6 +63,7 @@ colours_power = {
     "Gas + CCS": "gainsboro",  # Light slate gray for gas with carbon capture, transitional
     "Biomass + other": "darkolivegreen",  # Dark olive green to represent biomass, a renewable but complex source
     "Biomass + CCS": "yellowgreen",  # Yellow green for biomass with carbon capture, enhancing its clean aspects
+    "Hydropower": "royalblue",  # Sky blue to signify wind, clean and free like the sky
     "Wind": "skyblue",  # Sky blue to signify wind, clean and free like the sky
     "Solar": "goldenrod"  # Goldenrod, rich and vibrant for solar energy
 }
@@ -162,7 +173,7 @@ def plot_column(model_dfs, col, col_title):
         # Figure 1: Plot global shares of generation      
         ax = axs[left_most_indices[idx] + col]
         model_df_T = model_df.T
-        model_df_T.plot(kind="area", ax=ax, color = colours[model], fontsize=8)
+        model_df_T.plot(kind="area", ax=ax, color = colours[model])
         
         ax.set_ylabel(ylabels[model])
         years_labels = [2020, 2030, 2040, 2050]
@@ -204,7 +215,7 @@ def plot_column(model_dfs, col, col_title):
         
         if idx == 0:
             ax.set_title(col_title)
-        
+
 plot_column(model_dfs_S0, 0, "A. Current trajectory")
 plot_column(model_dfs_ct, 1, "B. + Carbon tax")
 plot_column(model_dfs_sub, 2, "C. + Subsidies")
