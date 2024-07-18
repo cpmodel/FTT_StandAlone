@@ -30,7 +30,7 @@ def set_carbon_tax(data, c6ti):
     # Load factors
     Lfactor = data['ZCET'][:, :, c6ti['10 Loads (t/V)']]    
     
-    carbon_costs = (data["REPPX"][:, :, 0]                          # Carbon price in euro / tC
+    carbon_costs = (data["REPP2X"][:, :, 0]                          # Carbon price in euro / tC
                     * data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
                     # data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
                     / Lfactor                                       # Conversion from per km to per t-km

@@ -57,7 +57,7 @@ def set_carbon_tax(data, c4ti):
         Carbon costs per country and technology (2D)
     '''
     
-    carbon_costs = (data["REPPX"][:, :, 0]                               # Carbon price in euro / tC
+    carbon_costs = (data["REPP2X"][:, :, 0]                               # Carbon price in euro / tC
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
                     / 3.666 / 1000 / 1000                                # Conversion from C to CO2 and MWh to kWh, kg to tonne 
                     )

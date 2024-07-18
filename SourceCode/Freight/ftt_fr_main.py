@@ -225,7 +225,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                         S_k = data_dt['ZEWS'][r, b2, 0]
 
                         Aik = data['ZEWA'][0, b1, b2]*data['ZCET'][r, b1, c6ti['16 Turnover rate']]
-                        Aki = data['ZEWA'][0, b2, b1]*data['ZCET'][r, b1, c6ti['16 Turnover rate']]
+                        Aki = data['ZEWA'][0, b2, b1]*data['ZCET'][r, b2, c6ti['16 Turnover rate']]
 
                         # Propagating width of variations in perceived costs
                         dFik = sqrt(2) * sqrt((data_dt['ZTDD'][r, b1, 0]*data_dt['ZTDD'][r, b1, 0] + data_dt['ZTDD'][r, b2, 0]*data_dt['ZTDD'][r, b2, 0]))

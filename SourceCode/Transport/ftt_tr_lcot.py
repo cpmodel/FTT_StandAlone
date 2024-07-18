@@ -47,7 +47,7 @@ def set_carbon_tax(data, c3ti, year):
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
     
     
-    carbon_costs = (data["REPPX"][:, :, 0]                                    # Carbon price in euro / tC
+    carbon_costs = (data["REPP2X"][:, :, 0]                                    # Carbon price in euro / tC
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
                     # * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
                     / ns / ff                                               # Conversion from per km to per pkm
