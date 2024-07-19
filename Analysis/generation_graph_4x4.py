@@ -20,7 +20,7 @@ plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
 
 
-output_file = "Results.pickle"
+output_file = "Results_scens.pickle"
 
 output_S0, titles, fig_dir, tech_titles = preprocess_data(output_file, "S0")
 output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
@@ -49,7 +49,7 @@ grouping_transport = {"Petrol": [0, 1, 2], "Petrol adv": [3, 4, 5], "Diesel": [6
                       "Diesel adv": [9, 10, 11], "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
                       "Plug-in hybrid": [21, 22, 23], "Electric": [18, 19, 20],  "Hydrogen": [24, 25, 26]
                       }
-grouping_freight = {"Petrol": [0], "Petrol adv": [2], "Diesel": [4], "Diesel adv": [6],
+grouping_freight = {"Petrol": [0, 2], "Diesel": [4, 6],
                     "CNG/LPG": [8], "Hybrid": [10], "Electric": [12], "Hydrogen": [18], "Biofuel": [14, 16]
                     }
 
@@ -173,7 +173,7 @@ def plot_column(model_dfs, col, col_title):
         # Figure 1: Plot global shares of generation      
         ax = axs[left_most_indices[idx] + col]
         model_df_T = model_df.T
-        model_df_T.plot(kind="area", ax=ax, color = colours[model])
+        model_df_T.plot(kind="area", ax=ax, color = colours[model], linewidth=0)
         
         ax.set_ylabel(ylabels[model])
         years_labels = [2020, 2030, 2040, 2050]
@@ -224,4 +224,4 @@ plot_column(model_dfs_man, 3, "D. + Mandates")
 fig.subplots_adjust(wspace=0.08)  # Adjust the height spacing
 
 output_file = os.path.join(fig_dir, "Shares_graph_4x4.svg")
-fig.savefig(output_file)#, bbox_extra_artists=(lgd,), bbox_inches='tight')
+fig.savefig(output_file,  bbox_inches='tight')#, bbox_extra_artists=(lgd,), bbox_inches='tight')

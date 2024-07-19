@@ -32,25 +32,28 @@ def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=11):
             
             yearly_replacement = 1/15 * 0.8
             
-            # In 2035, the sum should be 80% of sales.
+            # In 2040, the sum should be 80% of sales.
             sum_zwsa_share = np.full(zwsa.shape[0], frac * n * yearly_replacement)   
             
             sum_ff = np.sum(zews[:, fossil_techs], axis=(1, 2))
             sum_EV = np.sum(zews[:, EV_techs], axis=(1, 2))
-            sum_zwsa = np.where(sum_ff < 1.8 * sum_zwsa_share, 0, sum_zwsa_share)          # Stop when there is too little fossil fuels to replace
-            sum_zwsa = np.where(sum_EV > 1 - 2 * sum_zwsa_share, 0, sum_zwsa_share)        # Also stop if virtually all shares are heat pumps already
+            sum_zwsa_share = np.where(sum_ff < 1.8 * sum_zwsa_share, 0, sum_zwsa_share)          # Stop when there is too little fossil fuels to replace
+            sum_zwsa_share = np.where(sum_EV > 1 - 2 * sum_zwsa_share, 0, sum_zwsa_share)        # Also stop if virtually all shares are heat pumps already
             
             # Compute fractions for each heat pump, ff technique, based on fraction of shares
             # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_zwsa to sum_ff)
-            backup_shares = np.tile(np.array([1.0]), (zwsa.shape[0], 1))
+            backup_EV_shares = np.tile(np.array([1.0]), (zwsa.shape[0], 1))
+            # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_zwsa to sum_ff)
+            backup_fossil_shares = np.tile(np.array([0.08, 0.0, 0.9, 0, 0.02]), (zwsa.shape[0], 1))
             # fraction of each EV type by region (backup_shares if dividing by zero)
-            frac_EVs = np.divide(zews[:, EV_techs, 0],  sum_EV[:, None], out=backup_shares, where=sum_EV[:, None] > 0)
-            frac_fossils =  np.divide(zews[:, fossil_techs, 0],  sum_ff[:, None])
+            frac_EVs = np.divide(zews[:, EV_techs, 0],  sum_EV[:, None], 
+                                 out=backup_EV_shares, where=sum_EV[:, None] > 0)
+            frac_fossils =  np.divide(zews[:, fossil_techs, 0],  sum_ff[:, None],
+                                      out=backup_fossil_shares, where=sum_ff[:, None] > 0)
 
-            zwsa[:, fossil_techs, 0] = -sum_zwsa[:, None] * frac_fossils * rflz[:, :, 0]
-            zwsa[:, EV_techs, 0] = sum_zwsa[:, None] * frac_EVs * rflz[:, :, 0]
+            zwsa[:, fossil_techs, 0] = -sum_zwsa_share[:, None] * frac_fossils * rflz[:, :, 0]
+            zwsa[:, EV_techs, 0] = sum_zwsa_share[:, None] * frac_EVs * rflz[:, :, 0]
+               
             
-            
-            
-    # Else: return hswa unchanged
+    # Else: return zswa unchanged
     return zwsa

@@ -15,8 +15,10 @@ from preprocessing import preprocess_data
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
+# Set global font size
+plt.rcParams.update({'xtick.labelsize': 12, 'ytick.labelsize': 12})
 
-output, titles, fig_dir, tech_titles = preprocess_data("Results_baseline.pickle", "S0")
+output, titles, fig_dir, tech_titles = preprocess_data("Results_scens.pickle", "S0")
 
 
 # Define the regions and the region numbers of interest

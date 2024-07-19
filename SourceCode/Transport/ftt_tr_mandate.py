@@ -36,8 +36,8 @@ def EV_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
             
             sum_ff = np.sum(tews[:, fossil_techs], axis=(1, 2))
             sum_EV = np.sum(tews[:, EV_techs], axis=(1, 2))
-            sum_twsa = np.where(sum_ff < 1.8 * sum_twsa_share, 0, sum_twsa_share)          # Stop when there is too little fossil fuels to replace
-            sum_twsa = np.where(sum_EV > 1 - 2 * sum_twsa_share, 0, sum_twsa_share)        # Also stop if virtually all shares are heat pumps already
+            sum_twsa_share = np.where(sum_ff < 1.8 * sum_twsa_share, 0, sum_twsa_share)          # Stop when there is too little fossil fuels to replace
+            sum_twsa_share = np.where(sum_EV > 1 - 2 * sum_twsa_share, 0, sum_twsa_share)        # Also stop if virtually all shares are heat pumps already
             
             # Compute fractions for each heat pump, ff technique, based on fraction of shares
             # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_twsa to sum_ff)
@@ -46,8 +46,8 @@ def EV_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
             frac_EVs = np.divide(tews[:, EV_techs, 0],  sum_EV[:, None], out=backup_shares, where=sum_EV[:, None] > 0)
             frac_fossils =  np.divide(tews[:, fossil_techs, 0],  sum_ff[:, None])
 
-            twsa[:, fossil_techs, 0] = -sum_twsa[:, None] * frac_fossils * rflt[:, :, 0]
-            twsa[:, EV_techs, 0] = sum_twsa[:, None] * frac_EVs * rflt[:, :, 0]
+            twsa[:, fossil_techs, 0] = -sum_twsa_share[:, None] * frac_fossils * rflt[:, :, 0]
+            twsa[:, EV_techs, 0] = sum_twsa_share[:, None] * frac_EVs * rflt[:, :, 0]
             test = 1
             
             

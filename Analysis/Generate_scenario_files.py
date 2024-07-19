@@ -96,7 +96,7 @@ def policy_change(df, policy):
         case "MWKA strong":     # Set MWKA to 2021 MEWK values in 2022 and 2023, and then go down to 0 by 2035 --> #TODO
             # Easiest here is probably to semi-hard code this work. 
             pass
-        case "MEWT strong":     # Subsidize all renewables, except for solar
+        case "MEWT":           # Subsidize all renewables, except for solar
             df.iloc[ 8:18, 24:] = -0.3
             df.iloc[19:22, 24:] = -0.3
        
@@ -120,7 +120,7 @@ def policy_change(df, policy):
             
         case "EV mandate regulation":
             df.iloc[:15, 35:] = 0
-        case "EV mandates exogenous sales":
+        case "EV mandate exogenous sales":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
                    
             
@@ -173,7 +173,7 @@ def policy_change(df, policy):
 # Import policies from policies.csv in same folder
 policies = pd.read_csv(os.path.join(current_dir, "policies.csv"))
 
-policy_packages = ["Carbon tax", "and_subsidies", "and_mandates"]
+policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]
 
 for policy_package in policy_packages:
     print(policy_package)
