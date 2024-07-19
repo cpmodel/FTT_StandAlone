@@ -389,6 +389,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
                             * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
                             * dw[tech]/data['ZEWW'][0, tech, 0])
+                            
+            battery_cap_transport = data["BTTC"][:, :, c6ti['21 Battery capacity (kWh)']]
+            yearly_additions_freight = (battery_cap_transport * data["ZEWI"][:, :, None]) / 1e3  # Convert kWh to GWh
+            cumulative_capacity_freight = np.sum(yearly_additions_freight, axis=0)  # Summing across regions
 
 
             # Calculate total investment by technology in terms of truck purchases
