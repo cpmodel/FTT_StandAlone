@@ -74,9 +74,7 @@ from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
 from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
-
-
-
+from SourceCode.sector_coupling.transport_batteries_to_power import get_sector_coupling_dict
 
 
 # %% main function
@@ -810,6 +808,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
                                      + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
             
+            sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+            
+            cumulative_capacity_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
 
             # =================================================================
             # Cost-Supply curves
