@@ -18,7 +18,11 @@ plt.rcParams.update({'font.size': 14})
 # Set global font size
 plt.rcParams.update({'xtick.labelsize': 12, 'ytick.labelsize': 12})
 
+output_file = "Results_policies.pickle"
 output, titles, fig_dir, tech_titles = preprocess_data("Results_scens.pickle", "S0")
+output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
+output_sub, _, _, _ = preprocess_data(output_file, "Subsidies")
+output_man, _, _, _ = preprocess_data(output_file, "Mandates")
 
 
 # Define the regions and the region numbers of interest
@@ -32,11 +36,11 @@ dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "
 year = 2030
 
 # Define the shares, prices of interest
-models = {"FTT:P", "FTT:Tr", "FTT:H", "FTT:Fr"}
-price_names = {"FTT:P": "MECW", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
+models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
+price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
-
+# TODO: should carbon tax be part of this? Probably not, right?
 
 
 # Construct a dataframe with the biggest clean and dirty technologies.
@@ -113,6 +117,29 @@ def get_prices(output, year, model, biggest_technologies):
             raise e
     return prices
 
+def interpolate_crossover_year(price_series_clean, price_series_fossil):
+    # Return None if the prices are under the threshold throughout the timeseries
+    
+    crossover_index = np.where(price_series_clean <= price_series_fossil)[0][0]
+    year_before = 2020 + crossover_index - 1
+    
+    # Interpolating between the year_before and the crossover year
+    price_before = price_series_clean[crossover_index - 1]
+    price_after = price_series_clean[crossover_index]
+    
+    fossil_price_before = price_series_fossil[crossover_index - 1]
+    fossil_price_after = price_series_fossil[crossover_index]
+    
+    # Linear interpolation formula to find the fraction of the year
+    fraction = (fossil_price_before - price_before) / ((price_after - price_before) - (fossil_price_after - fossil_price_before))
+    
+    crossover_year = year_before + fraction
+        
+    if crossover_year < 2021:
+        crossover_year = None
+    
+    return crossover_year
+
 def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names):
     """ Get the year when the clean technology becomes cheaper than the dirty technology."""
     crossover_years = {}
@@ -122,7 +149,9 @@ def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil,
         try:
             price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
             price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
-            crossover_years[r] = np.where(price_series_clean <= price_series_fossil)[0][0] + 2020
+            crossover_years[r] = interpolate_crossover_year(price_series_clean, price_series_fossil)
+    
+            
         except IndexError:
             crossover_years[r] = None
     return crossover_years
@@ -140,7 +169,7 @@ def get_crossover_operational_vs_new(output, model, biggest_techs_clean, biggest
         try:
             price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
             price_series_fossil = output[op_cost_name[model]][ri, tech_fossil, 0, 10:]
-            crossover_years[r] = np.where(price_series_clean <= price_series_fossil)[0][0] + 2020
+            crossover_years[r] = interpolate_crossover_year(price_series_clean, price_series_fossil)
         except IndexError:
             crossover_years[r] = None
     return crossover_years
@@ -156,7 +185,16 @@ for model in models:
     prices_clean = get_prices(output, year, model, biggest_techs_clean)
     prices_dirty = get_prices(output, year, model, biggest_techs_fossil)
     crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+    crossover_years_ct = get_crossover_year(output_ct, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+    crossover_years_sub = get_crossover_year(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+    crossover_years_man = get_crossover_year(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+
     crossover_years_op = get_crossover_operational_vs_new(output, model, biggest_techs_clean, biggest_techs_fossil, price_names, operation_cost_name)
+    crossover_years_op_ct = get_crossover_operational_vs_new(output_ct, model, biggest_techs_clean, biggest_techs_fossil, price_names, operation_cost_name)
+    crossover_years_op_sub = get_crossover_operational_vs_new(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names, operation_cost_name)
+    crossover_years_op_man = get_crossover_operational_vs_new(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names, operation_cost_name)
+
+    
     for r in regions:
         row = {
         "Region": r, 
@@ -167,8 +205,14 @@ for model in models:
         "Fossil technology": biggest_techs_fossil[r], 
         "Fossil tech name": fossil_tech_names[r],
         "Fossil price (2030)": prices_dirty[r],
-        "Cross-over year": crossover_years[r],
-        "Cross-over operational": crossover_years_op[r]
+        "Cross-over": crossover_years[r],
+        "Cross-over carbon tax": crossover_years_ct[r],
+        "Cross-over subsidies": crossover_years_sub[r],
+        "Cross-over mandates": crossover_years_man[r],
+        "Cross-over operat.": crossover_years_op[r],
+        "Cross-over operat. carbon tax": crossover_years_op_ct[r],
+        "Cross-over operat. subsidies": crossover_years_op_sub[r],
+        "Cross-over operat. mandates": crossover_years_op_man[r]
         }
         rows.append(row)
 
@@ -176,7 +220,10 @@ for model in models:
 df = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Clean technology", "Clean tech name", "Clean price (2030)", 
                                  "Fossil technology", "Fossil tech name", "Fossil price (2030)", 
-                                 "Cross-over year", "Cross-over operational"])
+                                 "Cross-over", "Cross-over carbon tax",
+                                 "Cross-over subsidies", "Cross-over mandates",
+                                 "Cross-over operat.", "Cross-over operat. carbon tax",
+                                 "Cross-over operat. subsidies", "Cross-over operat. mandates"])
 
 
 #%% Making a graph with four subplots for each sector.
@@ -209,7 +256,7 @@ def compute_percentage_difference(model, years):
     
     return percentage_difference
 
-#%% Plot the figure
+#%% Plot the figure of levelised cost difference fossil vs clean tech
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 
@@ -225,11 +272,7 @@ for mi, model in enumerate(models):
     
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
         ax.set_ylabel("Levelised costs difference (%)")
-    if mi > 1:  # Add y-label only to the leftmost subplots
-        ax.set_xlabel("Year")
-  
    
-    
     # Remove the top and right frame
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -243,12 +286,136 @@ fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), nco
 
 plt.tight_layout()
 plt.tight_layout()
-plt.show()
-
 
 # Save the graph as an editable svg file
-
 output_file = os.path.join(fig_dir, "Figure1_baseline_price_differences.svg")
-fig.savefig(output_file, format="svg")
+fig.savefig(output_file, format="svg", bbox_inches='tight')
 
+
+#%% Cross-over year by policy
+
+def determine_lims_crossover(row):
+    xmin = np.min(row)
+    xmax = np.max(row)
+    
+    if row.isna().any() and not row.isna().all():
+        xmax = 2050
+    
+    return xmin, xmax
+    
+    
+
+# Create the plot
+fig, ax = plt.subplots(figsize=(10, 10))
+
+# Plot the timelines
+y_base = 0
+y_gap = 1
+model_gap = -5
+offset_op = 0.3
+
+colors = {
+    'Cross-over': 'blue',
+    'Cross-over carbon tax': 'green',
+    'Cross-over subsidies': 'red',
+    'Cross-over mandates': 'purple',
+    'Cross-over operat.': 'cornflowerblue',
+    'Cross-over operat. carbon tax': 'lightgreen',
+    'Cross-over operat. subsidies': 'pink',
+    'Cross-over operat. mandates': 'plum'
+}
+
+colors = {
+    'Cross-over': '#003f5c',  # Dark blue
+    'Cross-over carbon tax': '#2f4b7c',  # Medium-dark blue
+    'Cross-over subsidies': '#665191',  # Medium blue
+    'Cross-over mandates': '#a05195',  # Light blue
+    'Cross-over operat.': '#004d40',  # Dark green
+    'Cross-over operat. carbon tax': '#2e7d32',  # Medium-dark green
+    'Cross-over operat. subsidies': '#66bb6a',  # Medium green
+    'Cross-over operat. mandates': '#a5d6a7'  # Light green
+}
+
+policy_names = {
+    'Cross-over': 'Current traject.',
+    'Cross-over carbon tax': 'Carbon tax',
+    'Cross-over subsidies': 'Subsidies',
+    'Cross-over mandates': 'Mandates',
+    'Cross-over operat.': 'Operational costs',
+    'Cross-over operat. carbon tax': 'Operational costs',
+    'Cross-over operat. subsidies': 'Operational costs',
+    'Cross-over operat. mandates': 'Operational costs'
+    }
+
+# Define the timeline range
+timeline_start = 2020
+timeline_end = 2050
+
+# # Plot the timelines
+# for index, row in df.iterrows():
+#     y_position = index  # Adjust the vertical position for each region
+#     ax.hlines(y_position, timeline_start, timeline_end, color='grey', alpha=0.5)
+#     for policy in colors.keys():
+#         if row["Sector"] == "FTT:P":
+#             ax.plot(row[policy], y_position, 'o', color=colors[policy], label=row['Region'])  # Plot the dots
+#         else:
+#             ax.plot(row[policy], y_position, 'o', color=colors[policy], label=row['Region'])  # Plot the dots
+
+yticks = []
+yticklabels = []
+
+for model in models:
+    model_data = df[df['Sector'] == model]
+    for index, row in model_data.iterrows():
+        y_position = y_base + index * y_gap
+        ax.hlines(y_position, timeline_start, timeline_end, color='grey', alpha=0.5)
+        xmin, xmax = determine_lims_crossover(row.iloc[-8:-4])
+        if xmin is not None and xmax is not None:
+            ax.hlines(y_position, xmin, xmax, color='black', alpha=1.0)
+        if row["Sector"] == "FTT:P":
+            ax.hlines(y_position + offset_op, timeline_start, timeline_end,
+                      color='grey', alpha=0.5)
+            xmin, xmax = determine_lims_crossover(row.iloc[-4:])
+            if xmin is not None and xmax is not None:
+                ax.hlines(y_position + offset_op, xmin, xmax, color='black', alpha=1.0)
+        for pi, policy in enumerate(colors.keys()):
+            if row["Sector"] == "FTT:P" and pi > 4:
+                ax.plot(row[policy], y_position + offset_op, 'o', color=colors[policy])
+            elif pi < 4:
+                ax.plot(row[policy], y_position, 'o', color=colors[policy])
+        yticks.append(y_position)
+        yticklabels.append(row['Region'])
+    y_base += len(model_data) * y_gap + model_gap
+
+
+# Remove frame
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.spines['bottom'].set_visible(False)
+
+ax.tick_params(axis='y', length=0)
+ax.tick_params(axis='x', length=0, pad=-10)
+
+ax.set_yticks(yticks)
+ax.set_yticklabels(yticklabels)
+
+# Create custom legend
+handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors[policy],
+                      markersize=10, label=policy_names[policy]) for policy in colors]
+legend_y_position = 10
+ax.legend(handles=handles, loc='upper right', frameon=True, ncol=2, bbox_to_anchor=(0.95, 0.475), framealpha=0.8)
+
+# Add secondary y-axis for models
+secax = ax.secondary_yaxis('left')
+secax.set_yticks([2.5 + i*7 for i, model in enumerate(models)])
+secax.set_yticklabels(models, rotation=90, va='center', ha='center')
+secax.tick_params(length=0, pad=100)
+secax.spines['left'].set_visible(False)
+
+plt.title("Crossover year by policy \n Comparison largest clean and fossil technology in each country")
+
+# Save the graph as an editable svg file
+output_file = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.svg")
+fig.savefig(output_file, format="svg", bbox_inches='tight')
 

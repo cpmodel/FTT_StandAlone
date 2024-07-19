@@ -21,14 +21,13 @@ plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_policies.pickle"
 
-# TODO: run with the policies separately
 output_S0, titles, fig_dir, tech_titles = preprocess_data(output_file, "S0")
 output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
 output_sub, _, _, _ = preprocess_data(output_file, "Subsidies")
 output_man, _, _, _ = preprocess_data(output_file, "Mandates")
 
 models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
-price_names = {"FTT:P": "MECW", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
+price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 shares_variables = {"FTT:P": "MEWG", "FTT:Tr": "TEWK", "FTT:Fr": "ZEWK", "FTT:H": "HEWG"}
 tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 11, "FTT:Fr": 12}
 scenarios = {"Current traj.": output_S0, "Carbon tax": output_ct,

@@ -224,4 +224,4 @@ plot_column(model_dfs_man, 3, "D. + Mandates")
 fig.subplots_adjust(wspace=0.08)  # Adjust the height spacing
 
 output_file = os.path.join(fig_dir, "Shares_graph_4x4.svg")
-fig.savefig(output_file,  bbox_inches='tight')#, bbox_extra_artists=(lgd,), bbox_inches='tight')
+fig.savefig(output_file, bbox_inches='tight')#, bbox_extra_artists=(lgd,), bbox_inches='tight')
