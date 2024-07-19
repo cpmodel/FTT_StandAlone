@@ -235,7 +235,7 @@ def get_lcoe(data, titles):
         npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
         
         # 1c - Operation costs
-        npv_operation                 = (ft + omt + stor_cost + marg_stor_cost + ct + fft) / denominator
+        npv_operation                 = (ft + omt + stor_cost + marg_stor_cost + fft) / denominator
         
         # 2 – Utility
         npv_utility = energy_prod / denominator

@@ -10,6 +10,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from preprocessing import preprocess_data
 
@@ -37,6 +38,7 @@ year = 2030
 
 # Define the shares, prices of interest
 models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
+model_names_r = ["Trucks", "Cars", "Heating", "Power"]
 price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
@@ -136,7 +138,7 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
     crossover_year = year_before + fraction
         
     if crossover_year < 2021:
-        crossover_year = None
+        crossover_year = 2021
     
     return crossover_year
 
@@ -314,16 +316,7 @@ y_gap = 1
 model_gap = -5
 offset_op = 0.3
 
-colors = {
-    'Cross-over': 'blue',
-    'Cross-over carbon tax': 'green',
-    'Cross-over subsidies': 'red',
-    'Cross-over mandates': 'purple',
-    'Cross-over operat.': 'cornflowerblue',
-    'Cross-over operat. carbon tax': 'lightgreen',
-    'Cross-over operat. subsidies': 'pink',
-    'Cross-over operat. mandates': 'plum'
-}
+
 
 colors = {
     'Cross-over': '#003f5c',  # Dark blue
@@ -364,25 +357,38 @@ timeline_end = 2050
 yticks = []
 yticklabels = []
 
-for model in models:
+for model in models[::-1]:
     model_data = df[df['Sector'] == model]
     for index, row in model_data.iterrows():
-        y_position = y_base + index * y_gap
+        y_position = y_base + (len(df)-index) * y_gap
         ax.hlines(y_position, timeline_start, timeline_end, color='grey', alpha=0.5)
+        
+        # Plot the lines connecting the crossover years
         xmin, xmax = determine_lims_crossover(row.iloc[-8:-4])
         if xmin is not None and xmax is not None:
             ax.hlines(y_position, xmin, xmax, color='black', alpha=1.0)
         if row["Sector"] == "FTT:P":
-            ax.hlines(y_position + offset_op, timeline_start, timeline_end,
-                      color='grey', alpha=0.5)
             xmin, xmax = determine_lims_crossover(row.iloc[-4:])
             if xmin is not None and xmax is not None:
-                ax.hlines(y_position + offset_op, xmin, xmax, color='black', alpha=1.0)
+                ax.hlines(y_position, xmin, xmax, color='black', alpha=1.0)
+                
+        # Plot the crossover year (points)
         for pi, policy in enumerate(colors.keys()):
-            if row["Sector"] == "FTT:P" and pi > 4:
-                ax.plot(row[policy], y_position + offset_op, 'o', color=colors[policy])
+            if row[policy] <= 2021:
+                pass
+            elif row["Sector"] == "FTT:P" and pi > 4:
+                ax.plot(row[policy], y_position, 'o', color=colors[policy])
             elif pi < 4:
                 ax.plot(row[policy], y_position, 'o', color=colors[policy])
+        
+        
+                
+        # Plot arrows when the crossover poinnt in past of after 2050:
+        if row.iloc[-8:-4].isna().all():
+            ax.arrow(2049.3, y_position, 1, 0, head_width=0.2, head_length=0.2, fc='#003f5c', ec='#003f5c')
+        elif (row.iloc[-8:-4] < 2021.1).all():
+            ax.arrow(2020.7, y_position, -1, 0, head_width=0.2, head_length=0.2, fc='#003f5c', ec='#003f5c')                
+       
         yticks.append(y_position)
         yticklabels.append(row['Region'])
     y_base += len(model_data) * y_gap + model_gap
@@ -394,26 +400,80 @@ ax.spines['right'].set_visible(False)
 ax.spines['left'].set_visible(False)
 ax.spines['bottom'].set_visible(False)
 
-ax.tick_params(axis='y', length=0)
+ax.tick_params(axis='y', length=0, pad=-5)
 ax.tick_params(axis='x', length=0, pad=-10)
 
 ax.set_yticks(yticks)
 ax.set_yticklabels(yticklabels)
 
-# Create custom legend
-handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors[policy],
-                      markersize=10, label=policy_names[policy]) for policy in colors]
-legend_y_position = 10
-ax.legend(handles=handles, loc='upper right', frameon=True, ncol=2, bbox_to_anchor=(0.95, 0.475), framealpha=0.8)
+# # Create custom legend
+# handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors[policy],
+#                       markersize=10, label=policy_names[policy]) for policy in colors]
+# legend_y_position = 10
+# ax.legend(handles=handles, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(1.0, -0.03), framealpha=0.8)
+
+
+
+
+
+
+
+
+
+
+# Define the policy legend elements
+policy_legend_elements = [
+    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over'], markersize=10, label='Current traject.'),
+    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over carbon tax'], markersize=10, label='Carbon tax'),
+    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over subsidies'], markersize=10, label='Subsidies'),
+    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over mandates'], markersize=10, label='Mandates')
+]
+
+# Define the comparison legend elements
+comparison_legend_elements = [
+    Line2D([0], [0], marker='o', color='w', markerfacecolor='#003f5c', markersize=10, label='New vs New', linestyle='None'),
+    Line2D([0], [0], marker='o', color='w', markerfacecolor='#004d40', markersize=10, label='New vs Existing', linestyle='None')
+]
+
+# Create custom handles for comparisons
+custom_lines = [
+    Line2D([0], [0], color=colors['Cross-over'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over carbon tax'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over subsidies'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over mandates'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over operat.'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over operat. carbon tax'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over operat. subsidies'], lw=4),
+    Line2D([0], [0], color=colors['Cross-over operat. mandates'], lw=4)
+]
+
+# Place the policy legend
+first_legend = ax.legend(handles=policy_legend_elements, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(1.0, -0.05), framealpha=0.8)
+ax.add_artist(first_legend)
+
+# Place the comparison legend below the first one
+ax.legend(handles=comparison_legend_elements, loc='upper right', frameon=True, ncol=2, bbox_to_anchor=(1.0, -0.15), framealpha=0.8)
+
+# Add the custom lines for comparison under the correct labels
+for line in custom_lines:
+    ax.add_line(line)
+
+
+
+
+
+
+
 
 # Add secondary y-axis for models
 secax = ax.secondary_yaxis('left')
-secax.set_yticks([2.5 + i*7 for i, model in enumerate(models)])
-secax.set_yticklabels(models, rotation=90, va='center', ha='center')
+secax.set_yticks([2.5 + i*7 for i, model in enumerate(models[::-1])])
+secax.set_yticklabels(model_names_r, rotation=90, va='center', ha='center')
 secax.tick_params(length=0, pad=100)
 secax.spines['left'].set_visible(False)
 
-plt.title("Crossover year by policy \n Comparison largest clean and fossil technology in each country")
+fig.suptitle("Crossover year by policy \n Comparison largest clean and fossil technology in each country", 
+             x=0.45, y=0.95, ha='center')
 
 # Save the graph as an editable svg file
 output_file = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.svg")
