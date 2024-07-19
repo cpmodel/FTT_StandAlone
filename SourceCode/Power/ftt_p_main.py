@@ -810,7 +810,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             sector_coupling_assumps = get_sector_coupling_dict(data, titles)
             
-            cumulative_capacity_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+            battery_lifetime = 12 #assuming 12 years
+            
+            capacity_batteries_current_year = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+            capacity_batteries_last_year = time_lag["MSSC"] * sector_coupling_assumps["GW to GWh"]
+            
+            single_year_capacity = capacity_batteries_current_year - capacity_batteries_last_year
+            
+            yearly_replacements_existing_capacity = single_year_capacity + data["MSSC"]/battery_lifetime
 
             # =================================================================
             # Cost-Supply curves
