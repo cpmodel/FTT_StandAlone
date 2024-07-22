@@ -817,7 +817,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             yearly_cap_additions = capacity_batteries_current_year - capacity_batteries_last_year
             
-            yearly_overall_capacity_additions = yearly_cap_additions + capacity_batteries_current_year/12
+            yearly_overall_capacity_additions = yearly_cap_additions + capacity_batteries_current_year/battery_lifetime
 
             # =================================================================
             # Cost-Supply curves
