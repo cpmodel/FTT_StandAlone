@@ -648,14 +648,14 @@ def rldc(data, time_lag, data_dt, year, titles):
     storage_ratio = share_repurposed_batteries(data, year, titles)
     data = update_costs_from_repurposing(data, storage_ratio, year, titles)
     
-    
     # Ad hoc correction for exchange rate and inflation
-    # TODO: check if these corrections actually make sense
-    data["MSSP"] = data["MSSP"] * 1.34
+    # These corrections deviate from FORTRAN. There was 11% inflation between 2013 and 2020,
+    # so I need to divide by 1.11
+    data["MSSP"] = data["MSSP"] / 1.11
     data["MLSP"] = data["MLSP"] * 1.34
-    data["MSSM"] = data["MSSM"] * 1.34
+    data["MSSM"] = data["MSSM"] / 1.11
     data["MLSM"] = data["MLSM"] * 1.34
-    data["MSSR"] = data["MSSR"] * 1.34
+    data["MSSR"] = data["MSSR"] / 1.11
     
     check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
     check_mewl = pd.DataFrame(data['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
