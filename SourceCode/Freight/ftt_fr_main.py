@@ -88,7 +88,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Creating variables
 
     zjet = copy.deepcopy(data['ZJET'][0, :, :])
-    emis_corr = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
+    emis_corr = np.ones([len(titles['RTI']), len(titles['FTTI'])])
 
     if year <= histend["RVKZ"]:
 
