@@ -815,9 +815,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             capacity_batteries_current_year = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
             capacity_batteries_last_year = time_lag["MSSC"] * sector_coupling_assumps["GW to GWh"]
             
-            single_year_capacity = capacity_batteries_current_year - capacity_batteries_last_year
+            yearly_cap_additions = capacity_batteries_current_year - capacity_batteries_last_year
             
-            yearly_replacements_existing_capacity = single_year_capacity + data["MSSC"]/battery_lifetime
+            yearly_overall_capacity_additions = yearly_cap_additions + capacity_batteries_current_year/12
 
             # =================================================================
             # Cost-Supply curves
