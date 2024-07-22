@@ -47,7 +47,18 @@ def flatten(xss):
 
 def get_total_emissions(output, model):
     """Sum over regions and technologies"""
-    emission_m = np.sum(output[emissions_names[model]], axis=(0, 1, 2))
+    if model in ["FTT:P", "FTT:H"]:
+        emission_m = np.sum(output[emissions_names[model]], axis=(0, 1, 2))
+    elif model == "FTT:Tr":
+        emission_by_tech = output[emissions_names[model]]
+        all_vehicles = list(range(emission_by_tech.shape[1]))
+        non_EVs = [x for x in all_vehicles if x not in [18, 19, 20]]
+        emission_m = np.sum(emission_by_tech[:, non_EVs], axis=(0, 1, 2))
+    elif model == "FTT:Fr":
+        emission_by_tech = output[emissions_names[model]]
+        all_vehicles = list(range(emission_by_tech.shape[1]))
+        non_EVs = [x for x in all_vehicles if x not in [12, 13]]
+        emission_m = np.sum(emission_by_tech[:, non_EVs], axis=(0, 1, 2))
     return emission_m
 
 emissions = {}
@@ -74,7 +85,7 @@ axs = axs.flatten()
 # Define a harmonious color palette
 palette = sns.color_palette("Blues_r", 3)
 
-year_ind = 2035 - 2010
+year_ind = 2050 - 2010
 
 for mi, model in enumerate(models):
     ax = axs[mi]
@@ -82,7 +93,7 @@ for mi, model in enumerate(models):
         emission_diff = emissions_abs_diff[model][scenario][year_ind]
         ax.barh(scenario, emission_diff, color=palette[(si+2)//3])
         ax.set_title(model)
-        print(f"Scenario {scenario} and model {model} has {emission_diff} diff")
+        print(f"Model {model} and scen {scenario} has {emission_diff:.3f} diff")
     
     
     ax.axvline(0, color='black', linewidth=0.8)  # Add vertical line at zero

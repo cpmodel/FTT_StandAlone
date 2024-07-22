@@ -16,6 +16,7 @@ def get_sector_coupling_dict(data, titles):
                 data["SectorCouplingAssumps"][0, :, 0]
                 ))
     return sector_coupling_assumps
+
     
 def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     """
@@ -113,14 +114,26 @@ def update_costs_from_repurposing(data, storage_ratio, year, titles):
     remaining_costs_fraction = ((1-share_repurposed)
                                 + share_repurposed 
                                 * (1-sector_coupling_assumps["Cost savings"]))
-    # if year%10 == 0:
-    #     print(f"In {year}, the remaining_cost_fraction is {remaining_costs_fraction[1]}")
-    #     print(f"In {year}, region with the highest remaining fraction is {np.argmax(remaining_costs_fraction)}"
-    #           f"at {remaining_costs_fraction[np.argmax(remaining_costs_fraction)]}")
-
     
     data["MSSP"] = data["MSSP"] * remaining_costs_fraction
     data["MSSM"] = data["MSSM"] * remaining_costs_fraction
+    
+    return data
+
+def vehicle_to_grid(data, time_lag, c3ti, titles):
+    
+    sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+    participation = sector_coupling_assumps["V2G participation rate"]
+    availability = sector_coupling_assumps["V2G available fraction"]
+    
+    # Units - TEWK: 1000 cars, BTTC - kWh
+    total_batteries = time_lag["TEWK"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    
+    # Sum over the EVs only (assume PHEV too small per Xu et al. )
+    batteries_EVs_only = np.sum(total_batteries[:, [18, 19, 20], :], axis=1, keepdims=True)
+    
+    # All all batteries together
+    data['V2G battery stock'] = batteries_EVs_only
     
     return data
     
