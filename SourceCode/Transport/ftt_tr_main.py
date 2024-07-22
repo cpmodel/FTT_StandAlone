@@ -550,10 +550,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data['TWIY'][r, :, 0] = (data_dt['TWIY'][r, :, 0] + data['TEWI'][r, :, 0] * dt 
                                         * data['BTTC'][r, :, c3ti['1 Prices cars (USD/veh)']] / 1.33
                                         )
-            
+            """
             battery_cap_transport = data["BTTC"][:, :, c3ti['18 Battery cap (kWh)']]
             yearly_additions_transport = (battery_cap_transport * data["TEWI"][:, :, None]) / 1e6  # Convert kWh to GWh
             cumulative_capacity_transport = np.sum(yearly_additions_transport, axis=0)  # Summing across regions
+            """
 
 
             # =================================================================
