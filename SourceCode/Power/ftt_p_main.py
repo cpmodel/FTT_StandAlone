@@ -803,11 +803,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] 
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
             
-            
-            # Investment (1.33 an exchange rate factor, code differs from FORTRAN)
-            data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
-                                     + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
-            
             sector_coupling_assumps = get_sector_coupling_dict(data, titles)
             
             battery_lifetime = 12 #assuming 12 years
@@ -818,6 +813,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             yearly_cap_additions = capacity_batteries_current_year - capacity_batteries_last_year
             
             yearly_overall_capacity_additions = yearly_cap_additions + capacity_batteries_current_year/battery_lifetime
+            
+            
+            # Investment (1.33 an exchange rate factor, code differs from FORTRAN)
+            data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
+                                     + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
+            
+            
 
             # =================================================================
             # Cost-Supply curves
