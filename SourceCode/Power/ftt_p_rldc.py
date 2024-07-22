@@ -24,7 +24,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.sector_coupling.transport_batteries_to_power import share_repurposed_batteries, update_costs_from_repurposing
+from SourceCode.sector_coupling.transport_batteries_to_power import share_transport_batteries, update_costs_from_transport_batteries, vehicle_to_grid
 
 
 #%% FEQS
@@ -644,13 +644,12 @@ def rldc(data, time_lag, data_dt, year, titles):
             data['MSSM'][r,18,0] = marg_cost_sol_ss 
             
     # %%
-    r_int = 0
-    storage_ratio = share_repurposed_batteries(data, year, titles)
-    data = update_costs_from_repurposing(data, storage_ratio, year, titles)
-    
+    data = vehicle_to_grid(data, time_lag, year, titles)
+    storage_ratio = share_transport_batteries(data, year, titles)
+    data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
+
     # Ad hoc correction for exchange rate and inflation
-    # These corrections deviate from FORTRAN. There was 11% inflation between 2013 and 2020,
-    # so I need to divide by 1.11
+    # These corrections deviate from FORTRAN. There was 11% inflation between 2013 and 2020
     data["MSSP"] = data["MSSP"] / 1.11
     data["MLSP"] = data["MLSP"] * 1.34
     data["MSSM"] = data["MSSM"] / 1.11

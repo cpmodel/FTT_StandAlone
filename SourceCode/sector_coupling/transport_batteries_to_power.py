@@ -68,7 +68,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     
     return data
 
-def share_repurposed_batteries(data, year, titles):
+def share_transport_batteries(data, year, titles):
     """
     Estimate the battery needs in power from GW to GWh, and compute ratio with transport.
     The original Ueckerdt paper does not contain this information. We therefore estimate
@@ -89,12 +89,14 @@ def share_repurposed_batteries(data, year, titles):
     # Convert GW to GWh (estimate)
     capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
     
-    storage_ratio = data["Second-hand battery stock"]  / capacity_batteries_power
+    # Share of either repurposed or V2G batteries
+    storage_ratio = ( (data["Second-hand battery stock"] + data["V2G battery stock"])
+                    / capacity_batteries_power )
     
     
     return storage_ratio
 
-def update_costs_from_repurposing(data, storage_ratio, year, titles):
+def update_costs_from_transport_batteries(data, storage_ratio, year, titles):
     """
     Compute the new costs for storage. Repurposing batteries have costs
     of roughly 20-80% of new batteries, or 30% to 70%, according to:
@@ -120,20 +122,38 @@ def update_costs_from_repurposing(data, storage_ratio, year, titles):
     
     return data
 
-def vehicle_to_grid(data, time_lag, c3ti, titles):
+def vehicle_to_grid(data, time_lag, year, titles):
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     participation = sector_coupling_assumps["V2G participation rate"]
     availability = sector_coupling_assumps["V2G available fraction"]
     
+    # Assume linearly increasing share cars are suitable
+    if year < 2025:
+        tech_readiness = 0
+    elif year > 2035:
+        tech_readiness = 1
+    else:
+        tech_readiness = (year-2024) * 0.1
+    
+    # Categories for the cost matrix (BTTC)
+    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
+    
     # Units - TEWK: 1000 cars, BTTC - kWh
     total_batteries = time_lag["TEWK"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    
     
     # Sum over the EVs only (assume PHEV too small per Xu et al. )
     batteries_EVs_only = np.sum(total_batteries[:, [18, 19, 20], :], axis=1, keepdims=True)
     
+    # Available batteries
+    available_batteries = ( batteries_EVs_only
+                           * participation * availability * tech_readiness) 
+    # Convert to GWh (TEWK in 1000 cars, battery capacity in kWh)
+    available_batteries = available_batteries / 1000
+    
     # All all batteries together
-    data['V2G battery stock'] = batteries_EVs_only
+    data['V2G battery stock'] = available_batteries
     
     return data
     
