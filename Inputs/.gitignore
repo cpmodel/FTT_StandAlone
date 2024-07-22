@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 *.csv
-!SectorCouplingAssumps.csv
+!S0/General/SectorCouplingAssumps.csv
 *.db1
 *.mre
 !S0/*/????X*.csv

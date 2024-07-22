@@ -10,10 +10,7 @@ import pickle
 import os
 import sys
 
-
-def preprocess_data(name_pickle_file, scenario):
-    
-    
+def define_path():
     # Assuming your script is in a subdirectory of the project root, adjust the relative path accordingly.
     # For example, if your script is in 'src/scripts', you might use '../..' to reach the project root.
     project_root_relative_path = '..'  # Adjust this path to match your project structure
@@ -31,10 +28,13 @@ def preprocess_data(name_pickle_file, scenario):
     # source_code_path = os.path.join(project_root_absolute_path, 'SourceCode')
     # sys.path.append(source_code_path)
     
-    pickle_path = os.path.join(project_root_absolute_path, 'Output', name_pickle_file) 
-    
-    with open(pickle_path, 'rb') as f:
-        results = pickle.load(f)
+    return project_root_absolute_path
+
+
+
+def get_metadata():
+    """Get the classification by variable, the directory to print figures and the 
+    names of the technology classification in each sector"""
     
     
     # Attempt to import again
@@ -49,18 +49,35 @@ def preprocess_data(name_pickle_file, scenario):
         from support.titles_functions import load_titles
     # Local library imports
     
-    
-    # Extract the results for scenario (f.i. S0)
-    output = results[scenario]
-    
-    
     # Import classification titles from utilities
     titles = load_titles()
+    
+    project_root_absolute_path = define_path()
     
     fig_dir = os.path.join(project_root_absolute_path, "Output", "Figures")
     os.makedirs(fig_dir, exist_ok=True)
     
     # Get names of the technologies of interest
-    tech_titles = {"FTT:P": "T2TI", "FTT:Tr": "VTTI", "FTT:Fr": "FTTI", "FTT:H": "HTTI"}
+    tech_titles = {"FTT:P": "T2TI", "FTT:Tr": "VTTI", "FTT:Fr": "FTTI", "FTT:H": "HTTI"}    
     
-    return output, titles, fig_dir, tech_titles
+    models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
+
+    
+    return titles, fig_dir, tech_titles, models
+    
+
+
+def get_output(name_pickle_file, scenario):
+    
+    project_root_absolute_path = define_path()
+    
+    pickle_path = os.path.join(project_root_absolute_path, 'Output', name_pickle_file) 
+    
+    with open(pickle_path, 'rb') as f:
+        results = pickle.load(f)
+    
+    # Extract the results for scenario (f.i. S0)
+    output = results[scenario]   
+    
+    
+    return output

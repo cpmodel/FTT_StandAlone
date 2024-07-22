@@ -165,15 +165,18 @@ def policy_change(df, policy):
         case "Heat pump mandate exogenous sales":
             df.iloc[0, 1] = 1       # The heat pump mandates are coded as a function; this switch turns it on
             
-            
+        # Sector coupling
+        case "Sector coupling":
+            df.iloc[3, 1] = 0.5         # 50% cost savings on second-hand batteries
             
     return df
         
         
 # Import policies from policies.csv in same folder
-policies = pd.read_csv(os.path.join(current_dir, "policies.csv"))
+policies = pd.read_csv(os.path.join(current_dir, "policies_by_sector.csv"))
 
-policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]
+policy_packages = list(policies.keys()[9:])
+#policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]
 
 for policy_package in policy_packages:
     print(policy_package)

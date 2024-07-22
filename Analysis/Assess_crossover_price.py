@@ -12,7 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-from preprocessing import preprocess_data
+from preprocessing import get_output, get_metadata
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
@@ -20,11 +20,12 @@ plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 12, 'ytick.labelsize': 12})
 
 output_file = "Results_policies.pickle"
-output, titles, fig_dir, tech_titles = preprocess_data("Results_scens.pickle", "S0")
-output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
-output_sub, _, _, _ = preprocess_data(output_file, "Subsidies")
-output_man, _, _, _ = preprocess_data(output_file, "Mandates")
+output = get_output("Results_scens.pickle", "S0")
+output_ct = get_output(output_file, "Carbon tax")
+output_sub = get_output(output_file, "Subsidies")
+output_man = get_output(output_file, "Mandates")
 
+titles, fig_dir, tech_titles, models = get_metadata()
 
 # Define the regions and the region numbers of interest
 regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "UK": 14, "Germany": 2}
@@ -37,7 +38,6 @@ dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "
 year = 2030
 
 # Define the shares, prices of interest
-models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
 price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
@@ -318,12 +318,13 @@ offset_op = 0.3
 
 
 
+# Define lighter colours for better distinction
 colors = {
-    'Cross-over': '#003f5c',  # Dark blue
-    'Cross-over carbon tax': '#2f4b7c',  # Medium-dark blue
-    'Cross-over subsidies': '#665191',  # Medium blue
-    'Cross-over mandates': '#a05195',  # Light blue
-    'Cross-over operat.': '#004d40',  # Dark green
+    'Cross-over': '#005f99',  # Lighter blue
+    'Cross-over carbon tax': '#3f5b8c',  # Medium-dark blue
+    'Cross-over subsidies': '#7a5195',  # Lighter medium blue
+    'Cross-over mandates': '#bc5090',  # Light blue
+    'Cross-over operat.': '#009688',  # Lighter dark green
     'Cross-over operat. carbon tax': '#2e7d32',  # Medium-dark green
     'Cross-over operat. subsidies': '#66bb6a',  # Medium green
     'Cross-over operat. mandates': '#a5d6a7'  # Light green
@@ -376,7 +377,7 @@ for model in models[::-1]:
         for pi, policy in enumerate(colors.keys()):
             if row[policy] <= 2021:
                 pass
-            elif row["Sector"] == "FTT:P" and pi > 4:
+            elif row["Sector"] == "FTT:P" and pi >= 4:
                 ax.plot(row[policy], y_position, 'o', color=colors[policy])
             elif pi < 4:
                 ax.plot(row[policy], y_position, 'o', color=colors[policy])
@@ -416,11 +417,6 @@ ax.set_yticklabels(yticklabels)
 
 
 
-
-
-
-
-
 # Define the policy legend elements
 policy_legend_elements = [
     Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over'], markersize=10, label='Current traject.'),
@@ -431,8 +427,8 @@ policy_legend_elements = [
 
 # Define the comparison legend elements
 comparison_legend_elements = [
-    Line2D([0], [0], marker='o', color='w', markerfacecolor='#003f5c', markersize=10, label='New vs New', linestyle='None'),
-    Line2D([0], [0], marker='o', color='w', markerfacecolor='#004d40', markersize=10, label='New vs Existing', linestyle='None')
+    Line2D([0], [0], marker='o', color='w', markerfacecolor='#005f99', markersize=10, label='New green tech vs new fossil', linestyle='None'),
+    Line2D([0], [0], marker='o', color='w', markerfacecolor='#009688', markersize=10, label='New green tech vs existing fossil', linestyle='None')
 ]
 
 # Create custom handles for comparisons
@@ -448,19 +444,15 @@ custom_lines = [
 ]
 
 # Place the policy legend
-first_legend = ax.legend(handles=policy_legend_elements, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(1.0, -0.05), framealpha=0.8)
+first_legend = ax.legend(handles=policy_legend_elements, loc='upper left', frameon=True, ncol=4, bbox_to_anchor=(-0.1, -0.05), framealpha=0.8)
 ax.add_artist(first_legend)
 
 # Place the comparison legend below the first one
-ax.legend(handles=comparison_legend_elements, loc='upper right', frameon=True, ncol=2, bbox_to_anchor=(1.0, -0.15), framealpha=0.8)
+ax.legend(handles=comparison_legend_elements, loc='upper left', frameon=True, ncol=2, bbox_to_anchor=(-0.1, -0.10), framealpha=0.8)
 
 # Add the custom lines for comparison under the correct labels
 for line in custom_lines:
     ax.add_line(line)
-
-
-
-
 
 
 

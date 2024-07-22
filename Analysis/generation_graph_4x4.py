@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-from preprocessing import preprocess_data
+from preprocessing import get_metadata, get_output
 
 # Set global font size
 plt.rcParams.update({'font.size': 12})
@@ -22,13 +22,13 @@ plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
 
 output_file = "Results_scens.pickle"
 
-output_S0, titles, fig_dir, tech_titles = preprocess_data(output_file, "S0")
-output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
-output_sub, _, _, _ = preprocess_data(output_file, "and_subsidies")
-output_man, _, _, _ = preprocess_data(output_file, "and_mandates")
+output_S0 = get_output(output_file, "S0")
+output_ct = get_output(output_file, "Carbon tax")
+output_sub = get_output(output_file, "and_subsidies")
+output_man = get_output(output_file, "and_mandates")
 
+titles, fig_dir, tech_titles, models = get_metadata()
 
-models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
 shares_variables = {"FTT:P": "MEWG", "FTT:Tr": "TEWK", "FTT:Fr": "ZEWK", "FTT:H": "HEWG"}
 
 tech_names = {}             # The titles of the technology names
