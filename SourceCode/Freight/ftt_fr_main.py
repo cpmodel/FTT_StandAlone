@@ -87,7 +87,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Technology to fuel user conversion matrix
     zjet = copy.deepcopy(data['ZJET'][0, :, :])
     # Initialise the emission correction factor
-    emis_corr = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
+    emis_corr = np.ones([len(titles['RTI']), len(titles['FTTI'])])
 
     # Initialise up to the last year of historical data
     if year <= histend["RVKZ"]:
