@@ -1,0 +1,66 @@
+def heat_pump_mandate2(heat_mandate, hwsa_r, hews_r, endogenous_additions, r, year, n_years=11):
+    """ 
+    Sets a mandate which increasing to 80% of sales in 2035. That year, fossil
+    fuel boilers are outregulated. The shares of each type of heat pump is
+    proportional to historical shares. Similarly, the shares of lost fossil-based
+    boilers is proportional to shares in previous year. 
+    
+    A few exceptions:
+        * When this decreases growth HPs, use endogenous shares
+        * When not enough fossil boilers are left, decrease mandate
+    """
+    
+    
+    fossil_techs = [0, 1, 2, 3, 6, 8]
+    heat_pump_techs = [9, 10, 11]
+    
+    
+    if heat_mandate[0,0,0] == 1:
+        if year in range(2025, 2025 + n_years):
+        
+            frac = 1/n_years            # Fraction decrease per year
+            n = year - 2024
+            lifetime_tech = 20          # Typical lifetime boiler
+            
+            # In 2035, the sum should be 80% of sales are heat pump. Lifetime = 20y, so 0.05 ~= 100%
+            sum_hwsa = frac * n / lifetime_tech   
+            
+            sum_ff = np.sum(hews_r[fossil_techs])
+            sum_hp = np.sum(hews_r[heat_pump_techs])
+            
+            if sum_ff < 1.8 * sum_hwsa:
+                sum_hwsa = 0.0  # Stop when there is too little fossil fuels to replace
+            if sum_hp > 1 - 2 * sum_hwsa:
+                sum_hwsa = 0
+            
+            # Compute fractions for each heat pump, ff technique, based on fraction of shares
+            # Ensure no division by zero (note, fossil fuel second option doesn' matter, as we've already scaled sum_hwsa to sum_ff)
+            if sum_hp > 0:
+                frac_heat_pumps = hews_r[heat_pump_techs, 0]
+            else:
+                frac_heat_pumps = np.array([0.1, 0.45, 0.45])
+            if sum_ff > 0:
+                frac_fossils = hews_r[fossil_techs, 0] / sum_ff
+            else:
+                frac_fossils = np.array([0.2, 0.2, 0.2, 0.2, 0.2, 0])
+                
+            frac_hp_endo = ( np.sum(endogenous_additions[heat_pump_techs])
+                            / np.sum(endogenous_additions[endogenous_additions>0]) )
+            
+            test = 1
+            # Turn down or off, based on last years sales.
+            # Turn off when endogenous sales exceed mandate
+            if frac_hp_endo > sum_hwsa * lifetime_tech:
+                sum_hwsa = 0
+            if frac_hp_endo > 0 and frac_hp_endo < sum_hwsa:
+                sum_hwsa = sum_hwsa - 1/lifetime_tech * frac_hp_endo
+            
+                        
+            
+            hwsa_r[fossil_techs, 0] = -sum_hwsa * frac_fossils
+            hwsa_r[heat_pump_techs, 0] = sum_hwsa * frac_heat_pumps
+            
+            
+
+    # Else: return hswa unchanged
+    return hwsa_r

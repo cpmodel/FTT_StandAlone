@@ -82,6 +82,8 @@ for mi, model in enumerate(models):
         emission_diff = emissions_abs_diff[model][scenario][year_ind]
         ax.barh(scenario, emission_diff, color=palette[(si+2)//3])
         ax.set_title(model)
+        print(f"Scenario {scenario} and model {model} has {emission_diff} diff")
+    
     
     ax.axvline(0, color='black', linewidth=0.8)  # Add vertical line at zero
     # Remove the top and right frame
