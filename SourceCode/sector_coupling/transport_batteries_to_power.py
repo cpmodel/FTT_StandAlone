@@ -68,7 +68,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     
     return data
 
-def share_transport_batteries(data, year, titles):
+def share_transport_batteries(data, titles):
     """
     Estimate the battery needs in power from GW to GWh, and compute ratio with transport.
     The original Ueckerdt paper does not contain this information. We therefore estimate
@@ -149,6 +149,7 @@ def vehicle_to_grid(data, time_lag, year, titles):
     # Available batteries
     available_batteries = ( batteries_EVs_only
                            * participation * availability * tech_readiness) 
+    
     # Convert to GWh (TEWK in 1000 cars, battery capacity in kWh)
     available_batteries = available_batteries / 1000
     

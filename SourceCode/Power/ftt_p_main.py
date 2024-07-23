@@ -74,6 +74,7 @@ from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
 from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
+from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power, battery_costs
 
 
 
@@ -451,8 +452,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
-            stop = 1
 
+            
+             
             # Learning-by-doing effects on investment
             if year > histend['BCET']:
                 for tech in range(len(titles['T2TI'])):
@@ -786,6 +788,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
+            
+            # %%
+            data["Battery cap additions"][0, t-1, 0] = quarterly_bat_add_power(no_it, data, data_dt, titles)
 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):
@@ -853,12 +858,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 if domain[var] == 'FTT-P':
 
                     data_dt[var] = np.copy(data[var])
+            
         
         if year == 2050 and t == no_it:
             print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.3f} M GWh")
             print(f"Total solar+wind in 2050 is: {np.sum(data['MEWG'][:, 16:19, 0])/10**6:.3f} M GWh")
 
-            
+         
 
 
     return data

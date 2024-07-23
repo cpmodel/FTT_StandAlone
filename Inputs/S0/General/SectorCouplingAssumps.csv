@@ -6,7 +6,7 @@ Cost savings,0
 GW to GWh,4.3
 V2G available fraction,0.24
 V2G participation rate,0.4
-Dummy,
+Battery learning exponent,-0.412
 Dummy,
 Dummy,
 Dummy,

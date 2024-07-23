@@ -76,7 +76,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     # Categories for the cost matrix
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
-
+    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
+    
     sector = 'freight'
 
     # Factor used to create intermediate data from annual figures
@@ -88,6 +89,26 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     zjet = copy.deepcopy(data['ZJET'][0, :, :])
     # Initialise the emission correction factor
     emis_corr = np.ones([len(titles['RTI']), len(titles['FTTI'])])
+
+    
+    if year == 2012:
+        start_nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
+        for veh in range(len(titles['FTTI'])):
+            if veh in [12, 13]:
+                # Starting EV cost (without battery)
+                start_nonbat_cost[:, veh, 0] = (data['ZCET'][:, veh, c6ti['1 Price of vehicles (USD/vehicle)']]
+                                          - time_lag['ZCET'][:, veh, c6ti['21 Battery capacity (kWh)']]
+                                          * data['BTTC'][:, 18, c3ti['19 Battery cost ($/kWh)']])
+            else:
+                start_nonbat_cost[:, veh, 0] = 0
+        # Save the nonbat_costs for later
+        data["ZEVC"] = start_nonbat_cost
+    elif year > 2020:
+        # Copy over TEVC values
+        data['ZEVC'] = np.copy(time_lag['ZEVC'] )
+        pass
+
+
 
     # Initialise up to the last year of historical data
     if year <= histend["RVKZ"]:
@@ -141,7 +162,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['ZEWK'][:, :, 0] = data['ZEWS'][:, :, 0] \
                                 * data['RFLZ'][:, np.newaxis, 0, 0]
         
-        #Set cumulative capacities variable
+        # Set cumulative capacities variable
         data['ZEWW'][0, :, 0] = data['ZCET'][0, :, c6ti['11 Cumulative seats']]
 
         if year == histend["RVKZ"]:
@@ -378,19 +399,48 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             dw = np.sum(bi, axis = 0)
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
+            
+            
+            
+            quarterly_additions_freight = zewi_t[:, :, 0] * data["ZCET"][:, :, c6ti['21 Battery capacity (kWh)']]
+            quarterly_additions_freight = (quarterly_additions_freight) / 1e6  # Convert kWh to GWh.
+            summed_quarterly_capacity_freight = np.sum(quarterly_additions_freight)  # Summing across sectors
+            
+            data["Battery cap additions"][2, t-1, 0] = summed_quarterly_capacity_freight
+            
+            
                 
-            # Reopen region loop 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['FTTI'])):
 
                 if data['ZEWW'][0, tech, 0] > 0.1:
+                    
+                    nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
+                    # For EVs, add the battery costs to the non-battery costs
+                    if tech in [12, 13]:
+                        
+                        nonbat_cost[:, veh, 0] = (data["ZEVC"][:, veh, 0] 
+                                            * (np.sum(data["TWWB"], axis=1) / np.sum(data["TWWB"], axis=1)) 
+                                            ** (data["ZCET"][:, veh, c6ti['15 Learning exponent']]/2)
+                                            )
+
+                        
+
+                        data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
+                                nonbat_cost[:, veh, 0] 
+                                + (data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                                        * data["ZCET"][:, veh, c6ti['21 Battery capacity (kWh)']])
+                                )
+                    # For non-EVs, add only the non-battery costs
+                    # else:
 
                     data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
                             data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
                             * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
-                            * dw[tech]/data['ZEWW'][0, tech, 0])
+                            * dw[tech] / data['ZEWW'][0, tech, 0])
 
 
+            
             # Calculate total investment by technology in terms of truck purchases
             for r in range(len(titles['RTI'])):
                 data['ZWIY'][r, :, 0] = data['ZEWI'][r, :, 0] \

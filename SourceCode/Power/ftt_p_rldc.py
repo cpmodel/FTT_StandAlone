@@ -25,7 +25,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.sector_coupling.transport_batteries_to_power import share_transport_batteries, update_costs_from_transport_batteries, vehicle_to_grid
-
+from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 #%% FEQS
 def feqs(a):
@@ -222,7 +222,8 @@ def rldc(data, time_lag, data_dt, year, titles):
         # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
         
         # Apply learning rate to levelised cost of storage (MSCC and MLCC)
-        data['MSCC'][:,0,0] = 0.20 * 1e6 * (data_dt['MSSC'][:, 0, 0].sum() / data['MSSC2020']) ** learning_exp_ss
+        battery_cost_frac = battery_costs(data, time_lag, year, titles)
+        data['MSCC'][:,0,0] = 0.20 * 1e6 * battery_cost_frac
         data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / data['MLSC2020']) ** learning_exp_ls
     
 
@@ -645,7 +646,7 @@ def rldc(data, time_lag, data_dt, year, titles):
             
     # %%
     data = vehicle_to_grid(data, time_lag, year, titles)
-    storage_ratio = share_transport_batteries(data, year, titles)
+    storage_ratio = share_transport_batteries(data, titles)
     data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
 
     # Ad hoc correction for exchange rate and inflation
@@ -668,8 +669,7 @@ def rldc(data, time_lag, data_dt, year, titles):
     check_mlsm = pd.DataFrame(data['MLSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
     check_mssm = pd.DataFrame(data['MSSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
 
-    # %%
-    
+
     # Store the storage capacities in 2020
     if year == 2020:
         data['MSSC2020'] = np.sum(data['MSSC']).copy()

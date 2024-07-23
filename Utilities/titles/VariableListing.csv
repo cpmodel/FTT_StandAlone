@@ -393,3 +393,7 @@ Second-hand battery stock,Sum of second-hand batteries,GWh,RTI,NA,NA,TIME,FTT-P,
 MPRI,FTT:Power,"Switch for electricity price calculation (1=Double weighted LCOE, 2=Merit order approach)",RTI,NA,NA,NA,FTT-P,-,-,-,-,Y,Y
 SectorCouplingAssumps,Assumptions for sector coupling,,NA,SCA,NA,NA,General,-,-,-,,Y,Y
 V2G battery stock,Available EV battery stock given participation rate and use,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2010,-,Y,Y
+Battery cap additions,Capacity additions per timestep per model,GWh,models_w_batteries,noit,NA,TIME,General,-,-,2020,-,-,-
+Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
+Cumulative total batcap 2020,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
+ZEVC,Starting non-battery costs of a truck,USD/veh,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,

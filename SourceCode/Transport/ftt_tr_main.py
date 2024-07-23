@@ -45,6 +45,7 @@ from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_mandate import EV_mandate
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
+from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 
 # %% Fleet size - under development
@@ -465,6 +466,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (kWh)  
             new_bat = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
             new_bat[:, :, 0] = tewi_t[:, :, 0] * data["BTTC"][:, :, c3ti["18 Battery cap (kWh)"]]  
+            data["Battery cap additions"][1, t-1, 0] = np.sum(new_bat)/1000 # In GWh
             
             # Cumulative investment for learning cost reductions
             bi = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
@@ -503,12 +505,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if 17 < veh < 24:
                     # Battery cost as a result of learning
                     # Battery cost = energy density over time*rare metal price trend over time
+                    # data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] = (
+                    #     (data["BTTC"][:, veh, c3ti['22 Energy density']] ** (year - 2022)) 
+                    #     * (data["BTTC"][:, veh, c3ti['21 Rare metal price']] ** (year - 2022)) 
+                    #     * data['BTCI'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                    #     * (np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1))
+                    #     ** data["BTTC"][:, veh, c3ti['16 Learning exponent']]) 
+                    battery_cost_frac = battery_costs(data, time_lag, year, titles)
+                    
                     data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] = (
-                        (data["BTTC"][:, veh, c3ti['22 Energy density']] ** (year - 2022)) 
-                        * (data["BTTC"][:, veh, c3ti['21 Rare metal price']] ** (year - 2022)) 
-                        * data['BTCI'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
-                        * (np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1))
-                        ** data["BTTC"][:, veh, c3ti['16 Learning exponent']])                 
+                        data['BTCI'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
+                        * battery_cost_frac )
             
             # Save battery cost
             data["TEBC"] = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
@@ -518,6 +525,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             id_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
             # Initialise variable for cost of EV/PHEV - battery
             i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
+            
+            
+            
             
             # Learning-by-doing effects on investment
             for veh in range(len(titles['VTTI'])):
