@@ -392,7 +392,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             
             battery_cap_transport = zewi_t[:, :, 0] * data["ZCET"][:, :, c6ti['21 Battery capacity (kWh)']]
             
-            yearly_additions_freight = (battery_cap_transport * data["ZEWI"][:, :, None]) / 1e3  # Convert kWh to GWh and from 1000 units to 1.
+            yearly_additions_freight = (battery_cap_transport) / 1e3  # Convert kWh to GWh and from 1000 units to 1.
             
             cumulative_capacity_freight = np.sum(yearly_additions_freight, axis=0)  # Summing across regions
 
