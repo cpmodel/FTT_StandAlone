@@ -391,3 +391,4 @@ Second-hand batteries by age,Second-hand batteries from transport and freight,GW
 Second-hand battery stock,Sum of second-hand batteries,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 MPRI,FTT:Power,"Switch for electricity price calculation (1=Double weighted LCOE, 2=Merit order approach)",RTI,NA,NA,NA,FTT-P,-,-,-,-,Y,Y
 SectorCouplingAssumps,Assumptions for sector coupling,,NA,SCA,NA,NA,General,-,-,-,,Y,Y
+CBAT,Cumulative capacity of Batteries (GWh),GWh,NA,NA,NA,TIME,General,-,-,-,-,,
