@@ -58,6 +58,6 @@ def calculate_cumulative_capacity_power(data, data_dt, get_sector_coupling_dict,
 
     quarterly_cap_additions = capacity_batteries_current_timestep - capacity_batteries_last_timestep
 
-    cumulative_quarterly_capacity_power = quarterly_cap_additions + (capacity_batteries_current_timestep / (battery_lifetime / time_steps))
+    cumulative_quarterly_capacity_power = quarterly_cap_additions + (capacity_batteries_current_timestep / (battery_lifetime * time_steps))
     
     return cumulative_quarterly_capacity_power
