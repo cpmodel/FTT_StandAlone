@@ -109,7 +109,9 @@ for mi, model in enumerate(models):
 
 fig.subplots_adjust(wspace=0.6)  # Increase horizontal space between subplots
     
-        
+# Save the graph as an editable svg file
+output_file = os.path.join(fig_dir, "Emission_reduction_by_sector.svg")
+fig.savefig(output_file, format="svg", bbox_inches='tight')
     
     
     
