@@ -553,6 +553,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 
             
             yearly_additions_transport = new_bat / 1e6  # Convert kWh to GWh
+            
             cumulative_quarterly_capacity_transport = np.sum(yearly_additions_transport, axis=0)  # Summing across regions
 
 
