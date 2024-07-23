@@ -807,12 +807,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             battery_lifetime = 12 #assuming 12 years
             
-            capacity_batteries_current_year = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
-            capacity_batteries_last_year = time_lag["MSSC"] * sector_coupling_assumps["GW to GWh"]
+            time_steps = 4 #per quarter in a year
             
-            yearly_cap_additions = capacity_batteries_current_year - capacity_batteries_last_year
+            capacity_batteries_current_timestep = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+            capacity_batteries_last_timestep = data_dt["MSSC"] * sector_coupling_assumps["GW to GWh"]
             
-            yearly_overall_capacity_additions = yearly_cap_additions + capacity_batteries_current_year/battery_lifetime
+            quarterly_cap_additions = capacity_batteries_current_timestep - capacity_batteries_last_timestep
+            
+            cumulative_quarterly_capacity_power = quarterly_cap_additions + (capacity_batteries_current_timestep/(battery_lifetime/time_steps))
             
             
             # Investment (1.33 an exchange rate factor, code differs from FORTRAN)
