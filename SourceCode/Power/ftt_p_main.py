@@ -75,8 +75,6 @@ from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
 from SourceCode.sector_coupling.transport_batteries_to_power import get_sector_coupling_dict
-from SourceCode.Power.ftt_p_lbd import learning_by_doing
-from SourceCode.Power.ftt_p_lbd import calculate_cumulative_capacity_power
 
 
 # %% main function
@@ -756,7 +754,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         data['MESC'][r, tech, 0] = 0.0
                         data['MELF'][r, tech, 0] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
-
+                        
+            """
+            
             # Call the learning_by_doing function
             data = learning_by_doing(mewi_t, titles, data, data_dt, time_lag, c2ti, set_carbon_tax, year)
 
@@ -824,7 +824,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             quarterly_cap_additions = capacity_batteries_current_timestep - capacity_batteries_last_timestep
             
             cumulative_quarterly_capacity_power = quarterly_cap_additions + (capacity_batteries_current_timestep/(battery_lifetime/time_steps))
-            """
+            
             
             # Investment (1.33 an exchange rate factor, code differs from FORTRAN)
             data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
