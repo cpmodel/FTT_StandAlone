@@ -176,7 +176,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
-            emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
+            emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
             fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
@@ -212,7 +212,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # "Emissions"
             data['TEWE'][r, :, 0] = (data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
-                                     * CO2_corr[r] * emis_corr[r,:]/1e6)
+                                     * CO2_corr[r] * emis_corr[r,:] / 1e6)
     
     # Call the survival function routine, updating scrappage and age matrix:
     if year <= np.max(data["TDA1"][:, 0, 0]):
@@ -400,7 +400,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             CO2_corr = np.ones(len(titles['RTI']))
-            emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
+            emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
             fuel_converter = copy.deepcopy(data['TJET'][0, :, :])
 
