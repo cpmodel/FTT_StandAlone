@@ -39,6 +39,8 @@ from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.support.divide import divide
 from SourceCode.Freight.ftt_fr_sales import get_sales
 from SourceCode.Freight.ftt_fr_mandate import EV_truck_mandate
+from SourceCode.sector_coupling.battery_lbd import battery_costs
+
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -94,11 +96,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     if year == 2012:
         start_nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
         for veh in range(len(titles['FTTI'])):
-            if veh in [12, 13]:
+            if veh in [12, 13, 19, 20]:
                 # Starting EV cost (without battery)
                 start_nonbat_cost[:, veh, 0] = (data['ZCET'][:, veh, c6ti['1 Price of vehicles (USD/vehicle)']]
                                           - time_lag['ZCET'][:, veh, c6ti['21 Battery capacity (kWh)']]
-                                          * data['BTTC'][:, 18, c3ti['19 Battery cost ($/kWh)']])
+                                          * data["ZCET"][:, veh, c6ti['22 Battery cost ($/kWh)']]  )
             else:
                 start_nonbat_cost[:, veh, 0] = 0
         # Save the nonbat_costs for later
@@ -169,6 +171,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Calculate levelised cost
             carbon_costs = set_carbon_tax(data, c6ti)
             data = get_lcof(data, titles, carbon_costs)
+            
+            data["ZCET initial"] = np.copy["ZCET"]
 
 
     "Model Dynamics"
@@ -332,7 +336,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     warnings.warn(msg)
                     
                 # Copy over costs that don't change
-                data['ZCET'][:, :, 1:20] = data_dt['ZCET'][:, :, 1:20]
+                data['ZCET'][:, :, 1:22] = data_dt['ZCET'][:, :, 1:22]
 
                 data['ZESG'][r, :, 0] = D[r, 0, 0]/data['ZLOD'][r, 0, 0]
 
@@ -408,6 +412,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             data["Battery cap additions"][2, t-1, 0] = summed_quarterly_capacity_freight
             
+            # Copy over the technology cost categories that do not change 
+            # Copy over the initial cost matrix
+            data["ZCET initial"] = np.copy(data_dt['ZCET initial'])
+
+
+            # Battery learning
+            for tech in range(len(titles['FTTI'])):
+                # Only for those tech with batteries
+                if data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']] > 0:
+                    
+                    battery_cost_frac = battery_costs(data, time_lag, year, titles)
+                    
+                    data["ZCET"][:, tech, c3ti['19 Battery cost ($/kWh)']] = (
+                        data['ZCET initial'][:, tech, c6ti['22 Battery cost ($/kWh)']]
+                        * battery_cost_frac )
+            
+            # Save battery cost
+            data["ZEBC"] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+            data["ZEBC"][:, :, 0] = data["BTTC"][:, :, c3ti['19 Battery cost ($/kWh)']]
             
                 
             # Learning-by-doing effects on investment
@@ -420,10 +443,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                     # For EVs, add the battery costs to the non-battery costs
                     # TODO: make battery costs dt a global variable in some way. 
-                    if tech in [12, 13]:
+                    if tech in [12, 13, 19, 20]:
                         nonbat_cost_dt[:, veh, 0] = (
                                 data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
-                                - data["BTTC"][:, 18, c3ti['19 Battery cost ($/kWh)']]  # TODO
+                                - data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
                                 * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
                                 )
                         nonbat_cost[:, veh, 0] = ( nonbat_cost_dt[:, veh, 0]
@@ -433,13 +456,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
                                 nonbat_cost[:, veh, 0] 
-                                + (data["BTTC"][:, 18, c3ti['19 Battery cost ($/kWh)']] 
+                                + (data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
                                         * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
                                 )
                     # For non-EVs, add only the non-battery costs
                     else:
                         data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
                                 data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
+                                * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                                * dw[tech] / data['ZEWW'][0, tech, 0])
+                        
+                        # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
+                        # Doesn't make too much sense for non-EVs, but does make sense for EVs
+                        data['ZCET'][:, tech, c6ti['5 O&M costs (USD/km)']] =  \
+                                data_dt['ZCET'][:, tech, c6ti['5 O&M costs (USD/km)']] \
                                 * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
                                 * dw[tech] / data['ZEWW'][0, tech, 0])
 
