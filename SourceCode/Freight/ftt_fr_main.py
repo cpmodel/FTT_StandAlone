@@ -430,8 +430,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                         * battery_cost_frac )
             
             # Save battery cost
-            data["ZEBC"] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
-            data["ZEBC"][:, :, 0] = data["BTTC"][:, :, c3ti['19 Battery cost ($/kWh)']]
+            #data["ZEBC"] = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
+            #data["ZEBC"][:, :, 0] = data["ZCET"][:, :, c6ti['22 Battery cost ($/kWh)']]
             
                 
             # Learning-by-doing effects on investment
