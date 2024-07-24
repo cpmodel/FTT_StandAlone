@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from preprocessing import preprocess_data
+from preprocessing import get_output, get_metadata
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
@@ -21,12 +21,13 @@ plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_policies.pickle"
 
-output_S0, titles, fig_dir, tech_titles = preprocess_data(output_file, "S0")
-output_ct, _, _, _  = preprocess_data(output_file, "Carbon tax")
-output_sub, _, _, _ = preprocess_data(output_file, "Subsidies")
-output_man, _, _, _ = preprocess_data(output_file, "Mandates")
+output_S0 = get_output(output_file, "S0")
+output_ct  = get_output(output_file, "Carbon tax")
+output_sub = get_output(output_file, "Subsidies")
+output_man = get_output(output_file, "Mandates")
 
-models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
+titles, fig_dir, tech_titles, models = get_metadata()
+
 price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 shares_variables = {"FTT:P": "MEWG", "FTT:Tr": "TEWK", "FTT:Fr": "ZEWK", "FTT:H": "HEWG"}
 tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 11, "FTT:Fr": 12}
@@ -91,4 +92,7 @@ plt.show()
    
 # Save the graph as an editable svg file
 output_file = os.path.join(fig_dir, "Cost_declines_by_policy.svg")
+output_file2 = os.path.join(fig_dir, "Cost_declines_by_policy.png")
+
 fig.savefig(output_file, format="svg")
+fig.savefig(output_file2, format="png")

@@ -111,7 +111,9 @@ fig.subplots_adjust(wspace=0.6)  # Increase horizontal space between subplots
     
 # Save the graph as an editable svg file
 output_file = os.path.join(fig_dir, "Emission_reduction_by_sector.svg")
+output_file2 = os.path.join(fig_dir, "Emission_reduction_by_sector.png")
 fig.savefig(output_file, format="svg", bbox_inches='tight')
+fig.savefig(output_file2, format="png", bbox_inches='tight')
     
     
     

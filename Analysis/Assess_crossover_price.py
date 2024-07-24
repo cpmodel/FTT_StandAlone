@@ -291,7 +291,11 @@ plt.tight_layout()
 
 # Save the graph as an editable svg file
 output_file = os.path.join(fig_dir, "Figure1_baseline_price_differences.svg")
+output_file2 = os.path.join(fig_dir, "Figure1_baseline_price_differences.png")
+
 fig.savefig(output_file, format="svg", bbox_inches='tight')
+fig.savefig(output_file2, format="png", bbox_inches='tight')
+
 
 
 #%% Cross-over year by policy
@@ -468,6 +472,8 @@ fig.suptitle("Crossover year by policy \n Comparison largest clean and fossil te
              x=0.45, y=0.95, ha='center')
 
 # Save the graph as an editable svg file
-output_file = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.svg")
-fig.savefig(output_file, format="svg", bbox_inches='tight')
+output_file = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.png")
+# fig.savefig(output_file, format="svg", bbox_inches='tight')
+fig.savefig(output_file, format="png", bbox_inches='tight')
+
 
