@@ -172,7 +172,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             carbon_costs = set_carbon_tax(data, c6ti)
             data = get_lcof(data, titles, carbon_costs)
             
-            data["ZCET initial"] = np.copy["ZCET"]
+            data["ZCET initial"] = np.copy(data["ZCET"])
+
 
 
     "Model Dynamics"
@@ -420,8 +421,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Battery learning
             for tech in range(len(titles['FTTI'])):
                 # Only for those tech with batteries
-                if data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']] > 0:
-                    
+                if np.any(data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']] > 0):
+
                     battery_cost_frac = battery_costs(data, time_lag, year, titles)
                     
                     data["ZCET"][:, tech, c3ti['19 Battery cost ($/kWh)']] = (
