@@ -74,6 +74,10 @@ def battery_costs(data, time_lag, year, titles):
         ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap 2020"] ) 
         ** battery_learning_exp )
     
+    # No learning takes place before 2020
+    if year <= 2020:
+        battery_cost_fraction = 1
+    
     return battery_cost_fraction
     
     

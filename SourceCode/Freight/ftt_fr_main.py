@@ -416,28 +416,32 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 if data['ZEWW'][0, tech, 0] > 0.1:
                     
                     nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
-                    # For EVs, add the battery costs to the non-battery costs
-                    if tech in [12, 13]:
-                        
-                        nonbat_cost[:, veh, 0] = (data["ZEVC"][:, veh, 0] 
-                                            * (np.sum(data["TWWB"], axis=1) / np.sum(data["TWWB"], axis=1)) 
-                                            ** (data["ZCET"][:, veh, c6ti['15 Learning exponent']]/2)
-                                            )
+                    nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
 
-                        
+                    # For EVs, add the battery costs to the non-battery costs
+                    # TODO: make battery costs dt a global variable in some way. 
+                    if tech in [12, 13]:
+                        nonbat_cost_dt[:, veh, 0] = (
+                                data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
+                                - data["BTTC"][:, 18, c3ti['19 Battery cost ($/kWh)']]  # TODO
+                                * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
+                                )
+                        nonbat_cost[:, veh, 0] = ( nonbat_cost_dt[:, veh, 0]
+                                                * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                                                * dw[tech] / data['ZEWW'][0, tech, 0])
+                                                )
 
                         data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
                                 nonbat_cost[:, veh, 0] 
-                                + (data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] 
-                                        * data["ZCET"][:, veh, c6ti['21 Battery capacity (kWh)']])
+                                + (data["BTTC"][:, 18, c3ti['19 Battery cost ($/kWh)']] 
+                                        * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
                                 )
                     # For non-EVs, add only the non-battery costs
-                    # else:
-
-                    data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
-                            data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
-                            * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
-                            * dw[tech] / data['ZEWW'][0, tech, 0])
+                    else:
+                        data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
+                                data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
+                                * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                                * dw[tech] / data['ZEWW'][0, tech, 0])
 
 
             

@@ -95,11 +95,11 @@ def get_lcof(data, titles, carbon_costs):
 
         # Defining and Initialising Variables
 
-        #Cost matrix
+        # Cost matrix
         zcet = data['ZCET'][r, :, :]
         carbon_c = carbon_costs[r]
 
-        #First, mask for lifetime
+        # First, mask for lifetime
         LF = zcet[:, c6ti['8 service lifetime (y)']]
         max_LF = int(np.max(LF))
         LF_mat = np.linspace(np.zeros(len(titles['FTTI'])), max_LF-1,
@@ -182,8 +182,8 @@ def get_lcof(data, titles, carbon_costs):
         RT = np.where(mask, RT, 0)
         
         # Calculate LCOF without policy, and find standard deviation
-        npv_expenses1 = (It+FT+OMt)/Lfactor
-        npv_expenses1 = (npv_expenses1/denominator)
+        npv_expenses1 = (It + FT + OMt) / Lfactor
+        npv_expenses1 = (npv_expenses1 / denominator)
         npv_utility = 1/denominator
         
         # Remove 1s for tech with small lifetime than max
