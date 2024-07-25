@@ -43,10 +43,11 @@ def get_cumulative_batcap(data, time_lag, year, titles):
     
     # For simplicity, in 2020, the capacity is set to 2020 values of overall battery
     # capacity in the three models together. 
+    # TODO: Deal with the fact that different models start at different times
     
     if year <= 2020:
         data["Cumulative total batcap 2020"][0, 0, 0] = (
-            np.sum(data["TWWB"]) / 1000
+            np.sum(data["TEWW"][0, 18:24]) / 1000
             + np.sum(data["MSSC"] * sector_coupling_assumps["GW to GWh"])
             + np.sum(data["ZEWK"][:, :, 0] * data["ZCET"][:, :, c6ti['21 Battery capacity (kWh)']] / 10e6)
             )
@@ -70,6 +71,7 @@ def battery_costs(data, time_lag, year, titles):
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     battery_learning_exp = sector_coupling_assumps["Battery learning exponent"]
+    # TODO: figure out how to get 2021 cumulative batcap (rather than being one year behind)
     battery_cost_fraction = (
         ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap 2020"] ) 
         ** battery_learning_exp )

@@ -170,7 +170,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year == histend["RVKZ"]:
             # Calculate levelised cost
             carbon_costs = set_carbon_tax(data, c6ti)
-            data = get_lcof(data, titles, carbon_costs)
+            data = get_lcof(data, titles, carbon_costs, year)
             
             data["ZCET initial"] = np.copy(data["ZCET"])
 
@@ -432,31 +432,29 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Save battery cost
             #data["ZEBC"] = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
             #data["ZEBC"][:, :, 0] = data["ZCET"][:, :, c6ti['22 Battery cost ($/kWh)']]
+            nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
+            nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
             
-                
             # Learning-by-doing effects on investment
             for tech in range(len(titles['FTTI'])):
 
                 if data['ZEWW'][0, tech, 0] > 0.1:
                     
-                    nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
-                    nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
-
                     # For EVs, add the battery costs to the non-battery costs
                     # TODO: make battery costs dt a global variable in some way. 
                     if tech in [12, 13, 19, 20]:
-                        nonbat_cost_dt[:, veh, 0] = (
+                        nonbat_cost_dt[:, tech, 0] = (
                                 data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
                                 - data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
                                 * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
                                 )
-                        nonbat_cost[:, veh, 0] = ( nonbat_cost_dt[:, veh, 0]
+                        nonbat_cost[:, tech, 0] = ( nonbat_cost_dt[:, tech, 0]
                                                 * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
                                                 * dw[tech] / data['ZEWW'][0, tech, 0])
                                                 )
 
                         data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
-                                nonbat_cost[:, veh, 0] 
+                                nonbat_cost[:, tech, 0] 
                                 + (data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
                                         * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
                                 )
@@ -483,7 +481,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Calculate levelised cost again
             carbon_costs = set_carbon_tax(data, c6ti)
-            data = get_lcof(data, titles, carbon_costs)
+            data = get_lcof(data, titles, carbon_costs, year)
 
 
             # Update time loop variables:
