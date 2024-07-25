@@ -66,6 +66,7 @@ def change_csv_files(model, scen_name, source_dir, variable, policy):
 
 
 def policy_change(df, policy):
+    carbon_price = 200.0     # Constant €200 per tonne CO2 
     match policy:
         
         case "REPP":  # A linearly increasing price to €200 per tonne CO2, i.e.  
@@ -87,29 +88,26 @@ def policy_change(df, policy):
             df.iloc[:, 14:42] = (price_2050) / 27.0 * np.arange(28) * 3.667 
             # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
             df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) ) * 3.667       
-            
+    
+        case "Power REPP":
+            df.iloc[:, 15:] = carbon_price * 3.667 
         
         
         # Power sector policies
         case "MEWR strong":     # Completely outregulate fossil technologies from 2024
             df.iloc[1:8, 24:] = 0
-        case "MWKA strong":     # Set MWKA to 2021 MEWK values in 2022 and 2023, and then go down to 0 by 2035 --> #TODO
-            # Easiest here is probably to semi-hard code this work. 
-            pass
         case "MEWT":           # Subsidize all renewables, except for solar
             df.iloc[ 8:18, 24:] = -0.3
             df.iloc[19:22, 24:] = -0.3
-       
         case "Coal phase-out":
             df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on 
-       
+      
         
         # Transport policies
         case "TREG strong":
             df.iloc[:15, 24:] = 0
         case "TWSA strong":
             df.iloc[18:21, 24:] = 0 # (exogenous sales in k-veh) TODO: I will need to figure out what a reasonable mandate is. 
-
         case "BRR strong tax": 
             df.iloc[:15, 24:] = 0.3
         case "BRR strong subsidy":
@@ -117,11 +115,13 @@ def policy_change(df, policy):
         case "BRR strong combo":
             df.iloc[:15, 24:] = 0.3
             df.iloc[18:21, 24:] = -0.3
-            
         case "EV mandate regulation":
             df.iloc[:15, 35:] = 0
         case "EV mandate exogenous sales":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+        case "Transport REPP":
+             df.iloc[:, 15:] = carbon_price * 3.667    
+  
                    
             
         # Freight policies
@@ -140,6 +140,8 @@ def policy_change(df, policy):
             df.iloc[[0, 2, 4, 6, 8], 23:] = 0
         case "EV truck mandate exogenous sales":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+        case "Freight REPP":
+            df.iloc[:, 15:] = carbon_price * 3.667 
             
         # Heat policies
         case "HREG strong":
@@ -164,7 +166,10 @@ def policy_change(df, policy):
             df.iloc[6, 35:] = 0
         case "Heat pump mandate exogenous sales":
             df.iloc[0, 1] = 1       # The heat pump mandates are coded as a function; this switch turns it on
+        case "Heat REPP":
+            df.iloc[:, 15:] = carbon_price * 3.667 
             
+        
         # Sector coupling
         case "Sector coupling":
             df.iloc[3, 1] = 0.5         # 50% cost savings on second-hand batteries
@@ -173,7 +178,7 @@ def policy_change(df, policy):
         
         
 # Import policies from policies.csv in same folder
-policies = pd.read_csv(os.path.join(current_dir, "policies_by_sector.csv"))
+policies = pd.read_csv(os.path.join(current_dir, "policies.csv"))
 
 policy_packages = list(policies.keys()[9:])
 #policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]
@@ -186,7 +191,8 @@ for policy_package in policy_packages:
         policy = row[1]         # Get the row as a dictionary
 
         if policies_turned_on[pi]:
-            print(policy["Model"])
+            print(f"{policy['Model']}: {policy['Policy']}")
+            
             source_dir = get_source_dir(input_dir, "S0", policy["Model"])
             copy_csv_files_to_scen(policy["Model"], policy["Variable"], policy_package, source_dir)
             change_csv_files(policy["Model"], policy_package, source_dir, policy["Variable"], policy["Policy"])

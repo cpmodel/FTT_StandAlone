@@ -1,14 +1,16 @@
 ﻿Policy,Model,Variable,Description,,,,,,Carbon tax,and_subsidies,and_mandates,Subsidies,Mandates
+Power REPP,FTT-P,REPPX,Constant carbon tax at 200€/tonne CO2,,,,,,1,1,1,0,0
 MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,0,1,1,1,0
-REPP,General,REPPX,Linearly increasing to €200 per tCO2 by 2050 (power),,,,,,1,1,1,0,0
-REPP2,General,REPP2X,Linearly increasing from 0 to 200 per tCO2 by 2050 (non-power),,,,,,1,1,1,0,0
 Coal phase-out,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035; active phase-out,,,,,,0,0,1,0,1
+Transport REPP,FTT-Tr,REPP2X,Constant carbon tax at 200€/tonne CO2,,,,,,1,1,1,0,0
 EV mandate regulation,FTT-Tr,TREG,No new fossil cars from 2035,,,,,,0,0,1,0,1
 EV mandate exogenous sales,FTT-Tr,EV mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,0,1,0,1
 BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,,,,0,1,1,1,0
+Freight REPP,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,1,1,1,0,0
 ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,0,1,1,1,0
 EV truck mandate regulation,FTT-Fr,ZREG,No new fossil cars from 2035,,,,,,0,0,1,0,1
 EV truck mandate exogenous sales,FTT-Fr,EV truck mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,0,1,0,1
+Heat REPP,FTT-H,REPP4X,Constant carbon tax at 200€/tonne CO2,,,,,,1,1,1,0,0
 HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,,,,0,1,1,1,0
 Heat pump mandate 2035 regulation,FTT-H,HREG,Regulate out fossilf fuels in 2035,,,,,,0,0,1,0,1
 Heat pump mandate exogenous sales,FTT-H,hp mandate,"Linearly increasing sales of heat pump from 2024 to 2035, decrease fossil heating technologies (using switch)",,,,,,0,0,1,0,1

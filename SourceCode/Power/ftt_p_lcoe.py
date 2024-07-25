@@ -34,7 +34,7 @@ def set_carbon_tax(data, c2ti, year):
     Returns:
         Carbon costs per country and technology (2D), part of BCET
     '''
-    
+   
     carbon_costs = (
                     data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']]   # Emission per GWh
                     * data["REPPX"][:, :, 0]                              # Carbon price in euro / tC
