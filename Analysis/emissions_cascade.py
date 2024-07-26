@@ -8,7 +8,6 @@ Created on Mon Jul 22 10:35:01 2024
 # Import the results pickle file
 import os
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -22,10 +21,10 @@ plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_sectors.pickle"
 
-output_S0_FTTP = get_output("Results_S0_FTTP.pickle", "S0")
-output_S0_FTTH  = get_output("Results_S0_FTTH.pickle", "S0")
-output_S0_FTTTr = get_output("Results_S0_FTTTr.pickle", "S0")
-output_S0_FTTFr = get_output("Results_S0_FTTFr.pickle", "S0")
+output_S0_FTTP = get_output(output_file, "S0")
+output_S0_FTTH  = get_output(output_file, "S0")
+output_S0_FTTTr = get_output(output_file, "S0")
+output_S0_FTTFr = get_output(output_file, "S0")
 
 titles, fig_dir, tech_titles, models = get_metadata()
 

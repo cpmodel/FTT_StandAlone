@@ -250,14 +250,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         S_k = data_dt['ZEWS'][r, b2, 0]
 
-                        Aik = data['ZEWA'][0, b1, b2]*data['ZCET'][r, b1, c6ti['16 Turnover rate']]
-                        Aki = data['ZEWA'][0, b2, b1]*data['ZCET'][r, b2, c6ti['16 Turnover rate']]
+                        Aik = data['ZEWA'][0, b1, b2] * data['ZCET'][r, b1, c6ti['16 Turnover rate']]
+                        Aki = data['ZEWA'][0, b2, b1] * data['ZCET'][r, b2, c6ti['16 Turnover rate']]
 
                         # Propagating width of variations in perceived costs
-                        dFik = sqrt(2) * sqrt((data_dt['ZTDD'][r, b1, 0]*data_dt['ZTDD'][r, b1, 0] + data_dt['ZTDD'][r, b2, 0]*data_dt['ZTDD'][r, b2, 0]))
+                        dFik = sqrt(2) * sqrt((data_dt['ZTTD'][r, b1, 0]*data_dt['ZTTD'][r, b1, 0] + data_dt['ZTTD'][r, b2, 0]*data_dt['ZTTD'][r, b2, 0]))
 
                         # Consumer preference incl. uncertainty
-                        Fik = 0.5*(1 + np.tanh(1.25*(data_dt['ZTLL'][r, b2, 0]-data_dt['ZTLL'][r, b1, 0])/dFik))
+                        Fik = 0.5 * (1 + np.tanh(1.25*(data_dt['ZTTC'][r, b2, 0] - data_dt['ZTTC'][r, b1, 0]) / dFik))
 
                         # Preferences are then adjusted for regulations
                         F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
