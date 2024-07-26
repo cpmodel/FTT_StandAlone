@@ -94,6 +94,7 @@ def get_lcof(data, titles):
         # Standard deviation of costs of trucks
         dIt = np.ones([len(titles['FTTI']), int(max_LF)])
         dIt = dIt * zcet[:, c6ti['2 Std of price  (USD/vehicle)'], np.newaxis]
+        dIt = dIt / zcet[:, c6ti['18 Average Mileage'], np.newaxis]
         dIt[:,1:] = 0
 
         # Reg tax based on carbon price, RTCOt = ($/tCO2/km)/(tCO2/km)
