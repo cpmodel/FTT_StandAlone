@@ -444,8 +444,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     if tech in [12, 13, 18, 19]:
                         nonbat_cost_dt[:, tech, 0] = (
                                 data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
-                                - data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
-                                * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
+                                - data_dt["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
+                                * data_dt["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
                                 )
                         nonbat_cost[:, tech, 0] = ( nonbat_cost_dt[:, tech, 0]
                                                 * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
@@ -455,8 +455,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                         data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
                                 nonbat_cost[:, tech, 0] 
                                 + (data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
-                                        * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
+                                * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
                                 )
+                        test = 1
                     
                     # For non-EVs, add only the non-battery costs
                     else:
