@@ -78,7 +78,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     # Categories for the cost matrix
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
-    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
     sector = 'freight'
 
@@ -96,7 +95,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     if year == 2012:
         start_nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
         for veh in range(len(titles['FTTI'])):
-            if veh in [12, 13, 19, 20]:
+            if veh in [12, 13, 18, 19]:
                 # Starting EV cost (without battery)
                 start_nonbat_cost[:, veh, 0] = (data['ZCET'][:, veh, c6ti['1 Price of vehicles (USD/vehicle)']]
                                           - time_lag['ZCET'][:, veh, c6ti['21 Battery capacity (kWh)']]
@@ -425,7 +424,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                     battery_cost_frac = battery_costs(data, time_lag, year, titles)
                     
-                    data["ZCET"][:, tech, c3ti['19 Battery cost ($/kWh)']] = (
+                    data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']] = (
                         data['ZCET initial'][:, tech, c6ti['22 Battery cost ($/kWh)']]
                         * battery_cost_frac )
             
@@ -442,7 +441,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     
                     # For EVs, add the battery costs to the non-battery costs
                     # TODO: make battery costs dt a global variable in some way. 
-                    if tech in [12, 13, 19, 20]:
+                    if tech in [12, 13, 18, 19]:
                         nonbat_cost_dt[:, tech, 0] = (
                                 data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
                                 - data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
@@ -458,6 +457,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                 + (data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
                                         * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
                                 )
+                    
                     # For non-EVs, add only the non-battery costs
                     else:
                         data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
