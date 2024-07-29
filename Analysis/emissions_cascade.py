@@ -16,7 +16,6 @@ from preprocessing import get_output, get_metadata
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
-# Set global font size
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_sectors.pickle"
@@ -41,8 +40,7 @@ models_to_scenarios = {"FTT:P": ["FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-P"]
 outputs_baseline = {"FTT:P": output_S0_FTTP, "FTT:H": output_S0_FTTH, 
                     "FTT:Tr": output_S0_FTTTr, "FTT:Fr": output_S0_FTTFr}
 
-def flatten(xss):
-    return [x for xs in xss for x in xs]
+
 
 def get_total_emissions(output, model):
     """Sum over regions and technologies"""
@@ -60,8 +58,13 @@ def get_total_emissions(output, model):
         emission_m = np.sum(emission_by_tech[:, non_EVs], axis=(0, 1, 2))
     return emission_m
 
+
+# Compute overall CO2 reductions per sector
 emissions = {}
 emissions_abs_diff = {}
+
+def flatten(xss):
+    return [x for xs in xss for x in xs]
 
 all_policy_scens = list(set(flatten(models_to_scenarios.values())))
 for model in models:
@@ -74,13 +77,17 @@ for model in models:
         emissions[model][scenario] = get_total_emissions(output, model)
         emissions_abs_diff[model][scenario] = emissions[model][scenario] - emissions[model]["Baseline"]  
     
-# # Compute overall CO2 reductions per sector
 
 #%% Plot the figure
-fig, axs = plt.subplots(2, 2, figsize=(12, 12), sharex=True)
+fig, axs = plt.subplots(2, 2, figsize=(12, 6), sharex=True)
 axs = axs.flatten()
 
-
+title_labels = {"FTT:P": "Power sector emissions", "FTT:H": "Heating emissions",
+                "FTT:Tr": "Emissions from cars", "FTT:Fr": "Emissions from freight"}
+scenario_labels = {"FTT-P": "Power policies", "FTT-H": "Heating policies", "FTT-Tr": "Transport policies",
+                   "FTT-Fr": "Freight policies", "All minus FTT-P": "All of above", 
+                   "All minus FTT-H": "All of above", "All minus FTT-Tr": "All of above", 
+                   "All minus FTT-Fr": "All of above"}
 # Define a harmonious color palette
 palette = sns.color_palette("Blues_r", 3)
 
@@ -90,8 +97,8 @@ for mi, model in enumerate(models):
     ax = axs[mi]
     for si, scenario in enumerate(models_to_scenarios[model][::-1]):
         emission_diff = emissions_abs_diff[model][scenario][year_ind]
-        ax.barh(scenario, emission_diff, color=palette[(si+2)//3])
-        ax.set_title(model)
+        ax.barh(scenario_labels[scenario], emission_diff, color=palette[(si+2)//3])
+        ax.set_title(title_labels[model], pad=15)
         print(f"Model {model} and scen {scenario} has {emission_diff:.3f} diff")
     
     
@@ -100,13 +107,25 @@ for mi, model in enumerate(models):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    
+    ax.grid(which='both', axis='x', color='grey', linestyle='-', linewidth=0.5)
     
     if mi > 1:
         ax.set_xlabel(r"MtCO$_2$ emission")
+    #ax.set_yticklabels(['Heat policies', 'Transport policies', 'Freight policies', "All of the above"])
+    ax.tick_params(axis='both', which='both', length=0)  # Remove ticks in both axes
+    # Set y-tick labels to bold
+    for label in ax.get_yticklabels():
+        #label.set_fontweight('bold')
+        label.set_horizontalalignment('left')
+        
+    # Adjust the position of the y-tick labels to avoid overlap with the bars
+    ax.tick_params(axis='y', pad=130)
+    
+    ax.set_xlim(-25, 45)
 
-    ax.tick_params(axis='y', which='both', length=0)  # Remove y-ticks but keep y-labels
-
-fig.subplots_adjust(wspace=0.6)  # Increase horizontal space between subplots
+fig.subplots_adjust(wspace=0.6, hspace=0.4)  # Increase horizontal space between subplots
     
 # Save the graph as an editable svg file
 output_file = os.path.join(fig_dir, "Emission_reduction_by_sector.svg")

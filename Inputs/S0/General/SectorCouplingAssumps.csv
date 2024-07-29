@@ -2,7 +2,7 @@
 Utilisation rate,0.5
 Yearly decay,0.98
 Starting degradation,0.74
-Cost savings,0
+Cost savings,0.5
 GW to GWh,4.3
 V2G available fraction,0.24
 V2G participation rate,0.4
