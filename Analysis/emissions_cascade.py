@@ -123,7 +123,7 @@ for mi, model in enumerate(models):
     # Adjust the position of the y-tick labels to avoid overlap with the bars
     ax.tick_params(axis='y', pad=130)
     
-    ax.set_xlim(-25, 45)
+    ax.set_xlim(-25, 25)
 
 fig.subplots_adjust(wspace=0.6, hspace=0.4)  # Increase horizontal space between subplots
     
