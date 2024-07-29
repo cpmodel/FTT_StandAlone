@@ -213,6 +213,50 @@ def calculate_global_crossover_year(output, models, regions, price_names, shares
 global_crossover_years = calculate_global_crossover_year(output=output, models=models, regions=regions, price_names=price_names, shares_variables=shares_variables, tech_variable=tech_variable)
 
 
+def calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable):
+    weighted_avg_costs_clean = {}
+    weighted_avg_costs_fossil = {}
+
+    for model in models:
+        clean_costs = []
+        fossil_costs = []
+        weights = []
+        
+        for r, ri in regions.items():
+            try:
+                # Get price series for clean and fossil technologies
+                tech_clean = clean_techs[model]
+                price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
+                tech_fossil = dirty_techs[model]
+                price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
+                
+                # Get shares as weights
+                share_data_clean = output[shares_variables[model]][ri, tech_clean, :]
+                share_data_fossil = output[shares_variables[model]][ri, tech_fossil, :]
+                weight = np.sum(share_data_clean) + np.sum(share_data_fossil)
+                
+                clean_costs.append(price_series_clean)
+                fossil_costs.append(price_series_fossil)
+                weights.append(weight)
+                
+            except KeyError as e:
+                print(f"Invalid key access: {e}")
+                continue
+        
+        if weights:
+            # Calculate weighted average costs
+            weighted_avg_costs_clean[model] = np.average(clean_costs, axis=0, weights=weights)
+            weighted_avg_costs_fossil[model] = np.average(fossil_costs, axis=0, weights=weights)
+        else:
+            weighted_avg_costs_clean[model] = None
+            weighted_avg_costs_fossil[model] = None
+
+    return weighted_avg_costs_clean, weighted_avg_costs_fossil
+
+weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
+
+
+"""
 def convert_to_years_and_months(global_crossover_years):
     converted = {}
     for model, value in global_crossover_years.items():
@@ -294,3 +338,4 @@ for key, cell in table.get_celld().items():
 
 plt.title("Transition in Sector brings Cost-parity forward by", pad=20)
 plt.show()
+"""
