@@ -466,7 +466,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # New battery additions (MWh) = new sales (1000 vehicles) * average battery capacity (kWh)  
             new_bat = np.zeros([len(titles['RTI']), len(titles['VTTI']),1])
             new_bat[:, :, 0] = tewi_t[:, :, 0] * data["BTTC"][:, :, c3ti["18 Battery cap (kWh)"]]  
-            data["Battery cap additions"][1, t-1, 0] = np.sum(new_bat)/1000 # In GWh
+            data["Battery cap additions"][1, t-1, 0] = np.sum(new_bat) / 1000 # In GWh
             
             # Cumulative investment for learning cost reductions
             bi = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
