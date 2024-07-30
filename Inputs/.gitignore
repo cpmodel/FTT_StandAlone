@@ -3,6 +3,7 @@
 !S0/General/SectorCouplingAssumps.csv
 *.db1
 *.mre
+!S0/*/*mandate.csv
 !S0/*/????X*.csv
 !S1/*/????X*.csv
 !S2*/????X*.csv
