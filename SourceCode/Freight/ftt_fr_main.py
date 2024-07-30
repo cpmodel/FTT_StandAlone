@@ -206,10 +206,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data["ZWSA"] = EV_truck_mandate(data["EV truck mandate"], data["ZWSA"], time_lag["ZEWS"], time_lag['RFLZ'], year)
         
         for t in range(1, no_it + 1):
-        # Interpolations to avoid staircase profile
-
+        
+            # Interpolations to avoid staircase profile
             D = time_lag['RVKZ'][:, :, :] + (data['RVKZ'][:, :, :] - time_lag['RVKZ'][:, :, :]) * t * dt
             Utot = time_lag['RFLZ'][:, :, :] + (data['RFLZ'][:, :, :] - time_lag['RFLZ'][:, :, :]) * t * dt
+            Utot_dt = time_lag['RFLZ'][:, :, :] + (data['RFLZ'][:, :, :] - time_lag['RFLZ'][:, :, :]) * (t-1) * dt
 
             for r in range(len(titles['RTI'])):
 
@@ -310,10 +311,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 dUkTK =  np.where(reg_vs_exog, 0.0, data['ZWSA'][r, :, 0] \
                                   / ZWSA_scalar / no_it)
 
-                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
-                # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                # Correct for stretching effect in regulations. This is the difference in capacity due only to increasing fleet size.
+                # This is the difference between the endogenous capacity, and what the endogenous capacity would have been
                 # if rflz (i.e. total vehicles) had not grown.
-                dUkREG = -(endo_capacity - endo_shares * Utot[r,np.newaxis]) \
+                dUkREG = -(endo_capacity - endo_shares * Utot_dt[r,np.newaxis]) \
                          * isReg[r, :].reshape([len(titles['FTTI'])])
                                            
                 # Sum effect of exogenous sales additions (if any) with effect of regulations. 
