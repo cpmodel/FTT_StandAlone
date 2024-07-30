@@ -279,10 +279,6 @@ class ModelRun:
             if "FTT-P" in self.ftt_modules:
                 if year > 2022:
                     variables = electricity_price_feedback(variables, time_lags)
-            
-            if any(module in self.ftt_modules for module in ["FTT-P", "FTT-Tr", "FTT-Fr"]):
-                
-                variables = get_cumulative_batcap(variables, time_lags, year, self.titles)
                 
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")

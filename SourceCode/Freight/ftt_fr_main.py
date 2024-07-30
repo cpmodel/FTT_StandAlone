@@ -416,14 +416,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Copy over the technology cost categories that do not change 
             # Copy over the initial cost matrix
             data["ZCET initial"] = np.copy(data_dt['ZCET initial'])
-
-
+            
             # Battery learning
+            battery_cost_frac = battery_costs(data, time_lag, year, titles)
+            
             for tech in range(len(titles['FTTI'])):
+                    
                 # Only for those tech with batteries
                 if np.any(data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']] > 0):
-
-                    battery_cost_frac = battery_costs(data, time_lag, year, titles)
                     
                     data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']] = (
                         data['ZCET initial'][:, tech, c6ti['22 Battery cost ($/kWh)']]

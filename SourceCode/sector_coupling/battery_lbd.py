@@ -40,30 +40,29 @@ def get_cumulative_batcap(data, time_lag, year, titles):
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
     
-    
-    # For simplicity, in 2020, the capacity is set to 2020 values of overall battery
+    # For simplicity, in 2021, the capacity is set to 2021 values of overall battery
     # capacity in the three models together. 
     # TODO: Deal with the fact that different models start at different times
     
-    if year <= 2020:
-        data["Cumulative total batcap 2020"][0, 0, 0] = (
+    if year <= 2021:
+        data["Cumulative total batcap 2021"][0, 0, 0] = (
             np.sum(data["TEWW"][0, 18:24]) / 1000
             + np.sum(data["MSSC"] * sector_coupling_assumps["GW to GWh"])
             + np.sum(data["ZEWK"][:, :, 0] * data["ZCET"][:, :, c6ti['21 Battery capacity (kWh)']] / 10e6)
             )
-        data["Cumulative total batcap"] = np.copy(data["Cumulative total batcap 2020"])
+        data["Cumulative total batcap"] = np.copy(data["Cumulative total batcap 2021"])
     else:
-        # Copy over the 2020 value from last year
-        data["Cumulative total batcap 2020"] = time_lag["Cumulative total batcap 2020"]
+        # Copy over the 2021 value from last year
+        data["Cumulative total batcap 2021"] = time_lag["Cumulative total batcap 2021"]
         
+        # Impute any missing data from the current timestep
+        battery_additions = guess_battery_additions(data, time_lag)
         # Add battery capacity additions across models and across timesteps
-        cum_batcap = time_lag["Cumulative total batcap"] + np.sum(data["Battery cap additions"])
-        data["Cumulative total batcap"] = cum_batcap
+        data["Cumulative total batcap"] = time_lag["Cumulative total batcap"] + battery_additions
         
     return data
 
-# def shares_batcap_transport(battery_cap_additions, cum_additions):
-#     "Each year, calculate the share of battery additions from transport"
+
     
 def battery_costs(data, time_lag, year, titles):
     """Compute remaining fraction of costs for batteries, based on cumulative 
@@ -71,15 +70,67 @@ def battery_costs(data, time_lag, year, titles):
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     battery_learning_exp = sector_coupling_assumps["Battery learning exponent"]
-    # TODO: figure out how to get 2021 cumulative batcap (rather than being one year behind)
-    battery_cost_fraction = (
-        ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap 2020"] ) 
-        ** battery_learning_exp )
     
-    # No learning takes place before 2020
-    if year <= 2020:
+    get_cumulative_batcap(data, time_lag, year, titles)
+    # No learning takes place before 2021
+    if year <= 2021:
         battery_cost_fraction = 1
     
+    else:
+        battery_cost_fraction = (
+            ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap 2021"] ) 
+            ** battery_learning_exp )
+    
+    
     return battery_cost_fraction
+
+def guess_battery_additions(data, time_lag):
+    """ This function computes last year's battery additions share by sector, 
+    and imputes the total battery additions based on partial data 
+    or normally if there is complete data. 
+    """
+    
+    # Share by sector
+    share_by_sector = ( np.sum(time_lag["Battery cap additions"], axis=(1,2)) 
+                        / np.sum(time_lag["Battery cap additions"]) )
+    
+    # Find last timestep with at least some data:
+    def find_current_timestep(array):
+        """Find the latest column with at least one non-zero element"""
+        for col in range(array.shape[1] - 1, -1, -1):
+            if 1 <= np.count_nonzero(array[:, col]) <= 3:
+                return col
+        return None
+    latest_timestep = find_current_timestep(data["Battery cap additions"])
+    
+    # Check if data complete
+    def check_complete(array, latest_timestep):
+        """Check if all models have run and information is complete"""
+        number_of_completed_sectors = np.count_nonzero(array[:, latest_timestep])
+        complete = False
+        if number_of_completed_sectors == 3:
+            complete = True
+        return complete
+        
+    complete = check_complete(data["Battery cap additions"], latest_timestep)
+    
+    if complete:
+        total_cap_additions = np.sum(data["Battery cap additions"])
+    else:
+        cap_additions_latest = data["Battery cap additions"][:, latest_timestep, 0]
+        # Calculate the total of non-zero elements
+        total_non_zero = np.sum(cap_additions_latest)
+        # Calculate the imputed total
+        sum_existing_shares = np.sum(share_by_sector[cap_additions_latest != 0])
+        if sum_existing_shares > 0:
+            imputed_total = total_non_zero / sum_existing_shares
+        else:
+            imputed_total = total_non_zero
+    
+        total_cap_additions = (imputed_total 
+                               + np.sum(data["Battery cap additions"][:, :latest_timestep]) )
+    
+    
+    return total_cap_additions    
     
     

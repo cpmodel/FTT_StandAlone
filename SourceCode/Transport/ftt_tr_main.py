@@ -501,6 +501,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
 
             # Battery learning
+            battery_cost_frac = battery_costs(data, time_lag, year, titles)
             for veh in range(len(titles['VTTI'])):
                 if 17 < veh < 24:
                     # Battery cost as a result of learning
@@ -511,7 +512,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     #     * data['BTCI'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
                     #     * (np.sum(bat_cap, axis=1) / np.sum(data["TWWB"], axis=1))
                     #     ** data["BTTC"][:, veh, c3ti['16 Learning exponent']]) 
-                    battery_cost_frac = battery_costs(data, time_lag, year, titles)
                     
                     data["BTTC"][:, veh, c3ti['19 Battery cost ($/kWh)']] = (
                         data['BTCI'][:, veh, c3ti['19 Battery cost ($/kWh)']] 
