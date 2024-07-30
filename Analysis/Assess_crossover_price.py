@@ -27,7 +27,7 @@ output_man = get_output(output_file, "Mandates")
 titles, fig_dir, tech_titles, models = get_metadata()
 
 # Define the regions and the region numbers of interest
-regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "UK": 14, "Germany": 2}
+regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany": 2, "UK": 14}
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
@@ -115,6 +115,13 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
     Returns None if the prices of the clean technology are higher than 
     the fossil technolgy throughout."""
     
+    # First check if there is a cross-over year
+    # Set the cross-over year to -inf and inf if there isn't. 
+    if (price_series_clean <= price_series_fossil).all():
+        return float('-inf')
+    elif (price_series_clean > price_series_fossil).all():
+        return float('inf')
+    
     crossover_index = np.where(price_series_clean <= price_series_fossil)[0][0]
     year_before = 2020 + crossover_index - 1
     
@@ -145,8 +152,7 @@ def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil,
             price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
             price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
             crossover_years[r] = interpolate_crossover_year(price_series_clean, price_series_fossil)
-    
-            
+          
         except IndexError:
             crossover_years[r] = None
     return crossover_years
@@ -174,7 +180,6 @@ for model in models:
     crossover_years_sub = get_crossover_year(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names)
     crossover_years_man = get_crossover_year(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names)
 
-   
     
     for r in regions:
         row = {
@@ -204,7 +209,7 @@ df = pd.DataFrame(rows, columns=["Region", "Sector",
 #%% Making a graph with four subplots for each sector.
 # Each graph shows the percentage difference between the clean and fossil technology in 2025, 2035 and 2050. 
 # The x-axis is the year and the y-axis the percentage difference.
-# The title is be the sector name. Each line in the subplot will have a different region. 
+# The title is the sector name. Each region has its own line.
 
 
 # Define the years of interest
@@ -230,6 +235,7 @@ def compute_percentage_difference(model, years):
             percentage_difference[ri, yi] = get_percentage_difference(clean_prices[r], fossil_prices[r])
     
     return percentage_difference
+
 
 #%% Plot the figure of levelised cost difference fossil vs clean tech
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
@@ -277,7 +283,8 @@ def determine_lims_crossover(row):
     xmin = np.min(row)
     xmax = np.max(row)
     
-    if row.isna().any() and not row.isna().all():
+    # If there is a nan, but not all are nan
+    if (row == np.inf).any() and not (row == np.inf).all():
         xmax = 2050
     
     return xmin, xmax
@@ -296,8 +303,8 @@ offset_op = 0.3
 
 # Define lighter colours for better distinction
 colors = {
-    'Cross-over': '#005f99',  # Lighter blue
-    'Cross-over carbon tax': '#3f5b8c',  # Medium-dark blue
+    'Cross-over': '#003f7f',  # Dark blue
+    'Cross-over carbon tax': '#547bb5',  # Medium-dark blue
     'Cross-over subsidies': '#7a5195',  # Purple
     'Cross-over mandates': '#bc5090',  # Pink-purple
 }
@@ -317,7 +324,9 @@ timeline_end = 2050
 yticks = []
 yticklabels = []
 
+# Go over models in reverse order
 for model in models[::-1]:
+    
     model_data = df[df['Sector'] == model]
     for index, row in model_data.iterrows():
         y_position = y_base + (len(df)-index) * y_gap
@@ -334,14 +343,13 @@ for model in models[::-1]:
             if row[policy] < 2021:
                 pass
             
-            elif pi < 4:
-                ax.plot(row[policy], y_position, 'o', color=colors[policy], markersize=10)
+            ax.plot(row[policy], y_position, 'o', color=colors[policy], markersize=10)
         
                 
-        # Plot arrows when the crossover poinnt in past of after 2050:
-        if row.iloc[-4:].isna().all():
+        # Plot arrows when the crossover point in past of after 2050 (-inf or inf):
+        if (row.iloc[-4:] == np.inf).all():
             ax.arrow(2049.3, y_position, 1, 0, head_width=0.3, head_length=0.2, fc='#003f5c', ec='#003f5c')
-        elif (row.iloc[-4:] < 2021.1).all():
+        elif (row.iloc[-4:] == -np.inf).all():
             ax.arrow(2020.7, y_position, -1, 0, head_width=0.3, head_length=0.2, fc='#003f5c', ec='#003f5c')                
        
         yticks.append(y_position)
