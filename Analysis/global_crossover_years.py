@@ -256,6 +256,48 @@ def calculate_weighted_average_costs(output, models, regions, price_names, share
 weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
 
 
+def find_min_costs_for_year(dict1, dict2, year_index):
+    min_costs = {}
+    for key in dict1.keys():
+        costs1 = dict1[key][:, year_index] if len(dict1[key].shape) > 1 else dict1[key][year_index]
+        costs2 = dict2[key][:, year_index] if len(dict2[key].shape) > 1 else dict2[key][year_index]
+        min_costs[key] = min(np.min(costs1), np.min(costs2))
+    return min_costs
+
+# Example usage with your dictionaries and year index
+year_index = 30  # Index for the year 2030
+min_costs = find_min_costs_for_year(weighted_avg_costs_clean, weighted_avg_costs_fossil, year_index)
+print(min_costs)
+
+
+def find_crossover_point(costs1, costs2, years):
+    differences = costs1 - costs2
+    for i in range(1, len(differences)):
+        if differences[i-1] >= 0 and differences[i] < 0:
+            return years[i]
+    return None  # Return None if no crossover point is found
+
+
+# Determine the index for the year 2030
+start_year = 2020
+target_year = 2030
+year_index = target_year - start_year
+
+# Find the minimum costs for the year 2030
+min_costs_2030 = find_min_costs_for_year(weighted_avg_costs_clean, weighted_avg_costs_fossil, year_index)
+
+# Example years array
+years = np.arange(start_year, start_year + len(weighted_avg_costs_clean['FTT:Fr'][0]))
+
+# Find crossover point for FTT:Fr
+costs_solar = weighted_avg_costs_clean['FTT:Tr'][0]
+costs_coal = weighted_avg_costs_fossil['FTT:Tr'][0]
+crossover_year = find_crossover_point(costs_solar, costs_coal, years)
+
+print(f"Minimum costs in 2030: {min_costs_2030}")
+print(f"Crossover year for Solar and Coal: {crossover_year}")
+
+
 """
 def convert_to_years_and_months(global_crossover_years):
     converted = {}
