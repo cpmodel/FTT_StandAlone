@@ -175,6 +175,7 @@ for model in models:
     
 
 #%%
+
 # Calculate weighted average costs for clean and fossils
 def calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable):
     weighted_avg_costs_clean = {}
@@ -262,8 +263,47 @@ global_crossover_years = calculate_global_crossover_year_with_costs(
 print(global_crossover_years)
 
 
+time_step = 10
+
+# Dictionary to store the results
+lowest_series_dict = {}
+
+# Iterate over all keys in the dictionaries
+for key in weighted_avg_costs_clean.keys():
+    min_value = float('inf')
+    min_series = None
+    min_source = ""
+
+    # Check all rows in weighted_avg_costs_clean for the current key
+    for row in weighted_avg_costs_clean[key]:
+        value = row[time_step]
+        if value < min_value:
+            min_value = value
+            min_series = row
+            min_source = "weighted_avg_costs_clean"
+
+    # Check all rows in weighted_avg_costs_fossil for the current key
+    for row in weighted_avg_costs_fossil[key]:
+        value = row[time_step]
+        if value < min_value:
+            min_value = value
+            min_series = row
+            min_source = "weighted_avg_costs_fossil"
+
+    # Store the lowest series in the result dictionary
+    lowest_series_dict[key] = {
+        "source": min_source,
+        "time_series": min_series
+    }
+
+# Output the result
+for key, data in lowest_series_dict.items():
+    print(f"The lowest time series for {key} at time step {time_step} is from {data['source']}.")
+    print("The entire time series is:")
+    print(data['time_series'])
 
 #%%
+"""
 output_csv_path = "Analysis/global_crossover_years_for_Tr.csv"
 
 with open(output_csv_path, mode='w', newline='') as file:
@@ -273,4 +313,4 @@ with open(output_csv_path, mode='w', newline='') as file:
         writer.writerow([model_name, crossover_year])
 
 print(f"Data saved to {output_csv_path}")
-
+"""
