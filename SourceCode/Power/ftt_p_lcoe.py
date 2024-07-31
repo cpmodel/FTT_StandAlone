@@ -196,7 +196,7 @@ def get_lcoe(data, titles):
         npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st + marg_stor_cost) / denominator 
         
         # 1b – Expenses – average LCOEs
-        npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
+        npv_expenses_no_policy        = (it_av + ft + omt + stor_cost) / denominator  
         npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
         
         # 2 – Utility
