@@ -91,8 +91,11 @@ def guess_battery_additions(data, time_lag):
     """
     
     # Share by sector
-    share_by_sector = ( np.sum(time_lag["Battery cap additions"], axis=(1,2)) 
-                        / np.sum(time_lag["Battery cap additions"]) )
+    if np.sum(time_lag["Battery cap additions"]) > 0:
+        share_by_sector = ( np.sum(time_lag["Battery cap additions"], axis=(1,2)) 
+                            / np.sum(time_lag["Battery cap additions"]) )
+    else: # 45% for transport and power, 10% for freight if no former shares
+        share_by_sector = np.array([0.45, 0.45, 0.1])
     
     # Find last timestep with at least some data:
     def find_current_timestep(array):
@@ -102,6 +105,12 @@ def guess_battery_additions(data, time_lag):
                 return col
         return None
     latest_timestep = find_current_timestep(data["Battery cap additions"])
+    
+    # Return zero if there is no data
+    if latest_timestep is None:
+        return 0
+    
+    
     
     # Check if data complete
     def check_complete(array, latest_timestep):

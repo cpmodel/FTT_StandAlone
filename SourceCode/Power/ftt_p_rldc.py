@@ -213,18 +213,7 @@ def rldc(data, time_lag, data_dt, year, titles):
     
 
     
-    if year > 2020: 
-        
-        #data['MSSC2020'] = time_lag['MSSC2020'].copy()
-        data['MLSC2020'] = time_lag['MLSC2020'].copy()        
-        
-        # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
-        # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
-        
-        # Apply learning rate to levelised cost of storage (MSCC and MLCC)
-        battery_cost_frac = battery_costs(data, time_lag, year, titles)
-        data['MSCC'][:,0,0] = 0.19 * 1e6 * battery_cost_frac
-        data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / data['MLSC2020']) ** learning_exp_ls
+    
     
 
     # Wind and solar shares for all regions
@@ -517,6 +506,20 @@ def rldc(data, time_lag, data_dt, year, titles):
         
         
         # Storage cost are overwritten here:
+            
+        if year > 2020: 
+            
+            #data['MSSC2020'] = time_lag['MSSC2020'].copy()
+            data['MLSC2020'] = time_lag['MLSC2020'].copy()        
+            
+            # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
+            # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
+            
+            # Apply learning rate to levelised cost of storage (MSCC and MLCC)
+            battery_cost_frac = battery_costs(data, time_lag, year, titles)
+            data['MSCC'][:,0,0] = 0.19 * 1e6 * battery_cost_frac
+            data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / data['MLSC2020']) ** learning_exp_ls
+        
         # Assumed levelised cost of storage: 0.20 EURO/kWh initially
         # in reality the capacity/energy discharged ratio changes due to demand-supply mismatches.
         # For simplicity a fixed LC is chosen
