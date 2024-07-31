@@ -20,7 +20,7 @@ plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
 output_file = "Results.pickle"
 
-output = get_output("Results.pickle", "FTT-Tr")
+output = get_output("Results.pickle", "FTT-H")
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -220,49 +220,6 @@ def calculate_weighted_average_costs(output, models, regions, price_names, share
 weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
 
 
-def calculate_global_crossover_year_with_costs(output, models, regions, price_names, shares_variables, tech_variable):
-    # Calculate weighted average costs for clean and fossil technologies
-    weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(
-        output, models, regions, price_names, shares_variables, tech_variable
-    )
-
-    global_crossover_years = {}
-    for model in models:
-        # Get the weighted average costs for the current model
-        clean_costs = weighted_avg_costs_clean.get(model)
-        fossil_costs = weighted_avg_costs_fossil.get(model)
-
-        if clean_costs is not None and fossil_costs is not None:
-            # Find the minimum costs across regions for each year
-            min_clean_costs = np.min(clean_costs, axis=0)
-            min_fossil_costs = np.min(fossil_costs, axis=0)
-            
-            # Identify the first year where clean costs are less than fossil costs
-            crossover_year_index = np.where(min_clean_costs < min_fossil_costs)[0]
-            
-            if crossover_year_index.size > 0:
-                global_crossover_year = crossover_year_index[0] + 2020
-                global_crossover_years[model] = global_crossover_year
-            else:
-                global_crossover_years[model] = None
-        else:
-            global_crossover_years[model] = None
-
-    return global_crossover_years
-
-
-global_crossover_years = calculate_global_crossover_year_with_costs(
-    output=output,
-    models=models,
-    regions=regions,
-    price_names=price_names,
-    shares_variables=shares_variables,
-    tech_variable=tech_variable
-)
-
-print(global_crossover_years)
-
-
 time_step = 10
 
 # Dictionary to store the results
@@ -296,15 +253,96 @@ for key in weighted_avg_costs_clean.keys():
         "time_series": min_series
     }
 
-# Output the result
-for key, data in lowest_series_dict.items():
-    print(f"The lowest time series for {key} at time step {time_step} is from {data['source']}.")
-    print("The entire time series is:")
-    print(data['time_series'])
+
+def calculate_global_crossover_year_with_costs(output, models, regions, price_names, shares_variables, tech_variable):
+    weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(
+        output, models, regions, price_names, shares_variables, tech_variable
+    )
+
+    global_crossover_years = {}
+    base_year = 2020
+
+    for model in models:
+        # Get the lowest cost time series for each model from clean and fossil data
+        clean_costs = weighted_avg_costs_clean.get(model)
+        fossil_costs = weighted_avg_costs_fossil.get(model)
+
+        if clean_costs is not None and fossil_costs is not None:
+            # Determine the global lowest cost time series by taking the minimum across all rows (regions)
+            min_clean_costs = np.min(clean_costs, axis=0)
+            min_fossil_costs = np.min(fossil_costs, axis=0)
+
+            # Identify the first time step where clean costs are less than fossil costs
+            crossover_year_index = np.where(min_clean_costs < min_fossil_costs)[0]
+
+            if crossover_year_index.size > 0:
+                # If the crossover occurs, calculate the exact year
+                index = crossover_year_index[0]
+                if index > 0:
+                    prev_clean_cost = min_clean_costs[index - 1]
+                    prev_fossil_cost = min_fossil_costs[index - 1]
+                    curr_clean_cost = min_clean_costs[index]
+                    curr_fossil_cost = min_fossil_costs[index]
+
+                    # Linear interpolation to find the precise crossover point
+                    fraction = (prev_fossil_cost - prev_clean_cost) / (
+                        (prev_fossil_cost - prev_clean_cost) - (curr_fossil_cost - curr_clean_cost)
+                    )
+                    global_crossover_year = base_year + index - 1 + fraction
+                else:
+                    global_crossover_year = base_year + index
+
+                global_crossover_years[model] = global_crossover_year
+            else:
+                global_crossover_years[model] = None
+        else:
+            global_crossover_years[model] = None
+
+    return global_crossover_years
+
+
+global_crossover_years = calculate_global_crossover_year_with_costs(
+    output=output,
+    models=models,
+    regions=regions,
+    price_names=price_names,
+    shares_variables=shares_variables,
+    tech_variable=tech_variable
+)
+
+print(global_crossover_years)
+
+
+def convert_fractional_years_to_years_and_months(fractional_year):
+    # Extract the integer part (year) and the fractional part (month)
+    year = int(fractional_year)
+    fraction = fractional_year - year
+
+    # Convert the fractional part to months
+    months = round(fraction * 12)
+
+    # If months is 12, increment the year and reset months
+    if months == 12:
+        year += 1
+        months = 0
+
+    return year, months
+
+# Convert each fractional year to year and month
+converted_years_months = {}
+for key, fractional_year in global_crossover_years.items():
+    year, month = convert_fractional_years_to_years_and_months(fractional_year)
+    converted_years_months[key] = (year, month)
+
+# Output the results
+for key, (year, month) in converted_years_months.items():
+    print(f"{key}: Year = {year}, Month = {month}")
+
+
 
 #%%
 """
-output_csv_path = "Analysis/global_crossover_years_for_Tr.csv"
+output_csv_path = "Analysis/global_crossover_years_for_Heat.csv"
 
 with open(output_csv_path, mode='w', newline='') as file:
     writer = csv.writer(file)
