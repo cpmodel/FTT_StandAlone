@@ -377,14 +377,7 @@ legend_y_position = 10
 ax.legend(handles=handles, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(1.0, -0.03), framealpha=0.8)
 
 
-# Add secondary y-axis for models (sectors)
-# secax = ax.secondary_yaxis('left')
-# secax.set_yticks([2.8 + i*7.2 for i, model in enumerate(models[::-1])])
-# secax.set_yticklabels(model_names_r, rotation=90, va='center', ha='center')
-# secax.tick_params(length=0, pad=100)
-# secax.spines['left'].set_visible(False)
-
-fig.suptitle("Crossover year by policy \n Comparison largest clean and fossil technology in each country", 
+fig.suptitle("When does the clean technology becomes the lowest costs, when excluding policy costs \n Comparison largest clean and fossil technology in each country", 
              x=0.45, y=0.95, ha='center')
 
 # Save the graph as an editable svg file
