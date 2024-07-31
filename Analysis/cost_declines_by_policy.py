@@ -10,6 +10,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from preprocessing import get_output, get_metadata
 
@@ -59,15 +60,17 @@ for model in models:
     
 
 #%% Plot the figure
-fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(7, 10), sharey=True)
 axs = axs.flatten()
+palette = sns.color_palette("Blues_r", 3)
+
 
 
 for mi, model in enumerate(models):
     df = df_dict[model]
     ax = axs[mi]
-    ax.plot(df["Scenario"], df["Price 2035"], 'o', label='Price 2035', markersize=15)
-    ax.plot(df["Scenario"], df["Price 2050"], 'o', label='Price 2050', markersize=15)
+    ax.plot(df["Scenario"], df["Price 2035"], 'o', label='Price 2035', markersize=15, color=palette[0])
+    ax.plot(df["Scenario"], df["Price 2050"], 'o', label='Price 2050', markersize=15, color=palette[1])
 
     # Add labels and title
     ax.set_xticklabels(df["Scenario"], rotation=90)
@@ -78,13 +81,16 @@ for mi, model in enumerate(models):
     # Remove frame
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+
     
     ax.grid(axis='y')
     
 
 # Add legend only to the last plot
 handles, labels = ax.get_legend_handles_labels()
-plt.subplots_adjust(hspace=2)
+fig.subplots_adjust(hspace=1, wspace=50)
 fig.legend(handles, labels, loc='upper right', frameon=False, ncol=2)
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])  # Adjust layout to make space for the legend

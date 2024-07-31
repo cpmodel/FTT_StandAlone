@@ -283,24 +283,12 @@ def determine_lims_crossover(row):
     xmin = np.min(row)
     xmax = np.max(row)
     
-    # If there is a nan, but not all are nan
+    # If there is a inf, but not all are inf
     if (row == np.inf).any() and not (row == np.inf).all():
         xmax = 2050
     
     return xmin, xmax
-    
-    
-# Create the plot
-fig, ax = plt.subplots(figsize=(10, 10))
-
-# Plot the timelines
-y_base = 0
-y_gap = 1
-model_gap = -5
-offset_op = 0.3
-
-
-
+ 
 # Define lighter colours for better distinction
 colors = {
     'Cross-over': '#003f7f',  # Dark blue
@@ -314,23 +302,35 @@ policy_names = {
     'Cross-over carbon tax': 'Carbon tax',
     'Cross-over subsidies': 'Subsidies',
     'Cross-over mandates': 'Mandates',
-    }
+    }   
+    
+
+# Plot the timelines
+y_base = 0
+y_gap = 1.08
+model_gap = -5
+offset_op = 0.3
+
 
 # Define the timeline range
 timeline_start = 2020
 timeline_end = 2050
 
+# Create the plot
+fig, ax = plt.subplots(figsize=(10, 10))
 
 yticks = []
 yticklabels = []
 
 # Go over models in reverse order
-for model in models[::-1]:
+for mi, model in enumerate(models[::-1]):
     
+    ax.text(2045, mi * 7.9 + 7, model_names_r[mi], fontsize=13)
     model_data = df[df['Sector'] == model]
     for index, row in model_data.iterrows():
         y_position = y_base + (len(df)-index) * y_gap
         ax.hlines(y_position, timeline_start, timeline_end, color='grey', alpha=0.5)
+        
         
         # Plot the lines connecting the crossover years
         xmin, xmax = determine_lims_crossover(row.iloc[-4:])
@@ -344,8 +344,7 @@ for model in models[::-1]:
                 pass
             
             ax.plot(row[policy], y_position, 'o', color=colors[policy], markersize=10)
-        
-                
+                    
         # Plot arrows when the crossover point in past of after 2050 (-inf or inf):
         if (row.iloc[-4:] == np.inf).all():
             ax.arrow(2049.3, y_position, 1, 0, head_width=0.3, head_length=0.2, fc='#003f5c', ec='#003f5c')
@@ -371,25 +370,19 @@ ax.tick_params(axis='y', length=0, pad=-5)
 ax.tick_params(axis='x', length=0, pad=-10)
 
 
-policy_legend_elements = [
-    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over'], markersize=10, label='Current traject.'),
-    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over carbon tax'], markersize=10, label='Carbon tax'),
-    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over subsidies'], markersize=10, label='Subsidies'),
-    Line2D([0], [0], marker='o', color='w', markerfacecolor=colors['Cross-over mandates'], markersize=10, label='Mandates')
-]
 # Create custom legend
 handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors[policy],
-                      markersize=10, label=policy_names[policy]) for policy in colors]
+                      markersize=12, label=policy_names[policy]) for policy in colors]
 legend_y_position = 10
 ax.legend(handles=handles, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(1.0, -0.03), framealpha=0.8)
 
 
 # Add secondary y-axis for models (sectors)
-secax = ax.secondary_yaxis('left')
-secax.set_yticks([2.8 + i*7.2 for i, model in enumerate(models[::-1])])
-secax.set_yticklabels(model_names_r, rotation=90, va='center', ha='center')
-secax.tick_params(length=0, pad=100)
-secax.spines['left'].set_visible(False)
+# secax = ax.secondary_yaxis('left')
+# secax.set_yticks([2.8 + i*7.2 for i, model in enumerate(models[::-1])])
+# secax.set_yticklabels(model_names_r, rotation=90, va='center', ha='center')
+# secax.tick_params(length=0, pad=100)
+# secax.spines['left'].set_visible(False)
 
 fig.suptitle("Crossover year by policy \n Comparison largest clean and fossil technology in each country", 
              x=0.45, y=0.95, ha='center')
