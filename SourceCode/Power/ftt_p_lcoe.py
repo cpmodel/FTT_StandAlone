@@ -55,7 +55,7 @@ def set_carbon_tax(data, c2ti, year):
     return carbon_costs
     
 
-def get_lcoe(data, titles):
+def get_lcoe(data, titles, year):
     """
     Calculate levelized costs.
 
@@ -198,24 +198,30 @@ def get_lcoe(data, titles):
 
         # Storage costs and marginal costs (lifetime only)
         stor_cost = np.ones([len(titles['T2TI']), int(max_lt)])
+        battery_cost = np.ones([len(titles['T2TI']), int(max_lt)])
         marg_stor_cost = np.ones([len(titles['T2TI']), int(max_lt)])
 
         if np.rint(data['MSAL'][r, 0, 0]) in [2]:
             stor_cost = stor_cost * (data['MSSP'][r, :, 0, np.newaxis] +
                                      data['MLSP'][r, :, 0, np.newaxis]) / 1000
             marg_stor_cost = marg_stor_cost * 0
+            battery_cost = battery_cost * data['MSSP'][r, :, 0, np.newaxis] / 1000
         elif np.rint(data['MSAL'][r, 0, 0]) in [3, 4, 5]:
             stor_cost = stor_cost * (data['MSSP'][r, :, 0, np.newaxis] +
                                      data['MLSP'][r, :, 0, np.newaxis]) / 1000
             marg_stor_cost = marg_stor_cost * (data['MSSM'][r, :, 0, np.newaxis] +
                                           data['MLSM'][r, :, 0, np.newaxis]) / 1000
+            battery_cost = battery_cost * data['MSSP'][r, :, 0, np.newaxis] / 1000
         else:
             stor_cost = stor_cost * 0
             marg_stor_cost = marg_stor_cost * 0
+            battery_cost = battery_cost * 0
             
        
         stor_cost = np.where(lt_mask, stor_cost, 0)
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
+        battery_cost = np.where(lt_mask, battery_cost, 0)
+
         
         dstor_cost = 0.2 * stor_cost         # Assume a standard deviation of 20%
 
@@ -229,9 +235,10 @@ def get_lcoe(data, titles):
         npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost) / denominator 
         npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
         npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st + marg_stor_cost) / denominator 
+        npv_expenses_mu_no_policy_battery_only = (it_mu + ft + omt + battery_cost) / denominator 
         
         # 1b – Expenses – average LCOEs
-        npv_expenses_no_policy        = (it_av + ft + omt + stor_cost + marg_stor_cost) / denominator  
+        npv_expenses_no_policy        = (it_av + ft + omt + stor_cost) / denominator  
         npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
         
         # 1c - Operation costs
@@ -250,7 +257,8 @@ def get_lcoe(data, titles):
         lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
         lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
-        
+        lcoe_mu_no_policy_battery_only = np.sum(npv_expenses_mu_no_policy_battery_only, axis=1) / utility_tot 
+
 
         # 4b levelised cost – average units 
         lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
@@ -267,6 +275,7 @@ def get_lcoe(data, titles):
         data['MECW'][r, :, 0] = lcoe_mu_only_co2        # Bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
         data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
+        data["MECW battery only"][r, :, 0] = lcoe_mu_no_policy_battery_only   # LCOE without policy with only short-term storage costs
         data['MLCO'][r, :, 0] = lcoo                    # Levelised cost of operation
         data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
 

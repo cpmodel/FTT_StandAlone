@@ -89,6 +89,7 @@ MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWDL,FTT:Power lagged demand,PJ,RTI,JTI,NA,TIME,FTT-P,,,2010,-,,Y
 FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,From E3ME results,,Y
 MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECW battery only,"LCOE bare, no policies, only battery costs",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,From E3ME results,,Y

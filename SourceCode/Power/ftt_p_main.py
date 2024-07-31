@@ -179,7 +179,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRED'] = mred
         data['MRES'] = mres
 
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, year)
         data = rldc(data, time_lag, iter_lag, year, titles)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
@@ -241,7 +241,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MCFC'][:, :, 0] = data['MWLO'][:, :, 0].copy()
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
-        data = get_lcoe(data, titles)                                  # Get the levelised costs
+        data = get_lcoe(data, titles, year)                                  # Get the levelised costs
         data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3) # Get the marginal fuel prices
 
 
@@ -286,7 +286,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
-            time_lag = get_lcoe(data, titles)
+            time_lag = get_lcoe(data, titles, year)
         # Call RLDC function for capacity and load factor by LB, and storage costs
         if year >= 2013:
 
@@ -498,7 +498,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, year)
             data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3) 
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
@@ -844,7 +844,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Update LCOE
             # =================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, year)
             data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)
 
             # =================================================================
