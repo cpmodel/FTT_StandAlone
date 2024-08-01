@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 from preprocessing import get_output, get_metadata
+
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
@@ -123,7 +123,7 @@ for mi, model in enumerate(models):
     # Adjust the position of the y-tick labels to avoid overlap with the bars
     ax.tick_params(axis='y', pad=130)
     
-    ax.set_xlim(-25, 25)
+    ax.set_xlim(-25, 30)
 
 fig.subplots_adjust(wspace=0.6, hspace=0.4)  # Increase horizontal space between subplots
     

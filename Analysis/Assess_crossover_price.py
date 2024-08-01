@@ -10,7 +10,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 
 from preprocessing import get_output, get_metadata
 
@@ -18,11 +17,9 @@ from preprocessing import get_output, get_metadata
 plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
-output_file = "Results_policies.pickle"
-output = get_output("Results_scens.pickle", "S0")
-output_ct = get_output(output_file, "Carbon tax")
-output_sub = get_output(output_file, "Subsidies")
-output_man = get_output(output_file, "Mandates")
+output_file = "Results_sxp.pickle"
+output_S0 = get_output(output_file, "S0")
+
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -157,25 +154,26 @@ def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil,
             crossover_years[r] = None
     return crossover_years
 
-# Construct a dataframe with the biggest clean and fossil technologies.
-# The dataframe will have the following columns:
-# - Region
-# - Sector
-# - Clean technology
-# - Dirty technology
-# - Clean price (2030)
-# - Dirty price (2030)
-# - Cross-over year if any
+
+
+
 
 rows = []
 for model in models:
-    biggest_techs_clean = find_biggest_tech(output, clean_techs, year, model, regions)
-    biggest_techs_fossil = find_biggest_tech_dirty(output, dirty_techs, biggest_techs_clean, year, model)
+    # Get the bit of the model name after the colon (like Fr)
+    model_abb = model.split(':')[1]
+    output_ct = get_output(output_file, f"sxp - {model_abb} CT")
+    output_sub = get_output(output_file, f"sxp - {model_abb} subs")
+    output_man = get_output(output_file, f"sxp - {model_abb} mand")
+    
+    biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, year, model, regions)
+    biggest_techs_fossil = find_biggest_tech_dirty(output_S0, dirty_techs, biggest_techs_clean, year, model)
     clean_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_clean.items()}
     fossil_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_fossil.items()}
-    prices_clean = get_prices(output, year, model, biggest_techs_clean)
-    prices_dirty = get_prices(output, year, model, biggest_techs_fossil)
-    crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+    prices_clean = get_prices(output_S0, year, model, biggest_techs_clean)
+    prices_dirty = get_prices(output_S0, year, model, biggest_techs_fossil)
+    
+    crossover_years = get_crossover_year(output_S0, model, biggest_techs_clean, biggest_techs_fossil, price_names)
     crossover_years_ct = get_crossover_year(output_ct, model, biggest_techs_clean, biggest_techs_fossil, price_names)
     crossover_years_sub = get_crossover_year(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names)
     crossover_years_man = get_crossover_year(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names)
@@ -223,14 +221,14 @@ def get_percentage_difference(clean_price, dirty_price):
 def compute_percentage_difference(model, years):
     """Compute percentage price difference per year per region in top techs."""
     
-    biggest_techs_clean = find_biggest_tech(output, clean_techs, 2030, model, regions)
-    biggest_techs_fossil = find_biggest_tech_dirty(output, dirty_techs, biggest_techs_clean, 2030, model)
+    biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, 2030, model, regions)
+    biggest_techs_fossil = find_biggest_tech_dirty(output_S0, dirty_techs, biggest_techs_clean, 2030, model)
     percentage_difference = np.zeros((len(regions), len(years)))
     for ri, r in enumerate(regions):
     
         for yi, year in enumerate(years):
-            clean_prices = get_prices(output, year, model, biggest_techs_clean)
-            fossil_prices = get_prices(output, year, model, biggest_techs_fossil)
+            clean_prices = get_prices(output_S0, year, model, biggest_techs_clean)
+            fossil_prices = get_prices(output_S0, year, model, biggest_techs_fossil)
                
             percentage_difference[ri, yi] = get_percentage_difference(clean_prices[r], fossil_prices[r])
     
