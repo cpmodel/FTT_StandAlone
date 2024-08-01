@@ -606,17 +606,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWG'] = mewg
             data['MEWK'] = mewk
             
-            # if year in [2021, 2022]:
-            #     print(f'Belgium MEWD {year}:{t} is {data["MEWD"][1, 7, 0]:.0f} after shares')
-            #     print(f'Belgium MEWDt {year}:{t} is {MEWDt[0]:.0f} after shares')
-            #     print(f'Belgium solar MEWG in {year}:{t} is {data["MEWG"][0, 18, 0]:.0f} after shares')
-                #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
-            # if year in [2049, 2050]:
-            #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
-                #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
+
             
             if np.any(np.isnan(data['MEWS'])):
                 print(f"NaNs found in MEWS in {year}")
+                raise ValueError
             if ~np.any(np.isclose(data['MEWS'][:,:,0].sum(axis=1), 1.0)):
                 print(f"Sum of MEWS does not add up to 1 in {year}")
             if np.any(data['MEWS'][:,:,0]< 0.0):
@@ -723,7 +717,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             data["MEWI"] = get_sales_yearly(
                 data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
-                data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
+                data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
             
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])

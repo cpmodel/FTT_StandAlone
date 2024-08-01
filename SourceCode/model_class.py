@@ -36,8 +36,6 @@ import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
 from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
 from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
-from SourceCode.sector_coupling.battery_lbd import get_cumulative_batcap
-
 
 
 # Support modules

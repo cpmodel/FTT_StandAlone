@@ -89,7 +89,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
     return sales_or_investment, sales_dt
 
 
-def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, timescales):
+def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, timescales, year):
     """
     Calculate new sales/investments for all FTT models before simulation starts (e.g. TEWI)
 

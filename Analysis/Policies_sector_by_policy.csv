@@ -1,4 +1,4 @@
-﻿Policy,Model,Variable,Description,,,,,,P CT,H CT,Tr CT,Fr CT,P subs,H subs,Tr subs,Fr subs,P mand,H mand,Tr mand,Fr mand
+﻿Policy,Model,Variable,Description,,,,,,sxp - P CT,sxp - H CT,sxp - Tr CT,sxp - Fr CT,sxp - P subs,sxp - H subs,sxp - Tr subs,sxp - Fr subs,sxp - P mand,sxp - H mand,sxp - Tr mand,sxp - Fr mand
 Power REPP,FTT-P,REPPX,Constant carbon tax at 200€/tonne CO2,,,,,,1,0,0,0,0,0,0,0,0,0,0,0
 MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,0,0,0,0,1,0,0,0,0,0,0,0
 Coal phase-out,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035; active phase-out,,,,,,0,0,0,0,0,0,0,0,1,0,0,0

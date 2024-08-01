@@ -5,6 +5,7 @@ Created on Mon Nov  6 10:41:13 2023
 @author: Femke Nijsse
 """
 import numpy as np
+from SourceCode.support.divide import divide
 
 def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
     """Compute marginal fuel prices MEWP based on development within
@@ -40,19 +41,25 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                 weight_new = np.sum(data["MEWI"][r, :, 0]) / np.sum(data["MEWK"][r, :, 0])
             weight_new = min(weight_new, 1.0) 
             weight_old = 1.0 - weight_new
-
-            shares_new = data["MEWI"][r, :, 0] / np.sum(data["MEWI"][r, :, 0])
-            shares_new = shares_new / np.sum(shares_new)
+            
+            if np.sum(data["MEWI"][r, :, 0]) > 0:
+                shares_new = data["MEWI"][r, :, 0] / np.sum(data["MEWI"][r, :, 0])
+                shares_new = shares_new / np.sum(shares_new)
+            else:
+                shares_new = np.zeros(data["MEWI"][r, :, 0].shape)
 
             shares_old = (data["MEWK"][r, :, 0] - data["MEWI"][r, :, 0]) / np.sum(data["MEWK"][r, :, 0])
             shares_old[shares_old < 0.0] = 0.0
             shares_old = shares_old / np.sum(shares_old)
 
-
-            weighted_lcoe_new = np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0])  \
-                                / np.sum(shares_new * data["MEWL"][r, :, 0])
-            weighted_lcoe_old = np.sum(shares_old * data["MEWL"][r, :, 0] * data["MEWC"][r, :, 0]) \
-                                / np.sum(shares_old * data["MEWL"][r, :, 0])
+            
+            weighted_lcoe_new = divide(
+                        np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0]),
+                        np.sum(shares_new * data["MEWL"][r, :, 0]) )
+              
+            weighted_lcoe_old = np.divide(
+                        np.sum(shares_old * data["MEWL"][r, :, 0] * data["MEWC"][r, :, 0]),
+                        np.sum(shares_old * data["MEWL"][r, :, 0]) )
 
             data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
 
