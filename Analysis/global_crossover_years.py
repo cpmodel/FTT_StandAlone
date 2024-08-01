@@ -20,7 +20,7 @@ plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
 output_file = "Results.pickle"
 
-output = get_output("Results.pickle", "FTT-H")
+output = get_output("Results.pickle", "S0")
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -35,7 +35,6 @@ df = pd.read_csv(os.path.join(current_dir, "Analysis/e3me_regions_jan23.csv"))
 
 # Convert the DataFrame to a dictionary
 regions = dict(zip(df['Country'], df['Value']))
-
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
@@ -219,98 +218,63 @@ def calculate_weighted_average_costs(output, models, regions, price_names, share
 
 weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
 
-
+#Finding lowest costs from the weighted average costs
 time_step = 10
 
-# Dictionary to store the results
-lowest_series_dict = {}
+def find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step):
+    lowest_series_clean = {}
 
-# Iterate over all keys in the dictionaries
-for key in weighted_avg_costs_clean.keys():
-    min_value = float('inf')
-    min_series = None
-    min_source = ""
+    for key, value in weighted_avg_costs_clean.items():
+        # Initialize variables to track the minimum value and corresponding series
+        min_value = float('inf')
+        min_series = None
 
-    # Check all rows in weighted_avg_costs_clean for the current key
-    for row in weighted_avg_costs_clean[key]:
-        value = row[time_step]
-        if value < min_value:
-            min_value = value
-            min_series = row
-            min_source = "weighted_avg_costs_clean"
+        # Check all rows for the current key in the dictionary
+        for row in value:
+            cost_at_time_step = row[time_step]
+            if cost_at_time_step < min_value:
+                min_value = cost_at_time_step
+                min_series = row
 
-    # Check all rows in weighted_avg_costs_fossil for the current key
-    for row in weighted_avg_costs_fossil[key]:
-        value = row[time_step]
-        if value < min_value:
-            min_value = value
-            min_series = row
-            min_source = "weighted_avg_costs_fossil"
+        # Store the lowest time series for the current key
+        lowest_series_clean[key] = min_series
 
-    # Store the lowest series in the result dictionary
-    lowest_series_dict[key] = {
-        "source": min_source,
-        "time_series": min_series
-    }
+    return lowest_series_clean
 
+def find_lowest_cost_series_for_fossil(weighted_avg_costs_fossil, time_step):
+    lowest_series_fossil = {}
 
-def calculate_global_crossover_year_with_costs(output, models, regions, price_names, shares_variables, tech_variable):
-    weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(
-        output, models, regions, price_names, shares_variables, tech_variable
-    )
+    for key, value in weighted_avg_costs_fossil.items():
+        # Initialize variables to track the minimum value and corresponding series
+        min_value = float('inf')
+        min_series = None
 
-    global_crossover_years = {}
-    base_year = 2020
+        # Check all rows for the current key in the dictionary
+        for row in value:
+            cost_at_time_step = row[time_step]
+            if cost_at_time_step < min_value:
+                min_value = cost_at_time_step
+                min_series = row
 
-    for model in models:
-        # Get the lowest cost time series for each model from clean and fossil data
-        clean_costs = weighted_avg_costs_clean.get(model)
-        fossil_costs = weighted_avg_costs_fossil.get(model)
+        # Store the lowest time series for the current key
+        lowest_series_fossil[key] = min_series
 
-        if clean_costs is not None and fossil_costs is not None:
-            # Determine the global lowest cost time series by taking the minimum across all rows (regions)
-            min_clean_costs = np.min(clean_costs, axis=0)
-            min_fossil_costs = np.min(fossil_costs, axis=0)
+    return lowest_series_fossil
 
-            # Identify the first time step where clean costs are less than fossil costs
-            crossover_year_index = np.where(min_clean_costs < min_fossil_costs)[0]
+lowest_series_clean = find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step)
 
-            if crossover_year_index.size > 0:
-                # If the crossover occurs, calculate the exact year
-                index = crossover_year_index[0]
-                if index > 0:
-                    prev_clean_cost = min_clean_costs[index - 1]
-                    prev_fossil_cost = min_fossil_costs[index - 1]
-                    curr_clean_cost = min_clean_costs[index]
-                    curr_fossil_cost = min_fossil_costs[index]
-
-                    # Linear interpolation to find the precise crossover point
-                    fraction = (prev_fossil_cost - prev_clean_cost) / (
-                        (prev_fossil_cost - prev_clean_cost) - (curr_fossil_cost - curr_clean_cost)
-                    )
-                    global_crossover_year = base_year + index - 1 + fraction
-                else:
-                    global_crossover_year = base_year + index
-
-                global_crossover_years[model] = global_crossover_year
-            else:
-                global_crossover_years[model] = None
-        else:
-            global_crossover_years[model] = None
-
-    return global_crossover_years
+lowest_series_fossil = find_lowest_cost_series_for_fossil(weighted_avg_costs_fossil, time_step)
 
 
-global_crossover_years = calculate_global_crossover_year_with_costs(
-    output=output,
-    models=models,
-    regions=regions,
-    price_names=price_names,
-    shares_variables=shares_variables,
-    tech_variable=tech_variable
-)
+#Calculating sectoral crossover year
 
-print(global_crossover_years)
+sector_crossover_year = {}
+
+for key in lowest_series_clean.keys():
+    ftt_lowest_series_clean = lowest_series_clean.get(key)
+    ftt_lowest_series_fossil = lowest_series_fossil.get(key)
+
+    sector_crossover_year[key] = interpolate_crossover_year(ftt_lowest_series_clean, ftt_lowest_series_fossil)
 
 
 def convert_fractional_years_to_years_and_months(fractional_year):
@@ -330,18 +294,19 @@ def convert_fractional_years_to_years_and_months(fractional_year):
 
 # Convert each fractional year to year and month
 converted_years_months = {}
-for key, fractional_year in global_crossover_years.items():
+for key, fractional_year in sector_crossover_year.items():
     year, month = convert_fractional_years_to_years_and_months(fractional_year)
     converted_years_months[key] = (year, month)
 
-# Output the results
-for key, (year, month) in converted_years_months.items():
+# Output the results in a consistent order (if needed, sort by keys)
+for key in sorted(converted_years_months.keys()):
+    year, month = converted_years_months[key]
     print(f"{key}: Year = {year}, Month = {month}")
+    
 
-
-
-#%%
 """
+#%%
+
 output_csv_path = "Analysis/global_crossover_years_for_Heat.csv"
 
 with open(output_csv_path, mode='w', newline='') as file:
