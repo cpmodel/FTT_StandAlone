@@ -1,5 +1,14 @@
-Model,Crossover Year
-FTT:P,2020.4368930943185
-FTT:H,2021.0338247489433
-FTT:Tr,2020
-FTT:Fr,2026.5009063548491
+S0,,,Power,,,Heat,,,Transport,,,Freight,
+Model,Crossover Year,,Model,Crossover Year,,Model,Crossover Year,,Model,Crossover Year,,Model,Crossover Year
+FTT:P,2021,,FTT:P,2021,,FTT:P,2021,,FTT:P,2021,,FTT:P,2021
+FTT:H,2021.033825,,FTT:H,2021.034503,,FTT:H,2021,,FTT:H,2021.033554,,FTT:H,2021.033776
+FTT:Tr,2022.539923,,FTT:Tr,2022.548094,,FTT:Tr,2022.540065,,FTT:Tr,2022.083169,,FTT:Tr,2022.517553
+FTT:Fr,2026.500906,,FTT:Fr,2026.516358,,FTT:Fr,2026.500975,,FTT:Fr,2025.945046,,FTT:Fr,2026.499984
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,
+,Crossover Year by policy,,,,,,,,,,,,
+Model,Power,Heat,Transport,Freight,,,,,,,,,
+FTT:P,0,0,0,0,,,,,,,,,
+FTT:H,-0.000678,0.033825,0.000271,4.9E-05,,,,,,,,,
+FTT:Tr,-0.008171,-0.000142,0.456754,0.02237,,,,,,,,,
+FTT:Fr,-0.015452,-6.9E-05,0.55586,0.000922,,,,,,,,,

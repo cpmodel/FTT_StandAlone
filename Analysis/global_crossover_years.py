@@ -20,7 +20,7 @@ plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
 output_file = "Results.pickle"
 
-output = get_output("Results.pickle", "S0")
+output = get_output("Results.pickle", "FTT-Fr")
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -307,12 +307,12 @@ for key in sorted(converted_years_months.keys()):
 """
 #%%
 
-output_csv_path = "Analysis/global_crossover_years_for_Heat.csv"
+output_csv_path = "Analysis/global_crossover_years_for_Fr.csv"
 
 with open(output_csv_path, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["Model", "Crossover Year"])
-    for model_name, crossover_year in global_crossover_years.items():
+    for model_name, crossover_year in sector_crossover_year.items():
         writer.writerow([model_name, crossover_year])
 
 print(f"Data saved to {output_csv_path}")
