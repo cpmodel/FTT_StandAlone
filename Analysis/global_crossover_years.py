@@ -9,7 +9,6 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 import csv
 
 from preprocessing import get_output, get_metadata
@@ -218,7 +217,7 @@ def calculate_weighted_average_costs(output, models, regions, price_names, share
 
 weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
 
-#Finding lowest costs from the weighted average costs
+#Finding lowest costs from the weighted average costs at time step 2030
 time_step = 10
 
 def find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step):
