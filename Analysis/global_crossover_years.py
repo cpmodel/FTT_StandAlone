@@ -19,7 +19,7 @@ plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
 output_file = "Results.pickle"
 
-output = get_output("Results.pickle", "FTT-Fr")
+output = get_output("Results.pickle", "FTT-H")
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -98,7 +98,7 @@ def remove_vehicles_from_list(dirty_techs, biggest_techs_clean):
     elif tech == 19:
         dirty_techs["FTT:Tr"] = [1, 4, 7, 10]
     elif tech == 20:
-        dirty_techs["FTT:Tr"] = [2, 5, 8, 11]
+        dirty_techs["FTT:Tr"] = [1, 2, 5, 8, 11]
     return dirty_techs
         
         
@@ -220,6 +220,7 @@ weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average
 #Finding lowest costs from the weighted average costs at time step 2030
 time_step = 10
 
+"""
 def find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step):
     lowest_series_clean = {}
 
@@ -263,15 +264,34 @@ def find_lowest_cost_series_for_fossil(weighted_avg_costs_fossil, time_step):
 lowest_series_clean = find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step)
 
 lowest_series_fossil = find_lowest_cost_series_for_fossil(weighted_avg_costs_fossil, time_step)
+"""
 
+# Function to extract a different specific series for each key
+def extract_specific_series_for_each_key(original_data, series_indices):
+    specific_series = {}
+    for key, index in series_indices.items():
+        if key in original_data and index < len(original_data[key]):
+            specific_series[key] = original_data[key][index]
+        else:
+            specific_series[key] = None  # Handle case where the index is out of range
+    return specific_series
+
+#Extract time series for each key
+series_indices_for_clean = {'FTT:Fr': 0, 'FTT:H': 0, 'FTT:P': 1, 'FTT:Tr': 1}
+
+series_indices_for_fossil = {'FTT:Fr': 2, 'FTT:H': 0, 'FTT:P': 2, 'FTT:Tr': 0}
+
+# Extract the specific series for each key
+specific_series_from_clean = extract_specific_series_for_each_key(weighted_avg_costs_clean, series_indices_for_clean)
+
+specific_series_from_fossil = extract_specific_series_for_each_key(weighted_avg_costs_fossil, series_indices_for_fossil)
 
 #Calculating sectoral crossover year
-
 sector_crossover_year = {}
 
-for key in lowest_series_clean.keys():
-    ftt_lowest_series_clean = lowest_series_clean.get(key)
-    ftt_lowest_series_fossil = lowest_series_fossil.get(key)
+for key in specific_series_from_fossil.keys():
+    ftt_lowest_series_clean = specific_series_from_clean.get(key)
+    ftt_lowest_series_fossil = specific_series_from_fossil.get(key)
 
     sector_crossover_year[key] = interpolate_crossover_year(ftt_lowest_series_clean, ftt_lowest_series_fossil)
 
@@ -306,13 +326,14 @@ for key in sorted(converted_years_months.keys()):
 """
 #%%
 
-output_csv_path = "Analysis/global_crossover_years_for_Fr.csv"
+# Create a DataFrame from the converted_years_months dictionary
+df = pd.DataFrame.from_dict(converted_years_months, orient='index', columns=['Year', 'Month'])
 
-with open(output_csv_path, mode='w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(["Model", "Crossover Year"])
-    for model_name, crossover_year in sector_crossover_year.items():
-        writer.writerow([model_name, crossover_year])
+# Sort the DataFrame by the index (keys)
+df.sort_index(inplace=True)
 
-print(f"Data saved to {output_csv_path}")
+# Write the DataFrame to a CSV file, ensuring the index is included
+df.to_csv('Analysis/global_crossover_years_for_Heat.csv', index=True)
+
+print("Output has been written to output.csv")
 """
