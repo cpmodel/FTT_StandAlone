@@ -238,9 +238,20 @@ for scenario, result in converted_results.items():
 
 #%%
 
+import matplotlib.pyplot as plt
+import pandas as pd
+
 # Load the adjusted results from the pickle file
 with open('adjusted_results.pickle', 'rb') as handle:
     converted_results = pickle.load(handle)
+
+# Define the policy names corresponding to the scenarios
+policy_names = {
+    "FTT-H": "Heat policies",
+    "FTT-P": "Power policies",
+    "FTT-Tr": "Transport policies",
+    "FTT-Fr": "Freight policies"
+}
 
 # Convert the results into a pandas DataFrame, excluding the S0 scenario
 data = []
@@ -248,22 +259,25 @@ for scenario, results in converted_results.items():
     if scenario != "S0":  # Exclude the reference scenario
         for region, (year, month) in results.items():
             if year == 0:
-                data.append({'Scenario': scenario, 'Region': region, 'YearMonth': f'{month} months'})
+                data.append({'Policy': policy_names[scenario], 'Region': region, 'YearMonth': f'{month} months'})
             else:
-                data.append({'Scenario': scenario, 'Region': region, 'YearMonth': f'{year} years, {month} months'})
+                data.append({'Policy': policy_names[scenario], 'Region': region, 'YearMonth': f'{year} years, {month} months'})
 
 df = pd.DataFrame(data)
 
 # Pivot the DataFrame to get the desired format
-table_df = df.pivot(index='Scenario', columns='Region', values='YearMonth')
+table_df = df.pivot(index='Policy', columns='Region', values='YearMonth')
+
+# Reorder the rows according to the desired model ordering
+model_order = ["Power policies", "Heat policies", "Transport policies", "Freight policies"]
+table_df = table_df.reindex(model_order)
 
 # Plotting the table using matplotlib
-fig, ax = plt.subplots(figsize=(12, 4))  # Adjust the size as needed
+fig, ax = plt.subplots(figsize=(10, 8))  # Adjust the size as needed
 
 # Add titles as text annotations
-#ax.text(0.5, 1.15, 'Scenarios vs Policies', ha='center', va='center', transform=ax.transAxes, fontsize=16, fontweight='bold')
-ax.text(0.5, 0.8, 'Sectors', ha='center', va='center', transform=ax.transAxes, fontsize=14, fontweight='bold')
-ax.text(-0.1, 0.5, 'Scenarios', ha='center', va='center', rotation='vertical', transform=ax.transAxes, fontsize=14, fontweight='bold')
+plt.suptitle('Cost Parity Brought Forward by', fontsize=16, fontweight='bold', x=0.6, y=0.7)
+ax.text(0.5, 0.7, 'Sectors', ha='center', va='center', transform=ax.transAxes, fontsize=14, fontweight='bold')
 
 ax.axis('tight')
 ax.axis('off')
@@ -272,8 +286,8 @@ ax.axis('off')
 table = ax.table(cellText=table_df.values, colLabels=table_df.columns, rowLabels=table_df.index, cellLoc='center', loc='center', edges='BRLT')
 
 table.auto_set_font_size(False)
-table.set_fontsize(10)
-table.scale(1.0, 1.2)
+table.set_fontsize(12)
+table.scale(1.1, 2.5)  # Increase the vertical size of rows
 
 header_color = '#40466e'
 header_text_color = 'w'
@@ -288,10 +302,4 @@ for (i, j), cell in table.get_celld().items():
     if i > 0 and j > -1:
         cell.set_facecolor(row_colors[i % 2])  # Alternating row colors
 
-plt.title("Cost Parity Brought Forward by (years and months)", pad=10, fontsize=16, fontweight='bold')
-
-plt.subplots_adjust(left=0.2, top=0.8, bottom=0.2)
-
-# Save the table as an image
-#plt.savefig('results_table.png', bbox_inches='tight')
-#plt.show()
+plt.subplots_adjust(left=0.25, top=0.8, bottom=0.2, right=0.95)
