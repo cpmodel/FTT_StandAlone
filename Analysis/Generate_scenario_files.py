@@ -96,9 +96,10 @@ def policy_change(df, policy):
         # Power sector policies
         case "MEWR strong":     # Completely outregulate fossil technologies from 2024
             df.iloc[1:8, 24:] = 0
-        case "MEWT":           # Subsidize all renewables, except for solar
-            df.iloc[ 8:18, 24:] = -0.3
-            df.iloc[19:22, 24:] = -0.3
+        case "MEWT":           # Subsidize all renewables
+            #df.iloc[ 8:18, 24:] = -0.3
+            #df.iloc[19:22, 24:] = -0.3
+            df.iloc[ 8:22, 24:] = -0.3
         case "Coal phase-out":
             df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on 
       
@@ -178,7 +179,7 @@ def policy_change(df, policy):
         
         
 # Import policies from policies.csv in same folder
-policies = pd.read_csv(os.path.join(current_dir, "Policies_by_sector.csv"))
+policies = pd.read_csv(os.path.join(current_dir, "Policies_sector_by_policy.csv"))
 
 policy_packages = list(policies.keys()[9:])
 #policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]
