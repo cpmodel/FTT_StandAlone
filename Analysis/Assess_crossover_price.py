@@ -91,41 +91,46 @@ def remove_vehicles_from_list(dirty_techs, biggest_techs_clean):
         
         
 
-def get_prices(output, year, model, biggest_technologies):
+def get_prices(output, year, model, biggest_technologies, regions):
     """Get the prices of the biggest technologies."""
     price_var = price_names[model]
     prices = {}
     for r, tech in biggest_technologies.items():
         try:
             prices[r] = output[price_var][regions[r], tech, 0, year - 2010]
-        except IndexError as e:
-            print(regions[r])
+        except (IndexError, KeyError) as e:
+            print(regions)
             print(model)
-            #print(output[price_var])
             print(tech)
             print(r)
+            print(biggest_technologies)
             raise e
+        
     return prices
 
 def interpolate_crossover_year(price_series_clean, price_series_fossil):
     """Interpolate based on price difference in cross-over year and previous year
-    Returns None if the prices of the clean technology are higher than 
-    the fossil technolgy throughout."""
+    Returns -inf if cost-parity in past, inf if cost-parity not reached before 2050."""
     
-    # First check if there is a cross-over year
-    # Set the cross-over year to -inf and inf if there isn't. 
+    # First check if cost-parity occurs
+    # Set crossover year to -inf if cost-parity already achieved and inf if it will not.
     if (price_series_clean <= price_series_fossil).all():
         return float('-inf')
     elif (price_series_clean > price_series_fossil).all():
         return float('inf')
     
-    crossover_index = np.where(price_series_clean <= price_series_fossil)[0][0]
+    # Then, if we start with cost-parity, but don't have it consistently, also return -inf
+    if price_series_clean[0] <= price_series_fossil[0]:
+        return float('-inf')
+    
+    crossover_index = np.argmax(price_series_clean <= price_series_fossil)
     year_before = 2020 + crossover_index - 1
     
-    # Interpolating between the year_before and the crossover year
+    # Interpolating between the year_before and the crossover year of clean tech
     price_before = price_series_clean[crossover_index - 1]
     price_after = price_series_clean[crossover_index]
     
+    # Same for the fossil price
     fossil_price_before = price_series_fossil[crossover_index - 1]
     fossil_price_after = price_series_fossil[crossover_index]
     
@@ -133,28 +138,34 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
     fraction = (fossil_price_before - price_before) / ((price_after - price_before) - (fossil_price_after - fossil_price_before))
     
     crossover_year = year_before + fraction
-        
-    if crossover_year < 2021:
-        crossover_year = 2021
+      
+    try:
+        if crossover_year < 2021:
+            crossover_year = 2021
+    except ValueError as e:
+        print(crossover_index)
+        print(price_series_clean.shape)
+        print(price_series_fossil.shape)
+        print(fossil_price_before)
+        print(price_before)
+        raise e
+
     
     return crossover_year
 
-def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names):
+def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions):
     """ Get the year when the clean technology becomes cheaper than the fossil technology."""
     crossover_years = {}
     for r, ri in regions.items():
+        
         tech_clean = biggest_techs_clean[r]
         tech_fossil = biggest_techs_fossil[r]
-        try:
-            price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
-            price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
-            crossover_years[r] = interpolate_crossover_year(price_series_clean, price_series_fossil)
-          
-        except IndexError:
-            crossover_years[r] = None
+        
+        price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
+        price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
+        crossover_years[r] = interpolate_crossover_year(price_series_clean, price_series_fossil)
+    
     return crossover_years
-
-
 
 
 
@@ -168,15 +179,15 @@ for model in models:
     
     biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, year, model, regions)
     biggest_techs_fossil = find_biggest_tech_dirty(output_S0, dirty_techs, biggest_techs_clean, year, model)
-    clean_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_clean.items()}
-    fossil_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_fossil.items()}
-    prices_clean = get_prices(output_S0, year, model, biggest_techs_clean)
-    prices_dirty = get_prices(output_S0, year, model, biggest_techs_fossil)
+    clean_tech_names = {reg: titles[tech_titles[model]][index] for reg, index in biggest_techs_clean.items()}
+    fossil_tech_names = {reg: titles[tech_titles[model]][index] for reg, index in biggest_techs_fossil.items()}
+    prices_clean = get_prices(output_S0, year, model, biggest_techs_clean, regions)
+    prices_dirty = get_prices(output_S0, year, model, biggest_techs_fossil, regions)
     
-    crossover_years = get_crossover_year(output_S0, model, biggest_techs_clean, biggest_techs_fossil, price_names)
-    crossover_years_ct = get_crossover_year(output_ct, model, biggest_techs_clean, biggest_techs_fossil, price_names)
-    crossover_years_sub = get_crossover_year(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names)
-    crossover_years_man = get_crossover_year(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+    crossover_years = get_crossover_year(output_S0, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
+    crossover_years_ct = get_crossover_year(output_ct, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
+    crossover_years_sub = get_crossover_year(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
+    crossover_years_man = get_crossover_year(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
 
     
     for r in regions:
@@ -203,6 +214,79 @@ df = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Cross-over", "Cross-over carbon tax",
                                  "Cross-over subsidies", "Cross-over mandates"])
 
+# %% Compute how much, globally, we're brought forward. 
+
+clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
+fossil_tech_variable = {"FTT:P": 6, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 4}       # Note 4 for transport gives an error
+
+output_file_sectors = "Results_sectors.pickle"
+
+
+output_S0 = get_output(output_file_sectors, "S0")
+output_ppolicies = get_output(output_file_sectors, "FTT-P")
+output_hpolicies = get_output(output_file_sectors, "FTT-H")
+output_trpolicies = get_output(output_file_sectors, "FTT-Tr")
+output_frpolicies = get_output(output_file_sectors, "FTT-Fr")
+
+output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies]
+policy_names = ["Baseline", "Power policies", "Heat policies", "Transport policies", "Freight policies"]
+
+def compute_average_crossover_diff(df_crossovers, policy_name, model):
+    """ Compute the average cross-over year diff, only for those regions where 
+    there is a finite saving."""
+        
+    cy_arrays = []
+    for index, row in df_crossovers.iterrows():
+        cy_arrays.append(np.array(list(row["Crossover years"].values())))    
+    
+    # Create a boolean mask for each array where values are not inf or nan
+    masks = [np.isfinite(arr) for arr in cy_arrays]
+    
+    # Combine masks to get indices where all arrays are finite
+    combined_mask = np.all(masks, axis=0)
+    valid_indices = list(np.where(combined_mask)[0])
+    
+    print(f"There is a crossover in {len(valid_indices)} number of regions in {model}")
+    
+    cy_S0 = cy_arrays[0]
+    cy_rows = []
+    
+    for pi, policy in enumerate(policy_name[1:]):
+        averaged_cy = np.average([cy_arrays[pi+1][ind] - cy_S0[ind] for ind in valid_indices])
+        row = {
+            "Model": model,
+            "Policy": policy,
+            "Crossover years": averaged_cy}
+        cy_rows.append(row)
+    
+    return cy_rows
+
+crossover_list = []
+crossover_diff_list = []
+
+for model in models:
+    
+    clean_tech_dict = {i: clean_tech_variable[model] for i in range(1, 72)}
+    fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
+    
+    regions = {i: i - 1 for i in range(1, 72)}
+    
+    for policy, output in zip(policy_names, output_files):    
+    # CrossoverYear_XPolicy
+        crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
+        row = {
+            "Model": model,
+            "Policy": policy,
+            "Crossover years": crossover_years}
+        crossover_list.append(row)
+
+df_crossovers = pd.DataFrame(crossover_list, columns = ["Model", "Policy", "Crossover years"])
+
+for model in models:
+    average_crossover_rows = compute_average_crossover_diff(df_crossovers[df_crossovers["Model"]==model], policy_names, model)
+    
+
+
 
 #%% Making a graph with four subplots for each sector.
 # Each graph shows the percentage difference between the clean and fossil technology in 2025, 2035 and 2050. 
@@ -227,8 +311,8 @@ def compute_percentage_difference(model, years):
     for ri, r in enumerate(regions):
     
         for yi, year in enumerate(years):
-            clean_prices = get_prices(output_S0, year, model, biggest_techs_clean)
-            fossil_prices = get_prices(output_S0, year, model, biggest_techs_fossil)
+            clean_prices = get_prices(output_S0, year, model, biggest_techs_clean, regions)
+            fossil_prices = get_prices(output_S0, year, model, biggest_techs_fossil, regions)
                
             percentage_difference[ri, yi] = get_percentage_difference(clean_prices[r], fossil_prices[r])
     
