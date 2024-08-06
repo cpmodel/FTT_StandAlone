@@ -135,11 +135,11 @@ def get_lcof(data, titles, carbon_costs, year):
               * data['RZCO'][r,0,0])
         RZCOt[:,1:] = 0
 
-        # Registration Taxes, ZTVT is vehicle tax
-        ItVT = np.ones([len(titles['FTTI']), int(max_LF)])
-        ItVT = ItVT * (zcet[:, c6ti['14 CO2Emissions (gCO2/km)'], np.newaxis] + data['ZTVT'][r,:,0, np.newaxis])
-        ItVT = ItVT / zcet[:, c6ti['18 Average Mileage'], np.newaxis]
-        ItVT[:,1:] = 0
+        # Registration Taxes, ZTVT is vehicle tax # TODO: go back to old system / new system consistently
+        #ItVT = np.ones([len(titles['FTTI']), int(max_LF)])
+        ItVT = It * (data['ZTVT'][r, :, 0, np.newaxis])
+        #ItVT = ItVT / zcet[:, c6ti['18 Average Mileage'], np.newaxis]
+        #ItVT[:,1:] = 0
 
         # Fuel Cost
         FT = np.ones([len(titles['FTTI']), int(max_LF)])
