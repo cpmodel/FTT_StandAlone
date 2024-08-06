@@ -9,17 +9,20 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import csv
+from matplotlib.lines import Line2D
 
 from preprocessing import get_output, get_metadata
+
+#Extract time series for each key
+series_indices_for_clean = {'FTT:Fr': 0, 'FTT:H': 0, 'FTT:P': 1, 'FTT:Tr': 1}
+
+series_indices_for_fossil = {'FTT:Fr': 2, 'FTT:H': 0, 'FTT:P': 2, 'FTT:Tr': 0}
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
-output_file = "Results.pickle"
-
-output = get_output("Results.pickle", "FTT-P")
+scenarios = ["FTT-Tr", "FTT-Fr", "FTT-P", "FTT-H"]
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -35,9 +38,10 @@ df = pd.read_csv(os.path.join(current_dir, "Analysis/e3me_regions_jan23.csv"))
 # Convert the DataFrame to a dictionary
 regions = dict(zip(df['Country'], df['Value']))
 
+
 # Define the clean technology list by model
-clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
-dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [0, 2, 4, 6, 8]}
+clean_techs = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
+dirty_techs = {"FTT:P": [6], "FTT:Tr": list(range(12)), "FTT:H": [2], "FTT:Fr": [4]}
 
 
 # Define the shares, prices of interest
@@ -94,11 +98,11 @@ def remove_vehicles_from_list(dirty_techs, biggest_techs_clean):
     
     r, tech = biggest_techs_clean
     if tech == 18:
-        dirty_techs["FTT:Tr"] = [0, 3, 6, 9]
+        dirty_techs["FTT:Tr"] = [1]
     elif tech == 19:
-        dirty_techs["FTT:Tr"] = [1, 4, 7, 10]
+        dirty_techs["FTT:Tr"] = [1]
     elif tech == 20:
-        dirty_techs["FTT:Tr"] = [1, 2, 5, 8, 11]
+        dirty_techs["FTT:Tr"] = [1]
     return dirty_techs
         
         
@@ -123,13 +127,6 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
     """Interpolate based on price difference in cross-over year and previous year
     Returns None if the prices of the clean technology are higher than 
     the fossil technolgy throughout."""
-    
-    # First check if there is a cross-over year
-    # Set the cross-over year to -inf and inf if there isn't. 
-    if (price_series_clean <= price_series_fossil).all():
-        return float('-inf')
-    elif (price_series_clean > price_series_fossil).all():
-        return float('inf')
     
     crossover_index = np.where(price_series_clean <= price_series_fossil)[0][0]
     year_before = 2020 + crossover_index - 1
@@ -166,22 +163,61 @@ def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil,
         except IndexError:
             crossover_years[r] = None
     return crossover_years
-
-
-rows = []
-for model in models:
-    biggest_techs_clean = find_biggest_tech(output, clean_techs, year, model, regions)
-    biggest_techs_fossil = find_biggest_tech_dirty(output, dirty_techs, biggest_techs_clean, year, model)
-    clean_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_clean.items()}
-    fossil_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_fossil.items()}
-    prices_clean = get_prices(output, year, model, biggest_techs_clean)
-    prices_dirty = get_prices(output, year, model, biggest_techs_fossil)
-    crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
     
 
-#%%
+def calculate_global_crossover_year(output, models, regions, price_names, shares_variables, tech_variable):
+    global_crossover_years = {}
+    for model in models:
+        # The correct function call
+        crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+        
+        # Extract valid years and corresponding regions
+        valid_years = [(year, region) for region, year in crossover_years.items() if year is not None]
+        
+        if not valid_years:
+            global_crossover_years[model] = None
+        else:
+            # Separate years and regions
+            years, region_list = zip(*valid_years)
+            
+            # Calculate weights based on share variables
+            weights = []
+            for region in region_list:
+                try:
+                    share_data = output[shares_variables[model]][regions[region], tech_variable[model], :]
+                    weight = np.sum(share_data)
+                    weights.append(weight)
+                except KeyError as e:
+                    print(f"Invalid key access: {e}")
+                    weights.append(0)
+            
+            if weights:
+                global_crossover_year = np.average(years, weights=weights)
+                global_crossover_years[model] = global_crossover_year
+            else:
+                global_crossover_years[model] = None
 
-# Calculate weighted average costs for clean and fossils
+    return global_crossover_years
+
+global_crossover_years = {}
+
+for scenario in scenarios:
+    output_file = "Results.pickle"
+    output = get_output(output_file, scenario)
+    rows = []
+    for model in models:
+        biggest_techs_clean = find_biggest_tech(output, clean_techs, year, model, regions)
+        biggest_techs_fossil = find_biggest_tech_dirty(output, dirty_techs, biggest_techs_clean, year, model)
+        clean_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_clean.items()}
+        fossil_tech_names = {key: titles[tech_titles[model]][index] for key, index in biggest_techs_fossil.items()}
+        prices_clean = get_prices(output, year, model, biggest_techs_clean)
+        prices_dirty = get_prices(output, year, model, biggest_techs_fossil)
+        crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
+        global_crossover_years[scenario] = calculate_global_crossover_year(output=output, models=models, regions=regions, price_names=price_names, shares_variables=shares_variables, tech_variable=tech_variable)
+
+print(global_crossover_years)
+
+"""
 def calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable):
     weighted_avg_costs_clean = {}
     weighted_avg_costs_fossil = {}
@@ -224,124 +260,40 @@ def calculate_weighted_average_costs(output, models, regions, price_names, share
 
 weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
 
-#Finding lowest costs from the weighted average costs at time step 2030
-time_step = 10
 
-"""
-def find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step):
-    lowest_series_clean = {}
-
-    for key, value in weighted_avg_costs_clean.items():
-        # Initialize variables to track the minimum value and corresponding series
-        min_value = float('inf')
-        min_series = None
-
-        # Check all rows for the current key in the dictionary
-        for row in value:
-            cost_at_time_step = row[time_step]
-            if cost_at_time_step < min_value:
-                min_value = cost_at_time_step
-                min_series = row
-
-        # Store the lowest time series for the current key
-        lowest_series_clean[key] = min_series
-
-    return lowest_series_clean
-
-def find_lowest_cost_series_for_fossil(weighted_avg_costs_fossil, time_step):
-    lowest_series_fossil = {}
-
-    for key, value in weighted_avg_costs_fossil.items():
-        # Initialize variables to track the minimum value and corresponding series
-        min_value = float('inf')
-        min_series = None
-
-        # Check all rows for the current key in the dictionary
-        for row in value:
-            cost_at_time_step = row[time_step]
-            if cost_at_time_step < min_value:
-                min_value = cost_at_time_step
-                min_series = row
-
-        # Store the lowest time series for the current key
-        lowest_series_fossil[key] = min_series
-
-    return lowest_series_fossil
-
-lowest_series_clean = find_lowest_cost_series_for_clean(weighted_avg_costs_clean, time_step)
-
-lowest_series_fossil = find_lowest_cost_series_for_fossil(weighted_avg_costs_fossil, time_step)
-"""
-
-# Function to extract a different specific series for each key
-def extract_specific_series_for_each_key(original_data, series_indices):
-    specific_series = {}
-    for key, index in series_indices.items():
-        if key in original_data and index < len(original_data[key]):
-            specific_series[key] = original_data[key][index]
+def find_crossover_year(weighted_avg_costs_clean, weighted_avg_costs_fossil):
+    crossover_years = {}
+    start_year = 2020  # assuming the price series starts from 2020
+    for model in weighted_avg_costs_clean:
+        clean_costs = np.average(weighted_avg_costs_clean[model][0])
+        fossil_costs = np.average(weighted_avg_costs_fossil[model][0])
+        
+        if clean_costs is not None and fossil_costs is not None:
+            try:
+                crossover_index = np.where(clean_costs <= fossil_costs)[0][0]
+                crossover_year = start_year + crossover_index
+                crossover_years[model] = crossover_year
+            except IndexError:
+                crossover_years[model] = None
         else:
-            specific_series[key] = None  # Handle case where the index is out of range
-    return specific_series
+            crossover_years[model] = None
 
-#Extract time series for each key
-series_indices_for_clean = {'FTT:Fr': 0, 'FTT:H': 0, 'FTT:P': 1, 'FTT:Tr': 1}
+    return crossover_years
 
-series_indices_for_fossil = {'FTT:Fr': 2, 'FTT:H': 0, 'FTT:P': 2, 'FTT:Tr': 0}
+crossover_years = find_crossover_year(weighted_avg_costs_clean, weighted_avg_costs_fossil)
 
-# Extract the specific series for each key
-specific_series_from_clean = extract_specific_series_for_each_key(weighted_avg_costs_clean, series_indices_for_clean)
 
-specific_series_from_fossil = extract_specific_series_for_each_key(weighted_avg_costs_fossil, series_indices_for_fossil)
 
-#Calculating sectoral crossover year
-sector_crossover_year = {}
+def convert_to_years_and_months(global_crossover_years):
+    converted = {}
+    for model, value in global_crossover_years.items():
+        year = int(value)
+        fractional_part = value - year
+        months = round(fractional_part * 12)  # Convert to months and round to nearest integer
+        converted[model] = (year, months)
+    return converted
 
-for key in specific_series_from_fossil.keys():
-    ftt_lowest_series_clean = specific_series_from_clean.get(key)
-    ftt_lowest_series_fossil = specific_series_from_fossil.get(key)
 
-    sector_crossover_year[key] = interpolate_crossover_year(ftt_lowest_series_clean, ftt_lowest_series_fossil)
-
-"""
-def convert_fractional_years_to_years_and_months(fractional_year):
-    # Extract the integer part (year) and the fractional part (month)
-    year = int(fractional_year)
-    fraction = fractional_year - year
-
-    # Convert the fractional part to months
-    months = round(fraction * 12)
-
-    # If months is 12, increment the year and reset months
-    if months == 12:
-        year += 1
-        months = 0
-
-    return year, months
-
-# Convert each fractional year to year and month
-converted_years_months = {}
-for key, fractional_year in sector_crossover_year.items():
-    year, month = convert_fractional_years_to_years_and_months(fractional_year)
-    converted_years_months[key] = (year, month)
-
-# Output the results in a consistent order (if needed, sort by keys)
-for key in sorted(converted_years_months.keys()):
-    year, month = converted_years_months[key]
-    print(f"{key}: Year = {year}, Month = {month}")
-    
-"""
-
-"""
-#%%
-
-# Create a DataFrame from the converted_years_months dictionary
-df = pd.DataFrame.from_dict(converted_years_months, orient='index', columns=['Year', 'Month'])
-
-# Sort the DataFrame by the index (keys)
-df.sort_index(inplace=True)
-
-# Write the DataFrame to a CSV file, ensuring the index is included
-df.to_csv('Analysis/global_crossover_years_for_Heat.csv', index=True)
-
-print("Output has been written to output.csv")
+converted_years_months = convert_to_years_and_months(global_crossover_years)
+print(converted_years_months)
 """
