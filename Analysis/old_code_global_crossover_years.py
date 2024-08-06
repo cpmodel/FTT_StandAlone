@@ -22,7 +22,7 @@ series_indices_for_fossil = {'FTT:Fr': 2, 'FTT:H': 0, 'FTT:P': 2, 'FTT:Tr': 0}
 plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 13, 'ytick.labelsize': 13})
 
-scenarios = ["FTT-Tr", "FTT-Fr", "FTT-P", "FTT-H"]
+scenarios = ["S0", "FTT-Tr", "FTT-Fr", "FTT-P", "FTT-H"]
 
 titles, fig_dir, tech_titles, models = get_metadata()
 
@@ -216,84 +216,3 @@ for scenario in scenarios:
         global_crossover_years[scenario] = calculate_global_crossover_year(output=output, models=models, regions=regions, price_names=price_names, shares_variables=shares_variables, tech_variable=tech_variable)
 
 print(global_crossover_years)
-
-"""
-def calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable):
-    weighted_avg_costs_clean = {}
-    weighted_avg_costs_fossil = {}
-
-    for model in models:
-        clean_costs = []
-        fossil_costs = []
-        weights = []
-        
-        for r, ri in regions.items():
-            try:
-                # Get price series for clean and fossil technologies
-                tech_clean = clean_techs[model]
-                price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
-                tech_fossil = dirty_techs[model]
-                price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
-                
-                # Get shares as weights
-                share_data_clean = output[shares_variables[model]][ri, tech_clean, :]
-                share_data_fossil = output[shares_variables[model]][ri, tech_fossil, :]
-                weight = np.sum(share_data_clean) + np.sum(share_data_fossil)
-                
-                clean_costs.append(price_series_clean)
-                fossil_costs.append(price_series_fossil)
-                weights.append(weight)
-                
-            except KeyError as e:
-                print(f"Invalid key access: {e}")
-                continue
-        
-        if weights:
-            # Calculate weighted average costs
-            weighted_avg_costs_clean[model] = np.average(clean_costs, axis=0, weights=weights)
-            weighted_avg_costs_fossil[model] = np.average(fossil_costs, axis=0, weights=weights)
-        else:
-            weighted_avg_costs_clean[model] = None
-            weighted_avg_costs_fossil[model] = None
-
-    return weighted_avg_costs_clean, weighted_avg_costs_fossil
-
-weighted_avg_costs_clean, weighted_avg_costs_fossil = calculate_weighted_average_costs(output, models, regions, price_names, shares_variables, tech_variable)
-
-
-def find_crossover_year(weighted_avg_costs_clean, weighted_avg_costs_fossil):
-    crossover_years = {}
-    start_year = 2020  # assuming the price series starts from 2020
-    for model in weighted_avg_costs_clean:
-        clean_costs = np.average(weighted_avg_costs_clean[model][0])
-        fossil_costs = np.average(weighted_avg_costs_fossil[model][0])
-        
-        if clean_costs is not None and fossil_costs is not None:
-            try:
-                crossover_index = np.where(clean_costs <= fossil_costs)[0][0]
-                crossover_year = start_year + crossover_index
-                crossover_years[model] = crossover_year
-            except IndexError:
-                crossover_years[model] = None
-        else:
-            crossover_years[model] = None
-
-    return crossover_years
-
-crossover_years = find_crossover_year(weighted_avg_costs_clean, weighted_avg_costs_fossil)
-
-
-
-def convert_to_years_and_months(global_crossover_years):
-    converted = {}
-    for model, value in global_crossover_years.items():
-        year = int(value)
-        fractional_part = value - year
-        months = round(fractional_part * 12)  # Convert to months and round to nearest integer
-        converted[model] = (year, months)
-    return converted
-
-
-converted_years_months = convert_to_years_and_months(global_crossover_years)
-print(converted_years_months)
-"""
