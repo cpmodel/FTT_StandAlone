@@ -41,7 +41,7 @@ regions = dict(zip(df['Country'], df['Value']))
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
-dirty_techs = {"FTT:P": [6], "FTT:Tr": list(range(12)), "FTT:H": [2], "FTT:Fr": [4]}
+dirty_techs = {"FTT:P": [2], "FTT:Tr": list(range(12)), "FTT:H": [2], "FTT:Fr": [4]}
 
 
 # Define the shares, prices of interest
@@ -216,3 +216,92 @@ for scenario in scenarios:
         global_crossover_years[scenario] = calculate_global_crossover_year(output=output, models=models, regions=regions, price_names=price_names, shares_variables=shares_variables, tech_variable=tech_variable)
 
 print(global_crossover_years)
+
+
+# Calculate the difference from the baseline scenario (S0)
+baseline_scenario = "S0"
+baseline_crossover_years = global_crossover_years[baseline_scenario]
+differences_from_baseline = {}
+
+for scenario in scenarios:
+    if scenario != baseline_scenario:
+        scenario_differences = {}
+        for model in models:
+            # Ensure the model exists in both the current scenario and the baseline
+            if model in global_crossover_years[scenario] and model in baseline_crossover_years:
+                # Check if both values are not None
+                if global_crossover_years[scenario][model] is not None and baseline_crossover_years[model] is not None:
+                    # Calculate the difference for the corresponding model
+                    scenario_differences[model] = global_crossover_years[scenario][model] - baseline_crossover_years[model]
+                else:
+                    # If either value is None, set the difference to None
+                    scenario_differences[model] = None
+        # Store the differences for the current scenario
+        differences_from_baseline[scenario] = scenario_differences
+
+# Print the differences from the baseline scenario
+print("\nDifferences from Baseline Scenario (S0):")
+for scenario, differences in differences_from_baseline.items():
+    print(f"{scenario}: {differences}")
+
+#%%    
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Helper function to convert differences into years and months
+def convert_to_years_months(difference):
+    if difference is None:
+        return "N/A"
+    years = int(difference)
+    months = int((difference - years) * 12)
+    return f"{years} years, {months} months"
+
+# Convert the results into a pandas DataFrame with years and months format
+data = []
+for scenario, results in differences_from_baseline.items():
+    for model, difference in results.items():
+        converted_value = convert_to_years_months(difference)
+        data.append({'Scenario': scenario, 'Model': model, 'Difference': converted_value})
+
+df = pd.DataFrame(data)
+
+# Pivot the DataFrame to get the desired format
+table_df = df.pivot(index='Scenario', columns='Model', values='Difference')
+
+# Reorder the rows according to the desired model ordering
+model_order = ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr"]
+table_df = table_df.reindex(model_order)
+
+# Plotting the table using matplotlib
+fig, ax = plt.subplots(figsize=(12, 8))  # Adjust the size as needed
+
+# Add titles as text annotations
+plt.suptitle('Difference in Global Crossover Years Compared to Baseline Scenario (S0)', fontsize=16, fontweight='bold', x=0.6, y=0.8)
+ax.text(0.5, 0.7, 'Models', ha='center', va='center', transform=ax.transAxes, fontsize=14, fontweight='bold')
+
+ax.axis('tight')
+ax.axis('off')
+
+# Create a table
+table = ax.table(cellText=table_df.values, colLabels=table_df.columns, rowLabels=table_df.index, cellLoc='center', loc='center', edges='BRLT')
+
+table.auto_set_font_size(False)
+table.set_fontsize(12)
+table.scale(1.1, 2.5)  # Increase the vertical size of rows
+
+header_color = '#40466e'
+header_text_color = 'w'
+row_colors = ['#f2f2f2', 'w']
+
+for (i, j), cell in table.get_celld().items():
+    if j == -1:
+        cell.set_text_props(fontweight='bold', color='black')  # Row labels bold
+    if i == 0:
+        cell.set_facecolor(header_color)
+        cell.set_text_props(color=header_text_color, fontweight='bold')  # Column labels white text and bold
+    if i > 0 and j > -1:
+        cell.set_facecolor(row_colors[i % 2])  # Alternating row colors
+
+plt.subplots_adjust(left=0.25, top=0.8, bottom=0.2, right=0.95)
+plt.show()
