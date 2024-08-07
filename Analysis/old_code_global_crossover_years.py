@@ -2,7 +2,7 @@
 """
 Created on Sun Jul 28 20:48:15 2024
 
-@author: Owner
+@author: Rishi
 """
 
 import os
@@ -12,11 +12,6 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 from preprocessing import get_output, get_metadata
-
-#Extract time series for each key
-series_indices_for_clean = {'FTT:Fr': 0, 'FTT:H': 0, 'FTT:P': 1, 'FTT:Tr': 1}
-
-series_indices_for_fossil = {'FTT:Fr': 2, 'FTT:H': 0, 'FTT:P': 2, 'FTT:Tr': 0}
 
 # Set global font size
 plt.rcParams.update({'font.size': 14})
@@ -124,9 +119,15 @@ def get_prices(output, year, model, biggest_technologies):
     return prices
 
 def interpolate_crossover_year(price_series_clean, price_series_fossil):
-    """Interpolate based on price difference in cross-over year and previous year
-    Returns None if the prices of the clean technology are higher than 
-    the fossil technolgy throughout."""
+    """Interpolate based on price difference in cross-over year and previous year.
+    Returns inf if the prices of the clean technology are higher than the fossil technology throughout.
+    Returns -inf if the clean technology has always been cheaper.
+    """
+    if all(price_series_clean > price_series_fossil):
+        return np.inf  # Clean technology never becomes cheaper
+    
+    if all(price_series_clean < price_series_fossil):
+        return -np.inf  # Clean technology is already cheaper
     
     crossover_index = np.where(price_series_clean <= price_series_fossil)[0][0]
     year_before = 2020 + crossover_index - 1
@@ -149,6 +150,23 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
     return crossover_year
 
 def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names):
+    """Get the year when the clean technology becomes cheaper than the fossil technology."""
+    crossover_years = {}
+    for r, ri in regions.items():
+        tech_clean = biggest_techs_clean[r]
+        tech_fossil = biggest_techs_fossil[r]
+        try:
+            price_series_clean = output[price_names[model]][ri, tech_clean, 0, 10:]
+            price_series_fossil = output[price_names[model]][ri, tech_fossil, 0, 10:]
+            crossover_year = interpolate_crossover_year(price_series_clean, price_series_fossil)
+            crossover_years[r] = crossover_year
+            
+        except IndexError:
+            crossover_years[r] = None
+    return crossover_years
+
+
+def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names):
     """ Get the year when the clean technology becomes cheaper than the fossil technology."""
     crossover_years = {}
     for r, ri in regions.items():
@@ -168,17 +186,19 @@ def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil,
 def calculate_global_crossover_year(output, models, regions, price_names, shares_variables, tech_variable):
     global_crossover_years = {}
     for model in models:
-        # The correct function call
+        
         crossover_years = get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names)
         
-        # Extract valid years and corresponding regions
-        valid_years = [(year, region) for region, year in crossover_years.items() if year is not None]
+        # Separate years and regions
+        finite_years = [(year, region) for region, year in crossover_years.items() if year not in [None, np.inf, -np.inf]]
+        always_cheaper_regions = [region for region, year in crossover_years.items() if year == -np.inf]
+        never_cheaper_regions = [region for region, year in crossover_years.items() if year == np.inf]
         
-        if not valid_years:
+        if not finite_years and not always_cheaper_regions:
             global_crossover_years[model] = None
         else:
             # Separate years and regions
-            years, region_list = zip(*valid_years)
+            years, region_list = zip(*finite_years) if finite_years else ([], [])
             
             # Calculate weights based on share variables
             weights = []
@@ -192,11 +212,23 @@ def calculate_global_crossover_year(output, models, regions, price_names, shares
                     weights.append(0)
             
             if weights:
-                global_crossover_year = np.average(years, weights=weights)
+                global_crossover_year = np.average(years, weights=weights) if years else None
                 global_crossover_years[model] = global_crossover_year
             else:
                 global_crossover_years[model] = None
 
+            # Handle regions where clean technology is already cheaper
+            if always_cheaper_regions:
+                for region in always_cheaper_regions:
+                    try:
+                        share_data = output[shares_variables[model]][regions[region], tech_variable[model], :]
+                        weight = np.sum(share_data)
+                        if global_crossover_years[model] is None:
+                            global_crossover_years[model] = 2020  # Assume the earliest possible year
+                        global_crossover_years[model] = (global_crossover_years[model] * sum(weights) + 2020 * weight) / (sum(weights) + weight)
+                    except KeyError as e:
+                        print(f"Invalid key access for always cheaper region: {e}")
+                        
     return global_crossover_years
 
 global_crossover_years = {}
@@ -246,54 +278,62 @@ for scenario, differences in differences_from_baseline.items():
 
 #%%    
 
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
-# Helper function to convert differences into years and months
-def convert_to_years_months(difference):
-    if difference is None:
-        return "N/A"
-    years = int(difference)
-    months = int((difference - years) * 12)
-    return f"{years} years, {months} months"
+# Function to convert fractional years to "years and months"
+def convert_to_years_months(value):
+    if np.isnan(value):
+        return '0 months'
+    years = int(value)
+    months = int((value - years) * 12)
+    return f'{years} years {months} months' if years > 0 else f'{months} months'
 
-# Convert the results into a pandas DataFrame with years and months format
-data = []
-for scenario, results in differences_from_baseline.items():
-    for model, difference in results.items():
-        converted_value = convert_to_years_months(difference)
-        data.append({'Scenario': scenario, 'Model': model, 'Difference': converted_value})
+# Convert dictionary to DataFrame
+df = pd.DataFrame(differences_from_baseline, index=['FTT:P', 'FTT:H', 'FTT:Tr', 'FTT:Fr'])
 
-df = pd.DataFrame(data)
+# Apply conversion to DataFrame
+df_converted = df.applymap(convert_to_years_months)
 
-# Pivot the DataFrame to get the desired format
-table_df = df.pivot(index='Scenario', columns='Model', values='Difference')
+# Mapping dictionary for policy names
+policy_names = {
+    'FTT:P': 'Power policies',
+    'FTT:H': 'Heat policies',
+    'FTT:Tr': 'Transport policies',
+    'FTT:Fr': 'Forestry policies'
+}
 
-# Reorder the rows according to the desired model ordering
-model_order = ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr"]
-table_df = table_df.reindex(model_order)
+# Update row labels
+df_converted.rename(index=policy_names, inplace=True)
 
-# Plotting the table using matplotlib
-fig, ax = plt.subplots(figsize=(12, 8))  # Adjust the size as needed
+# Plotting the table with enhanced aesthetics
+fig, ax = plt.subplots(figsize=(10, 6))  # Adjust the size as needed
 
-# Add titles as text annotations
-plt.suptitle('Difference in Global Crossover Years Compared to Baseline Scenario (S0)', fontsize=16, fontweight='bold', x=0.6, y=0.8)
-ax.text(0.5, 0.7, 'Models', ha='center', va='center', transform=ax.transAxes, fontsize=14, fontweight='bold')
+# Hide axes
+ax.xaxis.set_visible(False)
+ax.yaxis.set_visible(False)
+ax.set_frame_on(False)
 
-ax.axis('tight')
-ax.axis('off')
+# Create table plot
+table = ax.table(cellText=df_converted.values,
+                 colLabels=df.columns,
+                 rowLabels=df_converted.index,
+                 cellLoc='center',
+                 loc='center',
+                 edges='BRLT')
 
-# Create a table
-table = ax.table(cellText=table_df.values, colLabels=table_df.columns, rowLabels=table_df.index, cellLoc='center', loc='center', edges='BRLT')
-
+# Adjust table properties
 table.auto_set_font_size(False)
 table.set_fontsize(12)
-table.scale(1.1, 2.5)  # Increase the vertical size of rows
+table.scale(1.1, 2.0)  # Adjust the scaling as needed
 
+# Aesthetic improvements
 header_color = '#40466e'
 header_text_color = 'w'
 row_colors = ['#f2f2f2', 'w']
 
+# Set header properties
 for (i, j), cell in table.get_celld().items():
     if j == -1:
         cell.set_text_props(fontweight='bold', color='black')  # Row labels bold
@@ -303,5 +343,10 @@ for (i, j), cell in table.get_celld().items():
     if i > 0 and j > -1:
         cell.set_facecolor(row_colors[i % 2])  # Alternating row colors
 
+# Add titles as text annotations
+plt.suptitle('Global Crossover Years by Policy', fontsize=16, fontweight='bold', x=0.6, y=0.8)
+ax.text(0.5, 0.8, 'Sectors', ha='center', va='center', transform=ax.transAxes, fontsize=14, fontweight='bold')
+
 plt.subplots_adjust(left=0.25, top=0.8, bottom=0.2, right=0.95)
+
 plt.show()
