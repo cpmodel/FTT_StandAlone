@@ -21,13 +21,12 @@ plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_sxp.pickle"
-titles, fig_dir, tech_titles, models = get_metadata()
+titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 
-price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
-shares_variables = {"FTT:P": "MEWG", "FTT:Tr": "TEWK", "FTT:Fr": "ZEWK", "FTT:H": "HEWG"}
+price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
 tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 11, "FTT:Fr": 12}
-
+operation_cost_name = {"FTT:P": "MLCO"}
 
 tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",
              "FTT:H": "Air-air heat pump", "FTT:Fr": "Small electric truck"}
@@ -41,10 +40,29 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
     tech_variable and the indices of the years of interest.
     """
     prices = output[price_names[model]][:, tech_variable, 0, year_inds]
-    weights = output[shares_variables[model]][:, tech_variable, 0, year_inds]
+    
+    if model == "FTT:P" and tech_variable in [2, 6]:
+        prices = output[operation_cost_name[model]][:, tech_variable, 0, year_inds]
+    
+    weights = output[shares_vars[model]][:, tech_variable, 0, year_inds]
+    # If there is no technologically left (think coal after phase-out), take overall size MEWG
+    try:
+        if (np.sum(weights, axis=0) == 0).any():
+            weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)
+    except TypeError as e:
+        print(shares_vars)
+        print(model)
+        raise e
+    
     weighted_prices = np.average(prices, weights=weights, axis=0)
     
     return weighted_prices
+
+
+
+#%% =============================================================================
+# Cost declines wrt to 2024 at 2035 and 2050 (omitted in favour of different graph)
+# ==================================================================================
 
 df_dict = {}         # Creates a dict later filled with dataframes
 output_S0 = get_output(output_file, "S0")
@@ -72,7 +90,8 @@ for model in models:
     df_dict[model] = pd.DataFrame(rows)
     
 
-#%% Plot the figure with cost declines by policy
+#%%% Cost declines 2035/2050 -- plotting
+
 fig, axs = plt.subplots(2, 2, figsize=(7, 10), sharey=True)
 axs = axs.flatten()
 palette = sns.color_palette("Blues_r", 3)
@@ -120,14 +139,15 @@ fig.savefig(figure_output_file2, format="png")
 
 
 
-#%% globally averaged costs over time by policy.   # TODO get final ones from Rishi
-clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
-fossil_tech_variable = {"FTT:P": [6], "FTT:Tr": [1], "FTT:H": [2], "FTT:Fr": [4]} # Note 4 for transport gives an error
-timeseries_dict = {}
-graph_label = {"FTT:P": "Solar vs gas", "FTT:H": "Water-air HP vs gas boiler",
-               "FTT:Tr": "petrol vs EV", "FTT:Fr": "Diesel truck vs EV"}
+#%% =====================================================================
+# Globally averaged cost difference over time by within-sector policy
+# ========================================================================
 
-# TODO: figure out why the cost difference becomes "BETTER" when adding 7 to transport
+clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
+fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [2], "FTT:Fr": [4]} # Note 4 for transport gives an error
+graph_label = {"FTT:P": "New solar vs current coal", "FTT:H": "Water-air HP vs gas boiler",
+               "FTT:Tr": "Petrol vs EV", "FTT:Fr": "Diesel truck vs EV"}
+
 
 # Define the percentage difference function
 def get_percentage_difference(clean_price, dirty_price):
@@ -137,20 +157,22 @@ def find_lowest_cost_tech(output, model, tech_list, year_ind):
     """Given model output, the model, and a list of techs to consider,
     find the technology with the lowest costs in 2030"""
     
-    lowest_cost_start = 10000
+    lowest_cost = 10000
     for tech in tech_list:
         cost = get_weighted_costs(output, model, tech, year_ind)
-        if cost < lowest_cost_start:
+        if cost < lowest_cost:
             tech_ind_cheapest = tech
-            lowest_costs = cost
+            lowest_cost = cost
     return tech_ind_cheapest
             
    
-
 year_inds = list(range(14, 41))
+timeseries_dict = {}
+
 
 for model in models:
     timeseries_by_policy = []   
+    
     # Get the bit of the model name after the colon (like Fr)
     model_abb = model.split(':')[1]
     output_ct = get_output(output_file, f"sxp - {model_abb} CT")
@@ -170,18 +192,21 @@ for model in models:
         price_diff_perc = get_percentage_difference(weighted_prices_clean, weighted_prices_fossil)
         timeseries_by_policy.append(price_diff_perc)
         
-        
     
     timeseries_dict[model] = timeseries_by_policy
 
-fig, axs = plt.subplots(2, 2, figsize=(7, 10), sharey=True)
+#%%% Global cost difference -- plotting
+fig, axs = plt.subplots(2, 2, figsize=(8, 10), sharey=True)
 axs = axs.flatten()
+
+# Get 4 colours from the "rocket" palette
+colours = sns.color_palette()
 
 for mi, model in enumerate(models):
     df = df_dict[model]
     ax = axs[mi]
-    for si, scen in enumerate(scenarios.keys()):
-        ax.plot(range(2024, 2051), timeseries_dict[model][si], label=scen)
+    for si, (scen, colour) in enumerate(zip(scenarios.keys(), colours)):
+        ax.plot(range(2024, 2051), timeseries_dict[model][si], label=scen, color=colour)
     ax.axhline(y=0, color="grey")    
     # Remove frame
     ax.spines['top'].set_visible(False)
@@ -191,6 +216,8 @@ for mi, model in enumerate(models):
     
     ax.xaxis.set_ticks_position('none') 
     ax.yaxis.set_ticks_position('none') 
+    ax.set_xlim(2020, 2050.15)
+    ax.set_ylim(-40.5, 60)
     
     ax.grid()
     if mi == 0:
@@ -199,7 +226,9 @@ for mi, model in enumerate(models):
     if mi in [0, 2]:
         ax.set_ylabel("levelised cost difference (%)")
     
-    ax.text(2050, 2, graph_label[model], ha="right")
+    ax.text(2050, 62, graph_label[model], ha="right")
+    
+    
 
 
 # Save the graph as an editable svg file

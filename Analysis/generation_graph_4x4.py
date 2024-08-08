@@ -20,16 +20,14 @@ plt.rcParams.update({'font.size': 12})
 plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
 
 
-output_file = "Results_scens.pickle"
+output_file = "Results_cum_policies.pickle"
 
 output_S0 = get_output(output_file, "S0")
 output_ct = get_output(output_file, "Carbon tax")
 output_sub = get_output(output_file, "and_subsidies")
 output_man = get_output(output_file, "and_mandates")
 
-titles, fig_dir, tech_titles, models = get_metadata()
-
-shares_variables = {"FTT:P": "MEWG", "FTT:Tr": "TEWK", "FTT:Fr": "ZEWK", "FTT:H": "HEWG"}
+titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 tech_names = {}             # The titles of the technology names
 
@@ -120,7 +118,7 @@ def sum_vehicles_or_gen(output):
     total_shares_all = {}           # The share of each technology (or total capacity, not yet decided)
     total_shares = {}
     for model in models:
-        total_shares_all[model] = np.sum(output[shares_variables[model]], axis=(0, 2))
+        total_shares_all[model] = np.sum(output[shares_vars[model]], axis=(0, 2))
         tech_names[model] = list(groupings[model].keys())
         
         indices = groupings[model].values()

@@ -59,11 +59,10 @@ def get_metadata():
     
     # Get names of the technologies of interest
     tech_titles = {"FTT:P": "T2TI", "FTT:Tr": "VTTI", "FTT:Fr": "FTTI", "FTT:H": "HTTI"}    
-    
     models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
+    shares_vars = {"FTT:P": "MEWG", "FTT:Tr": "TEWK", "FTT:Fr": "ZEWK", "FTT:H": "HEWG"} 
 
-    
-    return titles, fig_dir, tech_titles, models
+    return titles, fig_dir, tech_titles, models, shares_vars
     
 
 

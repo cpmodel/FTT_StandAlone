@@ -20,27 +20,20 @@ plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_sectors.pickle"
+output_baseline = get_output(output_file, "S0")
+output_all_policies = get_output(output_file, "sxp - All policies")
 
-output_S0_FTTP = get_output(output_file, "S0")
-output_S0_FTTH  = get_output(output_file, "S0")
-output_S0_FTTTr = get_output(output_file, "S0")
-output_S0_FTTFr = get_output(output_file, "S0")
-
-titles, fig_dir, tech_titles, models = get_metadata()
+titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 models = ["FTT:H", "FTT:Tr", "FTT:Fr", "FTT:P"]
 
 
 # Define the shares, prices of interest
-shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 emissions_names = {"FTT:P": "MEWE", "FTT:Tr": "TEWE", "FTT:H": "HEWE", "FTT:Fr": "ZEWE"}
 
 models_to_scenarios = {"FTT:H": ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-H", "All minus FTT-P"],
                        "FTT:Tr": ["FTT-P",  "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-Tr", "All minus FTT-P"],
                        "FTT:Fr": ["FTT-P",  "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-Fr", "All minus FTT-P"],
                        "FTT:P": ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-P"] }
-
-outputs_baseline = {"FTT:P": output_S0_FTTP, "FTT:H": output_S0_FTTH, 
-                    "FTT:Tr": output_S0_FTTTr, "FTT:Fr": output_S0_FTTFr}
 
 
 
@@ -72,8 +65,8 @@ all_policy_scens = list(set(flatten(models_to_scenarios.values())))
 for model in models:
     emissions[model] = {}
     emissions_abs_diff[model] = {}
-    output_baseline = outputs_baseline[model]
     emissions[model]["Baseline"] = get_total_emissions(output_baseline, model)
+    emissions[model]["sxp - All policies"] = get_total_emissions(output_all_policies, model)
     for scenario in models_to_scenarios[model]:
         output = get_output(output_file, scenario)
         emissions[model][scenario] = get_total_emissions(output, model)
@@ -200,4 +193,83 @@ output_file2 = os.path.join(fig_dir, "Emission_reduction_by_sector.png")
 fig.savefig(output_file, format="svg", bbox_inches='tight')
 fig.savefig(output_file2, format="png", bbox_inches='tight')
 
+#%% ===========================================================================
+# Donut chart figure cumulative emissions figures
+# =============================================================================
+
+# Data
+
+emissions_from_2025 = {
+    scenario: {
+        policy: values[15:] for policy, values in policies.items()
+    } for scenario, policies in emissions.items()
+}
+
+emissions_cum_2050 = np.sum([emissions_from_2025[model]["Baseline"] for model in models])
+
+def cumulative_saved_emissions(model, policy):
+    '''Get the difference of emissions between policy and baseline for only that sector'''
+    
+    cum_emissions_baseline = np.sum(emissions_from_2025[model][policy])
+    baseline_sector_emissions = np.sum(emissions_from_2025[model]["Baseline"])
+    return baseline_sector_emissions - cum_emissions_baseline
+
+def combined_policies_saved_emissions():
+    total_emissions_all_policies = np.sum([emissions_from_2025[model]["sxp - All policies"] for model in models])
+    return  emissions_cum_2050 - total_emissions_all_policies
+
+sectoral_saved_emissions = [cumulative_saved_emissions("FTT:P", "FTT-P"),
+                            cumulative_saved_emissions("FTT:H", "FTT-H"),
+                            cumulative_saved_emissions("FTT:Tr", "FTT-Tr"),
+                            cumulative_saved_emissions("FTT:Fr", "FTT-Fr")]
+
+inner_data = {"No policy": emissions_cum_2050}
+data = {
+    "Power policy": cumulative_saved_emissions("FTT:P", "FTT-P"),
+    "Heat policy": cumulative_saved_emissions("FTT:H", "FTT-H"),
+    "Transport policy": cumulative_saved_emissions("FTT:Fr", "FTT-Fr"),
+    "Freight policy": cumulative_saved_emissions("FTT:Tr", "FTT-Tr"),
+    "Combined policies": max(combined_policies_saved_emissions() - np.sum(sectoral_saved_emissions), 0)
+}
+
+
+# Calculate the remaining emissions after policies
+remaining = inner_data["No policy"] - sum(data.values())
+
+# Add the remaining emissions to the outer data
+data["Remaining emissions"] = remaining
+
+labels = list(data.keys())
+sizes = list(data.values())
+
+# Create a pie chart with higher DPI
+fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+
+
+# Create custom autopct function
+def custom_autopct(pct):
+    if pct > 35:
+        return f'{pct:.1f}%'
+    else:
+        return f'–{pct:.1f}%'
+
+# Donut
+wedges, texts, autotexts = ax.pie(
+    sizes, labels=labels, autopct=lambda pct: custom_autopct(pct),
+    startangle=90, pctdistance=0.65 ,
+    radius=1.2, wedgeprops=dict(width=0.3, edgecolor='w'))
+
+
+# Equal aspect ratio ensures that pie is drawn as a circle
+ax.axis('equal')
+
+# Set font properties
+plt.setp(texts, size=12)
+plt.setp(autotexts, size=12)
+
+# Add title
+plt.title("Global Cumulative Emissions 2025–2050", fontsize=16)
+
+# Display the chart
+plt.show()
 

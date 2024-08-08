@@ -10,6 +10,8 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn 
+
 
 from preprocessing import get_output, get_metadata
 
@@ -21,7 +23,7 @@ output_file = "Results_sxp.pickle"
 output_S0 = get_output(output_file, "S0")
 
 
-titles, fig_dir, tech_titles, models = get_metadata()
+titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 # Define the regions and the region numbers of interest
 regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany": 2, "UK": 14}
@@ -33,8 +35,8 @@ dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "
 
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
-price_names = {"FTT:P": "MEWC", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
-shares_names = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
+price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
+shares_vars = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
 # TODO: should carbon tax be part of this? Probably not, right?
 
@@ -42,11 +44,10 @@ operation_cost_name = {"FTT:P": "MLCO"}
 year = 2030
 
 
-
 # Find the biggest clean or fossil technology:
 def find_biggest_tech(output, tech_lists, year, model, regions):
     """Find the biggest technology in each region for a given model."""
-    shares_var = shares_names[model]
+    shares_var = shares_vars[model]
     tech_list = tech_lists[model]
     max_techs = {}
     for r, ri in regions.items():
@@ -60,7 +61,7 @@ def find_biggest_tech(output, tech_lists, year, model, regions):
 
 
 # Find the biggest clean or fossil technology:
-def find_biggest_tech_dirty(output, dirty_techs, biggest_techs_clean, year, model):
+def find_biggest_tech_fossil(output, dirty_techs, biggest_techs_clean, year, model):
     """Find the biggest technology in each region for a given model."""
     
     if model != "FTT:Tr":
@@ -94,6 +95,8 @@ def remove_vehicles_from_list(dirty_techs, biggest_techs_clean):
 def get_prices(output, year, model, biggest_technologies, regions):
     """Get the prices of the biggest technologies."""
     price_var = price_names[model]
+    if model == "FTT:P" and (2 in biggest_technologies.values() or 6 in biggest_technologies.values()):
+        price_var = operation_cost_name[model]
     prices = {}
     for r, tech in biggest_technologies.items():
         try:
@@ -167,7 +170,9 @@ def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil,
     
     return crossover_years
 
-
+#%% =========================================================================
+# First figure of script: globally averaged costs over time by region
+# ============================================================================
 
 rows = []
 for model in models:
@@ -178,7 +183,7 @@ for model in models:
     output_man = get_output(output_file, f"sxp - {model_abb} mand")
     
     biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, year, model, regions)
-    biggest_techs_fossil = find_biggest_tech_dirty(output_S0, dirty_techs, biggest_techs_clean, year, model)
+    biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, year, model)
     clean_tech_names = {reg: titles[tech_titles[model]][index] for reg, index in biggest_techs_clean.items()}
     fossil_tech_names = {reg: titles[tech_titles[model]][index] for reg, index in biggest_techs_fossil.items()}
     prices_clean = get_prices(output_S0, year, model, biggest_techs_clean, regions)
@@ -208,87 +213,14 @@ for model in models:
         rows.append(row)
 
 # Construct the DataFrame from the list of dictionaries
-df = pd.DataFrame(rows, columns=["Region", "Sector",
+df_cy = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Clean technology", "Clean tech name", "Clean price (2030)", 
                                  "Fossil technology", "Fossil tech name", "Fossil price (2030)", 
                                  "Cross-over", "Cross-over carbon tax",
                                  "Cross-over subsidies", "Cross-over mandates"])
 
-# %% Compute how much, globally, we're brought forward. 
 
-clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
-fossil_tech_variable = {"FTT:P": 6, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 4}       # Note 4 for transport gives an error
-
-output_file_sectors = "Results_sectors.pickle"
-
-
-output_S0 = get_output(output_file_sectors, "S0")
-output_ppolicies = get_output(output_file_sectors, "FTT-P")
-output_hpolicies = get_output(output_file_sectors, "FTT-H")
-output_trpolicies = get_output(output_file_sectors, "FTT-Tr")
-output_frpolicies = get_output(output_file_sectors, "FTT-Fr")
-
-output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies]
-policy_names = ["Baseline", "Power policies", "Heat policies", "Transport policies", "Freight policies"]
-
-def compute_average_crossover_diff(df_crossovers, policy_name, model):
-    """ Compute the average cross-over year diff, only for those regions where 
-    there is a finite saving."""
-        
-    cy_arrays = []
-    for index, row in df_crossovers.iterrows():
-        cy_arrays.append(np.array(list(row["Crossover years"].values())))    
-    
-    # Create a boolean mask for each array where values are not inf or nan
-    masks = [np.isfinite(arr) for arr in cy_arrays]
-    
-    # Combine masks to get indices where all arrays are finite
-    combined_mask = np.all(masks, axis=0)
-    valid_indices = list(np.where(combined_mask)[0])
-    
-    print(f"There is a crossover in {len(valid_indices)} number of regions in {model}")
-    
-    cy_S0 = cy_arrays[0]
-    cy_rows = []
-    
-    for pi, policy in enumerate(policy_name[1:]):
-        averaged_cy = np.average([cy_arrays[pi+1][ind] - cy_S0[ind] for ind in valid_indices])
-        row = {
-            "Model": model,
-            "Policy": policy,
-            "Crossover years": averaged_cy}
-        cy_rows.append(row)
-    
-    return cy_rows
-
-crossover_list = []
-crossover_diff_list = []
-
-for model in models:
-    
-    clean_tech_dict = {i: clean_tech_variable[model] for i in range(1, 72)}
-    fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
-    
-    regions = {i: i - 1 for i in range(1, 72)}
-    
-    for policy, output in zip(policy_names, output_files):    
-    # CrossoverYear_XPolicy
-        crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
-        row = {
-            "Model": model,
-            "Policy": policy,
-            "Crossover years": crossover_years}
-        crossover_list.append(row)
-
-df_crossovers = pd.DataFrame(crossover_list, columns = ["Model", "Policy", "Crossover years"])
-
-for model in models:
-    average_crossover_rows = compute_average_crossover_diff(df_crossovers[df_crossovers["Model"]==model], policy_names, model)
-    
-
-
-
-#%% Making a graph with four subplots for each sector.
+#%%% Making a graph with four subplots for each sector.
 # Each graph shows the percentage difference between the clean and fossil technology in 2025, 2035 and 2050. 
 # The x-axis is the year and the y-axis the percentage difference.
 # The title is the sector name. Each region has its own line.
@@ -306,7 +238,7 @@ def compute_percentage_difference(model, years):
     """Compute percentage price difference per year per region in top techs."""
     
     biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, 2030, model, regions)
-    biggest_techs_fossil = find_biggest_tech_dirty(output_S0, dirty_techs, biggest_techs_clean, 2030, model)
+    biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, 2030, model)
     percentage_difference = np.zeros((len(regions), len(years)))
     for ri, r in enumerate(regions):
     
@@ -319,7 +251,7 @@ def compute_percentage_difference(model, years):
     return percentage_difference
 
 
-#%% Plot the figure of levelised cost difference fossil vs clean tech
+#%%% Plot the figure of levelised cost difference fossil vs clean tech
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 
@@ -359,7 +291,208 @@ fig.savefig(output_file2, format="png", bbox_inches='tight')
 
 
 
-#%% Cross-over year by policy
+
+#%% =========================================================================
+# Figure that is a 4x4 table with difference is crossover year
+# ============================================================================
+
+clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
+fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 4}       # Note 4 for transport gives an error
+
+output_file_sectors = "Results_sectors.pickle"
+
+
+output_S0 = get_output(output_file_sectors, "S0")
+output_ppolicies = get_output(output_file_sectors, "FTT-P")
+output_hpolicies = get_output(output_file_sectors, "FTT-H")
+output_trpolicies = get_output(output_file_sectors, "FTT-Tr")
+output_frpolicies = get_output(output_file_sectors, "FTT-Fr")
+
+output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies]
+policy_names = ["Baseline", "Power policies", "Heat policies", "Transport policies", "Freight policies"]
+
+def convert_fractional_years_to_years_and_months(fractional_year):
+    ''' Extract the integer part (year) and the fractional part (month) '''
+    year = int(fractional_year)
+    fraction = fractional_year - year
+
+    # Convert the fractional part to months
+    months = round(fraction * 12)
+
+    # If months is 12, increment the year and reset months
+    if months == 12:
+        year += 1
+        months = 0
+
+    return -year, -months
+
+
+def format_monthyear_str(years, months):
+    if years == 0 and months not in [-1, 1]:
+        yearmonth_str = f'{months} months'
+    elif years == 0 and months in [-1, 1]:
+        yearmonth_str = f'{months} month'
+    elif years == 1:
+        yearmonth_str = f'{years} year, {months} months'
+    else:
+        yearmonth_str = f'{years} years, {months} months'
+    return yearmonth_str
+
+def compute_average_crossover_diff(df_crossovers, policy_name, model):
+    """ Compute the average cross-over year diff, only for those regions where 
+    there is a finite saving."""
+        
+    cy_arrays = []
+    for index, row in df_crossovers.iterrows():
+        cy_arrays.append(np.array(list(row["Crossover years"].values())))    
+    
+    # Create a boolean mask for each array where values are not inf or nan
+    masks = [np.isfinite(arr) for arr in cy_arrays]
+    
+    # Combine masks to get indices where all arrays are finite
+    combined_mask = np.all(masks, axis=0)
+    valid_indices = list(np.where(combined_mask)[0])
+    
+    print(f"There is a crossover in {len(valid_indices)} number of regions in {model}")
+    
+    cy_S0 = cy_arrays[0]
+    cy_rows = []
+    
+    for pi, policy in enumerate(policy_name[1:]):
+        averaged_cy = np.average([cy_arrays[pi+1][ind] - cy_S0[ind] for ind in valid_indices])
+        years, months = convert_fractional_years_to_years_and_months(averaged_cy)
+        yearmonth_str = format_monthyear_str(years, months)
+        row = {
+            "Model": model,
+            "Policy": policy,
+            "Crossover year diff": yearmonth_str}
+        cy_rows.append(row)
+    
+    return cy_rows
+
+crossover_list = []
+crossover_diff_list = []
+
+for model in models:
+    
+    clean_tech_dict = {i: clean_tech_variable[model] for i in range(1, 72)}
+    fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
+    
+    regions = {i: i - 1 for i in range(1, 72)}
+    
+    for policy, output in zip(policy_names, output_files):    
+    # CrossoverYear_XPolicy
+        crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
+        row = {
+            "Model": model,
+            "Policy": policy,
+            "Crossover years": crossover_years}
+        crossover_list.append(row)
+
+df_crossovers = pd.DataFrame(crossover_list, columns = ["Model", "Policy", "Crossover years"])
+
+for model in models:
+    average_crossover_rows = compute_average_crossover_diff(df_crossovers[df_crossovers["Model"]==model], policy_names, model)
+    crossover_diff_list.extend(average_crossover_rows)
+
+# Create a DataFrame from the list of dictionaries
+df = pd.DataFrame(crossover_diff_list)
+
+
+
+# Pivot the DataFrame to get the desired 4x4 table
+table = df.pivot(index='Policy', columns='Model', values='Crossover year diff')
+# Reindex the table to ensure the policy order matches policy_names
+table = table.reindex(index= policy_names[1:], columns=models)
+
+# Plot the table as a figure
+fig, ax = plt.subplots(dpi=300)
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=table.values, rowLabels=table.index, colLabels=table.columns, cellLoc='center', loc='center')
+
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1.2, 1.2)
+
+header_color = '#40466e'
+header_text_color = 'w'
+row_colors = ['#f2f2f2', 'w']
+
+for (i, j), cell in table.get_celld().items():
+    if j == -1:
+        cell.set_text_props(fontweight='bold', color='black')  # Row labels bold
+    if i == 0:
+        cell.set_facecolor(header_color)
+        cell.set_text_props(color=header_text_color, fontweight='bold')  # Column labels white text and bold
+    if i > 0 and j > -1:
+        cell.set_facecolor(row_colors[i % 2])  # Alternating row colors
+
+
+plt.subplots_adjust(top=1, bottom=0)  # This line adjusts the whitespace
+#plt.title("Cost Parity Brought Forward by (months)", fontsize=14, fontweight='bold')
+
+#%% ========================================================================
+#    Same as table above, but now in violin plot. 
+# ===========================================================================
+fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+axs = axs.flatten()
+seaborn.set(style = 'whitegrid') 
+
+# TODO: ensure I filter out those with nans in other categories
+
+# Expand the dataframe to make it suitable for the violin plot
+
+ # Initialize an empty DataFrame to collect the results
+expanded_df = pd.DataFrame()
+
+# Iterate through each row and expand the dictionary
+for idx, row in df_crossovers.iterrows():
+    # Create a temporary DataFrame from the dictionary
+    temp_df = pd.DataFrame(list(row['Crossover years'].items()), columns=['Region', 'Crossover year'])
+    # Add the other columns to the temporary DataFrame
+    temp_df['Model'] = row['Model']
+    temp_df['Policy'] = row['Policy']
+    # Append to the result DataFrame
+    expanded_df = pd.concat([expanded_df, temp_df], ignore_index=True)
+
+# Rearrange columns to the desired order
+expanded_df = expanded_df[['Model', 'Policy', 'Region', 'Crossover year']]
+
+    
+def all_finite(group):
+    return np.isfinite(group["Crossover year"]).all()
+   
+for mi, model in enumerate(models):
+    
+    # use to set style of background of plot
+    ax = axs[mi]
+    
+    df_model = expanded_df[expanded_df["Model"]==model]
+    
+    # Group by "Region" and filter out groups with any non-finite "Crossover year" values
+    filtered_df_model = df_model.groupby("Region").filter(all_finite)
+    
+    ax.set_title(model)
+     
+    seaborn.violinplot(x ='Policy', y ='Crossover year', data = filtered_df_model, ax=ax)
+    seaborn.swarmplot(x ='Policy', y ='Crossover year', data = filtered_df_model, color= "black", ax=ax, size=3)
+    
+    ax.set_ylim(2021, 2050)
+    
+    # Rotate x-axis labels
+    ax.tick_params(axis='x', rotation=45)
+    # Remove x-axis label
+    ax.set_xlabel('')
+
+    
+# Adjust spacing between subplots
+plt.subplots_adjust(hspace=0.5, wspace=0.2)    
+
+
+#%% =========================================================================
+#  Fourth figure of this script: timelines by sector by country
+# ============================================================================
 
 def determine_lims_crossover(row):
     xmin = np.min(row)
@@ -389,7 +522,7 @@ policy_names = {
 
 # Plot the timelines
 y_base = 0
-y_gap = 1.08
+y_gap = 1.0
 model_gap = -5
 offset_op = 0.3
 
@@ -399,20 +532,23 @@ timeline_start = 2020
 timeline_end = 2050
 
 # Create the plot
-fig, ax = plt.subplots(figsize=(10, 10))
+fig, axs = plt.subplots(nrows=len(models), figsize=(10, 10), sharex=True)
+axs = axs.flatten()
 
-yticks = []
-yticklabels = []
+
 
 # Go over models in reverse order
-for mi, model in enumerate(models[::-1]):
+for mi, model in enumerate(models):
+    ax = axs[mi]
+    model_data = df_cy[df_cy['Sector'] == model]
     
-    ax.text(2045, mi * 7.9 + 7, model_names_r[mi], fontsize=13)
-    model_data = df[df['Sector'] == model]
+    yticks = []
+    yticklabels = []
+    
+    
+    
     for index, row in model_data.iterrows():
-        y_position = y_base + (len(df)-index) * y_gap
-        ax.hlines(y_position, timeline_start, timeline_end, color='grey', alpha=0.5)
-        
+        y_position = len(df) - index     
         
         # Plot the lines connecting the crossover years
         xmin, xmax = determine_lims_crossover(row.iloc[-4:])
@@ -423,43 +559,58 @@ for mi, model in enumerate(models[::-1]):
         # Plot the crossover year (points)
         for pi, policy in enumerate(colors.keys()):
             if row[policy] < 2021:
-                pass
-            
+                pass 
             ax.plot(row[policy], y_position, 'o', color=colors[policy], markersize=10)
                     
         # Plot arrows when the crossover point in past of after 2050 (-inf or inf):
         if (row.iloc[-4:] == np.inf).all():
-            ax.arrow(2049.3, y_position, 1, 0, head_width=0.3, head_length=0.2, fc='#003f5c', ec='#003f5c')
+            ax.arrow(2049, y_position, 0.8, 0, head_width=0.3, head_length=0.3, fc='#003f5c', ec='#003f5c')
         elif (row.iloc[-4:] == -np.inf).all():
-            ax.arrow(2020.7, y_position, -1, 0, head_width=0.3, head_length=0.2, fc='#003f5c', ec='#003f5c')                
+            ax.arrow(2021, y_position, -0.8, 0, head_width=0.3, head_length=0.3, fc='#003f5c', ec='#003f5c')                
        
+        
+        # Set the region label
+        
         yticks.append(y_position)
         yticklabels.append(row['Region'])
-    y_base += len(model_data) * y_gap + model_gap
+    
+    ax.text(2046, max(yticks)+0.5, model_names_r[3-mi], fontsize=13, weight='bold')
+    
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticklabels)
+    
+    # Remove frame
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
 
-# Set the region label
-ax.set_yticks(yticks)
-ax.set_yticklabels(yticklabels)
-
-# Remove frame
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['left'].set_visible(False)
-ax.spines['bottom'].set_visible(False)
-
-# Remove ticks and move tick labels
-ax.tick_params(axis='y', length=0, pad=-5)
-ax.tick_params(axis='x', length=0, pad=-10)
+    # Remove ticks and move tick labels
+    ax.tick_params(axis='y', length=0, pad=15)
+    ax.tick_params(axis='x', length=0, pad=0)
+            
+    ax.set_xlim(2019.95, 2050.1)
+    
+    # Disable default vertical grid lines
+    ax.grid(False, axis='x')
+    # Draw custom vertical grid lines within y-tick range
+    for x in np.arange(2020, 2051, 5):  # Example for every 5 years
+        ax.plot([x, x], [min(yticks), max(yticks)], color='gray', linestyle='--', linewidth=0.5)
+        
+    # Hide excess grid lines by setting major ticks only at yticks positions
+    ax.yaxis.set_major_locator(plt.FixedLocator(yticks))
+        
+    
 
 
 # Create custom legend
 handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors[policy],
                       markersize=12, label=policy_names[policy]) for policy in colors]
 legend_y_position = 10
-ax.legend(handles=handles, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(1.0, -0.03), framealpha=0.8)
+ax.legend(handles=handles, loc='upper right', frameon=True, ncol=4, bbox_to_anchor=(0.9, -0.1), framealpha=0.8)
 
 
-fig.suptitle("When does the clean technology becomes the lowest costs, when excluding policy costs \n Comparison largest clean and fossil technology in each country", 
+fig.suptitle("Cost-parity point: costs without policy \n Comparison largest clean and fossil technology in each country", 
              x=0.45, y=0.95, ha='center')
 
 # Save the graph as an editable svg file
@@ -467,6 +618,7 @@ output_file = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.png")
 output_file2 = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.svg")
 fig.savefig(output_file, format="png", bbox_inches='tight')
 fig.savefig(output_file2, format="svg", bbox_inches='tight')
+
 
 
 
