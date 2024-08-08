@@ -23,11 +23,6 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 3. Per technology, choose a gamma value that ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. If gamma values are often larger than 30, there may be structural errors in the model, so feel free to contact an experienced modeller. 
 4. Save the gamma values in Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx.
 
-### Differing start dates for costs and capacity
-1. If your cost data is not from the same year as your final generation data, a code change needs to be made. In ftt_p_main.py, you will need to add an if statement (if year == (cost data year + 1)).., to run the learning-by-doing up to the proper start of the simulation. 
-    1. TODO Option 1: switch to BNEF for cost data
-    2. TODO Option 2: make a new variable in FTT-Standalone/Utilities/Titles/VariableListing.csv which contains the date of the cost data, and adjust the code to reflect, so that code doesn't need updating.
-
 ### Costs
 1. Update the costs of CAPEX, OPEX and the standard deviation of both using a the average of BNEF data, GNESTE and Enerdata (2 out of 3 is sufficient). Exeter has access to BNEF data, the WB to Enerdata and [GNESTE data](https://github.com/iain-staffell/GNESTE) is open-access. Do not add raw data from BNEF or Enerdata to the repository; they are not open access! 
     1. Ensure the sources use the same currency (note that $2020USD is different from $2023USD). 
@@ -36,18 +31,18 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 2. Update the fuel costs
     1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
     2.  Higher-quality update: The [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) is down at the moment, but Exeter has access until May 2025, so ask Ian. The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh. 
-3. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J5 from 2020 to 2023 after you've updated the cost data. 
-4. Verify that LCOE estimates in the model are roughly in accordance with independent estimates. You can compare with BNEF or Lazard prices.
+3. Edit the BCET "History end" in FTT-Standalone/Utilities/Titles/VariableListing.csv. This is found in column J. This ensures learning-by-doing starts in the right year.
+4. Verify that LCOE estimates in the model are roughly in accordance with independent estimates. You can compare for instance compare with BNEF if you have access or [Lazard prices](https://www.lazard.com/research-insights/levelized-cost-of-energyplus/).
 5. Adjust the currency conversions in the code to the new currency (for instance, from 2013USD to 2023USD). Ideally, this is done automatically from histend.
 
 ## Less frequent updates
 
 ### Technical parameters
-5. Update the technical potential. The last update for the technical potential for onshore, offshore and solar was done early 2022. 
-6. Update Cost-Supply Curves to reflect maximum capacity factor by country. These go up steadily over time for solar and wind, as efficiency and capacity factors improve.
+5. Update the technical potential. The last update for the technical potential for onshore, offshore and solar was done early 2022 (see [the solar momentum paper](https://www.nature.com/articles/s41467-023-41971-7?utm_source=rct_congratemailt&utm_medium=email&utm_campaign=oa_20231017&utm_content=10.1038/s41467-023-41971-7#Sec6)) for more details. 
+6. Update Cost-Supply Curves to reflect maximum capacity factor by country. These go up steadily over time for solar and wind, as efficiency and capacity factors improve. We used the BNEF data for the 2022 update, and extrapolated based on latitute and proxies. The exact proxies are found in the large CSC files, ask Femke for the latest file.
 7. You can also check efficiency and GHG emissions, which change with slow changes of technologies.  Note that emissions are computed bottom-up, but there is a top-down correction to ensure our overall emissions are correct in E3ME.
 8. Update efficiencies of storage technologies if needed.
-4. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies. 
+4. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies based on [Way et al](https://www.sciencedirect.com/science/article/pii/S254243512200410X). 
 
 ### Classification
 1. Update which technologies should be included. Are there new technologies we should include? Do we have the data to split rooftop solar from utility-scale solar? Can we add storage technologies / hydrogen? And have some technologies been relegated to the dustbin?
