@@ -36,9 +36,9 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 2. Update the fuel costs
     1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
     2.  Higher-quality update: The [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) is down at the moment, but Exeter has access until May 2025, so ask Ian. The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh. 
-4. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies. 
-5. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J5 from 2020 to 2023 after you've updated the cost data. 
-6. Adjust the currency conversions in the code to the new currency (for instance, from 2013USD to 2023USD). Ideally, this is done automatically from histend.
+3. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J5 from 2020 to 2023 after you've updated the cost data. 
+4. Verify that LCOE estimates in the model are roughly in accordance with independent estimates. You can compare with BNEF or Lazard prices.
+5. Adjust the currency conversions in the code to the new currency (for instance, from 2013USD to 2023USD). Ideally, this is done automatically from histend.
 
 ## Less frequent updates
 
@@ -47,6 +47,7 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 6. Update Cost-Supply Curves to reflect maximum capacity factor by country. These go up steadily over time for solar and wind, as efficiency and capacity factors improve.
 7. You can also check efficiency and GHG emissions, which change with slow changes of technologies.  Note that emissions are computed bottom-up, but there is a top-down correction to ensure our overall emissions are correct in E3ME.
 8. Update efficiencies of storage technologies if needed.
+4. Update the learning rate. We use learning rates from literature. It may be worth revisiting every 5 to 10 years, depending on the novelty of the technology and speed of deployment. The last update was done in early 2022 for solar and wind technologies, as well as storage technologies. 
 
 ### Classification
-1. Update which technologies should be included. Are there new technologies we should include? In particular storage technologies / hydrogen? And have some technologies been relegated to the dustbin?
+1. Update which technologies should be included. Are there new technologies we should include? Do we have the data to split rooftop solar from utility-scale solar? Can we add storage technologies / hydrogen? And have some technologies been relegated to the dustbin?
