@@ -15,9 +15,11 @@ import seaborn as sns
 from preprocessing import get_output, get_metadata
 
 # Set global font size
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
 
-# Set global font size for tick labels
+# plt.rcParams['axes.labelsize'] = 14
+
+# # Set global font size for tick labels
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
 output_file = "Results_sxp.pickle"
@@ -44,15 +46,9 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
     if model == "FTT:P" and tech_variable in [2, 6]:
         prices = output[operation_cost_name[model]][:, tech_variable, 0, year_inds]
     
-    weights = output[shares_vars[model]][:, tech_variable, 0, year_inds]
-    # If there is no technologically left (think coal after phase-out), take overall size MEWG
-    try:
-        if (np.sum(weights, axis=0) == 0).any():
-            weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)
-    except TypeError as e:
-        print(shares_vars)
-        print(model)
-        raise e
+    # Way by total size of the market per region
+    weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)
+   
     
     weighted_prices = np.average(prices, weights=weights, axis=0)
     
@@ -144,8 +140,8 @@ fig.savefig(figure_output_file2, format="png")
 # ========================================================================
 
 clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
-fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [2], "FTT:Fr": [4]} # Note 4 for transport gives an error
-graph_label = {"FTT:P": "New solar vs current coal", "FTT:H": "Water-air HP vs gas boiler",
+fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [4]} # Note 4 for transport gives an error
+graph_label = {"FTT:P": "New solar vs existing coal", "FTT:H": "Water-air HP vs gas boiler",
                "FTT:Tr": "Petrol vs EV", "FTT:Fr": "Diesel truck vs EV"}
 
 
@@ -164,6 +160,7 @@ def find_lowest_cost_tech(output, model, tech_list, year_ind):
             tech_ind_cheapest = tech
             lowest_cost = cost
     return tech_ind_cheapest
+
             
    
 year_inds = list(range(14, 41))
@@ -196,7 +193,7 @@ for model in models:
     timeseries_dict[model] = timeseries_by_policy
 
 #%%% Global cost difference -- plotting
-fig, axs = plt.subplots(2, 2, figsize=(8, 10), sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 
 # Get 4 colours from the "rocket" palette
@@ -206,8 +203,9 @@ for mi, model in enumerate(models):
     df = df_dict[model]
     ax = axs[mi]
     for si, (scen, colour) in enumerate(zip(scenarios.keys(), colours)):
-        ax.plot(range(2024, 2051), timeseries_dict[model][si], label=scen, color=colour)
-    ax.axhline(y=0, color="grey")    
+        ax.plot(range(2024, 2051), timeseries_dict[model][si], label=scen, color=colour, linewidth=2.5)
+    ax.axhline(y=0, color="grey", linewidth=1.2)    
+    
     # Remove frame
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -217,17 +215,29 @@ for mi, model in enumerate(models):
     ax.xaxis.set_ticks_position('none') 
     ax.yaxis.set_ticks_position('none') 
     ax.set_xlim(2020, 2050.15)
-    ax.set_ylim(-40.5, 60)
+    ax.set_ylim(-50.5, 35.2)
     
-    ax.grid()
+    # Set grid lines
+    ax.set_xticks([2020, 2025, 2030, 2035, 2040, 2045, 2050])
+    
+    # Hide major x-tick labels
+    ax.tick_params(axis='x', which='major', labelbottom=False)
+    
+    # Condense x-labels slightly
+    ax.set_xticks([2020.8, 2030.4, 2039.6, 2049.2], minor=True)
+    ax.set_xticklabels([2020, 2030, 2040, 2050], minor=True)
+    ax.tick_params(axis='x', which='minor', pad=5)
+    
+    ax.grid(True, which='major', linewidth=0.7)
+    ax.grid(True, axis='y', linewidth=0.7)
+    
     if mi == 0:
         ax.legend(loc='best')
     
     if mi in [0, 2]:
-        ax.set_ylabel("levelised cost difference (%)")
+        ax.set_ylabel("Levelised cost difference (%)")
     
-    ax.text(2050, 62, graph_label[model], ha="right")
-    
+    ax.text(2050, 37, graph_label[model], ha="right")
     
 
 
@@ -236,7 +246,7 @@ figure_output_file = os.path.join(fig_dir, "Price_diff_timeseries_by_policy_glob
 figure_output_file2 = os.path.join(fig_dir, "Price_diff_timeseries_by_policy_global.png")
 
 fig.savefig(figure_output_file, format="svg")
-fig.savefig(figure_output_file2, format="png")
+fig.savefig(figure_output_file2, format="png", dpi=300)
 
 
 

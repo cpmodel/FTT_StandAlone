@@ -14,7 +14,7 @@ import os
 from preprocessing import get_metadata, get_output
 
 # Set global font size
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 12, 'legend.fontsize': 12})
 
 # Set global font size for tick labels
 plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
