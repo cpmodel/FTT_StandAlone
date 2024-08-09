@@ -654,10 +654,11 @@ def rldc(data, time_lag, data_dt, year, titles):
 
     # Ad hoc correction for exchange rate and inflation
     # These corrections deviate from FORTRAN. There was 11% inflation between 2013 and 2020
+    # For exchange rate EUR/USD, take the average of 2013 and 2015 (1.33/1.11).
     data["MSSP"] = data["MSSP"] / 1.11
-    data["MLSP"] = data["MLSP"] * 1.34
+    data["MLSP"] = data["MLSP"] * 1.22
     data["MSSM"] = data["MSSM"] / 1.11
-    data["MLSM"] = data["MLSM"] * 1.34
+    data["MLSM"] = data["MLSM"] * 1.22
     data["MSSR"] = data["MSSR"] / 1.11
     
     check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
