@@ -242,7 +242,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
         data = get_lcoe(data, titles, year)                                  # Get the levelised costs
-        data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3) # Get the marginal fuel prices
+        data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)       # Get the marginal fuel prices
 
 
 
@@ -452,6 +452,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
+            
+            # For dispatchable techs, set decision load factor at MEWL
+            data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
 
             
              
@@ -782,6 +785,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
+            
+            # For dispatchable techs, set decision load factor at MEWL
+            data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
             
             # %%
             data["Battery cap additions"][0, t-1, 0] = quarterly_bat_add_power(no_it, data, data_dt, titles)
