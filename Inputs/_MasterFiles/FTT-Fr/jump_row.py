@@ -12,14 +12,14 @@ workbook = openpyxl.load_workbook('FTT-Fr-20x71_2022_S0.xlsx')
 sheet = workbook['ZCET']
 
 # List of cells to copy from
-source_cells = ['C11', 'C19', 'C25']
+source_cells = ['C10', 'C18', 'C24']
 
 # Destination starting row
-start_row = 11
+start_row = 10
 destination_column = 'C'
 
 # Number of iterations
-iterations = 32
+iterations = 33
 
 # Loop through each iteration
 for i in range(iterations):
