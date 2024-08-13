@@ -9,9 +9,8 @@ Created on Wed Jul 17 09:18:35 2024
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
 
-from preprocessing import get_metadata, get_output
+from preprocessing import get_metadata, get_output, save_fig, save_data
 
 # Set global font size
 plt.rcParams.update({'font.size': 12, 'legend.fontsize': 12})
@@ -34,8 +33,8 @@ tech_names = {}             # The titles of the technology names
 
 # Group the technologies in a coarser classification:
     
-grouping_power = {"Coal and oil": [1, 2, 4], "Coal + CCS": [3, 5], "Gas": [6], "Gas + CCS": [7], 
-                  "Nuclear": [0], "Biomass + other": [8, 10, 12, 14, 20, 21, 22, 23], "Biomass + CCS": [9, 11, 13],
+grouping_power = {"Coal and oil": [1, 2,3, 4,5], "Gas": [6, 7], 
+                  "Nuclear": [0], "Biomass + other": [8, 9, 10, 11, 12, 13, 14, 20, 21, 22, 23],
                   "Hydropower": [15], "Wind": [16, 17], "Solar": [18, 19]}
 
 
@@ -56,11 +55,8 @@ grouping_freight = {"Petrol": [0, 2], "Diesel": [4, 6],
 colours_power = {
     "Nuclear": "lightcoral",  # Light coral to indicate its clean but debated nature
     "Coal and oil": "black",  # Black for traditional, high carbon emission sources
-    "Coal + CCS": "dimgray",  # Dim gray to represent coal with carbon capture, slightly cleaner
     "Gas": "silver",  # Slate grey to differentiate from coal but still fossil fuel
-    "Gas + CCS": "gainsboro",  # Light slate gray for gas with carbon capture, transitional
-    "Biomass + other": "darkolivegreen",  # Dark olive green to represent biomass, a renewable but complex source
-    "Biomass + CCS": "yellowgreen",  # Yellow green for biomass with carbon capture, enhancing its clean aspects
+    "Biomass + other": "yellowgreen",  # Dark olive green to represent biomass, a renewable but complex source
     "Hydropower": "royalblue",  # Sky blue to signify wind, clean and free like the sky
     "Wind": "skyblue",  # Sky blue to signify wind, clean and free like the sky
     "Solar": "goldenrod"  # Goldenrod, rich and vibrant for solar energy
@@ -219,9 +215,25 @@ plot_column(model_dfs_ct, 1, "B. + Carbon tax")
 plot_column(model_dfs_sub, 2, "C. + Subsidies")
 plot_column(model_dfs_man, 3, "D. + Mandates")
 
+def combine_dfs(dict_of_dfs):
+    
+    # Combine the DataFrames into a single DataFrame
+    combined_df = pd.concat(dict_of_dfs.values(), keys=dict_of_dfs.keys())
+    
+    # Reset the index, converting both levels of the index into columns
+    combined_df = combined_df.reset_index()
+
+    # Rename the newly created level_0 column to "Model"
+    combined_df = combined_df.rename(columns={'level_0': 'Model', "Level_1": "Technology"})
+    
+    return combined_df
+
+
 fig.subplots_adjust(wspace=0.08)  # Adjust the height spacing
 
-output_file = os.path.join(fig_dir, "Shares_graph_4x4.svg")
-output_file2 = os.path.join(fig_dir, "Shares_graph_4x4.png")
+save_fig(fig, fig_dir, "Shares_graph_4x4")
+save_data(combine_dfs(model_dfs_S0), fig_dir, "Shares_graph_4x4_Baseline")
+save_data(combine_dfs(model_dfs_ct), fig_dir, "Shares_graph_4x4_Carbontax")
+save_data(combine_dfs(model_dfs_sub), fig_dir, "Shares_graph_4x4_AndSubsidies")
+save_data(combine_dfs(model_dfs_man), fig_dir, "Shares_graph_4x4_Andmandates")
 
-fig.savefig(output_file2, bbox_inches='tight')#, bbox_extra_artists=(lgd,), bbox_inches='tight')

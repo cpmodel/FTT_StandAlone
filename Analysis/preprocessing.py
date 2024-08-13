@@ -80,3 +80,29 @@ def get_output(name_pickle_file, scenario):
     
     
     return output
+
+def save_fig(fig, fig_dir, title):
+    '''This function saves the figures in both svg and png format, at 300 dpi. '''
+    
+    # Save the graph as an editable svg file
+    output_file = os.path.join(fig_dir, f'{title}.svg')
+    output_file2 = os.path.join(fig_dir, f'{title}.png')
+    fig.savefig(output_file, format="svg", bbox_inches='tight')
+    fig.savefig(output_file2, format="png", bbox_inches='tight')
+    
+def save_data(df, fig_dir, title):
+    '''Saved the dataframe with all the data for the figure'''
+    
+    # Go one directory back and add "Figures_data"
+    data_dir = os.path.join(os.path.dirname(fig_dir), "Figures_data")
+    
+    # Create the new directory if it doesn't exist
+    os.makedirs(data_dir, exist_ok=True)
+    
+    # Specify the full file path
+    file_path = os.path.join(data_dir, f"{title}.csv")
+    
+    # Save the DataFrame to the new CSV file
+    df.to_csv(file_path, index=False)
+    
+    

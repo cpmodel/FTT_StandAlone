@@ -6,13 +6,12 @@ Created on Thu Jul 18 17:13:22 2024
 """
 
 # Import the results pickle file
-import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from preprocessing import get_output, get_metadata
+from preprocessing import get_output, get_metadata, save_fig, save_data
 
 # Set global font size
 plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
@@ -127,11 +126,7 @@ plt.tight_layout(rect=[0, 0, 1, 0.95])  # Adjust layout to make space for the le
 plt.show()
    
 # Save the graph as an editable svg file
-figure_output_file = os.path.join(fig_dir, "Cost_declines_by_policy.svg")
-figure_output_file2 = os.path.join(fig_dir, "Cost_declines_by_policy.png")
-
-fig.savefig(figure_output_file, format="svg")
-fig.savefig(figure_output_file2, format="png")
+save_fig(fig, fig_dir, "Cost_declines_by_policy")
 
 
 
@@ -241,12 +236,9 @@ for mi, model in enumerate(models):
     
 
 
-# Save the graph as an editable svg file
-figure_output_file = os.path.join(fig_dir, "Price_diff_timeseries_by_policy_global.svg")
-figure_output_file2 = os.path.join(fig_dir, "Price_diff_timeseries_by_policy_global.png")
+# Save the graph as an svg and png file
+save_fig(fig, fig_dir, "Price_diff_timeseries_by_policy_global")
 
-fig.savefig(figure_output_file, format="svg")
-fig.savefig(figure_output_file2, format="png", dpi=300)
 
 
 

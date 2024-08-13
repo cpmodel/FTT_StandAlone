@@ -6,13 +6,13 @@ Created on Mon Jul 22 10:35:01 2024
 """
 
 # Import the results pickle file
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.gridspec as gridspec
+import pandas as pd
 
-from preprocessing import get_output, get_metadata
+from preprocessing import get_output, get_metadata, save_fig, save_data
 
 
 # Set global font size
@@ -187,25 +187,29 @@ for mi, model in enumerate(models):
 
 fig.subplots_adjust(wspace=0.6, hspace=0.4)  # Increase horizontal space between subplots
     
-# Save the graph as an editable svg file
-output_file = os.path.join(fig_dir, "Emission_reduction_by_sector.svg")
-output_file2 = os.path.join(fig_dir, "Emission_reduction_by_sector.png")
-fig.savefig(output_file, format="svg", bbox_inches='tight')
-fig.savefig(output_file2, format="png", bbox_inches='tight')
+save_fig(fig, fig_dir, "Emission_reduction_by_sector")
+
 
 #%% ===========================================================================
 # Donut chart figure cumulative emissions figures
 # =============================================================================
 
-# Data
-
+# Emissions timeseries from 2025
 emissions_from_2025 = {
     scenario: {
         policy: values[15:] for policy, values in policies.items()
     } for scenario, policies in emissions.items()
 }
 
-emissions_cum_2050 = np.sum([emissions_from_2025[model]["Baseline"] for model in models])
+# Emissions in 2050
+emissions_2050 = {
+    scenario: {
+        policy: values[-1] for policy, values in policies.items()
+        } for scenario, policies in emissions.items()
+    }
+
+emissions_cum_2050_S0 = np.sum([emissions_from_2025[model]["Baseline"] for model in models])
+emissions_tot_2050_S0 = np.sum([emissions_2050[model]["Baseline"] for model in models])
 
 def cumulative_saved_emissions(model, policy):
     '''Get the difference of emissions between policy and baseline for only that sector'''
@@ -214,36 +218,59 @@ def cumulative_saved_emissions(model, policy):
     baseline_sector_emissions = np.sum(emissions_from_2025[model]["Baseline"])
     return baseline_sector_emissions - cum_emissions_baseline
 
+def saved_emissions_2050(model, policy):
+    '''Get the difference of emissions between policy and baseline for only that sector'''
+    
+    cum_emissions_baseline = np.sum(emissions_2050[model][policy])
+    baseline_sector_emissions = np.sum(emissions_2050[model]["Baseline"])
+    return baseline_sector_emissions - cum_emissions_baseline
+
+
 def combined_policies_saved_emissions():
     total_emissions_all_policies = np.sum([emissions_from_2025[model]["sxp - All policies"] for model in models])
-    return  emissions_cum_2050 - total_emissions_all_policies
+    return  emissions_cum_2050_S0 - total_emissions_all_policies
 
-sectoral_saved_emissions = [cumulative_saved_emissions("FTT:P", "FTT-P"),
-                            cumulative_saved_emissions("FTT:H", "FTT-H"),
-                            cumulative_saved_emissions("FTT:Tr", "FTT-Tr"),
-                            cumulative_saved_emissions("FTT:Fr", "FTT-Fr")]
+def combined_policies_saved_emissions_2050():
+    total_emissions_all_policies = np.sum([emissions_2050[model]["sxp - All policies"] for model in models])
+    return  emissions_tot_2050_S0 - total_emissions_all_policies
 
-inner_data = {"No policy": emissions_cum_2050}
-data = {
-    "Power policy": cumulative_saved_emissions("FTT:P", "FTT-P"),
-    "Heat policy": cumulative_saved_emissions("FTT:H", "FTT-H"),
-    "Transport policy": cumulative_saved_emissions("FTT:Fr", "FTT-Fr"),
-    "Freight policy": cumulative_saved_emissions("FTT:Tr", "FTT-Tr"),
-    "Combined policies": max(combined_policies_saved_emissions() - np.sum(sectoral_saved_emissions), 0)
-}
+def set_up_list_saved_emissions(emissions_function):
+    sectoral_saved_emissions = [emissions_function("FTT:P", "FTT-P"),
+                                emissions_function("FTT:H", "FTT-H"),
+                                emissions_function("FTT:Tr", "FTT-Tr"),
+                                emissions_function("FTT:Fr", "FTT-Fr")]
+    return sectoral_saved_emissions
 
+
+def set_up_data_dict(sectoral_saved_emissions, combined_policies_function):
+    data = {
+        "Power policies": sectoral_saved_emissions[0],
+        "Heat policies": sectoral_saved_emissions[1],
+        "Transport policies": sectoral_saved_emissions[2],
+        "Freight policies": sectoral_saved_emissions[3],
+        "Combined policies": max(combined_policies_function() - np.sum(sectoral_saved_emissions), 0)
+    }
+    return data
+
+sectoral_saved_emissions = set_up_list_saved_emissions(cumulative_saved_emissions)
+sectoral_saved_emissions_2050 = set_up_list_saved_emissions(saved_emissions_2050)
+data_cum = set_up_data_dict(sectoral_saved_emissions, combined_policies_saved_emissions)
+data_2050 = set_up_data_dict(sectoral_saved_emissions_2050, combined_policies_saved_emissions_2050)
 
 # Calculate the remaining emissions after policies
-remaining = inner_data["No policy"] - sum(data.values())
+remaining_cum = emissions_cum_2050_S0 - sum(data_cum.values())
+remaining_2050 = emissions_tot_2050_S0 - sum(data_2050.values())
 
-# Add the remaining emissions to the outer data
-data["Remaining emissions"] = remaining
+# Add the remaining emissions to the data
+data_cum["Remaining emissions"] = remaining_cum
+data_2050["Remaining emissions"] = remaining_2050
 
-labels = list(data.keys())
-sizes = list(data.values())
+labels = list(data_cum.keys())
+sizes_cum = list(data_cum.values())
+sizes_2050 = list(data_2050.values())
 
 # Create a pie chart with higher DPI
-fig, ax = plt.subplots(figsize=(8, 8), dpi=300)
+fig, ax = plt.subplots(1, 2, figsize=(12, 7), dpi=300)
 
 
 # Create custom autopct function
@@ -253,23 +280,36 @@ def custom_autopct(pct):
     else:
         return f'–{pct:.1f}%'
 
-# Donut
-wedges, texts, autotexts = ax.pie(
-    sizes, labels=labels, autopct=lambda pct: custom_autopct(pct),
-    startangle=90, pctdistance=0.65 ,
-    radius=1.2, wedgeprops=dict(width=0.3, edgecolor='w'))
+def create_donut(ax, sizes):
+    # Donut
+    wedges, texts, autotexts = ax.pie(
+        sizes, labels=labels, autopct=lambda pct: custom_autopct(pct),
+        startangle=90, pctdistance=0.65 ,
+        radius=1.2, wedgeprops=dict(width=0.3, edgecolor='w'))
 
+    # Equal aspect ratio ensures that pie is drawn as a circle
+    ax.axis('equal')
+    
+    # Set font properties
+    plt.setp(texts, size=12)
+    plt.setp(autotexts, size=12)
+    
+create_donut(ax[0], sizes_cum)
+create_donut(ax[1], sizes_2050)
 
-# Equal aspect ratio ensures that pie is drawn as a circle
-ax.axis('equal')
-
-# Set font properties
-plt.setp(texts, size=12)
-plt.setp(autotexts, size=12)
 
 # Add title
-plt.title("Global Cumulative Emissions 2025–2050", fontsize=16)
+ax[0].set_title("Global Cumulative Emissions 2025–2050", fontsize=16)
+ax[1].set_title("Emissions 2050", fontsize=16)
 
-# Display the chart
-plt.show()
+plt.subplots_adjust(wspace=0.6)  # Increase the space between the graphs
+
+df = pd.DataFrame({
+    'Policy': data_cum.keys(),
+    'Cumulative emissions (MtCO2)': data_cum.values(),
+    '2050 emissions (MtCO2)': data_2050.values()
+    })
+save_fig(fig, fig_dir, "Donut_chart_emissions")
+save_data(df, fig_dir, "Donut_chart_data")
+
 

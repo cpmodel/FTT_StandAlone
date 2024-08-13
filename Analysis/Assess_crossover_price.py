@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn 
 
 
-from preprocessing import get_output, get_metadata
+from preprocessing import get_output, get_metadata, save_fig, save_data
 
 # Set global font size
 plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
@@ -30,7 +30,7 @@ regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
-dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [0, 2, 4, 6, 8]}
+dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [0, 4]}
 
 
 # Define the shares, prices of interest
@@ -254,13 +254,16 @@ def compute_percentage_difference(model, years):
 #%%% Plot the figure of levelised cost difference fossil vs clean tech
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
-
+rows = []
 for mi, model in enumerate(models):
     percentage_difference = compute_percentage_difference(model, years)      
     ax = axs[mi]  
     
     for ri, r in enumerate(regions):
         ax.plot(years, percentage_difference[ri], label=r, marker='o', markersize=8)
+        row = {"Region": r, "Model": model, "2025 %diff": percentage_difference[ri][0],
+               "2035 %diff": percentage_difference[ri][1], "2050 %diff": percentage_difference[ri][2]}
+        rows.append(row)
     
     ax.axhline(0, color='grey', linestyle='--', linewidth=2)  # Adding horizontal line at y=0
     ax.set_title(f"{model}")
@@ -280,37 +283,34 @@ handles, labels = axs[0].get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), ncol=3)
 
 plt.tight_layout()
-plt.tight_layout()
+
+df_perc_difference = pd.DataFrame(rows)
 
 # Save the graph as an editable svg file
-output_file = os.path.join(fig_dir, "Figure1_baseline_price_differences.svg")
-output_file2 = os.path.join(fig_dir, "Figure1_baseline_price_differences.png")
-
-fig.savefig(output_file, format="svg", bbox_inches='tight')
-fig.savefig(output_file2, format="png", bbox_inches='tight')
+save_fig(fig, fig_dir, "Baseline_price_differences")
+save_data(df_perc_difference, fig_dir, "Baseline_price_difference")
 
 
 
 
 #%% =========================================================================
-# Figure that is a 4x4 table with difference is crossover year
+# Figure that is a 5x4 table with difference is crossover year
 # ============================================================================
 
 clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
 fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 4}       # Note 4 for transport gives an error
 
-output_file_sectors = "Results_sectors.pickle"
 
-
-output_S0 = get_output(output_file_sectors, "S0")
-output_ppolicies = get_output(output_file_sectors, "FTT-P")
-output_hpolicies = get_output(output_file_sectors, "FTT-H")
-output_trpolicies = get_output(output_file_sectors, "FTT-Tr")
-output_frpolicies = get_output(output_file_sectors, "FTT-Fr")
-output_all_policies = get_output(output_file_sectors, "sxp - All policies")
+output_S0 = get_output(output_file, "S0")
+output_ppolicies = get_output(output_file, "sxp - P mand")
+output_hpolicies = get_output(output_file, "sxp - H mand")
+output_trpolicies = get_output(output_file, "sxp - Tr mand")
+output_frpolicies = get_output(output_file, "sxp - Fr mand")
+# To do: change this to a new scenario - all mandates
+output_all_policies = get_output(output_file, "sxp - All policies")
 
 output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_policies]
-policy_names = ["Baseline", "Power policies", "Heat policies", "Transport policies", "Freight policies", "All policies"]
+policy_names = ["Baseline", "Coal phase-out", "Heat pump mandates", "EV mandates", "EV truck mandates", "All mandates"]
 
 def convert_fractional_years_to_years_and_months(fractional_year):
     ''' Extract the integer part (year) and the fractional part (month) '''
@@ -490,7 +490,6 @@ def subtract_from_baseline(filtered_df_model):
     
     return new_df
 
-
     
 def all_finite(group):
     return np.isfinite(group["Crossover year"]).all()
@@ -509,8 +508,8 @@ for mi, model in enumerate(models):
     
     ax.set_title(model)
      
-    #seaborn.violinplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
-    seaborn.stripplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax, size=4)
+    seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
+    #seaborn.stripplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax, size=4)
     
     ax.set_ylim(-6, 12)
     
@@ -679,11 +678,11 @@ ax.legend(handles=handles, loc='upper right',  ncol=4,
 fig.suptitle("Cost-parity point: costs without policy \n Comparison largest clean and fossil technology in each country", 
              x=0.45, y=0.95, ha='center')
 
-# Save the graph as an editable svg file
-output_file = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.png")
-output_file2 = os.path.join(fig_dir, "Horizontal_timeline_crossover_year.svg")
-fig.savefig(output_file, format="png", bbox_inches='tight')
-fig.savefig(output_file2, format="svg", bbox_inches='tight')
+# Save the graph as an png/svg files
+save_fig(fig, fig_dir, "Horizontal_timeline_crossover_year")
+repl_dict = {"FTT:P": "Power", "FTT:H": "Heat", "FTT:Tr": "Cars", "FTT:Fr": "Trucks"}
+df_cy['Sector'] = df_cy['Sector'].replace(repl_dict)
+save_data(df_cy, fig_dir, "Horizontal_timeline_crossover_year")
 
 
 
