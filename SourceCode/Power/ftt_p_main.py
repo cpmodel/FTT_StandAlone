@@ -591,7 +591,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data["MEWD"] = np.copy(data['MEWDX'])
             
             data["MWKA"] = set_linear_coal_phase_out(data["coal phaseout"],
-                                                     data["MWKA"], time_lag["MWKA"], time_lag["MEWK"], year, n_years=11)
+                                                     data["MWKA"], time_lag["MWKA"], time_lag["MEWK"], year)
             # =================================================================
             # Shares equation
             # =================================================================

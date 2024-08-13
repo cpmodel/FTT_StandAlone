@@ -34,6 +34,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
     # For each region r
     for r in range(len(titles['RTI'])):
         
+        
         # If MPRI == 1 --> use the weighted average LCOE
         if data["MPRI"][r] == 1:
             weight_new = 0.0
@@ -52,13 +53,14 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             shares_old[shares_old < 0.0] = 0.0
             shares_old = shares_old / np.sum(shares_old)
 
-            
+            # Used to be MECC
             weighted_lcoe_new = divide(
-                        np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC"][r, :, 0]),
+                        np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC incl CO2"][r, :, 0]),
                         np.sum(shares_new * data["MEWL"][r, :, 0]) )
-              
+             
+            # Used to be MEWC (without carbon costs)
             weighted_lcoe_old = np.divide(
-                        np.sum(shares_old * data["MEWL"][r, :, 0] * data["MEWC"][r, :, 0]),
+                        np.sum(shares_old * data["MEWL"][r, :, 0] * data["MECC only CO2"][r, :, 0]),
                         np.sum(shares_old * data["MEWL"][r, :, 0]) )
 
             data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old

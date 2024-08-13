@@ -240,6 +240,9 @@ def get_lcoe(data, titles, year):
         # 1b – Expenses – average LCOEs
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost) / denominator  
         npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
+        npv_expenses_all              = npv_expenses_no_policy + (fft + st + ct) / denominator
+        npv_expenses_only_co2         = npv_expenses_no_policy + ct / denominator
+
         
         # 1c - Operation costs
         npv_operation                 = (ft + omt + stor_cost + marg_stor_cost + fft) / denominator
@@ -261,7 +264,10 @@ def get_lcoe(data, titles, year):
 
 
         # 4b levelised cost – average units 
-        lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
+        lcoe_no_policy          = np.sum(npv_expenses_no_policy, axis=1) / utility_tot - data['MEFI'][r, :, 0]  
+        lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]  
+        lcoe_all                = np.sum(npv_expenses_all, axis=1) / utility_tot - data['MEFI'][r, :, 0]
+        lcoe_only_co2           = np.sum(npv_expenses_only_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]
         
         # 4c - Operational costs
         lcoo                    = np.sum(npv_operation, axis=1) / utility_tot      # Levelised cost of operation
@@ -271,13 +277,15 @@ def get_lcoe(data, titles, year):
 
 
         # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = lcoe_mu_no_policy       # The real bare LCOE without taxes
-        data['MECW'][r, :, 0] = lcoe_mu_only_co2        # Bare LCOE with CO2 costs
-        data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
-        data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
+        data['MEWC'][r, :, 0] = lcoe_mu_no_policy           # The real bare LCOE without taxes
+        data['MECW'][r, :, 0] = lcoe_mu_only_co2            # Bare LCOE with CO2 costs
+        data["MECC"][r, :, 0] = lcoe_all_but_co2            # LCOE with policy, without CO2 costs
+        data["MECC only CO2"][r, :, 0] = lcoe_only_co2      # Bare LCOE without policy, average CF, CO2 costs
+        data["MECC incl CO2"][r, :, 0] = lcoe_all           # LCOE without gamma with all the rest
+        data['METC'][r, :, 0] = lcoe_mu_gamma               # As seen by consumer (generalised cost)
         data["MECW battery only"][r, :, 0] = lcoe_mu_no_policy_battery_only   # LCOE without policy with only short-term storage costs
-        data['MLCO'][r, :, 0] = lcoo                    # Levelised cost of operation
-        data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
+        data['MLCO'][r, :, 0] = lcoo                        # Levelised cost of operation
+        data['MTCD'][r, :, 0] = dlcoe                       # Standard deviation LCOE 
 
 
         # Output variables
