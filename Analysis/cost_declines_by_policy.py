@@ -16,8 +16,6 @@ from preprocessing import get_output, get_metadata, save_fig, save_data
 # Set global font size
 plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
 
-# plt.rcParams['axes.labelsize'] = 14
-
 # # Set global font size for tick labels
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
 
@@ -209,19 +207,21 @@ for mi, model in enumerate(models):
     
     ax.xaxis.set_ticks_position('none') 
     ax.yaxis.set_ticks_position('none') 
-    ax.set_xlim(2020, 2050.15)
-    ax.set_ylim(-50.5, 35.2)
+    
     
     # Set grid lines
-    ax.set_xticks([2020, 2025, 2030, 2035, 2040, 2045, 2050])
+    ax.set_xticks([2025, 2030, 2035, 2040])
     
     # Hide major x-tick labels
     ax.tick_params(axis='x', which='major', labelbottom=False)
     
-    # Condense x-labels slightly
+    #Condense x-labels slightly
     ax.set_xticks([2020.8, 2030.4, 2039.6, 2049.2], minor=True)
     ax.set_xticklabels([2020, 2030, 2040, 2050], minor=True)
     ax.tick_params(axis='x', which='minor', pad=5)
+    
+    ax.set_xlim(2024, 2040)
+    ax.set_ylim(0, 35.2)
     
     ax.grid(True, which='major', linewidth=0.7)
     ax.grid(True, axis='y', linewidth=0.7)
@@ -232,12 +232,33 @@ for mi, model in enumerate(models):
     if mi in [0, 2]:
         ax.set_ylabel("Levelised cost difference (%)")
     
-    ax.text(2050, 37, graph_label[model], ha="right")
+    ax.text(2040, 37, graph_label[model], ha="right")
     
 
+# Initialize an empty DataFrame to collect the results
+df_list = []
 
-# Save the graph as an svg and png file
-save_fig(fig, fig_dir, "Price_diff_timeseries_by_policy_global")
+years = list(range(2024, 2051))
+# Iterate over the dictionary to create the DataFrame
+for model, arrays in timeseries_dict.items():
+    for i, scenario in enumerate(scenarios.keys()):
+        # Convert the array to a DataFrame
+        temp_df = pd.DataFrame(arrays[i].reshape(1, -1), columns=years)
+        temp_df['Model'] = model
+        temp_df['Scenario'] = scenario
+        df_list.append(temp_df)
+        
+# Combine all DataFrames into one
+final_df = pd.concat(df_list, ignore_index=True)
+
+# Reorder columns to have 'Model' and 'Scenario' first
+final_df = final_df[['Model', 'Scenario'] + years]
+
+# Save the graph and its data
+save_fig(fig, fig_dir, "Global_price_perc_diff_timeseries_by_policy")
+save_data(final_df, fig_dir, "Global_price_perc_diff_timeseries_by_policy")
+
+
 
 
 

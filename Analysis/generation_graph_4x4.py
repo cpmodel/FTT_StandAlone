@@ -18,13 +18,24 @@ plt.rcParams.update({'font.size': 12, 'legend.fontsize': 12})
 # Set global font size for tick labels
 plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
 
-
+# To do: change this to individual_policies (now that the carbon tax has a massive effect)
 output_file = "Results_cum_policies.pickle"
 
 output_S0 = get_output(output_file, "S0")
-output_ct = get_output(output_file, "Carbon tax")
-output_sub = get_output(output_file, "and_subsidies")
-output_man = get_output(output_file, "and_mandates")
+output_S0_all = {"FTT:P": output_S0, "FTT:H": output_S0, "FTT:Tr": output_S0, "FTT:Fr": output_S0}
+#output_ct = get_output(output_file, "Carbon tax")
+output_ct_all = {"FTT:P": get_output(output_file, "sxp - P CT"),
+                 "FTT:H": get_output(output_file, "sxp - H CT"),
+                 "FTT:Tr": get_output(output_file, "sxp - Tr CT"),
+                 "FTT:Fr": get_output(output_file, "sxp - Fr CT")}
+output_sub_all = {"FTT:P": get_output(output_file, "cum - P CT+sub"),
+                 "FTT:H": get_output(output_file, "cum - H CT+sub"),
+                 "FTT:Tr": get_output(output_file, "cum - Tr CT+sub"),
+                 "FTT:Fr": get_output(output_file, "cum - Fr CT+sub")}
+output_man_all = {"FTT:P": get_output(output_file, "FTT-P"),
+                 "FTT:H": get_output(output_file, "FTT-H"),
+                 "FTT:Tr": get_output(output_file, "FTT-Tr"),
+                 "FTT:Fr": get_output(output_file, "FTT-Fr")}
 
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
@@ -35,7 +46,7 @@ tech_names = {}             # The titles of the technology names
     
 grouping_power = {"Coal and oil": [1, 2,3, 4,5], "Gas": [6, 7], 
                   "Nuclear": [0], "Biomass + other": [8, 9, 10, 11, 12, 13, 14, 20, 21, 22, 23],
-                  "Hydropower": [15], "Wind": [16, 17], "Solar": [18, 19]}
+                  "Hydropower": [15], "Offshore wind": [17], "Onshore wind": [16], "Solar": [18, 19]}
 
 
 grouping_heat = { "Coal": [6], "Oil": [0, 1], "Gas": [2, 3], "Biomass": [4, 5],
@@ -52,13 +63,15 @@ grouping_freight = {"Petrol": [0, 2], "Diesel": [4, 6],
 
 
 
+
 colours_power = {
     "Nuclear": "lightcoral",  # Light coral to indicate its clean but debated nature
     "Coal and oil": "black",  # Black for traditional, high carbon emission sources
     "Gas": "silver",  # Slate grey to differentiate from coal but still fossil fuel
     "Biomass + other": "yellowgreen",  # Dark olive green to represent biomass, a renewable but complex source
     "Hydropower": "royalblue",  # Sky blue to signify wind, clean and free like the sky
-    "Wind": "skyblue",  # Sky blue to signify wind, clean and free like the sky
+    "Offshore wind": "cornflowerBlue",  # Sky blue to signify wind, clean and free like the sky
+    "Onshore wind": "skyblue",  # Sky blue to signify wind, clean and free like the sky
     "Solar": "goldenrod"  # Goldenrod, rich and vibrant for solar energy
 }
 
@@ -114,7 +127,7 @@ def sum_vehicles_or_gen(output):
     total_shares_all = {}           # The share of each technology (or total capacity, not yet decided)
     total_shares = {}
     for model in models:
-        total_shares_all[model] = np.sum(output[shares_vars[model]], axis=(0, 2))
+        total_shares_all[model] = np.sum(output[model][shares_vars[model]], axis=(0, 2))
         tech_names[model] = list(groupings[model].keys())
         
         indices = groupings[model].values()
@@ -143,16 +156,17 @@ def create_dataframes(total_shares):
         model_dfs[model] = df
     return model_dfs
 
-total_shares_S0 = sum_vehicles_or_gen(output_S0)
+# TODO: Change these output files to dicts of outputs
+total_shares_S0 = sum_vehicles_or_gen(output_S0_all)
 model_dfs_S0 = create_dataframes(total_shares_S0)
 
-total_shares_ct = sum_vehicles_or_gen(output_ct)
+total_shares_ct = sum_vehicles_or_gen(output_ct_all)
 model_dfs_ct = create_dataframes(total_shares_ct)
 
-total_shares_sub = sum_vehicles_or_gen(output_sub)
+total_shares_sub = sum_vehicles_or_gen(output_sub_all)
 model_dfs_sub = create_dataframes(total_shares_sub)
 
-total_shares_man = sum_vehicles_or_gen(output_man)
+total_shares_man = sum_vehicles_or_gen(output_man_all)
 model_dfs_man = create_dataframes(total_shares_man)
 
 
@@ -184,8 +198,6 @@ def plot_column(model_dfs, col, col_title):
         ax.spines['left'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
         
-        # Add faint white horizontal grid lines
-        #ax.grid(axis='y', color='white', linestyle='-', linewidth=0.5)
         
         if col == 3:
             # Create individual legend to the right of each plot

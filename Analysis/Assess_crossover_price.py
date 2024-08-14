@@ -6,7 +6,6 @@ Created on Tue Jun 18 11:39:28 2024
 """
 
 # Import the results pickle file
-import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -306,10 +305,12 @@ output_ppolicies = get_output(output_file, "sxp - P mand")
 output_hpolicies = get_output(output_file, "sxp - H mand")
 output_trpolicies = get_output(output_file, "sxp - Tr mand")
 output_frpolicies = get_output(output_file, "sxp - Fr mand")
-# To do: change this to a new scenario - all mandates
-output_all_policies = get_output(output_file, "sxp - All policies")
+output_all_mandates = get_output(output_file, "Mandates")
 
-output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_policies]
+# To do: change this to a new scenario - all mandates
+#output_all_policies = get_output(output_file, "sxp - All policies")
+
+output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_mandates]
 policy_names = ["Baseline", "Coal phase-out", "Heat pump mandates", "EV mandates", "EV truck mandates", "All mandates"]
 
 def convert_fractional_years_to_years_and_months(fractional_year):
@@ -360,7 +361,7 @@ def compute_average_crossover_diff(df_crossovers, policy_name, model):
     combined_mask = np.all(masks, axis=0)
     valid_indices = list(np.where(combined_mask)[0])
     
-    print(f"There is a crossover in {len(valid_indices)} number of regions in {model}")
+    print(f"There is a crossover in {len(valid_indices)} regions in {model}")
     
     cy_S0 = cy_arrays[0]
     cy_rows = []
@@ -451,7 +452,7 @@ plt.subplots_adjust(top=1, bottom=0)  # This line adjusts the whitespace
 plt.title("How much is cost-parity brought forward?", fontsize=14, fontweight='bold')
 
 #%% ========================================================================
-#    Same as table above, but now in violin plot. 
+#    Same as table above, but now in box plot. 
 # ===========================================================================
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
@@ -502,16 +503,14 @@ for mi, model in enumerate(models):
     
     # Group by "Region" and filter out groups with any non-finite "Crossover year" values
     filtered_df_model = df_model.groupby("Region").filter(all_finite)
-    #difference_baseline = df_model.
-    
+        
     df_difference = subtract_from_baseline(filtered_df_model)
     
     ax.set_title(model)
      
     seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
-    #seaborn.stripplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax, size=4)
     
-    ax.set_ylim(-6, 12)
+    ax.set_ylim(-4, 12)
     
     # Rotate x-axis labels
     ax.tick_params(axis='x', rotation=45)
@@ -606,8 +605,6 @@ for mi, model in enumerate(models):
     
     yticks = []
     yticklabels = []
-    
-    
     
     
     for index, row in model_data.iterrows():
