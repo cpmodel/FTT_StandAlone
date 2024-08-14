@@ -34,8 +34,8 @@ def heat_pump_mandate(heat_mandate, hwsa, hews, hewi_lag, year, n_years=11):
             frac = 1/n_years            # Fraction decrease per year
             n = year - 2024
             
-            # In 2035, the sum should be 80% of sales are heat pump. Lifetime = 20y, so 0.05 ~= 100%
-            sum_hwsa = np.full(hwsa.shape[0], frac * n * 0.04)   
+            # In 2035, the sum should be 70% of sales are heat pump (as quite some endogenous sales). Lifetime = 20y, so 0.05 ~= 100%
+            sum_hwsa = np.full(hwsa.shape[0], frac * n * 0.035)   
             
             sum_ff = np.sum(hews[:, fossil_techs], axis=(1, 2))
             sum_hp = np.sum(hews[:, heat_pump_techs], axis=(1, 2))
@@ -52,9 +52,7 @@ def heat_pump_mandate(heat_mandate, hwsa, hews, hewi_lag, year, n_years=11):
             hwsa[:, heat_pump_techs, 0] = sum_hwsa[:, None] * frac_heat_pumps
             
             frac_hp_hewi = np.sum(hewi_lag[:, heat_pump_techs], axis=(1, 2))
-            
-            # Turn off in countries where this would reduce heat pump additions
-            #hwsa = np.where(frac_hp_hewi[:, None, None] > sum_hwsa[:, None, None] * 20, 0, hwsa)
+        
             
             
     # Else: return hswa unchanged

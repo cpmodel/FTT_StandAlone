@@ -9,7 +9,7 @@ Created on Tue Jul 16 11:13:09 2024
 
 import numpy as np
 
-def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=11):
+def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=16):
     """ 
     Sets a mandate of growing exogenous sales to 2035. At that point, separately,
     regulations comes into play that outregulates fossil technologies. 
@@ -26,11 +26,11 @@ def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=11):
         
         
         if EV_mandate[0,0,0] == 1:
-            if year in range(2030, 2030 + n_years):
+            if year in range(2025, 2025 + n_years):
             
                 frac = 1/n_years            # Fraction decrease per year
-                n = year - 2029
-                yearly_replacement = 1/15 * 0.8
+                n = year - 2024
+                yearly_replacement = 1/15 * 0.75
                 share_by_size = np.sum(zews[:, truck_size::2], axis=(1, 2))
                 
                 # In 2040, the sum should be 80% of sales.
