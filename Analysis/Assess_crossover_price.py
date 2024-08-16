@@ -11,12 +11,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn 
 
-
+from cost_declines_by_policy import get_weighted_costs
 from preprocessing import get_output, get_metadata, save_fig, save_data
 
 # Set global font size
 plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
+plt.rcParams['figure.dpi'] = 300  
 
 output_file = "Results_sxp.pickle"
 output_S0 = get_output(output_file, "S0")
@@ -30,6 +31,7 @@ regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
 dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [0, 4]}
+repl_dict = {"FTT:P": "Power", "FTT:H": "Heat", "FTT:Tr": "Cars", "FTT:Fr": "Trucks"}
 
 
 # Define the shares, prices of interest
@@ -250,7 +252,6 @@ def compute_percentage_difference(model, years):
     return percentage_difference
 
 
-#%%% Plot the figure of levelised cost difference fossil vs clean tech
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 rows = []
@@ -293,7 +294,7 @@ save_data(df_perc_difference, fig_dir, "Baseline_price_difference")
 
 
 #%% =========================================================================
-# Figure that is a 5x4 table with difference is crossover year
+# Table: 5x4 table with difference in crossover year
 # ============================================================================
 
 clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
@@ -307,7 +308,6 @@ output_trpolicies = get_output(output_file, "sxp - Tr mand")
 output_frpolicies = get_output(output_file, "sxp - Fr mand")
 output_all_mandates = get_output(output_file, "Mandates")
 
-# To do: change this to a new scenario - all mandates
 #output_all_policies = get_output(output_file, "sxp - All policies")
 
 output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_mandates]
@@ -343,6 +343,7 @@ def format_monthyear_str(years, months):
     else:
         yearmonth_str = f'{years} years, {months} months'
     return yearmonth_str
+
 
 
 
@@ -397,7 +398,7 @@ for model in models:
     regions = {i: i - 1 for i in range(1, 72)}
     
     for policy, output in zip(policy_names, output_files):    
-    # CrossoverYear_XPolicy
+
         crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
         weights = get_weights(output, model, cap_vars)
         row = {
@@ -417,9 +418,7 @@ for model in models:
 # Create a DataFrame from the list of dictionaries
 df = pd.DataFrame(crossover_diff_list)
 
-
-
-# Pivot the DataFrame to get the desired 4x4 table
+# Pivot the DataFrame to get the desired 5x4 table
 table = df.pivot(index='Policy', columns='Model', values='Crossover year diff')
 # Reindex the table to ensure the policy order matches policy_names
 table = table.reindex(index= policy_names[1:], columns=models)
@@ -428,7 +427,8 @@ table = table.reindex(index= policy_names[1:], columns=models)
 fig, ax = plt.subplots(figsize=(6, 2), dpi=300)
 ax.axis('tight')
 ax.axis('off')
-table = ax.table(cellText=table.values, rowLabels=table.index, colLabels=table.columns, cellLoc='center', loc='center')
+table = ax.table(cellText=table.values, rowLabels=table.index, colLabels=["Power sector", "Heating", "Cars", "Trucks"],
+                         cellLoc='center', loc='center')
 
 table.auto_set_font_size(False)
 table.set_fontsize(10)
@@ -451,9 +451,11 @@ for (i, j), cell in table.get_celld().items():
 plt.subplots_adjust(top=1, bottom=0)  # This line adjusts the whitespace
 plt.title("How much is cost-parity brought forward?", fontsize=14, fontweight='bold')
 
-#%% ========================================================================
-#    Same as table above, but now in box plot. 
-# ===========================================================================
+
+#%% ==============================================================================
+#             Figure 3: Same as table above, but now in box plot. 
+# ===============================================================================
+
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 seaborn.set(style = 'whitegrid') 
@@ -506,20 +508,24 @@ for mi, model in enumerate(models):
         
     df_difference = subtract_from_baseline(filtered_df_model)
     
-    ax.set_title(model)
+    ax.set_title(repl_dict[model], fontsize=14)
      
     seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
     
-    ax.set_ylim(-4, 12)
+    ax.set_ylim(-2, 14)
     
     # Rotate x-axis labels
     ax.tick_params(axis='x', rotation=45)
     # Remove x-axis label
     ax.set_xlabel('')
+    
+    # Adjust label alignment to be parallel
+    for label in ax.get_xticklabels():
+        label.set_ha('right')
 
     
 # Adjust spacing between subplots
-plt.subplots_adjust(hspace=0.5, wspace=0.2)    
+plt.subplots_adjust(hspace=0.7, wspace=0.2)    
 
 
 #%% =========================================================================
@@ -677,7 +683,6 @@ fig.suptitle("Cost-parity point: costs without policy \n Comparison largest clea
 
 # Save the graph as an png/svg files
 save_fig(fig, fig_dir, "Horizontal_timeline_crossover_year")
-repl_dict = {"FTT:P": "Power", "FTT:H": "Heat", "FTT:Tr": "Cars", "FTT:Fr": "Trucks"}
 df_cy['Sector'] = df_cy['Sector'].replace(repl_dict)
 save_data(df_cy, fig_dir, "Horizontal_timeline_crossover_year")
 

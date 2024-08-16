@@ -26,7 +26,7 @@ models = ["FTT:H", "FTT:Tr", "FTT:Fr", "FTT:P"]
 # Define the shares, prices of interest
 emissions_names = {"FTT:P": "MEWE", "FTT:Tr": "TEWE", "FTT:H": "HEWE", "FTT:Fr": "ZEWE"}
 
-all_policies_or_mandates = "Mandates"
+all_policies_or_mandates = "All policies"
 if all_policies_or_mandates == "All policies":
     output_file = "Results_sectors.pickle"
     output_baseline = get_output(output_file, "S0")
@@ -298,7 +298,7 @@ sizes_cum = list(data_cum.values())
 sizes_2050 = list(data_2050.values())
 
 # Create a pie chart with higher DPI
-fig, ax = plt.subplots(1, 2, figsize=(12, 7), dpi=300)
+fig, ax = plt.subplots(1, 2, figsize=(11, 5), dpi=300)
 
 
 # Create custom autopct function
@@ -312,14 +312,14 @@ def create_donut(ax, sizes):
     # Donut
     wedges, texts, autotexts = ax.pie(
         sizes, labels=labels, autopct=lambda pct: custom_autopct(pct),
-        startangle=90, pctdistance=0.62 ,
-        radius=1.3, wedgeprops=dict(width=0.3, edgecolor='w'))
+        startangle=90, pctdistance=0.5 ,
+        radius=1, wedgeprops=dict(width=0.3, edgecolor='w'))
 
     # Equal aspect ratio ensures that pie is drawn as a circle
     ax.axis('equal')
     
     # Set font properties
-    plt.setp(texts, size=12)
+    plt.setp(texts, size=13)
     plt.setp(autotexts, size=12)
     
 create_donut(ax[0], sizes_cum)
@@ -330,7 +330,7 @@ create_donut(ax[1], sizes_2050)
 ax[0].set_title("Global Cumulative Emissions 2025–2050", fontsize=16, pad=-10)
 ax[1].set_title("Emissions 2050", fontsize=16, pad=-10)
 
-plt.subplots_adjust(wspace=0.6)  # Increase the space between the graphs
+plt.subplots_adjust(wspace=1)  # Increase the space between the graphs
 
 df = pd.DataFrame({
     'Policy': data_cum.keys(),

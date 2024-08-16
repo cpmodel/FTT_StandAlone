@@ -51,80 +51,83 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
     
     return weighted_prices
 
+output_S0 = get_output(output_file, "S0")
 
 
 #%% =============================================================================
 # Cost declines wrt to 2024 at 2035 and 2050 (omitted in favour of different graph)
 # ==================================================================================
 
-df_dict = {}         # Creates a dict later filled with dataframes
-output_S0 = get_output(output_file, "S0")
+plot_dot_graph = False
 
-for model in models:
-    df_dict[model] = pd.DataFrame()
-    rows = []
-    
-    # Get the bit of the model name after the colon (like Fr)
-    model_abb = model.split(':')[1]
-    output_ct = get_output(output_file, f"sxp - {model_abb} CT")
-    output_sub = get_output(output_file, f"sxp - {model_abb} subs")
-    output_man = get_output(output_file, f"sxp - {model_abb} mand")
-    
-    scenarios = {"Current traj.": output_S0, "Carbon tax": output_ct,
-                 "Subsidies": output_sub, "Mandates": output_man}
-    
-    for scen, output in scenarios.items():
-        weighted_prices = get_weighted_costs(output, model, tech_variable[model], year_inds)
-        normalised_prices = weighted_prices / weighted_prices[0]
+if plot_dot_graph:
+    df_dict = {}         # Creates a dict later filled with dataframes
+
+    for model in models:
+        df_dict[model] = pd.DataFrame()
+        rows = []
         
-        row = {"Scenario": scen, "Price 2035": normalised_prices[1], "Price 2050": normalised_prices[2]}
-        rows.append(row)
+        # Get the bit of the model name after the colon (like Fr)
+        model_abb = model.split(':')[1]
+        output_ct = get_output(output_file, f"sxp - {model_abb} CT")
+        output_sub = get_output(output_file, f"sxp - {model_abb} subs")
+        output_man = get_output(output_file, f"sxp - {model_abb} mand")
+        
+        scenarios = {"Current traj.": output_S0, "Carbon tax": output_ct,
+                     "Subsidies": output_sub, "Mandates": output_man}
+        
+        for scen, output in scenarios.items():
+            weighted_prices = get_weighted_costs(output, model, tech_variable[model], year_inds)
+            normalised_prices = weighted_prices / weighted_prices[0]
+            
+            row = {"Scenario": scen, "Price 2035": normalised_prices[1], "Price 2050": normalised_prices[2]}
+            rows.append(row)
+        
+        df_dict[model] = pd.DataFrame(rows)
+        
     
-    df_dict[model] = pd.DataFrame(rows)
+    # Cost declines 2035/2050 -- plotting
     
-
-#%%% Cost declines 2035/2050 -- plotting
-
-fig, axs = plt.subplots(2, 2, figsize=(7, 10), sharey=True)
-axs = axs.flatten()
-palette = sns.color_palette("Blues_r", 3)
-
-
-for mi, model in enumerate(models):
-    df = df_dict[model]
-    ax = axs[mi]
-    ax.plot(df["Scenario"], df["Price 2035"], 'o', label='Price 2035', markersize=15, color=palette[0])
-    ax.plot(df["Scenario"], df["Price 2050"], 'o', label='Price 2050', markersize=15, color=palette[1])
-
-    # Add labels and title
-    ax.set_xticklabels(df["Scenario"], rotation=90)
-    if mi % 2 == 0:
-        ax.set_ylabel('Cost relative to 2024')
-    ax.set_title(tech_name[model], pad=20)
+    fig, axs = plt.subplots(2, 2, figsize=(7, 10), sharey=True)
+    axs = axs.flatten()
+    palette = sns.color_palette("Blues_r", 3)
     
-    # Remove frame
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
     
-    ax.xaxis.set_ticks_position('none') 
-    ax.yaxis.set_ticks_position('none') 
+    for mi, model in enumerate(models):
+        df = df_dict[model]
+        ax = axs[mi]
+        ax.plot(df["Scenario"], df["Price 2035"], 'o', label='Price 2035', markersize=15, color=palette[0])
+        ax.plot(df["Scenario"], df["Price 2050"], 'o', label='Price 2050', markersize=15, color=palette[1])
     
-    ax.set_ylim(0.45, 1.)
-    ax.grid(axis='y')
+        # Add labels and title
+        ax.set_xticklabels(df["Scenario"], rotation=90)
+        if mi % 2 == 0:
+            ax.set_ylabel('Cost relative to 2024')
+        ax.set_title(tech_name[model], pad=20)
+        
+        # Remove frame
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        
+        ax.xaxis.set_ticks_position('none') 
+        ax.yaxis.set_ticks_position('none') 
+        
+        ax.set_ylim(0.45, 1.)
+        ax.grid(axis='y')
+        
     
-
-# Add legend only to the last plot
-handles, labels = ax.get_legend_handles_labels()
-fig.subplots_adjust(hspace=1, wspace=200)
-fig.legend(handles, labels, loc='upper right', frameon=False, ncol=2)
-
-plt.tight_layout(rect=[0, 0, 1, 0.95])  # Adjust layout to make space for the legend
-plt.show()
-   
-# Save the graph as an editable svg file
-save_fig(fig, fig_dir, "Cost_declines_by_policy")
+    # Add legend only to the last plot
+    handles, labels = ax.get_legend_handles_labels()
+    fig.subplots_adjust(hspace=1, wspace=200)
+    fig.legend(handles, labels, loc='upper right', frameon=False, ncol=2)
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.95])  # Adjust layout to make space for the legend
+    plt.show()
+       
+    # Save the graph as an editable svg file
+    save_fig(fig, fig_dir, "Cost_declines_by_policy")
 
 
 
@@ -134,7 +137,7 @@ save_fig(fig, fig_dir, "Cost_declines_by_policy")
 
 clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
 fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [4]} # Note 4 for transport gives an error
-graph_label = {"FTT:P": "New solar vs existing coal", "FTT:H": "Water-air HP vs gas boiler",
+graph_label = {"FTT:P": "New solar + battery vs existing coal", "FTT:H": "Water-air HP vs gas boiler",
                "FTT:Tr": "Petrol vs EV", "FTT:Fr": "Diesel truck vs EV"}
 
 
@@ -156,7 +159,7 @@ def find_lowest_cost_tech(output, model, tech_list, year_ind):
 
             
    
-year_inds = list(range(14, 41))
+year_inds = list(range(13, 41))
 timeseries_dict = {}
 
 
@@ -173,8 +176,8 @@ for model in models:
                  "Subsidies": output_sub, "Mandates": output_man}
     
     
-    clean_tech_variable[model] = find_lowest_cost_tech(output, model, clean_tech_variable[model], 20)
-    fossil_tech_variable[model] = find_lowest_cost_tech(output, model, fossil_tech_variable[model], 20)
+    clean_tech_variable[model] = find_lowest_cost_tech(output_S0, model, clean_tech_variable[model], 20)
+    fossil_tech_variable[model] = find_lowest_cost_tech(output_S0, model, fossil_tech_variable[model], 20)
     
     for scen, output in scenarios.items():
         weighted_prices_clean = get_weighted_costs(output, model, clean_tech_variable[model], year_inds)
@@ -185,7 +188,8 @@ for model in models:
     
     timeseries_dict[model] = timeseries_by_policy
 
-#%%% Global cost difference -- plotting
+
+#%% Global cost difference -- plotting
 fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 
@@ -193,11 +197,12 @@ axs = axs.flatten()
 colours = sns.color_palette()
 
 for mi, model in enumerate(models):
-    df = df_dict[model]
     ax = axs[mi]
+
+    ax.axhline(y=0, color="grey", linewidth=2)    
     for si, (scen, colour) in enumerate(zip(scenarios.keys(), colours)):
-        ax.plot(range(2024, 2051), timeseries_dict[model][si], label=scen, color=colour, linewidth=2.5)
-    ax.axhline(y=0, color="grey", linewidth=1.2)    
+        ax.plot(range(2023, 2051), timeseries_dict[model][si], label=scen, color=colour, linewidth=2.5)
+    
     
     # Remove frame
     ax.spines['top'].set_visible(False)
@@ -209,19 +214,19 @@ for mi, model in enumerate(models):
     ax.yaxis.set_ticks_position('none') 
     
     
-    # Set grid lines
-    ax.set_xticks([2025, 2030, 2035, 2040])
+    # # Set grid lines
+    # ax.set_xticks([2025, 2030, 2035, 2040])
     
-    # Hide major x-tick labels
-    ax.tick_params(axis='x', which='major', labelbottom=False)
+    # # Hide major x-tick labels
+    # ax.tick_params(axis='x', which='major', labelbottom=False)
     
-    #Condense x-labels slightly
-    ax.set_xticks([2020.8, 2030.4, 2039.6, 2049.2], minor=True)
-    ax.set_xticklabels([2020, 2030, 2040, 2050], minor=True)
-    ax.tick_params(axis='x', which='minor', pad=5)
+    # #Condense x-labels slightly
+    # ax.set_xticks([2025.2, 2030.1, 2034.8, 2039.9], minor=True)
+    # ax.set_xticklabels([2025, 2030, 2035, 2040], minor=True)
+    # ax.tick_params(axis='x', which='minor', pad=5)
     
-    ax.set_xlim(2024, 2040)
-    ax.set_ylim(0, 35.2)
+    ax.set_xlim(2024, 2034)
+    ax.set_ylim(-5.4, 25.6)
     
     ax.grid(True, which='major', linewidth=0.7)
     ax.grid(True, axis='y', linewidth=0.7)
@@ -232,13 +237,13 @@ for mi, model in enumerate(models):
     if mi in [0, 2]:
         ax.set_ylabel("Levelised cost difference (%)")
     
-    ax.text(2040, 37, graph_label[model], ha="right")
+    ax.text(2033, 26, graph_label[model], ha="right")
     
 
 # Initialize an empty DataFrame to collect the results
 df_list = []
 
-years = list(range(2024, 2051))
+years = list(range(2023, 2051))
 # Iterate over the dictionary to create the DataFrame
 for model, arrays in timeseries_dict.items():
     for i, scenario in enumerate(scenarios.keys()):

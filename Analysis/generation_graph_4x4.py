@@ -19,23 +19,22 @@ plt.rcParams.update({'font.size': 12, 'legend.fontsize': 12})
 plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
 
 # To do: change this to individual_policies (now that the carbon tax has a massive effect)
-output_file = "Results_cum_policies.pickle"
+output_file = "Results_sxp.pickle"
 
 output_S0 = get_output(output_file, "S0")
 output_S0_all = {"FTT:P": output_S0, "FTT:H": output_S0, "FTT:Tr": output_S0, "FTT:Fr": output_S0}
-#output_ct = get_output(output_file, "Carbon tax")
 output_ct_all = {"FTT:P": get_output(output_file, "sxp - P CT"),
                  "FTT:H": get_output(output_file, "sxp - H CT"),
                  "FTT:Tr": get_output(output_file, "sxp - Tr CT"),
                  "FTT:Fr": get_output(output_file, "sxp - Fr CT")}
-output_sub_all = {"FTT:P": get_output(output_file, "cum - P CT+sub"),
-                 "FTT:H": get_output(output_file, "cum - H CT+sub"),
-                 "FTT:Tr": get_output(output_file, "cum - Tr CT+sub"),
-                 "FTT:Fr": get_output(output_file, "cum - Fr CT+sub")}
-output_man_all = {"FTT:P": get_output(output_file, "FTT-P"),
-                 "FTT:H": get_output(output_file, "FTT-H"),
-                 "FTT:Tr": get_output(output_file, "FTT-Tr"),
-                 "FTT:Fr": get_output(output_file, "FTT-Fr")}
+output_sub_all = {"FTT:P": get_output(output_file, "sxp - P subs"),
+                 "FTT:H": get_output(output_file, "sxp - H subs"),
+                 "FTT:Tr": get_output(output_file, "sxp - Tr subs"),
+                 "FTT:Fr": get_output(output_file, "sxp - Fr subs")}
+output_man_all = {"FTT:P": get_output(output_file, "sxp - P mand"),
+                 "FTT:H": get_output(output_file, "sxp - H mand"),
+                 "FTT:Tr": get_output(output_file, "sxp - Tr mand"),
+                 "FTT:Fr": get_output(output_file, "sxp - Fr mand")}
 
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
@@ -223,9 +222,9 @@ def plot_column(model_dfs, col, col_title):
             ax.set_title(col_title)
 
 plot_column(model_dfs_S0, 0, "A. Current trajectory")
-plot_column(model_dfs_ct, 1, "B. + Carbon tax")
-plot_column(model_dfs_sub, 2, "C. + Subsidies")
-plot_column(model_dfs_man, 3, "D. + Mandates")
+plot_column(model_dfs_ct, 1, "B. Carbon tax")
+plot_column(model_dfs_sub, 2, "C. Subsidies")
+plot_column(model_dfs_man, 3, "D. Mandates / phase-out")
 
 def combine_dfs(dict_of_dfs):
     
