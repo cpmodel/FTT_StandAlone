@@ -435,47 +435,49 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
             nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']),1])
             
-            # Learning-by-doing effects on investment
-            for tech in range(len(titles['FTTI'])):
-
-                if data['ZEWW'][0, tech, 0] > 0.1:
-                    
-                    # For EVs, add the battery costs to the non-battery costs
-                    # TODO: make battery costs dt a global variable in some way. 
-                    if tech in [12, 13, 18, 19]:
-                        nonbat_cost_dt[:, tech, 0] = (
-                                data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
-                                - data_dt["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
-                                * data_dt["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
-                                )
-                        nonbat_cost[:, tech, 0] = ( nonbat_cost_dt[:, tech, 0]
-                                                * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
-                                                * dw[tech] / data['ZEWW'][0, tech, 0])
-                                                )
-
-                        data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
-                                nonbat_cost[:, tech, 0] 
-                                + (data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
-                                * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
-                                )
-                        test = 1
-                    
-                    # For non-EVs, add only the non-battery costs
-                    else:
-                        data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
-                                data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
-                                * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
-                                * dw[tech] / data['ZEWW'][0, tech, 0])
-                        
-                        # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
-                        # Doesn't make too much sense for non-EVs, but does make sense for EVs
-                        data['ZCET'][:, tech, c6ti['5 O&M costs (USD/km)']] =  \
-                                data_dt['ZCET'][:, tech, c6ti['5 O&M costs (USD/km)']] \
-                                * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
-                                * dw[tech] / data['ZEWW'][0, tech, 0])
-
-
+            if year > histend["ZCET"]:
             
+                # Learning-by-doing effects on investment
+                for tech in range(len(titles['FTTI'])):
+    
+                    if data['ZEWW'][0, tech, 0] > 0.1:
+                        
+                        # For EVs, add the battery costs to the non-battery costs
+                        # TODO: make battery costs dt a global variable in some way. 
+                        if tech in [12, 13, 18, 19]:
+                            nonbat_cost_dt[:, tech, 0] = (
+                                    data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] 
+                                    - data_dt["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
+                                    * data_dt["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']]
+                                    )
+                            nonbat_cost[:, tech, 0] = ( nonbat_cost_dt[:, tech, 0]
+                                                    * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                                                    * dw[tech] / data['ZEWW'][0, tech, 0])
+                                                    )
+    
+                            data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  (
+                                    nonbat_cost[:, tech, 0] 
+                                    + (data["ZCET"][:, tech, c6ti['22 Battery cost ($/kWh)']]  
+                                    * data["ZCET"][:, tech, c6ti['21 Battery capacity (kWh)']])
+                                    )
+                            test = 1
+                        
+                        # For non-EVs, add only the non-battery costs
+                        else:
+                            data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
+                                    data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] \
+                                    * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                                    * dw[tech] / data['ZEWW'][0, tech, 0])
+                            
+                            # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
+                            # Doesn't make too much sense for non-EVs, but does make sense for EVs
+                            data['ZCET'][:, tech, c6ti['5 O&M costs (USD/km)']] =  \
+                                    data_dt['ZCET'][:, tech, c6ti['5 O&M costs (USD/km)']] \
+                                    * (1.0 + data["ZCET"][:, tech, c6ti['15 Learning exponent']]
+                                    * dw[tech] / data['ZEWW'][0, tech, 0])
+    
+    
+                
             # Calculate total investment by technology in terms of truck purchases
             for r in range(len(titles['RTI'])):
                 data['ZWIY'][r, :, 0] = data['ZEWI'][r, :, 0] \
