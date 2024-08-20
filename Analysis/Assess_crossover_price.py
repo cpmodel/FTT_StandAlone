@@ -11,7 +11,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn 
 
-from cost_declines_by_policy import get_weighted_costs
 from preprocessing import get_output, get_metadata, save_fig, save_data
 
 # Set global font size
@@ -113,7 +112,8 @@ def get_prices(output, year, model, biggest_technologies, regions):
     return prices
 
 def interpolate_crossover_year(price_series_clean, price_series_fossil):
-    """Interpolate based on price difference in cross-over year and previous year
+    """ First, find cross-over year. 
+    Then, interpolate based on price difference in cross-over year and previous year
     Returns -inf if cost-parity in past, inf if cost-parity not reached before 2050."""
     
     # First check if cost-parity occurs
@@ -153,8 +153,7 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
         print(fossil_price_before)
         print(price_before)
         raise e
-
-    
+ 
     return crossover_year
 
 def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions):
@@ -284,11 +283,11 @@ fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), nco
 
 plt.tight_layout()
 
-df_perc_difference = pd.DataFrame(rows)
 
 # Save the graph as an editable svg file
-save_fig(fig, fig_dir, "Baseline_price_differences")
-save_data(df_perc_difference, fig_dir, "Baseline_price_difference")
+save_fig(fig, fig_dir, "Figure 2 - Baseline_price_differences")
+df_perc_difference = pd.DataFrame(rows)
+save_data(df_perc_difference, fig_dir, "Figure 2 - Baseline_price_difference")
 
 
 
@@ -300,8 +299,6 @@ save_data(df_perc_difference, fig_dir, "Baseline_price_difference")
 clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
 fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 4}       # Note 4 for transport gives an error
 
-
-output_S0 = get_output(output_file, "S0")
 output_ppolicies = get_output(output_file, "sxp - P mand")
 output_hpolicies = get_output(output_file, "sxp - H mand")
 output_trpolicies = get_output(output_file, "sxp - Tr mand")
@@ -312,6 +309,7 @@ output_all_mandates = get_output(output_file, "Mandates")
 
 output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_mandates]
 policy_names = ["Baseline", "Coal phase-out", "Heat pump mandates", "EV mandates", "EV truck mandates", "All mandates"]
+
 
 def convert_fractional_years_to_years_and_months(fractional_year):
     ''' Extract the integer part (year) and the fractional part (month) '''
@@ -327,6 +325,24 @@ def convert_fractional_years_to_years_and_months(fractional_year):
         months = 0
 
     return -year, -months
+
+
+def get_weighted_costs(output, model, tech_variable, year_inds):
+    """Get the weighted cost based on the scenario (output), model,
+    tech_variable and the indices of the years of interest.
+    """
+    
+    if model == "FTT:P" and tech_variable in [2, 6, [2], [6]]:
+        prices = output[operation_cost_name[model]][:, tech_variable, 0, year_inds]
+    else:
+        prices = output[price_names[model]][:, tech_variable, 0, year_inds]
+    
+    # Way by total size of the market per region
+    weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)
+    weighted_prices = np.average(prices, weights=weights, axis=0)
+        
+    return weighted_prices
+
 
 
 def format_monthyear_str(years, months):
@@ -346,7 +362,6 @@ def format_monthyear_str(years, months):
 
 
 
-
 def compute_average_crossover_diff(df_crossovers, policy_name, model):
     """ Compute the average cross-over year diff, only for those regions where 
     there is a finite saving."""
@@ -361,7 +376,6 @@ def compute_average_crossover_diff(df_crossovers, policy_name, model):
     # Combine masks to get indices where all arrays are finite
     combined_mask = np.all(masks, axis=0)
     valid_indices = list(np.where(combined_mask)[0])
-    
     print(f"There is a crossover in {len(valid_indices)} regions in {model}")
     
     cy_S0 = cy_arrays[0]
@@ -370,7 +384,6 @@ def compute_average_crossover_diff(df_crossovers, policy_name, model):
     for pi, policy in enumerate(policy_name[1:]):
         cy_diff = [cy_arrays[pi+1][ind] - cy_S0[ind] for ind in valid_indices]
         weights = df_crossovers["Weights"].iloc[0][valid_indices]
-        
         averaged_cy = np.average(cy_diff, weights=weights)
         
         years, months = convert_fractional_years_to_years_and_months(averaged_cy)
@@ -390,45 +403,89 @@ def get_weights(output, model, cap_vars):
 crossover_list = []
 crossover_diff_list = []
 
-for model in models:
+# Compute it first by region, and average cross-over years, or first average prices
+average_prices_first = True
+
+if average_prices_first == False:
+
+    for model in models:
     
-    clean_tech_dict = {i: clean_tech_variable[model] for i in range(1, 72)}
-    fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
+        
+        clean_tech_dict = {i: clean_tech_variable[model] for i in range(1, 72)}
+        fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
+        
+        regions = {i: i - 1 for i in range(1, 72)}
+        
+        for policy, output in zip(policy_names, output_files):    
+            crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
+            weights = get_weights(output, model, cap_vars)
+            row = {
+                "Model": model,
+                "Policy": policy,
+                "Crossover years": crossover_years, 
+                "Weights": weights}
+            crossover_list.append(row)
     
-    regions = {i: i - 1 for i in range(1, 72)}
+        df_crossovers = pd.DataFrame(crossover_list, columns = ["Model", "Policy", "Crossover years", "Weights"])
+        
+    for model in models:
+         average_crossover_rows = compute_average_crossover_diff(
+                         df_crossovers[df_crossovers["Model"]==model], policy_names, model)
+         crossover_diff_list.extend(average_crossover_rows)
+     
+    df = pd.DataFrame(crossover_diff_list)
+        
+
+elif average_prices_first == True: 
     
-    for policy, output in zip(policy_names, output_files):    
+    crossover_diff_list = []
+    clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
+    fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [4]} # Note 4 for transport gives an error
+    year_inds = list(range(10, 41))
+    for model in models:
+        
+        fossil_costs_S0 = get_weighted_costs(output_S0, model, fossil_tech_variable[model], year_inds)
+        clean_costs_S0 = get_weighted_costs(output_S0, model, clean_tech_variable[model], year_inds)
+        year_S0 = interpolate_crossover_year(clean_costs_S0, fossil_costs_S0)
+        if model == "FTT:H":
+            print(fossil_costs_S0)
+            print(clean_costs_S0)
+        
+        
+        for policy, output in zip(policy_names[1:], output_files[1:]):  
+            fossil_costs = get_weighted_costs(output, model, fossil_tech_variable[model], year_inds)
+            clean_costs = get_weighted_costs(output, model, clean_tech_variable[model], year_inds)
+            year = interpolate_crossover_year(clean_costs, fossil_costs)
+            try:
+                years, months = convert_fractional_years_to_years_and_months(year-year_S0)
+            except ValueError:
+                print(f"model is {model}")
+                print(f"policy is {policy}")
+                print(f"year_S0: {year_S0}")
+                print(f'year: {year}')
+            yearmonth_str = format_monthyear_str(years, months)
+            row = {
+                "Model": model,
+                "Policy": policy,
+                "Crossover year diff": yearmonth_str}
+            crossover_diff_list.extend(row)
+            print(row)
+    df = pd.DataFrame(crossover_diff_list)
+        
+    
 
-        crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
-        weights = get_weights(output, model, cap_vars)
-        row = {
-            "Model": model,
-            "Policy": policy,
-            "Crossover years": crossover_years, 
-            "Weights": weights}
-        crossover_list.append(row)
-
-df_crossovers = pd.DataFrame(crossover_list, columns = ["Model", "Policy", "Crossover years", "Weights"])
-
-for model in models:
-    average_crossover_rows = compute_average_crossover_diff(
-                    df_crossovers[df_crossovers["Model"]==model], policy_names, model)
-    crossover_diff_list.extend(average_crossover_rows)
-
-# Create a DataFrame from the list of dictionaries
-df = pd.DataFrame(crossover_diff_list)
-
-# Pivot the DataFrame to get the desired 5x4 table
+# Pivot the DataFrame to get a 5x4 table
 table = df.pivot(index='Policy', columns='Model', values='Crossover year diff')
 # Reindex the table to ensure the policy order matches policy_names
-table = table.reindex(index= policy_names[1:], columns=models)
+table = table.reindex(index=policy_names[1:], columns=models)
 
 # Plot the table as a figure
 fig, ax = plt.subplots(figsize=(6, 2), dpi=300)
 ax.axis('tight')
 ax.axis('off')
-table = ax.table(cellText=table.values, rowLabels=table.index, colLabels=["Power sector", "Heating", "Cars", "Trucks"],
-                         cellLoc='center', loc='center')
+table = ax.table(cellText=table.values, rowLabels=table.index,
+                 colLabels=["Power sector", "Heating", "Cars", "Trucks"],
+                 cellLoc='center', loc='center')
 
 table.auto_set_font_size(False)
 table.set_fontsize(10)
@@ -448,7 +505,7 @@ for (i, j), cell in table.get_celld().items():
         cell.set_facecolor(row_colors[i % 2])  # Alternating row colors
 
 
-plt.subplots_adjust(top=1, bottom=0)  # This line adjusts the whitespace
+plt.subplots_adjust(top=1, bottom=0)  # Adjust whitespace
 plt.title("How much is cost-parity brought forward?", fontsize=14, fontweight='bold')
 
 
@@ -460,13 +517,13 @@ fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
 axs = axs.flatten()
 seaborn.set(style = 'whitegrid') 
 
-# Expand the dataframe to make it suitable for the violin plot
+# Expand the dataframe to make it suitable for the boxplot
 # Initialize an empty DataFrame to collect the results
 expanded_df = pd.DataFrame()
 
 # Iterate through each row and expand the dictionary
 for idx, row in df_crossovers.iterrows():
-    # Create a temporary DataFrame from the dictionary
+    
     temp_df = pd.DataFrame(list(row['Crossover years'].items()), columns=['Region', 'Crossover year'])
     # Add the other columns to the temporary DataFrame
     temp_df['Model'] = row['Model']
@@ -477,8 +534,8 @@ for idx, row in df_crossovers.iterrows():
 # Rearrange columns to the desired order
 expanded_df = expanded_df[['Model', 'Policy', 'Region', 'Crossover year']]
 
-def subtract_from_baseline(filtered_df_model):
-    
+def subtract_baseline(filtered_df_model):
+    '''Subtract the baseline crossover year'''
     # Step 1: Filter baseline data
     baseline_df = filtered_df_model[filtered_df_model['Policy'] == 'Baseline'][['Region', 'Crossover year']]
     
@@ -499,34 +556,30 @@ def all_finite(group):
    
 for mi, model in enumerate(models):
     
-    # use to set style of background of plot
     ax = axs[mi] 
     df_model = expanded_df[expanded_df["Model"]==model]
     
     # Group by "Region" and filter out groups with any non-finite "Crossover year" values
-    filtered_df_model = df_model.groupby("Region").filter(all_finite)
-        
-    df_difference = subtract_from_baseline(filtered_df_model)
+    filtered_df_model = df_model.groupby("Region").filter(all_finite)  
+    df_difference = subtract_baseline(filtered_df_model)
     
-    ax.set_title(repl_dict[model], fontsize=14)
-     
     seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
     
-    ax.set_ylim(-2, 14)
-    
-    # Rotate x-axis labels
-    ax.tick_params(axis='x', rotation=45)
-    # Remove x-axis label
-    ax.set_xlabel('')
+    ax.set_title(repl_dict[model], fontsize=14)
+    ax.set_ylim(-2, 14)   
+    ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
+    ax.set_xlabel('')                       # Remove x-axis label
     
     # Adjust label alignment to be parallel
     for label in ax.get_xticklabels():
         label.set_ha('right')
+    
+    save_data(df_difference, fig_dir, f"Figure 5 - Boxplot crossover years {repl_dict[model]}")
 
     
 # Adjust spacing between subplots
 plt.subplots_adjust(hspace=0.7, wspace=0.2)    
-
+save_fig(fig, fig_dir, "Figure 5 - Boxplot crossover years")
 
 #%% =========================================================================
 #  Fourth figure: timelines by sector by country
@@ -684,7 +737,7 @@ fig.suptitle("Cost-parity point: costs without policy \n Comparison largest clea
 # Save the graph as an png/svg files
 save_fig(fig, fig_dir, "Horizontal_timeline_crossover_year")
 df_cy['Sector'] = df_cy['Sector'].replace(repl_dict)
-save_data(df_cy, fig_dir, "Horizontal_timeline_crossover_year")
+save_data(df_cy, fig_dir, "Figure X - Horizontal_timeline_crossover_year")
 
 
 

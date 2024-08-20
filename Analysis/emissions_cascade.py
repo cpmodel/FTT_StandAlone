@@ -18,6 +18,8 @@ from preprocessing import get_output, get_metadata, save_fig, save_data
 # Set global font size
 plt.rcParams.update({'font.size': 14})
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
+plt.rcParams['figure.dpi'] = 300  
+
 
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
@@ -233,6 +235,10 @@ emissions_2050 = {
 emissions_cum_2050_S0 = np.sum([emissions_from_2025[model]["Baseline"] for model in models])
 emissions_tot_2050_S0 = np.sum([emissions_2050[model]["Baseline"] for model in models])
 
+print(f"Total cumulative emissions S0 2025-2050 is {emissions_cum_2050_S0/1000:.1f} GtCO₂")
+print(f"Total emissions 2050 S0 is {emissions_tot_2050_S0/1000:.1f} GtCO₂")
+
+
 def cumulative_saved_emissions(model, policy):
     '''Get the difference of emissions between policy and baseline for only that sector'''
     
@@ -289,6 +295,8 @@ data_2050 = set_up_data_dict(sectoral_saved_emissions_2050, combined_policies_sa
 remaining_cum = emissions_cum_2050_S0 - sum(data_cum.values())
 remaining_2050 = emissions_tot_2050_S0 - sum(data_2050.values())
 
+print(f"The additional emissions savings in 2050: {data_2050['Combined policies']:.0f} MtCO2")
+
 # Add the remaining emissions to the data
 data_cum["Remaining emissions"] = remaining_cum
 data_2050["Remaining emissions"] = remaining_2050
@@ -337,7 +345,7 @@ df = pd.DataFrame({
     'Cumulative emissions (MtCO2)': data_cum.values(),
     '2050 emissions (MtCO2)': data_2050.values()
     })
-save_fig(fig, fig_dir, "Donut_chart_emissions")
-save_data(df, fig_dir, "Donut_chart_data")
+save_fig(fig, fig_dir, "Figure 6 - Donut_chart_emissions")
+save_data(df, fig_dir, "Figure 6 - Donut_chart_emissions")
 
 

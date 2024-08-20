@@ -14,9 +14,9 @@ from preprocessing import get_metadata, get_output, save_fig, save_data
 
 # Set global font size
 plt.rcParams.update({'font.size': 12, 'legend.fontsize': 12})
-
-# Set global font size for tick labels
 plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
+plt.rcParams['figure.dpi'] = 300  
+
 
 # To do: change this to individual_policies (now that the carbon tax has a massive effect)
 output_file = "Results_sxp.pickle"
@@ -242,9 +242,9 @@ def combine_dfs(dict_of_dfs):
 
 fig.subplots_adjust(wspace=0.08)  # Adjust the height spacing
 
-save_fig(fig, fig_dir, "Shares_graph_4x4")
-save_data(combine_dfs(model_dfs_S0), fig_dir, "Shares_graph_4x4_Baseline")
-save_data(combine_dfs(model_dfs_ct), fig_dir, "Shares_graph_4x4_Carbontax")
-save_data(combine_dfs(model_dfs_sub), fig_dir, "Shares_graph_4x4_AndSubsidies")
-save_data(combine_dfs(model_dfs_man), fig_dir, "Shares_graph_4x4_Andmandates")
+save_fig(fig, fig_dir, "Figure 4 - Shares_graph_4x4")
+save_data(combine_dfs(model_dfs_S0), fig_dir, "Figure 4 - Shares_graph_4x4_Baseline")
+save_data(combine_dfs(model_dfs_ct), fig_dir, "Figure 4 - Shares_graph_4x4_Carbontax")
+save_data(combine_dfs(model_dfs_sub), fig_dir, "Figure 4 - Shares_graph_4x4_Subsidies")
+save_data(combine_dfs(model_dfs_man), fig_dir, "Figure 4 - Shares_graph_4x4_Mandates")
 

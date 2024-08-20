@@ -18,13 +18,15 @@ plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
 
 # # Set global font size for tick labels
 plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
+plt.rcParams['figure.dpi'] = 300  
+
 
 output_file = "Results_sxp.pickle"
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 
 price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
-tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 11, "FTT:Fr": 12}
+tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
 operation_cost_name = {"FTT:P": "MLCO"}
 
 tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",
@@ -38,16 +40,24 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
     """Get the weighted cost based on the scenario (output), model,
     tech_variable and the indices of the years of interest.
     """
-    prices = output[price_names[model]][:, tech_variable, 0, year_inds]
     
     if model == "FTT:P" and tech_variable in [2, 6]:
+        print(f"Taking the operational costs: {operation_cost_name[model]}, tech: {tech_variable}")
         prices = output[operation_cost_name[model]][:, tech_variable, 0, year_inds]
+    else:
+        prices = output[price_names[model]][:, tech_variable, 0, year_inds]
     
     # Way by total size of the market per region
     weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)
    
     
     weighted_prices = np.average(prices, weights=weights, axis=0)
+    if isinstance(weighted_prices, float):
+        print(f'model: {model}')
+        print(f'tech_variable: {tech_variable}')
+        print(f'year_inds: {year_inds}')
+    elif model == "FTT:P":
+        print(f"{tech_variable}: {weighted_prices[3:13]}")
     
     return weighted_prices
 
@@ -138,7 +148,7 @@ if plot_dot_graph:
 clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
 fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [4]} # Note 4 for transport gives an error
 graph_label = {"FTT:P": "New solar + battery vs existing coal", "FTT:H": "Water-air HP vs gas boiler",
-               "FTT:Tr": "Petrol vs EV", "FTT:Fr": "Diesel truck vs EV"}
+               "FTT:Tr": "EVs vs petrol cars", "FTT:Fr": "EV trucks vs diesel"}
 
 
 # Define the percentage difference function
@@ -260,8 +270,8 @@ final_df = pd.concat(df_list, ignore_index=True)
 final_df = final_df[['Model', 'Scenario'] + years]
 
 # Save the graph and its data
-save_fig(fig, fig_dir, "Global_price_perc_diff_timeseries_by_policy")
-save_data(final_df, fig_dir, "Global_price_perc_diff_timeseries_by_policy")
+save_fig(fig, fig_dir, "Figure 3 - Global_price_perc_diff_timeseries_by_policy")
+save_data(final_df, fig_dir, "Figure 3 - Global_price_perc_diff_timeseries_by_policy")
 
 
 
