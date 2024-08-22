@@ -12,13 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
-
-# Set global font size
-plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
-
-# # Set global font size for tick labels
-plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
-plt.rcParams['figure.dpi'] = 300  
+import config
 
 
 output_file = "Results_sxp.pickle"
@@ -32,8 +26,7 @@ operation_cost_name = {"FTT:P": "MLCO"}
 tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",
              "FTT:H": "Air-air heat pump", "FTT:Fr": "Small electric truck"}
 
-
-year_inds = list(np.array([2024, 2035, 2050]) - 2010)
+year_inds = [year - 2010 for year in [2024, 2035, 2050]]
 
 
 def get_weighted_costs(output, model, tech_variable, year_inds):
@@ -42,7 +35,6 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
     """
     
     if model == "FTT:P" and tech_variable in [2, 6]:
-        print(f"Taking the operational costs: {operation_cost_name[model]}, tech: {tech_variable}")
         prices = output[operation_cost_name[model]][:, tech_variable, 0, year_inds]
     else:
         prices = output[price_names[model]][:, tech_variable, 0, year_inds]
@@ -52,12 +44,6 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
    
     
     weighted_prices = np.average(prices, weights=weights, axis=0)
-    if isinstance(weighted_prices, float):
-        print(f'model: {model}')
-        print(f'tech_variable: {tech_variable}')
-        print(f'year_inds: {year_inds}')
-    elif model == "FTT:P":
-        print(f"{tech_variable}: {weighted_prices[3:13]}")
     
     return weighted_prices
 
@@ -223,17 +209,6 @@ for mi, model in enumerate(models):
     ax.xaxis.set_ticks_position('none') 
     ax.yaxis.set_ticks_position('none') 
     
-    
-    # # Set grid lines
-    # ax.set_xticks([2025, 2030, 2035, 2040])
-    
-    # # Hide major x-tick labels
-    # ax.tick_params(axis='x', which='major', labelbottom=False)
-    
-    # #Condense x-labels slightly
-    # ax.set_xticks([2025.2, 2030.1, 2034.8, 2039.9], minor=True)
-    # ax.set_xticklabels([2025, 2030, 2035, 2040], minor=True)
-    # ax.tick_params(axis='x', which='minor', pad=5)
     
     ax.set_xlim(2024, 2034)
     ax.set_ylim(-5.4, 25.6)

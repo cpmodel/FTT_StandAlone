@@ -13,12 +13,7 @@ import matplotlib.gridspec as gridspec
 import pandas as pd
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
-
-
-# Set global font size
-plt.rcParams.update({'font.size': 14})
-plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
-plt.rcParams['figure.dpi'] = 300  
+import config
 
 
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()

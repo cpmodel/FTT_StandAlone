@@ -11,12 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from preprocessing import get_metadata, get_output, save_fig, save_data
-
-# Set global font size
-plt.rcParams.update({'font.size': 12, 'legend.fontsize': 12})
-plt.rcParams.update({'xtick.labelsize': 10, 'ytick.labelsize': 10})
-plt.rcParams['figure.dpi'] = 300  
-
+import config
 
 # To do: change this to individual_policies (now that the carbon tax has a massive effect)
 output_file = "Results_sxp.pickle"

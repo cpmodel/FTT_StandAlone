@@ -12,17 +12,13 @@ import matplotlib.pyplot as plt
 import seaborn 
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
-
-# Set global font size
-plt.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
-plt.rcParams.update({'xtick.labelsize': 14, 'ytick.labelsize': 14})
-plt.rcParams['figure.dpi'] = 300  
+import config
 
 output_file = "Results_sxp.pickle"
 output_S0 = get_output(output_file, "S0")
-
-
 titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
+
+
 
 # Define the regions and the region numbers of interest
 regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany": 2, "UK": 14}
@@ -30,12 +26,11 @@ regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
 dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [0, 4]}
-repl_dict = {"FTT:P": "Power", "FTT:H": "Heat", "FTT:Tr": "Cars", "FTT:Fr": "Trucks"}
-
 
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
-price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
+price_names = config.PRICE_NAMES
+repl_dict = config.REPL_DICT
 shares_vars = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
 # TODO: should carbon tax be part of this? Probably not, right?
@@ -404,7 +399,7 @@ crossover_list = []
 crossover_diff_list = []
 
 # Compute it first by region, and average cross-over years, or first average prices
-average_prices_first = True
+average_prices_first = False
 
 if average_prices_first == False:
 
