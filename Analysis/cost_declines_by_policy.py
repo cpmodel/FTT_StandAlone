@@ -20,7 +20,7 @@ titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 
 price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
-tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
+tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 13}
 operation_cost_name = {"FTT:P": "MLCO"}
 
 tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",
@@ -131,8 +131,8 @@ if plot_dot_graph:
 # Globally averaged cost difference over time by within-sector policy
 # ========================================================================
 
-clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
-fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [4]} # Note 4 for transport gives an error
+clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [13]}
+fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [5]} # Note 4 for transport gives an error
 graph_label = {"FTT:P": "New solar + battery vs existing coal", "FTT:H": "Water-air HP vs gas boiler",
                "FTT:Tr": "EVs vs petrol cars", "FTT:Fr": "EV trucks vs diesel"}
 

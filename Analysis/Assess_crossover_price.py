@@ -24,8 +24,8 @@ titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
 regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany": 2, "UK": 14}
 
 # Define the clean technology list by model
-clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [12]}
-dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [0, 4]}
+clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [13]}
+dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [1, 5]}
 
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
@@ -260,7 +260,7 @@ for mi, model in enumerate(models):
         rows.append(row)
     
     ax.axhline(0, color='grey', linestyle='--', linewidth=2)  # Adding horizontal line at y=0
-    ax.set_title(f"{model}")
+    ax.set_title(f"{repl_dict[model]}")
     
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
         ax.set_ylabel("Levelised costs difference (%)")
@@ -291,8 +291,8 @@ save_data(df_perc_difference, fig_dir, "Figure 2 - Baseline_price_difference")
 # Table: 5x4 table with difference in crossover year
 # ============================================================================
 
-clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 12}
-fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 4}       # Note 4 for transport gives an error
+clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 13}
+fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 5}       # Note 4 for transport gives an error
 
 output_ppolicies = get_output(output_file, "sxp - P mand")
 output_hpolicies = get_output(output_file, "sxp - H mand")

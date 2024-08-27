@@ -861,8 +861,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
         
         if year == 2050 and t == no_it:
-            print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.3f} M GWh")
-            print(f"Total solar+wind in 2050 is: {np.sum(data['MEWG'][:, 16:19, 0])/10**6:.3f} M GWh")
+            print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.1f} M GWh, "
+                  "solar&wind is {np.sum(data['MEWG'][:, 16:19, 0])/10**6:.1f} M GWh")
 
          
 
