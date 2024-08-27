@@ -29,7 +29,7 @@ def EV_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
             frac = 1/n_years            # Fraction decrease per year
             n = year - 2024
             
-            yearly_replacement = 1/13 * 0.8
+            yearly_replacement = 1/13 * 0.7
             
             # In 2035, the sum should be 80% of sales.
             sum_twsa_share = np.full(twsa.shape[0], frac * n * yearly_replacement)   

@@ -51,9 +51,14 @@ grouping_transport = {"Petrol": [0, 1, 2], "Petrol adv": [3, 4, 5], "Diesel": [6
                       "Diesel adv": [9, 10, 11], "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
                       "Plug-in hybrid": [21, 22, 23], "Electric": [18, 19, 20],  "Hydrogen": [24, 25, 26]
                       }
-grouping_freight = {"Petrol": [0, 2], "Diesel": [4, 6],
-                    "CNG/LPG": [8], "Hybrid": [10], "Electric": [12], "Hydrogen": [18], "Biofuel": [14, 16]
+grouping_freight = {"Petrol": [0, 1, 2, 3], "Diesel": [4, 5, 6, 7],
+                    "CNG/LPG": [8, 9], "Hybrid": [10, 11], "Electric": [12, 13], "Hydrogen": [18, 19], 
+                    "Biofuel": [14, 15, 16, 17]
                     }
+
+# grouping_freight = {"Petrol": [1, 2], "Diesel": [4, 6],
+#                     "CNG/LPG": [8], "Hybrid": [10], "Electric": [12], "Hydrogen": [18], "Biofuel": [14, 16]
+#                     }
 
 
 
@@ -111,7 +116,7 @@ colours ={"FTT:P": colours_power, "FTT:H": colours_heat,
              "FTT:Tr": colours_transport, "FTT:Fr": colours_freight}
 
 ylabels = {"FTT:P": "Generation (PWh)", "FTT:H": "Useful demand (PWh)",
-           "FTT:Tr": "Cars (billions)", "FTT:Fr": "Light trucks (millions)"}
+           "FTT:Tr": "Cars (billions)", "FTT:Fr": "Trucks (millions)"}
 
 legend_titles = {"FTT:P": "Power technology", "FTT:H": "Heating technology", 
               "FTT:Tr": "Transport technology", "FTT:Fr": "Freight technology"}

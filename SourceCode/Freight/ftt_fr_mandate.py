@@ -30,7 +30,7 @@ def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=16):
             
                 frac = 1/n_years            # Fraction decrease per year
                 n = year - 2024
-                yearly_replacement = 1/15 * 0.75
+                yearly_replacement = 1/15 * 0.7
                 share_by_size = np.sum(zews[:, truck_size::2], axis=(1, 2))
                 
                 # In 2040, the sum should be 80% of sales.
