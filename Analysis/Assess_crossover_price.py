@@ -14,7 +14,7 @@ import seaborn
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
 
-output_file = "Results.pickle"
+output_file = "Results_sxp.pickle"
 output_S0 = get_output(output_file, "S0")
 titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
 
@@ -567,7 +567,7 @@ for mi, model in enumerate(models):
     seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
     
     ax.set_title(repl_dict[model], fontsize=14)
-    ax.set_ylim(-2, 14)   
+    ax.set_ylim(-2, 12)   
     ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     

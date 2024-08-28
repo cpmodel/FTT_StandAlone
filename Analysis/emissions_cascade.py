@@ -216,7 +216,7 @@ if plot_extra:
 # Emissions timeseries from 2025
 emissions_from_2025 = {
     scenario: {
-        policy: values[15:] for policy, values in policies.items()
+        policy: np.sum(values[15:]) for policy, values in policies.items()
     } for scenario, policies in emissions.items()
 }
 
@@ -234,18 +234,11 @@ print(f"Total cumulative emissions S0 2025-2050 is {emissions_cum_2050_S0/1000:.
 print(f"Total emissions 2050 S0 is {emissions_tot_2050_S0/1000:.1f} GtCO₂")
 
 
-def cumulative_saved_emissions(model, policy):
+def cumulative_saved_emissions(model, policy, emissions_cum_or_2050):
     '''Get the difference of emissions between policy and baseline for only that sector'''
     
-    cum_emissions_baseline = np.sum(emissions_from_2025[model][policy])
-    baseline_sector_emissions = np.sum(emissions_from_2025[model]["Baseline"])
-    return baseline_sector_emissions - cum_emissions_baseline
-
-def saved_emissions_2050(model, policy):
-    '''Get the difference of emissions between policy and baseline for only that sector'''
-    
-    cum_emissions_baseline = np.sum(emissions_2050[model][policy])
-    baseline_sector_emissions = np.sum(emissions_2050[model]["Baseline"])
+    cum_emissions_baseline = np.sum([emissions_cum_or_2050[model][policy] for model in models])
+    baseline_sector_emissions = np.sum([emissions_cum_or_2050[model]["Baseline"] for model in models])
     return baseline_sector_emissions - cum_emissions_baseline
 
 
@@ -257,17 +250,17 @@ def combined_policies_saved_emissions_2050():
     total_emissions_all_policies = np.sum([emissions_2050[model]["sxp - All policies"] for model in models])
     return  emissions_tot_2050_S0 - total_emissions_all_policies
 
-def set_up_list_saved_emissions(emissions_function):
+def set_up_list_saved_emissions(emissions):
     if all_policies_or_mandates == "All policies":
-        sectoral_saved_emissions = [emissions_function("FTT:P", "FTT-P"),
-                                    emissions_function("FTT:H", "FTT-H"),
-                                    emissions_function("FTT:Tr", "FTT-Tr"),
-                                    emissions_function("FTT:Fr", "FTT-Fr")]
+        sectoral_saved_emissions = [cumulative_saved_emissions("FTT:P", "FTT-P", emissions),
+                                    cumulative_saved_emissions("FTT:H", "FTT-H", emissions),
+                                    cumulative_saved_emissions("FTT:Tr", "FTT-Tr", emissions),
+                                    cumulative_saved_emissions("FTT:Fr", "FTT-Fr", emissions)]
     elif all_policies_or_mandates == "Mandates":
-        sectoral_saved_emissions = [emissions_function("FTT:P", "sxp - P mand"),
-                                    emissions_function("FTT:H", "sxp - H mand"),
-                                    emissions_function("FTT:Tr", "sxp - Tr mand"),
-                                    emissions_function("FTT:Fr", "sxp - Fr mand")]
+        sectoral_saved_emissions = [cumulative_saved_emissions("FTT:P", "sxp - P mand", emissions),
+                                    cumulative_saved_emissions("FTT:H", "sxp - H mand", emissions),
+                                    cumulative_saved_emissions("FTT:Tr", "sxp - Tr mand", emissions),
+                                    cumulative_saved_emissions("FTT:Fr", "sxp - Fr mand", emissions)]
     return sectoral_saved_emissions
 
 
@@ -281,8 +274,8 @@ def set_up_data_dict(sectoral_saved_emissions, combined_policies_function):
     }
     return data
 
-sectoral_saved_emissions = set_up_list_saved_emissions(cumulative_saved_emissions)
-sectoral_saved_emissions_2050 = set_up_list_saved_emissions(saved_emissions_2050)
+sectoral_saved_emissions = set_up_list_saved_emissions(emissions_from_2025)
+sectoral_saved_emissions_2050 = set_up_list_saved_emissions(emissions_2050)
 data_cum = set_up_data_dict(sectoral_saved_emissions, combined_policies_saved_emissions)
 data_2050 = set_up_data_dict(sectoral_saved_emissions_2050, combined_policies_saved_emissions_2050)
 
@@ -327,6 +320,20 @@ def create_donut(ax, sizes):
     
 create_donut(ax[0], sizes_cum)
 create_donut(ax[1], sizes_2050)
+
+# Plot the table if individual emission reductions. 
+# Convert the dictionary of dictionaries to a DataFrame
+summed_df = pd.DataFrame(emissions_from_2025)
+
+# Transpose the DataFrame if necessary to fit the 4x6 format
+summed_df = summed_df.T if summed_df.shape == (6, 4) else summed_df
+
+# Ensure the DataFrame is in the 4x6 format
+summed_df = summed_df.iloc[:4, :6]  # Taking the first 4 rows and 6 columns
+summed_df = summed_df.round(1)
+summed_df.columns = [col.replace('sxp - ', '') for col in summed_df.columns]
+# Display the DataFrame
+print(summed_df)
 
 
 # Add title

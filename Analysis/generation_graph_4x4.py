@@ -56,10 +56,12 @@ grouping_freight = {"Petrol": [0, 1, 2, 3], "Diesel": [4, 5, 6, 7],
                     "Biofuel": [14, 15, 16, 17]
                     }
 
-# grouping_freight = {"Petrol": [1, 2], "Diesel": [4, 6],
-#                     "CNG/LPG": [8], "Hybrid": [10], "Electric": [12], "Hydrogen": [18], "Biofuel": [14, 16]
-#                     }
+green_power = ["Offshore wind", "Onshore wind", "Solar"]
+green_heat = ["Hydronic heat pump", "Air-air heat pump"]
+green_transport = ["Electric"]
+green_freight = ["Electric"]
 
+green_all = {"FTT:P": green_power, "FTT:H": green_heat, "FTT:Tr": green_transport, "FTT:Fr": green_freight}
 
 
 
@@ -153,7 +155,7 @@ def create_dataframes(total_shares):
         model_dfs[model] = df
     return model_dfs
 
-# TODO: Change these output files to dicts of outputs
+
 total_shares_S0 = sum_vehicles_or_gen(output_S0_all)
 model_dfs_S0 = create_dataframes(total_shares_S0)
 
@@ -168,10 +170,25 @@ model_dfs_man = create_dataframes(total_shares_man)
 
 
 #%% Plot the figure
-fig, axs = plt.subplots(4, 4, figsize=(12, 12), sharey='row')
+fig, axs = plt.subplots(4, 4, figsize=(13, 12), sharey='row')
 axs = axs.flatten()
 
 left_most_indices = [0, 4, 8, 12]  # For a 4x4 grid
+text_y_values = {"FTT:P": 40, "FTT:H": 8, "FTT:Tr": 1.2, "FTT:Fr": 40}
+
+def get_sum_greens_2050(model_dfs, model):
+    """Take the sum over all green technologies"""
+    green_sum = np.sum([model_dfs[2050][tech]
+                      for tech in 
+                      green_all[model]])
+    return green_sum
+
+def green_growth(model_df_scen, model):
+    "Percentage difference in proper green techs from baseline"
+    baseline_green = get_sum_greens_2050(model_dfs_S0[model], model)
+    scenario_green = get_sum_greens_2050(model_df_scen, model)
+    green_growth = (scenario_green - baseline_green)/baseline_green * 100
+    return green_growth
 
 def plot_column(model_dfs, col, col_title):
     for idx, (model, model_df) in enumerate(model_dfs.items()):
@@ -195,6 +212,10 @@ def plot_column(model_dfs, col, col_title):
         ax.spines['left'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
         
+        # Compute difference from baseline
+        green_growth_out = green_growth(model_df, model)
+        
+        ax.text(x=20, y=text_y_values[model], s=f'+{green_growth_out:.0f}%')
         
         if col == 3:
             # Create individual legend to the right of each plot
@@ -223,6 +244,11 @@ plot_column(model_dfs_S0, 0, "A. Current trajectory")
 plot_column(model_dfs_ct, 1, "B. Carbon tax")
 plot_column(model_dfs_sub, 2, "C. Subsidies")
 plot_column(model_dfs_man, 3, "D. Mandates / phase-out")
+
+
+
+
+
 
 def combine_dfs(dict_of_dfs):
     
