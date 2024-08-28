@@ -315,10 +315,12 @@ def convert_fractional_years_to_years_and_months(fractional_year):
     months = round(fraction * 12)
 
     # If months is 12, increment the year and reset months
-    if months == 12:
-        year += 1
+    if months == -12:
+        print("Is this ignored?")
+        year -= 1
         months = 0
-
+    
+    
     return -year, -months
 
 
@@ -644,6 +646,10 @@ def comparison_str(clean_tech, fossil_tech):
     elif clean_tech == "Electricity Small" and fossil_tech == "Diesel Small":
         output_str = "EV truck vs diesel"
     elif clean_tech == "Electricity Small" and fossil_tech == "Petrol Small":
+        output_str = "EV truck vs diesel"
+    elif clean_tech == "Electricity Large" and fossil_tech == "Diesel Large":
+        output_str = "EV truck vs diesel"
+    elif clean_tech == "Electricity Large" and fossil_tech == "Petrol Large":
         output_str = "EV truck vs diesel"
         
     else:
