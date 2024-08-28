@@ -47,8 +47,8 @@ grouping_heat = { "Coal": [6], "Oil": [0, 1], "Gas": [2, 3], "Biomass": [4, 5],
                   "District heating": [7], "Electric": [8],
                   "Hydronic heat pump": [9, 10], "Air-air heat pump": [11], "Solar thermal": [12]}
 
-grouping_transport = {"Petrol": [0, 1, 2], "Petrol adv": [3, 4, 5], "Diesel": [6, 7, 8], 
-                      "Diesel adv": [9, 10, 11], "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
+grouping_transport = {"Petrol": [0, 1, 2, 4, 5, 6], "Diesel": [6, 7, 8, 9, 10, 11], 
+                      "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
                       "Plug-in hybrid": [21, 22, 23], "Electric": [18, 19, 20],  "Hydrogen": [24, 25, 26]
                       }
 grouping_freight = {"Petrol": [0, 1, 2, 3], "Diesel": [4, 5, 6, 7],
@@ -88,9 +88,7 @@ colours_heat = {
 
 colours_transport = {
     "Petrol": "dimgray",  # Dim gray for traditional gasoline vehicles
-    "Petrol adv": "darkgrey",  # Light gray to indicate slight improvements in petrol technology
     "Diesel": "slategrey",  # Slate blue for traditional diesel vehicles
-    "Diesel adv": "lightsteelblue",  # Cornflower blue for advanced diesel with better emissions
     "CNG": "mediumturquoise",  # Medium turquoise to differentiate it as cleaner than petrol/diesel
     "Hybrid": "lightgreen",  # Light green to show a mix of traditional and electric technologies
     "Plug-in hybrid": "yellowgreen",  # Yellow green to represent a better environmental choice over standard hybrids
