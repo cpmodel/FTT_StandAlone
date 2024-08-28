@@ -26,13 +26,12 @@ def EV_mandate(EV_mandate, twsa, tews, rflt, year, n_years=11):
     if EV_mandate[0,0,0] == 1:
         if year in range(2025, 2025 + n_years):
         
-            frac = 1/n_years            # Fraction decrease per year
             n = year - 2024
-            
+            x = n / n_years
             yearly_replacement = 1/13 * 0.7
-            
+            exogenous_sigmoid = x / (x + 0.8) 
             # In 2035, the sum should be 80% of sales.
-            sum_twsa_share = np.full(twsa.shape[0], frac * n * yearly_replacement)   
+            sum_twsa_share = np.full(twsa.shape[0], exogenous_sigmoid * yearly_replacement)   
             
             sum_ff = np.sum(tews[:, fossil_techs], axis=(1, 2))
             sum_EV = np.sum(tews[:, EV_techs], axis=(1, 2))

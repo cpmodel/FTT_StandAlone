@@ -31,11 +31,13 @@ def heat_pump_mandate(heat_mandate, hwsa, hews, hewi_lag, year, n_years=11):
     if heat_mandate[0,0,0] == 1:
         if year in range(2025, 2025 + n_years):
         
-            frac = 1/n_years            # Fraction decrease per year
             n = year - 2024
+            yearly_replacements = 1/20
+            x = n / n_years
+            exogenous_sigmoid = x / (x + 0.8)
             
             # In 2035, the sum should be 70% of sales are heat pump (as quite some endogenous sales). Lifetime = 20y, so 0.05 ~= 100%
-            sum_hwsa = np.full(hwsa.shape[0], frac * n * 0.035)   
+            sum_hwsa = np.full(hwsa.shape[0], exogenous_sigmoid * yearly_replacements)   
             
             sum_ff = np.sum(hews[:, fossil_techs], axis=(1, 2))
             sum_hp = np.sum(hews[:, heat_pump_techs], axis=(1, 2))
