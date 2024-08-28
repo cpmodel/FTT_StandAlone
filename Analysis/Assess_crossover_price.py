@@ -14,7 +14,7 @@ import seaborn
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
 
-output_file = "Results_sxp.pickle"
+output_file = "Results.pickle"
 output_S0 = get_output(output_file, "S0")
 titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
 
@@ -345,14 +345,18 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
 def format_monthyear_str(years, months):
     '''Is it plural or singular month/year?'''
     
-    if years == 0 and months not in [-1, 1]:
+    if years == 0 and months != 1 and months != -1:
         yearmonth_str = f'{months} months'
-    elif years == 0 and months in [-1, 1]:
+    elif years == 0 and (months == 1 or months == -1):
         yearmonth_str = f'{months} month'
     elif years == 1 and months == 1:
         yearmonth_str = f'{years} year, {months} month'
-    elif years == 1 and months != 1:
+    elif years == 1 and months != 0:
         yearmonth_str = f'{years} year, {months} months'
+    elif years == 1 and months == 0:
+        yearmonth_str = f'{years} year'
+    elif years != 0 and months == 0:
+        yearmonth_str = f'{years} years'
     else:
         yearmonth_str = f'{years} years, {months} months'
     return yearmonth_str
