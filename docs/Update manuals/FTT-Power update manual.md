@@ -1,20 +1,17 @@
 # Instructions for updating FTT:Power
-Ideally, FTT:Power is updated every two years. The last data update was done early 2022. Final figures for IEA shares come out in August. For costs, BNEF is very rapid, a few months behind. Unknown if GNESTE keeps updating. **You may need to have different start years for cost and generation in the code**
+Ideally, FTT:Power is updated every two years. The last data update was done September 2024. Final figures for IEA shares come out in August. For costs, BNEF is very rapid, a few months behind. Unknown if GNESTE keeps updating. **You may need to have different start years for cost and generation in the code**
 
 ## Frequent updates
-### Historical generation
-1. Update the historical generation. We use the IEA World Energy Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access **Describe how**
-    1. The datafiles to update are Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. The generation is in the MEWG sheet
+### Historical generation, capacity and load factors
+1. Update the historical generation. We use the IEA World Energy Balances to update generation data. This data is freely available for universities. People with a UK institutional log-in can find it at the [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB). People at CE also have access via license to used energy balances with E3ME the data can be accessed vis IEA WDS service. 
+    1. The datafiles to update are Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2024_S[0-1-2].xlsx. The generation is in the MEWG sheet
     2. This step is done manually. If you create a python script for this, please add it to the pre-processing repository.  
-2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://www.irena.org/publications/2022/Apr/Renewable-Capacity-Statistics-2022).
-    1. The datafile is the same as above
-    2. This step is done in excel. If you create a python script for this, please add it to the pre-processing repository.  
-3. The generation data is often not quite up-to-date. You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA variable. Do this for fast-changing technologies if relevant (offshore, solar PV). 
-    4. The python file to do this is can be found in the pre-processing repository (change_IRENA_hist_capacity_MWKA.py). 
-    5. The (2022) data is found at https://irena.org/Statistics/Download-query-tools 
-5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%).
-    1. Use the same script as above in the pre-processing file. Better seeding can be introduced in MWKA, to make sure we're accurately representing historical production.
-6. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J3 from 2021 to 2022 after you've updated the historical generation to include 2022 data. 
+2. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://pxweb.irena.org/pxweb/en/IRENASTAT). Due to data extraction limits, capacity and generation data should be extracted as seperate files.
+Additional data on generation and capacity can be obtained from the EMBER yearly electricity dataset https://ember-climate.org/data-catalogue/yearly-electricity-data/ 
+4. The generation data is often not quite up-to-date (typically a year behind the capacity data available). You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA variable. The IRENA and EMBER datasets provide capacity estimate for all main technologies which allow for an accurate update of the MWLO variable to the last year of history (2022)   
+5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%). CCS tech is also seeded at 0.01% of current fossil generation and 1% of Biomass for BECCS.
+6. The processing is all combined into a single script in the preprocessing repository ("Process Generation, capacity and load data.py").
+7. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J3 from 2021 to 2022 after you've updated the historical generation to include 2022 data. 
 
 ### Calibration (the gamma values)
 The FTT model is calibrated to ensure a historical trends do not suddenly change in the absense of new policies. We ensure the first derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
