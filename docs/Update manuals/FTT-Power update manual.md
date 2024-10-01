@@ -1,5 +1,5 @@
 # Instructions for updating FTT:Power
-Ideally, FTT:Power is updated every one or two years. The last data update was done early 2022. Final figures for IEA shares come out in August. For costs, BNEF is very rapid, a few months behind. Unknown if GNESTE keeps updating, but the IRENA data within GNESTE does, at the end of August/early September. **You may need to have different start years for cost and generation in the code**
+Ideally, FTT:Power is updated every one or two years. The last data update was done early 2022. Final figures for IEA shares come out in August. For costs, BNEF is very rapid, a few months behind. Unknown if GNESTE keeps updating, but the IRENA data within GNESTE does, in August or September. **You may need to have different start years for cost and generation in the code**
 
 ## Frequent updates
 ### Historical generation
