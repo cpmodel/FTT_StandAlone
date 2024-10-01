@@ -69,10 +69,10 @@ colours_power = {
     "Nuclear": "lightcoral",  # Light coral to indicate its clean but debated nature
     "Coal and oil": "black",  # Black for traditional, high carbon emission sources
     "Gas": "silver",  # Slate grey to differentiate from coal but still fossil fuel
-    "Biomass + other": "yellowgreen",  # Dark olive green to represent biomass, a renewable but complex source
-    "Hydropower": "royalblue",  # Sky blue to signify wind, clean and free like the sky
-    "Offshore wind": "cornflowerBlue",  # Sky blue to signify wind, clean and free like the sky
-    "Onshore wind": "skyblue",  # Sky blue to signify wind, clean and free like the sky
+    "Biomass + other": "saddlebrown",  # brown for consistency
+    "Hydropower": "royalblue",  
+    "Offshore wind": "palegreen",  # Sky blue to signify wind, clean and free like the sky
+    "Onshore wind": "mediumseagreen",  # Sky blue to signify wind, clean and free like the sky
     "Solar": "goldenrod"  # Goldenrod, rich and vibrant for solar energy
 }
 
@@ -174,7 +174,7 @@ fig, axs = plt.subplots(4, 4, figsize=(13, 12), sharey='row')
 axs = axs.flatten()
 
 left_most_indices = [0, 4, 8, 12]  # For a 4x4 grid
-text_y_values = {"FTT:P": 40, "FTT:H": 8, "FTT:Tr": 1.2, "FTT:Fr": 40}
+text_y_values = {"FTT:P": 32, "FTT:H": 7, "FTT:Tr": 1.2, "FTT:Fr": 38}
 
 def get_sum_greens_2050(model_dfs, model):
     """Take the sum over all green technologies"""
@@ -198,10 +198,16 @@ def plot_column(model_dfs, col, col_title):
         model_df_T.plot(kind="area", ax=ax, color = colours[model], linewidth=0)
         
         ax.set_ylabel(ylabels[model])
-        years_labels = [2020, 2030, 2040, 2050]
-        years_labels_loc = [1, 10.5, 19.5, 29]
-        ax.set_xticks(years_labels_loc)
-        ax.set_xticklabels(years_labels)
+        
+        # Set data and demand labels and ticks
+        if idx == 3:
+            # Turn off for rows above
+            years_labels = [2020, 2030, 2040, 2050]
+            years_labels_loc = [1, 10.5, 19.5, 29]
+            ax.set_xticks(years_labels_loc)
+            ax.set_xticklabels(years_labels)
+        else: 
+            ax.set_xticks([])
         ax.xaxis.set_ticks_position('none') 
         ax.yaxis.set_ticks_position('none') 
         ax.tick_params(axis='both', which='major', pad=-3)
@@ -215,7 +221,9 @@ def plot_column(model_dfs, col, col_title):
         # Compute difference from baseline
         green_growth_out = green_growth(model_df, model)
         
-        ax.text(x=20, y=text_y_values[model], s=f'+{green_growth_out:.0f}%')
+        if col != 0:
+            ax.text(x=29.5, y=text_y_values[model], s=f'+{green_growth_out:.0f}%', 
+                    horizontalalignment='right', fontweight='bold')
         
         if col == 3:
             # Create individual legend to the right of each plot
@@ -247,9 +255,6 @@ plot_column(model_dfs_man, 3, "D. Mandates / phase-out")
 
 
 
-
-
-
 def combine_dfs(dict_of_dfs):
     
     # Combine the DataFrames into a single DataFrame
@@ -264,7 +269,7 @@ def combine_dfs(dict_of_dfs):
     return combined_df
 
 
-fig.subplots_adjust(wspace=0.08)  # Adjust the height spacing
+fig.subplots_adjust(wspace=0.1, hspace=0.1)  # Adjust the width spacing
 
 save_fig(fig, fig_dir, "Figure 4 - Shares_graph_4x4")
 save_data(combine_dfs(model_dfs_S0), fig_dir, "Figure 4 - Shares_graph_4x4_Baseline")
