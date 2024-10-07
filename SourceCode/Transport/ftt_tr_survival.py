@@ -112,16 +112,6 @@ def survival_function(data, time_lag, histend, year, titles):
         # Vectorized condition for scrappage
         data['REVS'][..., 0] = np.where(scrappage > 0, scrappage, 0)
         
-        
-        # Warning if more cars survive than existed previous timestep:
-        for r in range(data['RLTA'].shape[0]):
-            for veh in range(data['RLTA'].shape[1]):
-                if not np.isclose(time_lag['TEWK'][r, veh, 0], survival[r, veh], atol=1e-6) and time_lag['TEWK'][r, veh, 0] < survival[r, veh]:
-                    msg = (f"Error! \n"
-                           f"Check year {year}, region - {titles['RTI'][r]}, vehicle - {titles['VTTI'][veh]}\n"
-                           "More cars survived than what was in the fleet before:\n"
-                           f"{time_lag['TEWK'][r, veh, 0]:.8f} versus {np.sum(data['RLTA'][r, veh, :]):.8f}")
-                    print(msg)
     
     data["RLTA"] = add_new_cars_age_matrix(
                 data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]

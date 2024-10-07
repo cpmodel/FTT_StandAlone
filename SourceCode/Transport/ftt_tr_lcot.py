@@ -116,7 +116,8 @@ def get_lcot(data, titles, year):
 
         # Fuel tax costs
         fft = np.ones([len(titles['VTTI']), int(max_lt)])
-        fft = fft * data['RTFT'][r, :, 0, np.newaxis] * en / ns / ff \
+        # RTFT must be converted from $/litre to $/MJ (assuming 35 MJ/l)
+        fft = fft * (data['RTFT'][r, :, 0, np.newaxis] / 35) * en / ns / ff \
               * taxable_fuels[r, :]
         fft = np.where(mask, fft, 0)
         
@@ -142,7 +143,7 @@ def get_lcot(data, titles, year):
         
         # Fuel cost components for front end
         data["TWFC"][r, :, 0] = bttc[:,c3ti['3 fuel cost (USD/km)']] / ns[:,0] / ff[:,0] \
-                                + data['RTFT'][r, 0, 0] * en[:,0] / ns[:,0] / ff[:,0] \
+                                + (data['RTFT'][r, 0, 0] / 35) * en[:,0] / ns[:,0] / ff[:,0] \
                                 * taxable_fuels[r, :, 0]
         # Net present value calculations
         # Discount rate
