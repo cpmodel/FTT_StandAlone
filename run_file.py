@@ -23,7 +23,6 @@ Local library imports:
 
 # Local library imports
 from SourceCode.model_class import ModelRun
-from SourceCode.support.output_functions import save_all
 
 # Instantiate the run
 model = ModelRun()
@@ -50,4 +49,3 @@ model.run()
 output_all = model.output
 
 #
-save_all(output_all)

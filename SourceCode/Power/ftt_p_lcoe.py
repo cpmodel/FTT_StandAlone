@@ -24,6 +24,39 @@ import numpy as np
 # -----------------------------------------------------------------------------
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
+def set_carbon_tax(data, c2ti, year):
+    '''
+    Convert the carbon price in REPP from euro / tC to $2013 dollars. 
+    Apply the carbon price to power sector technologies based on their efficiencies
+
+    The function changes data.
+    
+    REX --> EU local currency per euros rate (33 is US$)
+    PRSC --> price index (local currency) consumer expenditure
+    EX --> EU local currency per euro, 2005 == 1
+    The 13 part of the variable mean denotes 2013. 
+    '''
+    
+    carbon_costs = (
+                    data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']]   # Emission per GWh
+                    * data["REPPX"][:, :, 0]                              # Carbon price in euro / tC
+                    * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
+                    / 1000 / 3.666                                        # Conversion from GWh to MWh and from C to CO2. 
+                    )
+    
+    
+    if np.isnan(carbon_costs).any():
+        print(f"Carbon price is nan in year {year}")
+        print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
+        print( ('Conversion factor:'
+              f'{data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )}') )
+        print(f"Emissions intensity {data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']]}")
+        
+        raise ValueError
+                       
+    return carbon_costs
+    
+
 def get_lcoe(data, titles):
     """
     Calculate levelized costs.
@@ -212,8 +245,7 @@ def get_lcoe(data, titles):
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
         lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
-        # TODO make gamma values relative!!!
-        lcoe_mu_gamma = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
+        lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
 
         # 4b levelised cost – average units 
         lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
