@@ -15,7 +15,7 @@ Ideally, FTT:Power is updated every one or two years. The last data update was d
 1. Update the costs of CAPEX, OPEX and the standard deviation of both using a the average of IRENA data, IEA Energy Prices data, BNEF data, GNESTE. Exeter has access to BNEF data and IEA database. [GNESTE data](https://github.com/iain-staffell/GNESTE) & [IRENA data](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2024/Sep/IRENA_Renewable_power_generation_costs_in_2023.pdf) are open-access. Do not add raw data from BNEF to the repository; it is not open access! 
     1. Ensure the sources use the same currency (note that $2020USD is different from $2023USD). IRENA data doesn't require this conversion as the currency is $2023.
     2. Fuel costs of coal and gas from IEA have been averaged over 2019-2023 with appropriate conversion of units if necessary.
-    3. Assume standard deviation is 30% for CAPEX and OPEX, and verify this assumption using BNEF data, which has a range per country. If the range is smaller or larger, adjust this update manual.
+    3. Assume standard deviation is 40% for CAPEX and OPEX, and verify this assumption using BNEF data, which has a range per country. If the range is smaller or larger, adjust this update manual.
     4. Updated costs and cost update scripts are added to the [FTT_Standalone-support repository](https://github.com/cpmodel/FTT_Standalone-support/tree/main/FTT-Power%20updates/Cost%20update%202024) that generates updated BCET Masterfile.
 2. Update the fuel costs
     1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
