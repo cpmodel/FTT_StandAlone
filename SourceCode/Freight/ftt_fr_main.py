@@ -88,7 +88,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Creating variables
 
     zjet = copy.deepcopy(data['ZJET'][0, :, :])
-    emis_corr = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
+    emis_corr = np.ones([len(titles['RTI']), len(titles['FTTI'])])
 
     if year <= histend["RVKZ"]:
 
@@ -207,8 +207,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                         S_k = data_dt['ZEWS'][r, b2, 0]
 
-                        Aik = data['ZEWA'][0, b1, b2]/data['ZCET'][r, b1, c6ti['16 Turnover rate']]
-                        Aki = data['ZEWA'][0, b2, b1]/data['ZCET'][r, b1, c6ti['16 Turnover rate']]
+                        Aik = data['ZEWA'][0, b1, b2] * data['ZCET'][r, b1, c6ti['16 Turnover rate']]
+                        Aki = data['ZEWA'][0, b2, b1] * data['ZCET'][r, b2, c6ti['16 Turnover rate']]
 
                         # Propagating width of variations in perceived costs
                         dFik = sqrt(2) * sqrt((data_dt['ZTDD'][r, b1, 0]*data_dt['ZTDD'][r, b1, 0] + data_dt['ZTDD'][r, b2, 0]*data_dt['ZTDD'][r, b2, 0]))
@@ -296,13 +296,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
                 if ~np.isclose(np.sum(data['ZEWS'][r, :, 0]), 1.0, atol = 1e-5):
-                    msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
-                    Sum of market shares do not add to 1.0 (instead: {np.sum(data['ZEWS'][r, :, 0])})"""
+                    msg = (f"Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}"
+                    "Sum of market shares do not add to 1.0 (instead: {np.sum(data['ZEWS'][r, :, 0])})")
                     warnings.warn(msg)
 
                 if np.any(data['ZEWS'][r, :, 0] < 0.0):
-                    msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
-                    Negative market shares detected! Critical error!"""
+                    msg = (f"Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}"
+                    "Negative market shares detected! Critical error!")
                     warnings.warn(msg)
                     
                 # Copy over costs that don't change

@@ -94,6 +94,7 @@ def get_lcof(data, titles):
         # Standard deviation of costs of trucks
         dIt = np.ones([len(titles['FTTI']), int(max_LF)])
         dIt = dIt * zcet[:, c6ti['2 Std of price  (USD/vehicle)'], np.newaxis]
+        dIt = dIt / zcet[:, c6ti['18 Average Mileage'], np.newaxis]
         dIt[:,1:] = 0
 
         # Reg tax based on carbon price, RTCOt = ($/tCO2/km)/(tCO2/km)
@@ -104,7 +105,7 @@ def get_lcof(data, titles):
 
         # Registration Taxes, ZTVT is vehicle tax
         ItVT = np.ones([len(titles['FTTI']), int(max_LF)])
-        ItVT = ItVT * (zcet[:, c6ti['14 CO2Emissions (gCO2/km)'], np.newaxis] + data['ZTVT'][r,:,0, np.newaxis])
+        ItVT = ItVT * data['ZTVT'][r,:,0, np.newaxis]
         ItVT = ItVT / zcet[:, c6ti['18 Average Mileage'], np.newaxis]
         ItVT[:,1:] = 0
 
@@ -149,7 +150,7 @@ def get_lcof(data, titles):
 
         # Gamma values
         Gam = np.ones([len(titles['FTTI']), int(max_LF)])
-        Gam = Gam * zcet[:, c6ti['13 Gam (USD/pkm)'], np.newaxis]
+        Gam = Gam * zcet[:, c6ti['13 Gam (USD/t-km)'], np.newaxis]
         
         # Calculate LCOF without policy, and find standard deviation
         npv_expenses1 = (It+FT+OMt)/Lfactor
