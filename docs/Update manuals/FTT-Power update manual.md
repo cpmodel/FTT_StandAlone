@@ -16,7 +16,7 @@ Ideally, FTT:Power is updated every one or two years. The last data update was d
     1. Ensure the sources use the same currency (note that $2020USD is different from $2023USD). IRENA data doesn't require this conversion as the currency is $2023.
     2. Fuel costs of coal and gas from IEA have been averaged over 2019-2023 with appropriate conversion of units if necessary.
     3. Assume standard deviation is 30% for CAPEX and OPEX, and verify this assumption using BNEF data, which has a range per country. If the range is smaller or larger, adjust this update manual.
-    4. No script is yet available for the update. If you write a Python script, please add it to the [support repo](https://github.com/cpmodel/FTT_Standalone-support)
+    4. Updated costs and cost update scripts are added to the FTT_Standalone-support repository (https://github.com/cpmodel/FTT_Standalone-support/FTT-Power updates/Cost update 2024) that generates updated BCET Masterfile.
 2. Update the fuel costs
     1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
     2.  Higher-quality update: The [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) is down at the moment, but Exeter has access until May 2025, so ask Ian. The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh. 
