@@ -34,6 +34,7 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
+import SourceCode.Fertiliser.cleafs_main as cleafs_fert
 
 
 # Support modules
@@ -140,10 +141,10 @@ class ModelRun:
 
         # Load variable dimensions
         self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
-        
+
         # Set up csv files if they do not exist yet
         initialise_csv_files(self.ftt_modules, self.scenarios)
-        
+
         # Retrieve inputs
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
@@ -215,7 +216,7 @@ class ModelRun:
 
         # define modules list in for possible setting.ini selection
         modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
-                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
+                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS", "CLEAFS"]
         # Iteration loop here
         for itereration in range(max_iter):
 
@@ -241,27 +242,32 @@ class ModelRun:
                 variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-FBT" in self.ftt_modules:
                 variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-MTM" in self.ftt_modules:
                 variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-NMM" in self.ftt_modules:
                 variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-OIS2" in self.ftt_modules:
                 variables = ftt_indhe_ois2.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
+            if "CLEAFS" in self.ftt_modules:
+                variables = cleafs_fert.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
 
