@@ -97,7 +97,7 @@ def get_lcoih(data, titles, year):
 
 
 
-        # Capacity factor used in decisions (constant), not actual capacity factor #TODO ask about this
+        # Capacity factor used in decisions (constant)
         cf = data['BIC2'][r,:, ctti['13 Capacity factor mean'], np.newaxis]
 
         #conversion efficiency
@@ -107,11 +107,10 @@ def get_lcoih(data, titles, year):
         cf[cf<0.000001] = 0.000001
 
         # Factor to transfer cost components in terms of capacity to generation
-#        ones = np.ones([len(titles['ITTI']), 1])
         conv = 1/(cf)/8766 #number of hours in a year
 
         # Discount rate
-        # dr = data['BIC2'][r,6]
+
         dr = data['BIC2'][r,:, ctti['8 Discount rate'], np.newaxis]
 
         # Initialse the levelised cost components
@@ -191,7 +190,7 @@ def get_lcoih(data, titles, year):
         # Standard deviation of LCOT
         dlcoe = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
-        # LCOE augmented with gamma values
+        # LCOIH augmented with gamma values
         tlcoeg = tlcoe+data['IAM2'][r, :, 0]
 
         if np.any(tlcoeg < 0.0):
@@ -201,8 +200,7 @@ def get_lcoih(data, titles, year):
                     warnings.warn(msg)
 
         # Pass to variables that are stored outside.
-        data['ILC2'][r, :, 0] = lcoe            # The real bare LC without taxes (euros/mwh)
-        #data['IHLT'][r, :, 0] = tlcoe           # The real bare LC with taxes
+        data['ILC2'][r, :, 0] = lcoe            # The real bare LC without taxes (meuros/mwh)
         data['ILG2'][r, :, 0] = tlcoeg         # As seen by consumer (generalised cost)
         data['ILD2'][r, :, 0] = dlcoe          # Variation on the LC distribution
 
@@ -210,7 +208,6 @@ def get_lcoih(data, titles, year):
 
     return data
 
-#Final energy demand has to match IEA
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -324,9 +321,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                              data_dt['ILD2'][r, b1, 0] != 0.0):
                         continue
 
-                    #TODO: create market share constraints
+                    
                     Gijmax[b1] = 0.5 + 0.5*np.tanh(1.25*(data_dt['ISC2'][r, b1, 0] - data_dt['IWS2'][r, b1, 0])/0.1)
-                    #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
+                    
 
 
 

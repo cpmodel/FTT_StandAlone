@@ -96,7 +96,7 @@ def get_lcoih(data, titles, year):
         lt_mat = np.where(mask, lt_mat, 0)
 
 
-        # Capacity factor used in decisions (constant), not actual capacity factor #TODO ask about this
+        # Capacity factor used in decisions (constant)
         cf = data['BIC5'][r,:, ctti['13 Capacity factor mean'], np.newaxis]
 
         #conversion efficiency
@@ -109,7 +109,6 @@ def get_lcoih(data, titles, year):
         conv = 1/(cf)/8766 #number of hours in a year
 
         # Discount rate
-        # dr = data['BIC5'][r,6]
         dr = data['BIC5'][r,:, ctti['8 Discount rate'], np.newaxis]
 
         # Initialse the levelised cost components
@@ -200,8 +199,7 @@ def get_lcoih(data, titles, year):
                     warnings.warn(msg)
 
         # Pass to variables that are stored outside.
-        data['ILC5'][r, :, 0] = lcoe            # The real bare LC without taxes (euros/mwh)
-        #data['IHLT'][r, :, 0] = tlcoe           # The real bare LC with taxes
+        data['ILC5'][r, :, 0] = lcoe            # The real bare LC without taxes (meuros/mwh)
         data['ILG5'][r, :, 0] = tlcoeg         # As seen by consumer (generalised cost)
         data['ILD5'][r, :, 0] = dlcoe          # Variation on the LC distribution
 
@@ -276,11 +274,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
 
 
         # Factor used to create quarterly data from annual figures
-        no_it = 4
-        dt = 1 / no_it
+        no_it = int(data['noit'][0,0,0])
+        dt = 1 / float(no_it)
         kappa = 10 #tech substitution constant
 
-        ############## Computing total useful energy demand ##################
+        ############## Computing new shares ##################
 
         IUD5tot = data['IUD5'][:, :, 0].sum(axis=1)
 
@@ -325,9 +323,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
                              data_dt['ILD5'][r, b1, 0] != 0.0):
                         continue
 
-                    #TODO: create market share constraints
+                    
                     Gijmax[b1] = 0.5 + 0.5*np.tanh(1.25*(data_dt['ISC5'][r, b1, 0] - data_dt['IWS5'][r, b1, 0])/0.1)
-                    #Gijmin[b1] = np.tanh(1.25*(-mes2_dt[r, b1, 0] + mews_dt[r, b1, 0])/0.1)
+                    
 
 
 
