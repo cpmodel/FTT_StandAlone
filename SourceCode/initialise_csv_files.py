@@ -2,17 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 This script makes preperation to extract data from FTT masterfiles in the
-"/In/FTTAssumptions/[model]" folders and save them in separate csv files.
+"/Inputs/_MasterFiles/[model]" folders and save them in separate csv files.
 
 @author: Femke
 """
-
-
+    
 
 from pathlib import Path
 import os
-
-
 
 # Local library imports
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
@@ -32,11 +29,16 @@ def initialise_csv_files(ftt_modules, scenarios):
     None
     """
     # Get the masterfiles
-    ftt_modules = ftt_modules.split(', ')
-    scenarios = scenarios.split(', ')
-
+    ftt_modules = [item.strip() for item in ftt_modules.split(',')]
+    scenarios = [item.strip() for item in scenarios.split(',')]
+    
     model_list = generate_model_list(ftt_modules, scenarios)
-
+    
+    # Return if there are no corresponding masterfiles
+    if not model_list:
+        print("No corresponding Excel files, so relying on csvs only")
+        return
+    
     # Convert masterfiles to csv
     convert_masterfiles_to_csv(model_list)
 
@@ -99,12 +101,16 @@ def generate_model_list(ftt_modules, scenarios):
         file_root = None
         for scenario in scenarios:
             matching_file, current_file_root = get_masterfile(module, scenario)
+            # If there is a matching file name
             if matching_file:
                 # TODO: rewrite this and other code to allow for other types of scenario names
                 module_scenarios.append(int(scenario[1:]))
-            if current_file_root:  # Only change file_root if there is a masterfile related to the scenario
+            # Only change file_root if there is a masterfile related to the scenario
+            if current_file_root:  
                 file_root = current_file_root 
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
+       
+    
     return models
 
