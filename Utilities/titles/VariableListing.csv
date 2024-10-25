@@ -385,3 +385,8 @@ AQR,Agriculture output projection,million EUR2010,RTI,NA,NA,TIME,CLEAFS,2010,205
 BFTC,CLEAFS matrix of technology costs,-,RTI,TFTI,CFTI,NA,CLEAFS,-,-,2001,-,,Y
 PFRF,Price of urea,dollars/t,NA,NA,NA,TIME,CLEAFS,2015,2023,2015,Statista,,Y
 MFERTD,CLEAFS Maximum potential fertiliser demand (tN/year),Nt/year,RTI,TFTI,NA,TIME,CLEAFS,1961,2021,2001,based on FAO,,Y
+BCHY,FTT:Hydrogen matrix of technology costs,-,RTI,HYTI,C7TI,NA,FTT-H2,-,-,2001,Dummy data,,Y
+HYG1,FTT:Hydrogen total hydrogen supply by technology (kt H2),kt H2,RTI,HYTI,NA,TIME,FTT-H2,2011,2022,2011,IEA,Y,Y
+HYD1,FTT:Hydrogen total hydrogen supply (kt H2),kt H2,RTI,NA,NA,TIME,FTT-H2,2011,2022,2011,IEA,Y,Y
+HYJT,FTT:Hydrogen technology to fuel matrix,-,NA,HYTI,JTI,NA,FTT-H2,-,-,2001,-,,Y
+HYWW,FTT:Hydrogen global cumulative capacity (kt H2),kt H2,NA,HYTI,NA,TIME,FTT-H2,2022,2022,2022,IEA,,Y

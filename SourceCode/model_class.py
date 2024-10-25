@@ -35,7 +35,7 @@ import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
 import SourceCode.Fertiliser.cleafs_main as cleafs_fert
-
+import SourceCode.Hydrogen.ftt_h2_main as ftt_h2
 
 # Support modules
 import SourceCode.support.input_functions as in_f
@@ -133,8 +133,8 @@ class ModelRun:
         self.current = self.model_start
         self.years = np.arange(self.model_start, self.model_end+1)
         self.timeline = np.arange(self.simulation_start, self.simulation_end+1)
-        self.ftt_modules = config.get('settings', 'enable_modules')
-        self.scenarios = config.get('settings', 'scenarios')
+        self.ftt_modules = [x.strip() for x in config.get('settings', 'enable_modules').split(',')]
+        self.scenarios = [x.strip() for x in config.get('settings', 'scenarios').split(',')]
 
         # Load classification titles
         self.titles = titles_f.load_titles()
@@ -216,7 +216,7 @@ class ModelRun:
 
         # define modules list in for possible setting.ini selection
         modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
-                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS", "CLEAFS"]
+                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS", "FTT-H2", "CLEAFS"]
         # Iteration loop here
         for itereration in range(max_iter):
 
@@ -260,6 +260,11 @@ class ModelRun:
 
             if "FTT-IH-OIS2" in self.ftt_modules:
                 variables = ftt_indhe_ois2.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            if "FTT-H2" in self.ftt_modules:
+                variables = ftt_h2.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 

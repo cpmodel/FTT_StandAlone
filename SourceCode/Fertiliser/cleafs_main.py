@@ -6,41 +6,14 @@ cleafs_main.py
 Fertiliser CLEAFS module.
 ############################
 
-This is the main file for the power module, FTT: Power. The power
-module models technological replacement of electricity generation technologies due
-to simulated investor decision making. Investors compare the **levelised cost of
-electricity**, which leads to changes in the market shares of different technologies.
-
-After market shares are determined, the rldc function is called, which calculates
-**residual load duration curves**. This function estimates how much power needs to be
-supplied by flexible or baseload technologies to meet electricity demand at all times.
-This function also returns load band heights, curtailment, and storage information,
-including storage costs and marginal costs for wind and solar.
-
-FTT: Power also includes **dispatchers decisions**; dispatchers decide when different technologies
-supply the power grid. Investor decisions and dispatcher decisions are matched up, which is an
-example of a stable marraige problem.
-
-Costs in the model change due to endogenous learning curves, costs for electricity
-storage, as well as increasing marginal costs of resources calculated using cost-supply
-curves. **Cost-supply curves** are recalculated at the end of the routine.
+This is the main file for the fertiliser module, CLEAFS.
 
 Local library imports:
 
-    FTT: Power functions:
+    CLEAFS functions:
 
-    - `rldc <ftt_p_rldc.html>`__
-        Residual load duration curves
-    - `dspch <ftt_p_dspch.html>`__
-        Dispatch of capcity
-    - `get_lcoe <ftt_p_lcoe.html>`__
-        Levelised cost calculation
-    - `survival_function <ftt_p_surv.html>`__
-        Calculation of scrappage, sales, tracking of age, and average efficiency.
-    - `shares <ftt_p_shares.html>`__
-        Market shares simulation (core of the model)
-    - `cost_curves <ftt_p_costc.html>`__
-        Calculates increasing marginal costs of resources
+    - `bass_model <bass_model.html>`__
+        Bass diffusion model
 
     Support functions:
 

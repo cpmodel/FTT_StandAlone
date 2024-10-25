@@ -32,9 +32,6 @@ def initialise_csv_files(ftt_modules, scenarios):
     None
     """
     # Get the masterfiles
-    ftt_modules = ftt_modules.split(', ')
-    scenarios = scenarios.split(', ')
-
     model_list = generate_model_list(ftt_modules, scenarios)
 
     # Convert masterfiles to csv
@@ -48,7 +45,7 @@ def get_masterfile(ftt_module, scenario):
     The filename that matches
     The middle bit of the file names for input to convert_masterfiles_to_cvs
     """
-    
+
     # The * denotes the regionxtechnologies and last year updated part of the string
     file_pattern = f"{ftt_module}*_{scenario}.xlsx"
     matching_file = list(
@@ -62,7 +59,7 @@ def get_masterfile(ftt_module, scenario):
         matching_file = None
         file_root = None
         return matching_file, file_root
-    
+
     # Printing warnings 2: in case multiple files are found
     elif len(matching_file) > 1:
         print(f"Warning: Multiple files matched the pattern for module {ftt_module} and scenario {scenario}.")
@@ -103,7 +100,7 @@ def generate_model_list(ftt_modules, scenarios):
                 # TODO: rewrite this and other code to allow for other types of scenario names
                 module_scenarios.append(int(scenario[1:]))
             if current_file_root:  # Only change file_root if there is a masterfile related to the scenario
-                file_root = current_file_root 
+                file_root = current_file_root
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
     return models

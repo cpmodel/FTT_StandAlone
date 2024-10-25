@@ -53,10 +53,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     dims = dimensions
 
     # Declare list of scenarios
-    scenario_list = [x.strip() for x in scenarios.split(',')]
-    scenario_list = ["S0"] + [x for x in scenario_list if x != "S0"]
+    scenario_list = ["S0"] + [x for x in scenarios if x != "S0"]
 
-    modules_enabled = [x.strip() for x in ftt_modules.split(',')]
+    modules_enabled = ftt_modules
     modules_enabled += ['General']
 
     # Create container with the correct dimensions
@@ -98,11 +97,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                 if var not in valid_vars:
                     warnings.warn(f'Variable {var} is present in the folder as a csv but is not included \
                                 in VariableListing, so it will be ignored')
-            
+
             # Filter the list to include only the files that correspond to variables in data[scen].keys()
             csv_files = [f for f in csv_files if f[:-4].split('_')[0] in valid_vars]
-            
-            
+
+
             # Loop through all the files in the directory
             for file in csv_files:
 
@@ -120,11 +119,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                     key = None
                 else:
                     key = file_split[1]
-                
+
                 # The length of the dimensions
                 dims_length = [len(titles[dims[var][x]]) for x in range(4)]
 
-                
+
                 # If the fourth dimension is time
                 if dims[var][3] == 'TIME':
                     try:
@@ -167,7 +166,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read, reg_index = reg_index)
                                 raise(e)
-                            
+
 
                 # If the file does not have a region key like _BE
                 else:
@@ -182,15 +181,15 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)
-      
+
                         # If there is a second dimension # TODO: check if this is correct
                         if dims_length[1] > 1:
-                            try: 
+                            try:
                                 data[scen][var][:, :, 0, 0] = read
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read, reg_index = reg_index)
                                 raise(e)
-                        
+
                         # If there is a third dimension only
                         elif dims_length[2] > 1:
                         #elif len(titles[dims[var][2]]) > 1:
@@ -199,8 +198,8 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 data[scen][var][:, 0, :, 0] = read
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read)
-                                raise(e)    
-                        
+                                raise(e)
+
                         # If there is a fourth dimension only (time)
                         elif dims_length[3] > 1:
                             try:
@@ -213,7 +212,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                     else:
                         # If there is only one number
                         if all(dim_length == 1 for dim_length in dims_length):
-                            try: 
+                            try:
                                 data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read)
