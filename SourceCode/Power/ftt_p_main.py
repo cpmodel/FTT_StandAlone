@@ -483,11 +483,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # We assume that the values do not change throughout simulation.
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
             data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
-            print("")
-            print(f"In year {year}, MERC onshore is {data['MERC'][0, 9, 0]:5f}")
-            print(f"In year {year}, MCTN onshore is {data['MCTN'][0, 16, 0]:5f}")
-            print(f"In year {year}, MEWL onshore is {data['MEWL'][0, 16, 0]:5f}")
-            print(f"In year {year}, MEWW onshore is {data['MEWW'][0, 16, 0]:5f}")
+            
 
 # %% Simulation of stock and energy specs
     
@@ -675,9 +671,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:, :, 0],
                                                                data['MCGA'][:, :, 0])
             
-            if year == 2050 and t == no_it:
-                print(f"Total solar MEWL in 2050 is: {np.sum(data['MEWL'][:70, 18, 0]):.4f}")
-
             
             # Total additional electricity that needs to be generated
             data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]

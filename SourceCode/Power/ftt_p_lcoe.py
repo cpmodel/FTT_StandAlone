@@ -234,7 +234,6 @@ def get_lcoe(data, titles):
         
         # 2 – Utility
         npv_utility = energy_prod / denominator
-        npv_utility[npv_utility==1] = 0 # Remove 1s for tech with smaller lifetime than max
         utility_tot = np.sum(npv_utility, axis=1) 
         
         # 3 – Standard deviation (propagation of error)
@@ -277,5 +276,10 @@ def get_lcoe(data, titles):
         data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1] * bcet[:, 1] +
                                         bcet[:, 5] * bcet[:, 5] +
                                         bcet[:, 7] * bcet[:, 7])
+        
+        # Check if METC is nan
+        if np.isnan(data['METC']).any():
+            nan_indices_metc = np.where(np.isnan(data['METC']))
+            raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
 
     return data

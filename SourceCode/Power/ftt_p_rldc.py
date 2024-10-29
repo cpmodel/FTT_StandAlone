@@ -368,12 +368,17 @@ def rldc(data, time_lag, data_dt, year, titles):
         data['MLB1'][r,4,0] = max(max(data['MLB0'][r,4,0], 0.0) - max(data['MLB0'][r,3,0], 0.0), 0.02)
         # Normalise MKLB[r, :5] by using non-VRE MEWS (they have to sum to the same amount)
         # Given that MEWS adds to 1, so should MKLB do now 
-        data['MKLB'][r, :5, 0] = data['MLB1'][r,:5,0] / data['MLB1'][r,:5,0].sum()
+        data['MKLB'][r, :5, 0] = data['MLB1'][r,:5,0] / data['MLB1'][r, :5, 0].sum()
         data['MKLB'][r, :5, 0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
         data['MKLB'][r, 5, 0] = np.sum(Svar * data['MEWS'][r,:,0])
         
         if not np.isclose(data['MKLB'][r, :, 0].sum(), 1.0, atol=10e-6):  # MKLB should sum to ~1
             print(f"Warning: Sum of MKLB for region {r} is not approximately 1. Current sum: {data['MKLB'][r, :, 0].sum()}")
+            if np.isnan(data['MKLB'][r, :, 0].sum()):
+                nan_indices = np.where(np.isnan(data['MKLB'][r, :, 0]))[0]
+                raise ValueError(
+                    f"NaN values detected in rldc in data['MKLB'] "
+                    f"for region {r} at indices: {nan_indices}.")
         
         # Generation shares
         # Multiply load-bands by their respective LFs
