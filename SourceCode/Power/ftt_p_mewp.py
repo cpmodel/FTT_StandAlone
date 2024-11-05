@@ -7,6 +7,51 @@ Created on Mon Nov  6 10:41:13 2023
 import numpy as np
 from SourceCode.support.divide import divide
 
+def get_gen_share(data, r):
+    "Compute share of solar PV and share of onshore + offshore wind"
+    
+    solar_share =  data["MEWG"][r, 18] / np.sum(data["MEWG"][r])
+    wind_share = wind_share = np.sum(data["MEWG"][r, 16:18]) / np.sum(data["MEWG"][r])
+    
+    return solar_share, wind_share
+
+def add_balancing_costs(solar_share, wind_share, r):
+    
+    """Add balancing costs. These go from 2 to 4 EUR/MWh (2013 values). 
+    https://www.sciencedirect.com/science/article/pii/S0360544213009390
+    After 30% of generation, it is set at the maximum."""
+    
+    min_costs = 2 * 1.36
+    max_costs = 4 * 1.36 # Conversion 2013EUR to 2023dolalr
+    
+    solar_share_scaled = np.clip((solar_share - .05) / (.3 - .05), 0, 1)
+    wind_share_scaled = np.clip((wind_share - .05) / (.3 - .05), 0, 1)
+    
+    balancing_costs_solar = min_costs + (max_costs - min_costs) * solar_share_scaled
+    balancing_costs_wind = min_costs + (max_costs - min_costs) * wind_share_scaled
+
+    balancing_costs = balancing_costs_solar * solar_share + balancing_costs_wind * wind_share
+    
+    return balancing_costs
+
+def add_grid_integration_costs(solar_share, wind_share, r):
+    """Add grid integration costs. These go linearly to 7.5 EUR/MWh (2013 values).
+    https://www.sciencedirect.com/science/article/pii/S0360544213009390
+    After 40% of generation, it is set at the maximum."""
+    
+    solar_share_scaled = np.clip((solar_share) / 0.4, 0, 1)
+    wind_share_scaled = np.clip((wind_share) / 0.4, 0, 1)
+    
+    max_costs = 7.5 * 1.36
+    
+    grid_costs_solar = max_costs * solar_share_scaled
+    grid_costs_wind = max_costs * wind_share_scaled
+    
+    grid_integration_costs = grid_costs_solar * solar_share + grid_costs_wind * wind_share
+    
+    return grid_integration_costs
+    
+    
 def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
     """Compute marginal fuel prices MEWP based on development within
     ftt:power"""
@@ -33,7 +78,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
 
     # For each region r
     for r in range(len(titles['RTI'])):
-        
+                
         
         # If MPRI == 1 --> use the weighted average LCOE
         if data["MPRI"][r] == 1:
@@ -64,6 +109,12 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                         np.sum(shares_old * data["MEWL"][r, :, 0]) )
 
             data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
+            
+            # Finally, add grid and balancing costs to MEWP
+            solar_share, wind_share = get_gen_share(data, r)
+            data["MEWP"][r, 7, 0] += add_balancing_costs(solar_share, wind_share, r)
+            data["MEWP"][r, 7, 0] += add_grid_integration_costs(solar_share, wind_share, r)
+            
 
         # If MPRI == 2 --> estimate a costs based on a merit order
         elif data["MPRI"][r] == 2:
