@@ -235,6 +235,8 @@ emissions_from_2025_combined_policies = [emissions_from_2025[model]["sxp - All p
 emissions_cum_2050_S0 = np.sum(emissions_from_2025_S0)  # Sum over sectors
 emissions_2050_S0 = [emissions_2050[model]["Baseline"] for model in models]
 emissions_tot_2050_S0 = np.sum(emissions_2050_S0)
+emissions_2050_combined_policies = [emissions_2050[model]["sxp - All policies"] for model in models]
+
 
 print(f"Total cumulative emissions S0 2025-2050 is {emissions_cum_2050_S0/1000:.1f} GtCO₂")
 print(f"Total emissions 2050 S0 is {emissions_tot_2050_S0/1000:.1f} GtCO₂")
@@ -366,39 +368,45 @@ save_data(df, fig_dir, "Figure 6 - Donut_chart_emissions")
 # =============================================================================
 
 df_cumulative = pd.DataFrame({
-        "Baseline": emissions_from_2025_S0,
+        "Combined policies": emissions_from_2025_combined_policies,
          "One sector at a time": np.array(emissions_from_2025_S0) - np.array(sectoral_saved_emissions),
-         "Combined policies": emissions_from_2025_combined_policies
+         "Baseline": emissions_from_2025_S0
          }).transpose()
 
-df_cumulative.columns = model_names
+df_2050 = pd.DataFrame({
+        "Combined policies": emissions_2050_combined_policies,
+         "One sector at a time": np.array(emissions_2050_S0) - np.array(sectoral_saved_emissions_2050),
+         "Baseline": emissions_2050_S0
+         }).transpose()
 
+
+# Create subplots (2 rows, 1 column)
+fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(7.2, 4))  # Adjust figsize to fit both plots
 
 colors = ['#f47e7a', '#b71f5c', '#621237', '#dbbaa7']
-ax = df_cumulative.iloc[:, 0:4].plot.barh(align='center', stacked=True, figsize=(7.2, 2.5), color=colors)
-plt.tight_layout()
 
-# Create a title
-title = plt.title('Cumulative 2025-2050 emissions', pad=20)
-title.set_position([.5, 10])
+def plot_stacked_bar_chart(data, axis):
+    
+    data.columns = model_names
 
-# Adjust the subplot so that the title would fit
-plt.subplots_adjust(top=0.8, left=0.26)
-
-legend = plt.legend(loc='center',
-       frameon=False,
-       bbox_to_anchor=(0., 1.02, 1., .102), 
-       mode='expand', 
-       ncol=4, 
-       borderaxespad=-.46)
-
-
-results_2050 = {
-    '2050 emissions baseline': emissions_2050_S0,
-    '2050 emissions sector policies': emissions_2050_S0,
-    '2050 emissions all policies': emissions_2050_S0
-}
+    ax = data.iloc[:, 0:4].plot.barh(align='center', stacked=True, ax=axis,
+                                              color=colors, width=0.75)
+    plt.tight_layout()
+    
+    # Create a title
+    title = plt.title('Cumulative 2025-2050 emissions', pad=20)
+    title.set_position([.5, 10])
+    
+    # Adjust the subplot so that the title would fit
+    plt.subplots_adjust(top=0.8, left=0.26)
+    
+    legend = plt.legend(loc='center',
+           frameon=False,
+           bbox_to_anchor=(0., 1.02, 1., .102), 
+           ncol=4, 
+           borderaxespad=-.46)
 
 
+plot_stacked_bar_chart(df_cumulative, axes[0])
+plot_stacked_bar_chart(df_2050, axes[1])
 
-plt.show()
