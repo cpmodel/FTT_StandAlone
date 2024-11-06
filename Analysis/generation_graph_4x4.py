@@ -65,6 +65,7 @@ green_all = {"FTT:P": green_power, "FTT:H": green_heat, "FTT:Tr": green_transpor
 
 
 
+
 colours_power = {
     "Nuclear": "lightcoral",  # Light coral to indicate its clean but debated nature
     "Coal and oil": "black",  # Black for traditional, high carbon emission sources
@@ -121,6 +122,9 @@ ylabels = {"FTT:P": "Generation (PWh)", "FTT:H": "Useful demand (PWh)",
 legend_titles = {"FTT:P": "Power technology", "FTT:H": "Heating technology", 
               "FTT:Tr": "Transport technology", "FTT:Fr": "Freight technology"}
 
+# Define the text to be added to the left of the y-labels
+left_labels = ["Power generation", "Residential heating", "Personal transport", "Road freight"]
+
 # First define the globally summed generation, or number of vehicles:
 def sum_vehicles_or_gen(output):
     total_shares_all = {}           # The share of each technology (or total capacity, not yet decided)
@@ -170,7 +174,7 @@ model_dfs_man = create_dataframes(total_shares_man)
 
 
 #%% Plot the figure
-fig, axs = plt.subplots(4, 4, figsize=(13, 12), sharey='row')
+fig, axs = plt.subplots(4, 4, figsize=(7.2, 6.8), sharey='row')
 axs = axs.flatten()
 
 left_most_indices = [0, 4, 8, 12]  # For a 4x4 grid
@@ -198,6 +202,7 @@ def plot_column(model_dfs, col, col_title):
         model_df_T.plot(kind="area", ax=ax, color = colours[model], linewidth=0)
         
         ax.set_ylabel(ylabels[model])
+        ax.get_yaxis().set_label_coords(-0.2, 0.5)
         
         # Set data and demand labels and ticks
         if idx == 3:
@@ -221,6 +226,11 @@ def plot_column(model_dfs, col, col_title):
         # Compute difference from baseline
         green_growth_out = green_growth(model_df, model)
         
+        
+        if col == 0:
+            ax.text(-0.32, 0.5, left_labels[idx], transform=ax.transAxes,
+                    ha='right', va='center', rotation=90, fontweight='bold')
+        
         if col != 0:
             ax.text(x=29.5, y=text_y_values[model], s=f'+{green_growth_out:.0f}%', 
                     horizontalalignment='right', fontweight='bold')
@@ -230,23 +240,24 @@ def plot_column(model_dfs, col, col_title):
             handles, labels = ax.get_legend_handles_labels()
             legend = ax.legend(handles, labels, title=legend_titles[model],
                       labelspacing=0.1, frameon=False,
-                      bbox_to_anchor=(1.05, 1.1), loc='upper left')
+                      bbox_to_anchor=(1.0, 1.0), loc='upper left')
             
-           # Manually set the alignment of each text object in the legend
-            for text in legend.get_texts():
-                text.set_horizontalalignment('left')
+           # # Manually set the alignment of each text object in the legend
+           #  for text in legend.get_texts():
+           #      text.set_horizontalalignment('left')
         
         
-            # Access the legend's title and increase the pad manually
+            # Access the legend's title and increase vertical padding
             legend.get_title().set_position((0, 5))  # The numbers are x, y offsets
             
         else:
             # Explicitly do not create a legend for the first column
             ax.legend([], [], frameon=False)
             
-        
+        # For the top row
         if idx == 0:
-            ax.set_title(col_title)
+            ax.set_title(col_title, fontweight='bold')
+            
 
 plot_column(model_dfs_S0, 0, "A. Current trajectory")
 plot_column(model_dfs_ct, 1, "B. Carbon tax")

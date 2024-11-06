@@ -10,10 +10,16 @@ import matplotlib.pyplot as plt
 
 # Set global font size
 plt.rcParams.update(
-    {'font.size': 14,
-     'legend.fontsize': 14,
-     'xtick.labelsize': 14,
-     'ytick.labelsize': 14,
+    {'font.size': 7,
+     'figure.titlesize': 7, 
+     'axes.titlesize': 7,
+     'font.family': 'sans-serif',
+     'font.sans-serif': ['Helvetica', 'Arial'],  # Tries Helvetica first, then Arial
+     'legend.fontsize': 7,
+     'xtick.labelsize': 7,
+     'ytick.labelsize': 7,
+     'axes.labelsize': 7,
+     'legend.title_fontsize': 7,  # Legend title font size to match
      'figure.dpi': 300})
 
 
@@ -40,3 +46,8 @@ REPL_DICT = {"FTT:P": "Power",
              "FTT:H": "Heat",
              "FTT:Tr": "Cars",
              "FTT:Fr": "Trucks"}
+
+REPL_DICT2 = {"FTT:P": "Power: \n new clean tech vs existing fossil tech",
+             "FTT:H": "Heat",
+             "FTT:Tr": "Cars",
+             "FTT:Fr": "Large trucks"}

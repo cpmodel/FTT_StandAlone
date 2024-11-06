@@ -30,7 +30,7 @@ dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
 price_names = config.PRICE_NAMES
-repl_dict = config.REPL_DICT
+repl_dict = config.REPL_DICT2
 shares_vars = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
 # TODO: should carbon tax be part of this? Probably not, right?
@@ -246,7 +246,7 @@ def compute_percentage_difference(model, years):
     return percentage_difference
 
 
-fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(7.2, 7.2), sharey=True)
 axs = axs.flatten()
 rows = []
 for mi, model in enumerate(models):
