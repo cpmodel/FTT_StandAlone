@@ -4,7 +4,7 @@ Created on Mon Jul 22 10:35:01 2024
 
 @author: Femke Nijsse
 """
-
+#%%
 # Import the results pickle file
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +18,6 @@ import config
 
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
-#models = ["FTT:H", "FTT:Tr", "FTT:Fr", "FTT:P"]
 models = ["FTT:P", "FTT:H", "FTT:Tr", "FTT:Fr"]
 repl_dict = config.REPL_DICT
 model_names = [repl_dict[model] for model in models]
@@ -381,32 +380,62 @@ df_2050 = pd.DataFrame({
 
 
 # Create subplots (2 rows, 1 column)
-fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(7.2, 4))  # Adjust figsize to fit both plots
+fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(7.2, 2.6), dpi=300)  # Adjust figsize to fit both plots
 
 colors = ['#f47e7a', '#b71f5c', '#621237', '#dbbaa7']
 
 def plot_stacked_bar_chart(data, axis):
     
     data.columns = model_names
-
-    ax = data.iloc[:, 0:4].plot.barh(align='center', stacked=True, ax=axis,
+    data = data/1000  # Convert to GtCO2
+    data.iloc[:, 0:4].plot.barh(align='center', stacked=True, ax=axis,
                                               color=colors, width=0.75)
     plt.tight_layout()
     
-    # Create a title
-    title = plt.title('Cumulative 2025-2050 emissions', pad=20)
-    title.set_position([.5, 10])
+    # Create a bolded title for each subplot (axes[0] --> 'Cumulative 2025–2050 emissions', axes[1] --> 'Emissions 2050')
+    if axis == axes[0]:
+        axis.set_title(r"Cumulative 2025–2050 emissions (GtCO$_{\mathbf{2}}$)", fontweight='bold', pad=-20, loc='right')
+    else:
+        axis.set_title(r"Emissions 2050 (GtCO$_{\mathbf{2}}$)", fontweight='bold', pad=-20, loc='right')
     
-    # Adjust the subplot so that the title would fit
-    plt.subplots_adjust(top=0.8, left=0.26)
+    # Adjust the subplot so that the title fits
+    plt.subplots_adjust(top=1.05, left=0.26)
     
-    legend = plt.legend(loc='center',
-           frameon=False,
-           bbox_to_anchor=(0., 1.02, 1., .102), 
-           ncol=4, 
-           borderaxespad=-.46)
+    # Remove the legend
+    if axis == axes[0]:
+        axis.legend().remove()
+    
+    # Remove the top and right spine
+    axis.spines['top'].set_visible(False)
+    axis.spines['right'].set_visible(False)
+    
+   
+    
+    # Calculate the x-coordinates for the end of the middle and bottom bars
+    mid_bar_x = data.iloc[1, :].sum()  # Middle of the second bar
+    bottom_bar_x = data.iloc[0, :].sum()  # Middle of the bottom bar
+    print(bottom_bar_x)
+    
+    # Add annotation with a 90-degree turn arrow
+    axis.annotate(
+        "",
+        xy=(bottom_bar_x, 0),              # Start at the middle of the second bar
+        xytext=(mid_bar_x, 1),    # End at the middle of the lowest bar with vertical offset
+        ha="left", va="center",
+        arrowprops=dict(
+            arrowstyle="-|>",
+            connectionstyle="angle,angleA=90,angleB=0,rad=0",  # 90-degree turn
+            color="black",
+            lw=1.5,
+            shrinkA=0,shrinkB=0
+        ))
+
+    # Position the text label slightly to the right of the arrow
+    axis.text(mid_bar_x *1.03, 0.5, "Coordination gain", ha="left", va="center")
 
 
 plot_stacked_bar_chart(df_cumulative, axes[0])
 plot_stacked_bar_chart(df_2050, axes[1])
 
+
+# %%

@@ -10,8 +10,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.ticker as ticker
+
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
+
 import config
 
 
@@ -84,7 +87,7 @@ if plot_dot_graph:
     
     # Cost declines 2035/2050 -- plotting
     
-    fig, axs = plt.subplots(2, 2, figsize=(7, 10), sharey=True)
+    fig, axs = plt.subplots(2, 2, figsize=(3.5, 5), sharey=True)
     axs = axs.flatten()
     palette = sns.color_palette("Blues_r", 3)
     
@@ -133,8 +136,8 @@ if plot_dot_graph:
 
 clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [13]}
 fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [5]} # Note 4 for transport gives an error
-graph_label = {"FTT:P": "New solar + battery vs existing coal", "FTT:H": "Water-air HP vs gas boiler",
-               "FTT:Tr": "EVs vs petrol cars", "FTT:Fr": "EV trucks vs diesel"}
+graph_label = {"FTT:P": "New solar + battery \n vs existing coal", "FTT:H": "Water-air HP \n vs gas boiler",
+               "FTT:Tr": "EVs \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel"}
 
 
 # Define the percentage difference function
@@ -186,18 +189,24 @@ for model in models:
 
 
 #%% Global cost difference -- plotting
-fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(3.5, 3.5), sharey=True)
 axs = axs.flatten()
 
 # Get 4 colours from the "rocket" palette
 colours = sns.color_palette()
+
+def custom_xaxis_formatter(x, pos):
+    if x in [2030, 2040]:
+        return f'{int(x)}'
+    else:
+        return ''
 
 for mi, model in enumerate(models):
     ax = axs[mi]
 
     ax.axhline(y=0, color="grey", linewidth=2)    
     for si, (scen, colour) in enumerate(zip(scenarios.keys(), colours)):
-        ax.plot(range(2023, 2051), timeseries_dict[model][si], label=scen, color=colour, linewidth=2.5)
+        ax.plot(range(2023, 2051), timeseries_dict[model][si], label=scen, color=colour, linewidth=1)
     
     
     # Remove frame
@@ -209,20 +218,30 @@ for mi, model in enumerate(models):
     ax.xaxis.set_ticks_position('none') 
     ax.yaxis.set_ticks_position('none') 
     
-    
-    ax.set_xlim(2024, 2034)
+    if mi in [0, 2, 3]:
+        ax.set_xlim(2024, 2030)
+        ax.grid(True, which='major', linewidth=0.7)
+    else:
+        ax.set_xlim(2024, 2040)
+        ax.grid(True, linewidth=0.7)
     ax.set_ylim(-5.4, 25.6)
+    # Set the x-axis major ticks to be at intervals of 2 years
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+    if mi == 1:
+        # Apply the custom formatter to the x-axis
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(custom_xaxis_formatter))
     
-    ax.grid(True, which='major', linewidth=0.7)
     ax.grid(True, axis='y', linewidth=0.7)
     
-    if mi == 0:
+    if mi == 3:
         ax.legend(loc='best')
     
     if mi in [0, 2]:
         ax.set_ylabel("Levelised cost difference (%)")
     
-    ax.text(2033, 26, graph_label[model], ha="right")
+    #ax.text(2033, 26, graph_label[model], ha="right")
+    ax.set_title(graph_label[model], pad=-10, ha="left", fontweight='bold')
+
     
 
 # Initialize an empty DataFrame to collect the results
