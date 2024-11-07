@@ -17,7 +17,7 @@ from preprocessing import get_output, get_metadata, save_fig, save_data
 
 import config
 
-
+#%%
 output_file = "Results_sxp.pickle"
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
@@ -137,7 +137,7 @@ if plot_dot_graph:
 clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [13]}
 fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [5]} # Note 4 for transport gives an error
 graph_label = {"FTT:P": "New solar + battery \n vs existing coal", "FTT:H": "Water-air HP \n vs gas boiler",
-               "FTT:Tr": "EVs \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel"}
+               "FTT:Tr": "Electric vehicles \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel"}
 
 
 # Define the percentage difference function
@@ -221,26 +221,34 @@ for mi, model in enumerate(models):
     if mi in [0, 2, 3]:
         ax.set_xlim(2024, 2030)
         ax.grid(True, which='major', linewidth=0.7)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
     else:
         ax.set_xlim(2024, 2040)
-        ax.grid(True, linewidth=0.7)
-    ax.set_ylim(-5.4, 25.6)
+        ax.grid(True, which='major', linewidth=0.7)
+        ax.grid(True, which='minor', linewidth=0.2)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))
+
+    ax.set_ylim(-5.4, 28)
     # Set the x-axis major ticks to be at intervals of 2 years
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+       
+    
     if mi == 1:
         # Apply the custom formatter to the x-axis
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(custom_xaxis_formatter))
     
-    ax.grid(True, axis='y', linewidth=0.7)
+    ax.grid(True, axis='y', linewidth=0.5)
     
     if mi == 3:
-        ax.legend(loc='best')
+        ax.legend(loc='right')
     
     if mi in [0, 2]:
         ax.set_ylabel("Levelised cost difference (%)")
     
     #ax.text(2033, 26, graph_label[model], ha="right")
-    ax.set_title(graph_label[model], pad=-10, ha="left", fontweight='bold')
+    ax.set_title(graph_label[model], pad=-15, ha="left", fontweight='bold')
+    title = ax.title
+    title.set_position((0.1, title.get_position()[1]))
 
     
 

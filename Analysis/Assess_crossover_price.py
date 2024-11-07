@@ -222,7 +222,7 @@ df_cy = pd.DataFrame(rows, columns=["Region", "Sector",
 
 
 # Define the years of interest
-years = [2025, 2035, 2050]
+years = [2025, 2030, 2035, 2040, 2045, 2050]
 
 # Define the percentage difference function
 def get_percentage_difference(clean_price, dirty_price):
@@ -254,12 +254,12 @@ for mi, model in enumerate(models):
     ax = axs[mi]  
     
     for ri, r in enumerate(regions):
-        ax.plot(years, percentage_difference[ri], label=r, marker='o', markersize=8)
+        ax.plot(years, percentage_difference[ri], label=r, marker='o', markersize=3)
         row = {"Region": r, "Model": model, "2025 %diff": percentage_difference[ri][0],
                "2035 %diff": percentage_difference[ri][1], "2050 %diff": percentage_difference[ri][2]}
         rows.append(row)
     
-    ax.axhline(0, color='grey', linestyle='--', linewidth=2)  # Adding horizontal line at y=0
+    ax.axhline(0, color='grey', linestyle='--', linewidth=1)  # Adding horizontal line at y=0
     ax.set_title(f"{repl_dict[model]}")
     
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
@@ -268,7 +268,9 @@ for mi, model in enumerate(models):
     # Remove the top and right frame
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    
+
+    # Set xlim between 2025 and 2050
+    ax.set_xlim(2025, 2050)    
             
 # Extract handles and labels from the first subplot
 handles, labels = axs[0].get_legend_handles_labels()

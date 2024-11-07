@@ -36,18 +36,40 @@ def get_metadata():
     """Get the classification by variable, the directory to print figures and the 
     names of the technology classification in each sector"""
     
+    # Print the current working directory for debugging
+    print("Current working directory:", os.getcwd())
     
-    # Attempt to import again
+    # Attempt to import
     try:
         from SourceCode.support.titles_functions import load_titles
         print("Import successful")
     except ModuleNotFoundError as e:
-        print(f"Import failed: {e}")
-        # Troubleshooting step 4: Use an absolute path for verification
-        sys.path.append(r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone_laptop_repos\FTT_StandAlone\SourceCode")
-        sys.path.append(r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\FTT_StandAlone\SourceCode")
-        from support.titles_functions import load_titles
-    # Local library imports
+        # Troubleshooting: Use an absolute path
+        additional_paths = [
+            r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\FTT_StandAlone\SourceCode",
+            r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone_laptop_repos\FTT_StandAlone\SourceCode",
+            r"C:\Users\Work profile\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\SourceCode"
+        ]
+        for path in additional_paths:
+            if path not in sys.path:
+                sys.path.insert(0, path)
+       
+        # Verify the existence of the file
+        for path in additional_paths:
+            full_path = os.path.join(path, 'support', 'titles_functions.py')
+            if os.path.exists(full_path):
+                print(f"File exists: {full_path}")
+            else:
+                print(f"File does not exist: {full_path}")
+        
+        try:
+            from support.titles_functions import load_titles
+        except ModuleNotFoundError as e:
+            print(f"Import failed again: {e}")
+            #raise e
+            
+    
+    
     
     # Import classification titles from utilities
     titles = load_titles()
