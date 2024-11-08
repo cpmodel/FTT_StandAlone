@@ -288,7 +288,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles, year)
         # Call RLDC function for capacity and load factor by LB, and storage costs
-        if year >= 2013:
+        
+        if year >= 2013: # Still in historical period
 
             # 1 and 2 -- Estimate RLDC and storage parameters
             data = rldc(data, time_lag, iter_lag, year, titles)
@@ -644,8 +645,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Dispatch routine
             # =================================================================
-            # Call DSPCH function to dispatch flexible capacity based on MC
-
+            # Call DSPCH function to dispatch flexible capacity based on marginal costs (MC)
+            
+            test = 1
             mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                            data['MEWL'], data_dt['MWMC'], data_dt['MMCD'],
                                            len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))

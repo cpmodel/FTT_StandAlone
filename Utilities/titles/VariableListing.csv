@@ -82,7 +82,7 @@ MEWKX,Exogenous MEWK (from E3ME run),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3M
 MEWK,FTT-P Capacity by technology (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 MEWI,FTT-P Installed capacity additions (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWGX,Exogenous MEWG (from E3ME run),GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MEWG,FTT-P Generation by technology (GWh),GWh,RTI,T2TI,NA,TIME,FTT-P,-,2021,2001,-,Y,Y
+MEWG,FTT-P Generation by technology (GWh),GWh,RTI,T2TI,NA,TIME,FTT-P,-,2022,2001,-,Y,Y
 MEWE,FTT:Power CO2 emissions,MtCO2/y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWDX,Exogenous demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-,,Y
@@ -379,7 +379,7 @@ EXX,Exchange rate (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From 
 EX13,Exchange rate in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 REXX,EU local currency per euro rates from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 REX13,EU local currency per euro rates,index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
-BCET,FTT:Power matrix of technology costs,various,RTI,T2TI,C2TI,NA,FTT-P,-,2020,2001,-,Y,Y
+BCET,FTT:Power matrix of technology costs,various,RTI,T2TI,C2TI,NA,FTT-P,-,2023,2001,-,Y,Y
 IFT1,FTT-IH-CHI Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-CHI,-,-,2000,-,Y,Y
 IFT2,FTT-IH-FBT Fuel tax (2010 Euros/MWh),2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-FBT,-,-,2000,-,Y,Y
 IFT3,FTT-IH-MTM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,-,Y,Y
