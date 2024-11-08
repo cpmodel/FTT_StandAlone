@@ -165,10 +165,7 @@ def get_lcoe(data, titles, year):
         dft = dft * bcet[:, c2ti['6 std ($/MWh)'], np.newaxis]
         dft = np.where(lt_mask, dft, 0)
 
-        # fuel tax/subsidies
-        fft = np.ones([len(titles['T2TI']), int(max_lt)])
-        fft = fft * data['MTFT'][r, :, 0, np.newaxis]
-        fft = np.where(lt_mask, fft, 0)
+        
 
         # Average operation & maintenance cost
         omt = np.ones([len(titles['T2TI']), int(max_lt)])
@@ -234,18 +231,18 @@ def get_lcoe(data, titles, year):
         # 1a – Expenses – marginal units
         npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost) / denominator 
         npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
-        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st + marg_stor_cost) / denominator 
+        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + st + marg_stor_cost) / denominator 
         npv_expenses_mu_no_policy_battery_only = (it_mu + ft + omt + battery_cost) / denominator 
         
         # 1b – Expenses – average LCOEs
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost) / denominator  
-        npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
-        npv_expenses_all              = npv_expenses_no_policy + (fft + st + ct) / denominator
+        npv_expenses_all_but_co2      = npv_expenses_no_policy + (st) / denominator
+        npv_expenses_all              = npv_expenses_no_policy + (st + ct) / denominator
         npv_expenses_only_co2         = npv_expenses_no_policy + ct / denominator
 
         
         # 1c - Operation costs
-        npv_operation                 = (ft + omt + stor_cost + marg_stor_cost + fft) / denominator
+        npv_operation                 = (ft + omt + stor_cost + marg_stor_cost) / denominator
         
         # 2 – Utility
         npv_utility = energy_prod / denominator
@@ -304,5 +301,10 @@ def get_lcoe(data, titles, year):
         data['MMCD'][r, :, 0] = np.sqrt(bcet[:, 1] * bcet[:, 1] +
                                         bcet[:, 5] * bcet[:, 5] +
                                         bcet[:, 7] * bcet[:, 7])
+        
+        # Check if METC is nan
+        if np.isnan(data['METC']).any():
+            nan_indices_metc = np.where(np.isnan(data['METC']))
+            raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
 
     return data

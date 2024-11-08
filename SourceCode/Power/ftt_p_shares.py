@@ -19,10 +19,28 @@ from numba import njit
 
 # %% JIT-compiled shares equation
 # -----------------------------------------------------------------------------
-#@njit(fastmath=True)
+
 def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
            mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
            mewl_dt, mews_lag, mwlo, rti, t2ti, no_it, year):
+    '''Calculate the shares with compiled function, then check if values are real'''
+    
+    # First calculate the shares using njit
+    mews, mewl, mewg, mewk = shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
+               mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
+               mewl_dt, mews_lag, mwlo, rti, t2ti, no_it)
+    
+    # Then check the results
+    check_shares_output(mews, mewl, mewg, mewk)
+    
+    return  mews, mewl, mewg, mewk 
+
+
+
+@njit(fastmath=True)
+def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
+           mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
+           mewl_dt, mews_lag, mwlo, rti, t2ti, no_it):
 
     """
     Function to calculate market share dynamics.
@@ -233,6 +251,14 @@ def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
         mewg[r, :, 0] = mews[r, :, 0] * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(mews[r, :, 0] * mewl[r, :, 0])
         mewk[r, :, 0] = mewg[r, :, 0] / mewl[r, :, 0] / 8766
         
-     
 
     return mews, mewl, mewg, mewk
+
+def check_shares_output(mews, mewl, mewg, mewk):
+    
+    # Check for NaN values in 'mewk'
+    if np.isnan(mewk).any():
+        nan_indices_mewk = np.where(np.isnan(mewk))
+        raise ValueError(f"NaN values detected in 'mewk' at indices: "
+                         f"country: {nan_indices_mewk[0]}, technology: {nan_indices_mewk[1]}. Please check shares.")
+    

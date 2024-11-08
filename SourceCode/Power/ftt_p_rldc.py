@@ -366,6 +366,11 @@ def rldc(data, time_lag, data_dt, year, titles):
         
         if not np.isclose(data['MKLB'][r, :, 0].sum(), 1.0, atol=10e-6):  # MKLB should sum to ~1
             print(f"Warning: Sum of MKLB for region {r} is not approximately 1. Current sum: {data['MKLB'][r, :, 0].sum()}")
+            if np.isnan(data['MKLB'][r, :, 0].sum()):
+                nan_indices = np.where(np.isnan(data['MKLB'][r, :, 0]))[0]
+                raise ValueError(
+                    f"NaN values detected in rldc in data['MKLB'] "
+                    f"for region {r} at indices: {nan_indices}.")
         
         # Generation shares
         # Multiply load-bands by their respective LFs
