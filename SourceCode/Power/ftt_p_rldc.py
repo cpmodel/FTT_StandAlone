@@ -469,8 +469,8 @@ def rldc(data, time_lag, data_dt, year, titles):
                                    feqs((feqs(data['MLSC'][r,0,0])-feqs(mlsc_split_wind))) 
                                    )    
         
-            LSw = (Sw[r] + Ss[r])/ (Sw[r] + Ss[r]/ratio_ls[r])
-            LSs = (Sw[r] + Ss[r])/ (Sw[r]*ratio_ls[r] + Ss[r])            
+            LSw = (Sw[r] + Ss[r])/ feqs( (Sw[r] + Ss[r]/ratio_ls[r]) )
+            LSs = (Sw[r] + Ss[r])/ feqs( (Sw[r]*ratio_ls[r] + Ss[r]) )         
         
             # Split the average costs over technologies
             data['MLSP'][r, :, 0] = 0.0
@@ -538,8 +538,8 @@ def rldc(data, time_lag, data_dt, year, titles):
                                    feqs(feqs(rldc_prod[1]) - feqs(rldc_prod_split_wind[1])))
             
             # Apply ratios to split the storage costs
-            SSw = (Sw[r] + Ss[r]) / (Sw[r] + Ss[r]/ratio_ss[r])
-            SSs = (Sw[r] + Ss[r]) / (Sw[r]*ratio_ss[r] + Ss[r])
+            SSw = (Sw[r] + Ss[r]) / feqs( (Sw[r] + Ss[r]/ratio_ss[r]) )
+            SSs = (Sw[r] + Ss[r]) / feqs( (Sw[r]*ratio_ss[r] + Ss[r]) )
             
             # Assign price values
             data['MSSP'][r, :,0] = 0.0
