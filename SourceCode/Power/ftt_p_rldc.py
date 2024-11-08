@@ -298,7 +298,7 @@ def rldc(data, time_lag, data_dt, year, titles):
     for r in range(len(titles['RTI'])):
         if Sw[r] + Ss[r] == 0:
             print(f"No wind or solar in region {r}")
-            continue
+            
 
         # SHORT-TERM STORAGE
         # Multidimensional polynomial from Ueckerdt et al. (2017)
@@ -320,8 +320,8 @@ def rldc(data, time_lag, data_dt, year, titles):
        
         # Estimate general curtailment rate and the splits for wind and solar
         data['MCRT'][r, 0, 0] = rldc_prod[0]
-        curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r] + Ss[r]/ratio[r])
-        curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r]*ratio[r] + Ss[r])
+        curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r] + Ss[r]/ratio[r])
+        curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r]*ratio[r] + Ss[r])
         
         # Upper limit of values
         if data['MCRT'][r, 0, 0] > 0.75: data['MCRT'][r, 0, 0] = 0.75
@@ -470,7 +470,7 @@ def rldc(data, time_lag, data_dt, year, titles):
                                    )    
         
             LSw = (Sw[r] + Ss[r])/ feqs( (Sw[r] + Ss[r]/ratio_ls[r]) )
-            LSs = (Sw[r] + Ss[r])/ feqs( (Sw[r]*ratio_ls[r] + Ss[r]) )         
+            LSs = (Sw[r] + Ss[r])/ feqs( (Sw[r]*ratio_ls[r] + Ss[r]) )           
         
             # Split the average costs over technologies
             data['MLSP'][r, :, 0] = 0.0
