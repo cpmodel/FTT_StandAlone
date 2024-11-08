@@ -672,9 +672,9 @@ plt.title("How much is cost-parity brought forward?", fontweight='bold')
 #             Figure 3: Same as table above, but now in box plot. 
 # ===============================================================================
 
-fig, axs = plt.subplots(2, 2, figsize=(10, 10), sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(7.2, 4.5), sharey=True)
 axs = axs.flatten()
-seaborn.set(style = 'whitegrid') 
+#seaborn.set(style = 'whitegrid') 
 
 # Expand the dataframe to make it suitable for the boxplot
 # Initialize an empty DataFrame to collect the results
@@ -722,22 +722,25 @@ for mi, model in enumerate(models):
     filtered_df_model = df_model.groupby("Region").filter(all_finite)  
     df_difference = subtract_baseline(filtered_df_model)
     
-    seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
+    seaborn.boxplot(y ='Policy', x ='Crossover year difference', data = df_difference, ax=ax)
     
     ax.set_title(repl_dict[model])
-    ax.set_ylim(-2, 12)   
-    ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
+    ax.set_xlim(-2, 12)   
+    #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     
-    # Adjust label alignment to be parallel
-    for label in ax.get_xticklabels():
-        label.set_ha('right')
+    # Remove the top and right frame
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    # Set vertical grid lines
+    ax.xaxis.grid(True)
     
     save_data(df_difference, fig_dir, f"Figure 5 - Boxplot crossover years {repl_dict[model]}")
 
     
 # Adjust spacing between subplots
-plt.subplots_adjust(hspace=0.7, wspace=0.2)    
+plt.subplots_adjust(hspace=0.4, wspace=0.2)    
 save_fig(fig, fig_dir, "Figure 5 - Boxplot crossover years")
 
 #%% =========================================================================

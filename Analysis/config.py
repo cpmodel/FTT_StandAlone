@@ -47,7 +47,7 @@ REPL_DICT = {"FTT:P": "Power",
              "FTT:Tr": "Cars",
              "FTT:Fr": "Trucks"}
 
-REPL_DICT2 = {"FTT:P": "Power: \n new clean tech vs existing fossil tech",
+REPL_DICT2 = {"FTT:P": "Power",
              "FTT:H": "Heat",
              "FTT:Tr": "Cars",
              "FTT:Fr": "Large trucks"}
