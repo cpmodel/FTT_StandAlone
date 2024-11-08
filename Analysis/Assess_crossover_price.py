@@ -22,6 +22,7 @@ titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
 
 # Define the regions and the region numbers of interest
 regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany": 2, "UK": 14}
+regions_all = {i: i - 1 for i in range(1, 72)}
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [13]}
@@ -45,6 +46,17 @@ def find_biggest_tech(output, tech_lists, year, model, regions):
     shares_var = shares_vars[model]
     tech_list = tech_lists[model]
     max_techs = {}
+    try:
+        for r, ri in regions.items():
+            max_share = 0
+            for tech in tech_list:
+                share = output[shares_var][ri, tech, 0, year - 2010 + 1] 
+                if share >= max_share:
+                    max_share = share
+                    max_techs[r] = tech
+    except AttributeError as e:
+        print(regions)
+        raise e
     for r, ri in regions.items():
         max_share = 0
         for tech in tech_list:
@@ -56,7 +68,7 @@ def find_biggest_tech(output, tech_lists, year, model, regions):
 
 
 # Find the biggest clean or fossil technology:
-def find_biggest_tech_fossil(output, dirty_techs, biggest_techs_clean, year, model):
+def find_biggest_tech_fossil(output, dirty_techs, biggest_techs_clean, year, model, regions):
     """Find the biggest technology in each region for a given model."""
     
     if model != "FTT:Tr":
@@ -151,7 +163,8 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
  
     return crossover_year
 
-def get_crossover_year(output, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions):
+def get_crossover_year(output, model, biggest_techs_clean, 
+                       biggest_techs_fossil, price_names, regions):
     """ Get the year when the clean technology becomes cheaper than the fossil technology."""
     crossover_years = {}
     for r, ri in regions.items():
@@ -178,7 +191,7 @@ for model in models:
     output_man = get_output(output_file, f"sxp - {model_abb} mand")
     
     biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, year, model, regions)
-    biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, year, model)
+    biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, year, model, regions)
     clean_tech_names = {reg: titles[tech_titles[model]][index] for reg, index in biggest_techs_clean.items()}
     fossil_tech_names = {reg: titles[tech_titles[model]][index] for reg, index in biggest_techs_fossil.items()}
     prices_clean = get_prices(output_S0, year, model, biggest_techs_clean, regions)
@@ -216,10 +229,9 @@ df_cy = pd.DataFrame(rows, columns=["Region", "Sector",
 
 
 #%%% Making a graph with four subplots for each sector.
-# Each graph shows the percentage difference between the clean and fossil technology in 2025, 2035 and 2050. 
+# Each graph shows the percentage difference between the clean and fossil technology every 5 years
 # The x-axis is the year and the y-axis the percentage difference.
 # The title is the sector name. Each region has its own line.
-
 
 # Define the years of interest
 years = [2025, 2030, 2035, 2040, 2045, 2050]
@@ -229,35 +241,65 @@ def get_percentage_difference(clean_price, dirty_price):
     return 100 * (clean_price - dirty_price) / dirty_price
 
 # Define the data for the plot
-def compute_percentage_difference(model, years):
+def get_price_differences_percentage(model, years, regions):
     """Compute percentage price difference per year per region in top techs."""
     
     biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, 2030, model, regions)
-    biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, 2030, model)
-    percentage_difference = np.zeros((len(regions), len(years)))
-    for ri, r in enumerate(regions):
+    biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, 
+                                                    2030, model, regions)
+    price_difference_percentage = np.zeros((len(regions), len(years)))
     
+    for ri, r in enumerate(regions):
         for yi, year in enumerate(years):
             clean_prices = get_prices(output_S0, year, model, biggest_techs_clean, regions)
             fossil_prices = get_prices(output_S0, year, model, biggest_techs_fossil, regions)
                
-            percentage_difference[ri, yi] = get_percentage_difference(clean_prices[r], fossil_prices[r])
+            price_difference_percentage[ri, yi] = get_percentage_difference(clean_prices[r], fossil_prices[r])
     
-    return percentage_difference
+    return price_difference_percentage
 
 
-fig, axs = plt.subplots(2, 2, figsize=(7.2, 7.2), sharey=True)
+import matplotlib.pyplot as plt
+import numpy as np
+
+def find_intersections(x, y):
+    """Find the x-values where the line crosses y=0."""
+    intersections = []
+    for i in range(1, len(y)):
+        if y[i-1] * y[i] < 0:  # Check for sign change
+            # Linear interpolation to find the exact crossing point
+            x_cross = x[i-1] - y[i-1] * (x[i] - x[i-1]) / (y[i] - y[i-1])
+            intersections.append(x_cross)
+    return intersections
+
+# Example setup for the plot
+fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.5), sharey=True)
 axs = axs.flatten()
 rows = []
+
 for mi, model in enumerate(models):
-    percentage_difference = compute_percentage_difference(model, years)      
+    percentage_difference = get_price_differences_percentage(model, years, regions)      
     ax = axs[mi]  
     
+    perc_difference_all = get_price_differences_percentage(model, years, regions_all) 
+    
     for ri, r in enumerate(regions):
-        ax.plot(years, percentage_difference[ri], label=r, marker='o', markersize=3)
-        row = {"Region": r, "Model": model, "2025 %diff": percentage_difference[ri][0],
-               "2035 %diff": percentage_difference[ri][1], "2050 %diff": percentage_difference[ri][2]}
+        y_values = percentage_difference[ri]
+        line, = ax.plot(years, y_values, label=r, markersize=3)
+        
+        # Find intersections with y=0
+        intersections = find_intersections(years, y_values)
+        
+        # Plot markers at intersections with the same color as the line
+        for x_cross in intersections:
+            ax.plot(x_cross, 0, 'o', color=line.get_color(), markersize=1)  # Use the line color for the markers
+        
+        row = {"Region": r, "Model": model, "2025 %diff": y_values[0],
+               "2035 %diff": y_values[1], "2050 %diff": y_values[2]}
         rows.append(row)
+    
+    for ri, r in enumerate(regions_all):
+        ax.plot(years, perc_difference_all[ri], color='grey', alpha=0.5, linewidth=0.5)
     
     ax.axhline(0, color='grey', linestyle='--', linewidth=1)  # Adding horizontal line at y=0
     ax.set_title(f"{repl_dict[model]}")
@@ -270,8 +312,30 @@ for mi, model in enumerate(models):
     ax.spines['right'].set_visible(False)
 
     # Set xlim between 2025 and 2050
-    ax.set_xlim(2025, 2050)    
-            
+    ax.set_xlim(2025, 2050)   
+    
+    # Get the current y-limits before shading
+    ymin, ymax = ax.get_ylim() 
+    
+    # Apply green shading from 0 to the negative y-limit
+    ax.fill_between(years, ymin, 0, where=(np.array(years) >= 2025), facecolor='lightgreen', alpha=0.35)
+    
+    # Apply grey shading from 0 to the positive y-limit
+    ax.fill_between(years, 0, ymax, where=(np.array(years) >= 2025), facecolor='lightgrey', alpha=0.35)
+    
+    # Reset the y-limits after shading
+    ax.set_ylim(ymin, ymax)
+    
+    # Add two-pointed arrow with labels on the right-most subplots
+    if mi % 2 == 1:  # Right-most subplots
+        arrowprops = dict(arrowstyle='<->', color='black')
+        ax.annotate('Less costly', xy=(1.12, 0.93), xycoords='axes fraction', 
+                    xytext=(1.12, 0.05), textcoords='axes fraction', 
+                    ha='center', va='center', arrowprops=arrowprops)
+        ax.annotate('More costly', xy=(1.12, 0.05), xycoords='axes fraction', 
+                    xytext=(1.12, 0.95), textcoords='axes fraction', 
+                    ha='center', va='center', arrowprops=dict(arrowstyle='<-', color='black', alpha=0))
+        
 # Extract handles and labels from the first subplot
 handles, labels = axs[0].get_legend_handles_labels()
 
@@ -279,7 +343,6 @@ handles, labels = axs[0].get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), ncol=3)
 
 plt.tight_layout()
-
 
 # Save the graph as an editable svg file
 save_fig(fig, fig_dir, "Figure 2 - Baseline_price_differences")
@@ -318,11 +381,9 @@ def convert_fractional_years_to_years_and_months(fractional_year):
 
     # If months is 12, increment the year and reset months
     if months == -12:
-        print("Is this ignored?")
         year -= 1
         months = 0
-    
-    
+       
     return -year, -months
 
 
@@ -417,10 +478,10 @@ if average_prices_first == False:
         clean_tech_dict = {i: clean_tech_variable[model] for i in range(1, 72)}
         fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
         
-        regions = {i: i - 1 for i in range(1, 72)}
         
         for policy, output in zip(policy_names, output_files):    
-            crossover_years = get_crossover_year(output, model, clean_tech_dict, fossil_tech_dict, price_names, regions)
+            crossover_years = get_crossover_year(output, model,
+                                    clean_tech_dict, fossil_tech_dict, price_names, regions_all)
             weights = get_weights(output, model, cap_vars)
             row = {
                 "Model": model,
@@ -491,7 +552,7 @@ table = ax.table(cellText=table.values, rowLabels=table.index,
                  cellLoc='center', loc='center')
 
 table.auto_set_font_size(False)
-table.set_fontsize(10)
+#table.set_fontsize(10)
 table.scale(1.2, 1.2)
 
 header_color = '#40466e'
@@ -509,7 +570,7 @@ for (i, j), cell in table.get_celld().items():
 
 
 plt.subplots_adjust(top=1, bottom=0)  # Adjust whitespace
-plt.title("How much is cost-parity brought forward?", fontsize=14, fontweight='bold')
+plt.title("How much is cost-parity brought forward?", fontweight='bold')
 
 
 #%% ==============================================================================
@@ -568,7 +629,7 @@ for mi, model in enumerate(models):
     
     seaborn.boxplot(x ='Policy', y ='Crossover year difference', data = df_difference, ax=ax)
     
-    ax.set_title(repl_dict[model], fontsize=14)
+    ax.set_title(repl_dict[model])
     ax.set_ylim(-2, 12)   
     ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
@@ -704,7 +765,7 @@ for mi, model in enumerate(models):
         yticks.append(y_position)
         yticklabels.append(row['Region'])
     
-    ax.text(2046, max(yticks)+0.5, model_names_r[3-mi], fontsize=13, weight='bold')
+    ax.text(2046, max(yticks)+0.5, model_names_r[3-mi], weight='bold')
     
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
