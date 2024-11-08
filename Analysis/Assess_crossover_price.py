@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn 
+from matplotlib.lines import Line2D
+
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
@@ -228,13 +230,77 @@ df_cy = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Cross-over subsidies", "Cross-over mandates"])
 
 
+def comparison_str(clean_tech, fossil_tech):
+    if clean_tech == "19 Solar PV" and fossil_tech == "3 Coal":
+        output_str = "New solar vs existing coal"
+    elif clean_tech == "19 Solar PV" and fossil_tech == "7 CCGT":
+        output_str = "New solar vs existing gas"
+    
+    elif clean_tech == "12 Heatpump AirAir" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
+        output_str = "Air-air HP vs gas"
+    elif clean_tech == "11 Heatpump AirWater" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
+        output_str = "Water-air HP vs gas"
+        
+    # elif clean_tech == "20 Electric Mid" and fossil_tech == "8 Diesel Mid":
+    #     output_str = "Mid-sized EV vs diesel"
+    # elif clean_tech == "21 Electric Lux" and fossil_tech == "9 Diesel Lux":
+    #     output_str = "Mid-sized EV vs petrol"
+    # elif clean_tech == "20 Electric Mid" and fossil_tech == "2 Petrol Mid":
+    #     output_str = "Large EV vs diesel"
+    # elif clean_tech == "21 Electric Lux" and fossil_tech == "3 Petrol Lux":
+    #      output_str =  "Large EV vs petrol"
+    
+    elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["2 Petrol Mid", "3 Petrol Lux"]:
+        output_str = "Electric car vs diesel"
+    elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["8 Diesel Mid", "9 Diesel Lux"]:
+        output_str = "Electric car vs petrol"
+        
+    elif clean_tech == "Electricity Small" and fossil_tech == "Diesel Small":
+        output_str = "EV truck vs diesel"
+    elif clean_tech == "Electricity Small" and fossil_tech == "Petrol Small":
+        output_str = "EV truck vs diesel"
+    elif clean_tech == "Electricity Large" and fossil_tech == "Diesel Large":
+        output_str = "EV truck vs diesel"
+    elif clean_tech == "Electricity Large" and fossil_tech == "Petrol Large":
+        output_str = "EV truck vs diesel"
+        
+    else:
+        output_str = "TBD"
+        print(clean_tech, fossil_tech)
+        
+    return output_str
+
+# Define the mapping of comparison types to linestyles
+linestyle_mapping = {
+    'New solar vs existing coal': '-',
+    'New solar vs existing gas': '--',
+    'New wind vs existing coal': '-.',
+    'New wind vs existing gas': ':',
+    
+    'Air-air HP vs gas': '-',
+    'Water-air HP vs gas': '--',
+
+    'Electric car vs diesel': '-',
+    'Electric car vs petrol': '--',
+    
+    'EV truck vs diesel': '-',
+    'EV truck vs petrol': '--',
+}
+
+# Create custom legend handles and labels for the linestyles
+custom_lines = [Line2D([0], [0], color='black', linestyle=linestyle_mapping[key]) for key in linestyle_mapping]
+custom_labels = list(linestyle_mapping.keys())
+
 #%%% Making a graph with four subplots for each sector.
 # Each graph shows the percentage difference between the clean and fossil technology every 5 years
 # The x-axis is the year and the y-axis the percentage difference.
 # The title is the sector name. Each region has its own line.
 
 # Define the years of interest
-years = [2025, 2030, 2035, 2040, 2045, 2050]
+years = np.arange(2025, 2051)
+
+# Create a dictionary to store the colors used for each region
+region_colors = {}
 
 # Define the percentage difference function
 def get_percentage_difference(clean_price, dirty_price):
@@ -273,7 +339,7 @@ def find_intersections(x, y):
     return intersections
 
 # Example setup for the plot
-fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.5), sharey=True)
+fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.2), sharey=True)
 axs = axs.flatten()
 rows = []
 
@@ -283,23 +349,41 @@ for mi, model in enumerate(models):
     
     perc_difference_all = get_price_differences_percentage(model, years, regions_all) 
     
+    # Track the linestyles used in this subplot
+    used_linestyles = {}
+    
     for ri, r in enumerate(regions):
         y_values = percentage_difference[ri]
-        line, = ax.plot(years, y_values, label=r, markersize=3)
+        
+        # Generate the output_str for the current comparison
+        clean_tech = df_cy.loc[df_cy['Region'] == r, 'Clean tech name'].values[mi]
+        fossil_tech = df_cy.loc[df_cy['Region'] == r, 'Fossil tech name'].values[mi]
+        clean_vs_fossil_str = comparison_str(clean_tech, fossil_tech)
+        
+        # Get the linestyle for the current comparison
+        linestyle = linestyle_mapping.get(clean_vs_fossil_str, '-')
+        
+        line, = ax.plot(years, y_values, label=r, linestyle=linestyle)
+        
+        # Track the linestyle (tech) and color (region) used
+        used_linestyles[clean_vs_fossil_str] = linestyle
+        
+        region_colors[r] = line.get_color()
         
         # Find intersections with y=0
         intersections = find_intersections(years, y_values)
         
+        
         # Plot markers at intersections with the same color as the line
         for x_cross in intersections:
-            ax.plot(x_cross, 0, 'o', color=line.get_color(), markersize=1)  # Use the line color for the markers
+            ax.plot(x_cross, 0, 'o', color=line.get_color(), markersize=4)  # Use the line color for the markers
         
         row = {"Region": r, "Model": model, "2025 %diff": y_values[0],
                "2035 %diff": y_values[1], "2050 %diff": y_values[2]}
         rows.append(row)
     
-    for ri, r in enumerate(regions_all):
-        ax.plot(years, perc_difference_all[ri], color='grey', alpha=0.5, linewidth=0.5)
+    # for ri, r in enumerate(regions_all):
+    #     ax.plot(years, perc_difference_all[ri], color='grey', alpha=0.5, linewidth=0.5)
     
     ax.axhline(0, color='grey', linestyle='--', linewidth=1)  # Adding horizontal line at y=0
     ax.set_title(f"{repl_dict[model]}")
@@ -313,6 +397,7 @@ for mi, model in enumerate(models):
 
     # Set xlim between 2025 and 2050
     ax.set_xlim(2025, 2050)   
+    ax.set_ylim(-100, 100)
     
     # Get the current y-limits before shading
     ymin, ymax = ax.get_ylim() 
@@ -335,12 +420,22 @@ for mi, model in enumerate(models):
         ax.annotate('More costly', xy=(1.12, 0.05), xycoords='axes fraction', 
                     xytext=(1.12, 0.95), textcoords='axes fraction', 
                     ha='center', va='center', arrowprops=dict(arrowstyle='<-', color='black', alpha=0))
-        
+    
+    # Create custom legend handles and labels for the linestyles used in this subplot
+    custom_lines = [Line2D([0], [0], color='black', linestyle=used_linestyles[key]) for key in used_linestyles]
+    custom_labels = list(used_linestyles.keys())
+    
+    # Add the custom legend to the subplot
+    ax.legend(custom_lines, custom_labels, loc='upper right')
 # Extract handles and labels from the first subplot
 handles, labels = axs[0].get_legend_handles_labels()
 
-# Add a single legend for the entire figure, positioned beneath the graph
-fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.08), ncol=3)
+# Create custom legend handles and labels for the colors with continuous line style
+color_lines = [Line2D([0], [0], color=region_colors[r], linestyle='-') for r in region_colors]
+color_labels = list(region_colors.keys())
+
+# Add the color legend to the figure
+fig.legend(color_lines, color_labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=6)
 
 plt.tight_layout()
 
@@ -690,40 +785,7 @@ timeline_end = 2050
 fig, axs = plt.subplots(nrows=len(models), figsize=(8, 8), sharex=True)
 axs = axs.flatten()
 
-def comparison_str(clean_tech, fossil_tech):
-    if clean_tech == "19 Solar PV" and fossil_tech == "3 Coal":
-        output_str = "New solar vs existing coal"
-    elif clean_tech == "19 Solar PV" and fossil_tech == "7 CCGT":
-        output_str = "New solar vs existing gas"
-    
-    elif clean_tech == "12 Heatpump AirAir" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
-        output_str = "Air-air HP vs gas"
-    elif clean_tech == "11 Heatpump AirWater" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
-        output_str = "Water-air HP vs gas"
-        
-    elif clean_tech == "20 Electric Mid" and fossil_tech == "8 Diesel Mid":
-        output_str = "Mid-sized EV vs diesel"
-    elif clean_tech == "21 Electric Lux" and fossil_tech == "9 Diesel Lux":
-        output_str = "Mid-sized EV vs petrol"
-    elif clean_tech == "20 Electric Mid" and fossil_tech == "2 Petrol Mid":
-        output_str = "Large EV vs diesel"
-    elif clean_tech == "21 Electric Lux" and fossil_tech == "3 Petrol Lux":
-         output_str =  "Large EV vs petrol"
-        
-    elif clean_tech == "Electricity Small" and fossil_tech == "Diesel Small":
-        output_str = "EV truck vs diesel"
-    elif clean_tech == "Electricity Small" and fossil_tech == "Petrol Small":
-        output_str = "EV truck vs diesel"
-    elif clean_tech == "Electricity Large" and fossil_tech == "Diesel Large":
-        output_str = "EV truck vs diesel"
-    elif clean_tech == "Electricity Large" and fossil_tech == "Petrol Large":
-        output_str = "EV truck vs diesel"
-        
-    else:
-        output_str = "TBD"
-        print(clean_tech, fossil_tech)
-        
-    return output_str
+
 
 # Go over models in reverse order
 for mi, model in enumerate(models):
