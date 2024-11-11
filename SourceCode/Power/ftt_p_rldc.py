@@ -227,7 +227,7 @@ def rldc(data, time_lag, data_dt, year, titles):
     # Wind and solar shares for all regions
     Sw = np.zeros(len(titles['RTI']))
     Ss = np.zeros(len(titles['RTI']))
-    Sw = np.divide(np.sum(data['MEWG'][:, [16, 17, 21], 0], axis=1),
+    Sw = np.divide(np.sum(data['MEWG'][:, [16, 17], 0], axis=1),
                    e_dem[:],
                    where=~np.isclose(e_dem[:], 0.0))
     Ss = np.divide(data['MEWG'][:, 18, 0],
@@ -320,8 +320,9 @@ def rldc(data, time_lag, data_dt, year, titles):
        
         # Estimate general curtailment rate and the splits for wind and solar
         data['MCRT'][r, 0, 0] = rldc_prod[0]
-        curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r] + Ss[r]/ratio[r])
-        curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r]*ratio[r] + Ss[r])
+        if Sw[r] != 0 and Ss[r] != 0: 
+            curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r] + Ss[r]/ratio[r])
+            curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r]*ratio[r] + Ss[r])
         
         # Upper limit of values
         if data['MCRT'][r, 0, 0] > 0.75: data['MCRT'][r, 0, 0] = 0.75
@@ -333,7 +334,6 @@ def rldc(data, time_lag, data_dt, year, titles):
         data['MCTG'][r, :, 0] = 0.0
         data['MCTG'][r, 16, 0] = curt_w[r]
         data['MCTG'][r, 17, 0] = curt_w[r]
-        data['MCTG'][r, 21, 0] = curt_w[r]
         data['MCTG'][r, 18, 0] = curt_s[r]
         
         # %% Load band heights
@@ -476,14 +476,12 @@ def rldc(data, time_lag, data_dt, year, titles):
             data['MLSP'][r, :, 0] = 0.0
             data['MLSP'][r, 16, 0] = data['MLSR'][r,0,0] * LSw
             data['MLSP'][r, 17, 0] = data['MLSR'][r,0,0] * LSw
-            data['MLSP'][r, 21, 0] = data['MLSR'][r,0,0] * LSw
             data['MLSP'][r, 18, 0] = data['MLSR'][r,0,0] * LSs
         # For option 4, all VRE pay the equal amount
         elif np.rint(data['MSAL'][r, 0, 0]) in [4]:
             data['MLSP'][r, :, 0] = 0.0
             data['MLSP'][r, 16, 0] = data['MLSR'][r,0,0]
             data['MLSP'][r, 17, 0] = data['MLSR'][r,0,0]
-            data['MLSP'][r, 21, 0] = data['MLSR'][r,0,0]
             data['MLSP'][r, 18, 0] = data['MLSR'][r,0,0] 
         # All technologies pay the pay amount for the other options
         else:
@@ -545,14 +543,12 @@ def rldc(data, time_lag, data_dt, year, titles):
             data['MSSP'][r, :,0] = 0.0
             data['MSSP'][r, 16,0] = data['MSSR'][r,0,0] * SSw
             data['MSSP'][r, 17,0] = data['MSSR'][r,0,0] * SSw
-            data['MSSP'][r, 21,0] = data['MSSR'][r,0,0] * SSw
             data['MSSP'][r, 18,0] = data['MSSR'][r,0,0] * SSs
         # For option 4, all VRE pay the equal amount
         elif np.rint(data['MSAL'][r, 0, 0]) in [4]:
             data['MSSP'][r,:,0] = 0.0
             data['MSSP'][r,16,0] = data['MSSR'][r,0,0]
             data['MSSP'][r,17,0] = data['MSSR'][r,0,0]
-            data['MSSP'][r,21,0] = data['MSSR'][r,0,0]
             data['MSSP'][r,18,0] = data['MSSR'][r,0,0] 
         # All technologies pay the pay amount for the other options
         else:
@@ -612,7 +608,6 @@ def rldc(data, time_lag, data_dt, year, titles):
             data['MLSM'][r, :, 0] = 0.0
             data['MLSM'][r, 16, 0] = marg_cost_wind_ls
             data['MLSM'][r, 17, 0] = marg_cost_wind_ls
-            data['MLSM'][r, 21, 0] = marg_cost_wind_ls
             data['MLSM'][r, 18, 0] = marg_cost_sol_ls            
                 
             #-------------------------------------------------------------
@@ -643,7 +638,6 @@ def rldc(data, time_lag, data_dt, year, titles):
             data['MSSM'][r,:,0] = 0.0
             data['MSSM'][r,16,0] = marg_cost_wind_ss
             data['MSSM'][r,17,0] = marg_cost_wind_ss
-            data['MSSM'][r,21,0] = marg_cost_wind_ss
             data['MSSM'][r,18,0] = marg_cost_sol_ss 
             
     # %%

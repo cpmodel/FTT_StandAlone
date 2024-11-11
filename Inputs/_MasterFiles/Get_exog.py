@@ -206,7 +206,7 @@ if __name__ == '__main__':
         mlsmx[region].to_csv(os.path.join(dirp_out_ftt, "MLSMX_{}.csv".format(region)))
         #mcocx[region].to_csv(os.path.join(dirp_out_ftt, "MCOCX_{}.csv".format(region)))
         # mwicx[region].to_csv(os.path.join(dirp_out_ftt, "MWICX_{}.csv".format(region)))
-        mwfcx[region].to_csv(os.path.join(dirp_out_ftt, "MWFCX_{}.csv".format(region)))
+        #mwfcx[region].to_csv(os.path.join(dirp_out_ftt, "MWFCX_{}.csv".format(region)))
         #mwmcx[region].to_csv(os.path.join(dirp_out_ftt, "MWMCX_{}.csv".format(region)))
         #mmcdx[region].to_csv(os.path.join(dirp_out_ftt, "MMCDX_{}.csv".format(region)))
         #msspx[region].to_csv(os.path.join(dirp_out_ftt, "MSSPX_{}.csv".format(region)))
@@ -215,4 +215,4 @@ if __name__ == '__main__':
         #mes2x[region].to_csv(os.path.join(dirp_out_ftt, "MES2X_{}.csv".format(region)))
         
         # Not sure
-        fretx[region].to_csv(os.path.join(dirp_out_ftt, "FRETX_{}.csv".format(region)))
+        #fretx[region].to_csv(os.path.join(dirp_out_ftt, "FRETX_{}.csv".format(region)))
