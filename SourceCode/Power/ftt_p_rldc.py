@@ -33,7 +33,7 @@ def feqs(a):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def rldc(data, time_lag, data_dt, year, titles):
+def rldc(data, MEWDt, time_lag, data_dt, year, titles):
     """
     Calculate RLDCs.
 
@@ -203,7 +203,7 @@ def rldc(data, time_lag, data_dt, year, titles):
                              [0.191,-0.806,-0.434,-0.023,-0.491,-0.174,-0.291, 0.005]])
     
     # Electricity demand (!= same as supply!)
-    e_dem = data['MEWDX'][:, 7, 0] /3.6*1000
+    e_dem = MEWDt / 3.6 * 1000
     
     # Apply learning-by-doing on storage techs
     learning_exp_ss = -0.2945 # = -(0.421 + 0.168)/2: average for flow and li-ion batteries, and mid-length storage may be included here.
