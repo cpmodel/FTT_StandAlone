@@ -180,7 +180,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRES'] = mres
 
         data = get_lcoe(data, titles, year)
-        data = rldc(data, time_lag, iter_lag, year, titles)
+        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, titles)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
@@ -292,7 +292,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year >= 2013: # Still in historical period
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, time_lag, iter_lag, year, titles)
+            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, titles)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -633,7 +633,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
-            data = rldc(data, time_lag, data_dt, year, titles)
+            data = rldc(data, MEWDt, time_lag, data_dt, year, titles)
             
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
