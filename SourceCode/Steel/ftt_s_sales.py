@@ -10,46 +10,46 @@ ftt_h_sales.py
 Domestic Heat FTT module.
 ####################################
 
-    Calculate new sales/additions in FTT-Heat.
+Calculate new sales/additions in FTT-Heat.
 
-    This function calculates the amount of new additional boilers (HEWI).
-    This is based on:
+This function calculates the amount of new additional boilers (HEWI).
+This is based on:
 
-    1. If capacity has grown, the difference between the new capacity and the
-       old.
-    2. The amount of existing capacity that is depreciated (retired) as it
-       reaches its end of life.
-    
-    Capacity depreciation is currently based on the boiler lifetime in the
-    cost matrix. This means 1/boiler lifetime of capacity is retired every
-    year.
+1. If capacity has grown, the difference between the new capacity and the
+    old.
+2. The amount of existing capacity that is depreciated (retired) as it
+    reaches its end of life.
 
-    Parameters
-    -----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) for all
-        variables. Variable names are keys and the values are 3D NumPy arrays.
-    data_dt: dictionary
-        Data_dt is a container that holds all cross-sectional (of time) data
-        for all variables of the previous iteration.
-    time_lag: dictionary
-        Time_lag is a container that holds all cross-sectional (of time) data
-        for all variables of the previous year.
-    titles: dictionary
-        Titles is a container of all permissible dimension titles of the model.
-    dt: integer
-        Dt is an integer - 1 / number of iterations.
+Capacity depreciation is currently based on the boiler lifetime in the
+cost matrix. This means 1/boiler lifetime of capacity is retired every
+year.
 
-    Returns
-    ----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
-    hewi_t: 
-    
+Parameters
+-----------
+data: dictionary
+    Data is a container that holds all cross-sectional (of time) for all
+    variables. Variable names are keys and the values are 3D NumPy arrays.
+data_dt: dictionary
+    Data_dt is a container that holds all cross-sectional (of time) data
+    for all variables of the previous iteration.
+time_lag: dictionary
+    Time_lag is a container that holds all cross-sectional (of time) data
+    for all variables of the previous year.
+titles: dictionary
+    Titles is a container of all permissible dimension titles of the model.
+dt: integer
+    Dt is an integer - 1 / number of iterations.
+
+Returns
+----------
+data: dictionary
+    Data is a container that holds all cross-sectional (of time) data for
+    all variables.
+    Variable names are keys and the values are 3D NumPy arrays.
+    The values inside the container are updated and returned to the main
+    routine.
+hewi_t: np.array
+    Matrix of new heat capacity additions for the current iteration.
 
 """
 

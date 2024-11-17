@@ -1,19 +1,55 @@
 # # -*- coding: utf-8 -*-
-# """
-# Created on Wed Jun  5 15:47:32 2024
+"""
+Created on Wed Jun  5 15:47:32 2024
 
-# @author: Arpan.Golechha
-# """
+@author: Arpan.Golechha
+=========================================
+ftt_s_rawmaterials.py
+=========================================
+Steel production module.
+####################################
+
+This function performs a detailed computation related to the distribution of raw materials and their impact on steel production. 
+Finding scrap intensity, emission intensity, energy intensity, employment factor and capital investment costs 
+using scrap imports and exports, cost matrix and scrap avaliability.
+
+Parameters
+----------
+- raw_material_distr(data, titles, year, t)
+- data: dictionary
+    Data is a container that holds all cross-sectional (of time) for all
+    variables. Variable names are keys and the values are 3D NumPy arrays.
+- titles: dictionary
+    Titles is a container of all permissible dimension titles of the model.
+- year: int
+    Curernt/active year of solution
+- t: int
+    The iteration number for the current calculation cycle.
+
+Returns
+----------
+data: dictionary
+    Data is a container that holds all cross-sectional (of time) data for
+    all variables.
+    Variable names are keys and the values are 3D NumPy arrays.
+    The values inside the container are updated and returned to the main
+    routine.
+
+
+"""
 
 # Third party imports
 import numpy as np
 
 def raw_material_distr(data, titles, year, t):
-    metalinput = np.zeros((len(titles['STTI']), 3))
-    maxscrapdemand = np.zeros((len(titles['RTI']), len(titles['STTI'])))
-    maxscrapdemand_p = np.zeros_like(maxscrapdemand)
-    scraplimittrade = np.zeros_like(maxscrapdemand)
-    scrapcost = np.zeros_like(maxscrapdemand)
+
+    ## Initialization of variables
+    metalinput = np.zeros((len(titles['STTI']), 3))   
+    maxscrapdemand = np.zeros((len(titles['RTI'])))   
+    maxscrapdemand_p = np.zeros_like(maxscrapdemand)  
+    scraplimittrade = np.zeros_like(maxscrapdemand)   
+    scrapcost = np.zeros_like((len(titles['RTI']),26,1))     
+
     # pig-iron (or DRI) to crude steel ratio. Rationale: pig iron/DRI
     pitcsr = 1.1
     # has higher carbon content which is removed in steel making
@@ -22,63 +58,74 @@ def raw_material_distr(data, titles, year, t):
 
     # Simple treatment of scrap trade. Flows are only a function of scrap shortages
     # for the secondary steelmaking route.
-
     scrapcost = data['BSTC'][:, :, 16]
-    maxscrapdemand = np.sum(scrapcost[:, :] * data['SEWG'][:, : , 0], axis=0)
-    maxscrapdemand_p = np.sum(scrapcost[: , 0:24] * data['SEWG'][:, 0:24, 0], axis=0)
-    scraplimittrade = scrapcost[:, 25] * data['SEWG'][ :, 25, 0]
+    maxscrapdemand = np.sum(scrapcost[:, :] * data['SEWG'][:, : , 0],axis=1)  ## axis = 1 means summing across column for each row
 
-    if t == 1:
-        scrapshortage = np.zeros((len(titles['RTI']), len(titles['STTI'])))
-        scrapabundance = np.zeros((len(titles['RTI']), len(titles['STTI'])))
-        sxex = np.zeros_like(scrapabundance)
-            
-        if np.any(data['SXSC'][:, 0, 0] < scraplimittrade):
-            scrapshortage = scraplimittrade - data['SXSC'][:, :, 0]
-    
+    maxscrapdemand_p = np.sum(scrapcost[: , 0:24] * data['SEWG'][:, 0:24, 0],axis=1)
+    scraplimittrade = scrapcost[:, 25] * data['SEWG'][ :, 25, 0]   ## Adding maxscrap and MOE in 1990
+    ## t is no. of iterations per year
+    if t == 1: 
+        scrapshortage = np.zeros(len(titles['RTI']))    ## change
+        scrapabundance = np.zeros(len(titles['RTI']))    ## shape : (71,26)
+        sxex = np.zeros_like(scrapabundance)     ## shape : (71,26)
+
+        ## If Exogenous Scrap availability is less then the calculated limits
+        ## Calculating shortage and abundance
+        if np.any(data['SXSC'][:, 0, 0] < scraplimittrade):   ## Shape('SXSC') : (71,1,1) 
+            scrapshortage = (scraplimittrade - data['SXSC'][:, 0, 0]).reshape(-1, 1, 1)   ## change
+
         if np.any(data['SXSC'][:, :, 0] > maxscrapdemand):
             scrapabundance = data['SXSC'][:, :, 0] - maxscrapdemand
-        
-            # If there's global abundance of scrap then the shortages can simply be met through imports
-            if np.sum(scrapshortage) > np.sum(scrapabundance) and np.sum(scrapshortage) > 0.0:
-                mask = scrapshortage > 0.0
-                data['SXIM'][:,:,0] = np.zeros((len(titles['RTI']), len(titles['STTI'])))
-                data['SXIM'][mask] = scrapshortage[mask]
-        
-            # If the supply of scrap is insufficient to meet global demand then weight import according to the ratio of abundance and shortage.
-            if np.sum(scrapshortage) > np.sum(scrapabundance) and np.sum(scrapshortage) > 0.0:
-                mask = scrapshortage > 0.0
-                data['SXIM'] = np.zeros_like(scrapshortage)
-                data['SXIM'][mask] = scrapshortage[mask] * (np.sum(scrapabundance) / np.sum(scrapshortage))
-        sxsc = data['SXSC'][:, :, 0]
-        mask = sxsc > maxscrapdemand
-        sxex = np.zeros((len(titles['RTI']), len(titles['STTI'])))
+
+        # If there's global abundance of scrap then the shortages can simply be met through imports
+        if np.sum(scrapshortage) < np.sum(scrapabundance) and np.sum(scrapshortage) < 0.0:
+            mask = scrapshortage > 0.0
+            data['SXIM'] = np.zeros((len(titles['RTI']),len(titles['STTI'])))    ## shape : (71,26); variablelisting : (71,1,1) ## why?
+            data['SXIM'][mask] = scrapshortage[mask]
+
+        ## we can use elif so we don't have to data['SXIM'] to zeros
+        # If the supply of scrap is insufficient to meet global demand then weight import according to the ratio of abundance and shortage.
+        if np.sum(scrapshortage) > np.sum(scrapabundance) and np.sum(scrapshortage) > 0.0:
+            mask = scrapshortage > 0.0
+            data['SXIM'] = np.zeros_like(scrapshortage)    ## shape : (71,26)
+            data['SXIM'][mask] = scrapshortage[mask] * (np.sum(scrapabundance) / np.sum(scrapshortage))  
+
+        sxsc = data['SXSC'][:, 0, 0]
+        mask = sxsc > maxscrapdemand  
+
+        # sxex = np.zeros((len(titles['RTI']), len(titles['STTI'])))   
         print("Shape of scrapabundance:", scrapabundance.shape)
         sxex[mask] = np.sum(data['SXIM'][:, :, 0]) * (scrapabundance[mask] / np.sum(scrapabundance))
 
-        data['SXSR']= data['SXSC'] + data['SXIM'] - data['SXEX']
+        data['SXSR']= data['SXSC'] + data['SXIM'] - data['SXEX']      ## assigning SXSR; shape : (71,1,1) should be
+        ## shape (SXIM) : (71,26)  ## change
+        ## shape (SXEX) : (71,1,1) 
+        ## shpae (SXSC) : (71,1,1)
 
     for r in range(len(titles['RTI'])):
-        if data['SPSA'][r, 0 , 0] > 0.0:
+        if data['SPSA'][r, 0 , 0] > 0.0:  ## shape (SPSA) : (71,1,1)
                 for path in range(len(titles['STTI'])):
                     # There's enough scrap to meet the maximum scrap demand
                     if (np.any(data['SXSR'][r, 0, 0] >= maxscrapdemand)):
                         metalinput[path-1,0] = (1.0 - 0.09 - scrapcost[r, path-1]) * pitcsr 
                         metalinput[path-1,1] = 0.0
-                        metalinput[path-1,2] = scrapcost[r, path-1] +0.09
+                        metalinput[path-1,2] = scrapcost[r, path-1] +0.09   
                         metalinput[25,0] = 0.0
                         metalinput[25,1] = 0.0
                         metalinput[25,2] = scrapcost[r, 25] +0.09
                 #There's not enough scrap to feed into all the technologies, but there's 
                 #enough scrap to feed into the Scrap-EAF route.             
-                    elif ((data['SXSR'][r, 0, 0] < maxscrapdemand[r, 0, 0]) and (data['SXSR'][r, 0, 0] >= scraplimittrade[r, 0, 0])): 
+                    elif ((data['SXSR'][r, 0, 0] < maxscrapdemand[r]) and (data['SXSR'][r, 0, 0] >= scraplimittrade[r])):  
                         metalinput[path, 1] = 0.0
                 
-                        if (sum (data ['SEWG'][r, 0:24] * scrapcost[r, 0:24]) > 0.0):
-                            metalinput[path,2] = 0.09 + (data['SXSR'][r,0,0]-scraplimittrade[r, 0, 0])/maxscrapdemand_p[r, 0, 0] * scrapcost[path,r]
+                        if (np.sum(data ['SEWG'][r, 0:24] * scrapcost[r, 0:24]) > 0.0):  ## changed
+                            metalinput[path,2] = 0.09 + (data['SXSR'][r,0,0]-scraplimittrade[r])/maxscrapdemand_p[r] * scrapcost[r,path] ## change scrapcost defined shape : (71,26)
+                            ## metalinput[path,2] = 0.09 + (data['SXSR'][r,0,0]-scraplimittrade[r, 0, 0])/maxscrapdemand_p[r, 0, 0] * scrapcost[path,r]
+
+
                         else:
-                            metalinput[path,2] = scrapcost[r, path]/2 +0.09
-                
+                            metalinput[path,2] = scrapcost[r,path]/2 +0.09  
+
                         metalinput [path,0] = (1.0 - metalinput[path,2]) * pitcsr
                         metalinput[25,0] = 0.0
                         metalinput[25,1] = 0.0
@@ -86,7 +133,8 @@ def raw_material_distr(data, titles, year, t):
 
                 #There's not enough scrap available to meet the demand, so all available
                 #scrap will be fed into the Scrap-EAF route.    
-                    elif ((data['SXSR'][r,0,0] < maxscrapdemand [r,0,0]) and (data['SXSR'][r,0,0] < data['SEWG'][25,r,0]*(1-0.09))):
+                    elif ((data['SXSR'][r,0,0] < maxscrapdemand [r]) and (data['SXSR'][r,0,0] < data['SEWG'][r,25,0]*(1-0.09))):    ## data['SEWG'] change [r,25,0]
+                    ##((data['SXSR'][r,0,0] < maxscrapdemand [path]) and (data['SXSR'][r,0,0] < data['SEWG'][25,r,0]*(1-0.09))):  ## changed
                         metalinput[path,0] = pitcsr * (1.0 - 0.09)
                         metalinput[path,1] = 0.0
                         metalinput[path,2] = 0.09
@@ -96,12 +144,12 @@ def raw_material_distr(data, titles, year, t):
                         metalinput[25,2] = 0.09 + data['SXSR'][r, 0, 0] / data['SEWG'][r, 25, 0]  
 
         inventory = np.zeros((len(titles['SMTI']), len(titles['STTI'])))
-        #Select the correct ironmaking technology. Not applicable for techs 25 and 26
+
         for a in range(len(titles['STTI'])):
             for b in range(len(titles['SSTI'])):
-                if ((data['STIM'][0,a,b]==1) and b>7 and b<21):
+                if ((data['STIM'][0,a,b]==1) and b>7 and b<21):   ## shape (STIM) : (0,71,29)
                     if (a<25):
-                        data['SLCI'][0,:,2]= data['SCMM'][0,:,b]
+                        data['SLCI'][0,:,2]= data['SCMM'][0,:,b]   ## shape (SLCI) : (0,24,24); shape (SCMM) : (0,24,29)
                     else:
                         data['SLCI'][0,:,2]=0.0
                 if(data['STIM'][0,a,b]==1 and b>20 and b<27):
@@ -126,7 +174,7 @@ def raw_material_distr(data, titles, year, t):
             inventory[:,a] += (data['SCMM'][0,:,27])/1.14
         
             #Material based emission intensity
-            ef = np.sum(inventory[:,a]*data['SMEF'][0,:,0])
+            ef = np.sum(inventory[:,a]*data['SMEF'][0,:,0])   ## shape (SMEF) : (0,24,0)
             #ef_fossil = np.sum(inventory[0,1:15,a]*data['SMEF'][0,1:15,0])
             ef_biobased = np.sum(inventory[16:24, a] * data['SMEF'][0,16:24,0])
 
@@ -136,8 +184,9 @@ def raw_material_distr(data, titles, year, t):
             data['STEI'][r,a,0]= data['BSTC'][r,a,15]
             data['STSC'][r,a,0]= inventory[4,a]
 
+            ## change : why are we using this loop
             for mat in range(len(titles['SMTI'])):
-                data['BSTC'][r,a,21]= inventory[21,a]
+                data['BSTC'][r,a,21]= inventory[21,a] ## change a to mat
 
         
             #Select CCS technologies
@@ -151,24 +200,24 @@ def raw_material_distr(data, titles, year, t):
             
                 #Adjust O&M Costs due to CO2 transport and storage
                 data['BSTC'][r,a,2]= inventory[21,a]+ 5.0*0.9*ef
-                data['BSTC'][r,a,3]= data[r,a,2]*0.3
+                data['BSTC'][r,a,3]= data['BSTC'][r,a,2]*0.3  ## change
 
                 #Adjust EF for CCS utilising technologies
                 data['BSTC'][r,a,13] = 0.1 * ef - ef_biobased
-                data['STEF'][r,a,0] = 0.1 * ef - ef_biobased
+                data['STEF'][r,a,0] = 0.1 * ef - ef_biobased   ## shape (STEF) : (71,26)
                 data['BSTC'][r,a,14] = data['BSTC'][r,a,13]*0.1
 
                 #Adjust total Employment for complete steelmaking route (increase by 5% due to CCS)
                 data['BSTC'][r,a,4] = 1.05 * inventory[23,a]
-                data['SEPF'][r,a,0] = 1.05 * inventory[23,a]
+                data['SEPF'][r,a,0] = 1.05 * inventory[23,a]  ## shape (SEPF) : (71,26)
 
                 #Adjust electricity consumption due to CCS use
-                data['BSTC'][r,a,36] *= 1.1
+                data['BSTC'][r,a,36] *= 1.1   ## shape (BSTC) : (71,26,42)
         
             else:
                 #capital investment costs
                 if year == 2017:
-                    data['SCIN'][r, a, 0] = inventory[20,a]
+                    data['SCIN'][r, a, 0] = inventory[20,a]   ## shape (SCIN) : (71,26)
             
                 #OM and dOM
                 data['BSTC'][r,a,2]= inventory[21,a]
@@ -186,4 +235,28 @@ def raw_material_distr(data, titles, year, t):
     # ef2= data['BSTC'][r,:,13]
     # om= data['BSTC'][r,:,2]
     # empl= inventory[0,23,:]
+
     return data
+
+'''
+print(maxscrapdemand.shape)
+print(maxscrapdemand_p.shape)
+print(scraplimittrade.shape)
+print(scrapcost.shape)
+(71, 26)
+(71, 26)
+(71, 26)
+(71, 26)
+
+second
+(26,)
+(24,)
+(71,)
+(71, 26)
+
+# print(inventory.shape[1] - data['SLCI'].shape[1])  ## anwser is 2
+# inventory[:,:].shape ==  data['SLCI'][0,:,1].shape   ## problem
+## where is "SLCI" coming from ?
+# print("second")
+# print(data['SEWG'].shape)
+'''
