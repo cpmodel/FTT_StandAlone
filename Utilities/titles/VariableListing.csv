@@ -36,7 +36,7 @@ MSSI,FTT:Power short-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA
 MSSG,FTT:Power short-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSF,FTT:Power short-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSSE,Short-term storage round-trop efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2011,,,Y
-MSSC2020,FTT:Power short-term storage capacity (GW) in 2020,GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
+MSSC_histend,FTT:Power short-term storage capacity (GW) in 2020,GW,RTI,NA,NA,TIME,FTT-P,-,2023,2001,-,,Y
 MSSC,FTT:Power short-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MSRV,FTT:Power survival function (Created inside code),%,RTI,T2TI,TYTI,NA,FTT-P,-,-,2001,-,,Y
 MSLB,FTT:Power shares of capacity by tech x load band,na,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-,,Y
@@ -55,7 +55,7 @@ MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,
 MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSF,FTT:Power long-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSE,Long-term storage round-trip efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2010,,,Y
-MLSC2020,FTT:Power long-term storage capacity (GW) in 2020,GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLSC_histend,FTT:Power long-term storage capacity (GW) in 2020,GW,NA,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSC,FTT:Power long-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLLB,FTT:Power load factors (%) by tech x load band,%,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-,,Y
 MLCC,Long-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2012,,,Y
@@ -401,5 +401,5 @@ SectorCouplingAssumps,Assumptions for sector coupling,,NA,SCA,NA,NA,General,-,-,
 V2G battery stock,Available EV battery stock given participation rate and use,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 Battery cap additions,Capacity additions per timestep per model,GWh,models_w_batteries,noit,NA,TIME,General,-,-,2020,-,-,-
 Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
-Cumulative total batcap 2021,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
+Cumulative total batcap start,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
 ZEVC,Starting non-battery costs of a truck,USD/veh,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,

@@ -9,6 +9,7 @@ import numpy as np
 from SourceCode.sector_coupling.transport_batteries_to_power import get_sector_coupling_dict, share_transport_batteries
 
 def quarterly_bat_add_power(no_it, data, data_dt, titles):
+    "Add battery additions from the power sector each quarter"
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
 
@@ -35,25 +36,25 @@ def quarterly_bat_add_power(no_it, data, data_dt, titles):
 
 def get_cumulative_batcap(data, time_lag, year, titles):
     """Add all the quarterly additions together for true cumulative additions
-    This function is called from the model_class, after the power sector"""
+    This function is called from battery_costs below"""
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
     
-    # For simplicity, in 2021, the capacity is set to 2021 values of overall battery
+    # For simplicity, in 2022, the capacity is set to 2022 values of overall battery
     # capacity in the three models together. 
     # TODO: Deal with the fact that different models start at different times
     
-    if year <= 2021:
-        data["Cumulative total batcap 2021"][0, 0, 0] = (
+    if year <= 2022:
+        data["Cumulative total batcap start"][0, 0, 0] = (
             np.sum(data["TEWW"][0, 18:24]) / 1000
             + np.sum(data["MSSC"] * sector_coupling_assumps["GW to GWh"])
             + np.sum(data["ZEWK"][:, :, 0] * data["ZCET"][:, :, c6ti['21 Battery capacity (kWh)']] / 10e6)
             )
-        data["Cumulative total batcap"] = np.copy(data["Cumulative total batcap 2021"])
+        data["Cumulative total batcap"] = np.copy(data["Cumulative total batcap start"])
     else:
-        # Copy over the 2021 value from last year
-        data["Cumulative total batcap 2021"] = time_lag["Cumulative total batcap 2021"]
+        # Copy over the 2022 value from last year
+        data["Cumulative total batcap start"] = time_lag["Cumulative total batcap start"]
         
         # Impute any missing data from the current timestep
         battery_additions = guess_battery_additions(data, time_lag)
@@ -73,14 +74,16 @@ def battery_costs(data, time_lag, year, titles):
     
     get_cumulative_batcap(data, time_lag, year, titles)
     # No learning takes place before 2021
-    if year <= 2021:
+    if year <= 2022:
         battery_cost_fraction = 1
     
     else:
         battery_cost_fraction = (
-            ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap 2021"] ) 
+            ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap start"] ) 
             ** battery_learning_exp )
     
+    if np.isnan(battery_cost_fraction):
+        test = 1
     
     return battery_cost_fraction
 

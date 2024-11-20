@@ -35,7 +35,7 @@ def feqs(a):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def rldc(data, MEWDt, time_lag, data_dt, year, titles):
+def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
     """
     Calculate RLDCs.
 
@@ -510,18 +510,18 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles):
         
         # Storage cost are overwritten here:
             
-        if year > 2020: 
+        if year >= 2022: 
             
-            #data['MSSC2020'] = time_lag['MSSC2020'].copy()
-            data['MLSC2020'] = time_lag['MLSC2020'].copy()        
+            #data['MSSC_histend'] = time_lag['MSSC_histend'].copy()
+            data['MLSC_histend'] = time_lag['MLSC_histend'].copy()        
             
             # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
             # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
             
             # Apply learning rate to levelised cost of storage (MSCC and MLCC)
             battery_cost_frac = battery_costs(data, time_lag, year, titles)
-            data['MSCC'][:,0,0] = 0.19 * 1e6 * battery_cost_frac
-            data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / data['MLSC2020']) ** learning_exp_ls
+            data['MSCC'][:,0,0] = 0.18 * 1e6 * battery_cost_frac
+            data['MLCC'][:,0,0] = 0.32 * 1e6 * ( data_dt['MLSC'][:, 0, 0].sum() / data['MLSC_histend'] ) ** learning_exp_ls
         
         # Assumed levelised cost of storage: 0.20 EURO/kWh initially
         # in reality the capacity/energy discharged ratio changes due to demand-supply mismatches.
@@ -641,40 +641,20 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles):
                 marg_cost_sol_ss = output_sol * data['MSCC'][r,0,0] / (vre + vre_ggr_sol[r]) * SSs - data['MSSP'][r, 18, 0] 
                 marg_cost_wind_ss = output_wind * data['MSCC'][r,0,0] / (vre + vre_ggr_wind[r]) * SSw  - data['MSSP'][r, 16, 0] 
             
-            data['MSSM'][r,:,0] = 0.0
-            data['MSSM'][r,16,0] = marg_cost_wind_ss
-            data['MSSM'][r,17,0] = marg_cost_wind_ss
-            data['MSSM'][r,18,0] = marg_cost_sol_ss 
+            data['MSSM'][r, :, 0] = 0.0
+            data['MSSM'][r, 16, 0] = marg_cost_wind_ss
+            data['MSSM'][r, 17, 0] = marg_cost_wind_ss
+            data['MSSM'][r, 18, 0] = marg_cost_sol_ss 
             
     # %%
     data = vehicle_to_grid(data, time_lag, year, titles)
     storage_ratio = share_transport_batteries(data, titles)
     data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
-
-    # Ad hoc correction for exchange rate and inflation
-    # These corrections deviate from FORTRAN. There was 11% inflation between 2013 and 2020
-    data["MSSP"] = data["MSSP"] / 1.11
-    data["MLSP"] = data["MLSP"] 
-    data["MSSM"] = data["MSSM"] / 1.11
-    data["MLSM"] = data["MLSM"]
-    data["MSSR"] = data["MSSR"] / 1.11
     
-    check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mewl = pd.DataFrame(data['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mewl_lag = pd.DataFrame(time_lag['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mews = pd.DataFrame(data['MEWS'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mewd = pd.DataFrame(data['MEWD'][:, :, 0], index=titles['RTI'], columns=titles["JTI"])
-    check_mlsp = pd.DataFrame(data['MLSP'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mssp = pd.DataFrame(data['MSSP'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mssr = pd.Series(data["MSSR"][:, 0, 0], index=titles["RTI"])
-    check_mlsr = pd.Series(data["MLSR"][:, 0, 0], index=titles["RTI"])
-    check_mlsm = pd.DataFrame(data['MLSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mssm = pd.DataFrame(data['MSSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
 
-
-    # Store the storage capacities in 2020
-    if year == 2020:
-        data['MSSC2020'] = np.sum(data['MSSC']).copy()
-        data['MLSC2020']  = np.sum(data['MLSC']).copy()         
+    # Store the storage capacities in last historical year
+    if year <= histend["MSSC_histend"]:
+        data['MSSC_histend'] = np.sum(data['MSSC']).copy()
+        data['MLSC_histend']  = np.sum(data['MLSC']).copy()         
 
     return data
