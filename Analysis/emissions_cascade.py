@@ -70,7 +70,32 @@ def get_total_emissions(output, model):
         all_vehicles = list(range(emission_by_tech.shape[1]))
         non_EVs = [x for x in all_vehicles if x not in [12, 13]]
         emission_m = np.sum(emission_by_tech[:, non_EVs], axis=(0, 1, 2))
+    
+    # Rescale so that 2022 emissions line up with actual emissions
+    emission_m = scale_total_emissions(emission_m, model)
+    
     return emission_m
+
+def scale_total_emissions(emissions_m, model):
+    """ Total emissions are scaled to 2022 IEA numbers.
+    https://www.iea.org/data-and-statistics/charts/global-co2-emissions-by-sector-2019-2022
+    - Power sector is 14650 Mt CO2
+    - "Space and water heating: https://www.iea.org/energy-system/buildings/heating (2400 Mt CO2)"
+    - "Road transport emissions: 5870 Mt CO2 total (https://www.iea.org/energy-system/transport), 
+        of which 39% freight and remaining transport (https://www.nature.com/articles/s41598-024-52682-4)"""
+    
+    emissions_2022 = {"FTT:P" : 14650,
+                      "FTT:H" : 2400,
+                      "FTT:Tr": 3522,
+                      "FTT:Fr": 2289 }
+    
+    ind_2022 = 12
+    
+    scaling_factor = emissions_2022[model] / emissions_m[ind_2022]
+    emissions_m_rescaled = emissions_m * scaling_factor
+    
+    return emissions_m_rescaled
+    
 
 
 # Compute overall CO2 reductions per sector
