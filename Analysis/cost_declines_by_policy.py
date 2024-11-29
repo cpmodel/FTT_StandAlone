@@ -137,7 +137,7 @@ if plot_dot_graph:
 clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [13]}
 fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [5]} # Note 4 for transport gives an error
 graph_label = {"FTT:P": "New solar + battery \n vs existing coal", "FTT:H": "Water-air HP \n vs gas boiler",
-               "FTT:Tr": "Electric vehicles \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel"}
+               "FTT:Tr": "Electric vehicles \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel trucks"}
 
 
 # Define the percentage difference function
@@ -246,9 +246,9 @@ for mi, model in enumerate(models):
         ax.set_ylabel("Levelised cost difference (%)")
     
     #ax.text(2033, 26, graph_label[model], ha="right")
-    ax.set_title(graph_label[model], pad=-15, ha="left", fontweight='bold')
+    ax.set_title(graph_label[model], pad=-15, ha="right", fontweight='bold')
     title = ax.title
-    title.set_position((0.1, title.get_position()[1]))
+    title.set_position((0.97, title.get_position()[1]))
 
     
 

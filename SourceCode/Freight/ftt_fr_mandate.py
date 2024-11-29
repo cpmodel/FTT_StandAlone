@@ -19,14 +19,19 @@ def EV_truck_mandate(EV_mandate, zwsa, zews, rflz, year, n_years=16):
         * When there are too many EVs, no mandate
     """
     
+    if EV_mandate[0,0,0] > 1:
+        years_on = int(EV_mandate[0,0,0] - 2025)
+    else:
+        years_on = n_years
     
     for truck_size in [0, 1]:               # 0 denotes small, 1 denotes large
         fossil_techs = list(np.array([0, 2, 4, 6, 8]) + truck_size)
         EV_techs = [12 + truck_size]
         
         
-        if EV_mandate[0,0,0] == 1:
-            if year in range(2025, 2025 + n_years):
+        if EV_mandate[0,0,0] != 0:
+            
+            if year in range(2025, 2025 + years_on):
             
                 n = year - 2024
                 x = n/n_years

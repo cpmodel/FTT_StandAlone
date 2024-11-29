@@ -90,6 +90,7 @@ def policy_change(df, policy):
             df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) ) * 3.667       
     
         case "Power REPP":
+            df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
         
         
@@ -121,6 +122,7 @@ def policy_change(df, policy):
         case "EV mandate exogenous sales":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
         case "Transport REPP":
+             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
              df.iloc[:, 15:] = carbon_price * 3.667    
   
                    
@@ -142,7 +144,28 @@ def policy_change(df, policy):
         case "EV truck mandate exogenous sales":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
         case "Freight REPP":
+            df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
+        
+        # Carbon tax with start and end date
+        case str(value) if value.startswith("Freight REPP 20"):
+            df[df.columns[1:]] = df[df.columns[1:]].astype(float)
+            years = value.split()[-1]  # Extract the range part, e.g., "2026-2050"
+            start_year, end_year = map(int, years.split("-"))  # Extract start and end years
+            base_year = 2025  # Shifted base year for simplicity
+            base_column_index = 16  # Adjusted to match the base year
+            start_column_index = base_column_index + (start_year - base_year)
+            end_column_index = base_column_index + (end_year - base_year) + 1
+            df.iloc[:, start_column_index:end_column_index] = carbon_price * 3.667
+            
+        case "EV truck mandate exogenous sales before 2027":
+            df.iloc[0, 1] = 2027       # The EV mandates are coded as a function; this switch turns it on
+        case "EV truck mandate exogenous sales before 2030":
+            df.iloc[0, 1] = 2030       # The EV mandates are coded as a function; this switch turns it on
+        case "EV truck mandate exogenous sales before 2035":
+            df.iloc[0, 1] = 2035       # The EV mandates are coded as a function; this switch turns it on
+    
+        
             
         # Heat policies
         case "HREG strong":
@@ -168,6 +191,7 @@ def policy_change(df, policy):
         case "Heat pump mandate exogenous sales":
             df.iloc[0, 1] = 1       # The heat pump mandates are coded as a function; this switch turns it on
         case "Heat REPP":
+            df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
             
         
@@ -179,7 +203,7 @@ def policy_change(df, policy):
         
         
 # Import policies from policies.csv in same folder
-policies = pd.read_csv(os.path.join(current_dir, "Policies_by_sector.csv"))
+policies = pd.read_csv(os.path.join(current_dir, "Policies_sequencing.csv"))
 
 policy_packages = list(policies.keys()[9:])
 #policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]

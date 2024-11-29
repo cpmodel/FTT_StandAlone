@@ -204,8 +204,9 @@ def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
 
         
 
-
+        #dUkMK = ( mwka - (endo_capacity[13] + dUkREG[13]) ) * (t / no_it)
         # If MWKA is a ban or removal, base removal on endogenous capacity after regulation to ensure no negative shares
+        
         condition1 = mwka[r, :, 0] < endo_capacity
         dUkMK = np.where(condition1, (mwka[r, :, 0] - (endo_capacity + dUkREG)) * (t / no_it), 0)
         
@@ -218,6 +219,9 @@ def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
         # Regulations have priority over exogenous capacity
         condition3 = (mwka[r, :, 0] < 0) | ((mewr[r, :, 0] >= 0.0) & (mwka[r, :, 0] > mewr[r, :, 0]))
         dUkMK = np.where(condition3, 0.0, dUkMK)
+        
+        
+            
 
 
         # Sum effect of exogenous sales additions (if any) with

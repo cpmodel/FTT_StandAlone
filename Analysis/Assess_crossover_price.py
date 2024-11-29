@@ -723,6 +723,8 @@ for mi, model in enumerate(models):
     df_difference = subtract_baseline(filtered_df_model)
     
     seaborn.boxplot(y ='Policy', x ='Crossover year difference', data = df_difference, ax=ax)
+    # Remove the word policy from the y-axis
+    ax.set_ylabel('')
     
     ax.set_title(repl_dict[model])
     ax.set_xlim(-2, 12)   

@@ -1,0 +1,15 @@
+﻿Policy,Model,Variable,Description,,,,,,Carbon tax,CT_from_2027,CT_from_2030,CT_from_2035,CT_from_2024_counterfactual_2030,CT_from_2027_counterfactual_2030,CT_from_2030_counterfactual_2030,CT_from_2024_counterfactual_2035,CT_from_2027_counterfactual_2035,CT_from_2030_counterfactual_2035,CT_from_2035_counterfactual_2035
+Freight REPP,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,1,0,0,0,0,0,0,0,0,0,0
+Freight REPP 2027-2050,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,1,0,0,0,1,0,0,0,0,0
+Freight REPP 2030-2050,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,1,0,0,0,0,0,0,0,0
+Freight REPP 2035-2050,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,1,0,0,0,0,0,0,0
+ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,0,0,0,0,0,0,0,0,0,0,0
+EV truck mandate exogenous sales,FTT-Fr,EV truck mandate,Same as heat mandate: extra sales until 2040,,,,,,0,0,0,0,0,0,0,0,0,0,0
+EV truck mandate exogenous sales before 2027,FTT-Fr,EV truck mandate,Same as heat mandate: extra sales before 2027,,,,,,0,1,0,0,0,1,0,0,1,0,0
+EV truck mandate exogenous sales before 2030,FTT-Fr,EV truck mandate,Same as heat mandate: extra sales before 2030,,,,,,0,0,1,0,0,0,1,0,0,1,0
+EV truck mandate exogenous sales before 2035,FTT-Fr,EV truck mandate,Same as heat mandate: extra sales before 2035,,,,,,0,0,0,1,0,0,0,0,0,0,1
+Freight REPP 2024-2029,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,0,1,0,0,0,0,0,0
+Freight REPP 2027-2029,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,0,0,1,0,0,0,0,0
+Freight REPP 2024-2034,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,0,0,0,0,1,0,0,0
+Freight REPP 2027-2034,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,0,0,0,0,0,1,0,0
+Freight REPP 2030-2034,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,0,0,0,0,0,0,1,0
