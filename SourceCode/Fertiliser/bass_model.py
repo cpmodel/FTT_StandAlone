@@ -114,14 +114,15 @@ def simulate_bass_diffusion(data, time_lags, titles, histend, tech, sim_var, pop
 
     tech_idx = titles['TFTI'].index(tech)
     diffusion_lag = time_lags[sim_var][:, tech_idx, :]
-    p_array = data['BFTC'][:, tech_idx, titles['CFTI'].index('6 Innovation parameter')]
-    q_array = data['BFTC'][:, tech_idx, titles['CFTI'].index('7 Imitation parameter')]
+    p_array = data['BFTC'][:, tech_idx, titles['CFTI'].index('3 Innovation parameter')]
+    q_array = data['BFTC'][:, tech_idx, titles['CFTI'].index('4 Imitation parameter')]
+    pop_shares = data['FERTS'][:, 0, 0]
 
     for i, cty in enumerate(titles['RTI']):
         p = p_array[i]
         q = q_array[i]
 
-        m = population[i]
+        m = population[i] * pop_shares[i]
         diff_lag = diffusion_lag[i]
         # Find diffusion year
         t_sim = np.array(range(0, 500)) / 10

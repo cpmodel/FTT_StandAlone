@@ -36,7 +36,7 @@ from numba import njit
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.core_functions.ftt_sales_or_investments import get_sales
-import SourceCode.Fertiliser.npv_calculation as npv_calc
+import SourceCode.Fertiliser.population_shares as pop_shares
 import SourceCode.Fertiliser.bass_model as bm
 
 
@@ -107,6 +107,7 @@ def solve(data, time_lags, iter_lag, titles, histend, year, domain):
     #     data['MFERTD'] = proj_mfert_demand
 
     if year > histend['FERTD']:
+        data = pop_shares.green_population_share(data, time_lags, titles)
         data = bm.simulate_bass_diffusion(data, time_lags, titles, histend, green_tech, sim_var, total_fert_demand)
         data['FERTD'][:, grey_idx, :] = proj_fert_demand - data['FERTD'][:, green_idx, :]
 

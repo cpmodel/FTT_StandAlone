@@ -381,10 +381,10 @@ MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FT
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
 ZTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
 FERTD,CLEAFS Fertiliser demand (tN/year),Nt/year,RTI,TFTI,NA,TIME,CLEAFS,1961,2021,2001,FAO,Y,Y
-AQR,Agriculture output projection,million EUR2010,RTI,NA,NA,TIME,CLEAFS,2010,2050,2010,E3ME,,Y
+AQR,Agriculture output projection,million EUR2010,RTI,NA,NA,TIME,CLEAFS,2010,2050,2010,From E3ME,,Y
 BFTC,CLEAFS matrix of technology costs,-,RTI,TFTI,CFTI,NA,CLEAFS,-,-,2001,-,,Y
-PFRF,Price of urea,dollars/t,NA,NA,NA,TIME,CLEAFS,2015,2023,2015,Statista,,Y
-MFERTD,CLEAFS Maximum potential fertiliser demand (tN/year),Nt/year,RTI,TFTI,NA,TIME,CLEAFS,1961,2021,2001,based on FAO,,Y
+PFRA,Price of ammonia,$/t,RTI,CFTI,NA,TIME,CLEAFS,-,-,2010,From FTT-H2,,Y
+FERTS,CLEAFS Share of potential green fertiliser adopters,%,RTI,TFTI,NA,TIME,CLEAFS,1961,2021,2001,based on FAO,,Y
 BCHY,FTT:Hydrogen matrix of technology costs,-,RTI,HYTI,C7TI,NA,FTT-H2,-,-,2001,Dummy data,,Y
 HYG1,FTT:Hydrogen total hydrogen supply by technology (kt H2),kt H2,RTI,HYTI,NA,TIME,FTT-H2,2011,2022,2011,IEA,Y,Y
 HYD1,FTT:Hydrogen total hydrogen supply (kt H2),kt H2,RTI,NA,NA,TIME,FTT-H2,2011,2022,2011,IEA,Y,Y
