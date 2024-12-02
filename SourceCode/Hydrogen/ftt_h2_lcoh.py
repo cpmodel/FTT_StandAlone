@@ -56,139 +56,117 @@ def get_lcoh(data, titles):
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
-    # Categories for the cost matrix (BHTC)
-    c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
+    # Categories for the cost matrix (BCHY)
+    c7ti = {category: index for index, category in enumerate(titles['C7TI'])}
 
     for r in range(len(titles['RTI'])):
 
         # Cost matrix
-        #bhtc = data['BHTC'][r, :, :]
+        #BCHY = data['BCHY'][r, :, :]
 
         # Boiler lifetime
-        lt = data['BHTC'][r,:, c4ti['5 Lifetime']]
-        max_lt = int(np.max(lt))
-        lt_mat = np.linspace(np.zeros(len(titles['HTTI'])), max_lt-1,
-                             num=max_lt, axis=1, endpoint=True)
-        lt_max_mat = np.concatenate(int(max_lt)*[lt[:, np.newaxis]], axis=1)
-        mask = lt_mat < lt_max_mat
-        lt_mat = np.where(mask, lt_mat, 0)
+        lt = data['BCHY'][r,:, c7ti['Lifetime']]
+        bt = data['BCHY'][r,:, c7ti['Buildtime']]
+        max_lt = int(np.max(bt+lt))
+        
+        # Define (matrix) masks to turn off cost components before or after contruction 
+        full_lt_mat = np.linspace(np.zeros(len(titles['HYTI'])), max_lt-1,
+                                  num=max_lt, axis=1, endpoint=True)
+        lt_max_mat = np.concatenate(int(max_lt) * [(lt+bt-1)[:, np.newaxis]], axis=1)
+        bt_max_mat = np.concatenate(int(max_lt) * [(bt-1)[:, np.newaxis]], axis=1)
+        
+        bt_mask = full_lt_mat <= bt_max_mat
+        bt_mask_out = full_lt_mat > bt_max_mat
+        lt_mask_in = full_lt_mat <= lt_max_mat
+        lt_mask = np.where(lt_mask_in == bt_mask_out, True, False)
 
         # Capacity factor
-        cf = data['BHTC'][r,:, c4ti['13 Capacity factor mean'], np.newaxis]
-
-        # Conversion efficiency
-        ce = data['BHTC'][r,:, c4ti['9 Conversion efficiency'], np.newaxis]
-        #print("ce:", ce)
+        cf = data['BCHY'][r,:, c7ti['Capacity factor'], np.newaxis]
+        conv = cf*bt[:, None]
+        conv[-1, 0] = 1.0
 
         # Discount rate
-        dr = data['BHTC'][r,:, c4ti['8 Discount rate'], np.newaxis]
+        dr = data['BCHY'][r,:, c7ti['Discount rate'], np.newaxis]
 
         # Initialse the levelised cost components
         # Average investment cost
-        it = np.zeros([len(titles['HTTI']), int(max_lt)])
-        # print(it.shape)
-        # print(data['BHTC'][r,:, c4ti['1 Investment cost mean']].shape)
-        it[:, 0,np.newaxis] = data['BHTC'][r,:, c4ti['1 Inv cost mean (EUR/Kw)'],np.newaxis]/(cf*1000)
-
+        it = np.ones([len(titles['HYTI']), int(max_lt)])
+        it = it * (
+            data['BCHY'][r,:, c7ti['CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv) +
+            data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv) +
+            data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv))
+        it = np.where(bt_mask, it, 0)
 
         # Standard deviation of investment cost
-        dit = np.zeros([len(titles['HTTI']), int(max_lt)])
-        dit[:, 0, np.newaxis] = divide(data['BHTC'][r,:, c4ti['2 Inv Cost SD'], np.newaxis], (cf*1000))
+        dit = it * data['BCHY'][r,:, c7ti['CAPEX, std, % of mean'],np.newaxis]
 
         # Upfront subsidy/tax at purchase time
-        st = np.zeros([len(titles['HTTI']), int(max_lt)])
-        st[:, 0, np.newaxis] = it[:, 0, np.newaxis] * data['HTVS'][r, :, 0, np.newaxis]
+        st = np.zeros_like(it)
 
         # Average fuel costs
-        ft = np.ones([len(titles['HTTI']), int(max_lt)])
-        ft = ft * divide(data['BHTC'][r,:, c4ti['10 Fuel cost  (EUR/kWh)'], np.newaxis]*data['HEWP'][r, :, 0, np.newaxis], ce)
-        ft = np.where(mask, ft, 0)
+        ft = np.zeros([len(titles['HYTI']), int(max_lt)])
+        ft = ft + (
+            data['BCHY'][r,:, c7ti["Feedstock input, mean, kWh/kg H2 prod."], np.newaxis]*0.05+
+            data['BCHY'][r,:, c7ti["Heat demand, mean, kWh/kg H2"], np.newaxis]*0.05+
+            data['BCHY'][r,:, c7ti["Electricity demand, mean, kWh/kg H2"], np.newaxis]*0.15)
+        ft = np.where(lt_mask, ft, 0)
 
         # Standard deviation of fuel costs
-        dft = np.ones([len(titles['HTTI']), int(max_lt)])
-        dft = dft * ft * data['BHTC'][r,:, c4ti['11 Fuel cost SD'], np.newaxis] 
-        dft = np.where(mask, dft, 0)
+        dft = np.zeros([len(titles['HYTI']), int(max_lt)])
+        dft = dft + (
+            data['BCHY'][r,:, c7ti["Feedstock input, std, % of mean"], np.newaxis]*0.05+
+            data['BCHY'][r,:, c7ti["Heat demand, std, % of mean"], np.newaxis]*0.05+
+            data['BCHY'][r,:, c7ti["Electricity demand, % of mean"], np.newaxis]*0.15)
+        dft = np.where(lt_mask, dft, 0)
         
-        # Fuel tax costs
-        fft = np.ones([len(titles['HTTI']), int(max_lt)])
-        fft = fft* divide(data['HTRT'][r, :, 0, np.newaxis], ce)
-        fft = np.where(mask, fft, 0)
-        #print("fft:", fft)
-        #print(fft.shape)
-
-        # Average operation & maintenance cost
-        omt = np.ones([len(titles['HTTI']), int(max_lt)])
-        omt = omt * divide(data['BHTC'][r,:, c4ti['3 O&M mean (EUR/kW)'], np.newaxis], (cf*1000))
-        omt = np.where(mask, omt, 0)
-
-        # Standard deviation of operation & maintenance cost
-        domt = np.ones([len(titles['HTTI']), int(max_lt)])
-        domt = domt * divide(data['BHTC'][r,:, c4ti['4 O&M SD'], np.newaxis], (cf*1000))
-        domt = np.where(mask, domt, 0)
-
-        # Feed-in-Tariffs
-        fit = np.ones([len(titles['HTTI']), int(max_lt)])
-        fit = fit * data['HEFI'][r, :, 0, np.newaxis]
-        fit = np.where(mask, fit, 0)
+        # Fixed OPEX
+        opex_fix = np.zeros([len(titles['HYTI']), int(max_lt)])
+        opex_fix = opex_fix + (
+            data['BCHY'][r,:, c7ti['Fixed OPEX, mean, €/kg H2 cap/y'],np.newaxis]/(cf))
+        opex_fix = np.where(lt_mask, opex_fix, 0)
+        
+        # st.dev fixed opex
+        dopex_fix = opex_fix * data['BCHY'][r,:, c7ti['Fixed OPEX, std, % of mean'],np.newaxis]
+        
+        # Variable OPEX
+        opex_var = np.zeros([len(titles['HYTI']), int(max_lt)])
+        opex_var = opex_var + (
+            data['BCHY'][r,:, c7ti['Variable OPEX, mean, €/kg H2 prod'],np.newaxis])
+        opex_var = np.where(lt_mask, opex_var, 0)    
+        
+        # st.dev variable opex
+        dopex_var= opex_var * data['BCHY'][r,:, c7ti['Variable OPEX, std, % of mean'],np.newaxis]
+        
+        # Energy production
+        energy_prod = np.ones([len(titles['HYTI']), int(max_lt)])
+        energy_prod = np.where(lt_mask, energy_prod, 0)
 
         # Net present value calculations
         # Discount rate
-        denominator = (1+dr)**lt_mat
+        denominator = (1+dr)**full_lt_mat
 
         # 1-Expenses
-        # 1.1-Without policy costs
-        npv_expenses1 = (it+ft+omt)/denominator
-        # 1.2-With policy costs
-        npv_expenses2 = (it+st+ft+fft+omt-fit)/denominator
-        # 1.3-Only policy costs
-        npv_expenses3 = (st+fft-fit)/denominator
+        # 1.1-NPV
+        npv_expenses1 = (it+st+ft+opex_fix+opex_var)/denominator
+
         # 2-Utility
-        npv_utility = 1/denominator
-        #Remove 1s for tech with small lifetime than max
+        npv_utility = energy_prod/denominator
         npv_utility[npv_utility==1] = 0
-        npv_utility[:,0] = 1
+
         # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
+        npv_std = np.sqrt(dit**2 + dft**2 + dopex_fix**2 + + dopex_var**2)/denominator
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOH
         lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.2-LCOH including policy costs
-        tlcoh = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        # 1.3-LCOH of policy costs
-        lcoh_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
+        lcoh[np.isnan(lcoh)] == 0.0 
+
         # Standard deviation of LCOH
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
-
-        # LCOH augmented with non-pecuniary costs
-        tlcohg = tlcoh + data['BHTC'][r, :, c4ti['12 Gamma value']]
-
-        # Pay-back thresholds
-        pb = data['BHTC'][r,:, c4ti['16 Payback time, mean']]
-        dpb = data['BHTC'][r,:, c4ti['17 Payback time, SD']]
-
-        # Marginal costs of existing units
-        tmc = ft[:, 0] + omt[:, 0] + fft[:, 0] - fit[:, 0]
-        dtmc = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2)
-
-        # Total pay-back costs of potential alternatives
-        tpb = tmc + (it[:, 0] + st[:, 0])/pb
-        dtpb = np.sqrt(dft[:, 0]**2 + domt[:, 0]**2 +
-                       divide(dit[:, 0]**2, pb**2) +
-                       divide(it[:, 0]**2, pb**4)*dpb**2)
-
-        # Add gamma values
-        tmc = tmc + data['BHTC'][r, :, c4ti['12 Gamma value']]
-        tpb = tpb + data['BHTC'][r, :, c4ti['12 Gamma value']]
+        dlcoh[np.isnan(dlcoh)] == 0.0 
 
         # Pass to variables that are stored outside.
-        data['HEWC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
-        data['HETC'][r, :, 0] = tlcoh           # The real bare LCOH with taxes
-        data['HGC1'][r, :, 0] = tlcohg         # As seen by consumer (generalised cost)
-        data['HWCD'][r, :, 0] = dlcoh          # Variation on the LCOH distribution
-        data['HGC2'][r, :, 0] = tmc             # Total marginal costs
-        data['HGD2'][r, :, 0] = dtmc          # SD of Total marginal costs
-        data['HGC3'][r, :, 0] = tpb             # Total payback costs
-        data['HGD3'][r, :, 0] = dtpb          # SD of Total payback costs
+        data['HYLC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
+        data['HYLD'][r, :, 0] = dlcoh          # Variation on the LCOH distribution
 
     return data

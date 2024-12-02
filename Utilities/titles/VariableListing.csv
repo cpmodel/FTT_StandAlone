@@ -379,7 +379,6 @@ MMCDX,FTT:Power standard deviation of marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,
 MTCDX,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 ZTFT,FTT:Freight fuel tax,,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,Y,Y
-ZTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
 FERTD,CLEAFS Fertiliser demand (tN/year),Nt/year,RTI,TFTI,NA,TIME,CLEAFS,1961,2021,2001,FAO,Y,Y
 AQR,Agriculture output projection,million EUR2010,RTI,NA,NA,TIME,CLEAFS,2010,2050,2010,From E3ME,,Y
 BFTC,CLEAFS matrix of technology costs,-,RTI,TFTI,CFTI,NA,CLEAFS,-,-,2001,-,,Y
@@ -390,3 +389,11 @@ HYG1,FTT:Hydrogen total hydrogen supply by technology (kt H2),kt H2,RTI,HYTI,NA,
 HYD1,FTT:Hydrogen total hydrogen supply (kt H2),kt H2,RTI,NA,NA,TIME,FTT-H2,2011,2022,2011,IEA,Y,Y
 HYJT,FTT:Hydrogen technology to fuel matrix,-,NA,HYTI,JTI,NA,FTT-H2,-,-,2001,-,,Y
 HYWW,FTT:Hydrogen global cumulative capacity (kt H2),kt H2,NA,HYTI,NA,TIME,FTT-H2,2022,2022,2022,IEA,,Y
+HYLC,FTT:Hydrogen LCOH2,EUR/tH2,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYLD,FTT:Hydrogen LCOH2 -standard deviation,EUR/tH2,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYWS,FTT:Hydrogen market shares,-,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYWK,FTT:Hydrogen production capacities,kt H2 cap./y,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYIY,FTT:Hydrogen production capacities,EUR,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYPD,FTT:Hydrogen production forecst,kt H2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYWA,FTT:Hydrogen substitution frequencies,-,RTI,HYTI,HYTI,NA,FTT-H2,,,2022,-,Y,Y
+HYGM,FTT:Hydrogen gamma values,EUR/tH2,RTI,HYTI,HYTI,NA,FTT-H2,,,2022,-,Y,Y
