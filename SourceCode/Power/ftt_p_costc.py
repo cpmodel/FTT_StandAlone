@@ -413,19 +413,26 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     if j == 19 :
                         BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
 
-                # Increasing investment term type of limit
-                elif(BCET[r, j, 11] == 3):
 
-                    #------> Insert an interpolation here TODO this is from the fortran, do I need to do this?
-                    X = copy.deepcopy(CSC_Q[r, tech_to_resource[j], :])
-                    Y = copy.deepcopy(BCSC[r, tech_to_resource[j], 4:])
+                        # BCET[r, j, 10] = MERCX[r, tech_to_resource[j], 0] * 2.0
 
-                    X0 = MEPD[r, tech_to_resource[j], 0] / 3.6 #PJ -> TWh
-                    if X0> 0.0:
-                        Y0, I = interp(X, Y, X0, L)
-                    MERC[r, tech_to_resource[j], 0] = Y0
-                    BCET[r, j, 2] = Y0
+                # # Increasing investment term type of limit
+                # elif(BCET[r, j, 11] == 3):
 
+                #     #------> Insert an interpolation here TODO this is from the fortran, do I need to do this?
+                #     X = copy.deepcopy(CSC_Q[r, tech_to_resource[j], :])
+                #     Y = copy.deepcopy(BCSC[r, tech_to_resource[j], 4:])
+
+                #     X0 = MEPD[r, tech_to_resource[j], 0] / 3.6 #PJ -> TWh
+                #     if X0> 0.0:
+                #         Y0, I = interp(X, Y, X0, L)
+                #     MERC[r, tech_to_resource[j], 0] = copy.deepcopy(Y0)
+                #     # TODO: SET Exog MERC
+                #     # MERC[r, tech_to_resource[j], 0] = copy.deepcopy(MERCX[r, tech_to_resource[j], 0])
+                #     BCET[r, j, 2] = copy.deepcopy(Y0)
+                #     # BCET[r, j, 2] = copy.deepcopy(MERCX[r, tech_to_resource[j], 0])
+
+                
     # Add REN resources left in MRED, MRES
     
     # Total technical potential r>4 (j>4 in python)
