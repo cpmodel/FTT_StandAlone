@@ -119,7 +119,7 @@ def are_csvs_older_than_masterfiles(vars_to_convert, out_dir, models, \
             elif csv_exists(out_fn_reg):
                 time_modified = os.path.getmtime(out_fn_reg)
             else:
-                print(f"var does not exist: {var}")
+                print(f"No existing {var} csv files found")
                 print(f"vars_to_convert: {vars_to_convert}")
                 continue
             
