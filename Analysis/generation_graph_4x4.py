@@ -38,9 +38,9 @@ tech_names = {}             # The titles of the technology names
 
 # Group the technologies in a coarser classification:
     
-grouping_power = {"Coal and oil": [1, 2,3, 4,5], "Gas": [6, 7], 
-                  "Nuclear": [0], "Biomass + other": [8, 9, 10, 11, 12, 13, 14, 20, 21, 22, 23],
-                  "Hydropower": [15], "Offshore wind": [17], "Onshore wind": [16], "Solar": [18, 19]}
+grouping_power = {"Coal": [2,3], "Gas and oil": [1, 6, 7, 8, 9], 
+                  "Nuclear": [0], "Biomass + other": [4, 5, 8, 9, 12, 13],
+                  "Hydropower": [12, 13], "Offshore wind": [17], "Onshore wind": [16], "Solar": [18, 19]}
 
 
 grouping_heat = { "Coal": [6], "Oil": [0, 1], "Gas": [2, 3], "Biomass": [4, 5],
@@ -68,8 +68,8 @@ green_all = {"FTT:P": green_power, "FTT:H": green_heat, "FTT:Tr": green_transpor
 
 colours_power = {
     "Nuclear": "lightcoral",  # Light coral to indicate its clean but debated nature
-    "Coal and oil": "black",  # Black for traditional, high carbon emission sources
-    "Gas": "silver",  # Slate grey to differentiate from coal but still fossil fuel
+    "Coal": "black",  # Black for traditional, high carbon emission sources
+    "Gas and oil": "silver",  # Slate grey to differentiate from coal but still fossil fuel
     "Biomass + other": "saddlebrown",  # brown for consistency
     "Hydropower": "royalblue",  
     "Offshore wind": "palegreen",  # Sky blue to signify wind, clean and free like the sky
@@ -187,12 +187,20 @@ def get_sum_greens_2050(model_dfs, model):
                       green_all[model]])
     return green_sum
 
+def get_sum_all(model_dfs, model):
+    """Take the sum over all green technologies"""
+    sum_all = np.sum(model_dfs[2050])
+    return green_sum
+
 def green_growth(model_df_scen, model):
     "Percentage difference in proper green techs from baseline"
     baseline_green = get_sum_greens_2050(model_dfs_S0[model], model)
     scenario_green = get_sum_greens_2050(model_df_scen, model)
     green_growth = (scenario_green - baseline_green)/baseline_green * 100
-    return green_growth
+    
+    green_growth_pp = (scenario_green - baseline_green)/np.sum(model_dfs_S0[model][2050]) * 100    
+    return green_growth, green_growth_pp
+
 
 def plot_column(model_dfs, col, col_title):
     for idx, (model, model_df) in enumerate(model_dfs.items()):
@@ -224,7 +232,7 @@ def plot_column(model_dfs, col, col_title):
         ax.spines['bottom'].set_visible(False)
         
         # Compute difference from baseline
-        green_growth_out = green_growth(model_df, model)
+        green_growth_out, green_growth_pp = green_growth(model_df, model)
         
         
         if col == 0:
@@ -232,7 +240,7 @@ def plot_column(model_dfs, col, col_title):
                     ha='right', va='center', rotation=90, fontweight='bold')
         
         if col != 0:
-            ax.text(x=29.5, y=text_y_values[model], s=f'+{green_growth_out:.0f}%', 
+            ax.text(x=29.5, y=text_y_values[model], s=f'+{green_growth_pp:.0f}%pt', 
                     horizontalalignment='right', fontweight='bold')
         
         if col == 3:

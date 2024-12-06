@@ -81,7 +81,7 @@ def scale_total_emissions(emissions_m, model):
     https://www.iea.org/data-and-statistics/charts/global-co2-emissions-by-sector-2019-2022
     - Power sector is 14650 Mt CO2
     - "Space and water heating: https://www.iea.org/energy-system/buildings/heating (2400 Mt CO2)"
-    - "Road transport emissions: 5870 Mt CO2 total (https://www.iea.org/energy-system/transport), 
+    - "Road transport emissions: 5870 Mt CO2 total (https://www.iea.org/energy-system/transport ), 
         of which 39% freight and remaining transport (https://www.nature.com/articles/s41598-024-52682-4)"""
     
     emissions_2022 = {"FTT:P" : 14650,

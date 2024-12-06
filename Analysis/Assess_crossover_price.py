@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import seaborn 
 from matplotlib.lines import Line2D
 
-
+from matplotlib.font_manager import FontProperties
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
 
@@ -20,15 +20,16 @@ output_file = "Results_sxp.pickle"
 output_S0 = get_output(output_file, "S0")
 titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
 
-
-
 # Define the regions and the region numbers of interest
-regions = {'India': 41, "China": 40, "Brazil": 43, "United States": 33, "Germany": 2, "UK": 14}
+regions = {'India': 41, "China": 40, "Brazil": 43,
+           "United States": 33, "Germany": 2, "UK": 14,
+           "South Africa": 56, "Japan": 34}
+
 regions_all = {i: i - 1 for i in range(1, 72)}
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [13]}
-dirty_techs = {"FTT:P": [0, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [1, 5]}
+dirty_techs = {"FTT:P": [1, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [1, 5]}
 
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
@@ -235,6 +236,10 @@ def comparison_str(clean_tech, fossil_tech):
         output_str = "New solar vs existing coal"
     elif clean_tech == "19 Solar PV" and fossil_tech == "7 CCGT":
         output_str = "New solar vs existing gas"
+    elif clean_tech == "17 Onshore" and fossil_tech == "3 Coal":
+        output_str = "New wind vs existing coal"
+    elif clean_tech == "17 Onshore" and fossil_tech == "7 CCGT":
+        output_str = "New wind vs existing gas"
     
     elif clean_tech == "12 Heatpump AirAir" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
         output_str = "Air-air HP vs gas"
@@ -266,7 +271,7 @@ def comparison_str(clean_tech, fossil_tech):
         
     else:
         output_str = "TBD"
-        print(clean_tech, fossil_tech)
+        print(f"Missing technology combo is {clean_tech}, {fossil_tech}")
         
     return output_str
 
@@ -338,7 +343,7 @@ def find_intersections(x, y):
             intersections.append(x_cross)
     return intersections
 
-# Example setup for the plot
+# Setup for the plot
 fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.2), sharey=True)
 axs = axs.flatten()
 rows = []
@@ -426,7 +431,9 @@ for mi, model in enumerate(models):
     custom_labels = list(used_linestyles.keys())
     
     # Add the custom legend to the subplot
-    ax.legend(custom_lines, custom_labels, loc='upper right')
+    ax.legend(custom_lines, custom_labels, loc='upper right',
+              title="Leading technologies", title_fontproperties=FontProperties(weight='bold'))
+
 # Extract handles and labels from the first subplot
 handles, labels = axs[0].get_legend_handles_labels()
 
