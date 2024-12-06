@@ -54,7 +54,7 @@ def set_carbon_tax(data, c2ti, year):
     return carbon_costs
     
 
-def get_lcoe(data, titles):
+def get_lcoe(data, titles, year):
     """
     Calculate levelized costs.
 

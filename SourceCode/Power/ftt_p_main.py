@@ -230,7 +230,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MCFC'][:, :, 0] = data['MWLO'][:, :, 0].copy()
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, year)
 
 
     #%%
@@ -273,7 +273,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
-            time_lag = get_lcoe(data, titles)
+            time_lag = get_lcoe(data, titles, year)
         # Call RLDC function for capacity and load factor by LB, and storage costs
         
         if year >= 2013: # Still in historical period
@@ -477,7 +477,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, year)
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -813,7 +813,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Update LCOE
             # =================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, year)
 
             # =================================================================
             # Update the time-loop variables data_dt
