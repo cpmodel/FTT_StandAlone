@@ -103,7 +103,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # Simulation period starts in 2020   # Calculate capacities (SEWK)
     # Convert strings to lists of values
 
-    print("Nooooooo")
+    
 
     if year <= histend['SEWG']:   ## histend['SEWG'] = 2019
 
