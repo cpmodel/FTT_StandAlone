@@ -11,7 +11,7 @@ Domestic Heat FTT module.
 ####################################
 
 This is the main file for FTT: Heat, which models technological
-diffusion of domestic heat technologies due to consumer decision making. 
+diffusion of domestic heat technologies due to consumer decision making.
 Consumers compare the **levelised cost of heat**, which leads to changes in the
 market shares of different technologies.
 
@@ -29,8 +29,8 @@ Local library imports:
 Functions included:
     - get_lcoh
         Calculate levelised cost of transport
-        
-variables: 
+
+variables:
 cf = capacity factor
 ce = conversion efficiency
 
@@ -68,13 +68,13 @@ def get_lcoh(data, titles):
         lt = data['BCHY'][r,:, c7ti['Lifetime']]
         bt = data['BCHY'][r,:, c7ti['Buildtime']]
         max_lt = int(np.max(bt+lt))
-        
-        # Define (matrix) masks to turn off cost components before or after contruction 
+
+        # Define (matrix) masks to turn off cost components before or after contruction
         full_lt_mat = np.linspace(np.zeros(len(titles['HYTI'])), max_lt-1,
                                   num=max_lt, axis=1, endpoint=True)
         lt_max_mat = np.concatenate(int(max_lt) * [(lt+bt-1)[:, np.newaxis]], axis=1)
         bt_max_mat = np.concatenate(int(max_lt) * [(bt-1)[:, np.newaxis]], axis=1)
-        
+
         bt_mask = full_lt_mat <= bt_max_mat
         bt_mask_out = full_lt_mat > bt_max_mat
         lt_mask_in = full_lt_mat <= lt_max_mat
@@ -118,25 +118,25 @@ def get_lcoh(data, titles):
             data['BCHY'][r,:, c7ti["Heat demand, std, % of mean"], np.newaxis]*0.05+
             data['BCHY'][r,:, c7ti["Electricity demand, % of mean"], np.newaxis]*0.15)
         dft = np.where(lt_mask, dft, 0)
-        
+
         # Fixed OPEX
         opex_fix = np.zeros([len(titles['HYTI']), int(max_lt)])
         opex_fix = opex_fix + (
             data['BCHY'][r,:, c7ti['Fixed OPEX, mean, €/kg H2 cap/y'],np.newaxis]/(cf))
         opex_fix = np.where(lt_mask, opex_fix, 0)
-        
+
         # st.dev fixed opex
         dopex_fix = opex_fix * data['BCHY'][r,:, c7ti['Fixed OPEX, std, % of mean'],np.newaxis]
-        
+
         # Variable OPEX
         opex_var = np.zeros([len(titles['HYTI']), int(max_lt)])
         opex_var = opex_var + (
             data['BCHY'][r,:, c7ti['Variable OPEX, mean, €/kg H2 prod'],np.newaxis])
-        opex_var = np.where(lt_mask, opex_var, 0)    
-        
+        opex_var = np.where(lt_mask, opex_var, 0)
+
         # st.dev variable opex
         dopex_var= opex_var * data['BCHY'][r,:, c7ti['Variable OPEX, std, % of mean'],np.newaxis]
-        
+
         # Energy production
         energy_prod = np.ones([len(titles['HYTI']), int(max_lt)])
         energy_prod = np.where(lt_mask, energy_prod, 0)
@@ -159,11 +159,11 @@ def get_lcoh(data, titles):
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOH
         lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        lcoh[np.isnan(lcoh)] == 0.0 
+        lcoh[np.isnan(lcoh)] == 0.0
 
         # Standard deviation of LCOH
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
-        dlcoh[np.isnan(dlcoh)] == 0.0 
+        dlcoh[np.isnan(dlcoh)] == 0.0
 
         # Pass to variables that are stored outside.
         data['HYLC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
