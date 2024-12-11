@@ -404,13 +404,9 @@ for mi, model in enumerate(models):
     ax.set_xlim(2025, 2050)   
     ax.set_ylim(-100, 100)
     
-    # Get the current y-limits before shading
+    # Apply green and grey shading from 0 to ylimits
     ymin, ymax = ax.get_ylim() 
-    
-    # Apply green shading from 0 to the negative y-limit
     ax.fill_between(years, ymin, 0, where=(np.array(years) >= 2025), facecolor='lightgreen', alpha=0.35)
-    
-    # Apply grey shading from 0 to the positive y-limit
     ax.fill_between(years, 0, ymax, where=(np.array(years) >= 2025), facecolor='lightgrey', alpha=0.35)
     
     # Reset the y-limits after shading
