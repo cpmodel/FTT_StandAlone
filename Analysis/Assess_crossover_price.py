@@ -2,6 +2,9 @@
 """
 Created on Tue Jun 18 11:39:28 2024
 
+This script produces three graphs and a table, showing the cross-over price, 
+including the cross-sectoral effects.
+
 @author: fjmn202
 """
 

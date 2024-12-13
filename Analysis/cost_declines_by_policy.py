@@ -2,6 +2,9 @@
 """
 Created on Thu Jul 18 17:13:22 2024
 
+This script produces one figure. That is, the bare levelised cost difference,
+based on the policy. 
+
 @author: Femke Nijsse
 """
 
@@ -31,6 +34,10 @@ tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",
 
 year_inds = [year - 2010 for year in [2024, 2035, 2050]]
 
+# Define the percentage difference function
+def get_percentage_difference(clean_price, dirty_price):
+    return 100 * (clean_price - dirty_price) / dirty_price
+
 
 def get_weighted_costs(output, model, tech_variable, year_inds):
     """Get the weighted cost based on the scenario (output), model,
@@ -42,13 +49,37 @@ def get_weighted_costs(output, model, tech_variable, year_inds):
     else:
         prices = output[price_names[model]][:, tech_variable, 0, year_inds]
     
-    # Way by total size of the market per region
-    weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)
-   
-    
+    # Weigh by total size of the market per region
+    weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)    
     weighted_prices = np.average(prices, weights=weights, axis=0)
+
     
     return weighted_prices
+
+def get_costs(output, model, tech_variable, year_inds):
+    """Get the  cost based on the scenario (output), model,
+    tech_variable and the indices of the years of interest.
+    """
+    
+    if model == "FTT:P" and tech_variable in [2, 6]:
+        prices = output[operation_cost_name[model]][:, tech_variable, 0, year_inds]
+    else:
+        prices = output[price_names[model]][:, tech_variable, 0, year_inds]
+
+    return prices
+
+def get_weighted_percentage_difference(output, model, 
+                                       prices_clean, prices_fossil, year_inds):
+    
+    """First compute the percentage difference in each region,
+    Then compute the weighted difference based on overall market share"""
+    
+    percentage_difference = get_percentage_difference(prices_clean, prices_fossil)
+    weights = np.sum(output[shares_vars[model]][:, :, 0, year_inds], axis=1)    
+    weighted_difference = np.average(percentage_difference, weights=weights, axis=0)
+    
+    return weighted_difference
+
 
 output_S0 = get_output(output_file, "S0")
 
@@ -134,29 +165,14 @@ if plot_dot_graph:
 # Globally averaged cost difference over time by within-sector policy
 # ========================================================================
 
-clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [13]}
-fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [5]} # Note 4 for transport gives an error
+clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 13}
+fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 3, "FTT:Fr": 5} # Note 4 for transport gives an error
 graph_label = {"FTT:P": "New solar + battery \n vs existing coal", "FTT:H": "Water-air HP \n vs gas boiler",
                "FTT:Tr": "Electric vehicles \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel trucks"}
 
 
-# Define the percentage difference function
-def get_percentage_difference(clean_price, dirty_price):
-    return 100 * (clean_price - dirty_price) / dirty_price
 
-def find_lowest_cost_tech(output, model, tech_list, year_ind):
-    """Given model output, the model, and a list of techs to consider,
-    find the technology with the lowest costs in 2030"""
-    
-    lowest_cost = 10000
-    for tech in tech_list:
-        cost = get_weighted_costs(output, model, tech, year_ind)
-        if cost < lowest_cost:
-            tech_ind_cheapest = tech
-            lowest_cost = cost
-    return tech_ind_cheapest
 
-            
    
 year_inds = list(range(13, 41))
 timeseries_dict = {}
@@ -173,20 +189,24 @@ for model in models:
     
     scenarios = {"Current traj.": output_S0, "Carbon tax": output_ct,
                  "Subsidies": output_sub, "Mandates": output_man}
-    
-    
-    clean_tech_variable[model] = find_lowest_cost_tech(output_S0, model, clean_tech_variable[model], 20)
-    fossil_tech_variable[model] = find_lowest_cost_tech(output_S0, model, fossil_tech_variable[model], 20)
+     
     
     for scen, output in scenarios.items():
-        weighted_prices_clean = get_weighted_costs(output, model, clean_tech_variable[model], year_inds)
-        weighted_prices_fossil = get_weighted_costs(output, model, fossil_tech_variable[model], year_inds)
-        price_diff_perc = get_percentage_difference(weighted_prices_clean, weighted_prices_fossil)
+        # weighted_prices_clean = get_weighted_costs(output, model, clean_tech_variable[model], year_inds)
+        # weighted_prices_fossil = get_weighted_costs(output, model, fossil_tech_variable[model], year_inds)
+        # price_diff_perc = get_percentage_difference(weighted_prices_clean, weighted_prices_fossil)
+        # timeseries_by_policy.append(price_diff_perc)
+        
+        prices_clean = get_costs(output, model, clean_tech_variable[model], year_inds)
+        prices_fossil = get_costs(output, model, fossil_tech_variable[model], year_inds)
+        price_diff_perc = get_weighted_percentage_difference(output, model, 
+                                               prices_clean, prices_fossil, year_inds)
         timeseries_by_policy.append(price_diff_perc)
+        if model == "FTT:H":
+            test = 1
         
     
     timeseries_dict[model] = timeseries_by_policy
-
 
 #%% Global cost difference -- plotting
 fig, axs = plt.subplots(2, 2, figsize=(3.5, 3.5), sharey=True)

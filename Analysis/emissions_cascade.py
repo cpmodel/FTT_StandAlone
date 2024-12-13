@@ -456,7 +456,7 @@ def plot_stacked_bar_chart(data, axis):
         ))
 
     # Position the text label slightly to the right of the arrow
-    axis.text(mid_bar_x *1.03, 0.5, "Coordination gain", ha="left", va="center")
+    axis.text(mid_bar_x *1.03, 0.5, "Combination gain", ha="left", va="center")
 
 
 plot_stacked_bar_chart(df_cumulative, axes[0])
