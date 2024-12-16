@@ -27,20 +27,17 @@ def set_carbon_tax(data, c6ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    # Load factors
-    Lfactor = data['ZCET'][:, :, c6ti['10 Loads (t/V)']]
     
     carbon_costs = (data["REPP3X"][:, :, 0]                          # Carbon price in euro / tC
-                    * data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
+                    * data['BZTC'][:, :, c6ti['12 CO2Emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
                     # data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
                     / 3.666 / 10**6                                 # Conversion from C to CO2, and g to tonne
                     )
     
     
     if np.isnan(carbon_costs).any():
-        #print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
-        print(f"Emissions intensity {data['ZCET'][:, :, c6ti['14 CO2Emissions (gCO2/km)']]}")
+        print(f"Emissions intensity {data['BZTC'][:, :, c6ti['12 CO2Emissions (gCO2/km)']]}")
         
         raise ValueError
                        

@@ -95,7 +95,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     if year == 2012:
         start_nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
         for veh in range(len(titles['FTTI'])):
-            if veh in [12, 13, 18, 19]:
+            if veh in range(30, 35):
                 # Starting EV cost (without battery)
                 start_nonbat_cost[:, veh, 0] = (data['ZCET'][:, veh, c6ti['1 Price of vehicles (USD/vehicle)']]
                                           - time_lag['ZCET'][:, veh, c6ti['21 Battery capacity (kWh)']]
@@ -413,12 +413,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             data["Battery cap additions"][2, t-1, 0] = summed_quarterly_capacity_freight
             
+    
+            
             # Copy over the technology cost categories that do not change 
             # Copy over the initial cost matrix
             data["ZCET initial"] = np.copy(data_dt['ZCET initial'])
             
             # Battery learning
             battery_cost_frac = battery_costs(data, time_lag, year, titles)
+            
             
             for tech in range(len(titles['FTTI'])):
                     
