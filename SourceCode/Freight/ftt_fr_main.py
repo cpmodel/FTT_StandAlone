@@ -37,8 +37,7 @@ import numpy as np
 # Local library imports
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.support.divide import divide
-from SourceCode.Freight.ftt_fr_sales import get_sales
-from SourceCode.Freight.ftt_fr_mandate import EV_truck_mandate
+from SourceCode.Freight.ftt_fr_sales_and_mandate import get_enhanced_sales
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 
@@ -203,7 +202,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
         
-        data["ZWSA"] = EV_truck_mandate(data["EV truck mandate"], data["ZWSA"], time_lag["ZEWS"], time_lag['RFLZ'], year)
         
         for t in range(1, no_it + 1):
         
@@ -365,8 +363,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Investment (sales) = new capacity created
             # zewi_t is new additions at current timestep/iteration
-            data, zewi_t = get_sales(data, data_dt, time_lag, titles, dt, c6ti, t)
-            
+            data["ZEWI"], zewi_t, data["ZEWK"] = get_enhanced_sales(
+                    cap=data["ZEWK"],
+                    cap_dt=data_dt["ZEWK"], 
+                    cap_lag=time_lag["ZEWK"],
+                    shares=data["ZEWS"],
+                    shares_dt=data_dt["ZEWS"],
+                    sales_or_investment_in=data["ZEWI"],
+                    timescales=data['ZCET'][:, :, c6ti['8 service lifetime (y)']],
+                    dt=dt,
+                    EV_truck_mandate=data["EV truck mandate"],
+                    year=year
+                    )
+            data['ZEWS'][:, :, 0] = data['ZEWK'][:, :, 0] / np.sum(data['ZEWK'][:, :, 0], axis=1)[:, np.newaxis]            
             # Reopen country loop
             for r in range(len(titles['RTI'])):
 
