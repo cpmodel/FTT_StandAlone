@@ -399,4 +399,4 @@ HYWA,FTT:Hydrogen substitution frequencies,-,RTI,HYTI,HYTI,NA,FTT-H2,,,2022,-,Y,
 HYGM,FTT:Hydrogen gamma values,EUR/tH2,RTI,HYTI,HYTI,NA,FTT-H2,,,2022,-,Y,Y
 HYCSC,FTT:Hydrogen cost-supply curves,EUR/tH2,RTI,HYTI,bins,NA,FTT-H2,,,2022,-,Y,Y
 HYRCSC,FTT:Hydrogen regional cost-supply curves,EUR/tH2,ARTI,HYTI,bins,NA,FTT-H2,,,2022,-,Y,Y
-HYEXPSH,FTT:Hydrogen hydrogen export shares,%,RTI,NA,NA,NA,FTT-H2,,,2022,-,Y,Y
+HYEXPSH,FTT:Hydrogen hydrogen export shares,%,RTI,NA,NA,NA,FTT-H2,2011,2022,2023,-,Y,Y

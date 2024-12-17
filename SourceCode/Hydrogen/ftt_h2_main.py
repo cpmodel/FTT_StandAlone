@@ -44,6 +44,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Hydrogen.ftt_h2_lcoh import get_lcoh as get_lcoh2
 from SourceCode.Hydrogen.ftt_h2_csc import get_csc
+from SourceCode.Hydrogen.ftt_h2_pooledtrade import pooled_trade
 from SourceCode.core_functions.substitution_frequencies import sub_freq
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -217,19 +218,32 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                     data_dt[var] = np.copy(data[var])
 
-    # Create cost-supply curve
-    hylc = data['HYLC'][:, :, 0]
-    hyld = data['HYLD'][:, :, 0]
-    hycsc = data['HYCSC'][:, :, :]
-    hyrcsc = data['HYRCSC'][:, :, :]
-    cf_idx = c7ti['Capacity factor']
-    data['BCHY'][:, -1, cf_idx] = 0.5
-    hywk = data['HYG1'][:, :, 0] / data['BCHY'][:, :, cf_idx]
-    hyd1 = data['HYD1'][:, 0, 0]
-    hyexpsh = data['HYEXPSH'][:, 0, 0]
-    hyexpsh[:] = 0.1
+        # Create cost-supply curve
+        hylc = data['HYLC'][:, :, 0]
+        hyld = data['HYLD'][:, :, 0]
+        hycsc = data['HYCSC'][:, :, :]
+        hyrcsc = data['HYRCSC'][:, :, :]
+        cf_idx = c7ti['Capacity factor']
+        data['BCHY'][:, -1, cf_idx] = 0.5
+        hywk = data['HYG1'][:, :, 0] / data['BCHY'][:, :, cf_idx]
+        hyd1 = data['HYD1'][:, 0, 0]
+        lag_hyg1 = time_lag['HYG1'][:, :, 0]
+
+        if year > histend['HYEXPSH']:
+            fix_hyexpsh = time_lag['HYEXPSH'][:, 0, 0] * 0.9
+            flex_hyexpsh = time_lag['HYEXPSH'][:, 0, 0] * 0.1
+        else:
+            fix_hyexpsh = data['HYEXPSH'][:, 0, 0]
+            flex_hyexpsh = np.zeros_like(data['HYEXPSH'][:, 0, 0])
 
 
-    hycsc, bins = get_csc(hylc, hyld, hywk, hycsc, titles)
+
+        hycsc, bins = get_csc(hylc, hyld, hywk, hycsc, titles)
+        hyg1, capacity_factor = pooled_trade(hyd1, fix_hyexpsh, flex_hyexpsh, hylc, lag_hyg1, hywk, hycsc, hyrcsc, bins, titles)
+
+        data['HYG1'][:, :, 0] = hyg1
+        # Overwrite capacity factor where capacity is notnull
+        data['BCHY'][hywk != 0, c7ti['Capacity factor']] = capacity_factor[hywk != 0]
+
 
     return data
