@@ -76,14 +76,17 @@ def battery_costs(data, time_lag, year, titles):
     # No learning takes place before 2021
     if year <= 2022:
         battery_cost_fraction = 1
-    
     else:
-        battery_cost_fraction = (
-            ( time_lag["Cumulative total batcap"] / time_lag["Cumulative total batcap start"] ) 
-            ** battery_learning_exp )
-    
-    if np.isnan(battery_cost_fraction):
-        test = 1
+        # Add safety checks for both division and exponentiation
+        safe_denominator = np.where(time_lag["Cumulative total batcap start"] <= 0,
+                                  np.finfo(float).eps,
+                                  time_lag["Cumulative total batcap start"])
+        
+        ratio = time_lag["Cumulative total batcap"] / safe_denominator
+        # Ensure ratio is positive before applying power
+        safe_ratio = np.where(ratio <= 0, np.finfo(float).eps, ratio)
+        
+        battery_cost_fraction = safe_ratio ** battery_learning_exp
     
     return battery_cost_fraction
 
