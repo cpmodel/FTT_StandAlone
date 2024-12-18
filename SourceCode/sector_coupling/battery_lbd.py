@@ -49,7 +49,7 @@ def get_cumulative_batcap(data, time_lag, year, titles):
         data["Cumulative total batcap start"][0, 0, 0] = (
             np.sum(data["TEWW"][0, 18:24]) / 1000
             + np.sum(data["MSSC"] * sector_coupling_assumps["GW to GWh"])
-            + np.sum(data["ZEWK"][:, :, 0] * data["ZCET"][:, :, c6ti['21 Battery capacity (kWh)']] / 10e6)
+            + np.sum(data["ZEWK"][:, :, 0] * data["BZTC"][:, :, c6ti['16 Battery capacity (kWh)']] / 10e6)
             )
         data["Cumulative total batcap"] = np.copy(data["Cumulative total batcap start"])
     else:

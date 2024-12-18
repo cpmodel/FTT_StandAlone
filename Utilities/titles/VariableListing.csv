@@ -89,7 +89,6 @@ MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWDL,FTT:Power lagged demand,PJ,RTI,JTI,NA,TIME,FTT-P,,,2010,-,,Y
 FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,From E3ME results,,Y
 MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECW battery only,"LCOE bare, no policies, only battery costs",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
@@ -109,6 +108,7 @@ MELF,FTT:Power lifetime of power equipment,y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,
 MEKA,FTT:Power age-tracking matrix of existing capacity,GW,RTI,T2TI,TYTI,TIME,FTT-P,-,-,2001,-,,Y
 MEFI,FTT:Power feed-in-tariffs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MECW,"LCOE bare, no policies, with carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECW battery only,"LCOE bare, no policies, only battery costs",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MECS,LCOE incl. carbon price incl subsidies no FiT (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MECD,MEWC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MECC,LCOE (for price) no carbon price incl subsidies incl CF (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -302,48 +302,44 @@ IAM5,FTT-IH-OIS gamma values,,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,,Y,Y
 IRG5,FTT-IH-OIS regulations (based on capacity),GW,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 ISB5,FTT-IH-OIS subsidies (percentage of investment cost),%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 IXS5,FTT-IH-OIS exogenous share changes,%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
-RVKZ,FTT-Fr Demand,Million Tkm,RTI,NA,NA,TIME,FTT-Fr,,2018,1995,,,Y
-RFLZ,FTT-Fr Number in Fleet,veh,RTI,NA,NA,TIME,FTT-Fr,,2019,1995,,,Y
-ZEWS,FTT-Fr Market Shares,%,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2001,,Y,Y
-RVEH,FTT-Fr Historical Vehicle Sales,k/y,RTI,NA,NA,TIME,FTT-Fr,,2019,1995,,,
-ZREG,FTT-Fr regulations,,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
-ZWSA,FTT-Fr Exogenous market share,%,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
-EV truck mandate,FTT_transport switch to turn on EV mandate,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
-ZTVT,FTT-Fr vehicle tax,$,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
-ZTRT,FTT-Fr Annual road tax,$/vehicle-y,RTI,FTTI,NA,TIME,FTT-Fr,,2019,2018,,,Y
-ZBFM,FTT-Fr Biofuel blending mandate,%,RTI,NA,NA,TIME,FTT-Fr,,2019,2018,,,Y
-RZCO,FTT-Fr Registration carbon tax,$/(gCO2/km),RTI,NA,NA,TIME,FTT-Fr,,2019,2018,,,Y
-ZCET,FTT-Fr Matrix of Cost Components,Various,RTI,FTTI,C6TI,NA,FTT-Fr,,2023,,,,
-ZCET initial,FTT-Fr Matrix of Cost Components last year historical,Various,RTI,FTTI,C6TI,NA,FTT-Fr,,,,,,
+RVKZ,FTT-Fr Demand,Million Tkm,RTI,FSTI,NA,TIME,FTT-Fr,,2018,1995,,,Y
+RFLZ,FTT-Fr Number in Fleet,veh,RTI,FSTI,NA,TIME,FTT-Fr,,2023,2001,,,Y
+ZEWS,FTT-Fr Market Shares,%,RTI,FTTI,NA,TIME,FTT-Fr,,2023,2001,,Y,Y
+ZREG,FTT-Fr regulations,,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
+ZWSA,FTT-Fr Exogenous market share,%,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
+ZTVT,FTT-Fr vehicle tax,$,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
+ZTRT,FTT-Fr Annual road tax,$/vehicle-y,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
+ZBFM,FTT-Fr Biofuel blending mandate,%,RTI,NA,NA,TIME,FTT-Fr,,,2018,,,Y
+RZCO,FTT-Fr Registration carbon tax,$/(gCO2/km),RTI,NA,NA,TIME,FTT-Fr,,,2018,,,Y
+BZTC,FTT-Fr Matrix of Cost Components,Various,RTI,FTTI,C6TI,NA,FTT-Fr,,2023,2024,,,
+BZTC initial,FTT-Fr Matrix of Cost Components,Various,RTI,FTTI,C6TI,NA,FTT-Fr,,,,,,
 ZEWA,FTT-Fr Substitution matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,,
 ZEWB,FTT-Fr Spillover matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,,
-RVHH,FTT-Fr Sales History,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZESF,FTT-Fr Survival function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
-ZSFD,FTT-Fr Survival Function Age Derivative,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZLOD,FTT-Fr Load Factors,t/v,RTI,LODZ,NA,NA,FTT-Fr,,,,,,
 ZSLR,FTT-Fr Small large ratio,ratio,RTI,NA,NA,NA,FTT-Fr,,,,,,
 ZJTT,FTT-Fr Tech Change Function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZJET,FTT-Fr Technology to fuel user conversion matrix,,NA,FTTI,JTI,NA,FTT-Fr,,,,,,
 ZCEZ,FTT-Fr T-Scaling,,RTI,NA,NA,TIME,FTT-Fr,,,2019,,,
-ZTLC,FTT-Fr LCOF without policy,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
-ZTLD,FTT-Fr  LCOF sd,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
-ZTTC,FTT-Fr LCOF with policy,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
-ZTTD,FTT-Fr LCOF with policy sd,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
-ZTLL,FTT-Fr LCOF logarithmic space with gamma,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
-ZTDD,FTT-Fr log space with gamma sd,2010 Euros,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+ZTLC,FTT-Fr LCOF without policy,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
+ZTLD,FTT-Fr LCOF sd,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+ZTTC,FTT-Fr LCOF with policy,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
+ZTTD,FTT-Fr LCOF with policy sd,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+ZTLL,FTT-Fr LCOF logarithmic space with gamma,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+ZTDD,FTT-Fr log space with gamma sd,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+ZEGC,FTT-Fr LCOF with policy and gamma,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWK,FTT-Fr Capacity by technology (number of vehicles),No. vehicles,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
 ZEWI,FTT-Fr New sales,No. vehicles,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,Y,Y
-ZESD,FTT-Fr Difference between small and large truck shares,%,RTI,LODZ,NA,TIME,FTT-Fr,,,2001,,,
-ZESA,FTT-Fr Share of small trucks,%,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
 ZEVV,FTT-Fr Service by Technology,Mvkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
-ZESG,FTT-Fr Total Service (Mvkm),Mvkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+ZESG,FTT-Fr Total Service (Mvkm),Mvkm,RTI,FSTI,NA,TIME,FTT-Fr,,,2001,,,
 ZEST,FTT-Fr Service by Technology (MTkm),MTkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
 ZJEF,FTT-Fr Fuel use,ktoe,RTI,NA,NA,TIME,FTT-Fr,,,2001,,,Y
 ZJNJ,FTT-Fr Fuel use by fuel type,ktoe,RTI,JTI,NA,TIME,FTT-Fr,,,2001,,,
 ZEWE,FTT-Fr Emissions,MTCO2,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
-ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
+ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,2018,2018,,,Y
 ZWIY,FTT-Fr Investment by Technology (monetary value),$,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
-ZGAM,FTT-Fr Gamma values,,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,
+EV truck mandate,FTT freight switch to turn on EV mandate,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
+ZGAM,FTT-Fr Gamma values,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,
 noit,Number of iterations per year,,NA,NA,NA,NA,General,,,2000,,,
 IHF1,FTT-IH-CHI final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-CHI,,,2000,,,
 IHF2,FTT-IH-FBT final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-FBT,,,2000,,,
@@ -364,11 +360,11 @@ MCSC,FTT:Power cost-supply curves,na,RTI,ERTI,CSCTI,NA,FTT-P,-,-,2001,-,Y,Y
 MCRT,FTT:Power curtailment of VRE (% of generation),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCRG,Curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCOCX,Carbon costs by technology from E3ME,2013$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
-MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 REPPX,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,2010,,,
 REPP2X,FTT:Tr regional emission price,(euro/tC),RTI,NA,NA,TIME,FTT:Tr,,,2010,,,
 REPP3X,FTT:Fr regional emissions price,(euro/tC),RTI,NA,NA,TIME,FTT:Fr,,,2010,,,
 REPP4X,FTT:H regional emissions price,(euro/tC),RTI,NA,NA,TIME,FTT:H,,,2010,,,
+MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y

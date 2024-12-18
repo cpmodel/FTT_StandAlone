@@ -129,18 +129,18 @@ def policy_change(df, policy):
             
         # Freight policies
         case "ZREG strong":
-            df.iloc[[0, 2, 4, 6, 8], 7:] = 0
+            df.iloc[list(range(25)), 7:] = 0
         case "ZWSA strong":
             df.iloc[12, 7:] = 0 # TODO: I will need to figure out what a reasonable mandate is. 
         case "ZTVT strong tax":
-            df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3
+            df.iloc[list(range(25)), 7:] = 0.3
         case "ZTVT strong subsidy":
-            df.iloc[12, 7:] = -0.3
+            df.iloc[[31, 32, 33], 7:] = -0.3
         case "ZTVT strong combo":
-            df.iloc[[0, 2, 4, 6, 8], 7:] = 0.3
-            df.iloc[12, 7:] = -0.3
+            df.iloc[list(range(25)), 7:] = 0.3
+            df.iloc[[31, 32, 33], 7:] = -0.3
         case "EV truck mandate regulation":
-            df.iloc[[0, 2, 4, 6, 8], 23:] = 0
+            df.iloc[list(range(25)), 23:] = 0
         case "EV truck mandate exogenous sales":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
         case "Freight REPP":

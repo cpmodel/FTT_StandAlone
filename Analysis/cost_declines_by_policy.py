@@ -26,7 +26,7 @@ titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 
 price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
-tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 13}
+tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 33}
 operation_cost_name = {"FTT:P": "MLCO"}
 
 tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",

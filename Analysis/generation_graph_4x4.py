@@ -51,9 +51,16 @@ grouping_transport = {"Petrol": [0, 1, 2, 4, 5, 6], "Diesel": [6, 7, 8, 9, 10, 1
                       "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
                       "Plug-in hybrid": [21, 22, 23], "Electric": [18, 19, 20],  "Hydrogen": [24, 25, 26]
                       }
-grouping_freight = {"Petrol": [0, 1, 2, 3], "Diesel": [4, 5, 6, 7],
-                    "CNG/LPG": [8, 9], "Hybrid": [10, 11], "Electric": [12, 13], "Hydrogen": [18, 19], 
-                    "Biofuel": [14, 15, 16, 17]
+grouping_freight = {"Petrol": [1, 2, 3, 6, 7, 8], "Diesel": [11, 12, 13, 16, 17, 18],
+                    "CNG/LPG": [21, 22, 23], "Hybrid": [26, 27, 28],
+                    "Electric": [31, 32, 33], "Hydrogen": [41, 42, 43], 
+                    "Biofuel": [36, 37, 38]
+                    }
+
+grouping_freight = {"Petrol": [2, 3, 7, 8], "Diesel": [12, 13, 17, 18],
+                    "CNG/LPG": [22, 23], "Hybrid": [27, 28],
+                    "Electric": [32, 33], "Hydrogen": [42, 43], 
+                    "Biofuel": [37, 38]
                     }
 
 green_power = ["Offshore wind", "Onshore wind", "Solar"]
