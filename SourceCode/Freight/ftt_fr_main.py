@@ -34,7 +34,9 @@ import numpy as np
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
 from SourceCode.support.divide import divide
-from SourceCode.Freight.ftt_fr_sales_and_mandate import get_enhanced_sales
+from SourceCode.Freight.ftt_fr_sales_and_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 # %% main function
@@ -191,10 +193,11 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Copy over costs that don't change
             data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
             
-
+            
+           
             # Investment (sales) = new capacity created
             # zewi_t is new additions at current timestep/iteration
-            data["ZEWI"], zewi_t, data["ZEWK"] = get_enhanced_sales(
+            data["ZEWI"], zewi_t = get_sales(
                     cap=data["ZEWK"],
                     cap_dt=data_dt["ZEWK"], 
                     cap_lag=time_lag["ZEWK"],
@@ -203,11 +206,14 @@ def solve(data, time_lag, titles, histend, year, domain):
                     sales_or_investment_in=data["ZEWI"],
                     timescales=data['BZTC'][:, :, c6ti['8 Lifetime (y)']],
                     dt=dt,
-                    EV_truck_mandate=data["EV truck mandate"],
-                    year=year
+                 
                     )
-            data['ZEWS'][:, :, 0] = data['ZEWK'][:, :, 0] / np.sum(data['ZEWK'][:, :, 0], axis=1)[:, np.newaxis]            
+            
+            data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
+                            data["EV truck mandate"], data['ZEWI'], zewi_t, year)
 
+            data['ZEWS'][:, :, 0] = data['ZEWK'][:, :, 0] / np.sum(data['ZEWK'][:, :, 0], axis=1)[:, np.newaxis]            
+            
             # This is number of trucks by technology
             data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
             

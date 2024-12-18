@@ -44,7 +44,10 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 from SourceCode.Heat.ftt_h_hjef import compute_hjef
-from SourceCode.Heat.ftt_h_sales_and_mandate import get_enhanced_sales
+from SourceCode.Heat.ftt_h_sales_and_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+
+
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
@@ -461,18 +464,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
             # New additions (HEWI)
-            data['HEWI'], hewi_t, data["HEWK"] = get_enhanced_sales(
-                  cap=data["HEWK"],
-                  cap_dt=data_dt["HEWK"],
-                  cap_lag=time_lag["HEWK"],
-                  shares=data["HEWS"],
-                  shares_dt=data_dt["HEWS"],
-                  sales_or_investment_in=data["HEWI"],
-                  HETR=data['HETR'][:, :, 0],
-                  dt=dt,
-                  hp_mandate=data["hp mandate"],
-                  year=year,
+            data['HEWI'], hewi_t = get_sales(
+                  data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
+                  data["HEWS"], data_dt["HEWS"],
+                  data["HEWI"], data['HETR'][:, :, 0],
+                  dt
                   )
+            data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
+                data['HEWK'], data["hp mandate"], data['HEWI'], hewi_t, year)
+
+          
 
             # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
