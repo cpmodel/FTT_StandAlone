@@ -45,7 +45,6 @@ from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 from SourceCode.Transport.ftt_tr_sales_and_mandate import get_enhanced_sales
-from SourceCode.Transport.ftt_tr_sales_and_mandate import get_sales_yearly_with_mandate
 
 # %% Fleet size - under development
 # -----------------------------------------------------------------------------
