@@ -42,11 +42,10 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
-from SourceCode.Transport.ftt_tr_mandate import EV_mandate
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 from SourceCode.sector_coupling.battery_lbd import battery_costs
-
+from SourceCode.Transport.ftt_tr_sales_and_mandate import get_enhanced_sales
+from SourceCode.Transport.ftt_tr_sales_and_mandate import get_sales_yearly_with_mandate
 
 # %% Fleet size - under development
 # -----------------------------------------------------------------------------
@@ -260,7 +259,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
         
-        data["TWSA"] = EV_mandate(data["EV mandate"], data["TWSA"], time_lag["TEWS"], time_lag['RFLT'], year)
 
         ############## Computing new shares ##################
 
@@ -404,9 +402,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             
             # New additions (TEWI)
-            data["TEWI"], tewi_t = get_sales(
-                data["TEWK"], data_dt["TEWK"], time_lag["TEWK"], data["TEWS"], 
-                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt)
+            data["TEWI"], tewi_t, data["TEWK"] = get_enhanced_sales(
+                cap=data["TEWK"],
+                cap_dt=data_dt["TEWK"], 
+                cap_lag=time_lag["TEWK"],
+                shares=data["TEWS"],
+                shares_dt=data_dt["TEWS"],
+                sales_or_investment_in=data["TEWI"],
+                timescales=data['BTTC'][:, :, c3ti['8 lifetime']],
+                dt=dt,
+                EV_mandate=data["EV mandate"],
+                year=year
+                )
+
             
            
 

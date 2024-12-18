@@ -42,11 +42,9 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.Heat.ftt_h_sales import get_sales
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 from SourceCode.Heat.ftt_h_hjef import compute_hjef
-from SourceCode.Heat.ftt_h_mandates import heat_pump_mandate
-
+from SourceCode.Heat.ftt_h_sales_and_mandate import get_enhanced_sales
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
@@ -237,7 +235,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
         
-        data["HWSA"] = heat_pump_mandate(data["hp mandate"],  data["HWSA"], time_lag["HEWS"], time_lag["HEWI"], year)
 
         ############## Computing new shares ##################
 
@@ -248,7 +245,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * t * dt
             rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * (t-1) * dt
 
-            endo_eol = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
 
             for r in range(len(titles['RTI'])):
 
@@ -383,7 +379,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 endo_gen = endo_shares * rhudt[r, np.newaxis]
 
-                endo_eol[r] = np.sum(dSik, axis=1)
 
                 # -----------------------------------------------------
                 # Step 3: Exogenous sales additions
@@ -406,7 +401,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 #         data['HWSA'][r, b, 0] = 0.0
                 
                 dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
-
                 # Check endogenous shares plus additions for a single time step does not exceed regulated shares
                 reg_vs_exog = ((data['HWSA'][r, :, 0]*Utot/no_it + endo_gen) > data['HREG'][r, :, 0]*Utot) & (data['HREG'][r, :, 0] >= 0.0)
                 # Filter capacity additions based on regulated shares
@@ -467,8 +461,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
 
             # New additions (HEWI)
-            data, hewi_t = get_sales(data, data_dt, time_lag, titles, dt, t, endo_eol)
+            data['HEWI'], hewi_t, data["HEWK"] = get_enhanced_sales(
+                  cap=data["HEWK"],
+                  cap_dt=data_dt["HEWK"],
+                  cap_lag=time_lag["HEWK"],
+                  shares=data["HEWS"],
+                  shares_dt=data_dt["HEWS"],
+                  sales_or_investment_in=data["HEWI"],
+                  HETR=data['HETR'][:, :, 0],
+                  dt=dt,
+                  hp_mandate=data["hp mandate"],
+                  year=year,
+                  )
 
+            data['HEWI'] = np.zeros((len(titles['RTI']), len(titles['HTTI']), 1))
             # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 

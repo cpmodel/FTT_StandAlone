@@ -34,8 +34,7 @@ import numpy as np
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
 from SourceCode.support.divide import divide
-from SourceCode.Freight.ftt_fr_sales import get_sales
-from SourceCode.Freight.ftt_fr_mandate import EV_truck_mandate
+from SourceCode.Freight.ftt_fr_sales_and_mandate import get_enhanced_sales
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 # %% main function
@@ -166,8 +165,6 @@ def solve(data, time_lag, titles, histend, year, domain):
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
-
-        data["ZWSA"] = EV_truck_mandate(data["EV truck mandate"], data["ZWSA"], time_lag["ZEWS"], time_lag['RFLZ'], year)
         
         for t in range(1, no_it + 1):
         # Interpolations to avoid staircase profile
@@ -193,6 +190,23 @@ def solve(data, time_lag, titles, histend, year, domain):
                     
             # Copy over costs that don't change
             data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
+            
+
+            # Investment (sales) = new capacity created
+            # zewi_t is new additions at current timestep/iteration
+            data["ZEWI"], zewi_t, data["ZEWK"] = get_enhanced_sales(
+                    cap=data["ZEWK"],
+                    cap_dt=data_dt["ZEWK"], 
+                    cap_lag=time_lag["ZEWK"],
+                    shares=data["ZEWS"],
+                    shares_dt=data_dt["ZEWS"],
+                    sales_or_investment_in=data["ZEWI"],
+                    timescales=data['ZCET'][:, :, c6ti['8 service lifetime (y)']],
+                    dt=dt,
+                    EV_truck_mandate=data["EV truck mandate"],
+                    year=year
+                    )
+            data['ZEWS'][:, :, 0] = data['ZEWK'][:, :, 0] / np.sum(data['ZEWK'][:, :, 0], axis=1)[:, np.newaxis]            
 
             # This is number of trucks by technology
             data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
@@ -207,6 +221,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['ZEWE'] = ( data['ZEVV']
                             * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)'], None]
                             * (1 - data['ZBFM']) / 1e6 )
+            
             
             # Reopen country loop
             for r in range(len(titles['RTI'])):
@@ -236,9 +251,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                                     data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
             
 
-            # Investment (sales) = new capacity created
-            # zewi_t is new additions at current timestep/iteration
-            data, zewi_t = get_sales(data, data_dt, time_lag, titles, dt, c6ti, t)
             
             # Cumulative investment, not in region loop as it is global
             bi = np.matmul(zewi_t[:, :, 0], data['ZEWB'][0, :, :])
