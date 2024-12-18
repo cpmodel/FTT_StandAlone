@@ -474,7 +474,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                   year=year,
                   )
 
-            data['HEWI'] = np.zeros((len(titles['RTI']), len(titles['HTTI']), 1))
             # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 
