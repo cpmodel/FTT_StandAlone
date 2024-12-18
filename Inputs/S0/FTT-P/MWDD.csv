@@ -8,11 +8,11 @@
 7 CCGT,1,1,1,1,1,0
 8 CCGT + CCS,1,1,1,1,1,0
 9 OCGT,1,1,1,1,1,0
-10 OCGT,1,1,1,1,1,0
+10 OCGT + CCS,1,1,1,1,1,0
 11 Biomass,1,1,1,0,0,0
 12 Biomass + CCS,1,1,1,0,0,0
-13 Large hydro,0,0,0,0,0,1
-14 Pumped hydro,0,0,0,0,0,1
+13 Large Hydro,0,0,0,0,0,1
+14 Pumped Hydro,0,0,0,0,0,1
 15 Geothermal,1,0,0,0,0,0
 16 Marine,0,0,0,0,0,1
 17 Onshore,0,0,0,0,0,1

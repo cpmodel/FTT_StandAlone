@@ -31,8 +31,8 @@ regions = {'India': 41, "China": 40, "Brazil": 43,
 regions_all = {i: i - 1 for i in range(1, 72)}
 
 # Define the clean technology list by model
-clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [13]}
-dirty_techs = {"FTT:P": [1, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [1, 5]}
+clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [33]}
+dirty_techs = {"FTT:P": [1, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [13]}
 
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
@@ -263,14 +263,14 @@ def comparison_str(clean_tech, fossil_tech):
     elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["8 Diesel Mid", "9 Diesel Lux"]:
         output_str = "Electric car vs petrol"
         
-    elif clean_tech == "Electricity Small" and fossil_tech == "Diesel Small":
-        output_str = "EV truck vs diesel"
-    elif clean_tech == "Electricity Small" and fossil_tech == "Petrol Small":
-        output_str = "EV truck vs diesel"
-    elif clean_tech == "Electricity Large" and fossil_tech == "Diesel Large":
-        output_str = "EV truck vs diesel"
-    elif clean_tech == "Electricity Large" and fossil_tech == "Petrol Large":
-        output_str = "EV truck vs diesel"
+    elif clean_tech == "BEV HDT" and fossil_tech == "Diesel HDT":
+        output_str = "Heavy-duty BEV truck vs diesel"
+    elif clean_tech == "BEV MHT" and fossil_tech == "Diesel MHT":
+        output_str = "Medium-duty BEV truck vs diesel"
+    elif clean_tech == "BEV HDT" and fossil_tech == "Petrol HDT":
+        output_str = "Heavy-duty BEV truck vs diesel"
+    elif clean_tech == "BEV MDT" and fossil_tech == "Petrol MDT":
+        output_str = "Medium-duty BEV truck vs diesel"
         
     else:
         output_str = "TBD"
