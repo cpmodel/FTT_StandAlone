@@ -419,7 +419,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
             CO2_corr = np.ones(len(titles['RTI']))
-            emis_corr = np.zeros([len(titles['RTI']), len(titles['VTTI'])])
+            emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = data['TJET'][0, :, :]
 
             for r in range(len(titles['RTI'])):
