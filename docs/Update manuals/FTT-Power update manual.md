@@ -12,14 +12,14 @@ Ideally, FTT:Power is updated every one or two years. The last data update was d
 7. Update RERY (how?)
 
 ### Costs
-1. Update the costs of CAPEX, OPEX and the standard deviation of both using a the average of IRENA data, IEA Energy Prices data, BNEF data, GNESTE. Exeter has access to BNEF data and IEA database. [GNESTE data](https://github.com/iain-staffell/GNESTE) & [IRENA data](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2024/Sep/IRENA_Renewable_power_generation_costs_in_2023.pdf) are open-access. Do not add raw data from BNEF to the repository; it is not open access! 
+1. Update the costs of CAPEX, OPEX and their standard deviation using IRENA data, GNESTE and BNEF data. Prioritise the open-access data sets. Exeter has access to BNEF data and IEA database. [GNESTE data](https://github.com/iain-staffell/GNESTE) & [IRENA data](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2024/Sep/IRENA_Renewable_power_generation_costs_in_2023.pdf) are open-access. Do not add raw data from BNEF to the repository; it is not open access! 
     1. Ensure the sources use the same currency (note that $2020USD is different from $2023USD). IRENA data doesn't require this conversion as the currency is $2023.
-    2. Fuel costs of coal and gas from IEA have been averaged over 2019-2023 with appropriate conversion of units if necessary.
-    3. Assume standard deviation is 40% for CAPEX and OPEX, and verify this assumption using BNEF data, which has a range per country. If the range is smaller or larger, adjust this update manual.
-    4. Updated costs and cost update scripts are added to the [FTT_Standalone-support repository](https://github.com/cpmodel/FTT_Standalone-support/tree/main/FTT-Power%20updates/Cost%20update%202024) that generates updated BCET Masterfile.
+    2. Assume standard deviation is 40% for CAPEX and OPEX, and verify this assumption using BNEF data, which has a range per country. If the range is smaller or larger, adjust this update manual.
+    3. Cost update scripts to change BCET are added to the [FTT_Standalone-support repository](https://github.com/cpmodel/FTT_Standalone-support/tree/main/FTT-Power%20updates/Cost%20update%202024).
 2. Update the fuel costs
     1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
-    2.  Higher-quality update: The [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) is down at the moment, but Exeter has access until May 2025, so ask Ian. The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh. 
+    2.  The [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) is down at the moment, but Exeter has access until May 2025, so ask Ian. The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh. 
+    3.  Fuel costs of coal and gas from IEA have been averaged over 2019-2023 with appropriate conversion of units if necessary.
 3. Edit the BCET "History end" in FTT-Standalone/Utilities/Titles/VariableListing.csv. This is found in column J. This ensures learning-by-doing starts in the right year.
 4. Verify that LCOE estimates in the model are roughly in accordance with independent estimates. You can compare for instance compare with BNEF if you have access or [Lazard prices](https://www.lazard.com/research-insights/levelized-cost-of-energyplus/).
 5. Adjust the currency conversions in the code to the new currency (for instance, from 2013USD to 2023USD). Ideally, this is done automatically from histend.
@@ -27,7 +27,7 @@ Ideally, FTT:Power is updated every one or two years. The last data update was d
 Note - WB has access to Enerdata that wasn't used in the current, but might be used in the future!
 
 ### Calibration (the gamma values)
-The FTT model is calibrated to ensure a historical trends do not suddenly change in the absence of new policies. We ensure the first derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
+The FTT model is calibrated to ensure a historical trends do not suddenly change in the absence of new policies. We ensure the second derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
 1. To calibrate the gamma values, run the frontend of the standalone version (FTT_Stand_Alone_Launcher.cmd). Navigate to GAMMA. Initialize the power sector model, and do the following by country
 2. Pick a start date which gives you 5 years of historical data, and an end date with 5 year of future data
 3. Per technology, choose a gamma value that ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. If gamma values are often larger than 30, there may be structural errors in the model. Investigate why or contact an experienced modeller. 
