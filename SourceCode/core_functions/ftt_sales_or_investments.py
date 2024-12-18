@@ -6,7 +6,7 @@ Created on Thu Feb 15 09:09:50 2024
 """
 
 import numpy as np
-import copy
+
 
 def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in, 
                timescales, dt):
@@ -59,13 +59,13 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
     # Where capacity has decreased, we only replace depreciated capacity
     # if the depreciation > capacity loss
     conditions = [
-        (cap_growth >= 0.0),
+        (cap_growth_dt >= 0.0),
         (-share_depreciation < share_growth_dt) & (share_growth_dt < 0)
     ]
 
     outputs = [
         cap_dt[:, :, 0] * dt / timescales,
-        (share_growth_dt + share_depreciation) * cap_lag[:, :, 0] 
+        (share_growth_dt + share_depreciation) * cap_dt[:, :, 0] 
     ]
 
     # Thee end-of-life (eol) replacement options, depending on conditions
@@ -85,7 +85,7 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
                                 eol_replacements[:, :, 0])
         
     # Add additions at iteration t to total annual additions
-    sales_or_investment = copy.deepcopy(sales_or_investment_in)
+    sales_or_investment = np.copy(sales_or_investment_in)
     sales_or_investment[:, :, 0] = sales_or_investment[:, :, 0] + sales_dt[:, :, 0]
     
     return sales_or_investment, sales_dt
