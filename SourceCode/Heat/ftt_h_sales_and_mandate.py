@@ -28,7 +28,7 @@ def implement_mandate(cap, mandate_switch, cum_sales_in, sales_in, year):
 
         # Step 6: Update cumulative sales
         cum_sales_after_mandate = np.copy(cum_sales_in)
-        cum_sales_after_mandate[:, :, 0] += sales_dt[:, :, 0]
+        cum_sales_after_mandate[:, :, 0] += sales_difference[:, :, 0]
         
         return cum_sales_after_mandate, sales_after_mandate, cap
 

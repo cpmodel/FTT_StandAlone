@@ -193,7 +193,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Copy over costs that don't change
             data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
             
-            
+            # This is number of trucks by technology
+            data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
            
             # Investment (sales) = new capacity created
             # zewi_t is new additions at current timestep/iteration
@@ -210,12 +211,18 @@ def solve(data, time_lag, titles, histend, year, domain):
                     )
             
             data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
-                            data["EV truck mandate"], data['ZEWI'], zewi_t, year)
-
-            data['ZEWS'][:, :, 0] = data['ZEWK'][:, :, 0] / np.sum(data['ZEWK'][:, :, 0], axis=1)[:, np.newaxis]            
+                            data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t, year)
             
-            # This is number of trucks by technology
-            data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
+            # Recalculate zews per class
+            for r in range(len(titles['RTI'])):
+                for veh_class in range(n_veh_classes):
+                    denominator = np.sum(data['ZEWK'][r, veh_class::n_veh_classes])
+                    if denominator > 0:
+                        data['ZEWS'][r, veh_class::n_veh_classes, 0] = ( 
+                                data['ZEWK'][r, veh_class::n_veh_classes, 0]
+                                / denominator )
+                
+            
             
             # Find total service area and demand, first by tech, then by vehicle class     
             data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 10e6

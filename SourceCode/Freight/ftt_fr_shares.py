@@ -78,7 +78,29 @@ def shares(dt, t, no_it, zews_dt, zegc_dt, zttd_dt, zewa,
     return endo_shares, endo_capacity
 
 
-
+def skip_criteria(zews_dt, zegc_dt, zttd_dt, zewa, b1, b2, r):
+    """Skip calculations when the shares, costs or std costs are zero.
+    Also skip when the substitution is zero."""
+    
+    # Skip if starting shares are zero for tech b1
+    condition_b1 = np.logical_and(
+        zews_dt[r, b1, 0] > 0.0,
+        np.logical_and(zegc_dt[r, b1, 0] != 0.0, zttd_dt[r, b1, 0] != 0.0)
+    )
+    
+    # Skip if starting share or cost is zero for tech b2
+    condition_b2 = np.logical_and(
+        zews_dt[r, b2, 0] > 0.0,
+        np.logical_and(zegc_dt[r, b2, 0] != 0.0, zttd_dt[r, b2, 0] != 0.0)
+    )
+    
+    # Check if either b1 or b2 are zero for substitution
+    condition_substitution = np.logical_or(
+        zewa[0, b1, b2] != 0.0, zewa[0, b2, b1] != 0.0
+    )
+    
+    # Return skip if any condition fails
+    return np.logical_not(np.logical_and(condition_b1, np.logical_and(condition_b2, condition_substitution)))
 
         
         
@@ -143,34 +165,6 @@ def implement_shares_policies(endo_capacity, endo_shares,
     
             
     return zews
-
-
-
-
-def skip_criteria(zews_dt, zegc_dt, zttd_dt, zewa, b1, b2, r):
-    """Skip calculations when the shares, costs or std costs are zero.
-    Also skip when the substitution is zero."""
-    
-    # Skip if starting shares are zero for tech b1
-    condition_b1 = np.logical_and(
-        zews_dt[r, b1, 0] > 0.0,
-        np.logical_and(zegc_dt[r, b1, 0] != 0.0, zttd_dt[r, b1, 0] != 0.0)
-    )
-    
-    # Skip if starting share or cost is zero for tech b2
-    condition_b2 = np.logical_and(
-        zews_dt[r, b2, 0] > 0.0,
-        np.logical_and(zegc_dt[r, b2, 0] != 0.0, zttd_dt[r, b2, 0] != 0.0)
-    )
-    
-    # Check if either b1 or b2 are zero for substitution
-    condition_substitution = np.logical_or(
-        zewa[0, b1, b2] != 0.0, zewa[0, b2, b1] != 0.0
-    )
-    
-    # Return skip if any condition fails
-    return np.logical_not(np.logical_and(condition_b1, np.logical_and(condition_b2, condition_substitution)))
-
 
 
 

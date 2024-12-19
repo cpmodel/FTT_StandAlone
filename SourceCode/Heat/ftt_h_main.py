@@ -445,8 +445,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     Negative market shares detected! Critical error!
                     """.format(sector, titles['RTI'][r], year)
                     warnings.warn(msg)
-#                        t4 = time.time()
-#                        print("Share equation takes {}".format(t4-t3))
+#                      
 
             ############## Update variables ##################
             # Useful heat by boiler

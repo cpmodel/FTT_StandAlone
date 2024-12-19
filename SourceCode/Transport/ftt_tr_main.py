@@ -44,7 +44,9 @@ from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 from SourceCode.sector_coupling.battery_lbd import battery_costs
-from SourceCode.Transport.ftt_tr_sales_and_mandate import get_enhanced_sales
+from SourceCode.Transport.ftt_tr_sales_and_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+
 
 # %% Fleet size - under development
 # -----------------------------------------------------------------------------
@@ -401,7 +403,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             
             # New additions (TEWI)
-            data["TEWI"], tewi_t, data["TEWK"] = get_enhanced_sales(
+            data["TEWI"], tewi_t = get_sales(
                 cap=data["TEWK"],
                 cap_dt=data_dt["TEWK"], 
                 cap_lag=time_lag["TEWK"],
@@ -409,13 +411,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 shares_dt=data_dt["TEWS"],
                 sales_or_investment_in=data["TEWI"],
                 timescales=data['BTTC'][:, :, c3ti['8 lifetime']],
-                dt=dt,
-                EV_mandate=data["EV mandate"],
-                year=year
+                dt=dt
                 )
-
             
-           
+            # New additions (TEWI)
+            data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
+              data['TEWK'], data["EV mandate"], data['TEWI'], tewi_t, year
+                )
+            
+      
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.

@@ -26,11 +26,9 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, year):
         cap = cap + sales_difference
         cap[:, :, 0] = np.maximum(cap[:, :, 0], 0)
         
-        sales_dt = np.copy(sales_after_mandate)
-
         # Step 6: Update cumulative sales
         cum_sales_after_mandate = np.copy(cum_sales_in)
-        cum_sales_after_mandate[:, :, 0] += sales_dt[:, :, 0]
+        cum_sales_after_mandate[:, :, 0] += sales_difference[:, :, 0]
         
         return cum_sales_after_mandate, sales_after_mandate, cap
 
