@@ -414,12 +414,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dt=dt
                 )
             
-            # New additions (TEWI)
+            # Implement a mandate if possible. 
             data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
               data['TEWK'], data["EV mandate"], data['TEWI'], tewi_t, year
                 )
             
-      
+            # Recalculate TEWS/TEWG
+            for r in range(len(titles['RTI'])):
+                if np.sum(data['TEWK'][r, :, 0]) > 0:
+                    data['TEWS'][r, :, 0] = data['TEWK'][r, :, 0] / np.sum(data['TEWK'][r, :, 0])
+            data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # Fuel use
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.

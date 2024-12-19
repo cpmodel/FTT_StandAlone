@@ -471,8 +471,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                   )
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
                 data['HEWK'], data["hp mandate"], data['HEWI'], hewi_t, year)
+            
+            
+            # Recalculate HEWS, HEWK, HEWG and HEWF
+            data['HEWS'][:, :, 0] = data['HEWG'][:, :, 0] / np.sum(data['HEWG'][:, :, 0], axis=1)[:, None]
+            
+            # Capacity by boiler
+            data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
+                                              data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
 
-          
+            # Final energy by boiler
+            data['HEWF'][:, :, 0] = divide(data['HEWG'][:, :, 0],
+                                             data['BHTC'][:, :, c4ti["9 Conversion efficiency"]])
+            
 
             # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
