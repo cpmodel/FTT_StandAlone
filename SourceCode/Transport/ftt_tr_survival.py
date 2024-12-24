@@ -24,7 +24,7 @@ def get_survival_ratio(survival_function_array):
         survival ratio with shape (country, None, age brackets)
     """
     survival_ratio = survival_function_array[:, :-1, :] / survival_function_array[:, 1:, :]
-    survival_ratio = survival_ratio.reshape(71, 1, 22)
+    survival_ratio = survival_ratio.reshape(72, 1, 22)
     
     return survival_ratio
 
