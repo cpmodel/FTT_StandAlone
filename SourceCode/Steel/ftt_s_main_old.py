@@ -34,6 +34,9 @@ Functions included:
 
 """
 # Standard library imports
+import sys
+sys.path.append('C:/Users/swara/Documents/VS code/FTT_StandAlone-Steel_Swarali')
+
 import csv
 from math import sqrt
 import copy
@@ -165,7 +168,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             ## change : loop can use r from the outer loop
             for r in range(len(titles['RTI'])):
-                bi[r,:] = np.matmul(data['SEWB'][0, :, :], data['SEWK'][r, :, 0])   ## matmul : matrix multiplication
+                bi[r,:] = np.matmul(data['SEWB'], data['SEWK'])  ## matmul : matrix multiplication
                 data['SEWW'] = np.sum (bi, axis = 0)
             
             data['SEWW'] = data['SEWW'][None, :, None]
@@ -190,10 +193,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                             data['SICA'][:, t2, 0] = data['SICA'][:, t2, 0] + data['SEWW'][:, t1, 0] /1.14 
             
             #Check this statement. It's using BSTC (lifetime)
-            data['SEWI'][: , : , 0] = np.where((data['BSTC'][: , : , 5] > 0.0) , (data['SEWI'][: , : , 0] + (data['SWKL'][: , :, 0]/data['BSTC'][: , : , 5])) , np.max((data['SEWK'][: , : , 0] - data['SWKL'][: , : , 0]), 0))
+            data['SEWI'][: , : , 0] = np.where((data['BSTC'][: , : , c5ti['Lifetime']] > 0.0) , (data['SEWI'][: , : , 0] + (data['SWKL'][: , :, 0]/data['BSTC'][: , : , c5ti['Lifetime']])) , np.max((data['SEWK'][: , : , 0] - data['SWKL'][: , : , 0]), 0))
         
                                              
-    elif year > histend["SEWG"]:  
+    if year > histend["SEWG"]:  
 
         no_it = int(data['noit'][0, 0, 0]) 
         dt = 1 / float(no_it)

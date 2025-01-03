@@ -48,13 +48,10 @@ Returns
 import numpy as np
 
 def ftt_s_fuel_consumption(bstc, sewg, smed, nrti, nstti, c5ti, njti):
-    sjef = np.zeros((nrti , 12, 1))  ## changed
+    sjef = np.zeros((nrti , njti, 1))  ## changed
     sjco = np.zeros_like((sjef))
 
-    ## For all the fuel types all_zeros == True
-    # all_zero = np.all(bstc[:, :, c5ti['Hydrogen']] == 0)
-    # print(all_zero)
-
+    
     for r in range(nrti):
         for i in range(nstti):
         # Calculate fuel consumption

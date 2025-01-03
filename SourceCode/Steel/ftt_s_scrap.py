@@ -50,21 +50,18 @@ data: dictionary
 import numpy as np
 
 def scrap_calc(data, time_lag, titles, year):
-    data['SSSR'] = data['SXSS'].copy()
+    data['SSSR'] = data['SXSS']
     
-    ## All the below given variables are zero
-    # print('Second',data['SXLR'][1,1,0])
-    # print('Third',data['SHS2'][1,73,0])
-    # print('fourth',data['SXSC'][1,73,0])
-    # print('Third',data['SHS2'][3,3,0])
+    if (year > 2017):
+        data['SHS2'][:, year - 2000, 0] = data['SPSA'][:, 0, 0]
+
     data['SXSC'] = np.zeros((71,1,1))
 
     for r in range(len(titles['RTI'])):  
-        if (year > 2017):
-            data['SHS2'][r, year - 2000, 0] = data['SPSA'][r, 0, 0]
+        
         for sec in range(len(titles['XPTI'])):
              
-            Retrievedate = int(year - (data['SXLT'][r, sec, 0]))
+            Retrievedate = round(year - (data['SXLT'][r, sec, 0]))
 
             # Calcultate Scrap availability
             # SXSCtot = SXSCpg + HSP(T- LTpg) * RRpg * SSpg * (1 - LRpg) for all pg
@@ -74,31 +71,31 @@ def scrap_calc(data, time_lag, titles, year):
                 data['SXSC'][r, :, 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, 1, 0]*0.965**(1918 - Retrievedate) * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0]*(1 - (data['SXLR'][r, sec, 0]))
             elif (Retrievedate < 2017):
                 data['SXSC'][r, :, 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
-            if (Retrievedate+1 < 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+0 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
-            if (Retrievedate+2 < 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+1 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
-            if (Retrievedate+3 < 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+2 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.15
-            if (Retrievedate+4 < 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+3 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
-            if (Retrievedate+5 < 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+4 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
-            if (Retrievedate+6 < 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+5 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.05          
-            
-            if (Retrievedate+1 >= 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+0 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
-            if (Retrievedate+2 >= 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+1 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
-            if (Retrievedate+3 >= 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+2 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.15
-            if (Retrievedate+4 >= 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+3 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
-            if (Retrievedate+5 >= 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+4 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
-            if (Retrievedate+6 >= 2017):
-                data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+5 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.05
+                if (Retrievedate+1 < 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+0 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
+                if (Retrievedate+2 < 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+1 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
+                if (Retrievedate+3 < 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+2 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.15
+                if (Retrievedate+4 < 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+3 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
+                if (Retrievedate+5 < 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+4 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
+                if (Retrievedate+6 < 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS1'][r, Retrievedate+5 - 1917, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.05          
+                
+                if (Retrievedate+1 >= 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+0 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
+                if (Retrievedate+2 >= 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+1 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
+                if (Retrievedate+3 >= 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+2 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.15
+                if (Retrievedate+4 >= 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+3 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
+                if (Retrievedate+5 >= 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+4 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.1
+                if (Retrievedate+6 >= 2017):
+                    data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate+5 - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.05
             #If endogenous sector split calculation is going to be included then it should be fed in here to replace SXSS
             elif (Retrievedate >= 2017):
                 data['SXSC'][r,: , 0] = data['SXSC'][r, 0, 0] + data['SHS2'][r, Retrievedate - 2000, 0] * data['SXRR'][r, sec, 0] * data['SSSR'][r, sec, 0] * (1 - data['SXLR'][r, sec, 0]) * 0.2
