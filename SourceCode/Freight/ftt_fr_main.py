@@ -136,7 +136,10 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Find fuel use
             data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
                                     data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
-
+        
+        carbon_costs = set_carbon_tax(data, c6ti)
+        data = get_lcof(data, titles, carbon_costs, year)
+        
         if year == histend["RFLZ"]:
             # Calculate levelised cost
             

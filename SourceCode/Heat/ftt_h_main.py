@@ -448,43 +448,40 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 #                      
 
             ############## Update variables ##################
-            # Useful heat by boiler
+            
             data['HEWG'][:, :, 0] = data['HEWS'][:, :, 0] * rhudt[:, 0, 0, np.newaxis]
-
-            # Final energy by boiler
-            data['HEWF'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                             data['BHTC'][:, :, c4ti["9 Conversion efficiency"]])
-
-            # Capacity by boiler
+            
+            #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
             data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                              data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
-
-            # EmissionsFis
-            data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
+                                    data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
 
             # New additions (HEWI)
             data['HEWI'], hewi_t = get_sales(
                   data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
                   data["HEWS"], data_dt["HEWS"],
-                  data["HEWI"], data['HETR'][:, :, 0],
+                  data["HEWI"], 1/data['HETR'][:, :, 0],
                   dt
                   )
+            
+            # Change capacity and sales after mandate
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
                 data['HEWK'], data["hp mandate"], data['HEWI'], hewi_t, year)
             
+            # Calculate HEWG, HEWS and HEWF after mandates  
             
-            # Recalculate HEWS, HEWK, HEWG and HEWF
+            # Useful heat by boiler
+            data['HEWG'][:, :, 0] = data['HEWK'][:, :, 0] * data['BHTC'][:, :, c4ti["13 Capacity factor mean"]] * 1000
+            
             data['HEWS'][:, :, 0] = data['HEWG'][:, :, 0] / np.sum(data['HEWG'][:, :, 0], axis=1)[:, None]
-            
-            # Capacity by boiler
-            data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                              data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
 
             # Final energy by boiler
             data['HEWF'][:, :, 0] = divide(data['HEWG'][:, :, 0],
                                              data['BHTC'][:, :, c4ti["9 Conversion efficiency"]])
             
-
+            # Emissions
+            data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
+            
+            
             # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 

@@ -9,15 +9,20 @@ from SourceCode.ftt_core.ftt_mandate import get_new_sales_under_mandate, get_man
 green_indices = range(30, 35)  # Indices for green technologies
 MANDATE_START_YEAR = 2025
 N_YEARS = 16
-MANDATE_END_YEAR = MANDATE_START_YEAR + N_YEARS
+mandate_end_year = MANDATE_START_YEAR + N_YEARS
 
 
-def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, year):
+def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, year):    
     
+    if EV_truck_mandate[0, 0, 0] in range(2010, 2040) and year > EV_truck_mandate[0, 0, 0]:
+        # For the sequencing, I'm changing the end year
+        return cum_sales_in, sales_in, cap
+        
     # Step 4: Apply mandate adjustments with global shares and strict enforcement
-    mandate_share = get_mandate_share(year, MANDATE_START_YEAR, MANDATE_END_YEAR)
+    mandate_share = get_mandate_share(year, MANDATE_START_YEAR, mandate_end_year)
+        
 
-    if EV_truck_mandate[0, 0, 0] == 1 and np.sum(mandate_share) > 0:
+    if EV_truck_mandate[0, 0, 0] not in [-1, 0] and np.sum(mandate_share) > 0:
         
         sales_after_mandate = get_new_sales_under_mandate(sales_in, mandate_share, green_indices)
 
