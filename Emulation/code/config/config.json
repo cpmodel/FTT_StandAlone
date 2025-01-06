@@ -1,0 +1,90 @@
+{
+  "regions": ["EA", "US", "CN", "IN", "BR", "RGS", "RGN"],
+  "params": {
+    "general": {
+      "phase_pol": ["MEWR"],
+      "price_pol": ["MEFI", "MEWT"]
+    },
+    "special": {
+      "cp_pol": ["REPPX"]
+    }
+  },
+  "ranges": {
+    "learning_solar": [-0.473, -0.165],
+    "learning_wind": [-0.3, -0.088],
+    "lifetime_solar": [20, 35],
+    "lifetime_wind": [20, 35],
+    "lead_offshore": [3, 8],
+    "lead_onshore": [1, 4],
+    "lead_solar": [1, 4],
+    "south_discr": [0, 1],
+    "north_discr": [0, 1],
+    "elec_demand": [0, 1],
+    "ccgt_price": [0, 1],
+    "coal_price": [0, 1],
+    "tech_potential": [0, 1]
+  },
+  "updates_config": {
+    "Solar PV": {
+      "learning_solar": 16,
+      "lifetime_solar": 9,
+      "lead_solar": 10
+    },
+    "Onshore": {
+      "learning_wind": 16,
+      "lifetime_wind": 9,
+      "lead_onshore": 10
+    },
+    "Offshore": {
+      "learning_wind": 16,
+      "lifetime_wind": 9,
+      "lead_offshore": 10
+    },
+    "CCGT": {
+      "ccgt_price": 5,
+      "std_col": 6
+    },
+    "Coal": {
+      "coal_price": 5,
+      "std_col": 6
+    },
+    "Discount Rate": {
+      "north_discr": 17,
+      "south_discr": 17
+    }
+  },
+  "Nscens": 450,
+  "scen_code": "S3",
+  "scenarios": {"base": "S0", "ambitious": "S3"},
+  "round_decimals": 2,
+  "output_dir": "Inputs",
+  "batch_output_dir": "output/batches/",
+  "vars_to_compare": ["MEFI", "MEWT", "MEWR"],
+  "vars_non_costmatrix": ["MEWD", "MCSC"],
+  "general_vars": ["MCSC"],
+  "batch_size": 50,
+  "scen_levels_path": "Emulation/data/scenarios/S3_scen_levels.csv",
+  "base_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx",
+  "ambitious_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S3.xlsx",
+  "comparison_path": "Emulation/data/comparisons/S0_S3_comparison.xlsx",
+  "carbon_price_path": "Emulation/data/variable_data/carbon_price/S3_REPP.csv",
+  "cost_matrix_var": "BCET",
+  "cost_matrix_structure": {
+    "regions": 71,
+    "data_length": 34,
+    "tech_number": 22
+  },
+  "run_compare_scenarios": false,
+  "run_ambition_vary": true,
+  "region_groups": {
+    "EA": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", "NL", "AT", "PT", "FI", "SW", "UK", "CZ", "EN", "CY", "LV", "LT", "HU", "MT", "PL", "SI", "SK", "BG", "RO", "HR", "NO", "CH", "IS"],
+    "RGN": ["TR", "MK", "JA", "CA", "AU", "NZ", "RS", "RA", "KR"],
+    "RGS": ["MX", "AR", "CO", "LA", "TW", "ID", "AS", "OP", "RW", "UE", "SD", "NG",
+    "SA", "ON", "OC", "MY", "KZ", "AN", "AC", "AW", "AE", "ZA", "EG", "DC", "KE", 
+    "UA", "PK"],
+    "GN": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", 
+    "NL", "AT", "PT", "FI", "SW", "UK", "CZ", "EN", "CY", "LV", "LT",
+    "HU", "MT", "PL", "SI", "SK", "BG", "RO", "NO", "CH", "IS",
+    "HR", "TR", "MK", "US", "JA", "CA", "AU", "NZ", "RS", "RA", "CN", "KR"] 
+  }
+}
