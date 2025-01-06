@@ -14,6 +14,10 @@ import pandas as pd
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
+from matplotlib.ticker import FuncFormatter
+from matplotlib.font_manager import FontProperties
+
+
 
 # To do: create scenarios with a newly defined baseline of only temporary mandates
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
@@ -98,27 +102,39 @@ colors = ['#a1dab4', '#41ae76', '#238b45', '#005824']
 # Reverse those colours
 colors = colors[::-1]
 
+# Rename the labels in the DataFrame
+relative_sales_difference = relative_sales_difference.rename(columns={
+    "Mandate before 2027": "Mandate 2025–2026,\n then carbon tax",
+    "Mandate before 2030": "Mandate 2025–2029,\n then carbon tax",
+    "Mandate before 2035": "Mandate 2025–2034"
+})
+
 # Create two horizontal bar charts for the sales in EVs in 2030 and 2035. 
 
 relative_sales_difference.T.loc[:, [ "2030 no policy", "2030 CT"]].plot(
                 kind='barh', stacked=True, color=colors, ax=axes[0], width=0.75)
 
 #fleet_growth_EVs.loc[2030].plot(kind='barh', color=colors, ax=axes[0])
-axes[0].set_title("Preceding policy", weight='bold', loc='left')
-axes[0].set_xlabel("Additional sales share in large electric trucks")
-axes[0].set_ylabel("Year")
+axes[0].text(-0.35, 1.05, "Preceding policy", weight='bold', 
+             transform=axes[0].transAxes, ha='left')
+axes[0].set_xlabel("Sales share in large electric trucks")
 
 
 # Plot the growth in EVs in 2035
 relative_sales_difference.T.loc[:, ["2035 no policy", "2035 CT"]].plot(
         kind='barh', stacked=True, color=colors, ax=axes[1], width=0.75)
-axes[1].set_xlabel("Additional sales share in large electric trucks")
-axes[1].set_ylabel("Year")
+axes[1].set_xlabel("Sales share in large electric trucks")
+
+# Function to format the x-axis labels as percentages
+def to_percent(x, pos):
+    return f'{x * 100:.0f}%'
+formatter = FuncFormatter(to_percent)
 
 # Remove spines and add commas to the x-axis
 for ax in axes:
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    ax.xaxis.set_major_formatter(formatter)
 # Remove year as x-axis label
 axes[0].set_ylabel("")
 
@@ -127,6 +143,14 @@ plt.subplots_adjust(wspace=0.15)
         
 # Switch the order of the bars
 axes[0].invert_yaxis()
+
+# Customize the legend for the first plot
+handles, labels = axes[0].get_legend_handles_labels()
+axes[0].legend(handles, ['No policy', 'Carbon tax'], title='Policy 2030', title_fontproperties=FontProperties(weight='bold'))
+
+# Customize the legend for the second plot
+handles, labels = axes[1].get_legend_handles_labels()
+axes[1].legend(handles, ['No policy', 'Carbon tax'], title='Policy 2035', title_fontproperties=FontProperties(weight='bold'))
 
 
 # Save sequencing figure as a svg file and a png file

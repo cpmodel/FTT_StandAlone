@@ -165,18 +165,14 @@ if plot_dot_graph:
 # Globally averaged cost difference over time by within-sector policy
 # ========================================================================
 
-clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 13}
-fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 3, "FTT:Fr": 5} # Note 4 for transport gives an error
+clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 33}
+fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 3, "FTT:Fr": 13} # Note 4 for transport gives an error
 graph_label = {"FTT:P": "New solar + battery \n vs existing coal", "FTT:H": "Water-air HP \n vs gas boiler",
                "FTT:Tr": "Electric vehicles \n vs petrol cars", "FTT:Fr": "Electric trucks \n vs diesel trucks"}
-
-
-
 
    
 year_inds = list(range(13, 41))
 timeseries_dict = {}
-
 
 for model in models:
     timeseries_by_policy = []   
@@ -202,7 +198,7 @@ for model in models:
         price_diff_perc = get_weighted_percentage_difference(output, model, 
                                                prices_clean, prices_fossil, year_inds)
         timeseries_by_policy.append(price_diff_perc)
-        if model == "FTT:H":
+        if model == "FTT:Fr":
             test = 1
         
     
@@ -243,15 +239,14 @@ for mi, model in enumerate(models):
         ax.grid(True, which='major', linewidth=0.7)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
     else:
-        ax.set_xlim(2024, 2040)
+        ax.set_xlim(2024, 2050)
         ax.grid(True, which='major', linewidth=0.7)
         ax.grid(True, which='minor', linewidth=0.2)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))
 
-    ax.set_ylim(-5.4, 28)
+    ax.set_ylim(-10, 50)
     # Set the x-axis major ticks to be at intervals of 2 years
-       
     
     if mi == 1:
         # Apply the custom formatter to the x-axis

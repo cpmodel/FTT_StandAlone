@@ -185,7 +185,7 @@ fig, axs = plt.subplots(4, 4, figsize=(7.2, 6.8), sharey='row')
 axs = axs.flatten()
 
 left_most_indices = [0, 4, 8, 12]  # For a 4x4 grid
-text_y_values = {"FTT:P": 32, "FTT:H": 7, "FTT:Tr": 1.2, "FTT:Fr": 38}
+text_y_values = {"FTT:P": 32, "FTT:H": 7, "FTT:Tr": 1.2, "FTT:Fr": 120}
 
 def get_sum_greens_2050(model_dfs, model):
     """Take the sum over all green technologies"""

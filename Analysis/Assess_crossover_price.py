@@ -137,7 +137,7 @@ def interpolate_crossover_year(price_series_clean, price_series_fossil):
         return float('inf')
     
     # Then, if we start with cost-parity, but don't have it consistently, also return -inf
-    if price_series_clean[0] <= price_series_fossil[0]:
+    if price_series_clean[0] < price_series_fossil[0]:
         return float('-inf')
     
     crossover_index = np.argmax(price_series_clean <= price_series_fossil)
@@ -249,15 +249,6 @@ def comparison_str(clean_tech, fossil_tech):
     elif clean_tech == "11 Heatpump AirWater" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
         output_str = "Water-air HP vs gas"
         
-    # elif clean_tech == "20 Electric Mid" and fossil_tech == "8 Diesel Mid":
-    #     output_str = "Mid-sized EV vs diesel"
-    # elif clean_tech == "21 Electric Lux" and fossil_tech == "9 Diesel Lux":
-    #     output_str = "Mid-sized EV vs petrol"
-    # elif clean_tech == "20 Electric Mid" and fossil_tech == "2 Petrol Mid":
-    #     output_str = "Large EV vs diesel"
-    # elif clean_tech == "21 Electric Lux" and fossil_tech == "3 Petrol Lux":
-    #      output_str =  "Large EV vs petrol"
-    
     elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["2 Petrol Mid", "3 Petrol Lux"]:
         output_str = "Electric car vs diesel"
     elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["8 Diesel Mid", "9 Diesel Lux"]:
@@ -295,20 +286,9 @@ linestyle_mapping = {
     'EV truck vs petrol': '--',
 }
 
-# Create custom legend handles and labels for the linestyles
-custom_lines = [Line2D([0], [0], color='black', linestyle=linestyle_mapping[key]) for key in linestyle_mapping]
-custom_labels = list(linestyle_mapping.keys())
-
-#%%% Making a graph with four subplots for each sector.
-# Each graph shows the percentage difference between the clean and fossil technology every 5 years
-# The x-axis is the year and the y-axis the percentage difference.
-# The title is the sector name. Each region has its own line.
 
 # Define the years of interest
 years = np.arange(2025, 2051)
-
-# Create a dictionary to store the colors used for each region
-region_colors = {}
 
 # Define the percentage difference function
 def get_percentage_difference(clean_price, dirty_price):
@@ -333,9 +313,6 @@ def get_price_differences_percentage(model, years, regions):
     return price_difference_percentage
 
 
-import matplotlib.pyplot as plt
-import numpy as np
-
 def find_intersections(x, y):
     """Find the x-values where the line crosses y=0."""
     intersections = []
@@ -350,6 +327,13 @@ def find_intersections(x, y):
 fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.2), sharey=True)
 axs = axs.flatten()
 rows = []
+
+# Create a dictionary to store the colors used for each region
+region_colors = {}
+
+# Create custom legend handles and labels for the linestyles
+custom_lines = [Line2D([0], [0], color='black', linestyle=linestyle_mapping[key]) for key in linestyle_mapping]
+custom_labels = list(linestyle_mapping.keys())
 
 for mi, model in enumerate(models):
     percentage_difference = get_price_differences_percentage(model, years, regions)      
@@ -393,7 +377,7 @@ for mi, model in enumerate(models):
     # for ri, r in enumerate(regions_all):
     #     ax.plot(years, perc_difference_all[ri], color='grey', alpha=0.5, linewidth=0.5)
     
-    ax.axhline(0, color='grey', linestyle='--', linewidth=1)  # Adding horizontal line at y=0
+    ax.axhline(0, color='grey', linewidth=1)  # Adding horizontal line at y=0
     ax.set_title(f"{repl_dict[model]}")
     
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
@@ -457,8 +441,8 @@ save_data(df_perc_difference, fig_dir, "Figure 2 - Baseline_price_difference")
 # Table: 5x4 table with difference in crossover year
 # ============================================================================
 
-clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 13}
-fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 5}       # Note 4 for transport gives an error
+clean_tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 10, "FTT:Fr": 33}
+fossil_tech_variable = {"FTT:P": 2, "FTT:Tr": 1, "FTT:H": 2, "FTT:Fr": 13}       # Note 4 for transport gives an error
 
 output_ppolicies = get_output(output_file, "sxp - P mand")
 output_hpolicies = get_output(output_file, "sxp - H mand")
@@ -591,7 +575,8 @@ if average_prices_first == False:
                 "Weights": weights}
             crossover_list.append(row)
     
-        df_crossovers = pd.DataFrame(crossover_list, columns = ["Model", "Policy", "Crossover years", "Weights"])
+        df_crossovers = pd.DataFrame(crossover_list, 
+                          columns=["Model", "Policy", "Crossover years", "Weights"])
         
     for model in models:
          average_crossover_rows = compute_average_crossover_diff(
@@ -604,9 +589,10 @@ if average_prices_first == False:
 elif average_prices_first == True: 
     
     crossover_diff_list = []
-    clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [12]}
-    fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [4]} # Note 4 for transport gives an error
+    clean_tech_variable = {"FTT:P": [18], "FTT:Tr": [19], "FTT:H": [10], "FTT:Fr": [33]}
+    fossil_tech_variable = {"FTT:P": [2], "FTT:Tr": [1], "FTT:H": [3], "FTT:Fr": [13]} # Note 4 for transport gives an error
     year_inds = list(range(10, 41))
+    
     for model in models:
         
         fossil_costs_S0 = get_weighted_costs(output_S0, model, fossil_tech_variable[model], year_inds)
@@ -615,7 +601,6 @@ elif average_prices_first == True:
         if model == "FTT:H":
             print(fossil_costs_S0)
             print(clean_costs_S0)
-        
         
         for policy, output in zip(policy_names[1:], output_files[1:]):  
             fossil_costs = get_weighted_costs(output, model, fossil_tech_variable[model], year_inds)
@@ -636,8 +621,7 @@ elif average_prices_first == True:
             crossover_diff_list.extend(row)
             print(row)
     df = pd.DataFrame(crossover_diff_list)
-        
-    
+          
 
 # Pivot the DataFrame to get a 5x4 table
 table = df.pivot(index='Policy', columns='Model', values='Crossover year diff')
@@ -660,6 +644,7 @@ header_color = '#40466e'
 header_text_color = 'w'
 row_colors = ['#f2f2f2', 'w']
 
+# Formatting of the table
 for (i, j), cell in table.get_celld().items():
     if j == -1:
         cell.set_text_props(fontweight='bold', color='black')  # Row labels bold
@@ -733,7 +718,7 @@ for mi, model in enumerate(models):
     ax.set_ylabel('')
     
     ax.set_title(repl_dict[model])
-    ax.set_xlim(-2, 12)   
+    ax.set_xlim(-2, 14)   
     #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     
@@ -879,7 +864,3 @@ fig.suptitle("Cost-parity point: costs without policy \n Comparison largest clea
 save_fig(fig, fig_dir, "Horizontal_timeline_crossover_year")
 df_cy['Sector'] = df_cy['Sector'].replace(repl_dict)
 save_data(df_cy, fig_dir, "Figure X - Horizontal_timeline_crossover_year")
-
-
-
-
