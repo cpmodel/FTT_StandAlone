@@ -26,6 +26,7 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices):
     share of sales that need to be green, compute the new sales'''
     
     sales_after_mandate = np.copy(sales_in)
+    
     for r in range(sales_in.shape[0]):
         total_sales = np.sum(sales_in[r, :, 0])
         if total_sales > 0:

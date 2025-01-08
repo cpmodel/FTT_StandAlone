@@ -214,7 +214,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                     )
             
             data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
-                            data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t, year)
+                            data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t,
+                            n_veh_classes, year)
             
             # Recalculate zews per class
             for r in range(len(titles['RTI'])):
