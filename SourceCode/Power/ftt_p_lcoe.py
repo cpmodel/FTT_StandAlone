@@ -118,35 +118,11 @@ def get_lcoe(data, titles):
         # Discount rate
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
         
-        # Helper function to extract cost matrices
-        def extract_cost_matrix(column, conv_factor=None, mask=None):
+        # Helper function to extract cost
+        def extract_cost(column, conv_factor=None, mask=None):
             '''
-            Extract and process a cost matrix.
-
-            This helper function extracts a cost matrix based on a specified column
-            from the `bcet` data. It applies optional conversion factors to scale the
-            data and masks to zero out specific elements.
-
-            Parameters
-            ----------
-            column : str
-            The name of the column in the `bcet` matrix to extract the cost matrix.
-            conv_factor : np.ndarray, optional
-            A 1D array of conversion factors to scale the data. If None, no scaling is applied.
-            mask : np.ndarray, optional
-            A 2D boolean array specifying which elements to zero out. If None, no masking is applied.
-
-            Returns
-            -------
-            np.ndarray
-            A 2D cost matrix with the specified column's data, scaled by the conversion
-            factor (if provided) and masked (if provided).
-
-            Notes
-            -----
-            - The `bcet` matrix must be in the calling scope for this function to work.
-            - The `c2ti` dictionary must be defined to map column names to their indices.
-            - The matrix dimensions are determined by `len(titles['T2TI'])` and `max_lt`.
+            This helper function extracts cost and optionally scale and mask a cost matrix
+            from the `bcet` data.
             
             '''
             
@@ -159,42 +135,42 @@ def get_lcoe(data, titles):
 
         # Initialse the levelised cost components
         # Average investment cost of marginal unit (new investments)
-        it_mu = extract_cost_matrix('3 Investment ($/kW)', conv_mu, bt_mask)
+        it_mu = extract_cost('3 Investment ($/kW)', conv_mu, bt_mask)
         
         # Average investment costs of across all units (electricity price)
-        it_av = extract_cost_matrix('3 Investment ($/kW)', conv_av, bt_mask)
+        it_av = extract_cost('3 Investment ($/kW)', conv_av, bt_mask)
 
         # Standard deviation of investment cost - marginal unit
-        dit_mu = extract_cost_matrix('4 std ($/MWh)', conv_mu, bt_mask)
+        dit_mu = extract_cost('4 std ($/MWh)', conv_mu, bt_mask)
 
         # Standard deviation of investment cost - average of all units
-        dit_av = extract_cost_matrix('4 std ($/MWh)', conv_av, bt_mask)
+        dit_av = extract_cost('4 std ($/MWh)', conv_av, bt_mask)
 
         # Subsidies - only valid for marginal unit
-        st = extract_cost_matrix('3 Investment ($/kW)', conv_mu, bt_mask)
+        st = extract_cost('3 Investment ($/kW)', conv_mu, bt_mask)
         st *= data['MEWT'][r, :, :]
 
         # Average fuel costs
-        ft = extract_cost_matrix('5 Fuel ($/MWh)', mask=lt_mask)
+        ft = extract_cost('5 Fuel ($/MWh)', mask=lt_mask)
 
         # Standard deviation of fuel costs
-        dft = extract_cost_matrix('6 std ($/MWh)', mask=lt_mask)
+        dft = extract_cost('6 std ($/MWh)', mask=lt_mask)
 
         # fuel tax/subsidies
         fft = np.ones([len(titles['T2TI']), max_lt]) * data['MTFT'][r, :, 0, np.newaxis]
         fft = np.where(lt_mask, fft, 0)
 
         # Average operation & maintenance cost
-        omt = extract_cost_matrix('7 O&M ($/MWh)', mask=lt_mask)
+        omt = extract_cost('7 O&M ($/MWh)', mask=lt_mask)
 
         # Standard deviation of operation & maintenance cost
-        domt = extract_cost_matrix('8 std ($/MWh)', mask=lt_mask)
+        domt = extract_cost('8 std ($/MWh)', mask=lt_mask)
 
         # Carbon costs
-        ct = extract_cost_matrix('1 Carbon Costs ($/MWh)', mask=lt_mask)
+        ct = extract_cost('1 Carbon Costs ($/MWh)', mask=lt_mask)
         
         # Standard deviation carbon costs (set to zero for now)
-        dct = extract_cost_matrix('2 std ($/MWh)', mask=lt_mask)
+        dct = extract_cost('2 std ($/MWh)', mask=lt_mask)
 
         # Energy production over the lifetime (incl. buildtime)
         # No generation during the buildtime, so no benefits
