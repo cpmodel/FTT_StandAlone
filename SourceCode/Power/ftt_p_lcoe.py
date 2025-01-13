@@ -119,10 +119,12 @@ def get_lcoe(data, titles):
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
         
         # Helper function to extract cost
-        def extract_cost(column, conv_factor=None, mask=None):
+        def extract_costs(column, conv_factor=None, mask=None):
             '''
-            This helper function extracts cost and optionally scale and mask a cost matrix
-            from the `bcet` data.
+            
+            This helper function extracts costs from the `bcet` data and 
+            optionally applies scaling to adjust the values based on a conversion factor, 
+            and masking to zero out specific elements.
             
             '''
             
@@ -131,46 +133,48 @@ def get_lcoe(data, titles):
             
             if conv_factor is not None:
                 matrix *= conv_factor[:, np.newaxis]
+                
+            # Apply the mask to zero out specific elements if a mask is provided; otherwise, return the unmasked matrix
             return np.where(mask, matrix, 0) if mask is not None else matrix
 
         # Initialse the levelised cost components
         # Average investment cost of marginal unit (new investments)
-        it_mu = extract_cost('3 Investment ($/kW)', conv_mu, bt_mask)
+        it_mu = extract_costs('3 Investment ($/kW)', conv_mu, bt_mask)
         
         # Average investment costs of across all units (electricity price)
-        it_av = extract_cost('3 Investment ($/kW)', conv_av, bt_mask)
+        it_av = extract_costs('3 Investment ($/kW)', conv_av, bt_mask)
 
         # Standard deviation of investment cost - marginal unit
-        dit_mu = extract_cost('4 std ($/MWh)', conv_mu, bt_mask)
+        dit_mu = extract_costs('4 std ($/MWh)', conv_mu, bt_mask)
 
         # Standard deviation of investment cost - average of all units
-        dit_av = extract_cost('4 std ($/MWh)', conv_av, bt_mask)
+        dit_av = extract_costs('4 std ($/MWh)', conv_av, bt_mask)
 
         # Subsidies - only valid for marginal unit
-        st = extract_cost('3 Investment ($/kW)', conv_mu, bt_mask)
+        st = extract_costs('3 Investment ($/kW)', conv_mu, bt_mask)
         st *= data['MEWT'][r, :, :]
 
         # Average fuel costs
-        ft = extract_cost('5 Fuel ($/MWh)', mask=lt_mask)
+        ft = extract_costs('5 Fuel ($/MWh)', mask=lt_mask)
 
         # Standard deviation of fuel costs
-        dft = extract_cost('6 std ($/MWh)', mask=lt_mask)
+        dft = extract_costs('6 std ($/MWh)', mask=lt_mask)
 
         # fuel tax/subsidies
         fft = np.ones([len(titles['T2TI']), max_lt]) * data['MTFT'][r, :, 0, np.newaxis]
         fft = np.where(lt_mask, fft, 0)
 
         # Average operation & maintenance cost
-        omt = extract_cost('7 O&M ($/MWh)', mask=lt_mask)
+        omt = extract_costs('7 O&M ($/MWh)', mask=lt_mask)
 
         # Standard deviation of operation & maintenance cost
-        domt = extract_cost('8 std ($/MWh)', mask=lt_mask)
+        domt = extract_costs('8 std ($/MWh)', mask=lt_mask)
 
         # Carbon costs
-        ct = extract_cost('1 Carbon Costs ($/MWh)', mask=lt_mask)
+        ct = extract_costs('1 Carbon Costs ($/MWh)', mask=lt_mask)
         
         # Standard deviation carbon costs (set to zero for now)
-        dct = extract_cost('2 std ($/MWh)', mask=lt_mask)
+        dct = extract_costs('2 std ($/MWh)', mask=lt_mask)
 
         # Energy production over the lifetime (incl. buildtime)
         # No generation during the buildtime, so no benefits
