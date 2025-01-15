@@ -110,7 +110,7 @@ def get_lcoe(data, titles):
         # Capacity factor of marginal unit (for decision-making) # Trap for very low CF
         cf_mu = np.maximum(bcet[:, c2ti['11 Decision Load Factor']], 0.000001)
         # Factor to transfer cost components in terms of capacity to generation
-        conv_mu = 1/bt / cf_mu/8766*1000
+        conv_mu = ((1 / bt) / cf_mu / 8766) * 1000
         # Average capacity factor (for electricity price) # Trap for very low CF
         cf_av = np.maximum(data['MEWL'][r, :, 0], 0.000001)
         # Factor to transfer cost components in terms of capacity to generation
@@ -122,9 +122,11 @@ def get_lcoe(data, titles):
         def extract_costs(column, conv_factor=None, mask=None):
             '''
             
-            This helper function extracts costs from the `bcet` data and 
-            optionally applies scaling to adjust the values based on a conversion factor, 
-            and masking to zero out specific elements.
+            This helper function extracts costs from the 'bcet' data, applies masking to zero out
+            specific elements, and optionally scales the values based on a conversion factor.
+            
+            Scaling adjusts the extracted data values using a conversion factor to account for 
+            unit conversion, normalization, or context-specific adjustments.
             
             '''
             
