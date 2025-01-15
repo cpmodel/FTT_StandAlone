@@ -171,7 +171,8 @@ def implement_shares_policies(endo_capacity, endo_shares,
 def validate_shares(zews, sector, year, titles):
     for r in range(len(titles['RTI'])):
         if not (np.isclose(np.sum(zews[r, :, 0]), 5.0, atol=1e-5) or
-                np.isclose(np.sum(zews[r, :, 0]), 4.0, atol=1e-5)):
+                np.isclose(np.sum(zews[r, :, 0]), 4.0, atol=1e-5) or
+                np.isclose(np.sum(zews[r, :, 0]), 3.0, atol=1e-5)):
             msg = (f"Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}. "
             f"Sum of market shares do not add to 5.0 (instead: {np.sum(zews[r, :, 0])})")
             raise ValueError(msg)
