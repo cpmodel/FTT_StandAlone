@@ -109,25 +109,27 @@ def get_lcoe(data, titles):
         
         # Capacity factor of marginal unit (for decision-making) # Trap for very low CF
         cf_mu = np.maximum(bcet[:, c2ti['11 Decision Load Factor']], 0.000001)
+        
         # Factor to transfer cost components in terms of capacity to generation
         conv_mu = ((1 / bt) / cf_mu / 8766) * 1000
+        
         # Average capacity factor (for electricity price) # Trap for very low CF
         cf_av = np.maximum(data['MEWL'][r, :, 0], 0.000001)
+        
         # Factor to transfer cost components in terms of capacity to generation
         conv_av = 1/bt / cf_av/8766*1000
+        
         # Discount rate
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
         
         # Helper function to extract cost
         def extract_costs(column, conv_factor=None, mask=None):
             '''
-            
             This helper function extracts costs from the 'bcet' data, applies masking to zero out
             specific elements, and optionally scales the values based on a conversion factor.
             
             Scaling adjusts the extracted data values using a conversion factor to account for 
             unit conversion, normalization, or context-specific adjustments.
-            
             '''
             
             # Extract the matrix with data from the specified column
@@ -185,12 +187,15 @@ def get_lcoe(data, titles):
 
         # Storage costs and marginal costs (lifetime only)
         stor_cost, marg_stor_cost = np.zeros_like(ft), np.zeros_like(ft)
+        
         if np.rint(data['MSAL'][r, 0, 0]) in [2]:
             stor_cost = (data['MSSP'][r, :, 0, np.newaxis] + data['MLSP'][r, :, 0, np.newaxis]) / 1000
         elif np.rint(data['MSAL'][r, 0, 0]) in [3, 4, 5]:
             stor_cost = (data['MSSP'][r, :, 0, np.newaxis] + data['MLSP'][r, :, 0, np.newaxis]) / 1000
             marg_stor_cost = (data['MSSM'][r, :, 0, np.newaxis] + data['MLSM'][r, :, 0, np.newaxis]) / 1000
+
         stor_cost = np.where(lt_mask, stor_cost, 0)
+        
         marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
 
         dstor_cost = 0.2 * stor_cost  # Assume standard deviation of 20%
