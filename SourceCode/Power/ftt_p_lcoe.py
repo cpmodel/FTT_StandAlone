@@ -181,8 +181,8 @@ def get_lcoe(data, titles):
         dct = extract_costs('2 std ($/MWh)', mask=lt_mask)
 
         # Energy production over the lifetime (incl. buildtime)
-        # No generation during the buildtime, so no benefits
         energy_prod = np.ones([len(titles['T2TI']), int(max_lt)])
+        # No generation during the buildtime, so no benefits
         energy_prod = np.where(lt_mask, energy_prod, 0)
 
         # Storage costs and marginal costs (lifetime only)
@@ -203,7 +203,7 @@ def get_lcoe(data, titles):
         # Net present value calculations
         
         # Discount rate
-        denominator = (1+dr)**full_lt_mat
+        denominator = (1 + dr)**full_lt_mat
         
         # 1a – Expenses – marginal units
         npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost) / denominator 
