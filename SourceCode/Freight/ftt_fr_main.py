@@ -314,8 +314,8 @@ def solve(data, time_lag, titles, histend, year, domain):
     
                     if data['ZEWW'][0, tech, 0] > 0.1:
                         
-                        # For EVs, add the battery costs to the non-battery costs
-                        if tech in range(25, 35):
+                        # For PHEV, BEV, and FCEVs, add the battery costs to the non-battery costs
+                        if tech in range(25, 35) or tech in range(40, 45):
                             nonbat_cost_dt[:, tech, 0] = (
                                     data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
                                     - data_dt["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']]  
