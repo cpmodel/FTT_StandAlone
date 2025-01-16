@@ -47,10 +47,13 @@ Updating FTT-Freight is similar to FTT-Transport. With the exception of the [IEA
 4. We apply the same logic for load factor proxies as mileage.
 5. For three-wheeler freight vehicles in India, we estimate that mileage is the midpoint between LCVs (vans) and two and three-wheeler personal vehicles. The reasoning is that three-wheeler freight vehicles are likely to cover more distance than personal transport but unlikely as much as LCVs. Likewise for load factors, we use an estimate of 0.4t/vehicle which is based on capacities of such vehicles observed online. This is only a very rough estimate and can be refined.
 
-## Battery sizes
+## Battery sizes and costs
 1. In India, battery sizes for TWV and LCVs were assumed from sampling models from this [website](https://trucks.cardekho.com/en/trucks)
 2. In China, HDTs have an average battery size of 292kwh according to this [report](https://theicct.org/publication/ze-mhdv-market-china-january-june-2024-nov24/) by the ICCT. Meanwhile, we assume an LCV battery size of 60kwh based on sampling of top selling vans in China. 
 3. **To do - explain where other battery sizes are sourced from.**
+4. We take battery costs ($/kwh) from the BloombergNEF Battery Survey (2023 edition) which provides a global battery cost of $139/kwh, and costs of $151, $140, and $126 for Europe, the US, and China respectively.
 
 ## Learning rate
-1. 
+1. We assume a battery learning rate of 25% (note: this is converted to a learning exponent in FTT). This is in-line with a number of other studies, see [Ziegler & Trancik (2021)](https://doi.org/10.1039/D0EE02681F) as well as [Lam & Mercure (2021)](https://ore.exeter.ac.uk/repository/bitstream/handle/10871/129774/Lam%20et%20al_Evidence%20for%20a%20global%20EV%20TP.pdf?sequence=1). 
+2. The learning rate for the rest of a battery electric vehicle (i.e., excluding the battery pack) is assumed to be 10% based on literature including this [ICCT report](https://theicct.org/publication/purchase-cost-ze-trucks-feb22/).
+3. For PHEVs, the non-battery learning rate of 6% is taken from [Weiss et al. 2019](https://doi.org/10.1016/j.jclepro.2018.12.019) and for FCEVs, the learning rate is assumed to be 18% based on [Ruffini & Wei, 2019](https://doi.org/10.1016/j.energy.2018.02.071) and this [IRENA report](https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2020/Nov/IRENA_Green_Hydrogen_breakthrough_2021.pdf).
