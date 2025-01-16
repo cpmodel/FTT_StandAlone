@@ -111,19 +111,19 @@ def get_lcoe(data, titles):
         cf_mu = np.maximum(bcet[:, c2ti['11 Decision Load Factor']], 0.000001)
         
         # Factor to transfer cost components in terms of capacity to generation
-        conv_mu = ((1 / bt) / cf_mu / 8766) * 1000
+        conv_mu = 1 / bt / cf_mu / 8766 * 1000
         
         # Average capacity factor (for electricity price) # Trap for very low CF
         cf_av = np.maximum(data['MEWL'][r, :, 0], 0.000001)
         
         # Factor to transfer cost components in terms of capacity to generation
-        conv_av = 1/bt / cf_av/8766*1000
+        conv_av = 1 / bt / cf_av / 8766 * 1000
         
         # Discount rate
         dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
         
         # Helper function to extract cost
-        def extract_costs(column, conv_factor=None, mask=None):
+        def extract_costs(column, mask, conv_factor=None):
             '''
             This helper function extracts costs from the 'bcet' data, applies masking to zero out
             specific elements, and optionally scales the values based on a conversion factor.
@@ -139,23 +139,23 @@ def get_lcoe(data, titles):
                 matrix *= conv_factor[:, np.newaxis]
                 
             # Apply the mask to zero out specific elements if a mask is provided; otherwise, return the unmasked matrix
-            return np.where(mask, matrix, 0) if mask is not None else matrix
+            return np.where(mask, matrix, 0)
 
         # Initialse the levelised cost components
         # Average investment cost of marginal unit (new investments)
-        it_mu = extract_costs('3 Investment ($/kW)', conv_mu, bt_mask)
+        it_mu = extract_costs('3 Investment ($/kW)', bt_mask, conv_mu)
         
         # Average investment costs of across all units (electricity price)
-        it_av = extract_costs('3 Investment ($/kW)', conv_av, bt_mask)
+        it_av = extract_costs('3 Investment ($/kW)', bt_mask, conv_av)
 
         # Standard deviation of investment cost - marginal unit
-        dit_mu = extract_costs('4 std ($/MWh)', conv_mu, bt_mask)
+        dit_mu = extract_costs('4 std ($/MWh)', bt_mask, conv_mu)
 
         # Standard deviation of investment cost - average of all units
-        dit_av = extract_costs('4 std ($/MWh)', conv_av, bt_mask)
+        dit_av = extract_costs('4 std ($/MWh)', bt_mask, conv_av)
 
         # Subsidies - only valid for marginal unit
-        st = extract_costs('3 Investment ($/kW)', conv_mu, bt_mask)
+        st = extract_costs('3 Investment ($/kW)', bt_mask, conv_mu)
         st *= data['MEWT'][r, :, :]
 
         # Average fuel costs
