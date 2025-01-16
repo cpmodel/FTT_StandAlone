@@ -190,7 +190,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 titles, data['ZWSA'], data['ZREG'], isReg,
                 sum_over_classes, n_veh_classes, Utot, no_it)
                         
-            # Validate that there are no negative shares, and they add up to 4 or 5
+            # Validate that there are no negative shares, and they add up to 3 or 4 or 5
             validate_shares(data['ZEWS'], sector, year, titles)
                     
             # Copy over costs that don't change
