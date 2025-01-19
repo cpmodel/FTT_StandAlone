@@ -43,7 +43,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Hydrogen.ftt_h2_lcoh import get_lcoh as get_lcoh2
-from SourceCode.Hydrogen.ftt_h2_csc import get_csc
+from SourceCode.Hydrogen.cost_supply_curve import calc_csc
 from SourceCode.Hydrogen.ftt_h2_pooledtrade import pooled_trade
 from SourceCode.core_functions.substitution_frequencies import sub_freq
 # -----------------------------------------------------------------------------
@@ -103,23 +103,53 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             np.ones([len(titles['RTI']), len(titles['HYTI']), len(titles['HYTI'])]),
                             titles['HYTI'], titles['RTI'])
 
-    # Hard-coded exclusions
-    data['HYWA'][:, -1, :] = 0.0
-    data['HYWA'][:, :, -1] = 0.0
 
 
     # %% Historical accounting
     if year < 2023:
 
-        data['HYWK'] = divide(data['HYG1'], data['BCHY'][:, :, c7ti['Capacity factor'], np.newaxis])
+        # data['HYWK'] = divide(data['HYG1'], data['BCHY'][:, :, c7ti['Capacity factor'], np.newaxis])
         data['HYWS'] = data['HYWK'] / data['HYWK'].sum(axis=1)[:, :, None]
-        data['HYWS'][np.isnan(data['HYWS'])] = 0.0
         data['HYWS'][np.isnan(data['HYWS'])] = 0.0
         data['HYPD'][:, 0, 0] = data['HYG1'][:, :, 0].sum(axis=1)
         data = get_lcoh2(data, titles)
+        
+        # Total capacity
+        data['HYKF'][:, 0, 0] = data['HYWK'][:, :, 0].sum(axis=1)
+        
+        # Total hydrogen demand
+        data['HYDT'][:, 0, 0] = (data['HYD1'][:, 0, 0] +
+                                 data['HYD2'][:, 0, 0] +
+                                 data['HYD3'][:, 0, 0] +
+                                 data['HYD4'][:, 0, 0] +
+                                 data['HYD5'][:, 0, 0] ) / 1.6
+        
+        # System-wide capacity factor
+        data['HYSC'][:, 0, 0] = divide(data['HYG1'][:, :, 0].sum(axis=1),
+                                       data['HYWK'][:, :, 0].sum(axis=1))
+        
+        # Estimate capacity growth.
+        # Assume a maximum of 30% growth when the system is operating near
+        # it's full potential and assume total capacity decreases when the
+        # opposite occurs when capacity factors drop below 60%  
+        data['HYCG'][:,0,0] = 0.1 * np.tanh(1.25*(data['HYSC'][:, 0, 0] - 0.5)/0.3)
+        
 
     # %% Simulation period
     else:
+
+        # Total hydrogen demand
+        data['HYDT'][:, 0, 0] = (data['HYD1'][:, 0, 0] +
+                                 data['HYD2'][:, 0, 0] +
+                                 data['HYD3'][:, 0, 0] +
+                                 data['HYD4'][:, 0, 0] +
+                                 data['HYD5'][:, 0, 0] ) / 1.6
+        
+        dem_lag = (time_lag['HYD1'][:, 0, 0] +
+                                 time_lag['HYD2'][:, 0, 0] +
+                                 time_lag['HYD3'][:, 0, 0] +
+                                 time_lag['HYD4'][:, 0, 0] +
+                                 time_lag['HYD5'][:, 0, 0] )
 
         data_dt = {}
 
@@ -137,7 +167,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         dt = 1 / float(no_it)
 
         # Project hydrogen production
-        data['HYPD'][:, 0, 0] = time_lag['HYG1'][:, :, 0].sum(axis=1) * 1.02
+        data['HYKF'][:, 0, 0] = time_lag['HYKF'][:, 0, 0] * (1 + time_lag['HYCG'][:, 0, 0])
 
         # =====================================================================
         # Start of the quarterly time-loop
@@ -146,11 +176,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         #Start the computation of shares
         for t in range(1, no_it+1):
 
-            HYPDt = data_dt['HYPD'][:, 0, 0] + (data['HYPD'][:, 0, 0] - data_dt['HYPD'][:, 0, 0]) * t/no_it
+            HYKFt = data_dt['HYKF'][:, 0, 0] + (data['HYKF'][:, 0, 0] - data_dt['HYKF'][:, 0, 0]) * t/no_it
 
             for r in range(len(titles['RTI'])):
 
-                if np.isclose(HYPDt[r], 0.0):
+                if np.isclose(HYKFt[r], 0.0):
                     continue
 
                 # Initialise variables related to market share dynamics
@@ -201,49 +231,67 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 #calculate temportary market shares and temporary capacity from endogenous results
                 data['HYWS'][r, :, 0] = data_dt['HYWS'][r, :, 0] + np.sum(dSij, axis=1)
 
-                data['HYWK'][r, :, 0] = data['HYWS'][r, :, 0] * HYPDt[r, np.newaxis]/data['BCHY'][r, :, c7ti["Capacity factor"]]
-
-                data['HYG1'][r, :, 0] = data['HYWK'][r, :, 0] * data['BCHY'][r, :, c7ti["Capacity factor"]]
+                data['HYWK'][r, :, 0] = data['HYWS'][r, :, 0] * HYKFt[r, np.newaxis]
+                    
+            # Call CSC function
+            data['HYG1'][:, :, 0], data['HYEP'][0,0,0], data['HYCF'][:, :, 0] = calc_csc(data_dt['HYLC'], data_dt['HYLD'], data['HYDT'], data['HYWK'], data_dt['HYCF'], data['HYTC'], titles)
 
             data['HYWK'][np.isnan(data['HYWK'])] = 0.0
             data['HYG1'][np.isnan(data['HYWK'])] = 0.0
+            
+            # Capacity additions
+            cap_diff = data['HYWK'][r, :, 0] - time_lag['HYWK'][r, :, 0]
+            cap_drpctn = time_lag['HYWK'][r, :, 0] / time_lag['BCHY'][r, :, c7ti['Lifetime']]
+            data['HYWI'][r, :, 0] = np.where(cap_diff > 0.0,
+                                             cap_diff + cap_drpctn,
+                                             cap_drpctn)
+            
+            # Spillover learning
+            # Using a technological spill-over matrix (HYWB) together with capacity
+            # additions (MEWI) we can estimate total global spillover of similar
+            # techicals
+            bi = np.zeros((len(titles['RTI']),len(titles['HYTI'])))
+            hywi0 = np.sum(data['HYWI'][:, :, 0], axis=0)
+            dw = np.zeros(len(titles["HYTI"]))
+            
+            for i in range(len(titles["HYTI"])):
+                dw_temp = copy.deepcopy(hywi0)
+                dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
+                dw[i] = np.dot(dw_temp, data['HYWB'][0, i, :])
 
-            # Call LCOH2 function
-            data = get_lcoh2(data, titles)
+            # Cumulative capacity incl. learning spill-over effects
+            data["HYWW"][0, :, 0] = time_lag['HYWW'][0, :, 0] + dw
+            
+ 
+            # Learning-by-doing effects on investment
+            for tech in range(len(titles['HYTI'])):
 
-            # Update lags
-            for var in data_dt.keys():
+                if data['HYWW'][0, tech, 0] > 0.1:
 
-                if domain[var] == 'FTT-H2':
+                    data['BCHY'][:, tech, c7ti['CAPEX, mean, €/tH2 cap']] = data_dt['BCHY'][:, tech, c7ti['CAPEX, mean, €/tH2 cap']] * \
+                        (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])
 
-                    data_dt[var] = np.copy(data[var])
+        # System-wide capacity factor
+        data['HYSC'][:, 0, 0] = divide(data['HYG1'][:, :, 0].sum(axis=1),
+                                       data['HYWK'][:, :, 0].sum(axis=1))
 
-        # Create cost-supply curve
-        hylc = data['HYLC'][:, :, 0]
-        hyld = data['HYLD'][:, :, 0]
-        hycsc = data['HYCSC'][:, :, :]
-        hyrcsc = data['HYRCSC'][:, :, :]
-        cf_idx = c7ti['Capacity factor']
-        data['BCHY'][:, -1, cf_idx] = 0.5
-        hywk = data['HYG1'][:, :, 0] / data['BCHY'][:, :, cf_idx]
-        hyd1 = data['HYD1'][:, 0, 0]
-        lag_hyg1 = time_lag['HYG1'][:, :, 0]
+        # Estimate capacity growth.
+        # Assume a maximum of 30% growth when the system is operating near
+        # it's full potential and assume total capacity decreases when the
+        # opposite occurs when capacity factors drop below 60%  
+        data['HYCG'][:,0,0] = 0.3 * np.tanh(1.25*(data['HYSC'][:, 0, 0] - 0.6)/0.15)
+                    
+        # Call LCOH2 function
+        data = get_lcoh2(data, titles)
 
-        if year > histend['HYEXPSH']:
-            fix_hyexpsh = time_lag['HYEXPSH'][:, 0, 0] * 0.9
-            flex_hyexpsh = time_lag['HYEXPSH'][:, 0, 0] * 0.1
-        else:
-            fix_hyexpsh = data['HYEXPSH'][:, 0, 0]
-            flex_hyexpsh = np.zeros_like(data['HYEXPSH'][:, 0, 0])
+        # Update lags
+        for var in data_dt.keys():
 
+            if domain[var] == 'FTT-H2':
 
+                data_dt[var] = np.copy(data[var])            
+        
 
-        hycsc, bins = get_csc(hylc, hyld, hywk, hycsc, titles)
-        hyg1, capacity_factor = pooled_trade(hyd1, fix_hyexpsh, flex_hyexpsh, hylc, lag_hyg1, hywk, hycsc, hyrcsc, bins, titles)
-
-        data['HYG1'][:, :, 0] = hyg1
-        # Overwrite capacity factor where capacity is notnull
-        data['BCHY'][hywk != 0, c7ti['Capacity factor']] = capacity_factor[hywk != 0]
 
 
     return data

@@ -23,6 +23,7 @@ Local library imports:
 
 # Local library imports
 from SourceCode.model_class import ModelRun
+import pandas as pd
 
 # Instantiate the run
 model = ModelRun()
@@ -49,3 +50,24 @@ model.run()
 output_all = model.output
 
 #
+
+# %% Check outputs
+
+hywk = {}
+hyg1 = {}
+hywk_glo = pd.DataFrame(0.0, index=titles['HYTI'], columns=tl)
+hyg1_glo = pd.DataFrame(0.0, index=titles['HYTI'], columns=tl)
+
+
+for r, reg in enumerate(titles['RTI']):
+    
+    hywk[reg] = pd.DataFrame(output_all['S0']['HYWK'][r, :, 0, :], index=titles['HYTI'], columns=tl)
+    hyg1[reg] = pd.DataFrame(output_all['S0']['HYG1'][r, :, 0, :], index=titles['HYTI'], columns=tl)
+    
+    hywk_glo += hywk[reg]
+    hyg1_glo += hyg1[reg]
+    
+    
+    
+    
+

@@ -385,14 +385,14 @@ BFTC,CLEAFS matrix of technology costs,-,RTI,TFTI,CFTI,NA,CLEAFS,-,-,2001,-,,Y
 PFRA,Price of ammonia,$/t,RTI,CFTI,NA,TIME,CLEAFS,-,-,2010,From FTT-H2,,Y
 FERTS,CLEAFS Share of potential green fertiliser adopters,%,RTI,TFTI,NA,TIME,CLEAFS,1961,2021,2001,based on FAO,,Y
 BCHY,FTT:Hydrogen matrix of technology costs,-,RTI,HYTI,C7TI,NA,FTT-H2,-,-,2001,Dummy data,,Y
-HYG1,FTT:Hydrogen total hydrogen supply by technology (kt H2),kt H2,RTI,HYTI,NA,TIME,FTT-H2,2001,2022,2001,IEA,Y,Y
+HYG1,FTT:Hydrogen primary hydrogen production by technology (kt H2),kt H2,RTI,HYTI,NA,TIME,FTT-H2,2001,2022,2001,IEA,Y,Y
 HYD1,FTT:Hydrogen total hydrogen supply (kt H2),kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IEA,Y,Y
 HYJT,FTT:Hydrogen technology to fuel matrix,-,NA,HYTI,JTI,NA,FTT-H2,-,-,2001,-,,Y
 HYWW,FTT:Hydrogen global cumulative capacity (kt H2),kt H2,NA,HYTI,NA,TIME,FTT-H2,2022,2022,2022,IEA,,Y
 HYLC,FTT:Hydrogen LCOH2,EUR/tH2,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
 HYLD,FTT:Hydrogen LCOH2 -standard deviation,EUR/tH2,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
 HYWS,FTT:Hydrogen market shares,-,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
-HYWK,FTT:Hydrogen production capacities,kt H2 cap./y,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYWK,FTT:Hydrogen production capacities,kt H2 cap./y,RTI,HYTI,NA,TIME,FTT-H2,2011,2022,2022,-,Y,Y
 HYIY,FTT:Hydrogen production capacities,EUR,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
 HYPD,FTT:Hydrogen production forecst,kt H2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
 HYWA,FTT:Hydrogen substitution frequencies,-,RTI,HYTI,HYTI,NA,FTT-H2,,,2022,-,Y,Y
@@ -400,3 +400,31 @@ HYGM,FTT:Hydrogen gamma values,EUR/tH2,RTI,HYTI,HYTI,NA,FTT-H2,,,2022,-,Y,Y
 HYCSC,FTT:Hydrogen cost-supply curves,EUR/tH2,RTI,HYTI,bins,NA,FTT-H2,,,2022,-,Y,Y
 HYRCSC,FTT:Hydrogen regional cost-supply curves,EUR/tH2,ARTI,HYTI,bins,NA,FTT-H2,,,2022,-,Y,Y
 HYEXPSH,FTT:Hydrogen hydrogen export shares,%,RTI,NA,NA,NA,FTT-H2,2011,2022,2023,-,Y,Y
+HYGT,FTT:Hydrogen total hydrogen production (kt H2),kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IEA,Y,Y
+HYDT,FTT:Hydrogen total hydrogen demand (kt H2),kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,,Y,Y
+HYD1,FTT:Hydrogen NH3 for fertiliser demand in H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IFA,Y,Y
+HYD2,FTT:Hydrogen NH3 for further chemical production demand in H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IFA,Y,Y
+HYD3,FTT:Hydrogen MeOH for further chemical production demand in H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IFA,Y,Y
+HYD4,FTT:Hydrogen H2 for oil refining demand in H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IFA,Y,Y
+HYD5,FTT:Hydrogen H2 for energy purposes,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2001,IFA,Y,Y
+HYBY,FTT:Hydrogen H2 byproduction,kt H2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYKF,FTT:Hydrogen Total hydrogen capacity forecast,kt H2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYCF,FTT:Hydrogen capacity factors,%,RTI,HYTI,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYI1,NH3 imports in kt H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2022,-,Y,Y
+HYI2,MeOH imports in kt H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2022,-,Y,Y
+HYI3,Direct H2 imports in kt H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2022,-,Y,Y
+HYE1,NH3 exports in kt H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2022,-,Y,Y
+HYE2,MeOH exports in kt H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2022,-,Y,Y
+HYE3,Direct H2 exports in kt H2-eq.,kt H2,RTI,NA,NA,TIME,FTT-H2,2001,2022,2022,-,Y,Y
+HYTC,Transportation costs,EUR/tH2,RTI,RTI,NA,NA,FTT-H2,,,,-,Y,Y
+HYDG,Total demand growth rate of the previous year,%,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYIG,Total import growth rate of the previous year,%,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYEG,Total demand growth rate of the previous year,%,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYCG,Capacity growth rate,%,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYSC,System-wide capacity factor,%,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYEP,Hydrogen export price,EUR/tH2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYIP,Hydrogen import price,EUR/tH2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYPP,Hydrogen producer price,EUR/tH2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYCP,Hydrogen consumer price,EUR/tH2,RTI,NA,NA,TIME,FTT-H2,,,2022,-,Y,Y
+HYWB,Technological spill-over matrix,-,NA,HYTI,HYTI,NA,FTT-H2,,,,-,Y,Y
+HYWI,Capacity additions,kt H2,RTI,HYTI,NA,TIME,FTT-H2,,,,-,Y,Y

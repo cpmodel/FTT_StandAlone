@@ -469,7 +469,8 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
             # Read in sheet by sheet
             ci = 2              # Column indenting
             for i, var in enumerate(vars_to_convert[model]):
-
+                
+                print(var)
                 ndims = len(var_dict[model][var]['Dims'])
                 rdim, row_title = set_up_rows(model, var, var_dict, dims)
                 cdim, col_title = set_up_cols(model, var, var_dict, dims, timeline_dict)
@@ -502,7 +503,7 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
                             costs_to_gam(data, var, reg, timeline_dict, dims, out_dir)
 
                 elif ndims == 2:
-
+                    print(var)
                     data = extract_data(raw_data, sheet_name, row_start, rdim, ci, cf)
                     var_dict[model][var]['Data'][scen] = np.array(data.astype(np.float32))
 
@@ -551,6 +552,8 @@ if __name__ == '__main__':
     #           'FTT-IH-NMM': [[0], 'FTT-IH-NMM-13x70_2022'],
     #           'FTT-IH-OIS': [[0], 'FTT-IH-OIS-13x70_2022'],
     # }
+    
+    models = {'FTT-H2': [[0], 'FTT-H2-12x71_2024']}
 
     var_dict = convert_masterfiles_to_csv(
         models, ask_user_input=True, overwrite_existing_csvs=True)

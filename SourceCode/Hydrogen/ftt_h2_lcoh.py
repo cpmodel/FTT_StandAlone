@@ -81,7 +81,9 @@ def get_lcoh(data, titles):
         lt_mask = np.where(lt_mask_in == bt_mask_out, True, False)
 
         # Capacity factor
-        cf = data['BCHY'][r,:, c7ti['Capacity factor'], np.newaxis]
+        # cf = data['BCHY'][r,:, c7ti['Capacity factor'], np.newaxis]
+        cf = data['HYCF'][r, :, :]
+        cf[np.isclose(cf, 0.0)] = 0.75
         conv = cf*bt[:, None]
         conv[-1, 0] = 1.0
 

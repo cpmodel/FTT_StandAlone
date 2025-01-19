@@ -273,6 +273,11 @@ class ModelRun:
                 variables = cleafs_fert.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
+                
+            if "FSMAT" in self.ftt_modules:
+                variables = fsmat.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
 
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")
