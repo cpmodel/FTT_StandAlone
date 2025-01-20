@@ -127,7 +127,7 @@ def get_lcof(data, titles, carbon_costs, year):
         RZCOt[:,1:] = 0
 
         # Registration taxes, ZTVT is vehicle tax
-        ItVT = It * (data['ZTVT'][r, :, 0, np.newaxis])
+        ItVT = It * (1 + (data['ZTVT'][r, :, 0, np.newaxis]))
         
         # Fuel Cost
         FT = np.ones([len(titles['FTTI']), int(max_LF)])
@@ -208,7 +208,7 @@ def get_lcof(data, titles, carbon_costs, year):
         
         # Vehicle price components for front end ($/veh)
         data["ZWIC"][r, :, 0] = BZTC[:, c6ti['1 Purchase cost (USD/veh)']] \
-                                + data["ZTVT"][r, :, 0] \
+                                * (1 + data["ZTVT"][r, :, 0]) \
                                 + BZTC[:, c6ti["12 CO2 emissions (gCO2/km)"]] \
                                 * data["RZCO"][r, 0, 0]
         
