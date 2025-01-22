@@ -25,7 +25,7 @@ titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
 
 # Define the regions and the region numbers of interest
 regions = {'India': 41, "China": 40, "Brazil": 43,
-           "United States": 33, "Germany": 2, "UK": 14,
+           "United States": 33, "Canada": 35, "Germany": 2, "UK": 14,
            "South Africa": 56, "Japan": 34}
 
 regions_all = {i: i - 1 for i in range(1, 72)}
@@ -44,6 +44,20 @@ operation_cost_name = {"FTT:P": "MLCO"}
 
 # Define the year of interest
 year = 2030
+
+def skip_model_region_combo(model, ri):
+    # For figure one, skip those where we have significant proxy data
+    skip = False
+    if model == "FTT:H":
+        # Skip if not EU, Canada, US, China, Korea
+        skip = ri not in list(range(30)) + [33, 35, 40, 47]
+    if model == "FTT:Tr":
+        skip = ri not in list(range(30)) + [33, 34, 40, 41]
+    if model == "FTT:Fr":
+        skip = ri not in list(range(30)) + [33, 40, 41]
+    
+    return skip
+    
 
 
 # Find the biggest clean or fossil technology:
@@ -328,12 +342,10 @@ fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.2), sharey=True)
 axs = axs.flatten()
 rows = []
 
-# Create a dictionary to store the colors used for each region
-region_colors = {}
-
 # Create custom legend handles and labels for the linestyles
 custom_lines = [Line2D([0], [0], color='black', linestyle=linestyle_mapping[key]) for key in linestyle_mapping]
 custom_labels = list(linestyle_mapping.keys())
+region_colors = [plt.rcParams['axes.prop_cycle'].by_key()['color'][i] for i in range(len(regions))]
 
 for mi, model in enumerate(models):
     percentage_difference = get_price_differences_percentage(model, years, regions)      
@@ -345,6 +357,11 @@ for mi, model in enumerate(models):
     used_linestyles = {}
     
     for ri, r in enumerate(regions):
+        
+        # We don't have very strong cost data for all regions. Skipping some. 
+        if skip_model_region_combo(model, regions[r]):
+            continue
+        
         y_values = percentage_difference[ri]
         
         # Generate the output_str for the current comparison
@@ -355,12 +372,11 @@ for mi, model in enumerate(models):
         # Get the linestyle for the current comparison
         linestyle = linestyle_mapping.get(clean_vs_fossil_str, '-')
         
-        line, = ax.plot(years, y_values, label=r, linestyle=linestyle)
+        line, = ax.plot(years, y_values, label=r, linestyle=linestyle, c=region_colors[ri])
         
         # Track the linestyle (tech) and color (region) used
         used_linestyles[clean_vs_fossil_str] = linestyle
         
-        region_colors[r] = line.get_color()
         
         # Find intersections with y=0
         intersections = find_intersections(years, y_values)
@@ -374,8 +390,6 @@ for mi, model in enumerate(models):
                "2035 %diff": y_values[1], "2050 %diff": y_values[2]}
         rows.append(row)
     
-    # for ri, r in enumerate(regions_all):
-    #     ax.plot(years, perc_difference_all[ri], color='grey', alpha=0.5, linewidth=0.5)
     
     ax.axhline(0, color='grey', linewidth=1)  # Adding horizontal line at y=0
     ax.set_title(f"{repl_dict[model]}")
@@ -383,13 +397,14 @@ for mi, model in enumerate(models):
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
         ax.set_ylabel("Levelised costs difference (%)")
    
-    # Remove the top and right frame
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
+    # # Remove the top and right frame
+    # ax.spines['top'].set_visible(False)
+    # ax.spines['right'].set_visible(False)
 
     # Set xlim between 2025 and 2050
     ax.set_xlim(2025, 2050)   
     ax.set_ylim(-100, 100)
+    
     
     # Apply green and grey shading from 0 to ylimits
     ymin, ymax = ax.get_ylim() 
@@ -398,16 +413,6 @@ for mi, model in enumerate(models):
     
     # Reset the y-limits after shading
     ax.set_ylim(ymin, ymax)
-    
-    # Add two-pointed arrow with labels on the right-most subplots
-    if mi % 2 == 1:  # Right-most subplots
-        arrowprops = dict(arrowstyle='<->', color='black')
-        ax.annotate('Less costly', xy=(1.12, 0.93), xycoords='axes fraction', 
-                    xytext=(1.12, 0.05), textcoords='axes fraction', 
-                    ha='center', va='center', arrowprops=arrowprops)
-        ax.annotate('More costly', xy=(1.12, 0.05), xycoords='axes fraction', 
-                    xytext=(1.12, 0.95), textcoords='axes fraction', 
-                    ha='center', va='center', arrowprops=dict(arrowstyle='<-', color='black', alpha=0))
     
     # Create custom legend handles and labels for the linestyles used in this subplot
     custom_lines = [Line2D([0], [0], color='black', linestyle=used_linestyles[key]) for key in used_linestyles]
@@ -421,11 +426,11 @@ for mi, model in enumerate(models):
 handles, labels = axs[0].get_legend_handles_labels()
 
 # Create custom legend handles and labels for the colors with continuous line style
-color_lines = [Line2D([0], [0], color=region_colors[r], linestyle='-') for r in region_colors]
-color_labels = list(region_colors.keys())
+color_patches = [Line2D([0], [0], color=r_color, linestyle='-') for r_color in region_colors]
+color_labels = regions.keys()
 
 # Add the color legend to the figure
-fig.legend(color_lines, color_labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=6)
+fig.legend(color_patches, color_labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=6)
 
 plt.tight_layout()
 
@@ -718,7 +723,7 @@ for mi, model in enumerate(models):
     ax.set_ylabel('')
     
     ax.set_title(repl_dict[model])
-    ax.set_xlim(-2, 14)   
+    ax.set_xlim(-3, 12)   
     #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     
