@@ -265,19 +265,20 @@ class ModelRun:
                                         self.domain)
 
             if "FTT-H2" in self.ftt_modules:
+                
+                # CLEAFS is a sub module of FTT-H2. It should therefore only be
+                # executed when FTT-H2 is enabled.
+                if "CLEAFS" in self.ftt_modules:
+                    variables = cleafs_fert.solve(variables, time_lags, iter_lags,
+                                            self.titles, self.histend, tl[y],
+                                            self.domain)
+                
                 variables = ftt_h2.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
-            if "CLEAFS" in self.ftt_modules:
-                variables = cleafs_fert.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                
-            if "FSMAT" in self.ftt_modules:
-                variables = fsmat.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+
+
 
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of modules. Check settings.ini")

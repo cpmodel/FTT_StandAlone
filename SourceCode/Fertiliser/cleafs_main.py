@@ -91,11 +91,12 @@ def solve(data, time_lags, iter_lag, titles, histend, year, domain):
 
 
     # Calculate growth in agricultural sector
-    agri_growth = data['AQR'] / time_lags['AQR']
+    agri_growth = data['HYD1'] / time_lags['HYD1']
     # Replace NaNs
     agri_growth[np.isnan(agri_growth)] = 1
     # Project fertiliser demand
     proj_fert_demand = time_lags['FERTD'].sum(axis = 1) * agri_growth[:, 0, :]
+    
     total_fert_demand = proj_fert_demand.sum(axis = 1)
     # Project fertiliser demand using agriculture growth
     if histend['FERTD'] > year:
@@ -109,6 +110,7 @@ def solve(data, time_lags, iter_lag, titles, histend, year, domain):
     if year > histend['FERTD']:
         data = pop_shares.green_population_share(data, time_lags, titles)
         data = bm.simulate_bass_diffusion(data, time_lags, titles, histend, green_tech, sim_var, total_fert_demand)
+        # in N-equivalent fertiliser kt
         data['FERTD'][:, grey_idx, :] = proj_fert_demand - data['FERTD'][:, green_idx, :]
 
     return data

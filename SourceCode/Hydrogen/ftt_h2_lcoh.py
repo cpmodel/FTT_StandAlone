@@ -86,6 +86,11 @@ def get_lcoh(data, titles):
         cf[np.isclose(cf, 0.0)] = 0.75
         conv = cf*bt[:, None]
         conv[-1, 0] = 1.0
+        # Base CF
+        # This is used for the CSC routine
+        cf_base = np.ones_like(cf) * 0.85
+        conv_base = cf_base*bt[:, None]
+        conv_base[-1, 0] = 1.0        
 
         # Discount rate
         dr = data['BCHY'][r,:, c7ti['Discount rate'], np.newaxis]
@@ -98,6 +103,13 @@ def get_lcoh(data, titles):
             data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv) +
             data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv))
         it = np.where(bt_mask, it, 0)
+        # Base
+        it_base = np.ones([len(titles['HYTI']), int(max_lt)])
+        it_base = it_base * (
+            data['BCHY'][r,:, c7ti['CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv_base) +
+            data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv_base) +
+            data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv_base))
+        it_base = np.where(bt_mask, it_base, 0)
 
         # Standard deviation of investment cost
         dit = it * data['BCHY'][r,:, c7ti['CAPEX, std, % of mean'],np.newaxis]
@@ -126,6 +138,11 @@ def get_lcoh(data, titles):
         opex_fix = opex_fix + (
             data['BCHY'][r,:, c7ti['Fixed OPEX, mean, €/kg H2 cap/y'],np.newaxis]/(cf))
         opex_fix = np.where(lt_mask, opex_fix, 0)
+        # Base
+        opex_fix_base = np.zeros([len(titles['HYTI']), int(max_lt)])
+        opex_fix_base = opex_fix_base + (
+            data['BCHY'][r,:, c7ti['Fixed OPEX, mean, €/kg H2 cap/y'],np.newaxis]/(cf_base))
+        opex_fix_base = np.where(lt_mask, opex_fix_base, 0)
 
         # st.dev fixed opex
         dopex_fix = opex_fix * data['BCHY'][r,:, c7ti['Fixed OPEX, std, % of mean'],np.newaxis]
@@ -150,18 +167,23 @@ def get_lcoh(data, titles):
         # 1-Expenses
         # 1.1-NPV
         npv_expenses1 = (it+st+ft+opex_fix+opex_var)/denominator
+        # 1.2-NPV for CSC 
+        npv_expenses2 = (it_base+st+ft+opex_fix_base+opex_var)/denominator
 
         # 2-Utility
         npv_utility = energy_prod/denominator
         npv_utility[npv_utility==1] = 0
 
         # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit**2 + dft**2 + dopex_fix**2 + + dopex_var**2)/denominator
+        npv_std = 1.414 * np.sqrt(dit**2 + dft**2 + dopex_fix**2 + dopex_var**2)/denominator
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOH
         lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
         lcoh[np.isnan(lcoh)] == 0.0
+        # 1.2-LCOH for CSC
+        lcoh_csc = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
+        lcoh_csc[np.isnan(lcoh_csc)] == 0.0
 
         # Standard deviation of LCOH
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
@@ -169,6 +191,7 @@ def get_lcoh(data, titles):
 
         # Pass to variables that are stored outside.
         data['HYLC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
+        data['HYCC'][r, :, 0] = lcoh_csc
         data['HYLD'][r, :, 0] = dlcoh          # Variation on the LCOH distribution
 
     return data

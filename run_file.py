@@ -41,7 +41,7 @@ histend = model.histend
 domain = model.domain
 tl = model.timeline
 scens = model.scenarios
-
+# %%
 # Call the 'run' method of the ModelRun class to solve the model
 model.run()
 
@@ -66,6 +66,8 @@ for r, reg in enumerate(titles['RTI']):
     
     hywk_glo += hywk[reg]
     hyg1_glo += hyg1[reg]
+    
+hykf_glo = pd.DataFrame(output_all['S0']['HYKF'][:, 0, 0, :], index=titles['RTI'], columns=tl)
     
     
     

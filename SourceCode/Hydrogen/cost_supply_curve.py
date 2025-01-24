@@ -12,6 +12,8 @@ import warnings
 
 # Third party imports
 import numpy as np
+import scipy.stats as stats
+import pandas as pd
 
 # Local library imports
 from SourceCode.support.divide import divide
@@ -32,7 +34,7 @@ def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, title
     # Initialise a 3D variable
     lc_erf = np.zeros([bins, len(titles['RTI']), len(titles['HYTI'])])
     
-    cf_limit = 1.0 + 0.4*(1.0 - capacity_factor[:, :, 0])
+    cf_limit = 0.95
     capacity_online = capacity[:, :, 0] * cf_limit
     
     # Estimate the weigthed transportation costs
@@ -57,19 +59,28 @@ def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, title
         for i in range(len(titles['HYTI'])):
         
             mu = lc[r, i, 0]
-            sigma = lc_sd[r, i, 0] * mu
+            sigma = lc_sd[r, i, 0]
+            if sigma > 0.2 * mu:
+                sigma = 0.2 * mu
             cap = capacity_online[r, i]
             lc_erf[:, r, i] = cap * (0.5 + 0.5 * np.tanh(1.25*(cost_space-mu)/sigma))
+            
+            # x = stats.norm(loc=mu, scale=sigma).cdf(cost_space)*cap
             
     # Collapse the regional CSC into one global CSC
     glo_csc = lc_erf.sum(axis=1).sum(axis=1)
     
+    # To check the CSC development, print out the CSC values
+    csc_out = pd.DataFrame(0.0, index=np.arange(1, bins+1), columns=['Price', 'Quantity'])
+    csc_out.Price = cost_space.copy()
+    csc_out.Quantity = glo_csc.copy()
+    
     # Check is there is sufficient supply
-    if glo_csc[-1] > demand[:, 0, 0].sum():
+    if glo_csc[-1] > demand.sum():
         
         # Find the index of the minimum value in absolute terms after 
         # subtracting global demand
-        idx = np.argmin(np.abs(glo_csc - demand[:, 0, 0].sum()))
+        idx = np.argmin(np.abs(glo_csc - demand.sum()))
         
         # Import price 
         hy_price =  glo_csc[idx]

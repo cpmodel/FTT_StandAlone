@@ -2,7 +2,7 @@
 """
 Created on Wed Feb 21 11:54:30 2024
 
-@author: AE & CL
+@author: PV
 
 =========================================
 ftt_h2_main.py
@@ -46,6 +46,7 @@ from SourceCode.Hydrogen.ftt_h2_lcoh import get_lcoh as get_lcoh2
 from SourceCode.Hydrogen.cost_supply_curve import calc_csc
 from SourceCode.Hydrogen.ftt_h2_pooledtrade import pooled_trade
 from SourceCode.core_functions.substitution_frequencies import sub_freq
+from SourceCode.core_functions.substitution_dynamics_in_shares import substitution_in_shares
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
@@ -128,11 +129,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['HYSC'][:, 0, 0] = divide(data['HYG1'][:, :, 0].sum(axis=1),
                                        data['HYWK'][:, :, 0].sum(axis=1))
         
+        # Calculate the average lifetime across all technologies in each region
+        # This determines the rate of decline when new capacity seems underutilised
+        average_lifetime = data['BCHY'][:, :, c7ti['Lifetime']] * divide(data['HYWK'][:, :, 0],
+                                                                         data['HYWK'][:, :, :].sum(axis=1))
+        average_lifetime = average_lifetime.sum(axis=1)
+        
         # Estimate capacity growth.
-        # Assume a maximum of 30% growth when the system is operating near
+        # Assume a maximum of 15% growth when the system is operating near
         # it's full potential and assume total capacity decreases when the
-        # opposite occurs when capacity factors drop below 60%  
-        data['HYCG'][:,0,0] = 0.1 * np.tanh(1.25*(data['HYSC'][:, 0, 0] - 0.5)/0.3)
+        # opposite occurs when capacity factors drop below 65%  
+        data['HYCG'][:,0,0] = np.tanh(1.25*(data['HYSC'][:, 0, 0] - 0.65)/0.1)
+        
+        data['HYCG'][:,0,0] = np.where( data['HYCG'][:,0,0] < 0.0,
+                                       divide(data['HYCG'][:,0,0], average_lifetime),
+                                       data['HYCG'][:,0,0] * 0.15)
         
 
     # %% Simulation period
@@ -143,7 +154,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                  data['HYD2'][:, 0, 0] +
                                  data['HYD3'][:, 0, 0] +
                                  data['HYD4'][:, 0, 0] +
-                                 data['HYD5'][:, 0, 0] ) / 1.6
+                                 data['HYD5'][:, 0, 0] )
         
         dem_lag = (time_lag['HYD1'][:, 0, 0] +
                                  time_lag['HYD2'][:, 0, 0] +
@@ -168,6 +179,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Project hydrogen production
         data['HYKF'][:, 0, 0] = time_lag['HYKF'][:, 0, 0] * (1 + time_lag['HYCG'][:, 0, 0])
+        # Remove capacity additions in the medium-term outlook
+        data['HYKF'][:, 0, 0] -= data['HYMT'][:, :, 0].sum(axis=1)
+        
+        # Split the market into a grey and green market
+        # From CLEAFS
+        
+        # ALlocate permissible technologies to the green market
+        
+        # Remove green technologies in the green market from the overall market
+        # This becomes the grey market
 
         # =====================================================================
         # Start of the quarterly time-loop
@@ -175,66 +196,33 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         #Start the computation of shares
         for t in range(1, no_it+1):
-
+            
+            # Expected capacity expansion for the green market
+            
+            # Expected capacity expension for the grey market
             HYKFt = data_dt['HYKF'][:, 0, 0] + (data['HYKF'][:, 0, 0] - data_dt['HYKF'][:, 0, 0]) * t/no_it
 
             for r in range(len(titles['RTI'])):
 
                 if np.isclose(HYKFt[r], 0.0):
                     continue
-
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSij = np.zeros([len(titles['HYTI']), len(titles['HYTI'])])
-
-                # F contains the preferences
-                F = np.ones([len(titles['HYTI']), len(titles['HYTI'])]) * 0.5
-
-                for t1 in range(len(titles['HYTI'])):
-
-                    if (not data_dt['HYWS'][r, t1, 0] > 0.0 or
-                             list(hyti.keys())[t1] == "12 H2 by-production"):
-                        continue
-
-                    S_i = data_dt['HYWS'][r, t1, 0]
-
-                    for t2 in range(t1):
-
-                        if (not data_dt['HYWS'][r, t2, 0] > 0.0 or
-                                 list(hyti.keys())[t1] == "12 H2 by-production"):
-                            continue
-
-                        S_j = data_dt['HYWS'][r, t2, 0]
-
-                        # Propagating width of variations in perceived costs
-                        dFij = 1.414 * sqrt((data_dt['HYLD'][r, t1, 0] * data_dt['HYLD'][r, t1, 0]
-                                             + data_dt['HYLD'][r, t2, 0] * data_dt['HYLD'][r, t2, 0]))
+                
+                dSij = substitution_in_shares(data_dt['HYWS'], data['HYWA'], 
+                                              data_dt['HYLC'], data_dt['HYLD'], 
+                                              r, dt, titles)
 
 
-                        # Consumer preference incl. uncertainty
-                        Fij = 0.5 * (1 + np.tanh(1.25 * (data_dt['HYLC'][r, t2, 0]
-                                                   - data_dt['HYLC'][r, t1, 0]) / dFij))
-
-                        # Preferences are then adjusted for regulations
-                        F[t1, t2] = Fij
-                        F[t2, t1] = (1.0 - Fij)
-
-                        #Runge-Kutta market share dynamiccs
-                        k_1 = S_i*S_j * (data['HYWA'][0,t1, t2]*F[t1,t2]- data['HYWA'][0,t2, t1]*F[t2,t1])
-                        k_2 = (S_i+dt*k_1/2)*(S_j-dt*k_1/2)* (data['HYWA'][0,t1, t2]*F[t1,t2] - data['HYWA'][0,t2, t1]*F[t2,t1])
-                        k_3 = (S_i+dt*k_2/2)*(S_j-dt*k_2/2) * (data['HYWA'][0,t1, t2]*F[t1,t2] - data['HYWA'][0,t2, t1]*F[t2,t1])
-                        k_4 = (S_i+dt*k_3)*(S_j-dt*k_3) * (data['HYWA'][0,t1, t2]*F[t1,t2] - data['HYWA'][0,t2, t1]*F[t2,t1])
-
-                        dSij[t1, t2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
-                        dSij[t2, t1] = -dSij[t1, t2]
-
-                #calculate temportary market shares and temporary capacity from endogenous results
+                #calculate temporary market shares and temporary capacity from endogenous results
                 data['HYWS'][r, :, 0] = data_dt['HYWS'][r, :, 0] + np.sum(dSij, axis=1)
-
                 data['HYWK'][r, :, 0] = data['HYWS'][r, :, 0] * HYKFt[r, np.newaxis]
+                
+                # Add medium-term capacity additions and rescale shares
+                if data['HYWK'][r, :, 0].sum() > 0.0:
+                    data['HYWK'][r, :, 0] += data['HYMT'][r, :, 0]
+                    data['HYWS'][r, :, 0] = data['HYWK'][r, :, 0] / data['HYWK'][r, :, 0].sum()
                     
             # Call CSC function
-            data['HYG1'][:, :, 0], data['HYEP'][0,0,0], data['HYCF'][:, :, 0] = calc_csc(data_dt['HYLC'], data_dt['HYLD'], data['HYDT'], data['HYWK'], data_dt['HYCF'], data['HYTC'], titles)
+            data['HYG1'][:, :, 0], data['HYEP'][0,0,0], data['HYCF'][:, :, 0] = calc_csc(data_dt['HYCC'], data_dt['HYLD'], data['HYDT'], data['HYWK'], data_dt['HYCF'], data['HYTC'], titles)
 
             data['HYWK'][np.isnan(data['HYWK'])] = 0.0
             data['HYG1'][np.isnan(data['HYWK'])] = 0.0
@@ -275,11 +263,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['HYSC'][:, 0, 0] = divide(data['HYG1'][:, :, 0].sum(axis=1),
                                        data['HYWK'][:, :, 0].sum(axis=1))
 
+        # Calculate the average lifetime across all technologies in each region
+        # This determines the rate of decline when new capacity seems underutilised
+        average_lifetime = data['BCHY'][:, :, c7ti['Lifetime']] * divide(data['HYWK'][:, :, 0],
+                                                                         data['HYWK'][:, :, :].sum(axis=1))
+        average_lifetime = average_lifetime.sum(axis=1)
+        
         # Estimate capacity growth.
-        # Assume a maximum of 30% growth when the system is operating near
+        # Assume a maximum of 15% growth when the system is operating near
         # it's full potential and assume total capacity decreases when the
-        # opposite occurs when capacity factors drop below 60%  
-        data['HYCG'][:,0,0] = 0.3 * np.tanh(1.25*(data['HYSC'][:, 0, 0] - 0.6)/0.15)
+        # opposite occurs when capacity factors drop below 65%  
+        data['HYCG'][:,0,0] = np.tanh(1.25*(data['HYSC'][:, 0, 0] - 0.65)/0.1)
+        
+        data['HYCG'][:,0,0] = np.where( data['HYCG'][:,0,0] < 0.0,
+                                       divide(data['HYCG'][:,0,0], average_lifetime),
+                                       data['HYCG'][:,0,0] * 0.15)
                     
         # Call LCOH2 function
         data = get_lcoh2(data, titles)
