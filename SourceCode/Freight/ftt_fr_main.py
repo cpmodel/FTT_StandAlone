@@ -303,7 +303,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                         * battery_cost_frac )
             
             # Save battery cost
-
             nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
             nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
             
@@ -314,38 +313,48 @@ def solve(data, time_lag, titles, histend, year, domain):
     
                     if data['ZEWW'][0, tech, 0] > 0.1:
                         
+                        # Wright's law approximation for discrete time
+                        learning_factor = (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
+                                             * dw[tech] / data['ZEWW'][0, tech, 0])
+                        
                         # For PHEV, BEV, and FCEVs, add the battery costs to the non-battery costs
                         if tech in range(25, 35) or tech in range(40, 45):
+                            
                             nonbat_cost_dt[:, tech, 0] = (
                                     data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
                                     - data_dt["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']]  
                                     * data_dt["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']]
                                     )
-                            nonbat_cost[:, tech, 0] = ( nonbat_cost_dt[:, tech, 0]
-                                                    * (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
-                                                    * dw[tech] / data['ZEWW'][0, tech, 0])
-                                                    )
-    
-                            data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] =  (
+                            
+                            nonbat_cost[:, tech, 0] = nonbat_cost_dt[:, tech, 0] * learning_factor
+                                                    
+
+                            data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] = (
                                     nonbat_cost[:, tech, 0] 
                                     + (data["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']]  
                                     * data["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']])
                                     )
+                            
                         
                         # For non-EVs, add only the non-battery costs
                         else:
-                            data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] =  \
-                                    data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] \
-                                    * (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
-                                    * dw[tech] / data['ZEWW'][0, tech, 0])
+                            data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] = (
+                                    data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
+                                                    * learning_factor )
                             
-                            # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
-                            # Doesn't make too much sense for non-EVs, but does make sense for EVs
-                            data['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] =  \
-                                    data_dt['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] \
-                                    * (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
-                                    * dw[tech] / data['ZEWW'][0, tech, 0])
-
+                        # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
+                        # Doesn't make too much sense for non-EVs, but does make sense for EVs
+                        data['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] =  (
+                                data_dt['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] 
+                                * learning_factor )
+                        
+                        # Learning-by-doing for the standard deviations, scaling with above
+                        data['BZTC'][:, tech, c6ti['2 Std of purchase cost']] = (
+                            data_dt['BZTC'][:, tech, c6ti['2 Std of purchase cost']] * learning_factor )
+                        data['BZTC'][:, tech, c6ti['6 std O&M']] = (
+                            data_dt['BZTC'][:, tech, c6ti['6 std O&M']] * learning_factor )
+                        
+                        
 
             # Calculate total investment by technology in terms of truck purchases
             data['ZWIY'] = data['ZEWI'] * data["BZTC"][:, :, c6ti['1 Purchase cost (USD/veh)'], None]
