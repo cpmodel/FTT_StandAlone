@@ -76,14 +76,18 @@ def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, title
     csc_out.Quantity = glo_csc.copy()
     
     # Check is there is sufficient supply
-    if glo_csc[-1] > demand.sum():
+    if glo_csc[-2] > demand.sum():
         
         # Find the index of the minimum value in absolute terms after 
         # subtracting global demand
         idx = np.argmin(np.abs(glo_csc - demand.sum()))
         
+        if glo_csc[idx] < demand.sum() and idx != bins-1:
+            
+            idx += 1
+        
         # Import price 
-        hy_price =  glo_csc[idx]
+        hy_price =  cost_space[idx]
         
     else:
         
@@ -91,11 +95,15 @@ def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, title
         idx = bins-1
         
         # Import price 
-        hy_price =  glo_csc[idx]
+        hy_price =  cost_space[idx]
         
     # Now use the found price to see which technologies and regions are exporters
     production = lc_erf[idx, :, :]
+    
+    # Production will always be higher than demand, so rescale
+    production *= demand.sum() / production.sum()
     capacity_factor_new = divide(production, capacity[:, :, 0])
+
     
     return production, hy_price, capacity_factor_new
     
