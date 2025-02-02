@@ -1044,7 +1044,7 @@ def construct_gamma_graphic_data(model, region, start_year, type_):
                             sum_cuts = tuple(range(no_dims-1))
                             data_filter.append(np.sum(temp,axis=sum_cuts))
                         else:
-                            data_filter.append(data[var][dims_pos[d1],dims2_pos[d2],dims3_pos[d3],:])
+                            data_filter.append(data[var][dims_pos[d1], dims2_pos[d2], dims3_pos[d3], :len(years)])
         data_filter = np.vstack(data_filter)
 
         df = pd.DataFrame(data_filter, columns=years)
