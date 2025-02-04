@@ -94,3 +94,64 @@ def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
             dSij[t2, t1] = -dSij[t1, t2]
             
     return dSij
+
+# %%
+
+def decision_making_core(capacity_forecast, capacity_forecast_dt, shares_dt, 
+                         sub_freq, lc_avg_dt, lc_stdev_dt, 
+                         dt,  t, no_it, year, titles):
+    """
+    
+
+    Parameters
+    ----------
+    capacity_forecast : TYPE
+        DESCRIPTION.
+    capacity_forecast_dt : TYPE
+        DESCRIPTION.
+    shares_dt : TYPE
+        DESCRIPTION.
+    sub_freq : TYPE
+        DESCRIPTION.
+    lc_avg_dt : TYPE
+        DESCRIPTION.
+    lc_stdev_dt : TYPE
+        DESCRIPTION.
+    dt : TYPE
+        DESCRIPTION.
+    t : TYPE
+        DESCRIPTION.
+    no_it : TYPE
+        DESCRIPTION.
+    year : TYPE
+        DESCRIPTION.
+    titles : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    shares : TYPE
+        DESCRIPTION.
+    capacities : TYPE
+        DESCRIPTION.
+
+    """
+    
+    # Expected capacity expension for the grey market
+    capacity_step = capacity_forecast_dt + (capacity_forecast - capacity_forecast_dt) * t/no_it
+
+    for r in range(len(titles['RTI'])):
+
+        if np.isclose(capacity_step[r]):
+            continue
+        
+        dSij = substitution_in_shares(shares_dt, sub_freq, 
+                                      lc_avg_dt, lc_stdev_dt, 
+                                      r, dt, titles)
+
+
+        #calculate temporary market shares and temporary capacity from endogenous results
+        shares = shares_dt + np.sum(dSij, axis=1)
+        capacity = shares * capacity_step[r, np.newaxis]
+        
+    return shares, capacities

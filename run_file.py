@@ -68,8 +68,11 @@ for r, reg in enumerate(titles['RTI']):
     hyg1_glo += hyg1[reg]
     
 hykf_glo = pd.DataFrame(output_all['S0']['HYKF'][:, 0, 0, :], index=titles['RTI'], columns=tl)
-    
-    
+
+
+aaa = pd.DataFrame(output_all['S0']['FERTD'].sum(axis=0)[:, 0, :], index=titles['TFTI'], columns=tl)
+bbb = pd.DataFrame(output_all['S0']['FERTS'].sum(axis=0)[:, 0, :], index=titles['TFTI'], columns=tl)    
+ccc = aaa.div(aaa.sum(axis=0),axis=1)   
     
     
 

@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = 'empty-project-type'
-recent_files = ['SourceCode\\model_class.py', 'SourceCode\\core_functions\\substitution_frequencies.py', 'SourceCode\\Hydrogen\\ftt_h2_main.py', 'SourceCode\\Hydrogen\\ftt_h2_lcoh.py', 'SourceCode\\Hydrogen\\cost_supply_curve.py', 'settings.ini', 'SourceCode\\support\\read_support.py', 'SourceCode\\support\\input_functions.py', 'SourceCode\\Fertiliser\\cleafs_main.py', 'J:\\Projects\\DESNZ\\EEIST2 Hydrogen economy\\Data\\FTT-H2\\processing_PVedit.py', 'SourceCode\\core_functions\\substitution_dynamics_in_shares.py', 'SourceCode\\Fertiliser\\population_shares.py', 'run_file.py', 'SourceCode\\support\\convert_masterfiles_to_csv.py', 'Backend_FTT.py', 'manager_new\\update_manager_metadata.py']
+recent_files = ['run_file.py', 'SourceCode\\Hydrogen\\ftt_h2_main.py', 'SourceCode\\Hydrogen\\expected_capacity_expansion.py', 'SourceCode\\core_functions\\substitution_dynamics_in_levels.py', 'SourceCode\\core_functions\\substitution_dynamics_in_shares.py', 'SourceCode\\core_functions\\capacity_growth_rate.py', 'SourceCode\\Hydrogen\\cost_supply_curve.py', 'SourceCode\\support\\convert_masterfiles_to_csv.py', 'settings.ini', 'SourceCode\\Fertiliser\\cleafs_main.py', 'SourceCode\\support\\input_functions.py', 'SourceCode\\model_class.py', 'SourceCode\\support\\dimensions_functions.py', 'SourceCode\\Fertiliser\\bass_model.py', '..\\..\\..\\..\\..\\..\\E3ME\\EEIST2_WRI_India_v2\\In\\FTTAssumptions\\Upload_FTT_data.py', 'SourceCode\\Fertiliser\\population_shares.py']
 
 [main]
 version = 0.2.0

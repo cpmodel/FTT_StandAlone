@@ -24,7 +24,7 @@ from SourceCode.core_functions.substitution_frequencies import sub_freq
 
 
 
-def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, titles, bins=500):
+def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, titles, bins=500):
     
     # Categories for the cost matrix (BHTC)
     c7ti = {category: index for index, category in enumerate(titles['C7TI'])}
@@ -35,20 +35,23 @@ def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, title
     lc_erf = np.zeros([bins, len(titles['RTI']), len(titles['HYTI'])])
     
     cf_limit = 0.95
-    capacity_online = capacity[:, :, 0] * cf_limit
+    capacity_online = capacity[:, :, 0] * max_capacity_factor
+    
+    tot_reg_cap = capacity_online.sum(axis=1)
     
     # Estimate the weigthed transportation costs
     # From the perspective of the exporter
-    weighted_tc_exp = np.divide(transport_cost[:, :, 0] * demand[:, 0, 0],
-                                demand[:, 0, 0].sum())
+    demand_weight = demand[:, 0, 0] / demand.sum()
+    weighted_tc_exp = np.sum(transport_cost[:, :, 0] * demand_weight[:, None], axis=0)
+    
     # From the perspective of the importer
-    weighted_tc_imp = np.divide(
-        np.multiply(transport_cost[:, :, 0], demand[None, :, 0, 0]),
-        demand[:, 0, 0].sum()).sum(axis=0)
+    capacity_weight = tot_reg_cap / tot_reg_cap.sum()
+    weighted_tc_imp = np.sum(transport_cost[:, :, 0] * capacity_weight[None, :], axis=1)
+
     
     # Min and max lcoh2
-    lc_min = np.min(lc[:, :, 0] - 3 * lc_sd[:, :, 0] + weighted_tc_imp[:, None])
-    lc_max = np.max(lc[:, :, 0] + 3 * lc_sd[:, :, 0] + weighted_tc_imp[:, None]) 
+    lc_min = np.min(lc[:, :, 0] *0.8 + weighted_tc_exp[:, None])
+    lc_max = np.max(lc[:, :, 0] *1.2 + weighted_tc_exp[:, None]) 
     
     # Cost spacing of the bins
     cost_space = np.linspace(lc_min, lc_max, bins)
@@ -96,6 +99,9 @@ def calc_csc(lc, lc_sd, demand, capacity, capacity_factor, transport_cost, title
         
         # Import price 
         hy_price =  cost_space[idx]
+        
+    export_price = hy_price + weighted_tc_exp
+    import_price = hy_price + weighted_tc_imp
         
     # Now use the found price to see which technologies and regions are exporters
     production = lc_erf[idx, :, :]

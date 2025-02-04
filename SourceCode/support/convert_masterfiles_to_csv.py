@@ -493,7 +493,9 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
 
                         var_dict[model][var]['Data'][scen][reg] = \
                             np.array(data.astype(np.float32))
-
+                        
+                        if var == 'PFRA': 
+                            x= 1
                         write_to_csv(data, row_title, col_title, var, out_dir, reg)
 
                         # Extract the gamma values from cost matrix

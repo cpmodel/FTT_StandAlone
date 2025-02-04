@@ -195,7 +195,7 @@ class ModelRun:
                     # Populate output container
                     for var in self.variables:
                         if 'TIME' in self.dims[var]:
-                            print(var)
+                            # print(var)
                             self.output[scen][var][:, :, :, y] = self.variables[var]
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]

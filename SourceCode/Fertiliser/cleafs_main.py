@@ -94,6 +94,7 @@ def solve(data, time_lags, iter_lag, titles, histend, year, domain):
     agri_growth = data['HYD1'] / time_lags['HYD1']
     # Replace NaNs
     agri_growth[np.isnan(agri_growth)] = 1
+    agri_growth[np.isinf(agri_growth)] = 1
     # Project fertiliser demand
     proj_fert_demand = time_lags['FERTD'].sum(axis = 1) * agri_growth[:, 0, :]
     

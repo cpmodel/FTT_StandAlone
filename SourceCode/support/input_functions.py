@@ -135,10 +135,12 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         raise(e)
                     var_tl_fit = [year for year in var_tl if year in timeline]
                     var_tl_inds = [i for i, year in enumerate(timeline) if year in var_tl]
-                    #print(csv.columns, var)
+                    # print(csv.columns, var)
                     csv.columns = [int(year) for year in csv.columns]
 
                     #print(file)
+                    if var == 'WFTR':
+                        x=1
                     read = csv.loc[:, var_tl]
 
                 else:
