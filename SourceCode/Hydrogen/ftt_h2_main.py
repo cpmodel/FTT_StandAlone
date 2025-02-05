@@ -112,6 +112,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                              data['HYD3'][:, 0, 0] +
                              data['HYD4'][:, 0, 0] +
                              data['HYD5'][:, 0, 0] )
+    
+    # Energy price to technological energy cost mapping
+    
 
         
 
@@ -471,7 +474,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['WGCG'][:,0,0] = calc_capacity_growthrate(data['WGCF'][:, 0, 0], average_lifetime_green)
         data['WGCG'][np.isinf(data['WGCG'])] = 1.0
         data['WGCG'][np.isnan(data['WGCG'])] = 1.0
-        data['WGCG'][:,0,0] = 0.5 * data['WGCG'][:,0,0] + 0.5 * time_lag['WGCG'][:,0,0]
+        data['WGCG'][:,0,0] = 0.2 * data['WGCG'][:,0,0] + 0.8 * time_lag['WGCG'][:,0,0]
         # %%
         
         

@@ -392,7 +392,7 @@ HYWW,FTT:Hydrogen global cumulative capacity (kt H2),kt H2,NA,HYTI,NA,TIME,FTT-H
 HYLC,FTT:Hydrogen LCOH2,EUR/tH2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,
 HYLD,FTT:Hydrogen LCOH2 -standard deviation,EUR/tH2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,
 HYWS,FTT:Hydrogen market shares,-,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,
-HYWK,FTT:Hydrogen production capacities,kt H2 cap./y,RTI,HYTI,NA,TIME,FTT-H2,2001,2022,2001,-,Y,Y,
+HYWK,FTT:Hydrogen production capacities,kt H2 cap.,RTI,HYTI,NA,TIME,FTT-H2,2001,2022,2001,-,Y,Y,
 HYIY,FTT:Hydrogen production capacities,EUR,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,
 HYPD,FTT:Hydrogen production forecst,kt H2,RTI,NA,NA,TIME,FTT-H2,,,2001,-,Y,Y,
 HYWA,FTT:Hydrogen substitution frequencies,-,RTI,HYTI,HYTI,NA,FTT-H2,,,2001,-,Y,Y,

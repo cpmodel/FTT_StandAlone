@@ -97,61 +97,102 @@ def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
 
 # %%
 
-def decision_making_core(capacity_forecast, capacity_forecast_dt, shares_dt, 
-                         sub_freq, lc_avg_dt, lc_stdev_dt, 
-                         dt,  t, no_it, year, titles):
+def innovator_effect(shares, submat, lc, lcsd, r, dt, titles, year, tech_exclusion, 
+                     year_active=2029, nucleation_lim=0.2, innovator_rate=0.3):
     """
     
 
     Parameters
     ----------
-    capacity_forecast : TYPE
-        DESCRIPTION.
-    capacity_forecast_dt : TYPE
-        DESCRIPTION.
-    shares_dt : TYPE
-        DESCRIPTION.
-    sub_freq : TYPE
-        DESCRIPTION.
-    lc_avg_dt : TYPE
-        DESCRIPTION.
-    lc_stdev_dt : TYPE
-        DESCRIPTION.
-    dt : TYPE
-        DESCRIPTION.
-    t : TYPE
-        DESCRIPTION.
-    no_it : TYPE
-        DESCRIPTION.
-    year : TYPE
-        DESCRIPTION.
-    titles : TYPE
-        DESCRIPTION.
+    shares : 3D NumPy Array
+        Lagged market shares.
+    submat : 3D NumPy Array
+        Substitution frequencies.
+    lc : 3D NumPy Array
+        Levelised cost metric.
+    lcsd : 3D NumPy Array
+        Standard deviation of the levelised costs.
+    r : integer
+        Country indicator.
+    titles : dictionary
+        Collection of title classifications used inside the model.
+    year : Integer
+        Current year of the model run.
+    tech_exclusion : 2D NumPy Array
+        Boolean that determines which technologies in which regions are permissible
+        for the nucleation routine.
+    year_active : Integer, optional
+        The year from which nucleation of new technologies is permissible. The default is 2029.
+    nucleation_lim : Float, optional
+        The maximum market share after which the innovator effects stops. From that
+        point forward, diffusion is controlled by the imitator effect. The default is 0.2.
+    innovator_rate : Float, optional
+        Adjustment factor to slow or speed up substitution rates across the board.
+        The default is 0.3.
 
     Returns
     -------
-    shares : TYPE
-        DESCRIPTION.
-    capacities : TYPE
-        DESCRIPTION.
+    dSij : 2D NumPy Arrsay
+        Matrix of market share changes between all pairs.
 
     """
     
-    # Expected capacity expension for the grey market
-    capacity_step = capacity_forecast_dt + (capacity_forecast - capacity_forecast_dt) * t/no_it
+    # Initialise variables related to market share dynamics
+    # DSiK contains the change in shares
+    dSij = np.zeros([len(titles['HYTI']), len(titles['HYTI'])])
 
-    for r in range(len(titles['RTI'])):
-
-        if np.isclose(capacity_step[r]):
-            continue
+    # F contains the preferences
+    F = np.ones([len(titles['HYTI']), len(titles['HYTI'])]) * 0.5
+   
+    if year <= year_active:
         
-        dSij = substitution_in_shares(shares_dt, sub_freq, 
-                                      lc_avg_dt, lc_stdev_dt, 
-                                      r, dt, titles)
-
-
-        #calculate temporary market shares and temporary capacity from endogenous results
-        shares = shares_dt + np.sum(dSij, axis=1)
-        capacity = shares * capacity_step[r, np.newaxis]
-        
-    return shares, capacities
+        return dSij
+    
+    else:
+     
+        for t1 in range(len(titles['HYTI'])):
+            
+            # Skip if shares of i greater than nucleation limit or if the tech
+            # is to be excluded from the innovator effect.
+            if (shares[r, t1, 0] > nucleation_lim or
+                np.isclose(tech_exclusion[t1], 1.0)):
+                continue
+            
+            # We take the difference between the nucleation_limit and the current share
+            # This means that technologies with 0% share can be taken up in the system
+            S_i = nucleation_lim - shares[r, t1, 0]
+     
+            for t2 in range(t1):
+                
+                # t2 represents the incumbant technology, so it's share always
+                # needs to be greater than the nucleation_limit.
+                if (not shares[r, t2, 0] > nucleation_lim):
+                    continue
+     
+                S_j = shares[r, t2, 0]
+     
+                # Propagating width of variations in perceived costs
+                dFij = 1.414 * sqrt((lcsd[r, t1, 0] * lcsd[r, t1, 0]
+                                     + lcsd[r, t2, 0] * lcsd[r, t2, 0]))
+     
+     
+                # Consumer preference incl. uncertainty
+                Fij = 0.5 * (1 + np.tanh(1.25 * (lc[r, t2, 0]
+                                           - lc[r, t1, 0]) / dFij))
+     
+                # Preferences are then adjusted for regulations
+                F[t1, t2] = Fij
+                F[t2, t1] = (1.0 - Fij)
+     
+                #Runge-Kutta market share dynamiccs
+                k_1 = S_i*S_j * (submat[0,t1, t2]*F[t1,t2]- submat[0,t2, t1]*F[t2,t1]) * innovator_rate
+                k_2 = (S_i+dt*k_1/2)*(S_j-dt*k_1/2)* (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1]) * innovator_rate
+                k_3 = (S_i+dt*k_2/2)*(S_j-dt*k_2/2) * (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1]) * innovator_rate
+                k_4 = (S_i+dt*k_3)*(S_j-dt*k_3) * (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1]) * innovator_rate
+     
+                # Check that Sij[t1, t2] is always positive and Sij[t2, t1] is always negative
+                dSij[t1, t2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
+                dSij[t2, t1] = -dSij[t1, t2]
+                
+        return dSij
+    

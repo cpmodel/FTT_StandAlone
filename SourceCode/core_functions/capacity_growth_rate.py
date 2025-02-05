@@ -8,7 +8,7 @@ Created on Wed Jan 29 16:55:48 2025
 import numpy as np
 
 
-def calc_capacity_growthrate(sys_cf, sys_lt, midpoint=0.6, max_growth=0.25):
+def calc_capacity_growthrate(sys_cf, sys_lt, midpoint=0.8, max_growth=0.2):
     """
     
 
@@ -36,7 +36,7 @@ def calc_capacity_growthrate(sys_cf, sys_lt, midpoint=0.6, max_growth=0.25):
     grow = 0.5+0.5*np.tanh(1.25*(sys_cf - np.mean([1.0, midpoint]))/(0.25*(1.0-midpoint)))
     decline = 0.5+0.5*np.tanh(1.25*(sys_cf - np.mean([0.0, midpoint]))/(0.3*np.mean([0.0, midpoint]))) -1.0
     max_grow_rate = 0.25
-    max_decline_rate = 1.0/sys_lt
+    max_decline_rate = 1.0/(2*sys_lt)
     
     growh_rate = np.where(sys_cf > midpoint,
                           grow * max_grow_rate,
