@@ -161,8 +161,14 @@ def innovator_effect(shares, submat, lc, lcsd, r, dt, titles, year, tech_exclusi
             # We take the difference between the nucleation_limit and the current share
             # This means that technologies with 0% share can be taken up in the system
             S_i = nucleation_lim - shares[r, t1, 0]
-     
-            for t2 in range(t1):
+            
+            # In this case, we will need to loop over all combinations as t1
+            # represents the new technology, while t2 represents the incumbant
+            for t2 in range(len(titles['HYTI'])):
+                
+                # Skip if t1 == t2
+                if t1==t2:
+                    continue
                 
                 # t2 represents the incumbant technology, so it's share always
                 # needs to be greater than the nucleation_limit.
@@ -185,10 +191,11 @@ def innovator_effect(shares, submat, lc, lcsd, r, dt, titles, year, tech_exclusi
                 F[t2, t1] = (1.0 - Fij)
      
                 #Runge-Kutta market share dynamiccs
-                k_1 = S_i*S_j * (submat[0,t1, t2]*F[t1,t2]- submat[0,t2, t1]*F[t2,t1]) * innovator_rate
-                k_2 = (S_i+dt*k_1/2)*(S_j-dt*k_1/2)* (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1]) * innovator_rate
-                k_3 = (S_i+dt*k_2/2)*(S_j-dt*k_2/2) * (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1]) * innovator_rate
-                k_4 = (S_i+dt*k_3)*(S_j-dt*k_3) * (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1]) * innovator_rate
+                #One-sided only
+                k_1 = S_i*S_j * (submat[0,t1, t2]*F[t1,t2]) * innovator_rate
+                k_2 = (S_i+dt*k_1/2)*(S_j-dt*k_1/2)* (submat[0,t1, t2]*F[t1,t2]) * innovator_rate
+                k_3 = (S_i+dt*k_2/2)*(S_j-dt*k_2/2) * (submat[0,t1, t2]*F[t1,t2]) * innovator_rate
+                k_4 = (S_i+dt*k_3)*(S_j-dt*k_3) * (submat[0,t1, t2]*F[t1,t2]) * innovator_rate
      
                 # Check that Sij[t1, t2] is always positive and Sij[t2, t1] is always negative
                 dSij[t1, t2] = dt*(k_1+2*k_2+2*k_3+k_4)/6

@@ -13,6 +13,7 @@ import warnings
 # Third party imports
 import numpy as np
 import scipy.stats as stats
+from scipy.stats import lognorm
 import pandas as pd
 
 # Local library imports
@@ -66,7 +67,12 @@ def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, t
             if sigma > 0.2 * mu:
                 sigma = 0.2 * mu
             cap = capacity_online[r, i]
-            lc_erf[:, r, i] = cap * (0.5 + 0.5 * np.tanh(1.25*(cost_space-mu)/sigma))
+            
+            # Transform mu and sigma (assumed normally distributed) to log-normal params
+            shape = np.sqrt(np.log(1 + (sigma / mu) ** 2))
+            scale = mu / np.sqrt(1 + (sigma / mu) ** 2)
+            
+            lc_erf[:, r, i] = cap * lognorm.cdf(cost_space, shape, scale=scale)
             
             # x = stats.norm(loc=mu, scale=sigma).cdf(cost_space)*cap
             

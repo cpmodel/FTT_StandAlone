@@ -46,9 +46,9 @@ from SourceCode.Hydrogen.ftt_h2_lcoh import get_lcoh as get_lcoh2
 from SourceCode.Hydrogen.cost_supply_curve import calc_csc
 from SourceCode.Hydrogen.ftt_h2_pooledtrade import pooled_trade
 from SourceCode.core_functions.substitution_frequencies import sub_freq
-from SourceCode.core_functions.substitution_dynamics_in_shares import substitution_in_shares
-from SourceCode.core_functions.substitution_dynamics_in_shares import decision_making_core
+from SourceCode.core_functions.substitution_dynamics_in_shares import substitution_in_shares, innovator_effect
 from SourceCode.core_functions.capacity_growth_rate import calc_capacity_growthrate
+from SourceCode.Hydrogen.ftt_h2_energy_costs import calc_ener_cost
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
@@ -95,7 +95,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     sector = 'hydrogen'
     #sector_index = titles['Sectors_short'].index(sector)
-    print("FTT: Hydrogen under construction")
+    # print("FTT: Hydrogen under construction")
 
     # Estimate substitution frequencies
     data['HYWA'] = sub_freq(data['BCHY'][:, :, c7ti['Lifetime']],
@@ -114,7 +114,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                              data['HYD5'][:, 0, 0] )
     
     # Energy price to technological energy cost mapping
-    
+    data = calc_ener_cost(data, titles, year)
 
         
 

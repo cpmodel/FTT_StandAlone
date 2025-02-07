@@ -82,13 +82,14 @@ def get_lcoh(data, titles):
 
         # Capacity factor
         # cf = data['BCHY'][r,:, c7ti['Capacity factor'], np.newaxis]
-        cf = data['HYCF'][r, :, :]
-        cf[np.isclose(cf, 0.0)] = 0.75
+        cf = np.where(np.isclose(data['HYCF'][r, :, :], 0.0),
+                      data['BCHY'][r,:, c7ti['Maximum capacity factor'], None],
+                      data['HYCF'][r, :, :])
         conv = cf*bt[:, None]
         conv[-1, 0] = 1.0
         # Base CF
         # This is used for the CSC routine
-        cf_base = np.ones_like(cf) * 0.85
+        cf_base = data['BCHY'][r,:, c7ti['Maximum capacity factor'], None]
         conv_base = cf_base*bt[:, None]
         conv_base[-1, 0] = 1.0        
 
@@ -119,19 +120,11 @@ def get_lcoh(data, titles):
 
         # Average fuel costs
         ft = np.zeros([len(titles['HYTI']), int(max_lt)])
-        ft = ft + (
-            data['BCHY'][r,:, c7ti["Feedstock input, mean, kWh/kg H2 prod."], np.newaxis]*0.05+
-            data['BCHY'][r,:, c7ti["Heat demand, mean, kWh/kg H2"], np.newaxis]*0.05+
-            data['BCHY'][r,:, c7ti["Electricity demand, mean, kWh/kg H2"], np.newaxis]*0.15)
+        ft = ft + data['HYFC'][r,:, :]
         ft = np.where(lt_mask, ft, 0)
 
         # Standard deviation of fuel costs
-        dft = np.zeros([len(titles['HYTI']), int(max_lt)])
-        dft = dft + (
-            data['BCHY'][r,:, c7ti["Feedstock input, std, % of mean"], np.newaxis]*0.05+
-            data['BCHY'][r,:, c7ti["Heat demand, std, % of mean"], np.newaxis]*0.05+
-            data['BCHY'][r,:, c7ti["Electricity demand, % of mean"], np.newaxis]*0.15)
-        dft = np.where(lt_mask, dft, 0)
+        dft = ft * 0.1
 
         # Fixed OPEX
         opex_fix = np.zeros([len(titles['HYTI']), int(max_lt)])
