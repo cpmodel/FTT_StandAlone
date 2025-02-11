@@ -21,13 +21,15 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year):
     
 
 
-def get_new_sales_under_mandate(sales_in, mandate_share, green_indices):
+def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=None):
     '''Using sales_dt (RTI x techs x 1), the indices of green techs, and the
     share of sales that need to be green, compute the new sales'''
     
     sales_after_mandate = np.copy(sales_in)
+    if regions is None:
+        regions = range(sales_in.shape[0])
     
-    for r in range(sales_in.shape[0]):
+    for r in regions:
         total_sales = np.sum(sales_in[r, :, 0])
         if total_sales > 0:
             current_green = np.sum(sales_in[r, green_indices, 0])
