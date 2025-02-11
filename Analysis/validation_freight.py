@@ -18,6 +18,7 @@ variable_to_validate = "ZEWS"
 output_2022 = "Results_starting_2022.pickle"
 output_2022_new = "Results_starting_2022_new_turnover2.pickle"
 output_2023 = "Results_starting_2023.pickle"
+output_2023_no_gamma = "Results_starting_2023_nogamma.pickle"
 output_2023_new = "Results_starting_2023_new_turnover2.pickle"
 output_2024 = "Results_starting_2024.pickle"
 
@@ -39,22 +40,21 @@ def read_in_variable(input_file, variable_to_validate):
 zews_results_2022_subset = read_in_variable(output_2022, variable_to_validate)
 zews_results_2022_subset_new = read_in_variable(output_2022_new, variable_to_validate)
 zews_results_2023_subset = read_in_variable(output_2023, variable_to_validate)
+zews_results_2023_subset_no_gamma = read_in_variable(output_2023_no_gamma, variable_to_validate)
 zews_results_2023_subset_new = read_in_variable(output_2023_new, variable_to_validate)
 zews_results_2024_subset = read_in_variable(output_2024, variable_to_validate)
-
-unequal = (zews_results_2023_subset == zews_results_2024_subset)
-
 
 
 labels = ["LDV", "MDV", "HDV"]
 
 colors = ['r', 'b', 'g']
 
-markers1 = ['o', '.']
+markers1 = ['o', '.', '+']
 markers2 = ['v', 'x']
 descriptions1 = [
     "2023 start, TR≈0.125", 
-    "2023 start, TR≈0.2"
+    "2023 start, TR≈0.2",
+    "2023 start, TR=0.2, y=0"
 ]
 descriptions2 = ["2022 start, TR≈0.125",
                  "2022 start, TR≈0.2"]
@@ -70,6 +70,7 @@ legend_markers2 = [mlines.Line2D([], [], marker=m, linestyle='None', markersize=
 
 fig, axes = plt.subplots(nrows=2, figsize=(6, 9))  
 
+# One year of hindcasting (starting 2023)
 for tech in range(3):
     axes[0].scatter(zews_results_2024_subset[:, tech], zews_results_2023_subset_new[:, tech],
                marker='.', color=colors[tech])
@@ -77,13 +78,16 @@ for tech in range(3):
     axes[0].scatter(zews_results_2024_subset[:, tech], zews_results_2023_subset[:, tech],
                label = labels[tech], color=colors[tech], alpha=0.35)
     
+    axes[0].scatter(zews_results_2024_subset[:, tech], zews_results_2023_subset_no_gamma[:, tech],
+               color=colors[tech], marker='+')
+    
     # Second legend
     second_legend = axes[0].legend(handles=legend_markers1, loc='lower right')
     
     # Add it to the plot, so it's not overwritten
     axes[0].add_artist(second_legend)
     
-
+# Two years of hindcasting (starting 2022)
 for tech in range(3):
     axes[1].scatter(zews_results_2024_subset[:, tech], zews_results_2022_subset_new[:, tech],
                marker='x', color=colors[tech])
