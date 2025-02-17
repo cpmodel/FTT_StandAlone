@@ -12,11 +12,17 @@ N_YEARS = 16
 
 
 def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_classes, year):    
+    '''Implement mandate: linearly increasing sales. First recalculate sales, then 
+    recalculate capacity''' 
+    
+    test = 1
+    # If there are no mandates, immediately return inputs
+    if np.all(EV_truck_mandate[:, 0, 0] == 0):
+        return cum_sales_in, sales_in, cap
     
     cum_sales_after_mandate = np.copy(cum_sales_in)
     sales_after_mandate = np.copy(sales_in)
     mandate_end_year = MANDATE_START_YEAR + N_YEARS
-
     
     if EV_truck_mandate[0, 0, 0] in range(2010, 2040) and year > EV_truck_mandate[0, 0, 0]:
         # For the sequencing, I'm changing the end year
@@ -25,7 +31,13 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
         
     # Step 4: Apply mandate adjustments with global shares and strict enforcement
     mandate_share = get_mandate_share(year, MANDATE_START_YEAR, mandate_end_year)
-        
+    
+    # If the mandate is turned off that specific year, also return inputs
+    if np.sum(mandate_share) == 0:
+        return cum_sales_in, sales_in, cap
+    
+    # Select countries for which the mandate is turned on
+    regions = np.where(EV_truck_mandate == 1)[0]
 
     if EV_truck_mandate[0, 0, 0] not in [-1, 0] and np.sum(mandate_share) > 0:
         
@@ -34,7 +46,8 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
             green_indices_class = [6]
             
             # Recompute sales, after implementation of mandate
-            sales_after_mandate_class = get_new_sales_under_mandate(sales_in_class, mandate_share, green_indices_class)
+            sales_after_mandate_class = get_new_sales_under_mandate(sales_in_class, mandate_share,
+                                                                    green_indices_class, regions=regions)
             sales_after_mandate[:, veh_class::n_veh_classes] = sales_after_mandate_class
     
             # Step 5: Update capacity
@@ -47,9 +60,7 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
         
         return cum_sales_after_mandate, sales_after_mandate, cap
     
-    # If there is no mandate
-    else:
-        return cum_sales_in, sales_in, cap
+    
 
 
 
