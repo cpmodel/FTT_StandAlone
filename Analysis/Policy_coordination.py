@@ -26,7 +26,7 @@ cats = ["LDV", "MDV", "HDV"]
 # Change this to "ZTLC" for levelised cost, and "ZWIC" for upfront cost. 
 # Note, I'm taking off subsidies for ZWIC.
 
-price_name = "ZWIC"
+price_name = "ZTLC"
 tech_variable = {"LDV": 31, "MDV": 32, "HDV": 33}
 
 tech_name = {"LDV": "Electric van", "MDV": "Small electric truck", 
@@ -148,7 +148,7 @@ for ci, cat in enumerate(cats): # Loop over rows (vehicle class)
         ax.axhline(y=0, color="grey", linewidth=2)    
         
         xmin = 2024
-        xmax = 2034 if price_name == "ZTLC" else 2039
+        xmax = 2033 if price_name == "ZTLC" else 2039
         for si, (scen, colour) in enumerate(zip(scenarios.keys(), colours)):
             x_vals = range(2023, 2051)
             y_vals = timeseries_dict[cat][region][si]
@@ -162,11 +162,11 @@ for ci, cat in enumerate(cats): # Loop over rows (vehicle class)
                     ax.axvline(x_cross, color=colour, linestyle="--", linewidth=1)
                     
                     # Annotation baseline on the right, others on the left
-                    offset = 0.5 if price_name == "ZTLC" else 0.4
+                    offset = 0.4 if price_name == "ZTLC" else 0.4
                     # Add annotation if x_cross > 2025
                     if xmin < x_cross < xmax:
                         ax.text(x_cross + offset, 10, scen, color=colour,
-                                fontsize=8, ha='center', va='bottom', rotation=90)
+                                fontsize=7, ha='center', va='bottom', rotation=90)
         
         # Remove frame
         ax.spines['top'].set_visible(False)
