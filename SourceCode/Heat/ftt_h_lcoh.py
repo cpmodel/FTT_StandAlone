@@ -186,7 +186,7 @@ def get_lcoh(data, titles, carbon_costs):
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOH augmented with non-pecuniary costs
-        tlcohg = tlcoh + data['BHTC'][r, :, c4ti['12 Gamma value']]
+        tlcohg = tlcoh + (1 + data['BHTC'][r, :, c4ti['12 Gamma value']])
 
         # Pay-back thresholds
         pb = data['BHTC'][r,:, c4ti['16 Payback time, mean']]
@@ -204,8 +204,8 @@ def get_lcoh(data, titles, carbon_costs):
      
         
         # Add gamma values
-        tmc = tmc + data['BHTC'][r, :, c4ti['12 Gamma value']]
-        tpb = tpb + data['BHTC'][r, :, c4ti['12 Gamma value']]
+        tmc = tmc + (1 + data['BHTC'][r, :, c4ti['12 Gamma value']])
+        tpb = tpb + (1 + data['BHTC'][r, :, c4ti['12 Gamma value']])
 
         # Pass to variables that are stored outside.
         data['HEWC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
