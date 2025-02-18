@@ -339,6 +339,9 @@ ZEWE,FTT-Fr Emissions,MTCO2,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
 ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,2018,2018,,,Y
 ZWIY,FTT-Fr Investment by Technology (monetary value),$,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
 EV truck mandate,FTT freight switch to turn on EV mandate,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
+EV truck kickstarter,FTT freight switch to turn on EV kickstarter policy,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
+Feebate active,FTT freight switch to turn on Feevate system for revenue neutral subisidies,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
+emissions regulation active,FTT freight switch to turn on REGULATORY POLICY,,NA,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 ZGAM,FTT-Fr Gamma values,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,
 noit,Number of iterations per year,,NA,NA,NA,NA,General,,,2000,,,
 IHF1,FTT-IH-CHI final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-CHI,,,2000,,,

@@ -214,8 +214,16 @@ def solve(data, time_lag, titles, histend, year, domain):
                     )
             
             data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
-                            data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t,
-                            n_veh_classes, year)
+                data['ZEWK'], 
+                data["EV truck mandate"],
+                data["EV truck kickstarter"],
+                data["emissions regulation active"],
+                data['ZEWI'], 
+                zewi_t,
+                n_veh_classes, 
+                year,
+                emissions_intensity=data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]
+                )
             
             # Recalculate zews per class
             for r in range(len(titles['RTI'])):
