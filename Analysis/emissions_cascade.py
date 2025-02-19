@@ -58,17 +58,12 @@ if all_policies_or_mandates == "Mandates":
 
 def get_total_emissions(output, model):
     """Sum over regions and technologies"""
-    if model in ["FTT:P", "FTT:H"]:
+    if model in ["FTT:P", "FTT:H", "FTT:Fr"]:
         emission_m = np.sum(output[emissions_names[model]], axis=(0, 1, 2))
     elif model == "FTT:Tr":
         emission_by_tech = output[emissions_names[model]]
         all_vehicles = list(range(emission_by_tech.shape[1]))
         non_EVs = [x for x in all_vehicles if x not in [18, 19, 20]]
-        emission_m = np.sum(emission_by_tech[:, non_EVs], axis=(0, 1, 2))
-    elif model == "FTT:Fr":
-        emission_by_tech = output[emissions_names[model]]
-        all_vehicles = list(range(emission_by_tech.shape[1]))
-        non_EVs = [x for x in all_vehicles if x not in [12, 13]]
         emission_m = np.sum(emission_by_tech[:, non_EVs], axis=(0, 1, 2))
     
     # Rescale so that 2022 emissions line up with actual emissions
@@ -267,12 +262,24 @@ print(f"Total emissions 2050 S0 is {emissions_tot_2050_S0/1000:.1f} GtCO₂")
 
 
 def cumulative_saved_emissions(model, policy, emissions_cum_or_2050):
-    '''Get the difference of emissions between policy and baseline for only that sector'''
+    '''First way to calculate combination gain. 
+    1. Compute baseline emissions
+    2. Compute the economy-wide emissions per sectoral policy
+    3. Compute the economy-wide emissions in the baseline
+    '''
     
-    cum_emissions_baseline = np.sum([emissions_cum_or_2050[model][policy] for model in models])
+    baseline =  emissions_cum_or_2050[model]["Baseline"]  
+    cum_emissions_policy = np.sum([emissions_cum_or_2050[model][policy] for model in models])
     baseline_sector_emissions = np.sum([emissions_cum_or_2050[model]["Baseline"] for model in models])
-    return baseline_sector_emissions - cum_emissions_baseline
+    
+    return baseline - (baseline_sector_emissions - cum_emissions_policy)
 
+def get_sectoral_emissions_policy(model, policy, emissions_cum_or_2050):
+    '''Second way to calculation combination gain.
+    1. Simply compute the emissions in the relevant sector based on that sector's policy 
+    '''
+    emissions_sector_only = emissions_cum_or_2050[model][policy]
+    return emissions_sector_only
 
 def combined_policies_saved_emissions():
     total_emissions_all_policies = np.sum([emissions_from_2025[model]["sxp - All policies"] for model in models])
@@ -282,17 +289,17 @@ def combined_policies_saved_emissions_2050():
     total_emissions_all_policies = np.sum([emissions_2050[model]["sxp - All policies"] for model in models])
     return  emissions_tot_2050_S0 - total_emissions_all_policies
 
-def set_up_list_saved_emissions(emissions):
+def set_up_list_saved_emissions(emissions, function):
     if all_policies_or_mandates == "All policies":
-        sectoral_saved_emissions = [cumulative_saved_emissions("FTT:P", "FTT-P", emissions),
-                                    cumulative_saved_emissions("FTT:H", "FTT-H", emissions),
-                                    cumulative_saved_emissions("FTT:Tr", "FTT-Tr", emissions),
-                                    cumulative_saved_emissions("FTT:Fr", "FTT-Fr", emissions)]
+        sectoral_saved_emissions = [function("FTT:P", "FTT-P", emissions),
+                                    function("FTT:H", "FTT-H", emissions),
+                                    function("FTT:Tr", "FTT-Tr", emissions),
+                                    function("FTT:Fr", "FTT-Fr", emissions)]
     elif all_policies_or_mandates == "Mandates":
-        sectoral_saved_emissions = [cumulative_saved_emissions("FTT:P", "sxp - P mand", emissions),
-                                    cumulative_saved_emissions("FTT:H", "sxp - H mand", emissions),
-                                    cumulative_saved_emissions("FTT:Tr", "sxp - Tr mand", emissions),
-                                    cumulative_saved_emissions("FTT:Fr", "sxp - Fr mand", emissions)]
+        sectoral_saved_emissions = [function("FTT:P", "sxp - P mand", emissions),
+                                    function("FTT:H", "sxp - H mand", emissions),
+                                    function("FTT:Tr", "sxp - Tr mand", emissions),
+                                    function("FTT:Fr", "sxp - Fr mand", emissions)]
     return sectoral_saved_emissions
 
 
@@ -306,8 +313,8 @@ def set_up_data_dict(sectoral_saved_emissions, combined_policies_function):
     }
     return data
 
-sectoral_saved_emissions = set_up_list_saved_emissions(emissions_from_2025)
-sectoral_saved_emissions_2050 = set_up_list_saved_emissions(emissions_2050)
+sectoral_saved_emissions = set_up_list_saved_emissions(emissions_from_2025, get_sectoral_emissions_policy)
+sectoral_saved_emissions_2050 = set_up_list_saved_emissions(emissions_2050, get_sectoral_emissions_policy)
 data_cum = set_up_data_dict(sectoral_saved_emissions, combined_policies_saved_emissions)
 data_2050 = set_up_data_dict(sectoral_saved_emissions_2050, combined_policies_saved_emissions_2050)
 
@@ -321,71 +328,9 @@ print(f"The additional emissions savings in 2050: {data_2050['Combined policies'
 data_cum["Remaining emissions"] = remaining_cum
 data_2050["Remaining emissions"] = remaining_2050
 
-labels = list(data_cum.keys())
-sizes_cum = list(data_cum.values())
-sizes_2050 = list(data_2050.values())
 
 
-#%% ===========================================================================
-# Create donut graph
-# =============================================================================
 
-# Create a pie chart with higher DPI
-fig, ax = plt.subplots(1, 2, figsize=(11, 5), dpi=300)
-
-
-# Create custom autopct function
-def custom_autopct(pct):
-    if pct > 35:
-        return f'{pct:.1f}%'
-    else:
-        return f'–{pct:.1f}%'
-
-def create_donut(ax, sizes):
-    # Donut
-    wedges, texts, autotexts = ax.pie(
-        sizes, labels=labels, autopct=lambda pct: custom_autopct(pct),
-        startangle=90, pctdistance=0.5 ,
-        radius=1, wedgeprops=dict(width=0.3, edgecolor='w'))
-
-    # Equal aspect ratio ensures that pie is drawn as a circle
-    ax.axis('equal')
-    
-    # Set font properties
-    plt.setp(texts, size=13)
-    plt.setp(autotexts, size=12)
-    
-create_donut(ax[0], sizes_cum)
-create_donut(ax[1], sizes_2050)
-
-# Plot the table if individual emission reductions. 
-# Convert the dictionary of dictionaries to a DataFrame
-summed_df = pd.DataFrame(emissions_from_2025)
-
-# Transpose the DataFrame if necessary to fit the 4x6 format
-summed_df = summed_df.T if summed_df.shape == (6, 4) else summed_df
-
-# Ensure the DataFrame is in the 4x6 format
-summed_df = summed_df.iloc[:4, :6]  # Taking the first 4 rows and 6 columns
-summed_df = summed_df.round(1)
-summed_df.columns = [col.replace('sxp - ', '') for col in summed_df.columns]
-# Display the DataFrame
-print(summed_df)
-
-
-# Add title
-ax[0].set_title("Global Cumulative Emissions 2025–2050", fontsize=16, pad=-10)
-ax[1].set_title("Emissions 2050", fontsize=16, pad=-10)
-
-plt.subplots_adjust(wspace=1)  # Increase the space between the graphs
-
-df = pd.DataFrame({
-    'Policy': data_cum.keys(),
-    'Cumulative emissions (MtCO2)': data_cum.values(),
-    '2050 emissions (MtCO2)': data_2050.values()
-    })
-save_fig(fig, fig_dir, "Figure 6 - Donut_chart_emissions")
-save_data(df, fig_dir, "Figure 6 - Donut_chart_emissions")
 
 #%% ===========================================================================
 # Bar chart figure cumulative emissions figures
@@ -393,13 +338,13 @@ save_data(df, fig_dir, "Figure 6 - Donut_chart_emissions")
 
 df_cumulative = pd.DataFrame({
         "Combined policies": emissions_from_2025_combined_policies,
-         "One sector at a time": np.array(emissions_from_2025_S0) - np.array(sectoral_saved_emissions),
+         "One sector at a time": np.array(sectoral_saved_emissions),
          "Baseline": emissions_from_2025_S0
          }).transpose()
 
 df_2050 = pd.DataFrame({
         "Combined policies": emissions_2050_combined_policies,
-         "One sector at a time": np.array(emissions_2050_S0) - np.array(sectoral_saved_emissions_2050),
+         "One sector at a time": np.array(sectoral_saved_emissions_2050),
          "Baseline": emissions_2050_S0
          }).transpose()
 

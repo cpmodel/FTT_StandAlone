@@ -26,7 +26,6 @@ titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
 
 price_names = {"FTT:P": "MECW battery only", "FTT:Tr": "TEWC", "FTT:H": "HEWC", "FTT:Fr": "ZTLC"}
-tech_variable = {"FTT:P": 18, "FTT:Tr": 19, "FTT:H": 11, "FTT:Fr": 33}
 operation_cost_name = {"FTT:P": "MLCO"}
 
 tech_name = {"FTT:P": "Solar PV", "FTT:Tr": "EV (mid-range)",
@@ -167,9 +166,9 @@ for mi, model in enumerate(models):
     ax.yaxis.set_ticks_position('none') 
     
     if mi in [0, 2, 3]:
-        ax.set_xlim(2024, 2030)
+        ax.set_xlim(2024, 2035)
         ax.grid(True, which='major', linewidth=0.3)
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
     else:
         ax.set_xlim(2024, 2050)
         ax.grid(True, which='major', linewidth=0.3)
