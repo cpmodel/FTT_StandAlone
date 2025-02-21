@@ -15,7 +15,6 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
     '''Implement mandate: linearly increasing sales. First recalculate sales, then 
     recalculate capacity''' 
     
-    test = 1
     # If there are no mandates, immediately return inputs
     if np.all(EV_truck_mandate[:, 0, 0] == 0):
         return cum_sales_in, sales_in, cap
@@ -27,6 +26,10 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
     if EV_truck_mandate[0, 0, 0] in range(2010, 2040) and year > EV_truck_mandate[0, 0, 0]:
         # For the sequencing, I'm changing the end year
         mandate_end_year = EV_truck_mandate[0, 0, 0]
+    
+    if EV_truck_mandate[0, 0, 0] in range(2040, 2060):
+        # For the sectoral interactions, I'm simply trying to halve the mandate by stretching it out
+        mandate_end_year = EV_truck_mandate[0, 0, 0]
         
         
     # Step 4: Apply mandate adjustments with global shares and strict enforcement
@@ -37,7 +40,7 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
         return cum_sales_in, sales_in, cap
     
     # Select countries for which the mandate is turned on
-    regions = np.where(EV_truck_mandate == 1)[0]
+    regions = np.where(EV_truck_mandate != 0)[0]
 
     if EV_truck_mandate[0, 0, 0] not in [-1, 0] and np.sum(mandate_share) > 0:
         

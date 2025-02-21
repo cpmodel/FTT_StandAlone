@@ -27,9 +27,9 @@ emissions_names = {"FTT:P": "MEWE", "FTT:Tr": "TEWE", "FTT:H": "HEWE", "FTT:Fr":
 
 all_policies_or_mandates = "All policies"
 if all_policies_or_mandates == "All policies":
-    output_file = "Results_sectors.pickle"
+    output_file = "Results_sectors_half.pickle"
     output_baseline = get_output(output_file, "S0")
-    output_all_policies = get_output(output_file, "sxp - All policies")
+    output_all_policies = get_output(output_file, "sxp half - All policies")
 
 
 
@@ -38,17 +38,18 @@ if all_policies_or_mandates == "All policies":
                            "FTT:Fr": ["FTT-P",  "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-Fr", "All minus FTT-P"],
                            "FTT:P": ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-P"] }
     
-    models_to_scenarios = {"FTT:H": ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr"],
-                           "FTT:Tr": ["FTT-P",  "FTT-H", "FTT-Tr", "FTT-Fr"],
-                           "FTT:Fr": ["FTT-P",  "FTT-H", "FTT-Tr", "FTT-Fr"],
-                           "FTT:P": ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr"] }
+    single_sector_list = ["half FTT-P", "half FTT-H", "half FTT-Tr", "half FTT-Fr"]
+    models_to_scenarios = {"FTT:H": single_sector_list,
+                           "FTT:Tr": single_sector_list,
+                           "FTT:Fr": single_sector_list,
+                           "FTT:P": single_sector_list }
 
 if all_policies_or_mandates == "Mandates":
-    output_file = "Results_sxp.pickle"
+    output_file = "Results_sxp_half.pickle"
     output_baseline = get_output(output_file, "S0")
-    output_all_policies = get_output(output_file, "Mandates")
+    output_all_policies = get_output(output_file, "Mandates half")
     
-    single_mand_list = ["sxp - P mand", "sxp - H mand", "sxp - Tr mand", "sxp - Fr mand"]
+    single_mand_list = ["sxp half - P mand", "sxp half - H mand", "sxp half - Tr mand", "sxp half - Fr mand"]
     models_to_scenarios =  {"FTT:H": single_mand_list,
                            "FTT:Tr": single_mand_list,
                            "FTT:Fr": single_mand_list,
@@ -291,15 +292,15 @@ def combined_policies_saved_emissions_2050():
 
 def set_up_list_saved_emissions(emissions, function):
     if all_policies_or_mandates == "All policies":
-        sectoral_saved_emissions = [function("FTT:P", "FTT-P", emissions),
-                                    function("FTT:H", "FTT-H", emissions),
-                                    function("FTT:Tr", "FTT-Tr", emissions),
-                                    function("FTT:Fr", "FTT-Fr", emissions)]
+        sectoral_saved_emissions = [function("FTT:P", "half FTT-P", emissions),
+                                    function("FTT:H", "half FTT-H", emissions),
+                                    function("FTT:Tr", "half FTT-Tr", emissions),
+                                    function("FTT:Fr", "half FTT-Fr", emissions)]
     elif all_policies_or_mandates == "Mandates":
-        sectoral_saved_emissions = [function("FTT:P", "sxp - P mand", emissions),
-                                    function("FTT:H", "sxp - H mand", emissions),
-                                    function("FTT:Tr", "sxp - Tr mand", emissions),
-                                    function("FTT:Fr", "sxp - Fr mand", emissions)]
+        sectoral_saved_emissions = [function("FTT:P", "sxp half - P mand", emissions),
+                                    function("FTT:H", "sxp half - H mand", emissions),
+                                    function("FTT:Tr", "sxp half - Tr mand", emissions),
+                                    function("FTT:Fr", "sxp half - Fr mand", emissions)]
     return sectoral_saved_emissions
 
 

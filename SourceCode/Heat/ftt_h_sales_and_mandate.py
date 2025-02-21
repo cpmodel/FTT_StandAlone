@@ -4,7 +4,6 @@ import numpy as np
 green_indices = [9, 10, 11]  # Indices for heat pumps
 MANDATE_START_YEAR = 2025
 N_YEARS = 11  
-MANDATE_END_YEAR = MANDATE_START_YEAR + N_YEARS
 
 from SourceCode.ftt_core.ftt_mandate import get_new_sales_under_mandate, get_mandate_share
 
@@ -13,9 +12,15 @@ from SourceCode.ftt_core.ftt_mandate import get_new_sales_under_mandate, get_man
 def implement_mandate(cap, mandate_switch, cum_sales_in, sales_in, year):
     
     # Step 4: Apply mandate adjustments with global shares and strict enforcement
-    mandate_share = get_mandate_share(year, MANDATE_START_YEAR, MANDATE_END_YEAR)
+    mandate_end_year = MANDATE_START_YEAR + N_YEARS
 
-    if mandate_switch[0, 0, 0] == 1 and np.sum(mandate_share) > 0:
+    if mandate_switch[0, 0, 0] in range(2025, 2060):
+        # For the sectoral interactions, I'm simply trying to halve the mandate by stretching it out
+        mandate_end_year = mandate_switch[0, 0, 0]
+    
+    mandate_share = get_mandate_share(year, MANDATE_START_YEAR, mandate_end_year)
+
+    if mandate_switch[0, 0, 0] != 0 and np.sum(mandate_share) > 0:
         
         sales_after_mandate = get_new_sales_under_mandate(sales_in, mandate_share, green_indices)
 

@@ -70,7 +70,7 @@ def policy_change(df, policy):
     match policy:
         
         case "REPP":  # A linearly increasing price to €200 per tonne CO2, i.e.  
-            price_2050 = 200.0
+            price_2050 = carbon_price
             price_2023 = df.iloc[:, 14] / 3.667 # Note, REPP is given per tC, rather than tCO2
             
             # Reshape the price_2023 to a column vector
@@ -82,7 +82,7 @@ def policy_change(df, policy):
             df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) ) * 3.667      
             
         case "REPP2":  # A linearly increasing price to €200 per tonne CO2, i.e.  
-            price_2050 = 200.0
+            price_2050 = carbon_price
                         
             # Linearly increase to €200 per tonne CO2 
             df.iloc[:, 14:42] = (price_2050) / 27.0 * np.arange(28) * 3.667 
@@ -92,60 +92,77 @@ def policy_change(df, policy):
         case "Power REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
+            
+        case "Power REPP half":
+            df[df.columns[1:]] = df[df.columns[1:]].astype(float)
+            df.iloc[:, 15:] = carbon_price * 3.667 / 2
         
         
         # Power sector policies
         case "MEWR strong":     # Completely outregulate fossil technologies from 2024
-            df.iloc[1:8, 24:] = 0
+            df.iloc[1:10, 24:] = 0
         case "MEWT":           # Subsidize all renewables
-            #df.iloc[ 8:18, 24:] = -0.3
-            #df.iloc[19:22, 24:] = -0.3
-            df.iloc[ 8:22, 24:] = -0.3
+            df.iloc[ 10:22, 24:] = -0.3
+        case "MEWT half":           # Subsidize all renewables
+            df.iloc[ 10:22, 24:] = -0.15
         case "Coal phase-out":
             df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on 
+        case "Coal phase-out half":
+            df.iloc[0, 1] = 0.5       # TODO code the phase-out so it can be halved!
       
         
         # Transport policies
         case "TREG strong":
             df.iloc[:15, 24:] = 0
-        case "TWSA strong":
-            df.iloc[18:21, 24:] = 0 # (exogenous sales in k-veh) TODO: I will need to figure out what a reasonable mandate is. 
         case "BRR strong tax": 
             df.iloc[:15, 24:] = 0.3
         case "BRR strong subsidy":
             df.iloc[18:21, 24:] = -0.3
+        case "BRR half subsidy":
+            df.iloc[18:21, 24:] = -0.15
         case "BRR strong combo":
             df.iloc[:15, 24:] = 0.3
             df.iloc[18:21, 24:] = -0.3
         case "EV mandate regulation":
             df.iloc[:15, 35:] = 0
-        case "EV mandate exogenous sales":
+        case "EV mandate":
             df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+        case "EV mandate half":
+            df.iloc[0, 1] = 2045    # Half the speed of the mandate
         case "Transport REPP":
              df[df.columns[1:]] = df[df.columns[1:]].astype(float)
              df.iloc[:, 15:] = carbon_price * 3.667    
+        case "Transport REPP half":
+             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
+             df.iloc[:, 15:] = carbon_price * 3.667 / 2   
   
                    
             
         # Freight policies
         case "ZREG strong":
             df.iloc[list(range(25)), 7:] = 0
-        case "ZWSA strong":
-            df.iloc[12, 7:] = 0 # TODO: I will need to figure out what a reasonable mandate is. 
         case "ZTVT strong tax":
             df.iloc[list(range(25)), 7:] = 0.3
         case "ZTVT strong subsidy":
             df.iloc[[31, 32, 33], 7:] = -0.3
+        case "ZTVT half subsidy":
+            df.iloc[[31, 32, 33], 7:] = -0.15
         case "ZTVT strong combo":
             df.iloc[list(range(25)), 7:] = 0.3
             df.iloc[[31, 32, 33], 7:] = -0.3
         case "EV truck mandate regulation":
             df.iloc[list(range(25)), 23:] = 0
-        case "EV truck mandate exogenous sales":
-            df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+        case "EV truck mandate":
+            df.iloc[:, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+        case "EV truck mandate half":
+            
+            df.iloc[:, 1] = 2055       # The EV mandates are coded as a function; this switch turns it on
         case "Freight REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
+        case "Freight REPP half":
+            df[df.columns[1:]] = df[df.columns[1:]].astype(float)
+            df.iloc[:, 15:] = carbon_price * 3.667 / 2
         
         # Carbon tax with start and end date
         case str(value) if value.startswith("Freight REPP 20"):
@@ -158,12 +175,12 @@ def policy_change(df, policy):
             end_column_index = base_column_index + (end_year - base_year) + 1
             df.iloc[:, start_column_index:end_column_index] = carbon_price * 3.667
             
-        case "EV truck mandate exogenous sales before 2027":
-            df.iloc[0, 1] = 2027       # The EV mandates are coded as a function; this switch turns it on
-        case "EV truck mandate exogenous sales before 2030":
-            df.iloc[0, 1] = 2030       # The EV mandates are coded as a function; this switch turns it on
-        case "EV truck mandate exogenous sales before 2035":
-            df.iloc[0, 1] = 2035       # The EV mandates are coded as a function; this switch turns it on
+        case "EV truck mandate before 2027":
+            df.iloc[0, 1] = 2027       # #TODO: Check if this still works with new mandates
+        case "EV truck mandate before 2030":
+            df.iloc[0, 1] = 2030       # 
+        case "EV truck mandate before 2035":
+            df.iloc[0, 1] = 2035       # 
     
         
             
@@ -171,16 +188,13 @@ def policy_change(df, policy):
         case "HREG strong":
             df.iloc[:4, 24:] = 0
             df.iloc[6, 24:] = 0
-        case "HWSA strong": 
-            df.iloc[10:12, 24:35] = 0.005     # Air-source heat pumps
-            df.iloc[9, 24:35] = 0.002         # Ground-source heat pump
-            df.iloc[2:4, 24:35] = -0.005      # Gas (note, that this probably won't work everywhere). TODO: Does the code already stop this?
-            df.iloc[7, 24:35] = -0.002        # Electric heating
-        case "HTVS strong tax":  # Strong tax
+        case "HTVS strong tax": 
             df.iloc[:4, 24:] = 0.3
             df.iloc[6, 24:] = 0.3
-        case "HTVS strong subsidy":  # Strong tax
+        case "HTVS strong subsidy":
             df.iloc[9:12, 24:] = -0.3         # 30% subsidy on heat pumps
+        case "HTVS half subsidy":  # half the s tax
+            df.iloc[9:12, 24:] = -0.15         # 30% subsidy on heat pumps
         case "HTVS strong combo":  # Strong tax
             df.iloc[:4, 24:] = 0.3
             df.iloc[6, 24:] = 0.3
@@ -188,8 +202,11 @@ def policy_change(df, policy):
         case "Heat pump mandate 2035 regulation":
             df.iloc[:4, 35:] = 0
             df.iloc[6, 35:] = 0
-        case "Heat pump mandate exogenous sales":
+        case "Heat pump mandate":
             df.iloc[0, 1] = 1       # The heat pump mandates are coded as a function; this switch turns it on
+        case "Heat pump mandate half":
+            df.iloc[:, 1] = df.iloc[:, 1].astype(float)
+            df.iloc[0, 1] = 2045       # The heat pump mandates are coded as a function; this switch turns it on
         case "Heat REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
@@ -203,7 +220,7 @@ def policy_change(df, policy):
         
         
 # Import policies from policies.csv in same folder
-policies = pd.read_csv(os.path.join(current_dir, "Policies_sequencing.csv"))
+policies = pd.read_csv(os.path.join(current_dir, "Policies_sector_by_policy_halved.csv"))
 
 policy_packages = list(policies.keys()[9:])
 #policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]

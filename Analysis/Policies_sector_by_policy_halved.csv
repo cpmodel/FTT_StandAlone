@@ -1,0 +1,16 @@
+﻿Policy,Model,Variable,Description,,,,,,sxp half - P CT,sxp half - H CT,sxp half - Tr CT,sxp half - Fr CT,sxp half - P subs,sxp half - H subs,sxp half - Tr subs,sxp half - Fr subs,sxp half - P mand,sxp half - H mand,sxp half - Tr mand,sxp half - Fr mand,sxp half - All policies,Mandates half,half FTT-P,half FTT-Tr,half FTT-H,half FTT-Fr,All minus half FTT-P,All minus half FTT-Tr,All minus half FTT-H,All minus half FTT-Fr
+Power REPP half,FTT-P,REPPX,Constant carbon tax at 200€/tonne CO2,,,,,,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,1,1
+MEWT half,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,1,1
+Coal phase-out half,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035 or 2045; active phase-out,,,,,,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,0,1,1,1
+Transport REPP half,FTT-Tr,REPP2X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,1,1
+EV mandate regulation half,FTT-Tr,TREG,No new fossil cars from 2035,,,,,,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0
+EV mandate half,FTT-Tr,EV mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,0,0,0,0,0,0,0,0,0,1,0,1,1,0,1,0,0,1,0,1,1
+BRR half subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,,,,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1,0,0,1,0,1,1
+Freight REPP half,FTT-Fr,REPP3X,Constant carbon tax at 200€/tonne CO2,,,,,,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,1,0
+ZTVT half subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,1,1,1,0
+EV truck mandate regulation half,FTT-Fr,ZREG,No new fossil cars from 2035,,,,,,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0
+EV truck mandate half,FTT-Fr,EV truck mandate,"Same as heat mandate: get extra sales, and then in 2040, stop sales altogether",,,,,,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,1,1,1,0
+Heat REPP half,FTT-H,REPP4X,Constant carbon tax at 200€/tonne CO2,,,,,,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,1
+HTVS half subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,,,,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,1
+Heat pump mandate 2035 regulation half,FTT-H,HREG,Regulate out fossil fuels in 2035,,,,,,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0
+Heat pump mandate half,FTT-H,hp mandate,"Linearly increasing sales of heat pump from 2024 to 2035, decrease fossil heating technologies (using switch)",,,,,,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,1,0,1,1,0,1
