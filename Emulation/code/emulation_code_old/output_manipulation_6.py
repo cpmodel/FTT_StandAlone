@@ -16,14 +16,20 @@ import pandas as pd
 import numpy as np
 import matplotlib
 import pickle
+import sys
 
-os.chdir(r'C:\Users\ib400\GitHub\FTT_StandAlone')
+# Set root directory
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root_dir)
+os.chdir(root_dir)
+
+
 import SourceCode.support.titles_functions as titles_f
 
 #%%
 titles = titles_f.load_titles()
 
-scen_levels = pd.read_csv('Emulation/data/scenarios/S3_scenario_levels.csv')
+scen_levels = pd.read_csv('Emulation/data/scenarios/S3_scen_levels.csv')
 
 # combine scenario data and output
 data = {}

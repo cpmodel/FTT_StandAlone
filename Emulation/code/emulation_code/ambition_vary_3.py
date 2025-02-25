@@ -102,7 +102,7 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
     - dict, dictionary containing updated input DataFrames
     - str, new scenario code
     """
-    new_scen_code = scen_level['ID']
+    new_scen_code = scen_level['scenario']
     amb_scenario = scenarios['ambitious']
     base_scenario = scenarios['base']
 
@@ -203,7 +203,7 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
     cp_df = pd.read_csv(carbon_price_path)
     cp_df = cp_df.rename(columns={'Unnamed: 0': ''})
 
-    new_scen_code = scen_level.loc['ID']
+    new_scen_code = scen_level.loc['scenario']
     sheet_name = 'REPPX' # hardcoded for now, handle via dimensions later
     
     # Region list from updated scenario levels, not DRY
@@ -295,7 +295,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
 
     '''
     # Extract the scenario code
-    scen_code = scen_level['ID']
+    scen_code = scen_level['scenario']
     
     # Load baseline data
     cost_matrix = load_cost_matrix("Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx", ['BCET'], cost_matrix_structure) # GENERALISE
@@ -326,7 +326,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
             country_df.iloc[1:, 17] = min_rate + (max_rate - min_rate) * scen_level['north_discr'] * country_df.iloc[1:, 17]
 
         else:
-            country_df.iloc[1:, 17] = min_rate + (max_rate - min_rate) * scen_level['north_discr'] * country_df.iloc[1:, 17]
+            country_df.iloc[1:, 17] = min_rate + (max_rate - min_rate) * scen_level['south_discr'] * country_df.iloc[1:, 17]
 
 
         # Columns adjust
@@ -353,7 +353,7 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
     Returns:
     '''
     
-    scen_code = scen_level['ID']   
+    scen_code = scen_level['scenario']   
 
     for reg in range(0, len(titles['RTI_short'])):
 
@@ -363,18 +363,21 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
 
 
         mewd_base = pd.read_csv(f'Inputs/S0/FTT-P/MEWDX_{reg_short}.csv')
-        mewd_el_lower = mewd_base.iloc[7, 1:] * 0.9 # electricity demand
-        mewd_el_upper = mewd_base.iloc[7, 1:] * 1.1 # electricity demand
-
-        mewd_el_diff = mewd_el_upper - mewd_el_lower
-        mewd_el_update = mewd_el_lower + (mewd_el_diff * scen_level['elec_demand']) ## this needs to be general
-
-
-        # update demand
+        # Calculate growth rate
+        mewd_grate = mewd_base.iloc[7, 14:].pct_change().fillna(0)
+        # Calculate new growth rate based on scenario level
+        mewd_grate_new = mewd_grate[1:] * scen_level['elec_demand']
+        
+        # Calculate & insert new growth rate after 2023 - add in BCET end year from variable_listing
         mewd_updated = mewd_base.copy()
-        mewd_updated.iloc[7, 1:] = mewd_el_update
+
+
+        for i in range(1, len(mewd_updated.iloc[7, 15:])):
+            mewd_updated.iloc[7, 14 + i] = round((1 + mewd_grate_new.iloc[i-1]) * mewd_updated.iloc[7, 13 + i], 4) 
+                                                                                   
         mewd_updated.rename(columns={mewd_updated.columns[0]: ''}, inplace=True)
 
+        # Export to dict
         updated_input_data[scen_code]['MEWDX'][reg_short] = mewd_updated
 
         ### Technical potential
@@ -406,7 +409,7 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
     - output_dir: str, directory to save the updated files
     
     """
-    # Loop through updated data and save to new Excel files
+    # Loop through updated data and save to new csv files
     for new_scen_code in updated_input_data.keys():
         for sheet_name in updated_input_data[new_scen_code].keys():
 
@@ -419,9 +422,9 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
                     # Create a new directory for the new scenario code
                     new_output_dir = os.path.join(output_dir, new_scen_code, "FTT-P")
                     os.makedirs(new_output_dir, exist_ok=True)
-                    output_path = os.path.join(new_output_dir, f"{sheet_name}.xlsx")
+                    output_path = os.path.join(new_output_dir, f"{sheet_name}.csv")
                     
-                    df.to_excel(output_path, index=False)
+                    df.to_csv(output_path, index=False)
 
                 else:
                     for country in updated_input_data[new_scen_code][sheet_name].keys():
@@ -431,9 +434,9 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
                         # Repeating folder creation, can we remove this?
                         new_output_dir = os.path.join(output_dir, new_scen_code, "FTT-P")
                         os.makedirs(new_output_dir, exist_ok=True)
-                        output_path = os.path.join(new_output_dir, f"{sheet_name}_{country}.xlsx")
+                        output_path = os.path.join(new_output_dir, f"{sheet_name}_{country}.csv")
                         
-                        df.to_excel(output_path, index=False)
+                        df.to_csv(output_path, index=False)
 
             else:
                 for country in updated_input_data[new_scen_code][sheet_name].keys():
@@ -444,8 +447,8 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
                     new_output_dir = os.path.join(output_dir, new_scen_code, "General")
                     os.makedirs(new_output_dir, exist_ok=True)
 
-                    output_path = os.path.join(new_output_dir, f"{sheet_name}_{country}.xlsx")
-                    df.to_excel(output_path, index=False)
+                    output_path = os.path.join(new_output_dir, f"{sheet_name}_{country}.csv")
+                    df.to_csv(output_path, index=False)
 
 
 
@@ -480,7 +483,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in range(36, len(scen_levels.index)):
+    for i in range(0, len(scen_levels['scenario'])):
         
         updated_input_data = defaultdict(lambda: defaultdict(dict))
 
@@ -494,7 +497,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
         pol_vary_general(updated_input_data, input_data, scen_level, compare_data, scenarios, region_groups, params)
 
 
-        # Save updated data to new Excel files
+        # Save updated data to new csv files
         save_updated_data(updated_input_data, output_dir, general_vars)
         
 

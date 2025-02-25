@@ -19,8 +19,12 @@ Local library imports:
 
 """
 
+# External library imports
+import pickle
+
 # Local library imports
 from SourceCode.model_class import ModelRun
+from Emulation.code.emulation_code.em_output_save_4 import save_core
 
 # Instantiate the run
 model = ModelRun()
@@ -46,3 +50,5 @@ model.run()
 # Output of the model
 output_all = model.output
 
+# Save core output for emulation
+save_core(output_all = output_all)

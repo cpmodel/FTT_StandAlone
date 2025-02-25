@@ -63,8 +63,14 @@ def uncertainty_generator(ranges, Nscens=1, sampling_method=lhs, round_decimals=
     """
     uncertainty_df = pd.DataFrame()
     for var, (lower, upper) in ranges.items():
-        samples = generate_samples(sampling_method, Nscens, lower, upper, round_decimals)
+        integer_vars = ['lifetime_solar', 'lifetime_wind', 'lead_offshore', 'lead_onshore', 'lead_solar']
+        if var in integer_vars:
+            samples = generate_samples(sampling_method, Nscens, lower, upper, round_decimals = 0)
+        else:
+            samples = generate_samples(sampling_method, Nscens, lower, upper, round_decimals)
+        
         uncertainty_df[var] = samples.flatten()
+    
     return uncertainty_df
 
 def scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals=2, output_path=None):
@@ -86,10 +92,10 @@ def scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals=2,
     ambition_df = ambition_generator(regions, params, Nscens, round_decimals)
     uncertainty_df = uncertainty_generator(ranges, Nscens, round_decimals=round_decimals)
     combined_df = pd.concat([ambition_df, uncertainty_df], axis=1)
-    combined_df['ID'] = [f"{scen_code}_{i+1}" for i in range(Nscens)]
+    combined_df['scenario'] = [f"{scen_code}_{i+1}" for i in range(Nscens)]
     
-    # Reorder columns to make 'ID' the first column
-    cols = ['ID'] + [col for col in combined_df.columns if col != 'ID']
+    # Reorder columns to make 'scenario' the first column
+    cols = ['scenario'] + [col for col in combined_df.columns if col != 'scenario']
     combined_df = combined_df[cols]
     
     if output_path:

@@ -1,5 +1,5 @@
 {
-  "regions": ["EA", "US", "CN", "IN", "BR", "RGS", "RGN"],
+  "regions": ["EA", "US", "CN", "IN", "BR", "JA", "RGS", "RGN"],
   "params": {
     "general": {
       "phase_pol": ["MEWR"],
@@ -10,16 +10,16 @@
     }
   },
   "ranges": {
-    "learning_solar": [-0.473, -0.165],
-    "learning_wind": [-0.3, -0.088],
-    "lifetime_solar": [20, 35],
-    "lifetime_wind": [20, 35],
-    "lead_offshore": [3, 8],
+    "learning_solar": [-0.405, -0.233],
+    "learning_wind": [-0.276, -0.112],
+    "lifetime_solar": [20, 30],
+    "lifetime_wind": [20, 31],
+    "lead_offshore": [2, 8],
     "lead_onshore": [1, 4],
     "lead_solar": [1, 4],
     "south_discr": [0, 1],
     "north_discr": [0, 1],
-    "elec_demand": [0, 1],
+    "elec_demand": [0.6, 1.4],
     "ccgt_price": [0, 1],
     "coal_price": [0, 1],
     "tech_potential": [0, 1]
@@ -53,7 +53,7 @@
       "south_discr": 17
     }
   },
-  "Nscens": 450,
+  "Nscens": 500,
   "scen_code": "S3",
   "scenarios": {"base": "S0", "ambitious": "S3"},
   "round_decimals": 2,
@@ -78,7 +78,7 @@
   "run_ambition_vary": true,
   "region_groups": {
     "EA": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", "NL", "AT", "PT", "FI", "SW", "UK", "CZ", "EN", "CY", "LV", "LT", "HU", "MT", "PL", "SI", "SK", "BG", "RO", "HR", "NO", "CH", "IS"],
-    "RGN": ["TR", "MK", "JA", "CA", "AU", "NZ", "RS", "RA", "KR"],
+    "RGN": ["TR", "MK", "CA", "AU", "NZ", "RS", "RA", "KR"],
     "RGS": ["MX", "AR", "CO", "LA", "TW", "ID", "AS", "OP", "RW", "UE", "SD", "NG",
     "SA", "ON", "OC", "MY", "KZ", "AN", "AC", "AW", "AE", "ZA", "EG", "DC", "KE", 
     "UA", "PK"],
