@@ -8,15 +8,12 @@ Created on Mon Jul 22 10:35:01 2024
 # Import the results pickle file
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.gridspec as gridspec
 import pandas as pd
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
 from matplotlib.ticker import FuncFormatter
 from matplotlib.font_manager import FontProperties
-
 
 
 # To do: create scenarios with a newly defined baseline of only temporary mandates
@@ -50,16 +47,16 @@ relative_sales_difference = pd.DataFrame(index=np.array(["2030 no policy", "2030
 # Extract the results of variable ZEWK and ZEWI from all carbon tax scenarios
 for scenario, scenario_name in zip(scenarios, scenario_names):
     output = get_output(output_file, scenario)
-    # TODO: switch this when there is a new classification (for total and normal sales)
-    sales[scenario_name] = output["ZEWI"][:, 13, 0, 15:].sum(axis=0)
-    total_sales[scenario_name] =  output["ZEWI"][:, 1::2, 0, 15:].sum(axis=(0, 1))
+ 
+    sales[scenario_name] = output["ZEWI"][:, 33, 0, 15:].sum(axis=0)
+    total_sales[scenario_name] =  output["ZEWI"][:, 3::5, 0, 15:].sum(axis=(0, 1))
 
 #%%    
 # Extract the results of variable ZEWK and ZEWI from all counterfactual scenarios
 for scenario in scenario_counterfactuals:
     output = get_output(output_file, scenario)
-    sales[scenario] = output["ZEWI"][:, 13, 0, 15:].sum(axis=0)
-    total_sales[scenario] =  output["ZEWI"][:, 1::2, 0, 15:].sum(axis=(0, 1))
+    sales[scenario] = output["ZEWI"][:, 33, 0, 15:].sum(axis=0)
+    total_sales[scenario] =  output["ZEWI"][:, 3::5, 0, 15:].sum(axis=(0, 1))
 
 relative_sales = sales / total_sales
 
@@ -146,11 +143,11 @@ axes[0].invert_yaxis()
 
 # Customize the legend for the first plot
 handles, labels = axes[0].get_legend_handles_labels()
-axes[0].legend(handles, ['No policy', 'Carbon tax'], title='Policy 2030', title_fontproperties=FontProperties(weight='bold'))
+axes[0].legend(handles, ['No further policy', 'Carbon tax'], title='Policy 2030', title_fontproperties=FontProperties(weight='bold'))
 
 # Customize the legend for the second plot
 handles, labels = axes[1].get_legend_handles_labels()
-axes[1].legend(handles, ['No policy', 'Carbon tax'], title='Policy 2035', title_fontproperties=FontProperties(weight='bold'))
+axes[1].legend(handles, ['No further policy', 'Carbon tax'], title='Policy 2035', title_fontproperties=FontProperties(weight='bold'))
 
 
 # Save sequencing figure as a svg file and a png file

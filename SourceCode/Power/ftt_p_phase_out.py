@@ -45,7 +45,7 @@ def set_linear_coal_phase_out(coal_phaseout, mwka, mwka_lag, mewk_lag, year, tec
     #mwka = set_MWKA(mwka, other_regions, n_years=21)
     
     print("Half speed coal phase-out turned on")
-    mwka = set_MWKA(mwka, rich_region_indices, n_years=22)
-    mwka = set_MWKA(mwka, other_regions, n_years=42)
+    mwka = set_MWKA(mwka, rich_region_indices, n_years=11)
+    mwka = set_MWKA(mwka, other_regions, n_years=21)
     
     return mwka

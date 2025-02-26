@@ -32,7 +32,7 @@ regions_all = {i: i - 1 for i in range(1, 72)}
 
 # Define the clean technology list by model
 clean_techs = {"FTT:P": [16, 18], "FTT:Tr": [18, 19, 20], "FTT:H": [10, 11], "FTT:Fr": [33]}
-dirty_techs = {"FTT:P": [1, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [13]}
+dirty_techs = {"FTT:P": [1, 2, 6], "FTT:Tr": list(range(12)), "FTT:H": [2, 3], "FTT:Fr": [13, 23]}
 
 # Define the shares, prices of interest
 model_names_r = ["Trucks", "Cars", "Heating", "Power"]
@@ -276,6 +276,8 @@ def comparison_str(clean_tech, fossil_tech):
         output_str = "Heavy-duty BEV truck vs diesel"
     elif clean_tech == "BEV MDT" and fossil_tech == "Petrol MDT":
         output_str = "Medium-duty BEV truck vs diesel"
+    elif clean_tech == "BEV HDT" and fossil_tech == "CNG/LPG HDT":
+        output_str = "Heavy-duty BEV truck vs diesel"
         
     else:
         output_str = "TBD"
@@ -430,7 +432,7 @@ color_patches = [Line2D([0], [0], color=r_color, linestyle='-') for r_color in r
 color_labels = regions.keys()
 
 # Add the color legend to the figure
-fig.legend(color_patches, color_labels, loc='lower center', bbox_to_anchor=(0.5, -0.04), ncol=6)
+fig.legend(color_patches, color_labels, loc='lower center', bbox_to_anchor=(0.5, -0.06), ncol=5)
 
 plt.tight_layout()
 
@@ -723,7 +725,7 @@ for mi, model in enumerate(models):
     ax.set_ylabel('')
     
     ax.set_title(repl_dict[model])
-    ax.set_xlim(-2.5, 16)   
+    ax.set_xlim(-2.5, 12.5)   
     #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     
