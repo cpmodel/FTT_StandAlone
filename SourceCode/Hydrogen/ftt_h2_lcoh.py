@@ -100,16 +100,16 @@ def get_lcoh(data, titles):
         # Average investment cost
         it = np.ones([len(titles['HYTI']), int(max_lt)])
         it = it * (
-            data['BCHY'][r,:, c7ti['CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv) +
-            data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv) +
-            data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv))
+            data['BCHY'][r,:, c7ti['CAPEX, mean, €/kg H2 cap'],np.newaxis]/(conv) +
+            data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/kgH2 cap'],np.newaxis]/(conv) +
+            data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/kg H2 cap'],np.newaxis]/(conv))
         it = np.where(bt_mask, it, 0)
         # Base
         it_base = np.ones([len(titles['HYTI']), int(max_lt)])
         it_base = it_base * (
-            data['BCHY'][r,:, c7ti['CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv_base) +
-            data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv_base) +
-            data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/tH2 cap'],np.newaxis]/(conv_base))
+            data['BCHY'][r,:, c7ti['CAPEX, mean, €/kg H2 cap'],np.newaxis]/(conv_base) +
+            data['BCHY'][r,:, c7ti['Storage CAPEX, mean, €/kgH2 cap'],np.newaxis]/(conv_base) +
+            data['BCHY'][r,:, c7ti['Onsite electricity CAPEX, mean, €/kg H2 cap'],np.newaxis]/(conv_base))
         it_base = np.where(bt_mask, it_base, 0)
 
         # Standard deviation of investment cost

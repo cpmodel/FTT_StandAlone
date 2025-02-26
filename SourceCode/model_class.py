@@ -35,7 +35,7 @@ import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois2
 import SourceCode.Fertiliser.cleafs_main as cleafs_fert
-import SourceCode.Hydrogen.ftt_h2_main as ftt_h2
+import SourceCode.Hydrogen.ftt_h2_main_v2 as ftt_h2
 
 # Support modules
 import SourceCode.support.input_functions as in_f
@@ -275,7 +275,7 @@ class ModelRun:
                 
                 variables = ftt_h2.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
-                                        self.domain)
+                                        self.domain, self.dims, scenario)
 
 
 

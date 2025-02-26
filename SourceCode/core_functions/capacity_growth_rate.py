@@ -8,7 +8,7 @@ Created on Wed Jan 29 16:55:48 2025
 import numpy as np
 
 
-def calc_capacity_growthrate(sys_cf, sys_lt, midpoint=0.8, max_growth=0.2):
+def calc_capacity_growthrate(sys_cf, sys_lt, midpoint=0.85, max_growth=0.4):
     """
     
 
@@ -33,13 +33,13 @@ def calc_capacity_growthrate(sys_cf, sys_lt, midpoint=0.8, max_growth=0.2):
 
     """
     
-    grow = 0.5+0.5*np.tanh(1.25*(sys_cf - np.mean([1.0, midpoint]))/(0.25*(1.0-midpoint)))
-    decline = 0.5+0.5*np.tanh(1.25*(sys_cf - np.mean([0.0, midpoint]))/(0.3*np.mean([0.0, midpoint]))) -1.0
-    max_grow_rate = 0.25
+    grow = 0.5+0.5*np.tanh(1.25*(sys_cf - np.mean([1.0, midpoint]))/(0.1*(1.0-midpoint)))
+    decline = 0.5+0.5*np.tanh(1.25*(sys_cf - np.mean([0.0, midpoint]))/(0.8*np.mean([0.0, midpoint]))) -1.0
+    # max_grow_rate = 0.25
     max_decline_rate = 1.0/(2*sys_lt)
     
     growh_rate = np.where(sys_cf > midpoint,
-                          grow * max_grow_rate,
+                          grow * max_growth,
                           decline * max_decline_rate)
     
     
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     x = np.linspace(0, 1, num=100)
     
     for i in range(x.shape[0]):
-        y[i] = calc_capacity_growthrate(x[i], 25, midpoint=0.6, max_growth=0.35)
+        y[i] = calc_capacity_growthrate(x[i], 20, midpoint=0.6)
         
     df = pd.DataFrame(y, index=x, columns=['Growth rate'])
     ax = df.plot(grid=True, legend=False, color='black')

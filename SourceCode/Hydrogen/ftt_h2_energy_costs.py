@@ -32,7 +32,7 @@ def calc_ener_cost(data, titles, year):
     c7ti = {category: index for index, category in enumerate(titles['C7TI'])}
     
     # Conversion from kWh to ktoe
-    conversion = 0.0859845
+    conversion = 1/11630
     
     for tech in range(len(titles['HYTI'])):
         
@@ -40,18 +40,17 @@ def calc_ener_cost(data, titles, year):
         if tech in [0, 1, 4]:
             # Natural gas
             data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Feedstock input, mean, kWh/kg H2 prod.']] * conversion,
-                                                   data['PFRG'][:,5,0]) / data['PRSC'][:, 0, 0]
+                                                   data['PFRG'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
         elif tech in [2, 3]:
             # Coal
             data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Feedstock input, mean, kWh/kg H2 prod.']] * conversion,
-                                                   data['PFRC'][:,5,0]) / data['PRSC'][:, 0, 0]
+                                                   data['PFRC'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
         
         # Heat costs (assume it's always gas)
         data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Heat demand, mean, kWh/kg H2']] * conversion,
-                                               data['PFRG'][:,5,0]) / data['PRSC'][:, 0, 0]
+                                               data['PFRG'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0]) 
         
         # Electricity costs
         data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Electricity demand, mean, kWh/kg H2']] * conversion,
-                                               data['PFRE'][:,5,0]) / data['PRSC'][:, 0, 0]
-    
+                                               data['PFRE'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
     return data

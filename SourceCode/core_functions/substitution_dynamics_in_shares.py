@@ -100,7 +100,20 @@ def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
 def innovator_effect(shares, submat, lc, lcsd, r, dt, titles, year, tech_exclusion, 
                      year_active=2029, nucleation_lim=0.2, innovator_rate=0.3):
     """
+    The typical decision-making core in FTT only deals with the imitator effect
+    and it does not allow for nucleation of novel technologies in the system.
+    This function seeks to remedy that. 
     
+    The decision-making core to represent the innovator effect is similar, but 
+    has notable changes. First of all, Si represents a non-existent technology
+    that may nucleate into the system. The condition is that its market share
+    should be lower than the nucleation limit. Secondly, Sj always represents
+    an incumbent technology with a share above the nucleation limit. Thirdly, 
+    market share changes are only calculated moving from Sj to Si:
+        
+        dSij = (nucleation_lim - Si) * Sj * (Fij * Aij) * innovator_rate
+        
+    The innovator rate is there to tweak the magnitude of change.
 
     Parameters
     ----------

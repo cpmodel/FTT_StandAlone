@@ -25,17 +25,16 @@ from SourceCode.core_functions.substitution_frequencies import sub_freq
 
 
 
-def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, titles, bins=500):
+def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, titles, market, year, bins=500):
     
     # Categories for the cost matrix (BHTC)
-    c7ti = {category: index for index, category in enumerate(titles['C7TI'])}
-    jti = {category: index for index, category in enumerate(titles['JTI'])}
-    hyti = {category: index for index, category in enumerate(titles['HYTI'])}
+    # c7ti = {category: index for index, category in enumerate(titles['C7TI'])}
+    # jti = {category: index for index, category in enumerate(titles['JTI'])}
+    # hyti = {category: index for index, category in enumerate(titles['HYTI'])}
     
     # Initialise a 3D variable
     lc_erf = np.zeros([bins, len(titles['RTI']), len(titles['HYTI'])])
     
-    cf_limit = 0.95
     capacity_online = capacity[:, :, 0] * max_capacity_factor
     
     tot_reg_cap = capacity_online.sum(axis=1)
@@ -51,8 +50,8 @@ def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, t
 
     
     # Min and max lcoh2
-    lc_min = np.min(lc[:, :, 0] *0.8 + weighted_tc_exp[:, None])
-    lc_max = np.max(lc[:, :, 0] *1.2 + weighted_tc_exp[:, None]) 
+    lc_min = np.min(lc[:, :, 0] *0.9 + weighted_tc_exp[:, None])
+    lc_max = np.max(lc[:, :, 0] *1.1 + weighted_tc_exp[:, None]) 
     
     # Cost spacing of the bins
     cost_space = np.linspace(lc_min, lc_max, bins)
@@ -64,8 +63,8 @@ def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, t
         
             mu = lc[r, i, 0]
             sigma = lc_sd[r, i, 0]
-            if sigma > 0.2 * mu:
-                sigma = 0.2 * mu
+            if sigma > 0.1 * mu:
+                sigma = 0.1 * mu
             cap = capacity_online[r, i]
             
             # Transform mu and sigma (assumed normally distributed) to log-normal params
@@ -78,11 +77,6 @@ def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, t
             
     # Collapse the regional CSC into one global CSC
     glo_csc = lc_erf.sum(axis=1).sum(axis=1)
-    
-    # To check the CSC development, print out the CSC values
-    csc_out = pd.DataFrame(0.0, index=np.arange(1, bins+1), columns=['Price', 'Quantity'])
-    csc_out.Price = cost_space.copy()
-    csc_out.Quantity = glo_csc.copy()
     
     # Check is there is sufficient supply
     if glo_csc[-2] > demand.sum():
@@ -98,6 +92,12 @@ def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, t
         # Import price 
         hy_price =  cost_space[idx]
         
+        # Now use the found price to see which technologies and regions are exporters
+        production = lc_erf[idx, :, :]
+        
+        # Production will always be higher than demand, so rescale
+        production *= demand.sum() / production.sum()
+        
     else:
         
         # Take the last bin
@@ -106,18 +106,42 @@ def calc_csc(lc, lc_sd, demand, capacity, max_capacity_factor, transport_cost, t
         # Import price 
         hy_price =  cost_space[idx]
         
-    export_price = hy_price + weighted_tc_exp
-    import_price = hy_price + weighted_tc_imp
+        # Now use the found price to see which technologies and regions are exporters
+        production = lc_erf[idx, :, :]
         
-    # Now use the found price to see which technologies and regions are exporters
-    production = lc_erf[idx, :, :]
+        # If we reach the last cost bin, then use total capacity for scaling
+        production *= capacity_online.sum() / production.sum()
+        
+    # Add upper and lower limit of prices
+    if hy_price < lc_min:
+        hy_price = lc_min
+    if hy_price > lc_max:
+        hy_price = lc_max
+        
     
-    # Production will always be higher than demand, so rescale
-    production *= demand.sum() / production.sum()
     capacity_factor_new = divide(production, capacity[:, :, 0])
+    
+    # Calculate the average of average transportation costs
+    glo_avg_tc = np.sum(weighted_tc_exp * production.sum(axis=1) / production.sum())
+        
+    # To estimate regionalised prices, remove global average transportation
+    # costs from the global price and add transportation costs as seen by 
+    # exporters to the weighted demand region, and importers from the weighted
+    # producing capacity regions.
+    export_price = hy_price + weighted_tc_exp - glo_avg_tc
+    import_price = hy_price + weighted_tc_imp - glo_avg_tc
+    
+    # To check the CSC development, print out the CSC values
+    # csc_out = pd.DataFrame(0.0, index=np.arange(1, bins+1), columns=['Price', 'Quantity', 'DequalsQ'])
+    # csc_out.Price = cost_space.copy()
+    # csc_out.Quantity = glo_csc.copy()
+    # csc_out.loc[idx,'DequalsQ'] = 1
+    # csc_out.to_csv('CostSupplyCurve/CSC_{}_{}.csv'.format(market, year))
+    
+    
 
     
-    return production, hy_price, capacity_factor_new
+    return production, hy_price, capacity_factor_new, export_price, import_price
     
     
     
