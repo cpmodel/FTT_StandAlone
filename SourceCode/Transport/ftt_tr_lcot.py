@@ -144,7 +144,6 @@ def get_lcot(data, titles, carbon_costs, year):
                                  + data["Base registration rate"][r, :, 0, np.newaxis] * it[:, 0, np.newaxis]
                                 )
                                  
-        
 
         # Average fuel costs
         ft = np.ones([len(titles['VTTI']), int(max_lt)])
@@ -212,8 +211,12 @@ def get_lcot(data, titles, carbon_costs, year):
         # Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility == 1] = 0
         npv_utility[:, 0] = 1
+        
         # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit**2 + dft**2 + domt**2) / denominator
+        # MODIFIED: Calculate variance terms and apply proper discounting
+        variance_terms = dit**2 + dft**2 + domt**2
+        summed_variance = np.sum(variance_terms/(denominator**2), axis=1)
+        dlcot = np.sqrt(summed_variance)/np.sum(npv_utility, axis=1)
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOT
@@ -222,8 +225,6 @@ def get_lcot(data, titles, carbon_costs, year):
         tlcot = np.sum(npv_expenses2, axis = 1) / np.sum(npv_utility, axis = 1)
         # 1.3-LCOT of policy costs
         lcot_pol = np.sum(npv_expenses3, axis = 1) / np.sum(npv_utility, axis = 1)
-        # Standard deviation of LCOT
-        dlcot = np.sum(npv_std, axis = 1) / np.sum(npv_utility, axis = 1)
         
         # LCOT augmented with non-pecuniary costs
         tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])
