@@ -172,8 +172,12 @@ def get_lcoh(data, titles, carbon_costs):
         #Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility==1] = 0
         npv_utility[:,0] = 1
+        
         # 3-Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit**2 + dft**2 + domt**2)/denominator
+        # MODIFIED: Calculate variance terms and apply proper discounting
+        variance_terms = dit**2 + dft**2 + domt**2
+        summed_variance = np.sum(variance_terms/(denominator**2), axis=1)
+        dlcoh = np.sqrt(summed_variance)/np.sum(npv_utility, axis=1)
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOH
@@ -182,8 +186,6 @@ def get_lcoh(data, titles, carbon_costs):
         tlcoh = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
         # 1.3-LCOH of policy costs
         lcoh_pol = np.sum(npv_expenses3, axis=1)/np.sum(npv_utility, axis=1)
-        # Standard deviation of LCOH
-        dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
 
         # LCOH augmented with non-pecuniary costs
         tlcohg = tlcoh * (1 + data['BHTC'][r, :, c4ti['12 Gamma value']])
