@@ -125,6 +125,12 @@ def get_lcoh(data, titles):
 
         # Standard deviation of fuel costs
         dft = ft * 0.1
+        
+        # Average fuel costs
+        ct = np.zeros([len(titles['HYTI']), int(max_lt)])
+        data['HYCO'][r, :, 0] = data['BCHY'][r,:, c7ti['Emission factor']] * data['HYPR'][r, : ,0] * 1e-3
+        ct = ct + data['HYCO'][r, :, :]
+        ct = np.where(lt_mask, ct, 0)
 
         # Fixed OPEX
         opex_fix = np.zeros([len(titles['HYTI']), int(max_lt)])
@@ -159,9 +165,9 @@ def get_lcoh(data, titles):
 
         # 1-Expenses
         # 1.1-NPV
-        npv_expenses1 = (it+st+ft+opex_fix+opex_var)/denominator
+        npv_expenses1 = (it+st+ft+ct+opex_fix+opex_var)/denominator
         # 1.2-NPV for CSC 
-        npv_expenses2 = (it_base+st+ft+opex_fix_base+opex_var)/denominator
+        npv_expenses2 = (it_base+st+ct+ft+opex_fix_base+opex_var)/denominator
 
         # 2-Utility
         npv_utility = energy_prod/denominator

@@ -39,6 +39,7 @@ import warnings
 
 # Third party imports
 import numpy as np
+import pandas as pd
 
 # Local library imports
 from SourceCode.support.divide import divide
@@ -126,6 +127,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     
     # Calculate emission factors
     data = calc_emis_rate(data, titles, year)
+    # Overwrite for now
+    data['HYEF'][:, :, 0] = copy.deepcopy(data['BCHY'][:,:, c7ti['Emission factor']])
 
 
     # %% Historical accounting
@@ -457,12 +460,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 np.any(np.isnan(data['HYWK'][:, :, 0])) or
                 np.any(np.isnan(data['HYCF'][:, :, 0]))
                 ):
+                x=1
                 raise ValueError("Error: The results contain NaN values.")
                 
             if (np.any(data['HYG1'][:, :, 0]< 0.0) or
                         np.any(data['HYWK'][:, :, 0]<0.0) or
                         np.any(data['HYCF'][:, :, 0]<0.0)
                         ):
+                x=1
                 raise ValueError("Error: The results contain negative values.")
             
             # Capacity additions
@@ -491,8 +496,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             
             # Cost components to not copy over
             not_comps = ['Onsite electricity CAPEX, mean, €/kg H2 cap', 
-                         'Onsite electricity CAPEX, % of mean'
-                         'Additional OPEX, mean, €/kg H2 prod.' 
+                         'Onsite electricity CAPEX, % of mean',
+                         'Additional OPEX, mean, €/kg H2 prod.', 
                          'Additional OPEX, std, % of mean']
             idx_to_copy = [i for i, comp in enumerate(titles['C7TI']) if comp not in not_comps]
             
@@ -518,7 +523,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                        )
         
         
-
+        
+        # Initiase dataframe for checking
+        df_check_grey_growth = pd.DataFrame(0.0, index=titles['RTI'], columns=['CFSys', 'Dem_CAGR_est','Cap_CAGR_est', 'Cap_CAGR_corr'])
+        df_check_grey_growth.CFSys = data['WBCF'][:, 0, 0]
+        
         # Calculate the average lifetime across all technologies in each region
         # This determines the rate of decline when new capacity seems underutilised
         average_lifetime_grey = data['BCHY'][:, :, c7ti['Lifetime']] * divide(data['WBWK'][:, :, 0],
@@ -531,6 +540,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         data['WBCG'][np.isinf(data['WBCG'])] = 0.0
         data['WBCG'][np.isnan(data['WBCG'])] = 0.0
         data['WBCG'][:,0,0] = 0.2 * data['WBCG'][:,0,0] + 0.8 * time_lag['WBCG'][:,0,0]
+        
+        # Apply correction to growth rates
+        grey_demand_glo = data['HYDT'].sum() - data['WGRM'].sum()
+        grey_demand_glo_lag = time_lag['HYDT'].sum() - time_lag['WGRM'].sum()
+        # Next year's growth rate is probably similar to last years (we add 1% on top)
+        grey_growth = grey_demand_glo / grey_demand_glo_lag-1
+        df_check_grey_growth.Dem_CAGR_est = divide((data['HYDT'][:,0,0] - data['WGRM'][:,0,0]),
+                                                   (time_lag['HYDT'][:,0,0] - time_lag['WGRM'][:,0,0]))-1
+        # Check what the capacity forecast would be if calculated growth rates
+        # are used
+        grey_est_cap_growth = (np.sum(data['WBKF'] * (1+data['WBCG'])) / data['WBKF'].sum())-1
+        df_check_grey_growth.Cap_CAGR_est = data['WBCG'][:,0,0]
+        # Scale growth rates accordingly
+        scalar = grey_growth/grey_est_cap_growth
+        # Rescale
+        data['WBCG'] *= scalar
+        df_check_grey_growth.Cap_CAGR_corr = data['WBCG'][:, 0,0]
+
+    
         # %% New capacity expansion forecast - green market
         # System-wide capacity factor
         # Normalised to the maximum capacity factor
@@ -550,12 +578,39 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         if year < 2035:
  
             average_lifetime_green *= (99 * (1-(2034-year)/11) +1)
+            
+            
+        # Initiase dataframe for checking
+        df_check_green_growth = pd.DataFrame(0.0, index=titles['RTI'], columns=['CFSys', 'Dem_CAGR_est','Cap_CAGR_est', 'Cap_CAGR_corr'])
+        df_check_green_growth.CFSys = data['WGCF'][:, 0, 0]
         
         # Estimate capacity growth.
         data['WGCG'][:,0,0] = calc_capacity_growthrate(data['WGCF'][:, 0, 0], average_lifetime_green)
         data['WGCG'][np.isinf(data['WGCG'])] = 0.0
         data['WGCG'][np.isnan(data['WGCG'])] = 0.0
         data['WGCG'][:,0,0] = 0.5 * data['WGCG'][:,0,0] + 0.5 * time_lag['WGCG'][:,0,0]
+        
+        # Apply correction to growth rates
+        green_demand_glo = data['WGRM'].sum()
+        green_demand_glo_lag = time_lag['WGRM'].sum()
+        # Next year's growth rate is probably similar to last years (we add 1% on top)
+        if np.isclose(green_demand_glo_lag, 0.0):
+            green_growth = divide(green_demand_glo, green_demand_glo_lag)-1 + 0.01
+        else:
+            green_growth = 0.01
+        df_check_green_growth.Dem_CAGR_est = divide((data['WGRM'][:,0,0]),
+                                                   (time_lag['WGRM'][:,0,0]))-1
+
+        # Check what the capacity forecast would be if calculated growth rates
+        # are used
+        green_est_cap_growth = (np.sum(data['WGKF'] * (1+data['WGCG'])) / data['WGKF'].sum())-1
+        df_check_green_growth.Cap_CAGR_est = data['WGCG'][:,0,0]
+        # Scale growth rates accordingly
+        scalar = green_growth/green_est_cap_growth
+        # Rescale
+        if year > 2023: 
+            data['WGCG'] *= scalar
+        df_check_green_growth.Cap_CAGR_corr = data['WGCG'][:, 0,0]
         # %%
         # Calculate energy use
         data = calc_ener_cons(data, titles, year)     

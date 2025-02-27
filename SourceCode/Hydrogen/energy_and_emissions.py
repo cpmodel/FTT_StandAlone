@@ -88,20 +88,20 @@ def calc_emis_rate(data, titles, year):
         # feedstock
         if tech in [0, 1]:
             # Natural gas
-            data['HYEF'][:, tech, 0] += (data['BCHY'][:, tech, c7ti['Heat demand, mean, kWh/kg H2']] 
-                                         * conversion
+            data['HYEF'][:, tech, 0] += (data['BCHY'][:, tech, c7ti['Feedstock input, mean, kWh/kg H2 prod.']] 
+                                         * conversion # toe gas / kg H2
                                          * 0.0024299 # ktCO2 / toe gas
-                                         * 1e6)  # ktCO2/kg H2 to kg CO2 / kg H2
+                                         * 1e6 * 0.65)  # ktCO2/kg H2 to kg CO2 / kg H2
         elif tech in [2, 3]:
             # Coal
-            data['HYEF'][:, tech, 0] += (data['BCHY'][:, tech, c7ti['Heat demand, mean, kWh/kg H2']] 
-                                         * conversion
+            data['HYEF'][:, tech, 0] += (data['BCHY'][:, tech, c7ti['Feedstock input, mean, kWh/kg H2 prod.']] 
+                                         * conversion # toe coal / kg H2
                                          * 0.00419804 # ktCO2 / toe coal
-                                         * 1e6)  # ktCO2/kg H2 to kg CO2 / kg H2
+                                         * 1e6 * 0.65)  # ktCO2/kg H2 to kg CO2 / kg H2
     
         # Emissions due to heat generation (assume it's always gas)
         data['HYEF'][:, tech, 0] += (data['BCHY'][:, tech, c7ti['Heat demand, mean, kWh/kg H2']] 
-                                     * conversion
+                                     * conversion # toe gas / kg H2
                                      * 0.0024299 # ktCO2 / toe gas
                                      * 1e6)  # ktCO2/kg H2 to kg CO2 / kg H2
         
