@@ -250,7 +250,10 @@ def get_lcoe(data, titles, year):
         utility_tot = np.sum(npv_utility, axis=1) 
         
         # 3 – Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2) / denominator  
+        # MODIFIED: Calculate variance terms and apply proper discounting
+        variance_terms = dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2
+        summed_variance = np.sum(variance_terms/(denominator**2), axis=1)
+        dlcoe = np.sqrt(summed_variance)/utility_tot
         
         # 4a – levelised cost – marginal units 
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
@@ -269,9 +272,6 @@ def get_lcoe(data, titles, year):
         # 4c - Operational costs
         lcoo                    = np.sum(npv_operation, axis=1) / utility_tot      # Levelised cost of operation
         
-        # Standard deviation of LCOE
-        dlcoe                   = np.sum(npv_std, axis=1) / utility_tot
-
 
         # Pass to variables that are stored outside.
         data['MEWC'][r, :, 0] = lcoe_mu_no_policy           # The real bare LCOE without taxes
