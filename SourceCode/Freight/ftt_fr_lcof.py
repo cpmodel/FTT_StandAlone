@@ -3,19 +3,16 @@
 =========================================
 ftt_fr_lcof.py
 =========================================
-Freight LCOF FTT module.
+Freight LCOF FTT module with optional feebate system.
 ########################
 
-
 Functions included:
-    - get_lcof
-        Calculate levelized costs
-
+    - set_carbon_tax: Calculate carbon tax costs
+    - verify_revenue_neutrality: Check feebate balance
+    - get_lcof: Calculate levelized costs with optional feebate system
 """
 
-# Third party imports
 import numpy as np
-
 
 def set_carbon_tax(data, c6ti):
     '''
@@ -25,22 +22,98 @@ def set_carbon_tax(data, c6ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    
     carbon_costs = (data["REPP3X"][:, :, 0]                          # Carbon price in euro / tC
-                    * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]     # g CO2 / km (almost certainty)
-                    # data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
-                    / 3.666 / 10**6                                 # Conversion from C to CO2, and g to tonne
+                    * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]     # g CO2 / km
+                    / 3.666 / 10**6                                   # Conversion from C to CO2, and g to tonne
                     )
-    
     
     if np.isnan(carbon_costs).any():
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
-        print(f"Emissions intensity {data['BZTC'][:, :, c6ti['12 CO2Emissions (gCO2/km)']]}")
-        
+        print(f"Emissions intensity {data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]}")
         raise ValueError
                        
     return carbon_costs
 
+def verify_revenue_neutrality(data, titles, c6ti):
+    """
+    Verify revenue neutrality of the feebate system for countries with active subsidies.
+    Only checks regions where BEV subsidies are implemented.
+    """
+    n_veh_classes = 5
+    results = {}
+    
+    for r in range(len(titles['RTI'])):
+        region = titles['RTI'][r]
+        
+        # Check if this region has any BEV subsidies
+        bev_indices = [31, 32, 33]  # BEV indices
+        has_subsidies = np.any(data['ZTVT'][r, bev_indices, 0] < 0)
+        
+        if not has_subsidies:
+            continue
+            
+        results[region] = {'subsidy_costs': [], 'tax_revenues': []}
+        print(f"\nChecking revenue neutrality for {region}")
+        
+        for veh_class in range(n_veh_classes):
+            bev_indices_class = [idx for idx in [31, 32, 33] if idx % n_veh_classes == veh_class]
+            ice_indices_class = [idx for idx in range(25) if idx % n_veh_classes == veh_class]
+            
+            # Calculate total subsidy being paid out
+            bev_costs = data['BZTC'][r, bev_indices_class, c6ti['1 Purchase cost (USD/veh)']]
+            bev_numbers = data['ZEWI'][r, bev_indices_class, 0]
+            bev_subsidy_rates = data['ZTVT'][r, bev_indices_class, 0]
+            total_subsidy = np.sum(bev_costs * bev_numbers * abs(bev_subsidy_rates))
+            
+            if total_subsidy > 0:
+                # Calculate total tax being collected
+                ice_costs = data['BZTC'][r, ice_indices_class, c6ti['1 Purchase cost (USD/veh)']]
+                ice_numbers = data['ZEWI'][r, ice_indices_class, 0]
+                ice_tax_rates = data['ZTVT'][r, ice_indices_class, 0]
+                total_tax = np.sum(ice_costs * ice_numbers * ice_tax_rates)
+                
+                results[region]['subsidy_costs'].append(total_subsidy)
+                results[region]['tax_revenues'].append(total_tax)
+                
+                print(f"\nVehicle Class {veh_class}")
+                print(f"Total BEV subsidy cost: ${total_subsidy:,.2f}")
+                print(f"Total ICE tax revenue: ${total_tax:,.2f}")
+                print(f"Difference: ${total_tax - total_subsidy:,.2f}")
+                print(f"Revenue neutral? {abs(total_tax - total_subsidy) < 1e-6}")
+        
+        if results[region]['subsidy_costs']:
+            total_subsidies = sum(results[region]['subsidy_costs'])
+            total_taxes = sum(results[region]['tax_revenues'])
+            print(f"\nTOTALS FOR {region}:")
+            print(f"Total subsidies: ${total_subsidies:,.2f}")
+            print(f"Total tax revenue: ${total_taxes:,.2f}")
+            print(f"Overall difference: ${total_taxes - total_subsidies:,.2f}")
+            print("-" * 50)
+    
+    return results
+
+def calculate_feebate_rates(data, titles, c6ti, n_veh_classes):
+    """Calculate feebate rates for each vehicle class to maintain revenue neutrality"""
+    for r in range(len(titles['RTI'])):
+        for veh_class in range(n_veh_classes):
+            # Get indices for this vehicle class
+            bev_indices_class = [idx for idx in [31, 32, 33] if idx % n_veh_classes == veh_class]
+            ice_indices_class = [idx for idx in range(25) if idx % n_veh_classes == veh_class]
+            
+            # Calculate BEV subsidies for this class
+            bev_costs = data['BZTC'][r, bev_indices_class, c6ti['1 Purchase cost (USD/veh)']]
+            bev_numbers = data['ZEWI'][r, bev_indices_class, 0]
+            total_subsidy = np.sum(bev_costs * bev_numbers * abs(data['ZTVT'][r, bev_indices_class, 0]))
+            
+            # Calculate ICE tax rate for this class
+            ice_numbers = data['ZEWI'][r, ice_indices_class, 0]
+            ice_costs = data['BZTC'][r, ice_indices_class, c6ti['1 Purchase cost (USD/veh)']]
+            denominator = np.sum(ice_costs * ice_numbers)
+            
+            if denominator > 0:
+                ice_tax_rate = total_subsidy / denominator
+                ice_tax_rate = min(ice_tax_rate, 1.0)  # Cap at 100%
+                data['ZTVT'][r, ice_indices_class, 0] = ice_tax_rate
 
 def get_lcof(data, titles, carbon_costs, year):
     """
@@ -70,43 +143,47 @@ def get_lcof(data, titles, carbon_costs, year):
     Notes
     ---------
     Additional notes if required.
+    Calculate levelized costs with optional feebate system.
+    Feebate is activated if Feebate_active flag in data is set to 1.
     """
     # Categories for the cost matrix (BZTC)
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
+    n_veh_classes = 5
 
-    # Taxable categories for fuel - not all fuels subject to fuel tax
+    # Check if feebate system is active
+    if data.get('Feebate active', np.zeros((1,1,1)))[0,0,0] == 1:
+        if data.get('iteration', 0) == 0:
+            print("\nFeebate system is active")
+            calculate_feebate_rates(data, titles, c6ti, n_veh_classes)
+            print("\nVerifying revenue neutrality...")
+            verify_revenue_neutrality(data, titles, c6ti)
+
+    
     tf = np.ones([len(titles['FTTI']), 1])
-    # Make vehicles that do not use petrol/diesel exempt
-    tf[20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV
-
+    tf[20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV exempt
     taxable_fuels = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
 
     for r in range(len(titles['RTI'])):
-
         # Defining and Initialising Variables
-
         #Cost matrix
         BZTC = data['BZTC'][r, :, :]
         carbon_c = carbon_costs[r]
 
-
-        #First, mask for lifetime
+        # Lifetime calculations
         LF = BZTC[:, c6ti['8 Lifetime (y)']]
         max_LF = int(np.max(LF))
         LF_mat = np.linspace(np.zeros(len(titles['FTTI'])), max_LF-1,
                              num=max_LF, axis=1, endpoint=True)
         LF_max_mat = np.concatenate(int(max_LF) * [LF[:, np.newaxis]], axis=1)
         mask = LF_mat < LF_max_mat
-        LF_mask = np.where(mask, LF_mat, 0)
-
+	
         # Taxable fuels
         taxable_fuels[r,:] = tf[:]
-
+	
         # Discount rate
         rM = BZTC[:,c6ti['7 Discount rate'], np.newaxis]
         # For NPV calculations
         denominator = (1+rM)**LF_mat
-
 
         # Costs of trucks, paid once in a lifetime
         It = np.ones([len(titles['FTTI']), int(max_LF)])
@@ -144,7 +221,7 @@ def get_lcof(data, titles, carbon_costs, year):
         ct = ct * carbon_c[:, np.newaxis]
         ct = np.where(mask, ct, 0)
 
-       # fuel tax/subsidies
+        # fuel tax/subsidies
         fft = np.ones([len(titles['FTTI']), int(max_LF)])
         fft = fft * data['RZFT'][r, :, 0, np.newaxis] \
               * BZTC[:, c6ti["9 Energy use (MJ/vkm)"], np.newaxis] \
@@ -178,24 +255,29 @@ def get_lcof(data, titles, carbon_costs, year):
         # Remove 1s for tech with small lifetime than max
         npv_utility[npv_utility==1] = 0
         npv_utility[:,0] = 1
-        LCOF = np.sum(npv_expenses1, axis =1)/np.sum(npv_utility, axis=1)
+        LCOF = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
 
-        dnpv_expenses1 = np.sqrt(((dIt**2)/(Lfactor**2)) + ((dFT**2)/(Lfactor**2))
-        + ((dOMt**2)/(Lfactor**2)))/denominator
-        dLCOF = np.sum(dnpv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
+        # MODIFIED: Corrected standard deviation calculation
+        # First sum the variances
+        variance_terms = dIt**2 + dFT**2 + dOMt**2
+        # Scale variances by load factor
+        scaled_variance = variance_terms/(Lfactor**2)
+        # Apply proper discounting (squared) and sum
+        summed_variance = np.sum(scaled_variance/(denominator**2), axis=1)
+        # Calculate final standard deviation
+        dLCOF = np.sqrt(summed_variance)/np.sum(npv_utility, axis=1)
 
         # Calculate LCOF with policy, and find standard deviation
         npv_expenses2 = (It + ct + ItVT + FT + fft + OMt + RT) / Lfactor
         npv_expenses2 = npv_expenses2/denominator
         TLCOF = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        dTLCOF = dLCOF
+        dTLCOF = dLCOF 
 
         # Introduce Gamma Values
         TLCOFG = TLCOF * (1 + data['ZGAM'][r, :, 0])
 
         # Convert costs into logarithmic space - applying a log-normal distribution
         LTLCOF = np.log10((TLCOF**2)/np.sqrt((dTLCOF**2)+(TLCOF**2))) + data['ZGAM'][r, :, 0]
-
         dLTLCOF = np.sqrt(np.log10(1+(dTLCOF**2)/(TLCOF**2)))
 
         data['ZTLC'][r, :, 0] = LCOF        # LCOF without policy
