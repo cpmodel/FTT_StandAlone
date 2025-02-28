@@ -4,3 +4,4 @@
 *.mre
 !????X*.csv
 !REXX.csv
+S3_*/
