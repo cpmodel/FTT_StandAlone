@@ -11,7 +11,7 @@ based on the policy.
 # Import the results pickle file
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+import pandas as pd
 
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
@@ -200,26 +200,28 @@ for ci, cat in enumerate(cats): # Loop over rows (vehicle class)
 save_fig(fig, fig_dir, "Figure 5 - Policy coordination gains")
 
 
-# #%% Initialize an empty DataFrame to collect the results
-# df_list = []
+#%% Initialize an empty DataFrame to collect the results
+df_list = []
 
-# years = list(range(2023, 2051))
-# # Iterate over the dictionary to create the DataFrame
-# for cat, arrays in timeseries_dict.items():
-#     for i, scenario in enumerate(scenarios.keys()):
-#         # Convert the array to a DataFrame
-#         temp_df = pd.DataFrame(arrays[i].reshape(1, -1), columns=years)
-#         temp_df['cat'] = cat
-#         temp_df['Scenario'] = scenario
-#         df_list.append(temp_df)
-        
-# # Combine all DataFrames into one
-# final_df = pd.concat(df_list, ignore_index=True)
+years = list(range(2023, 2051))
+# Iterate over the dictionary to create the DataFrame
+for cat, arrays in timeseries_dict.items(): # Category, region, scenario
+    for region in regions:
+        for i, scenario in enumerate(scenarios.keys()):
+            # Convert the array to a DataFrame
+            temp_df = pd.DataFrame([arrays[region][i]], columns=years)
+            temp_df['cat'] = cat
+            temp_df['Scenario'] = scenario
+            temp_df['Region'] = region
+            df_list.append(temp_df)
+            
+# Combine all DataFrames into one
+final_df = pd.concat(df_list, ignore_index=True)
 
-# # Reorder columns to have 'cat' and 'Scenario' first
-# final_df = final_df[['cat', 'Scenario'] + years]
+# Reorder columns to have 'cat' and 'Scenario' first
+final_df = final_df[['cat', 'Scenario'] + years]
 
-# # Save the graph and its data
-# save_data(final_df, fig_dir, "Figure 3 - Global_price_perc_diff_timeseries_by_policy")
+# Save the graph and its data
+save_data(final_df, fig_dir, f"Figure 8 - Policy coordination {price_name}")
 
 

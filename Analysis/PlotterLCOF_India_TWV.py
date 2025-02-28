@@ -26,18 +26,11 @@ colors = {
     'CNG/LPG': '#1E90FF'  # Adding blue for CNG/LPG
 }
 
-linestyles = {
-    'Diesel': '--',
-    'Petrol': '--',
-    'BEV': '-',
-    'CNG/LPG': '--'
-}
+
 
 def get_country_powertrains(country):
     """Return appropriate powertrains for each country"""
-    if country == '41 China (CN)':
-        return ['Diesel', 'CNG/LPG', 'BEV']
-    return ['Diesel', 'Petrol', 'BEV']
+    return ['Diesel', 'CNG/LPG', 'Petrol', 'BEV']
 
 def extract_vehicle_data(df, country_name, vehicle_class, powertrain):
     """Extract LCOF data for a specific vehicle type"""
@@ -99,7 +92,7 @@ def create_scaled_labeled_plots(df, countries):
                     y_min = min(y_min, np.min(y_values))
                     y_max = max(y_max, np.max(y_values))
                     
-                    line = ax.plot(x_values, y_values, linestyle=linestyles[powertrain], 
+                    line = ax.plot(x_values, y_values, 
                                  color=colors[powertrain], linewidth=2)
                     
                     # Store legend handles for unique powertrains
@@ -108,7 +101,7 @@ def create_scaled_labeled_plots(df, countries):
                         legend_labels.append(powertrain)
 
             # Set grid and formatting
-            ax.grid(True, linestyle='--', alpha=0.7, color='gray', linewidth=0.5)
+            ax.grid(True, alpha=0.7, color='gray', linewidth=0.5)
             ax.set_axisbelow(True)
             
             if y_min < y_max:

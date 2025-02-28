@@ -14,13 +14,11 @@ from preprocessing import get_metadata, get_output, save_fig, save_data
 import config
 
 # To do: change this to output Amir is finding. 
-output_file = "Results_sxp.pickle"
+output_file = "Results_S0.pickle"
 
 # Change to the name of the scenario
 output_S0 = get_output(output_file, "S0")
-output_ct = get_output(output_file, "sxp - Fr CT")
-output_sub = get_output(output_file, "sxp - Fr subs")
-output_man = get_output(output_file, "sxp - Fr mand")
+
 
 titles, fig_dir, tech_titles, cats, shares_vars = get_metadata()
 
@@ -85,14 +83,6 @@ def create_dataframes(total_shares):
 total_shares_S0 = sum_vehicles(output_S0)
 cat_dfs_S0 = create_dataframes(total_shares_S0)
 
-total_shares_ct = sum_vehicles(output_ct)
-cat_dfs_ct = create_dataframes(total_shares_ct)
-
-total_shares_sub = sum_vehicles(output_sub)
-cat_dfs_sub = create_dataframes(total_shares_sub)
-
-total_shares_man = sum_vehicles(output_man)
-cat_dfs_man = create_dataframes(total_shares_man)
 
 
 #%% Plot the figure
