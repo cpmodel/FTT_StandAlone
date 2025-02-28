@@ -51,6 +51,17 @@ def calc_ener_cost(data, titles, year):
                                                data['PFRG'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0]) 
         
         # Electricity costs
-        data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Electricity demand, mean, kWh/kg H2']] * conversion,
-                                               data['PFRE'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
+        if tech in [5, 6, 7]:
+            
+            # grid based electrolysis can benefit from using electricity that would otherwise be curtailed.
+            # We assume a 50% utilisation of curtailed electricity
+            data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Electricity demand, mean, kWh/kg H2']] * conversion,
+                                                   data['PFRE'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0]) * (1-0.5*data['WCUR'][:,0,0])
+        else:
+            
+            data['HYFC'][:, tech, 0] += np.multiply(data['BCHY'][:, tech, c7ti['Electricity demand, mean, kWh/kg H2']] * conversion,
+                                                   data['PFRE'][:,5,0]) / (data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0]) 
+    
+    
+    
     return data

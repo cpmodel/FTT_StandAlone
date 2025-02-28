@@ -109,7 +109,7 @@ def solve(data, time_lags, iter_lag, titles, histend, year, domain):
     #     data['MFERTD'] = proj_mfert_demand
 
     if year > histend['FERTD']:
-        data = pop_shares.green_population_share(data, time_lags, titles)
+        data = pop_shares.green_population_share(data, time_lags, titles, year)
         data = bm.simulate_bass_diffusion(data, time_lags, titles, histend, green_tech, sim_var, total_fert_demand)
         # in N-equivalent fertiliser kt
         data['FERTD'][:, grey_idx, :] = proj_fert_demand - data['FERTD'][:, green_idx, :]

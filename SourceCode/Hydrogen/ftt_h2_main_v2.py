@@ -371,6 +371,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
 
             # Combine fixed and endogenous production estimates
             data['WGWG'][:, :, 0] = endo_production_green + fixed_production_green 
+            
+            # Domestic price formation
+            fixed_value = np.sum(fixed_production_green * data['HYLC'][:, :, 0], axis=1)
+            fixed_price = divide(fixed_value, fixed_production_green.sum(axis=1))
+            domestic_share = divide(data['WGWG'][:, :, 0].sum(axis=1), green_demand_step)
+            domestic_share = np.minimum(domestic_share, 1.0)
+            data['WCPR'][:,0,0] = domestic_share * fixed_price + (1-domestic_share)*data['WIPR'][:,0,0]
                 
             # %% Decision-making core -  split by market - Grey/default market second
                 
@@ -446,6 +453,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             # Combine fixed and endogenous production estimates
             data['WBWG'][:, :, 0] = endo_production_grey + fixed_production_grey
             
+            # Domestic price formation
+            fixed_value = np.sum(fixed_production_grey * data['HYLC'][:, :, 0], axis=1)
+            fixed_price = divide(fixed_value, fixed_production_grey.sum(axis=1))
+            domestic_share = divide(data['WBWG'][:, :, 0].sum(axis=1), grey_demand_step)
+            domestic_share = np.minimum(domestic_share, 1.0)
+            data['WCPR'][:,1,0] = domestic_share * fixed_price + (1-domestic_share)*data['WIPR'][:,1,0]
+            
+            
             # %% Accounting section
             
             # Combine data from the grey and green markets
@@ -484,11 +499,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             bi = np.zeros((len(titles['RTI']),len(titles['HYTI'])))
             hywi0 = np.sum(data['HYWI'][:, :, 0], axis=0)
             dw = np.zeros(len(titles["HYTI"]))
+            dw = np.dot(hywi0, data['HYWB'][0, :, :])
             
-            for i in range(len(titles["HYTI"])):
-                dw_temp = copy.deepcopy(hywi0)
-                dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
-                dw[i] = np.dot(dw_temp, data['HYWB'][0, i, :])
+            # for i in range(len(titles["HYTI"])):
+            #     dw_temp = copy.deepcopy(hywi0)
+            #     dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
+            #     dw[i] = np.dot(dw_temp, data['HYWB'][0, i, :])
 
             # Cumulative capacity incl. learning spill-over effects
             data["HYWW"][0, :, 0] = time_lag['HYWW'][0, :, 0] + dw
@@ -514,6 +530,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                         
             # Store the investment component
             data['HYIC'][:, :, 0] = data['BCHY'][:, :, c7ti['CAPEX, mean, €/kg H2 cap']]
+            
+            # Total investment in hydrogen technology
+            # data['HYIY'][:, :, 0] = data['HYIC'][:, :, 0]
+            
+            # Total CAPEX in hydrogen supply (incl dedicated power)
+            
         
         # %% New capacity expansion forecast - grey market
         # System-wide capacity factor

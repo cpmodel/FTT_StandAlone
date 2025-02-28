@@ -479,3 +479,4 @@ HYJF,Energy consumption for hydrogen production,ktoe,RTI,JTI,NA,TIME,FTT-H2,,,20
 HYCO,Carbon costs per unit of production,EUR/kg H2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
 HYPR,Carbon price,EUR/tCO2,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
 HYWE,Total CO2 emissions,Mt CO2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
+WCUR,"Curtailment rate, used to suppress electricity prices",%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
