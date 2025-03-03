@@ -50,6 +50,18 @@ def load_titles():
             # Assigning the short names (e.g. "1")
             if column_values[0] == 'Short name': # First row
                 titles_dict[f'{sheet}_short'] = column_values[1:]
+                
+            # Loading extra gamma automation titles
+            if column_values[0] == 'shares_var': 
+                titles_dict[f'{sheet}_shares_var'] = column_values[1:]
+            if column_values[0] == 'shares_roc_var': 
+                titles_dict[f'{sheet}_shares_roc_var'] = column_values[1:]
+            if column_values[0] == 'histend_var': 
+                titles_dict[f'{sheet}_histend_var'] = column_values[1:]
+            if column_values[0] == 'Gamma_Value': 
+                titles_dict[f'Gamma_Value'] = column_values[1:]
+            if column_values[0] == 'tech_var': 
+                titles_dict['tech_var'] = column_values[1:] 
 
     # Return titles dictionary
     return titles_dict
