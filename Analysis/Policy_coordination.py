@@ -21,13 +21,18 @@ import config
 output_file = "Results_mand_coordination.pickle"
 titles, fig_dir, tech_titles, _, _ = get_metadata()
 output_S0 = get_output(output_file, "S0")
-cats = ["LDV", "MDV", "HDV"]
+
 
 # Change this to "ZTLC" for levelised cost, and "ZWIC" for upfront cost. 
 # Note, I'm taking off subsidies for ZWIC.
 
-price_name = "ZTLC"
+price_name = "ZWIC"
 tech_variable = {"LDV": 31, "MDV": 32, "HDV": 33}
+
+if price_name == "ZTLC":
+    cats = ["LDV", "MDV", "HDV"]
+else:
+    cats = ["MDV", "HDV"]
 
 tech_name = {"LDV": "Electric van", "MDV": "Small electric truck", 
              "FTT:Fr": "Large electric truck"}
@@ -128,7 +133,7 @@ for cat in cats:
         timeseries_dict[cat][region] = timeseries_by_policy[:, ri, :]
 
 #%% Global cost difference -- plotting
-fig, axs = plt.subplots(3, len(regions), figsize=(4 + 1.2 * len(regions), 5.8), sharey=True)
+fig, axs = plt.subplots(len(cats), len(regions), figsize=(4 + 1.2 * len(regions), 2* len(cats)), sharey=True)
 
 # First, use 3 grey colors, and then 3 teal/blue ones
 colours = ["#33333C", "#5A6065", "#7B848C", "#004C6D", "#2C7FB8"]
