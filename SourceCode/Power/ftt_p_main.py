@@ -68,6 +68,7 @@ from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
+from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
 
 
 
@@ -231,6 +232,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
         data = get_lcoe(data, titles, year)
+        data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)       # Get the marginal fuel prices
 
 
     #%%
@@ -478,6 +480,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles, year)
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)       # Get the marginal fuel prices
+
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -818,6 +822,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update LCOE
             # =================================================================
             data = get_lcoe(data, titles, year)
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, glb3)       # Get the marginal fuel prices
 
             # =================================================================
             # Update the time-loop variables data_dt
