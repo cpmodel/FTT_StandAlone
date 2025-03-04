@@ -258,7 +258,8 @@ def get_lcoe(data, titles, year):
         data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
         data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
         data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
-
+        data["MECC only CO2"][r, :, 0] = lcoe_only_co2      # Bare LCOE without policy, average CF, CO2 costs
+        data["MECC incl CO2"][r, :, 0] = lcoe_all           # LCOE without gamma with all the rest
 
         # Output variables
         data['MWIC'][r, :, 0] = bcet[:, 2].copy()    # Investment cost component LCOE ($/kW)
