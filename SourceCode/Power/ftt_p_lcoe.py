@@ -246,7 +246,10 @@ def get_lcoe(data, titles, year):
         lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
 
         # 4b levelised cost – average units 
-        lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
+        lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]   
+        lcoe_all                = np.sum(npv_expenses_all, axis=1) / utility_tot - data['MEFI'][r, :, 0]
+        lcoe_only_co2           = np.sum(npv_expenses_only_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]
+
         
         # Standard deviation of LCOE
         dlcoe                   = np.sum(npv_std, axis=1) / utility_tot
