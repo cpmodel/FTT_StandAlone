@@ -108,6 +108,8 @@ MECW,"LCOE bare, no policies, with carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,N
 MECS,LCOE incl. carbon price incl subsidies no FiT (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MECD,MEWC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MECC,LCOE (for price) no carbon price incl subsidies incl CF (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECC incl CO2,LCOE (for price) including all policies (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECC only CO2,LCOE (for price) including all policies (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEC6,TLCOE load band 6,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEC5,TLCOE load band 5,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEC4,TLCOE load band 4,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
