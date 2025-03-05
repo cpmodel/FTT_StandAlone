@@ -254,7 +254,7 @@ def get_lcoe(data, titles, year):
 
         
         # Standard deviation of LCOE
-        dlcoe                   = np.sum(npv_std, axis=1) / utility_tot
+        dlcoe = np.sum(npv_std, axis=1) / utility_tot
 
 
         # Pass to variables that are stored outside.
