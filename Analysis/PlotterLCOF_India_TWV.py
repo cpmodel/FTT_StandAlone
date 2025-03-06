@@ -119,10 +119,7 @@ def create_scaled_labeled_plots(df, countries):
             # Add labels
             if i == 0:
                 ax.set_title(vehicle_class, fontsize=8, fontweight='bold', pad=10)
-            if j == 0:
-                ax.text(-0.3, 0.5, country_name, fontsize=8, fontweight='bold',
-                       rotation=90, transform=ax.transAxes, 
-                       verticalalignment='center')
+           
 
     # Add tight layout before legend
     plt.tight_layout()

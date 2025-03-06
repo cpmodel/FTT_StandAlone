@@ -31,12 +31,20 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=
     
     for r in regions:
         total_sales = np.sum(sales_in[r, :, 0])
+        
+        if r == 33 and 60 not in regions:
+            ''' REMOVE THIS BEFORE MERGING INTO THE MAIN MODEL'''
+            mandate_share_temp = mandate_share * 0.5
+            '''TODO: DONT FORGET TO REMOVE THIS. THIS IS JSUT FOR THE FREIGHT POLICY BRIEF'''
+            # TODO: remove this. 
+        else:
+            mandate_share_temp = mandate_share
         if total_sales > 0:
             current_green = np.sum(sales_in[r, green_indices, 0])
             current_share = current_green / total_sales
             
-            if current_share < mandate_share:
-                target_green = total_sales * mandate_share
+            if current_share < mandate_share_temp:
+                target_green = total_sales * mandate_share_temp
                 
                 # First, use local proportions if there are sales locally
                 if current_green > 0:

@@ -26,7 +26,7 @@ output_S0 = get_output(output_file, "S0")
 # Change this to "ZTLC" for levelised cost, and "ZWIC" for upfront cost. 
 # Note, I'm taking off subsidies for ZWIC.
 
-price_name = "ZWIC"
+price_name = "ZTLC"
 tech_variable = {"LDV": 31, "MDV": 32, "HDV": 33}
 
 if price_name == "ZTLC":
@@ -112,13 +112,13 @@ for cat in cats:
     output_eur = get_output(output_file, "Fr mand EUR")
     output_p_CN = get_output(output_file, "Fr mand EUR + CN")
     #output_p_US = get_output(output_file, "Fr mand EUR + CN + US") # Not used in first draft
-    output_p_IN = get_output(output_file, "Fr mand EUR + CN + US + IN")
+    output_p_IN = get_output(output_file, "Fr mand EUR + CN + US + IN + CA")
     output_p_RoW = get_output(output_file, "sxp - Fr mand")
 
 
     
     scenarios = {"Current traj.": output_S0, "+ Europe": output_eur, "+ China": output_p_CN,
-                 "+ US and India": output_p_IN, "+ RoW": output_p_RoW}
+                 "+ IN, CA and ½US": output_p_IN, "+ RoW": output_p_RoW}
      
     
     for scen, output in scenarios.items():
