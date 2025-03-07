@@ -48,6 +48,13 @@ def set_carbon_tax(data, c2ti, year):
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
         print( ('Conversion factor:'
               f'{data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )}') )
+        print('Conversion factor elements:')
+        print(f'REX: {data["REX13"][33, 0, 0]}')
+        print(f'PRSCX: {data["PRSCX"][:, :, 0]}')
+        print(f'EX13: {data["EX13"][:, :, 0]}')
+        print(f'PRSC13: {data["PRSC13"][:, :, 0]}')
+        print(f'EXX: {data["EXX"][:, :, 0] }')
+        
         print(f"Emissions intensity {data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']]}")
         
         raise ValueError
@@ -259,7 +266,7 @@ def get_lcoe(data, titles, year):
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
         lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
-        lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
+        lcoe_mu_gamma           = lcoe_mu_all_policies * (1 + data['MGAM'][r, :, 0])
         lcoe_mu_no_policy_battery_only = np.sum(npv_expenses_mu_no_policy_battery_only, axis=1) / utility_tot 
 
 
