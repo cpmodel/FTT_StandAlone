@@ -14,11 +14,8 @@ the diffusion of shares is constant across the boundary between the historical a
 
 
 
-
-
-
 # Reminder for Monday
-# Code now crashes if you have multiple models selected in settings
+# Code now crashes if you have multiple models selected in settings. To do with batteries? Make that code more robust.
 ################################################
 
 
@@ -53,8 +50,8 @@ def automation_init(model):
     # Looping through all FTT modules
     for module in model.titles['Models_short']:
         if module in modules:
+
             # Automation variable list for this module
-            # TODO: remove the ROC variables if I can compute them endogenously
             automation_var_list = [share_variables[module], gamma_variables[module]]
             # Establisting timeline for automation algorithm
             model.timeline = np.arange(model.histend[histend_vars[module]] - 12,
@@ -69,9 +66,6 @@ def automation_init(model):
             # Create container for roc variables
             automation_variables[module]['roc_gradient'] = np.zeros((len(model.titles['RTI_short']), len(model.titles[techs_vars[module]])))
             automation_variables[module]['hist_share_avg'] = np.zeros((len(model.titles['RTI_short']), len(model.titles[techs_vars[module]])))
-
-            # Compute the rate of change from the shares variable
-            automation_variables[module]["rate of change"] = compute_roc(automation_variables, share_variables, module)
             
             # Looping through years in automation timeline
             for year_index, year in enumerate(model.timeline):
@@ -87,7 +81,9 @@ def automation_init(model):
                         automation_variables[module][var][:, :, :, year_index] = model.variables[var]
                     else:
                         automation_variables[module][var][:, :, :, 0] = model.variables[var]
-                
+            
+            # Compute the rate of change from the shares variable
+            automation_variables[module]["rate of change"] = compute_roc(automation_variables, share_variables, module)
 
     return automation_variables
 # %%
@@ -135,13 +131,12 @@ def automation_var_update(automation_variables, model):
             # Define the ROC variable for each module (can have same name I think), rather than defining it in the model
             automation_variables[module]["rate of change"] = compute_roc(automation_variables, share_variables, module)
                 
-            test=1
 
     return automation_variables
 
 def compute_roc(automation_variables, share_variables, module):
-    roc = (automation_variables[module][share_variables[module]][:, :, :, 1:]
-                                            - automation_variables[module][share_variables[module]][:, :, :, :-1])
+    roc =   (automation_variables[module][share_variables[module]][:, :, :, 1:]
+           - automation_variables[module][share_variables[module]][:, :, :, :-1])
     
     return roc
 # %%
@@ -272,9 +267,9 @@ def gamma_auto(model):
             for region in range(1):
 
                 # Iterative loop for gamma convergence goes here
-                # TODO make number of iterations a variable
-                #for iter in tqdm(range(5)): ## generalise
-                for it in range(10):
+                # TODO make max number of iterations a variable
+                #for iter in tqdm(range(5)): 
+                for it in range(5):
 
                     # Calculate ROC ratio
                     automation_variables = roc_ratio(automation_variables, model, module, region)
@@ -299,6 +294,7 @@ def gamma_auto(model):
                     # print('Gamma automation iteration:', iter, 'completed')
                     if (it+1)%2 == 1:
                         print(f"The rate of change gradients are now \n: {automation_variables[module]['roc_gradient'][region][:19]}")
+                        print(f'Shares of gas are {automation_variables[module]["MEWS"][0, 6, 0, -8:]}')
 
 
     return automation_variables
