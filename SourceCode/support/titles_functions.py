@@ -54,8 +54,6 @@ def load_titles():
             # Loading extra gamma automation titles
             if column_values[0] == 'shares_var': 
                 titles_dict[f'{sheet}_shares_var'] = column_values[1:]
-            if column_values[0] == 'shares_roc_var': 
-                titles_dict[f'{sheet}_shares_roc_var'] = column_values[1:]
             if column_values[0] == 'histend_var': 
                 titles_dict[f'{sheet}_histend_var'] = column_values[1:]
             if column_values[0] == 'Gamma_Value': 

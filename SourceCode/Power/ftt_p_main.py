@@ -227,12 +227,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
-            
-                    
-            # Calculate rate of change of shares (for gamma value automation)    
-            if year > 2010:    
-                data['MSRC'][:,:,0] = data['MEWS'][:, :, 0] - time_lag['MEWS'][:, :, 0]
-            
+                        
             
             cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
             cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
@@ -518,8 +513,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
             data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
             
-            # Calculate rate of change of shares (for gamma value automation)    
-            data['MSRC'][:,:,0] = data['MEWS'][:, :, 0] - time_lag['MEWS'][:, :, 0]
 
 # %% Simulation of stock and energy specs
     
@@ -694,10 +687,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =============================================================
             #  Update variables wrt curtailment
             # =============================================================
-            
-            # Calculate rate of change of shares (for gamma value automation)
-            data['MSRC'][:, :, 0] = data['MEWS'][:, :, 0] - time_lag['MEWS'][:, :, 0]
-            
+         
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
             data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
