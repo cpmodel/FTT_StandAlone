@@ -127,11 +127,26 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
             base_df = var_df[var_df['Scenario'] == base_scenario].reset_index(drop=True)
 
             for row in range(0, len(amb_df.index)):
+                technology = amb_df['Technology'].iloc[row]
                 country = amb_df['Country'].iloc[row]
                 if amb_df['Country'].iloc[row] in regions:
                     ambition = scen_level[f'{country}_{policy_parameter}']
+
                 else:
                     print(f'No ambition level for {country} in {policy_parameter}')
+
+                # Handle rollback for certain technologies TODO generalise
+                if (country == 'US') & (policy_parameter == 'phase_pol'):
+                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                
+                    if (technology in roll_back_techs) & (ambition >= 0.5):
+                        continue
+                    elif (technology not in roll_back_techs) & (ambition < 0.5):
+                        continue
+                    elif (technology in roll_back_techs) & (ambition < 0.5):
+                        ambition = (0.5 - ambition) / 0.5
+                    elif (technology not in roll_back_techs) & (ambition >= 0.5):
+                        ambition = (ambition - 0.5) / 0.5
 
                 # Extract meta data and bounds
                 meta = amb_df.iloc[row, 0:5]
@@ -140,6 +155,7 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
                 
                 # Calculate new level
                 new_level = (upper_bound - lower_bound) * ambition
+                
                 new_level_meta = pd.concat([meta, new_level])
                 new_level_meta = pd.DataFrame(new_level_meta.drop('Scenario')).T
                 new_sheets = pd.concat([new_sheets, new_level_meta], axis=0)
@@ -364,16 +380,16 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
 
         mewd_base = pd.read_csv(f'Inputs/S0/FTT-P/MEWDX_{reg_short}.csv')
         # Calculate growth rate
-        mewd_grate = mewd_base.iloc[7, 14:].pct_change().fillna(0)
+        mewd_grate = mewd_base.iloc[7, 13:].pct_change().fillna(0)
         # Calculate new growth rate based on scenario level
         mewd_grate_new = mewd_grate[1:] * scen_level['elec_demand']
         
-        # Calculate & insert new growth rate after 2023 - add in BCET end year from variable_listing
+        # Calculate & insert new growth rate after 2022 - add in BCET end year from variable_listing
         mewd_updated = mewd_base.copy()
 
 
-        for i in range(1, len(mewd_updated.iloc[7, 15:])):
-            mewd_updated.iloc[7, 14 + i] = round((1 + mewd_grate_new.iloc[i-1]) * mewd_updated.iloc[7, 13 + i], 4) 
+        for i in range(1, len(mewd_updated.iloc[7, 14:])):
+            mewd_updated.iloc[7, 13 + i] = round((1 + mewd_grate_new.iloc[i-1]) * mewd_updated.iloc[7, 14 + i], 4) 
                                                                                    
         mewd_updated.rename(columns={mewd_updated.columns[0]: ''}, inplace=True)
 
@@ -483,7 +499,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in range(0, len(scen_levels['scenario'])):
+    for i in range(0, 10): # len(scen_levels['scenario'])
         
         updated_input_data = defaultdict(lambda: defaultdict(dict))
 
