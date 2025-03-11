@@ -136,17 +136,17 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
                     print(f'No ambition level for {country} in {policy_parameter}')
 
                 # Handle rollback for certain technologies TODO generalise
-                if (country == 'US') & (policy_parameter == 'phase_pol'):
-                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                # if (country == 'US') & (policy_parameter == 'phase_pol'):
+                #     roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
                 
-                    if (technology in roll_back_techs) & (ambition >= 0.5):
-                        continue
-                    elif (technology not in roll_back_techs) & (ambition < 0.5):
-                        continue
-                    elif (technology in roll_back_techs) & (ambition < 0.5):
-                        ambition = (0.5 - ambition) / 0.5
-                    elif (technology not in roll_back_techs) & (ambition >= 0.5):
-                        ambition = (ambition - 0.5) / 0.5
+                #     if (technology in roll_back_techs) & (ambition >= 0.5):
+                #         continue
+                #     elif (technology not in roll_back_techs) & (ambition < 0.5):
+                #         continue
+                #     elif (technology in roll_back_techs) & (ambition < 0.5):
+                #         ambition = (0.5 - ambition) / 0.5
+                #     elif (technology not in roll_back_techs) & (ambition >= 0.5):
+                #         ambition = (ambition - 0.5) / 0.5
 
                 # Extract meta data and bounds
                 meta = amb_df.iloc[row, 0:5]
