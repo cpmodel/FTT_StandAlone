@@ -1,7 +1,8 @@
 import pandas as pd
 import os
 import numpy as np
-from collections import defaultdict
+from tqdm import tqdm  # Import tqdm for progress bar
+
 
 # Local imports
 from SourceCode.support.titles_functions import load_titles
@@ -137,6 +138,9 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
         for sheet_name in sheet_names:
             if sheet_name not in compare_data:
                 continue  # Skip to the next iteration if the sheet_name does not exist in compare_data
+            
+            # Initialise dictionary
+            updated_input_data[new_scen_code][sheet_name] = {}
 
             var_df = compare_data[sheet_name]
             amb_df = var_df[var_df['Scenario'] == amb_scenario].reset_index(drop=True)
@@ -234,12 +238,15 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
     # load carbon price data
     cp_df = pd.read_csv(carbon_price_path)
     cp_df = cp_df.rename(columns={'Unnamed: 0': ''})
+    cp_df = cp_df.astype({col: 'float64' for col in cp_df.columns[1:]})  # Force float dtype
     cp_df.iloc[:, 1:] = cp_df.iloc[:, 1:].astype(float)
 
 
     new_scen_code = scen_level.loc['scenario']
     sheet_name = 'REPPX' # hardcoded for now, handle via dimensions later
     
+
+
     # Region list from updated scenario levels, not DRY
     regions = list({country.split('_')[0] for country in scen_level.index if country.endswith('_pol')})
 
@@ -254,7 +261,7 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
         
         
         # Multiply all values in the row (except country col and 2010) by the ambition value
-        cp_df.iloc[index, 2:] = cp_df.iloc[index, 2:] * ambition
+        cp_df.iloc[index, 14:] = round((cp_df.iloc[index, 14:] * ambition), 2)
         
     # Store single sheet
     updated_input_data[new_scen_code][sheet_name] = cp_df
@@ -330,6 +337,8 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
     '''
     # Extract the scenario code
     scen_code = scen_level['scenario']
+    sheet_name = 'BCET' 
+    updated_input_data[scen_code][sheet_name] = {}
     
     # Load baseline data
     cost_matrix = load_cost_matrix("Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx", ['BCET'], cost_matrix_structure) # GENERALISE
@@ -375,9 +384,9 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         # Drop the first row now that it is the header
         country_df = country_df[1:].reset_index(drop=True)        
         
-        updated_input_data[scen_code]['BCET'][country] = country_df # needs generalising
+        updated_input_data[scen_code][sheet_name][country] = country_df # needs generalising
 
-    return updated_input_data # do we need the return?
+    return updated_input_data 
 
 def inputs_vary_special(updated_input_data, scen_level, titles): # need to add paths
     '''
@@ -387,7 +396,13 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
     Returns:
     '''
     
-    scen_code = scen_level['scenario']   
+    scen_code = scen_level['scenario']  
+    sheet_name_1 = 'MEWDX'
+    sheet_name_2 = 'MCSC'
+
+    # Initialise dict for new scenario and sheet
+    updated_input_data[scen_code][sheet_name_1] = {}
+    updated_input_data[scen_code][sheet_name_2] = {} 
 
     for reg in range(0, len(titles['RTI_short'])):
 
@@ -412,7 +427,7 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
         mewd_updated.rename(columns={mewd_updated.columns[0]: ''}, inplace=True)
 
         # Export to dict
-        updated_input_data[scen_code]['MEWDX'][reg_short] = mewd_updated
+        updated_input_data[scen_code][sheet_name_1][reg_short] = mewd_updated
 
         ### Technical potential
         tech_base = pd.read_csv(f'Inputs/S0/General/MCSC_{reg_short}.csv')
@@ -429,7 +444,7 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
         tech_updated.loc[renewables_indices, '2'] = tech_update.iloc[renewables_indices].values
         tech_updated.rename(columns={tech_updated.columns[0]: ''}, inplace=True)
         
-        updated_input_data[scen_code]['MCSC'][reg_short] = tech_updated
+        updated_input_data[scen_code][sheet_name_2][reg_short] = tech_updated
 
 
     return updated_input_data
@@ -517,11 +532,18 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in range(0, len(scen_levels['scenario'][0:4])): # len(scen_levels['scenario'])
+    for i in tqdm(range(len(scen_levels['scenario'])), desc="Processing Scenarios", unit="scenario"):
         
-        updated_input_data = defaultdict(lambda: defaultdict(dict))
 
+        #updated_input_data = defaultdict(lambda: defaultdict(dict))
+        # Get the scenario levels for the current iteration and code
         scen_level = scen_levels.iloc[i]
+        scen_code = scen_level['scenario']
+        
+        # Initialise dictory for new scenario
+        updated_input_data = {}
+        updated_input_data[scen_code] = {}
+        
         
         # Update input data based on scenario levels and comparison data
         # TODO COMBINE THESE
