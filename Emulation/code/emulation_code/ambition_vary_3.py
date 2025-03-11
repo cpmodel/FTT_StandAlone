@@ -499,7 +499,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in range(0, 10): # len(scen_levels['scenario'])
+    for i in range(450, len(scen_levels['scenario'])): # len(scen_levels['scenario'])
         
         updated_input_data = defaultdict(lambda: defaultdict(dict))
 

@@ -76,7 +76,10 @@ def convert_output_to_dataframe(output_data, scen, titles):
                 country_list.append(titles['RTI'][country])  
                 country_short_list.append(titles['RTI_short'][country])
                 tech = index[1] 
-                technology_list.append(titles['T2TI'][tech])  
+                if variable == 'MEWP':
+                    technology_list.append(titles['JTI'][tech])
+                else:
+                    technology_list.append(titles['T2TI'][tech])  
                 year = index[3] + 2010
                 year_list.append(year)
                 
