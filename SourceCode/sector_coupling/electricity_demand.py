@@ -79,7 +79,7 @@ def electricity_demand_feedback(data, data_baseline, year, titles, units):
     
         demand_var = elec_map.loc[model, "fuel_var"]
         
-        # convert to same unit as MEWD
+        # convert to same unit as MEWD (PJ)
         unit = units[demand_var]
         conversion_factor = unit_conversion.loc[unit, demand_unit]
         

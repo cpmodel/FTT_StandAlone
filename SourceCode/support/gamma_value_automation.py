@@ -212,8 +212,8 @@ def adjust_gamma_values(automation_variables, model, module, Nyears):
     # Gradient ratio conditions
     negative_gradient = roc_gradient < 0
     positive_gradient = roc_gradient > 0
-    small_gradient = roc_gradient < 0.5
-    large_gradient = roc_gradient > 2
+    small_gradient = roc_gradient < 0.8
+    large_gradient = roc_gradient > 1.2
     
     # Historical share conditions
     negative_hist = hist_share_avg < 0
@@ -303,7 +303,7 @@ def gamma_auto(model):
                             automation_variables[module][gamma_variables[module]][:, :, 0, 0])
                 
                 # Perform automation algorithm, this updates the gamma values
-                automation_variables = adjust_gamma_values(automation_variables, model, module, Nyears)
+                automation_variables = adjust_gamma_values2(automation_variables, model, module, Nyears)
    
                 # Check for convergence each iteration and module loop
                 gamma = automation_variables[module][gamma_variables[module]][:, :, 0, 0]
