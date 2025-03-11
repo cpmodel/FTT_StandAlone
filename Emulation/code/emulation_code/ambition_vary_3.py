@@ -6,6 +6,8 @@ from collections import defaultdict
 # Local imports
 from SourceCode.support.titles_functions import load_titles
 titles = load_titles()
+# Opt-in to the future pandas behavior to avoid warnings
+pd.set_option('future.no_silent_downcasting', True)
 
 def load_comparison_data(comparison_path):
     """
@@ -77,15 +79,29 @@ def scen_levels_extend(scenario_levels, region_groups):
     # List comprehension to filter elements that end with '_pol'
     regions = list({country.split('_')[0] for country in list(scenario_levels.columns) if country.endswith('_pol')})    
     
+    # for key, additional_regions in region_groups.items():
+    #     if key in regions:
+    #         regions.extend(additional_regions)
+    #         for region in additional_regions:
+    #             scenario_levels[region + '_phase_pol'] = scenario_levels[key + '_phase_pol']
+    #             scenario_levels[region + '_cp_pol'] = scenario_levels[key + '_cp_pol']
+    #             scenario_levels[region + '_price_pol'] = scenario_levels[key + '_price_pol']
+    
+    new_columns = {}  # Dictionary to collect new column data
+
     for key, additional_regions in region_groups.items():
         if key in regions:
-            regions.extend(additional_regions)
+            regions.extend(additional_regions)  # Extend the list of regions
             for region in additional_regions:
-                scenario_levels[region + '_phase_pol'] = scenario_levels[key + '_phase_pol']
-                scenario_levels[region + '_cp_pol'] = scenario_levels[key + '_cp_pol']
-                scenario_levels[region + '_price_pol'] = scenario_levels[key + '_price_pol']
+                new_columns[region + '_phase_pol'] = scenario_levels[key + '_phase_pol']
+                new_columns[region + '_cp_pol'] = scenario_levels[key + '_cp_pol']
+                new_columns[region + '_price_pol'] = scenario_levels[key + '_price_pol']
 
-    return scenario_levels
+    # Efficiently add new columns in one step using pd.concat
+    return pd.concat([scenario_levels, pd.DataFrame(new_columns)], axis=1)
+
+
+    #return scenario_levels
 
 def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, scenarios, region_groups, params):
     """
@@ -218,6 +234,8 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
     # load carbon price data
     cp_df = pd.read_csv(carbon_price_path)
     cp_df = cp_df.rename(columns={'Unnamed: 0': ''})
+    cp_df.iloc[:, 1:] = cp_df.iloc[:, 1:].astype(float)
+
 
     new_scen_code = scen_level.loc['scenario']
     sheet_name = 'REPPX' # hardcoded for now, handle via dimensions later
@@ -499,7 +517,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in range(450, len(scen_levels['scenario'])): # len(scen_levels['scenario'])
+    for i in range(0, len(scen_levels['scenario'][0:4])): # len(scen_levels['scenario'])
         
         updated_input_data = defaultdict(lambda: defaultdict(dict))
 
