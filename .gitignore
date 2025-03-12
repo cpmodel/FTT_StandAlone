@@ -9,3 +9,4 @@ settings.ini
 Inputs/S0/.DS_Store
 SourceCode/.DS_Store
 Output/Results_*
+Emulation/data/emulators/*.rds
