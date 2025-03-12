@@ -11,6 +11,9 @@ os.chdir(root_dir)
 from emulation_code.utils import load_config
 from emulation_code.compare_scenarios_2 import compare_scenarios, export_compare
 from emulation_code.ambition_vary_3 import process_ambition_variation
+from emulation_code.run_emulation_5 import main as run_simulations
+from emulation_code.output_manipulation_6 import main as output_mainuplation
+
 from SourceCode.support.titles_functions import load_titles
 titles = load_titles()
 
@@ -38,7 +41,8 @@ def main():
     
     run_compare_scenarios = config.get('run_compare_scenarios', True)
     run_ambition_vary = config.get('run_ambition_vary', True)
-    
+    run_run_simulations = config.get('run_run_simulations', True)
+    run_output_manipulation = config.get('run_output_manipulation', True)
 
     # Compare scenarios
     if run_compare_scenarios:
@@ -49,12 +53,24 @@ def main():
     
     # Process ambition variation
     if run_ambition_vary:
-        processed_data = process_ambition_variation(base_master_path, scen_levels_path, 
+        process_ambition_variation(base_master_path, scen_levels_path, 
                                                     comparison_path, scenarios, region_groups, 
                                                     params, general_vars, output_dir,
                                                     cost_matrix, cost_matrix_structure, 
                                                     updates_config, titles, carbon_price_path)
         print("Processed Ambition Variation Data")
+
+    # Run simulations with data varied between boundary scenarios
+    if run_run_simulations:
+        run_simulations()
+        print("Simulations completed")
+
+    # Manipulate the output data into csv files for emulation
+    if run_output_manipulation:
+        output_mainuplation()
+        print("Output processed and saved")
+    
+
         
 #%%
 

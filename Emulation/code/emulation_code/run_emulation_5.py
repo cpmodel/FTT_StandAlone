@@ -51,7 +51,6 @@ def process_scenarios(all_scenarios, batch_size=50, config_path='settings.ini', 
     # Process scenarios in batches
     for i in range(0, len(all_scenarios), batch_size):
         batch = ["S0"] + all_scenarios[i:i + batch_size]
-        print(f"Processing scenarios for this batch: {batch}")
         
         try:
             # Load and update the settings file with the current batch of scenarios

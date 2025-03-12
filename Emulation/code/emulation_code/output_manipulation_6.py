@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import numpy as np
 import sys
+from tqdm import tqdm
 
 # Set root directory
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -38,7 +39,6 @@ def convert_output_to_dataframe(output_data, scen, titles):
 
     for variable, dimensions in output_data.items():
 
-        print(f'Converting {variable} for {scen}')
         if variable == 'MEWW':
             indices = np.indices(dimensions.shape).reshape(dimensions.ndim, -1).T
 
@@ -102,7 +102,6 @@ def convert_output_to_dataframe(output_data, scen, titles):
 def save_dataframe_to_csv(df, output_dir, scen):
     output_file = os.path.join(output_dir, f'{scen}_batch.csv')
     df.to_csv(output_file, index=False)
-    print(f'Batch {scen} saved')
 
 # Main function to process one results file at a time and save as a batch
 def process_and_save_results_file(scen, vars_to_compare, output_dir, titles):
@@ -121,7 +120,7 @@ def process_and_save_results_file(scen, vars_to_compare, output_dir, titles):
     save_dataframe_to_csv(df, output_dir, scen)
 
 # Example usage
-if __name__ == "__main__":
+def main():
     # Define the scenarios and variables to compare
     scen_levels = pd.read_csv('Emulation/data/scenarios/S3_scen_levels.csv')
     emulation_scens = scen_levels['scenario']
@@ -129,5 +128,9 @@ if __name__ == "__main__":
     output_dir = 'Emulation/data/runs'
     
     # Process each results file one at a time and save as a batch
-    for scen in scen_levels['scenario']:
+    for scen in tqdm(scen_levels['scenario'], desc = "Converting output", unit = "scenario"):
         process_and_save_results_file(scen, vars_to_compare, output_dir, titles)
+
+
+if __name__ == "__main__":
+    main()
