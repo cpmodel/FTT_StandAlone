@@ -19,7 +19,6 @@ Functions included:
 """
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
 # Local library imports
