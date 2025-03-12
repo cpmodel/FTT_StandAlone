@@ -23,8 +23,8 @@ import numpy as np
 from tqdm import tqdm
 import os
 
-#os.chdir("C:\\Users\Work profile\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone")
-os.chdir("C:\\Users\\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone")
+os.chdir("C:\\Users\Work profile\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone")
+#os.chdir("C:\\Users\\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone")
 
 from SourceCode import model_class
 # %%
@@ -32,7 +32,7 @@ from SourceCode import model_class
 def set_timeline(histend):
     "Which years are the model run?"
     # Note, make sure the timeline in the settings file at least covers this range
-    return np.arange(histend - 12, histend + 5)
+    return np.arange(2010, histend + 5)
 
 def automation_init(model):
     '''Initialising automation variables and running the model for the first time'''
@@ -53,7 +53,8 @@ def automation_init(model):
     # Looping through all FTT modules
     for module in model.titles['Models_short']:
         if module in modules:
-
+            
+            print(f"Initialising for model {module}")
             # Automation variable list for this module
             automation_var_list = [share_variables[module], gamma_variables[module]]
             # Establisting timeline for automation algorithm
@@ -209,11 +210,11 @@ def adjust_gamma_values_simulated_annealing(automation_variables, model, module,
     delta_gamma = np.random.normal(0, 0.015, size=gamma.shape)
 
     # Propose a new gamma solution
-    new_gamma = gamma + delta_gamma
+    gamma = gamma + delta_gamma
     
     gamma = np.clip(gamma, -1, 1)  # Ensure gamma values between -1 and 1
     gamma = np.repeat(gamma[:, :, np.newaxis, np.newaxis], Nyears, axis=3) # reshape format for whole period
-    automation_variables[module][gamma_variables[module]] = np.copy(new_gamma)
+    automation_variables[module][gamma_variables[module]] = np.copy(gamma)
 
     return automation_variables
 
@@ -269,6 +270,9 @@ def accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, 
     # Go back to old gamma/score values when values not accepted
     gamma[~acceptance_mask] = gamma_lag[~acceptance_mask]
     roc_change[~acceptance_mask] = roc_change_lag[~acceptance_mask]
+    
+    Nyears = automation_variables[module][gamma_variables[module]].shape[-1]
+    gamma = np.repeat(gamma[:, :, np.newaxis, np.newaxis], Nyears, axis=3) # reshape format for whole period
     
     automation_variables[module][gamma_variables[module]] = np.copy(gamma)
     automation_variables[module]['roc_change'] = np.copy(roc_change)
@@ -328,8 +332,8 @@ def gamma_auto(model):
                             automation_variables[module][gamma_variables[module]][:, :, 0, 0])
                 
                 # Save previous roc change values
-                automation_variables[module]["roc_change" + '_LAG'][:, :, 0, 0] = (
-                            automation_variables[module][gamma_variables[module]][:, :, 0, 0])
+                automation_variables[module]["roc_change" + '_LAG'][:, :] = (
+                            automation_variables[module]["roc_change"][:, :] )
                 
                 # Update gamma values semi-randomly
                 # automation_variables = adjust_gamma_values(automation_variables, model, module, Nyears)
@@ -349,7 +353,7 @@ def gamma_auto(model):
                 
                 # Compute new rate of change and accept/reject gamma values
                 automation_variables = roc_change(automation_variables, model, module)
-                automation_variables = accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, it)
+                automation_variables = accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, it, T0)
                 
                 if it == 0:
                     # Update initial temperature, based on differences in initial scores

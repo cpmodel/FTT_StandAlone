@@ -282,14 +282,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         else:
             data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
         
-        denominator = data['MEWK'][:,:,0].sum(axis=1)[:, np.newaxis]
-        if year == 2020:
-            stop_for_debugger = 1
-            import pdb; pdb.set_trace()
 
-        if np.any(denominator == 0):
-            raise ValueError(f"Division by zero in sum MEWK in year {year}")
-        data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], denominator)
+        data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:, np.newaxis])
         
         
         
