@@ -25,9 +25,9 @@ model_names = [repl_dict[model] for model in models]
 # Define the shares, prices of interest
 emissions_names = {"FTT:P": "MEWE", "FTT:Tr": "TEWE", "FTT:H": "HEWE", "FTT:Fr": "ZEWE"}
 
-all_policies_or_mandates = "Mandates"
+all_policies_or_mandates = "All policies"
 if all_policies_or_mandates == "All policies":
-    output_file = "Results_sectors_half.pickle"
+    output_file = "Results_sectors.pickle"
     output_baseline = get_output(output_file, "S0")
     #output_all_policies = get_output(output_file, "sxp half - All policies")
     output_all_policies = get_output(output_file, "sxp - All policies")
@@ -95,6 +95,8 @@ def scale_total_emissions(emissions_m, model):
     
     scaling_factor = emissions_2022[model] / emissions_m[ind_2022]
     emissions_m_rescaled = emissions_m * scaling_factor
+    #emissions_m_rescaled = emissions_m
+   
     
     return emissions_m_rescaled
     
@@ -268,7 +270,7 @@ print(f"Total cumulative emissions S0 2025-2050 is {emissions_cum_2050_S0/1000:.
 print(f"Total emissions 2050 S0 is {emissions_tot_2050_S0/1000:.1f} GtCO₂")
 
 
-def cumulative_saved_emissions(model, policy, emissions_cum_or_2050):
+def get_saved_emissions(model, policy, emissions_cum_or_2050):
     '''First way to calculate combination gain. 
     1. Compute baseline emissions
     2. Compute the economy-wide emissions per sectoral policy
@@ -333,16 +335,14 @@ def set_up_data_dict(sectoral_saved_emissions, combined_policies_function):
     }
     return data
 
-sectoral_saved_emissions = set_up_list_saved_emissions(emissions_from_2025, get_sectoral_emissions_policy)
-sectoral_saved_emissions_2050 = set_up_list_saved_emissions(emissions_2050, get_sectoral_emissions_policy)
+sectoral_saved_emissions = set_up_list_saved_emissions(emissions_from_2025, get_saved_emissions)
+sectoral_saved_emissions_2050 = set_up_list_saved_emissions(emissions_2050, get_saved_emissions)
 data_cum = set_up_data_dict(sectoral_saved_emissions, combined_policies_saved_emissions)
 data_2050 = set_up_data_dict(sectoral_saved_emissions_2050, combined_policies_saved_emissions_2050)
 
 # Calculate the remaining emissions after policies
 remaining_cum = emissions_cum_2050_S0 - sum(data_cum.values())
 remaining_2050 = emissions_tot_2050_S0 - sum(data_2050.values())
-
-print(f"The additional emissions savings in 2050: {data_2050['Combined policies']:.0f} MtCO2")
 
 # Add the remaining emissions to the data
 data_cum["Remaining emissions"] = remaining_cum
@@ -404,7 +404,7 @@ def plot_stacked_bar_chart(data, axis):
     # Calculate the x-coordinates for the end of the middle and bottom bars
     mid_bar_x = data.iloc[1, :].sum()  # Middle of the second bar
     bottom_bar_x = data.iloc[0, :].sum()  # Middle of the bottom bar
-    print(bottom_bar_x)
+    #print(bottom_bar_x)
     
     # Add annotation with a 90-degree turn arrow
     axis.annotate(
@@ -413,7 +413,7 @@ def plot_stacked_bar_chart(data, axis):
         xytext=(mid_bar_x, 1),    # End at the middle of the lowest bar with vertical offset
         ha="left", va="center",
         arrowprops=dict(
-            arrowstyle="-|>",
+            arrowstyle="-|>,head_width=0.15,head_length=0.1",
             connectionstyle="angle,angleA=90,angleB=0,rad=0",  # 90-degree turn
             color="black",
             lw=1.5,
@@ -426,6 +426,20 @@ def plot_stacked_bar_chart(data, axis):
 
 plot_stacked_bar_chart(df_cumulative, axes[0])
 plot_stacked_bar_chart(df_2050, axes[1])
+
+# Create nice dataframe for printing
+data = pd.DataFrame(
+    [sectoral_saved_emissions_2050, emissions_2050_combined_policies],
+    index=["One at a time", "Combined"],
+    columns=["Power", "Heat", "Transport", "Freight"]
+)
+
+data = data.round(2)
+# Print the table nicely
+print(data)
+
+total_saved_emissions_2050 = np.sum(sectoral_saved_emissions_2050) - np.sum(emissions_2050_combined_policies)
+print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2")
 
 
 # %%
