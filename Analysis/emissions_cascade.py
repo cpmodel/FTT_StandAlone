@@ -439,7 +439,8 @@ data = data.round(2)
 print(data)
 
 total_saved_emissions_2050 = np.sum(sectoral_saved_emissions_2050) - np.sum(emissions_2050_combined_policies)
-print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2")
+share_saved = total_saved_emissions_2050 / np.sum(emissions_2050_S0) * 100
+print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2, or {share_saved:.1f}")
 
 
 # %%

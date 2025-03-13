@@ -96,7 +96,6 @@ def automation_init(model):
 def run_model(automation_variables, model):
     '''Runs the model with new gamma values'''
     scenario = 'S0'
-
     modules = model.ftt_modules
 
     # Identifying the variables needed for automation
@@ -105,24 +104,27 @@ def run_model(automation_variables, model):
     histend_vars = dict(zip(model.titles['Models_short'], model.titles['Models_histend_var']))
   
 
-    # Looping through all FTT modules
-    for module in model.titles['Models_short']:
-        print(module)
-        if module in modules:
-            # Automation variable list for this module
-            automation_var_list = [share_variables[module], gamma_variables[module]]
-            
-            # Establisting timeline for automation algorithm
-            model.timeline = set_timeline(model.histend[histend_vars[module]])
-
-            # Overwriting input data for gamma values (broadcast to all years)
-            model.input[scenario][gamma_variables[module]][:, :, 0, :] = automation_variables[module][gamma_variables[module]][:, :, :, 0]
-
-            # Looping through years in automation timeline
-            for year_index, year in enumerate(model.timeline):
-
-                # Solving the model for each year
-                model.variables, model.lags = model.solve_year(year, year_index, scenario)
+    # Looping through years in automation timeline
+    for year_index, year in enumerate(model.timeline):
+    
+        # Solving the model for each year
+        model.variables, model.lags = model.solve_year(year, year_index, scenario)
+        
+        # Looping through all FTT modules
+        for module in model.titles['Models_short']:
+            if module in modules:
+                print("Running model")
+        
+                # Automation variable list for this module
+                automation_var_list = [share_variables[module], gamma_variables[module]]
+                
+                # Establisting timeline for automation algorithm
+                model.timeline = set_timeline(model.histend[histend_vars[module]])
+        
+                # Overwriting input data for gamma values (broadcast to all years)
+                model.input[scenario][gamma_variables[module]][:, :, 0, :] = (
+                    automation_variables[module][gamma_variables[module]][:, :, :, 0])
+  
 
                 # Populate variable container for automation
                 for var in automation_var_list:
@@ -206,12 +208,17 @@ def adjust_gamma_values_simulated_annealing(automation_variables, model, module,
     gamma_variables = dict(zip(model.titles['Models_short'], model.titles['Gamma_Value']))
     gamma = automation_variables[module][gamma_variables[module]][:, :, 0, 0]
     
+    roc_change = automation_variables[module]["roc_change"]
+    
     # Generate a candidate step
     delta_gamma = np.random.normal(0, 0.015, size=gamma.shape)
 
     # Propose a new gamma solution
     gamma = gamma + delta_gamma
     
+    # Set gamma to zero if the roc is zero (usually as shares are zero)
+    gamma = np.where(roc_change == 0, 0, gamma)
+      
     gamma = np.clip(gamma, -1, 1)  # Ensure gamma values between -1 and 1
     gamma = np.repeat(gamma[:, :, np.newaxis, np.newaxis], Nyears, axis=3) # reshape format for whole period
     automation_variables[module][gamma_variables[module]] = np.copy(gamma)
@@ -239,6 +246,9 @@ def compute_scores(gamma, gamma_lag, roc_change, roc_change_lag):
     score_lag = - np.abs(roc_change_lag) - lambda_reg * gamma_lag**2
     score = - np.abs(roc_change) - lambda_reg * gamma**2
     
+    score = np.clip(score, -0.5, 0)
+    score_lag = np.clip(score_lag, -0.5, 0)
+    
     return score, score_lag
 
 def accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, it, T0):
@@ -251,7 +261,7 @@ def accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, 
     '''
     
     # Hyperparameters
-    cooling_rate = 0.95
+    cooling_rate = 0.96
     
     # Cool down the temperature
     T = T0 * cooling_rate**it
@@ -264,7 +274,7 @@ def accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, 
 
     # Element-wise acceptance condition
     acceptance_mask = (score > score_lag) | (
-        np.random.rand(*score.shape) < np.exp((score - score_lag) / T)
+        np.log(np.random.rand(*score.shape)) < (score - score_lag) / T
     )
 
     # Go back to old gamma/score values when values not accepted
@@ -313,19 +323,18 @@ def gamma_auto(model):
     automation_variables = automation_init(model)
     
     
-    
     for module in model.titles['Models_short']:
-        if module in modules:
-            
+        #if module in modules:
+        if module in ['FTT-P']:   
             # Should be roughly equal to expected initial improvement / 5. Computer after first iteration.
-            T0 = 0.001  
+            T0 = 0.0001  
             
             # Initial roc_change values
             automation_variables = roc_change(automation_variables, model, module)
  
             # Iterative loop for gamma convergence
             #for iter in tqdm(range(5)): 
-            for it in range(50):
+            for it in range(150):
                 
                 # Save previous gamma values
                 automation_variables[module][gamma_variables[module]+'_LAG'][:, :, 0, 0] = (
@@ -339,14 +348,6 @@ def gamma_auto(model):
                 # automation_variables = adjust_gamma_values(automation_variables, model, module, Nyears)
                 automation_variables = adjust_gamma_values_simulated_annealing(
                                             automation_variables, model, module, Nyears, it)
-   
-                # Check for convergence each iteration and module loop
-                gamma = automation_variables[module][gamma_variables[module]][:, :, 0, 0]
-                gamma_lag = automation_variables[module][gamma_variables[module] + '_LAG'][:, :, 0, 0]
-                
-                if it > 20 and np.average(np.absolute(gamma - gamma_lag) < 0.001):
-                    print(f"Convergence reached at iter {iter}, gamma values no longer changing")
-                    break
 
                 # Running the model, updating variables of interest. 
                 automation_variables = run_model(automation_variables, model)
@@ -355,13 +356,25 @@ def gamma_auto(model):
                 automation_variables = roc_change(automation_variables, model, module)
                 automation_variables = accept_or_reject_gamma_changes(automation_variables, model, module, Nyears, it, T0)
                 
+                # Check for convergence each iteration and module loop
+                gamma = automation_variables[module][gamma_variables[module]][:, :, 0, 0]
+                gamma_lag = automation_variables[module][gamma_variables[module] + '_LAG'][:, :, 0, 0]
+                
+                if it > 30 and np.average(np.absolute(gamma - gamma_lag)) < 0.001:
+                    print(f"Convergence reached at iter {it}, gamma values no longer changing")
+                    break
+                
                 if it == 0:
                     # Update initial temperature, based on differences in initial scores
                     T0 = set_initial_temperature(automation_variables, model, module) / 5
+                    print(f'Temperature is {T0}')
                 
                 if (it+1)%10 == 1:
+                    roc = automation_variables[module]['roc_change']
+                    print(f"Median rate of change at {it} is {np.median(np.abs(roc))}")
                     print(f"The Germany rate of change differences are now \n: {automation_variables[module]['roc_change'][2][:19]}")
-                    print(f'Shares of gas are {automation_variables[module]["MEWS"][0, 6, 0, -8:]}')
+                    #print(f'Shares of gas are {automation_variables[module]["MEWS"][0, 6, 0, -8:]}')
+                    print(f'gamma values are now {automation_variables[module][gamma_variables[module]][2, :19, 0, 0]}')
 
 
     return automation_variables
