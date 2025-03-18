@@ -192,5 +192,9 @@ def get_lcoh(data, titles):
         data['HYLC'][r, :, 0] = lcoh            # The real bare LCOH without taxes
         data['HYCC'][r, :, 0] = lcoh_csc
         data['HYLD'][r, :, 0] = dlcoh          # Variation on the LCOH distribution
+        
+        # Quick addition to gasification
+        data['HYLC'][r, [2,3], 0] += 0.2
+        data['HYCC'][r, [2,3], 0] += 0.2
 
     return data

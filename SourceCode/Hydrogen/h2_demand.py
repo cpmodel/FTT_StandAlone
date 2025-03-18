@@ -29,6 +29,9 @@ def calc_h2_demand(data):
     
     # Apply mandate
     gr_nh3_fert_lvl = np.maximum(data['WDM1'][:, 0, 0] * data['HYD1'][:, 0, 0], gr_nh3_fert_lvl_cleafs)
+    gr_nh3_fert_lvl = np.where(gr_nh3_fert_lvl > data['HYD1'][:, 0, 0],
+                               data['HYD1'][:, 0, 0],
+                               gr_nh3_fert_lvl)
     gr_nh3_chem_lvl = data['WDM2'][:, 0, 0] * data['HYD2'][:, 0, 0]
     gr_meoh_chem_lvl = data['WDM3'][:, 0, 0] * data['HYD3'][:, 0, 0]
     gr_h2oil_chem_lvl = data['WDM4'][:, 0, 0] * data['HYD4'][:, 0, 0]

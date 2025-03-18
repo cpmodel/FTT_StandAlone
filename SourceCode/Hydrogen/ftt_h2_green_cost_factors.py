@@ -62,7 +62,7 @@ def calc_green_cost_factors(data, titles, year):
     vre_opex_factor *= 1e-3 
     
     # Load factor as a weighted average
-    vre_opex_factor = (data['WSSH'][:, 0, 0]*data['WSLF'][:, 0, 0]+
+    vre_load_factor = (data['WSSH'][:, 0, 0]*data['WSLF'][:, 0, 0]+
                        data['WOSH'][:, 0, 0]*data['WOLF'][:, 0, 0]+
                        data['WWSH'][:, 0, 0]*data['WWLF'][:, 0, 0])
     
@@ -70,7 +70,7 @@ def calc_green_cost_factors(data, titles, year):
     # Take electricity use factor from grid-based electrolysis
     data['BCHY'][:, green, elec_capex] = data['BCHY'][:, grid, elec_use] * vre_capex_factor[:, None] 
     data['BCHY'][:, green, elec_opex] = data['BCHY'][:, grid, elec_use] * vre_opex_factor[:, None] 
-    data['BCHY'][:, green, elec_loadfac] = vre_opex_factor[:, None] 
+    data['BCHY'][:, green, elec_loadfac] = vre_load_factor[:, None] 
 
     if year > 2023:
         x=1

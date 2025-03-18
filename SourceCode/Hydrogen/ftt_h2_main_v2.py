@@ -102,12 +102,30 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     sector = 'hydrogen'
     #sector_index = titles['Sectors_short'].index(sector)
     # print("FTT: Hydrogen under construction")
-
+    
+    # Adjustment to frequencies
+    lifetime_adjust = data['BCHY'][:, :, c7ti['Lifetime']]*0
+    buildtime_adjust = data['BCHY'][:, :, c7ti['Buildtime']]*0
+    
+    # Manual adjustment of lifetimes for new technologies
+    idx = [i for i in range(len(titles['HYTI'])) if i not in [0, 2]]
+    if 2021 < year < 2028:
+        
+        # Increase lifetime for novel technologies by a factor of ten, and
+        # reduce over time.
+        lifetime_adjust[:, idx] = 10 
+        
+    elif 2027 < year < 2038:
+        
+        lifetime_adjust[:, idx] = 10 * (1 - (2038-year)/(2038 - 2028))
+        
+    
+    
     # Estimate substitution frequencies
     data['HYWA'] = sub_freq(data['BCHY'][:, :, c7ti['Lifetime']],
                             data['BCHY'][:, :, c7ti['Buildtime']],
-                            data['BCHY'][:, :, c7ti['Lifetime']]*0,
-                            data['BCHY'][:, :, c7ti['Buildtime']]*0,
+                            lifetime_adjust,
+                            buildtime_adjust,
                             np.ones(len(titles['RTI']))*75,
                             np.ones([len(titles['RTI']), len(titles['HYTI']), len(titles['HYTI'])]),
                             titles['HYTI'], titles['RTI'])
@@ -143,6 +161,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                          data['HYWK'][:, :, 0],
                                          data['HYWK'][:, :, 0])
         
+        
+        data['WBWK'] = copy.deepcopy(data['HYWK'])
         # Adjust capacity factors
         data['HYCF'][:, :, 0] = divide(data['HYG1'][:, :, 0], data['HYWK'][:, :, 0])
 
@@ -207,6 +227,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 data_dt[var] = copy.deepcopy(time_lag[var])
 
         data_dt['HYIY'] = np.zeros([len(titles['RTI']), len(titles['HYTI']), 1])
+        data_dt['HYIT'] = np.zeros([len(titles['RTI']), len(titles['HYTI']), 1])
 
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
@@ -223,7 +244,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         
         # Project hydrogen production
         # Default market
-        data['WBKF'][:, 0, 0] = time_lag['WBKF'][:, 0, 0] * (1 + time_lag['WBCG'][:, 0, 0])
+        data['WBKF'][:, 0, 0] = time_lag['WBWK'][:, :, 0].sum(axis=1) * (1 + time_lag['WBCG'][:, 0, 0])
         
 
         # Split technologies to their respective market
@@ -250,7 +271,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 
             # Project hydrogen production
             # Green market
-            data['WGKF'][:, 0, 0] = time_lag['WGKF'][:, 0, 0] * (1 + time_lag['WGCG'][:, 0, 0])
+            data['WGKF'][:, 0, 0] = time_lag['WGWK'][:, :, 0].sum(axis=1) * (1 + time_lag['WGCG'][:, 0, 0])
             
         # Estimate the green capacity that is in the system
         # Calculate for all years
@@ -317,7 +338,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             
             # Expected capacity expansion for the green market
             green_capacity_forecast = data_dt['WGKF'][:, 0, 0] + (data['WGKF'][:, 0, 0] - 
-                                                                  data_dt['WGKF'][:, 0, 0]) * t/no_it
+                                                                  data_dt['WGKF'][:, 0, 0]+
+                                                                  np.sum(data['HYMT'][:, :, 0] * data['HYGR'][:, :, 0],axis=1)) * t/no_it
             # green_capacity_forecast += np.sum(data['HYMT'][:, :, 0] * np.isclose(data['HYGR'][:, :, 0], 1.0) * t/no_it, axis=1)
             
             # Green demand step
@@ -383,7 +405,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 
             # Expected capacity expension for the grey market
             grey_capacity_forecast = data_dt['WBKF'][:, 0, 0] + (data['WBKF'][:, 0, 0] -
-                                                                 data_dt['WBKF'][:, 0, 0]) * t/no_it
+                                                                 data_dt['WBKF'][:, 0, 0]+
+                                                                 np.sum(data['HYMT'][:, :, 0] * (1.0-data['HYGR'][:, :, 0]), axis=1) +
+                                                                 data['WBMT'][:, :, 0].sum(axis=1)) * t/no_it
             
             # grey_capacity_forecast += np.sum(data['HYMT'][:, :, 0] * np.isclose(data['HYGR'][:, :, 0], 0.0) * t/no_it, axis=1)
 
@@ -412,6 +436,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 # Add medium-term capacity additions and rescale shares
                 if data['WBWK'][r, :, 0].sum() > 0.0:
                     data['WBWK'][r, :, 0] += data['HYMT'][r, :, 0] * np.isclose(data['HYGR'][0, :, 0], 0.0) *t/no_it
+                    data['WBWK'][r, :, 0] += data['WBMT'][r, :, 0]  *t/no_it
                     
                     # Add spill-over capacity from the green market - as it can
                     # still compete for the default market
@@ -484,10 +509,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                         ):
                 x=1
                 raise ValueError("Error: The results contain negative values.")
+                
+            if (np.any(data['HYCF'][:,:,0] > data['BCHY'][:, :, c7ti['Maximum capacity factor']])):
+                
+                x = 1
             
             # Capacity additions
-            cap_diff = data['HYWK'][:, :, 0] - time_lag['HYWK'][:, :, 0]
-            cap_drpctn = divide(time_lag['HYWK'][:, :, 0], time_lag['BCHY'][:, :, c7ti['Lifetime']])
+            cap_diff = (data['HYWK'][:, :, 0] - data_dt['HYWK'][:, :, 0])/dt
+            cap_drpctn = divide(data_dt['HYWK'][:, :, 0], time_lag['BCHY'][:, :, c7ti['Lifetime']])
             data['HYWI'][:, :, 0] = np.where(cap_diff > 0.0,
                                              cap_diff + cap_drpctn,
                                              cap_drpctn)
@@ -532,10 +561,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             data['HYIC'][:, :, 0] = data['BCHY'][:, :, c7ti['CAPEX, mean, €/kg H2 cap']]
             
             # Total investment in hydrogen technology
-            # data['HYIY'][:, :, 0] = data['HYIC'][:, :, 0]
+            data['HYIY'][:, :, 0] = data_dt['HYIY'][:, :, 0] + data['HYWI'][:, :, 0] * dt * data['BCHY'][:, :, c7ti['CAPEX, mean, €/kg H2 cap']]
             
             # Total CAPEX in hydrogen supply (incl dedicated power)
-            
+            data['HYIT'][:, :, 0] = (data_dt['HYIT'][:, :, 0] + data['HYWI'][:, :, 0] * 
+                                     dt  * 
+                                    (data['BCHY'][:, :, c7ti['Storage CAPEX, mean, €/kgH2 cap']] + 
+                                     data['BCHY'][:, :, c7ti['Onsite electricity CAPEX, mean, €/kg H2 cap']])
+                                     ) + data['HYIY'][:, :, 0]
         
         # %% New capacity expansion forecast - grey market
         # System-wide capacity factor
@@ -572,12 +605,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                                    (time_lag['HYDT'][:,0,0] - time_lag['WGRM'][:,0,0]))-1
         # Check what the capacity forecast would be if calculated growth rates
         # are used
-        grey_est_cap_growth = (np.sum(data['WBKF'] * (1+data['WBCG'])) / data['WBKF'].sum())-1
+        grey_est_cap_growth = (np.sum(data['WBWK'].sum(axis=1)[:,None,:]* (1+data['WBCG'])) / grey_capacity_forecast.sum())-1
         df_check_grey_growth.Cap_CAGR_est = data['WBCG'][:,0,0]
         # Scale growth rates accordingly
         scalar = grey_growth/grey_est_cap_growth
+        
+        total_util = divide(data['WBWG'][:, :, 0].sum(),
+                            np.sum(data['WBWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']])
+                            )
+        
+        diff = grey_growth*total_util - grey_est_cap_growth
+        
         # Rescale
-        data['WBCG'] *= scalar
+        data['WBCG'] += diff
         df_check_grey_growth.Cap_CAGR_corr = data['WBCG'][:, 0,0]
 
     
@@ -599,7 +639,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         # be low
         if year < 2035:
  
-            average_lifetime_green *= (99 * (1-(2034-year)/11) +1)
+            average_lifetime_green *= (199 * ((2034-year)/11) +1)
             
             
         # Initiase dataframe for checking
@@ -620,18 +660,33 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             green_growth = divide(green_demand_glo, green_demand_glo_lag)-1 + 0.01
         else:
             green_growth = 0.01
-        df_check_green_growth.Dem_CAGR_est = divide((data['WGRM'][:,0,0]),
-                                                   (time_lag['WGRM'][:,0,0]))-1
+        df_check_green_growth.Dem_CAGR_est = divide(green_demand_glo, green_demand_glo_lag)-1
 
         # Check what the capacity forecast would be if calculated growth rates
         # are used
-        green_est_cap_growth = (np.sum(data['WGKF'] * (1+data['WGCG'])) / data['WGKF'].sum())-1
+        green_est_cap_growth = (np.sum(data['WGWK'].sum(axis=1)[:,None,:] * (1+data['WGCG'])) / green_capacity_forecast.sum())-1
         df_check_green_growth.Cap_CAGR_est = data['WGCG'][:,0,0]
         # Scale growth rates accordingly
         scalar = green_growth/green_est_cap_growth
+        
+        total_util = divide(data['WGWG'][:, :, 0].sum(),
+                            np.sum(data['WGWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']])
+                            )
+        # Average max capacity factor
+        cap_weight = divide(data['WGWK'][:, -3:, 0], data['WGWK'][:, -3:, 0].sum())
+        average_max_capfactor = np.sum(cap_weight * data['BCHY'][:, -3:, c7ti['Maximum capacity factor']])
+        average_actual_capfactor = np.sum(cap_weight * data['HYCF'][:, -3:, 0])
+        
+        cap_weight_reg = divide(data['WGWK'][:, -3:, 0], data['WGWK'][:, -3:, 0].sum(axis=1)[:, None])
+        average_max_capfactor_reg = np.sum(cap_weight_reg * data['BCHY'][:, -3:, c7ti['Maximum capacity factor']], axis=1)
+        average_actual_capfactor_reg = np.sum(cap_weight_reg * data['HYCF'][:, -3:, 0], axis=1)
+        aaa = average_actual_capfactor_reg>average_max_capfactor_reg
+        
+        diff = green_growth - grey_est_cap_growth
+        
         # Rescale
         if year > 2023: 
-            data['WGCG'] *= scalar
+            data['WGCG'] += diff
         df_check_green_growth.Cap_CAGR_corr = data['WGCG'][:, 0,0]
         # %%
         # Calculate energy use
