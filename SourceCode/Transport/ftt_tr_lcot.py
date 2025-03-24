@@ -227,12 +227,11 @@ def get_lcot(data, titles, carbon_costs, year):
         lcot_pol = np.sum(npv_expenses3, axis = 1) / np.sum(npv_utility, axis = 1)
         
         # LCOT augmented with non-pecuniary costs (not used, note same)
-        # log(C) = log(b) * (1+gamma) --> C = b**(1+gamma) 
-        tlcotg = tlcot ** (1 + data['TGAM'][r, :, 0])
+        tlcotg = tlcot * (1 + data['TGAM'][r, :, 0])
 
         # Transform into lognormal space
         logtlcot = ( np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot)) 
-                   * (1 + data['TGAM'][r, :, 0]) )
+                    + data['TGAM'][r, :, 0])
         dlogtlcot = np.sqrt(np.log(1.0 + dlcot * dlcot / (tlcot * tlcot)))
 
         # Pass to variables that are stored outside.

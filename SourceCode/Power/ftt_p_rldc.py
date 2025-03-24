@@ -282,8 +282,8 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
     Snotvar = 1 - data['MWDD'][0, :, 5]
 
     for r in range(len(titles['RTI'])):
-        if Sw[r] + Ss[r] == 0:
-            print(f"No wind or solar in region {r}")
+        # if Sw[r] + Ss[r] == 0:
+        #     print(f"No wind or solar in region {r}")
             
 
         # SHORT-TERM STORAGE
