@@ -22,7 +22,7 @@ import warnings
 import numpy as np
 
 
-def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
+def substitution_in_shares(act_shares, shares, submat, lc, lcsd, r, dt, titles):
     """
     This function applies the adapted Lotka-Volterra equation to determine substitution
     dynamics between several options in market share space. The differential equations
@@ -63,6 +63,9 @@ def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
             continue
 
         S_i = shares[r, t1, 0]
+        
+        corr_i = act_shares[r, t1, 0] / shares[r, t1, 0]
+        if corr_i > 1.0: corr_i = 1
 
         for t2 in range(t1):
 
@@ -70,6 +73,8 @@ def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
                 continue
 
             S_j = shares[r, t2, 0]
+            corr_j = act_shares[r, t2, 0] / shares[r, t2, 0]
+            if corr_j > 1.0: corr_j = 1
 
             # Propagating width of variations in perceived costs
             dFij = 1.414 * sqrt((lcsd[r, t1, 0] * lcsd[r, t1, 0]
@@ -85,11 +90,13 @@ def substitution_in_shares(shares, submat, lc, lcsd, r, dt, titles):
             F[t2, t1] = (1.0 - Fij)
 
             #Runge-Kutta market share dynamiccs
-            k_1 = S_i*S_j * (submat[0,t1, t2]*F[t1,t2]- submat[0,t2, t1]*F[t2,t1])
-            k_2 = (S_i+dt*k_1/2)*(S_j-dt*k_1/2)* (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1])
-            k_3 = (S_i+dt*k_2/2)*(S_j-dt*k_2/2) * (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1])
-            k_4 = (S_i+dt*k_3)*(S_j-dt*k_3) * (submat[0,t1, t2]*F[t1,t2] - submat[0,t2, t1]*F[t2,t1])
-
+            k_1 = S_i*S_j * (submat[0,t1, t2]*F[t1,t2]*corr_j- submat[0,t2, t1]*F[t2,t1]*corr_i)
+            k_2 = (S_i+dt*k_1/2)*(S_j-dt*k_1/2)* (submat[0,t1, t2]*F[t1,t2]*corr_j - submat[0,t2, t1]*F[t2,t1]*corr_i)
+            k_3 = (S_i+dt*k_2/2)*(S_j-dt*k_2/2) * (submat[0,t1, t2]*F[t1,t2]*corr_j - submat[0,t2, t1]*F[t2,t1]*corr_i)
+            k_4 = (S_i+dt*k_3)*(S_j-dt*k_3) * (submat[0,t1, t2]*F[t1,t2]*corr_j - submat[0,t2, t1]*F[t2,t1]*corr_i)
+            
+            if t1 == 9:
+                x = 1
             dSij[t1, t2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
             dSij[t2, t1] = -dSij[t1, t2]
             

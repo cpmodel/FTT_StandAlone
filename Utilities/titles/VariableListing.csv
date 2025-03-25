@@ -481,3 +481,4 @@ HYPR,Carbon price,EUR/tCO2,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (
 HYWE,Total CO2 emissions,Mt CO2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
 WCUR,"Curtailment rate, used to suppress electricity prices",%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
 WBMT,Capacity additions to the default market (to initialise capacities),kton H2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
+HYMC,Maximum capacity factor,%,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,

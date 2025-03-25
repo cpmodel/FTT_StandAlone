@@ -126,7 +126,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                             data['BCHY'][:, :, c7ti['Buildtime']],
                             lifetime_adjust,
                             buildtime_adjust,
-                            np.ones(len(titles['RTI']))*75,
+                            np.ones(len(titles['RTI']))*50,
                             np.ones([len(titles['RTI']), len(titles['HYTI']), len(titles['HYTI'])]),
                             titles['HYTI'], titles['RTI'])
     
@@ -352,7 +352,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 if np.isclose(green_capacity_forecast[r], 0.0):
                     continue
                 
-                dSij_green = substitution_in_shares(data_dt['WGWS'], data['HYWA'], 
+                dSij_green = substitution_in_shares(data_dt['WGWS'], data_dt['WGWS'], data['HYWA'], 
                                               data_dt['HYLC'], data_dt['HYLD'], 
                                               r, dt, titles)
                 
@@ -423,14 +423,35 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
 
                 if np.isclose(grey_capacity_forecast[r], 0.0):
                     continue
+
+                # dSij_grey2 = substitution_in_shares(data_dt['WBWS'], data['HYWA'], 
+                #                                    data_dt['HYLC'], data_dt['HYLD'], 
+                #                                    r, dt, titles)
                 
-                dSij_grey = substitution_in_shares(data_dt['WBWS'], data['HYWA'], 
+                dSij_grey = substitution_in_shares(data_dt['WBWS'], data_dt['HYWS'], data['HYWA'], 
                                                    data_dt['HYLC'], data_dt['HYLD'], 
                                                    r, dt, titles)
-
+                
+                # check shares because we're using market-wide shares that
+                # include green market shares for diffusion dynamic purposes
+                # dSi_check = np.sum(dSij_grey, axis=1)
+                # S_check = data_dt['WBWS'][r, :, 0] + dSi_check
+                # # Get indices where S_check is negative
+                # idx = np.where(S_check<0.0)[0][0]
+                # diff = S_check[idx]
+                # dSij_grey_check = copy.deepcopy(dSij_grey)
+                # dSij_grey_check[idx, :] = S_check[idx]
+                
+                
+                # check = data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey2, axis=1)
 
                 #calculate temporary market shares and temporary capacity from endogenous results
+                # data['WBWS'][r, :, 0] = np.where(data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1) < 0.0,
+                #                                  0.0,
+                #                                  data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1))                
                 data['WBWS'][r, :, 0] = data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1)
+                data['WBWS'][r, :, 0][data['WBWS'][r, :, 0] < 0.0] = 0.0
+                data['WBWS'][r, :, 0] = data['WBWS'][r, :, 0] / data['WBWS'][r, :, 0].sum()
                 data['WBWK'][r, :, 0] = data['WBWS'][r, :, 0] * grey_capacity_forecast[r, np.newaxis]
                 
                 # Add medium-term capacity additions and rescale shares
@@ -493,6 +514,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             data['HYG1'][:, :, 0] = data['WGWG'][:, :, 0] + data['WBWG'][:, :, 0]
             # Capacity by tech and region
             data['HYWK'][:, :, 0] = data['WGWK'][:, :, 0] + data['WBWK'][:, :, 0]
+            # Market shares across both segments
+            data['HYWS'][:, :, 0] = divide(data['HYWK'][:, :, 0], data['HYWK'][:, :, None, 0].sum(axis=1))
             # Capacity factors
             data['HYCF'][:, :, 0] = divide(data['HYG1'][:, :, 0], data['HYWK'][:, :, 0]) 
             
