@@ -274,10 +274,10 @@ def get_lcof(data, titles, carbon_costs, year):
         dTLCOF = dLCOF 
 
         # Introduce Gamma Values
-        TLCOFG = TLCOF * (1 + data['ZGAM'][r, :, 0])
+        TLCOFG = TLCOF * (1 + BZTC[:, c6ti['11 Gamma']])
 
         # Convert costs into logarithmic space - applying a log-normal distribution
-        LTLCOF = np.log10((TLCOF**2)/np.sqrt((dTLCOF**2)+(TLCOF**2))) + data['ZGAM'][r, :, 0]
+        LTLCOF = np.log10((TLCOF**2)/np.sqrt((dTLCOF**2)+(TLCOF**2))) + BZTC[:, c6ti['11 Gamma']]
         dLTLCOF = np.sqrt(np.log10(1+(dTLCOF**2)/(TLCOF**2)))
 
         data['ZTLC'][r, :, 0] = LCOF        # LCOF without policy

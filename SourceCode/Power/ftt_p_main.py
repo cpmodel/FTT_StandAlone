@@ -137,9 +137,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
 
-    # Store gamma values in the cost matrix (in case it varies over time)
-    data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
-
    
 
     # Copy over PRSC/EX values
@@ -449,10 +446,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
-
-            # Store gamma values in the cost matrix (in case it varies over time)
-            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
+            data['BCET'][:, :, 1:22] = time_lag['BCET'][:, :, 1:22].copy()
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
@@ -783,10 +777,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
            
 
             # Copy over the technology cost categories. We update the investment and capacity factors below
-            data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
-
-            # Store gamma values in the cost matrix (in case it varies over time)
-            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
+            data['BCET'][:, :, 1:22] = time_lag['BCET'][:, :, 1:22].copy()
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
