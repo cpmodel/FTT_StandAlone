@@ -216,7 +216,8 @@ def get_lcot(data, titles, carbon_costs, year):
         # MODIFIED: Calculate variance terms and apply proper discounting
         variance_terms = dit**2 + dft**2 + domt**2
         summed_variance = np.sum(variance_terms/(denominator**2), axis=1)
-        dlcot = np.sqrt(summed_variance)/np.sum(npv_utility, axis=1)
+        variance_plus_dcf = summed_variance + (np.sum(npv_expenses2, axis=1) * 0.15)**2
+        dlcot = np.sqrt(variance_plus_dcf)/np.sum(npv_utility, axis=1)
 
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOT

@@ -260,7 +260,8 @@ def get_lcoe(data, titles, year):
         # MODIFIED: Calculate variance terms and apply proper discounting
         variance_terms = dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2
         summed_variance = np.sum(variance_terms/(denominator**2), axis=1)
-        dlcoe = np.sqrt(summed_variance)/utility_tot
+        variance_plus_dcf = summed_variance + (np.sum(npv_expenses_all, axis=1) * 0.15)**2
+        dlcoe = np.sqrt(variance_plus_dcf)/utility_tot
         
         # 4a – levelised cost – marginal units 
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
