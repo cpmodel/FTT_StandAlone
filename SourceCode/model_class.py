@@ -43,7 +43,7 @@ import SourceCode.support.input_functions as in_f
 import SourceCode.support.titles_functions as titles_f
 import SourceCode.support.dimensions_functions as dims_f
 from SourceCode.support.cross_section import cross_section as cs
-from SourceCode.initialise_csv_files import initialise_csv_files
+from SourceCode.support.initialise_csv_files import initialise_csv_files
 
 
 class ModelRun:

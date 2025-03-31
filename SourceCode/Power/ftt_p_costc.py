@@ -27,9 +27,6 @@ Functions included:
    NR is rti, NT2 is t2ti, NJ is jti, NER is erti, NM is mti, NC2 is c2ti
 
 '''
-# Standard library imports
-import copy
-
 
 # Third party imports
 import numpy as np
@@ -37,6 +34,9 @@ from numba import njit
 
 # Local library imports
 from SourceCode.support.divide import divide
+
+# Make NumPy raise an error on overflow
+np.seterr(over='raise', under='raise')
 
 # %% interpolation function
 # -----------------------------------------------------------------------------
@@ -60,7 +60,6 @@ def interp(X, Y, X0, L):
         Value at which to interpolate
     L: int
         Length of data set
-
 
 
     Returns
@@ -183,9 +182,9 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
 
     # First 4 elements are the non-renewable resources
 
-    P[:4] = copy.deepcopy(MRCL[1, :4, 0])     # All marginal costs of non-renewable resources are identical (global), we use Belgium
+    P[:4] = np.copy(MRCL[1, :4, 0])     # All marginal costs of non-renewable resources are identical (global), we use Belgium
     MEPD_sum = np.sum(MEPD[:, :, 0], axis=0)  # Sum over regions
-    demand_non_renewables = copy.deepcopy(MEPD_sum[:4])       # Global demand for non-renewable resources
+    demand_non_renewables = np.copy(MEPD_sum[:4])       # Global demand for non-renewable resources
 
     # We search for the value of P that enables enough total production to supply demand
     # i.e. the value of P that minimises the difference between dFdt and demand_non_renewables
@@ -230,7 +229,7 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
                                 * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dC)
 
         # Write back new marginal cost values (same value for all regions)
-        MERC[:, j, 0] = copy.deepcopy(P[j])
+        MERC[:, j, 0] = np.copy(P[j])
         
         # Sum resources. 
         HistCSUM = np.sum(HistC, axis=1)
@@ -309,7 +308,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Coal
     MEPD[:, 2, 0] = MEWD[:, 0, 0] + MEWD[:, 1, 0]
     # Gas
-    MEPD[:, 3, 0] = copy.deepcopy(MEWD[:, 6, 0])
+    MEPD[:, 3, 0] = np.copy(MEWD[:, 6, 0])
 
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
@@ -319,45 +318,45 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     + divide(MEWG[:, 10, 0], BCET[:, 10, 13])  \
                     + divide(MEWG[:, 11, 0], BCET[:, 11, 13])) \
                     * 3.6/1000 # +  MEWD[11, :]   +   MEWD[10, :]
-    RERY[:, 4, 0] = copy.deepcopy(MEPD[:, 4, 0]) #in PJ
+    RERY[:, 4, 0] = np.copy(MEPD[:, 4, 0]) #in PJ
     # Biogas (From here onwards cost curves are in TWh)
     MEPD[:, 5, 0] = (MEWG[:, 12, 0] \
                    + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
                     * 3.6/1000
-    RERY[:, 5, 0] = copy.deepcopy(MEPD[:, 5, 0]) # in PJ
+    RERY[:, 5, 0] = np.copy(MEPD[:, 5, 0]) # in PJ
     # Biogas + CCS
     MEPD[:, 6, 0] = (MEWG[:, 12, 0] \
                    + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
                     * 3.6/1000
-    RERY[:, 6, 0] = copy.deepcopy(MEPD[:, 6, 0]) # in PJ
+    RERY[:, 6, 0] = np.copy(MEPD[:, 6, 0]) # in PJ
     # Tidal
     MEPD[:, 7, 0] = MEWG[:, 14, 0] * 3.6/1000
-    RERY[:, 7, 0] = copy.deepcopy(MEPD[:, 7, 0]) # in PJ
+    RERY[:, 7, 0] = np.copy(MEPD[:, 7, 0]) # in PJ
     # Hydro
     MEPD[:, 8, 0] = MEWG[:, 15, 0] * 3.6/1000
-    RERY[:, 8, 0] = copy.deepcopy(MEPD[:, 8, 0]) # in PJ
+    RERY[:, 8, 0] = np.copy(MEPD[:, 8, 0]) # in PJ
     # Onshore
     MEPD[:, 9, 0] = MEWG[:, 16, 0] * 3.6/1000
-    RERY[:, 9, 0] = copy.deepcopy(MEPD[:, 9, 0]) # in PJ
+    RERY[:, 9, 0] = np.copy(MEPD[:, 9, 0]) # in PJ
     # Offshore
     MEPD[:, 10, 0] = MEWG[:, 17, 0] * 3.6/1000
-    RERY[:, 10, 0] = copy.deepcopy(MEPD[:, 10, 0]) # in PJ
+    RERY[:, 10, 0] = np.copy(MEPD[:, 10, 0]) # in PJ
     # Solar (PV + CSP)
     MEPD[:, 11, 0] = (divide(MEWG[:, 18, 0], BCET[:, 18, 13])  +  divide(MEWG[:, 19, 0], BCET[:, 19, 13])) * 3.6/1000
-    RERY[:, 11, 0] = copy.deepcopy(MEPD[:, 11, 0]) # in PJ
+    RERY[:, 11, 0] = np.copy(MEPD[:, 11, 0]) # in PJ
     # Geothermal
     MEPD[:, 12, 0] = MEWG[:, 20, 0] * 3.6/1000
-    RERY[:, 12, 0] = copy.deepcopy(MEPD[:, 12, 0]) # in PJ
+    RERY[:, 12, 0] = np.copy(MEPD[:, 12, 0]) # in PJ
     # Wave
     MEPD[:, 13, 0] = MEWG[:, 21, 0] * 3.6/1000
-    RERY[:, 13, 0] = copy.deepcopy(MEPD[:, 13, 0]) # in PJ
+    RERY[:, 13, 0] = np.copy(MEPD[:, 13, 0]) # in PJ
 
     # All regions have the same information
-    MERC[:, 0, 0] = copy.deepcopy(MRCL[:, 0, 0])
-    MERC[:, 1, 0] = copy.deepcopy(MRCL[:, 1, 0])
-    MERC[:, 2, 0] = copy.deepcopy(MRCL[:, 2, 0])
-    MERC[:, 3, 0] = copy.deepcopy(MRCL[:, 3, 0])
-    MERC[:, 4, 0] = copy.deepcopy(MRCL[:, 4, 0])
+    MERC[:, 0, 0] = np.copy(MRCL[:, 0, 0])
+    MERC[:, 1, 0] = np.copy(MRCL[:, 1, 0])
+    MERC[:, 2, 0] = np.copy(MRCL[:, 2, 0])
+    MERC[:, 3, 0] = np.copy(MRCL[:, 3, 0])
+    MERC[:, 4, 0] = np.copy(MRCL[:, 4, 0])
 
 
     # Before 2017 do not overwrite RERY for fossil fuels, and no need to calculate CSCurves
@@ -384,43 +383,57 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     BCET[r, j, 4] = \
                         BCET[r, j, 4] + \
                         (MERC[r, tech_to_resource[j], 0] - MRCL[r, tech_to_resource[j], 0]) * 3.6 / BCET[r, j, 13]
+                
                 # For renewable resources: interpolate MEPD into the cost curves.
                 # Decreasing capacity factor type of limit
+                # Replaced with a much simpler exponential, as this is overly punishing to wind
                 elif(BCET[r, j, 11] == 0):
+                    
+                    X0 = MEPD[r, tech_to_resource[j], 0] / 3.6 #PJ -> TWh
+                    
+                    # X = np.copy(CSC_Q[r, tech_to_resource[j], :])
+                    # Y = np.copy(BCSC[r, tech_to_resource[j], 4:])
 
-                    X = copy.deepcopy(CSC_Q[r, tech_to_resource[j], :])
-                    Y = copy.deepcopy(BCSC[r, tech_to_resource[j], 4:])
+                    # # Note: the curve is in the form of an inverse capacity factor in BCSC
+                    
+                    # if X0 > 0.0:
+                    #     Y0, Ind = interp(X, Y, X0, L)
+                    # MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
+                    # BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
+                    # # For variable renewables (e.g. wind, solar, wave)
+                    # # the overall (average) capacity factor decreases as new units have lower and lower CFs
 
-                    # Note: the curve is in the form of an inverse capacity factor in BCSC
-                    X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
-                    if X0 > 0.0:
-                        Y0, Ind = interp(X, Y, X0, L)
-                    MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
-                    BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
-                    # For variable renewables (e.g. wind, solar, wave)
-                    # the overall (average) capacity factor decreases as new units have lower and lower CFs
+                    # if(MEWG[r, j, 0] > 0.01 and Ind >= 1 and X0 > 0):
 
-                    if(MEWG[r, j, 0] > 0.01 and Ind >= 1 and X0 > 0):
+                    #     # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
+                    #     CFvar[1:Ind + 1] = 1.0 / (Y[1:Ind + 1] + 0.000001) / (Ind)
+                    #     CFvar2 = sum(CFvar[1:Ind + 1])
+                    #     if CFvar2 > 0:
 
-                        # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
-                        CFvar[1:Ind + 1] = 1.0 / (Y[1:Ind + 1] + 0.000001) / (Ind)
-                        CFvar2 = sum(CFvar[1:Ind + 1])
-                        if CFvar2 > 0:
-
-                            MEWL[r, j, 0] = CFvar2
-
-
+                    #         MEWL[r, j, 0] = CFvar2
+                    
+                    k = 5
+                    share_TP_used = X0 / (BCSC[r, tech_to_resource[j], 2] + 0.000001)
+                    starting_CF = 1 / BCSC[r, tech_to_resource[j], 4]
+                    try:
+                        BCET[r, j, 10] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
+                        # Integrate to find the average capacity factor
+                        MEWL[r, j, 0] = starting_CF/share_TP_used * (share_TP_used - (np.exp(k*share_TP_used) - 1)/ (k*np.exp(k)) )
+                    except FloatingPointError as e:
+                        print(f"In region {r} and for technology {j}, share_TP_used is {share_TP_used}")
+                        print("Floating-point error detected:", e)
+                        raise e
                     # Fix: CSP is more efficient than PV by a factor 2
                     if j == 19 :
-                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
+                        BCET[r, j, 10] = BCET[r, 18, 10] * 2.0
                         
                 # Turned off, as the initial numbers don't align with BCET, and it's too strict.
                 # Increasing investment term type of limit
                 # elif(BCET[r, j, 11] == 3):
 
                 #     #------> Insert an interpolation here TODO this is from the fortran, do I need to do this?
-                #     X = copy.deepcopy(CSC_Q[r, tech_to_resource[j], :])
-                #     Y = copy.deepcopy(BCSC[r, tech_to_resource[j], 4:])
+                #     X = np.copy(CSC_Q[r, tech_to_resource[j], :])
+                #     Y = np.copy(BCSC[r, tech_to_resource[j], 4:])
 
                 #     X0 = MEPD[r, tech_to_resource[j], 0] / 3.6 #PJ -> TWh
                 #     if X0> 0.0:
@@ -431,7 +444,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Add REN resources left in MRED, MRES
     
     # Total technical potential r>4 (j>4 in python)
-    MRED[:, 4:, 0] = copy.deepcopy(BCSC[:, 4:, 2]) * 3.6
+    MRED[:, 4:, 0] = np.copy(BCSC[:, 4:, 2]) * 3.6
     # Remaining technical potential
     MRES[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6 - MEPD[:, 4:, 0]
 
