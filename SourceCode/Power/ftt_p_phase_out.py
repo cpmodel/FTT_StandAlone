@@ -14,7 +14,7 @@ The equation for a linearly decreasing line is:
 
 import numpy as np
 
-def set_linear_coal_phase_out(coal_phaseout, mwka, mwka_lag, mewk_lag, year, techs=[2, 4]):
+def set_linear_coal_phase_out(coal_phaseout, mwka, mwka_lag, mewk_lag, year, techs=[2]):
     '''For rich countries, coal phase-out happens up to 2035. For developing countries, 
     there is more time and they get to 2045.'''
     
