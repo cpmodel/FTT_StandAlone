@@ -266,7 +266,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Resources classification:
     # Correspondence vector between NT2 and NER (Technologies and resources: if I = Tech, II(I) = resource)
-    tech_to_resource = [0, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 13, 3, 3]
+    # Setting storage to biomass, as it's turned off
+    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 4, 4]
 
     # BCSC is natural resource data with dimensions NER NR and length of cost axis k
 
@@ -313,9 +314,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
-    MEPD[:, 4, 0] =  (divide(MEWG[:, 8, 0],  BCET[:, 8, 13])   \
-                    + divide(MEWG[:, 9, 0],  BCET[:, 9, 13])   \
-                    + divide(MEWG[:, 10, 0], BCET[:, 10, 13])  \
+    MEPD[:, 4, 0] =  (divide(MEWG[:, 10, 0], BCET[:, 10, 13])  \
                     + divide(MEWG[:, 11, 0], BCET[:, 11, 13])) \
                     * 3.6/1000 # +  MEWD[11, :]   +   MEWD[10, :]
     RERY[:, 4, 0] = np.copy(MEPD[:, 4, 0]) #in PJ
@@ -329,11 +328,11 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                    + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
                     * 3.6/1000
     RERY[:, 6, 0] = np.copy(MEPD[:, 6, 0]) # in PJ
-    # Tidal
-    MEPD[:, 7, 0] = MEWG[:, 14, 0] * 3.6/1000
+    # Marine
+    MEPD[:, 7, 0] = MEWG[:, 15, 0] * 3.6/1000
     RERY[:, 7, 0] = np.copy(MEPD[:, 7, 0]) # in PJ
     # Hydro
-    MEPD[:, 8, 0] = MEWG[:, 15, 0] * 3.6/1000
+    MEPD[:, 8, 0] = (MEWG[:, 12, 0] + MEWG[:, 13, 0]) * 3.6/1000
     RERY[:, 8, 0] = np.copy(MEPD[:, 8, 0]) # in PJ
     # Onshore
     MEPD[:, 9, 0] = MEWG[:, 16, 0] * 3.6/1000
@@ -345,11 +344,9 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     MEPD[:, 11, 0] = (divide(MEWG[:, 18, 0], BCET[:, 18, 13])  +  divide(MEWG[:, 19, 0], BCET[:, 19, 13])) * 3.6/1000
     RERY[:, 11, 0] = np.copy(MEPD[:, 11, 0]) # in PJ
     # Geothermal
-    MEPD[:, 12, 0] = MEWG[:, 20, 0] * 3.6/1000
+    MEPD[:, 12, 0] = MEWG[:, 14, 0] * 3.6/1000
     RERY[:, 12, 0] = np.copy(MEPD[:, 12, 0]) # in PJ
-    # Wave
-    MEPD[:, 13, 0] = MEWG[:, 21, 0] * 3.6/1000
-    RERY[:, 13, 0] = np.copy(MEPD[:, 13, 0]) # in PJ
+    
 
     # All regions have the same information
     MERC[:, 0, 0] = np.copy(MRCL[:, 0, 0])
@@ -447,7 +444,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Add REN resources left in MRED, MRES
     
-    # Total technical potential r>4 (j>4 in python)
+    # Total technical potential r>=4 (j>4 in python)
     MRED[:, 4:, 0] = np.copy(BCSC[:, 4:, 2]) * 3.6
     # Remaining technical potential
     MRES[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6 - MEPD[:, 4:, 0]
