@@ -27,12 +27,11 @@ emissions_names = {"FTT:P": "MEWE", "FTT:Tr": "TEWE", "FTT:H": "HEWE", "FTT:Fr":
 
 all_policies_or_mandates = "All policies"
 if all_policies_or_mandates == "All policies":
+    # Don't forget to include sxp - All policies when getting these results.. 
     output_file = "Results_sectors.pickle"
     output_baseline = get_output(output_file, "S0")
     #output_all_policies = get_output(output_file, "sxp half - All policies")
     output_all_policies = get_output(output_file, "sxp - All policies")
-
-
 
 
     models_to_scenarios = {"FTT:H": ["FTT-P", "FTT-H", "FTT-Tr", "FTT-Fr", "All minus FTT-H", "All minus FTT-P"],
@@ -440,7 +439,7 @@ print(data)
 
 total_saved_emissions_2050 = np.sum(sectoral_saved_emissions_2050) - np.sum(emissions_2050_combined_policies)
 share_saved = total_saved_emissions_2050 / np.sum(emissions_2050_S0) * 100
-print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2, or {share_saved:.1f}")
+print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2, or {share_saved:.1f}%")
 
 
 # %%
