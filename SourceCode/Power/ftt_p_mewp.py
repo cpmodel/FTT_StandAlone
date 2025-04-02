@@ -123,7 +123,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                         3: data["MWG4"][r, :, 0], 4: data["MWG5"][r, :, 0], 5: data["MWG6"][r, :, 0]}
             n_loadbands = len(glb3[0])
 
-            # We loop over our load bands
+            # Loop over load bands
             for LB in range(n_loadbands):
                 mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])  # Initialize marginal costs array
                 
@@ -134,7 +134,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                 mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition] \
                                                 - data["BCET"][r, :, 0][where_condition]
                 
-                # Taking the maximum marginal cost has proven to cause massive fluctuations
+                # Take the maximum marginal cost has proven to cause massive fluctuations
                 # Instead, take weighted average of the marginal cost to stabilise the fluctuations
                 # (It's mainly oil that is causing issues)
                 if np.sum(glb_dict[LB]) > 0.0:
@@ -152,13 +152,12 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             non_vre_price =  np.zeros((len(titles['RTI'])))
             
             # Estimate prices as a weighted average of marginal costs
-            # Above 25% VRE penetration, we assume that at certain moments
+            # Above 40% VRE penetration, we assume that at certain moments
             # electricity prices are completely determined by VRE technologies.
             
-            if np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :]) > 0.25:
-                vre_weight[r] = \
-                    (1.0 / 0.75) * np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) \
-                    / np.sum(data["MEWG"][r, :, 0]) - (1.0 / 3.0)
+            share_VRE = np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :])
+            if share_VRE > 0.40:
+                vre_weight[r] = (1.0 / 0.6) * share_VRE - 2.0 / 3.0
     
             if np.sum(np.array([glb_dict[LB] for LB in range(n_loadbands-1)])) > 0.0:
                 non_vre_price[r] = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
