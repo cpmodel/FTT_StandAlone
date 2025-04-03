@@ -67,9 +67,12 @@ for i_ax, file_path in enumerate(file_paths):
     
     # Plot for MDT and HDT
     plot_vehicle_cost(df, "MDT", ax)
+    df_filtered.to_csv(f"Figure 11-{i_ax+1}.csv")
+
     
 # Adjust layout
 plt.tight_layout()
 plt.show()
+
 
     
