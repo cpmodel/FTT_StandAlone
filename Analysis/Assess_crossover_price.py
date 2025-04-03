@@ -725,7 +725,7 @@ for mi, model in enumerate(models):
     ax.set_ylabel('')
     
     ax.set_title(repl_dict[model])
-    ax.set_xlim(-2.5, 12.5)   
+    ax.set_xlim(-3, 10)   
     #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     

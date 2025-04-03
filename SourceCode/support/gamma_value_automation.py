@@ -449,7 +449,7 @@ modules_to_assess = ['FTT-Tr', 'FTT-P', 'FTT-H']
 # Let's try 3 runs (5 is better), and max of 100 its. Takes about 1h minutes with 3
 total_runs = 3
 max_it = 100
-lambda_reg = 0.3  # Regularisation strength
+lambda_reg = 0.2  # Regularisation strength
 
 automation_variables, run_variables = gamma_auto(model)
 
