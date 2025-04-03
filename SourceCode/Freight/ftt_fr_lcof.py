@@ -264,8 +264,10 @@ def get_lcof(data, titles, carbon_costs, year):
         scaled_variance = variance_terms/(Lfactor**2)
         # Apply proper discounting (squared) and sum
         summed_variance = np.sum(scaled_variance/(denominator**2), axis=1)
+        # TODO, softcode. Hardcoded uncertainty in load factors ()
+        variance_plus_dcf = summed_variance + (np.sum(npv_expenses1, axis=1) * 0.15)**2
         # Calculate final standard deviation
-        dLCOF = np.sqrt(summed_variance)/np.sum(npv_utility, axis=1)
+        dLCOF = np.sqrt(variance_plus_dcf)/np.sum(npv_utility, axis=1)
 
         # Calculate LCOF with policy, and find standard deviation
         npv_expenses2 = (It + ct + ItVT + FT + fft + OMt + RT) / Lfactor
