@@ -199,6 +199,13 @@ for ci, cat in enumerate(cats): # Loop over rows (vehicle class)
         
         if ci == 0:
             ax.set_title(region)
+            
+        if ri == 0 and ci == 0:
+            ax.annotate("TCO of BEV already lower \n than ICE vehicles", (2025, 10))
+        if ri == 0 and ci == 2:
+            ax.annotate("TCO of short-haul HDV already \n lower than ICE trucks.\n No data for long-haul HDVS", (2025, 10))
+        if ri == 2 and ci == 1:
+            ax.annotate("TCO of MDVs already lower \n than ICE trucks", (2025, 10))
         fig.subplots_adjust(hspace=.4)
 
     
