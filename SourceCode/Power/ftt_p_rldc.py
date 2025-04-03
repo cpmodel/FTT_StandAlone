@@ -212,11 +212,11 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
     
     
 
-    # Wind and solar shares for all regions
-    Sw = np.divide(np.sum(data['MEWG'][:, [16, 17], 0], axis=1),
+    # Gross (pre-curtailment) wind and solar shares for all regions
+    Sw = np.divide(np.sum(data['MEWG'][:, [16, 17], 0] / (1 - data_dt['MCTN'][:, [16, 17], 0]), axis=1) ,
                    e_dem[:],
                    where=~np.isclose(e_dem[:], 0.0))
-    Ss = np.divide(data['MEWG'][:, 18, 0],
+    Ss = np.divide(data['MEWG'][:, 18, 0] / (1 - data_dt["MCTN"][:, 18, 0]),
                    e_dem[:],
                    where=~np.isclose(e_dem[:], 0.0))
 
