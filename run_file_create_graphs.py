@@ -105,256 +105,260 @@ ls_scens = ['solid', 'dashed', 'dotted', 'dashdot']
 tech_colors = ['black', "#49C9C5", "#AAB71D", "#C5446E", "#AAB71D", "#C5446E", 'purple']
 tech_colors2 = ['black', "#49C9C5", "darkgreen", "#AAB71D", "#AAB71D", "#C5446E", 'purple']
 
-# %% Graph 1 - Global average LCOH2 movements
-
-fp = os.path.join('Graphs', 'LCOH_polbrief_v{}.svg'.format(version))
-# Figure size
-figsize = (7.5, 3.75)
-# Create subplot    
-fig, axes = plt.subplots(nrows=1,
-                         ncols=4,
-                         figsize=figsize,
-                         sharey=True,
-                         sharex=True)
-
-axes_flat = axes.flatten()
-
-var_weight = 'HYG1'
-var_lcoh = 'HYCC'
-reg_idx = 3
-
-for t, tech in enumerate(agg_techs2[:-1]):
-    
-    tech_titles = conv2.index[conv2[tech] == 1].tolist()
-    idx = [conv2.index.get_loc(i) for i in tech_titles]
-    
-    for s, scen in enumerate(scen_dict.keys()):
-        
-        # Global weighted average by individual technology
-        lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
-                             output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
-        
-        lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
-        lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :], axis=(0,1))
-
-        df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
-        
-        axes_flat[t].plot(np.asarray(tl_out),
-                        df_lcoh_avg[tl_out].values,
-                        label=scen_dict[scen],
-                        color=tech_colors2[t],
-                        linestyle=ls_scens[s]) 
-        
-        axes_flat[t].set_title(tech)
-        
-    axes_flat[t].set_xlim([tl_out[0], tl_out[-1]]);
-    axes_flat[t].grid(alpha=0.4, color="#E3E3E3");
-    axes_flat[t].tick_params('x', labelrotation=60)
-    axes_flat[t].set_ylabel('Euro/kg H2')  
-    axes_flat[t].label_outer()
-    # axes_flat[t].set_xticks([2025, 2030, 2040, 2050])   
-      
-
-h1, l1 = axes_flat[0].get_legend_handles_labels()
-
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.05),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=4,
-           title="Scenarios",
-           fontsize=8)
-
-fig.subplots_adjust(hspace=0.2, wspace=0.2, right=0.97, bottom=0.27, left=0.05, top=0.95)
-
-fig.savefig(fp)
-plt.show()    
-# %% Graph 1 - Global average LCOH2 movements + production
-
-fp = os.path.join('Graphs', 'LCOH_Production_polbrief_v{}.svg'.format(version))
-# Figure size
-figsize = (7.5,5)
-# Create subplot    
-fig, axes = plt.subplots(nrows=2,
-                         ncols=4,
-                         figsize=figsize,
-                         sharey='row',
-                         sharex=True)
-
-# axes = axes.flatten()
-
 var_weight = 'HYG1'
 var_lcoh = 'HYCC'
 var_prod = 'HYG1'
-reg_idx = 3
 
-for t, tech in enumerate(agg_techs2[:-1]):
-    
-    tech_titles = conv2.index[conv2[tech] == 1].tolist()
-    idx = [conv2.index.get_loc(i) for i in tech_titles]
-    
-    for s, scen in enumerate(scen_dict.keys()):
-        
-        # Global weighted average by individual technology
-        lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
-                             output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
-        
-        lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] * lcoh_weight, axis=0).sum(axis=0)
-        lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] , axis=(0,1))
+# %% Graph 1 - Global average LCOH2 movements
 
-        # lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
-        # lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] , axis=(0,1))
+# fp = os.path.join('Graphs', 'LCOH_polbrief_v{}.svg'.format(version))
+# # Figure size
+# figsize = (7.5, 3.75)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=1,
+#                          ncols=4,
+#                          figsize=figsize,
+#                          sharey=True,
+#                          sharex=True)
 
-        df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
-        
-        axes[0,t].plot(np.asarray(tl_out),
-                        df_lcoh_avg[tl_out].values,
-                        label=scen_dict[scen],
-                        color=tech_colors2[t],
-                        linestyle=ls_scens[s]) 
-        
-        axes[0,t].set_title(tech)
-        
-    axes[0,t].set_xlim([tl_out[0], tl_out[-1]]);
-    axes[0,t].set_ylim([0, 7])
-    axes[0,t].grid(alpha=0.4, color="#E3E3E3");
-    axes[0,t].tick_params('x', labelrotation=60)
-    axes[0,t].set_ylabel('Levelised cost\nEuro(2024)/kg H$_2$')  
-    axes[0,t].label_outer()
-    # axes_flat[t].set_xticks([2025, 2030, 2040, 2050]) 
+# axes_flat = axes.flatten()
+
+# var_weight = 'HYG1'
+# var_lcoh = 'HYCC'
+# reg_idx = 3
+
+# for t, tech in enumerate(agg_techs2[:-1]):
     
-    for s, scen in enumerate(scen_dict.keys()):
-        
-        prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
-        df_prod = pd.Series(prod, index=tl)
-        
-        axes[1,t].plot(np.asarray(tl_out),
-                        df_prod[tl_out].values,
-                        label=scen_dict[scen],
-                        color=tech_colors2[t],
-                        linestyle=ls_scens[s]) 
-        
-        
-    axes[1,t].set_xlim([tl_out[0], tl_out[-1]]);
-    axes[1,t].grid(alpha=0.4, color="#E3E3E3");
-    axes[1,t].tick_params('x', labelrotation=60)
+#     tech_titles = conv2.index[conv2[tech] == 1].tolist()
+#     idx = [conv2.index.get_loc(i) for i in tech_titles]
     
-    # axes_flat[t].set_xticks([2023, 2030, 2040, 2050])   
-    axes[1,t].set_ylabel('Production\nMt H$_2$')   
-    axes[1,t].label_outer()
+#     for s, scen in enumerate(scen_dict.keys()):
+        
+#         # Global weighted average by individual technology
+#         lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
+#                              output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
+        
+#         lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
+#         lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :], axis=(0,1))
+
+#         df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
+        
+#         axes_flat[t].plot(np.asarray(tl_out),
+#                         df_lcoh_avg[tl_out].values,
+#                         label=scen_dict[scen],
+#                         color=tech_colors2[t],
+#                         linestyle=ls_scens[s]) 
+        
+#         axes_flat[t].set_title(tech)
+        
+#     axes_flat[t].set_xlim([tl_out[0], tl_out[-1]]);
+#     axes_flat[t].grid(alpha=0.4, color="#E3E3E3");
+#     axes_flat[t].tick_params('x', labelrotation=60)
+#     axes_flat[t].set_ylabel('Euro/kg H2')  
+#     axes_flat[t].label_outer()
+#     # axes_flat[t].set_xticks([2025, 2030, 2040, 2050])   
       
 
-h1, l1 = axes[0,0].get_legend_handles_labels()
+# h1, l1 = axes_flat[0].get_legend_handles_labels()
 
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.05),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=4,
-           title="Scenarios",
-           fontsize=8)
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.5,0.05),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=4,
+#            title="Scenarios",
+#            fontsize=8)
 
-fig.subplots_adjust(hspace=0.2, wspace=0.1, right=0.97, bottom=0.27, left=0.1, top=0.95)
+# fig.subplots_adjust(hspace=0.2, wspace=0.2, right=0.97, bottom=0.27, left=0.05, top=0.95)
 
-fig.savefig(fp)
-plt.show()   
+# fig.savefig(fp)
+# plt.show()    
+# %% Graph 1 - Global average LCOH2 movements + production
+
+# fp = os.path.join('Graphs', 'LCOH_Production_polbrief_v{}.svg'.format(version))
+# # Figure size
+# figsize = (7.5,5)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=2,
+#                          ncols=4,
+#                          figsize=figsize,
+#                          sharey='row',
+#                          sharex=True)
+
+# # axes = axes.flatten()
+
+# var_weight = 'HYG1'
+# var_lcoh = 'HYCC'
+# var_prod = 'HYG1'
+# reg_idx = 3
+
+# for t, tech in enumerate(agg_techs2[:-1]):
+    
+#     tech_titles = conv2.index[conv2[tech] == 1].tolist()
+#     idx = [conv2.index.get_loc(i) for i in tech_titles]
+    
+#     for s, scen in enumerate(scen_dict.keys()):
+        
+#         # Global weighted average by individual technology
+#         lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
+#                              output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
+        
+#         lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] * lcoh_weight, axis=0).sum(axis=0)
+#         lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] , axis=(0,1))
+
+#         # lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
+#         # lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] , axis=(0,1))
+
+#         df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
+        
+#         axes[0,t].plot(np.asarray(tl_out),
+#                         df_lcoh_avg[tl_out].values,
+#                         label=scen_dict[scen],
+#                         color=tech_colors2[t],
+#                         linestyle=ls_scens[s]) 
+        
+#         axes[0,t].set_title(tech)
+        
+#     axes[0,t].set_xlim([tl_out[0], tl_out[-1]]);
+#     axes[0,t].set_ylim([0, 7])
+#     axes[0,t].grid(alpha=0.4, color="#E3E3E3");
+#     axes[0,t].tick_params('x', labelrotation=60)
+#     axes[0,t].set_ylabel('Levelised cost\nEuro(2024)/kg H$_2$')  
+#     axes[0,t].label_outer()
+#     # axes_flat[t].set_xticks([2025, 2030, 2040, 2050]) 
+    
+#     for s, scen in enumerate(scen_dict.keys()):
+        
+#         prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
+#         df_prod = pd.Series(prod, index=tl)
+        
+#         axes[1,t].plot(np.asarray(tl_out),
+#                         df_prod[tl_out].values,
+#                         label=scen_dict[scen],
+#                         color=tech_colors2[t],
+#                         linestyle=ls_scens[s]) 
+        
+        
+#     axes[1,t].set_xlim([tl_out[0], tl_out[-1]]);
+#     axes[1,t].grid(alpha=0.4, color="#E3E3E3");
+#     axes[1,t].tick_params('x', labelrotation=60)
+    
+#     # axes_flat[t].set_xticks([2023, 2030, 2040, 2050])   
+#     axes[1,t].set_ylabel('Production\nMt H$_2$')   
+#     axes[1,t].label_outer()
+      
+
+# h1, l1 = axes[0,0].get_legend_handles_labels()
+
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.5,0.05),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=4,
+#            title="Scenarios",
+#            fontsize=8)
+
+# fig.subplots_adjust(hspace=0.2, wspace=0.1, right=0.97, bottom=0.27, left=0.1, top=0.95)
+
+# fig.savefig(fp)
+# plt.show()   
 
 # %% Graph 1 - Global average LCOH2 movements + production by scen
 
-fp = os.path.join('Graphs', 'LCOH_Production_polbrief_by_scen_v{}.svg'.format(version))
-# Figure size
-figsize = (7.5,5)
-# Create subplot    
-fig, axes = plt.subplots(nrows=2,
-                         ncols=4,
-                         figsize=figsize,
-                         sharey='row',
-                         sharex=True)
+# fp = os.path.join('Graphs', 'LCOH_Production_polbrief_by_scen_v{}.svg'.format(version))
+# # Figure size
+# figsize = (7.5,5)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=2,
+#                          ncols=4,
+#                          figsize=figsize,
+#                          sharey='row',
+#                          sharex=True)
 
-# axes = axes.flatten()
+# # axes = axes.flatten()
 
-var_weight = 'HYG1'
-var_lcoh = 'HYCC'
-var_prod = 'HYG1'
-reg_idx = 3
+# var_weight = 'HYG1'
+# var_lcoh = 'HYCC'
+# var_prod = 'HYG1'
+# reg_idx = 3
 
-for s, scen in enumerate(scen_dict.keys()):
+# for s, scen in enumerate(scen_dict.keys()):
     
-    for t, tech in enumerate(agg_techs2[:-1]):
+#     for t, tech in enumerate(agg_techs2[:-1]):
     
-        tech_titles = conv2.index[conv2[tech] == 1].tolist()
-        idx = [conv2.index.get_loc(i) for i in tech_titles]
+#         tech_titles = conv2.index[conv2[tech] == 1].tolist()
+#         idx = [conv2.index.get_loc(i) for i in tech_titles]
     
 
         
-        # Global weighted average by individual technology
-        lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
-                             output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
+#         # Global weighted average by individual technology
+#         lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
+#                              output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
         
-        lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] * lcoh_weight, axis=0).sum(axis=0)
-        lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] , axis=(0,1))
+#         lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] * lcoh_weight, axis=0).sum(axis=0)
+#         lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] , axis=(0,1))
 
-        # lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
-        # lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] , axis=(0,1))
+#         # lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
+#         # lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] , axis=(0,1))
 
-        df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
+#         df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
         
-        axes[0,s].plot(np.asarray(tl_out),
-                        df_lcoh_avg[tl_out].values,
-                        label=tech,
-                        color=tech_colors2[t]) 
+#         axes[0,s].plot(np.asarray(tl_out),
+#                         df_lcoh_avg[tl_out].values,
+#                         label=tech,
+#                         color=tech_colors2[t]) 
         
-        axes[0,s].set_title(scen_dict[scen])
+#         axes[0,s].set_title(scen_dict[scen])
         
-    axes[0,s].set_xlim([tl_out[0], tl_out[-1]]);
-    axes[0,s].set_ylim([0, 7])
-    axes[0,s].grid(alpha=0.4, color="#E3E3E3");
-    axes[0,s].tick_params('x', labelrotation=60)
-    axes[0,s].set_ylabel('Levelised cost\nEuro(2024)/kg H$_2$')  
-    axes[0,s].label_outer()
-    # axes[0,s].set_xticks([2025, 2030, 2040, 2050]) 
+#     axes[0,s].set_xlim([tl_out[0], tl_out[-1]]);
+#     axes[0,s].set_ylim([0, 7])
+#     axes[0,s].grid(alpha=0.4, color="#E3E3E3");
+#     axes[0,s].tick_params('x', labelrotation=60)
+#     axes[0,s].set_ylabel('Levelised cost\nEuro(2024)/kg H$_2$')  
+#     axes[0,s].label_outer()
+#     # axes[0,s].set_xticks([2025, 2030, 2040, 2050]) 
     
-    # for s, scen in enumerate(scen_dict.keys()):
+#     # for s, scen in enumerate(scen_dict.keys()):
         
-    prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
-    prod = np.matmul(conv2.iloc[:, :-1].T, output_all[scen][var_prod].sum(axis=0)[:, 0, :]) * 1e-3
-    df_prod = pd.DataFrame(prod.values, index=agg_techs2[:-1], columns=tl)
+#     prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
+#     prod = np.matmul(conv2.iloc[:, :-1].T, output_all[scen][var_prod].sum(axis=0)[:, 0, :]) * 1e-3
+#     df_prod = pd.DataFrame(prod.values, index=agg_techs2[:-1], columns=tl)
     
-    axes[1,s].stackplot(np.asarray(tl_out),
-                    df_prod[tl_out].values,
-                    labels=agg_techs2[:-1],
-                    colors=tech_colors2) 
+#     axes[1,s].stackplot(np.asarray(tl_out),
+#                     df_prod[tl_out].values,
+#                     labels=agg_techs2[:-1],
+#                     colors=tech_colors2) 
         
         
-    axes[1,s].set_xlim([tl_out[0], tl_out[-1]]);
-    axes[1,s].grid(alpha=0.4, color="#E3E3E3");
-    axes[1,s].tick_params('x', labelrotation=60)
+#     axes[1,s].set_xlim([tl_out[0], tl_out[-1]]);
+#     axes[1,s].grid(alpha=0.4, color="#E3E3E3");
+#     axes[1,s].tick_params('x', labelrotation=60)
     
-    # axes[1,s].set_xticks([2025, 2030, 2040, 2050])   
-    axes[1,s].set_ylabel('Production\nMt H$_2$')   
-    axes[1,s].label_outer()
+#     # axes[1,s].set_xticks([2025, 2030, 2040, 2050])   
+#     axes[1,s].set_ylabel('Production\nMt H$_2$')   
+#     axes[1,s].label_outer()
       
 
-h1, l1 = axes[1,0].get_legend_handles_labels()
+# h1, l1 = axes[1,0].get_legend_handles_labels()
 
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.05),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=4,
-           title="Technologies",
-           fontsize=8)
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.5,0.05),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=4,
+#            title="Technologies",
+#            fontsize=8)
 
-fig.subplots_adjust(hspace=0.2, wspace=0.1, right=0.97, bottom=0.27, left=0.1, top=0.95)
+# fig.subplots_adjust(hspace=0.2, wspace=0.1, right=0.97, bottom=0.27, left=0.1, top=0.95)
 
-fig.savefig(fp)
-plt.show()     
+# fig.savefig(fp)
+# plt.show()     
         
 # %% Graph 2 - Demand projections
 scen='S0'
@@ -364,8 +368,8 @@ fp = os.path.join('Graphs', 'Demand_v{}.svg'.format(version))
 figsize = (5, 5.5)
 # Create subplot    
 fig, axes = plt.subplots(nrows=1,
-                         ncols=1,
-                         figsize=figsize)
+                          ncols=1,
+                          figsize=figsize)
 
 df_demand_vectors = pd.DataFrame(0, index=dem_vectors, columns=tl)
 df_demand_vectors.iloc[0, :] = output_all[scen]['HYD1'][:,0,0,:].sum(axis=0)
@@ -403,14 +407,14 @@ l1_adj = ['NH$_3$ for fertiliser',
           'H$_2$ for oil refining']
 
 fig.legend(handles=h1,
-           labels=l1_adj,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.04),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=2,
-           title="Demand vectors",
-           fontsize=8)
+            labels=l1_adj,
+            loc="lower center",
+            bbox_to_anchor=(0.5,0.04),
+            frameon=False,
+            borderaxespad=0.,
+            ncol=2,
+            title="Demand vectors",
+            fontsize=8)
 
 fig.subplots_adjust(hspace=0.2, wspace=0.2, right=0.97, bottom=0.25, left=0.15, top=0.95)
 
@@ -420,61 +424,61 @@ plt.show()
 
 # %% Graph 3 - Technology composition
 
-fp = os.path.join('Graphs', 'Tech_comp_v{}.svg'.format(version))
-# Figure size
-figsize = (7.5, 3.75)
-# Create subplot    
-fig, axes = plt.subplots(nrows=1,
-                         ncols=3,
-                         figsize=figsize,
-                         sharey=True,
-                         sharex=True)
+# fp = os.path.join('Graphs', 'Tech_comp_v{}.svg'.format(version))
+# # Figure size
+# figsize = (7.5, 3.75)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=1,
+#                          ncols=3,
+#                          figsize=figsize,
+#                          sharey=True,
+#                          sharex=True)
 
-axes_flat = axes.flatten()
+# axes_flat = axes.flatten()
 
-var_prod = 'HYG1'
+# var_prod = 'HYG1'
 
-for t, tech in enumerate(agg_techs[:-1]):
+# for t, tech in enumerate(agg_techs[:-1]):
     
-    tech_titles = conv.index[conv[tech] == 1].tolist()
-    idx = [conv.index.get_loc(i) for i in tech_titles]
+#     tech_titles = conv.index[conv[tech] == 1].tolist()
+#     idx = [conv.index.get_loc(i) for i in tech_titles]
     
-    for s, scen in enumerate(scen_dict.keys()):
+#     for s, scen in enumerate(scen_dict.keys()):
         
-        prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
-        df_prod = pd.Series(prod, index=tl)
+#         prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
+#         df_prod = pd.Series(prod, index=tl)
         
-        axes_flat[t].plot(np.asarray(tl_out),
-                        df_prod[tl_out].values,
-                        label=scen_dict[scen],
-                        color=colors[t],
-                        linestyle=ls_scens[s]) 
+#         axes_flat[t].plot(np.asarray(tl_out),
+#                         df_prod[tl_out].values,
+#                         label=scen_dict[scen],
+#                         color=colors[t],
+#                         linestyle=ls_scens[s]) 
         
-        axes_flat[t].set_title(tech)
+#         axes_flat[t].set_title(tech)
         
-    axes_flat[t].set_xlim([tl_out[0], tl_out[-1]]);
-    axes_flat[t].grid(alpha=0.4, color="#E3E3E3");
-    axes_flat[t].tick_params('x', labelrotation=60)
-    axes_flat[t].label_outer()
-    # axes_flat[t].set_xticks([2023, 2030, 2040, 2050])   
-    axes_flat[t].set_ylabel('Mt H2')    
+#     axes_flat[t].set_xlim([tl_out[0], tl_out[-1]]);
+#     axes_flat[t].grid(alpha=0.4, color="#E3E3E3");
+#     axes_flat[t].tick_params('x', labelrotation=60)
+#     axes_flat[t].label_outer()
+#     # axes_flat[t].set_xticks([2023, 2030, 2040, 2050])   
+#     axes_flat[t].set_ylabel('Mt H2')    
 
-h1, l1 = axes_flat[0].get_legend_handles_labels()
+# h1, l1 = axes_flat[0].get_legend_handles_labels()
 
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.04),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=4,
-           title="Scenarios",
-           fontsize=8)
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.5,0.04),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=4,
+#            title="Scenarios",
+#            fontsize=8)
 
-fig.subplots_adjust(hspace=0.2, wspace=0.2, right=0.97, bottom=0.35, left=0.15, top=0.95)
+# fig.subplots_adjust(hspace=0.2, wspace=0.2, right=0.97, bottom=0.35, left=0.15, top=0.95)
 
-fig.savefig(fp)
-plt.show()   
+# fig.savefig(fp)
+# plt.show()   
 
 # %% Graph 4 -  comparing Brazil vs World
 
@@ -709,219 +713,219 @@ trade_table *= 1e-3
              
 # %% Graph 1 - Alternative
 
-fp = os.path.join('Graphs', 'LCOH_polbrief_full_detail_v{}.svg'.format(version))
-# Figure size
-figsize = (6.5, 6)
-# Create subplot    
-fig, axes = plt.subplots(nrows=4,
-                         ncols=4,
-                         figsize=figsize,
-                         sharey=True,
-                         sharex=True)
+# fp = os.path.join('Graphs', 'LCOH_polbrief_full_detail_v{}.svg'.format(version))
+# # Figure size
+# figsize = (6.5, 6)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=4,
+#                          ncols=4,
+#                          figsize=figsize,
+#                          sharey=True,
+#                          sharex=True)
 
-# axes_flat = axes.flatten()
+# # axes_flat = axes.flatten()
 
-var_weight = 'HYG1'
-var_lcoh = 'HYCC'
-reg_idx = 3
+# var_weight = 'HYG1'
+# var_lcoh = 'HYCC'
+# reg_idx = 3
 
-for s, scen in enumerate(scen_dict.keys()):
+# for s, scen in enumerate(scen_dict.keys()):
 
-    for t, tech in enumerate(agg_techs2[:-1]):
+#     for t, tech in enumerate(agg_techs2[:-1]):
         
-        tech_titles = conv2.index[conv2[tech] == 1].tolist()
-        idx = [conv2.index.get_loc(i) for i in tech_titles]
+#         tech_titles = conv2.index[conv2[tech] == 1].tolist()
+#         idx = [conv2.index.get_loc(i) for i in tech_titles]
         
-        for it in idx:
+#         for it in idx:
             
-            for r, reg in enumerate(titles['RTI']):
+#             for r, reg in enumerate(titles['RTI']):
                 
-                lcoh_ind = output_all[scen][var_lcoh][r, it, 0, :]
+#                 lcoh_ind = output_all[scen][var_lcoh][r, it, 0, :]
                 
-                df_lcoh = pd.Series(lcoh_ind, index=tl)
+#                 df_lcoh = pd.Series(lcoh_ind, index=tl)
                 
-                if r == 43 and it == 9:
-                    axes[t,s].plot(np.asarray(tl_out),
-                                    df_lcoh[tl_out].values,
-                                    color='#AAB71D',
-                                    label='Green alkaline electrolysis in Brazil')                     
-                elif r == 51 and it==1:
-                    axes[t,s].plot(np.asarray(tl_out),
-                                    df_lcoh[tl_out].values,
-                                    color='#009FE3',
-                                    label='SMR+CCS in OPEC')                     
-                else:
-                    axes[t,s].plot(np.asarray(tl_out),
-                                    df_lcoh[tl_out].values,
-                                    color='gray',
-                                    alpha=0.1,
-                                    linewidth=0.8 ) 
+#                 if r == 43 and it == 9:
+#                     axes[t,s].plot(np.asarray(tl_out),
+#                                     df_lcoh[tl_out].values,
+#                                     color='#AAB71D',
+#                                     label='Green alkaline electrolysis in Brazil')                     
+#                 elif r == 51 and it==1:
+#                     axes[t,s].plot(np.asarray(tl_out),
+#                                     df_lcoh[tl_out].values,
+#                                     color='#009FE3',
+#                                     label='SMR+CCS in OPEC')                     
+#                 else:
+#                     axes[t,s].plot(np.asarray(tl_out),
+#                                     df_lcoh[tl_out].values,
+#                                     color='gray',
+#                                     alpha=0.1,
+#                                     linewidth=0.8 ) 
                 
-        # Weighted average across all options
-        weights = divide(output_all[scen][var_weight][:, idx, 0, :],
-                             output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])        
-        lcoh_avg_weighted = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] *inflator[:, None, None] * weights, axis=0).sum(axis=0)
-        df_lcoh_avg_weighted = pd.Series(lcoh_avg_weighted, index=tl)
+#         # Weighted average across all options
+#         weights = divide(output_all[scen][var_weight][:, idx, 0, :],
+#                              output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])        
+#         lcoh_avg_weighted = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] *inflator[:, None, None] * weights, axis=0).sum(axis=0)
+#         df_lcoh_avg_weighted = pd.Series(lcoh_avg_weighted, index=tl)
 
-        axes[t,s].plot(np.asarray(tl_out),
-                        df_lcoh_avg_weighted[tl_out].values,
-                        color="#49C9C5",
-                        label='Weighted average',
-                        linestyle='dashed') 
+#         axes[t,s].plot(np.asarray(tl_out),
+#                         df_lcoh_avg_weighted[tl_out].values,
+#                         color="#49C9C5",
+#                         label='Weighted average',
+#                         linestyle='dashed') 
 
-        # Unweighted average
-        lcoh_avg = np.mean(output_all[scen][var_lcoh][:, idx, 0, :], axis=(0,1))
-        df_lcoh_avg = pd.Series(lcoh_avg, index=tl)
+#         # Unweighted average
+#         lcoh_avg = np.mean(output_all[scen][var_lcoh][:, idx, 0, :], axis=(0,1))
+#         df_lcoh_avg = pd.Series(lcoh_avg, index=tl)
 
         
-        axes[t,s].plot(np.asarray(tl_out),
-                        df_lcoh_avg[tl_out].values,
-                        color= "#C5446E",
-                        label='Unweighted average',
-                        linestyle='dashed') 
+#         axes[t,s].plot(np.asarray(tl_out),
+#                         df_lcoh_avg[tl_out].values,
+#                         color= "#C5446E",
+#                         label='Unweighted average',
+#                         linestyle='dashed') 
                 
-        if t == 0:
+#         if t == 0:
         
-            axes[t,s].set_title(scen_dict[scen])
+#             axes[t,s].set_title(scen_dict[scen])
             
-        if s == 0:
+#         if s == 0:
             
-            axes[t,s].set_ylabel('{}\nEuro(2024)/kg H2'.format(tech))
+#             axes[t,s].set_ylabel('{}\nEuro(2024)/kg H2'.format(tech))
             
-        axes[t,s].set_xlim([tl_out[0], tl_out[-1]]);
-        axes[t,s].grid(alpha=0.4, color="#E3E3E3");
-        axes[t,s].tick_params('x', labelrotation=60)        
+#         axes[t,s].set_xlim([tl_out[0], tl_out[-1]]);
+#         axes[t,s].grid(alpha=0.4, color="#E3E3E3");
+#         axes[t,s].tick_params('x', labelrotation=60)        
       
 
-h1, l1 = axes[0,0].get_legend_handles_labels()
-h2, l2 = axes[1,0].get_legend_handles_labels()
-h3, l3 = axes[2,0].get_legend_handles_labels()
-
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.25,0.03),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=1,
-           title="Global LCOH$_2$",
-           fontsize=8)
-
-fig.legend(handles=[h2[0], h3[0]],
-           labels=[l2[0], l3[0]],
-           loc="lower center",
-           bbox_to_anchor=(0.7,0.03),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=1,
-           title="Highlighted LCOH$_2$",
-           fontsize=8)
-
-fig.subplots_adjust(hspace=0.0, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
-
-fig.savefig(fp)
-plt.show()           
-        
-# %% Graph - display individual green hydrogen technologies
-
-agg_tech = 'ELEC-VRE'
-tech_titles = conv2.index[conv2[agg_tech] == 1].tolist()
-idx = [conv2.index.get_loc(i) for i in tech_titles]
-idx = [8,9,10]
-
-fp = os.path.join('Graphs', 'LCOH_range_v{}.svg'.format(version))
-# Figure size
-figsize = (6.5, 6)
-# Create subplot    
-fig, axes = plt.subplots(nrows=3,
-                         ncols=4,
-                         figsize=figsize,
-                         sharey=True,
-                         sharex=True)
-
-reg_colors = ['#AAB71D', '#49C9C5', '#C5446E', '#009FE3', 'purple', 'red']
-
-for i, t in enumerate(idx):
-
-    for s, scen in enumerate(scen_dict.keys()):
-        
-        # Only select instances with positive production
-        cond = output_all[scen]['HYG1'][:, t, 0, :]>0.0
-        
-        # Global Average        
-        lcoh_avg = np.mean(output_all[scen][var_lcoh][:, t, 0, :]*
-                               inflator[:, None], 
-                           axis=0, 
-                           where=cond)
-        df_lcoh_avg = pd.Series(lcoh_avg, index=tl)    
-        
-        axes[i,s].plot(np.asarray(tl_out),
-                        df_lcoh_avg[tl_out].values,
-                        color= "black",
-                        label='Global average',
-                        linestyle='dashed')
-        
-        # Maximum value
-        lcoh_max = np.max(output_all[scen][var_lcoh][:, t, 0, :]*
-                              inflator[:, None], 
-                          axis=0)
-        df_lcoh_max = pd.Series(lcoh_max, index=tl)    
-
-        # Minimum value
-        lcoh_min = np.min(output_all[scen][var_lcoh][:, t, 0, :]*
-                              inflator[:, None],
-                          axis=0)
-        df_lcoh_min = pd.Series(lcoh_min, index=tl)    
-
-        # Shaded area representing variability
-        axes[i,s].fill_between(np.asarray(tl_out),
-                               df_lcoh_min[tl_out].values,
-                               df_lcoh_max[tl_out].values,
-                               color='gray',
-                               alpha=0.5)
-        
-        # Special cases here
-        # Brazil, Australia, China, Germany, US, Japan
-        for j, r in enumerate([43, 36, 40, 2, 33, 34]):
-            
-            reg = ' '.join(titles['RTI'][r].split(' ')[1:-1])
-            df_lcoh_r = pd.Series(output_all[scen][var_lcoh][r, t, 0, :]*inflator[r, None], index=tl)
-            
-            axes[i,s].plot(np.asarray(tl_out),
-                            df_lcoh_r[tl_out].values,
-                            color= reg_colors[j],
-                            label=reg)            
-        
-        if i == 0:
-        
-            axes[i,s].set_title(scen_dict[scen])
-            
-        if s == 0:
-            
-            axes[i,s].set_ylabel('{}\nEuro(2024)/kg H$_2$'.format(titles['HYTI'][t].split(' ')[1]))
-            
-        axes[i,s].set_xlim([tl_out[0], tl_out[-1]]);
-        axes[i,s].grid(alpha=0.4, color="#E3E3E3");
-        axes[i,s].tick_params('x', labelrotation=60)          
-        
-h1, l1 = axes[0,0].get_legend_handles_labels()
+# h1, l1 = axes[0,0].get_legend_handles_labels()
 # h2, l2 = axes[1,0].get_legend_handles_labels()
 # h3, l3 = axes[2,0].get_legend_handles_labels()
 
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.03),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=4,
-           title="LCOH$_2$",
-           fontsize=8)    
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.25,0.03),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=1,
+#            title="Global LCOH$_2$",
+#            fontsize=8)
 
-fig.subplots_adjust(hspace=0.0, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
+# fig.legend(handles=[h2[0], h3[0]],
+#            labels=[l2[0], l3[0]],
+#            loc="lower center",
+#            bbox_to_anchor=(0.7,0.03),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=1,
+#            title="Highlighted LCOH$_2$",
+#            fontsize=8)
 
-fig.savefig(fp)
-plt.show()       
+# fig.subplots_adjust(hspace=0.0, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
+
+# fig.savefig(fp)
+# plt.show()           
+        
+# %% Graph - display individual green hydrogen technologies
+
+# agg_tech = 'ELEC-VRE'
+# tech_titles = conv2.index[conv2[agg_tech] == 1].tolist()
+# idx = [conv2.index.get_loc(i) for i in tech_titles]
+# idx = [8,9,10]
+
+# fp = os.path.join('Graphs', 'LCOH_range_v{}.svg'.format(version))
+# # Figure size
+# figsize = (6.5, 6)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=3,
+#                          ncols=4,
+#                          figsize=figsize,
+#                          sharey=True,
+#                          sharex=True)
+
+# reg_colors = ['#AAB71D', '#49C9C5', '#C5446E', '#009FE3', 'purple', 'red']
+
+# for i, t in enumerate(idx):
+
+#     for s, scen in enumerate(scen_dict.keys()):
+        
+#         # Only select instances with positive production
+#         cond = output_all[scen]['HYG1'][:, t, 0, :]>0.0
+        
+#         # Global Average        
+#         lcoh_avg = np.mean(output_all[scen][var_lcoh][:, t, 0, :]*
+#                                inflator[:, None], 
+#                            axis=0, 
+#                            where=cond)
+#         df_lcoh_avg = pd.Series(lcoh_avg, index=tl)    
+        
+#         axes[i,s].plot(np.asarray(tl_out),
+#                         df_lcoh_avg[tl_out].values,
+#                         color= "black",
+#                         label='Global average',
+#                         linestyle='dashed')
+        
+#         # Maximum value
+#         lcoh_max = np.max(output_all[scen][var_lcoh][:, t, 0, :]*
+#                               inflator[:, None], 
+#                           axis=0)
+#         df_lcoh_max = pd.Series(lcoh_max, index=tl)    
+
+#         # Minimum value
+#         lcoh_min = np.min(output_all[scen][var_lcoh][:, t, 0, :]*
+#                               inflator[:, None],
+#                           axis=0)
+#         df_lcoh_min = pd.Series(lcoh_min, index=tl)    
+
+#         # Shaded area representing variability
+#         axes[i,s].fill_between(np.asarray(tl_out),
+#                                df_lcoh_min[tl_out].values,
+#                                df_lcoh_max[tl_out].values,
+#                                color='gray',
+#                                alpha=0.5)
+        
+#         # Special cases here
+#         # Brazil, Australia, China, Germany, US, Japan
+#         for j, r in enumerate([43, 36, 40, 2, 33, 34]):
+            
+#             reg = ' '.join(titles['RTI'][r].split(' ')[1:-1])
+#             df_lcoh_r = pd.Series(output_all[scen][var_lcoh][r, t, 0, :]*inflator[r, None], index=tl)
+            
+#             axes[i,s].plot(np.asarray(tl_out),
+#                             df_lcoh_r[tl_out].values,
+#                             color= reg_colors[j],
+#                             label=reg)            
+        
+#         if i == 0:
+        
+#             axes[i,s].set_title(scen_dict[scen])
+            
+#         if s == 0:
+            
+#             axes[i,s].set_ylabel('{}\nEuro(2024)/kg H$_2$'.format(titles['HYTI'][t].split(' ')[1]))
+            
+#         axes[i,s].set_xlim([tl_out[0], tl_out[-1]]);
+#         axes[i,s].grid(alpha=0.4, color="#E3E3E3");
+#         axes[i,s].tick_params('x', labelrotation=60)          
+        
+# h1, l1 = axes[0,0].get_legend_handles_labels()
+# # h2, l2 = axes[1,0].get_legend_handles_labels()
+# # h3, l3 = axes[2,0].get_legend_handles_labels()
+
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.5,0.03),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=4,
+#            title="LCOH$_2$",
+#            fontsize=8)    
+
+# fig.subplots_adjust(hspace=0.0, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
+
+# fig.savefig(fp)
+# plt.show()       
 
 # %%
 tl_out = np.arange(2023, 2050+1)
@@ -1186,81 +1190,81 @@ plt.show()
         
 # %% Capacity growth rates
 
-scen = 'S3'
-tech_agg = 'ELEC-VRE'
-tl_out = np.arange(2030, 2050+1)
+# scen = 'S3'
+# tech_agg = 'ELEC-VRE'
+# tl_out = np.arange(2030, 2050+1)
 
-tech_titles = conv2.index[conv2[tech_agg] == 1].tolist()
-idx = [conv2.index.get_loc(i) for i in tech_titles]
+# tech_titles = conv2.index[conv2[tech_agg] == 1].tolist()
+# idx = [conv2.index.get_loc(i) for i in tech_titles]
 
-fp = os.path.join('Graphs', 'Growth_rates_v{}.svg'.format(version))
-# Figure size
-figsize = (4, 3.5)
-# Create subplot    
-fig, axes = plt.subplots(nrows=1,
-                         ncols=1,
-                         figsize=figsize,
-                         sharey=True,
-                         sharex=True)
+# fp = os.path.join('Graphs', 'Growth_rates_v{}.svg'.format(version))
+# # Figure size
+# figsize = (4, 3.5)
+# # Create subplot    
+# fig, axes = plt.subplots(nrows=1,
+#                          ncols=1,
+#                          figsize=figsize,
+#                          sharey=True,
+#                          sharex=True)
 
-for r, reg in enumerate(titles['RTI']):
+# for r, reg in enumerate(titles['RTI']):
     
-    for i, t in enumerate(idx): 
+#     for i, t in enumerate(idx): 
         
-        prod = output_all[scen][var_prod][r, t, 0, :]
-        df_prod = pd.Series(prod, index=tl)
-        df_prod_yoy = df_prod.pct_change() * 100
-        df_prod_yoy[df_prod_yoy<-40] = -40
+#         prod = output_all[scen][var_prod][r, t, 0, :]
+#         df_prod = pd.Series(prod, index=tl)
+#         df_prod_yoy = df_prod.pct_change() * 100
+#         df_prod_yoy[df_prod_yoy<-40] = -40
         
-        if r != 43:
+#         if r != 43:
             
-            axes.plot(np.asarray(tl_out),
-                      df_prod_yoy[tl_out],
-                      color='gray',
-                      alpha=0.2)
+#             axes.plot(np.asarray(tl_out),
+#                       df_prod_yoy[tl_out],
+#                       color='gray',
+#                       alpha=0.2)
         
-        else:
+#         else:
             
-            axes.plot(np.asarray(tl_out),
-                      df_prod_yoy[tl_out],
-                      color=colors[i],
-                      label=tech_titles[i]) 
+#             axes.plot(np.asarray(tl_out),
+#                       df_prod_yoy[tl_out],
+#                       color=colors[i],
+#                       label=tech_titles[i]) 
             
-    # Set labels and title
-    # axes[y].set_xlabel('Scenario')
-    axes.set_ylabel('Year-on-year growth rate\n%')
-    # axes[y].set_title() 
-    # axes.label_outer() 
+#     # Set labels and title
+#     # axes[y].set_xlabel('Scenario')
+#     axes.set_ylabel('Year-on-year growth rate\n%')
+#     # axes[y].set_title() 
+#     # axes.label_outer() 
 
-axes.fill_between(np.asarray(tl_out),
-                       20,
-                       40,
-                       color='goldenrod',
-                       alpha=0.3,
-                       label='Solar PV (range)')
+# axes.fill_between(np.asarray(tl_out),
+#                        20,
+#                        40,
+#                        color='goldenrod',
+#                        alpha=0.3,
+#                        label='Solar PV (range)')
 
-axes.set_xlim([tl_out[0], tl_out[-1]]);
-axes.grid(alpha=0.4, color="#E3E3E3");
-axes.tick_params('x', labelrotation=60)
-axes.set_xticks([2030, 2035, 2040, 2045, 2050])
+# axes.set_xlim([tl_out[0], tl_out[-1]]);
+# axes.grid(alpha=0.4, color="#E3E3E3");
+# axes.tick_params('x', labelrotation=60)
+# axes.set_xticks([2030, 2035, 2040, 2045, 2050])
     
-fig.subplots_adjust(hspace=0.2, wspace=0., right=0.97, bottom=0.3, left=0.2, top=0.9)
-h1, l1 = axes.get_legend_handles_labels()
-# h2, l2 = axes[1,0].get_legend_handles_labels()
-# h3, l3 = axes[2,0].get_legend_handles_labels()
+# fig.subplots_adjust(hspace=0.2, wspace=0., right=0.97, bottom=0.3, left=0.2, top=0.9)
+# h1, l1 = axes.get_legend_handles_labels()
+# # h2, l2 = axes[1,0].get_legend_handles_labels()
+# # h3, l3 = axes[2,0].get_legend_handles_labels()
 
-fig.legend(handles=h1,
-           labels=l1,
-           loc="lower center",
-           bbox_to_anchor=(0.5,0.03),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=2,
-           title="Brazil",
-           fontsize=8)
+# fig.legend(handles=h1,
+#            labels=l1,
+#            loc="lower center",
+#            bbox_to_anchor=(0.5,0.03),
+#            frameon=False,
+#            borderaxespad=0.,
+#            ncol=2,
+#            title="Brazil",
+#            fontsize=8)
 
-fig.savefig(fp)
-plt.show()               
+# fig.savefig(fp)
+# plt.show()               
 
 # %%
 tl_out = np.arange(2025, 2050+1)
