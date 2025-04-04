@@ -63,7 +63,7 @@ grouping_freight = {"Petrol": [2, 3, 7, 8], "Diesel": [12, 13, 17, 18],
                     "Biofuel": [37, 38]
                     }
 
-green_power = ["Offshore wind", "Onshore wind", "Solar"]
+green_power = ["Offshore wind", "Onshore wind", "Solar", "Hydropower"]
 green_heat = ["Hydronic heat pump", "Air-air heat pump"]
 green_transport = ["Electric"]
 green_freight = ["Electric"]
@@ -194,10 +194,6 @@ def get_sum_greens_2050(model_dfs, model):
                       green_all[model]])
     return green_sum
 
-def get_sum_all(model_dfs, model):
-    """Take the sum over all green technologies"""
-    sum_all = np.sum(model_dfs[2050])
-    return green_sum
 
 def green_growth(model_df_scen, model):
     "Percentage difference in proper green techs from baseline"
