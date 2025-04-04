@@ -2,6 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from preprocessing import get_output, get_metadata, save_fig, save_data
+
+
 
 titles = {"ZWIC_India.csv": "Purchase cost MDT",
           "ZWFC_India.csv": 'Fuel cost MDT'}
@@ -73,6 +76,10 @@ for i_ax, file_path in enumerate(file_paths):
 # Adjust layout
 plt.tight_layout()
 plt.show()
+
+titles, fig_dir, tech_titles, _, _ = get_metadata()
+
+save_fig(fig, fig_dir, "Figure 11 - Cost components BEV vs diesel India")
 
 
     

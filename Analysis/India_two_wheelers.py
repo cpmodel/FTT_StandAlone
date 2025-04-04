@@ -197,5 +197,4 @@ def combine_dfs(dict_of_dfs):
     return combined_df
 
 save_data(combine_dfs(cat_dfs_S0), fig_dir, "Figure 5 - Shares_India_twv")
-
-
+save_fig(fig, fig_dir, "Figure 12a - shares two- and three whelers India")

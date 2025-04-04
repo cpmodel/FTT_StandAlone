@@ -26,7 +26,7 @@ output_S0 = get_output(output_file, "S0")
 # Change this to "ZTLC" for levelised cost, and "ZWIC" for upfront cost. 
 # Note, I'm taking off subsidies for ZWIC.
 
-price_name = "ZTLC"
+price_name = "ZWIC"
 tech_variable = {"LDV": 31, "MDV": 32, "HDV": 33}
 
 if price_name == "ZTLC":
@@ -234,6 +234,6 @@ final_df = pd.concat(df_list, ignore_index=True)
 final_df = final_df[['cat', 'Scenario'] + years]
 
 # Save the graph and its data
-save_data(final_df, fig_dir, f"Figure 8 - Policy coordination {price_name}")
-
+save_data(final_df, fig_dir, "Figure 9 - Policy coordination")
+save_fig(fig, fig_dir, "Figure 9 - Policy coordination")
 

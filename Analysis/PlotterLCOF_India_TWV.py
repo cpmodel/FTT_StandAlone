@@ -10,6 +10,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import config
 
+from preprocessing import get_output, get_metadata, save_fig, save_data
+
+
 
 # Define countries with full names
 countries = {'India': '42 India (IN)'}
@@ -144,3 +147,6 @@ def create_scaled_labeled_plots(df, countries):
 df = pd.read_csv("ZTLC2.csv", delimiter=',', skiprows=4)
 fig = create_scaled_labeled_plots(df, countries)
 plt.show()
+
+titles, fig_dir, tech_titles, _, _ = get_metadata()
+save_fig(fig, fig_dir, "Figure 12b - LCOF India")
