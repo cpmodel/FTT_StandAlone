@@ -34,7 +34,6 @@ Functions included:
 """
 
 from math import sqrt
-import copy
 import warnings
 
 # Third party imports
@@ -87,7 +86,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     sector = 'freight'
     # Creating variables
 
-    zjet = copy.deepcopy(data['ZJET'][0, :, :])
+    zjet = data['ZJET'][0, :, :]
     emis_corr = np.ones([len(titles['RTI']), len(titles['FTTI'])])
 
     if year <= histend["RVKZ"]:
@@ -143,13 +142,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             if var.startswith("R"):
 
-                data_dt[var] = copy.deepcopy(time_lag[var])
+                data_dt[var] = np.copy(time_lag[var])
 
         for var in time_lag.keys():
 
             if var.startswith("Z"):
 
-                data_dt[var] = copy.deepcopy(time_lag[var])
+                data_dt[var] = np.copy(time_lag[var])
 
         # Find if there is a regulation and if it is exceeded
 
@@ -348,7 +347,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1E6)
 
 
-                zjet = copy.deepcopy(data['ZJET'][0, :, :])
+                zjet = data['ZJET'][0, :, :]
                 for veh in range(len(titles['FTTI'])):
                     for fuel in range(len(titles['JTI'])):
                         #  Middle distillates
@@ -404,13 +403,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                 if var.startswith("R"):
 
-                    data_dt[var] = copy.deepcopy(data[var])
+                    data_dt[var] = np.copy(data[var])
 
             for var in time_lag.keys():
 
                 if var.startswith("Z"):
 
-                    data_dt[var] = copy.deepcopy(data[var])
+                    data_dt[var] = np.copy(data[var])
 
 
     return data

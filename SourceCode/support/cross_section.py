@@ -10,12 +10,7 @@ Functions included in the file:
         Cross-sectional data slicer, selects a single year of the data dictionary.
 """
 
-# Standard library imports
-import os
-import copy
-
 # Third party imports
-import pandas as pd
 import numpy as np
 
 
@@ -60,11 +55,11 @@ def cross_section(data_in, dimensions, year, y, scenario, econometrics=None, lag
             for var in data_in[scenario]:
                 # If the variable has a time dimension take only the one year
                 if dimensions[var][3] == 'TIME':
-                    data_out[var] = copy.deepcopy(data_in[scenario][var][:, :, :, y])
+                    data_out[var] = np.copy(data_in[scenario][var][:, :, :, y])
 
                 # If the variable does not have a time dimension take all
                 else:
-                    data_out[var] = copy.deepcopy(data_in[scenario][var][:, :, :, 0])
+                    data_out[var] = np.copy(data_in[scenario][var][:, :, :, 0])
 
     #If a sheet with the econometric variables' name is fed, then fetch data only for those variables.
         else:
@@ -78,12 +73,12 @@ def cross_section(data_in, dimensions, year, y, scenario, econometrics=None, lag
                     #If the variable has a lag corresponding to the lag fed, take the values from that lag.
                     if lag in range(econometrics.loc[var, 'Lags'] + 1):
 
-                        data_out[var] = copy.deepcopy(data_in[scenario][var][:, :, :, y-lag])
+                        data_out[var] = np.copy(data_in[scenario][var][:, :, :, y-lag])
 
 #                    #Otherwise take the year fed (should be the first one)
                     elif lag is None:
 
-                        data_out[var] = copy.deepcopy(data_in[scenario][var][:, :, :, y])
+                        data_out[var] = np.copy(data_in[scenario][var][:, :, :, y])
 
 
     #Getting lagged cross-section for variables needed for the lagged sales specification, which are specified in the dictionary
@@ -109,12 +104,12 @@ def cross_section(data_in, dimensions, year, y, scenario, econometrics=None, lag
                 #If there aren't enough years to take the desired lags, take the first year available
                 if year - lag_year <= 0:
 
-                    data_out[var][r, :, :] = copy.deepcopy(data_in[scenario][var][target_reg, :, :, 0])
+                    data_out[var][r, :, :] = np.copy(data_in[scenario][var][target_reg, :, :, 0])
 
                 #Otherwise take the desired year.
                 else:
 
-                    data_out[var][r, :, :] = copy.deepcopy(data_in[scenario][var][target_reg, :, :, y-lag_year])
+                    data_out[var][r, :, :] = np.copy(data_in[scenario][var][target_reg, :, :, y-lag_year])
 
 
 

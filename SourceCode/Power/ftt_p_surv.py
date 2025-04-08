@@ -19,20 +19,10 @@ Functions included:
 
 """
 
-# Standard library imports
-from math import sqrt
-import os
-import copy
-import sys
-import warnings
 
 # Third party imports
-import pandas as pd
 import numpy as np
 from numba import njit
-
-# Local library imports
-from SourceCode.support.divide import divide
 
 
 # %% survival function
@@ -96,7 +86,7 @@ def survival_function(data, time_lag, histend, year, titles):
                 # Move all t1icles one year up:
                 # New sales will get added to the age-tracking matrix in the main
                 # routine.
-                data['MEKA'][r, t1, :-1] = copy.deepcopy(time_lag['MEKA'][r, t1, 1:])
+                data['MEKA'][r, t1, :-1] = time_lag['MEKA'][r, t1, 1:]
 
                 # Current age-tracking matrix:
                 # Only retain the fleet that survives
