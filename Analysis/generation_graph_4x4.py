@@ -63,7 +63,7 @@ grouping_freight = {"Petrol": [2, 3, 7, 8], "Diesel": [12, 13, 17, 18],
                     "Biofuel": [37, 38]
                     }
 
-green_power = ["Offshore wind", "Onshore wind", "Solar", "Hydropower"]
+green_power = ["Offshore wind", "Onshore wind", "Solar", "Hydropower", "Biomass + other"]
 green_heat = ["Hydronic heat pump", "Air-air heat pump"]
 green_transport = ["Electric"]
 green_freight = ["Electric"]
@@ -192,16 +192,19 @@ def get_sum_greens_2050(model_dfs, model):
     green_sum = np.sum([model_dfs[2050][tech]
                       for tech in 
                       green_all[model]])
-    return green_sum
+    green_share = green_sum / np.sum(model_dfs[2050])
+    return green_sum, green_share
 
 
 def green_growth(model_df_scen, model):
     "Percentage difference in proper green techs from baseline"
-    baseline_green = get_sum_greens_2050(model_dfs_S0[model], model)
-    scenario_green = get_sum_greens_2050(model_df_scen, model)
+    _, baseline_green = get_sum_greens_2050(model_dfs_S0[model], model)
+    _, scenario_green = get_sum_greens_2050(model_df_scen, model)
     green_growth = (scenario_green - baseline_green)/baseline_green * 100
     
     green_growth_pp = (scenario_green - baseline_green)/np.sum(model_dfs_S0[model][2050]) * 100    
+    green_growth_pp = (scenario_green - baseline_green) * 100   
+
     return green_growth, green_growth_pp
 
 

@@ -439,7 +439,11 @@ print(data)
 
 total_saved_emissions_2050 = np.sum(sectoral_saved_emissions_2050) - np.sum(emissions_2050_combined_policies)
 share_saved = total_saved_emissions_2050 / np.sum(emissions_2050_S0) * 100
+total_saved_emissions_cum = np.sum(sectoral_saved_emissions) - np.sum(emissions_from_2025_combined_policies)
+share_saved_cum = total_saved_emissions_cum / np.sum(emissions_from_2025_S0) * 100
 print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2, or {share_saved:.1f}%")
+print(f"The additional cumulative emissions savings: {total_saved_emissions_cum:.0f} MtCO2, or {share_saved_cum:.1f}%")
+
 
 
 # %%
