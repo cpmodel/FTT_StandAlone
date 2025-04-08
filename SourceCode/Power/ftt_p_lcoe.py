@@ -98,7 +98,7 @@ def get_lcoe(data, titles):
         '''
         
         # Extract the matrix with data from the specified column
-        matrix = np.ones([len(titles['T2TI']), max_lt]) * bcet[:, c2ti[column], np.newaxis]
+        matrix = bcet[:, c2ti[column], np.newaxis] * np.ones((1, max_lt))
         
         if conv_factor is not None:
             matrix *= conv_factor[:, np.newaxis]
@@ -130,7 +130,7 @@ def get_lcoe(data, titles):
         # Average capacity factor (for electricity price). Trap for very low CF
         cf_av = np.maximum(data['MEWL'][r, :, 0], 0.000001)
 
-        # Factor to transfer cost components in terms of capacity to generation
+        # Factor to go from capacity to generation, and split costs over build time
         conv_av = 1 / bt / cf_av / 8766 * 1000
         conv_mu = 1 / bt / cf_mu / 8766 * 1000
 
@@ -144,7 +144,6 @@ def get_lcoe(data, titles):
         
         # Average investment costs of across all units (for electricity price)
         it_av = extract_costs('3 Investment ($/kW)', bt_mask, bcet, max_lt, conv_av)
-        dit_av = extract_costs('4 std ($/MWh)', bt_mask, bcet, max_lt, conv_av)
 
         # Subsidies - only valid for marginal unit
         st = extract_costs('3 Investment ($/kW)', bt_mask, bcet, max_lt, conv_mu)
@@ -155,7 +154,7 @@ def get_lcoe(data, titles):
         dft = extract_costs('6 std ($/MWh)', lt_mask, bcet, max_lt)
 
         # fuel tax/subsidies
-        fft = np.ones([len(titles['T2TI']), max_lt]) * data['MTFT'][r, :, 0, np.newaxis]
+        fft = data['MTFT'][r, :, 0, np.newaxis] * np.ones((1, max_lt))
         fft = np.where(lt_mask, fft, 0)
 
         # Operation & maintenance cost and standard deviation
@@ -166,10 +165,8 @@ def get_lcoe(data, titles):
         ct = extract_costs('1 Carbon Costs ($/MWh)', lt_mask, bcet, max_lt)
         dct = extract_costs('2 std ($/MWh)', lt_mask, bcet, max_lt)
 
-        # Energy production over the lifetime (incl. build time)
-        energy_prod = np.ones([len(titles['T2TI']), int(max_lt)])
-        # No generation during the build time, so no benefits
-        energy_prod = np.where(lt_mask, energy_prod, 0)
+        # Energy production over the lifetime
+        energy_prod = lt_mask.astype(float)
 
         # Storage costs and marginal costs (lifetime only)
         stor_cost, marg_stor_cost = np.zeros_like(ft), np.zeros_like(ft)
@@ -227,12 +224,6 @@ def get_lcoe(data, titles):
         data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
 
 
-        # Output variables
-        data['MWIC'][r, :, 0] = bcet[:, c2ti['3 Investment ($/kW)']]      # Investment cost component LCOE ($/kW)
-        data['MWFC'][r, :, 0] = bcet[:, c2ti['5 Fuel ($/MWh)']]           # Fuel cost component of the LCOE ($/MWh)
-        data['MCOC'][r, :, 0] = bcet[:, c2ti['1 Carbon Costs ($/MWh)']]   # Carbon cost component of the LCOE ($/MWh)
-        data['MCFC'][r, :, 0] = bcet[:, c2ti['11 Decision Load Factor']]  # The (marginal) capacity factor
-
         # MWMC: FTT Marginal costs power generation ($/MWh)
         if np.rint(data['MSAL'][r, 0, 0]) > 1: # rint rounds to nearest int
             data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
@@ -245,9 +236,17 @@ def get_lcoe(data, titles):
             bcet[:, 1] ** 2 + bcet[:, 5] ** 2 + bcet[:, 7] ** 2
         )
         
-        # Check if METC is nan
-        if np.isnan(data['METC']).any():
-            nan_indices_metc = np.where(np.isnan(data['METC']))
-            raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
+    # Output variables
+    data['MWIC'][:, :, 0] = data['BCET'][:, :, c2ti['3 Investment ($/kW)']]      # Investment cost component LCOE ($/kW)
+    data['MWFC'][:, :, 0] = data['BCET'][:, :, c2ti['5 Fuel ($/MWh)']]           # Fuel cost component of the LCOE ($/MWh)
+    data['MCOC'][:, :, 0] = data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]   # Carbon cost component of the LCOE ($/MWh)
+    data['MCFC'][:, :, 0] = data['BCET'][:, :, c2ti['11 Decision Load Factor']]  # The (marginal) capacity factor
+        
+    # Check if METC is nan
+    if np.isnan(data['METC']).any():
+        nan_indices_metc = np.where(np.isnan(data['METC']))
+        raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
+        
+        
 
     return data
