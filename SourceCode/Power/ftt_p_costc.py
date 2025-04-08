@@ -425,8 +425,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                         BCET[r, j, 10] = BCET[r, 18, 10] * 2.0
                         
                     if share_TP_used > 0.98:
-                        BCET[r, j, 10] = 0.1
-                        MEWL[r, j, 0] = 0.8
+                        BCET[r, j, 10] = starting_CF * 0.1
+                        MEWL[r, j, 0] = starting_CF * 0.8
                         
                 # Turned off, as the initial numbers don't align with BCET, and it's too strict.
                 # Increasing investment term type of limit

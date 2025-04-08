@@ -89,8 +89,7 @@ def electricity_demand_feedback(data, data_baseline, year, titles, units):
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
         data["MEWDX"][:, elec_index, 0] += elec_change
-        if model == "FTT-Fr" and year == 2025:
-            breakie = 1
+  
         
     return data
 
