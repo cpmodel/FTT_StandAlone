@@ -122,7 +122,7 @@ def get_lcoe(data, titles):
         bt_max_mat = np.concatenate([(bt - 1)[:, np.newaxis]] * max_lt, axis=1)
 
         bt_mask = full_lt_mat <= bt_max_mat
-        lt_mask = full_lt_mat <= lt_max_mat
+        lt_mask = (bt_max_mat < full_lt_mat) & (full_lt_mat <= lt_max_mat)
 
         # Capacity factor of marginal unit (for decision-making). Trap for very low CF
         cf_mu = np.maximum(bcet[:, c2ti['11 Decision Load Factor']], 0.000001)        
@@ -189,9 +189,9 @@ def get_lcoe(data, titles):
         denominator = (1 + dr)**full_lt_mat
         
         # 1a – Expenses – marginal units
-        npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost) / denominator 
+        npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator 
         npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
-        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st + marg_stor_cost) / denominator 
+        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st) / denominator 
         
         # 1b – Expenses – average LCOEs
         npv_expenses_no_policy        = (it_av + ft + omt + stor_cost) / denominator  
