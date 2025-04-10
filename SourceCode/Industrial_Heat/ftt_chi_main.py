@@ -32,14 +32,9 @@ Functions included:
 """
 # Standard library imports
 from math import sqrt
-import os
-import copy
-import sys
 import warnings
-import time
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
 # Local library imports
@@ -261,7 +256,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
 
-            data_dt[var] = copy.deepcopy(time_lag[var])
+            data_dt[var] = np.copy(time_lag[var])
 
         # Create the regulation variable #Regulate capacity #no regulations yet, isReg full of zeros
         division = divide((data_dt['IWK1'][:, :, 0] - data['IRG1'][:, :, 0]),
@@ -513,7 +508,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             data["IWW1"][0, :, 0] = data_dt['IWW1'][0, :, 0] + dw
             #
             # # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BIC1'] = copy.deepcopy(data_dt['BIC1'])
+            data['BIC1'] = np.copy(data_dt['BIC1'])
             #
             # # Learning-by-doing effects on investment
             if year > cost_data_year:
@@ -534,7 +529,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
             #Update time loop variables:
             for var in data_dt.keys():
 
-                data_dt[var] = copy.deepcopy(data[var])
+                data_dt[var] = np.copy(data[var])
 
 
 

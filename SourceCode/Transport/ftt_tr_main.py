@@ -32,7 +32,6 @@ Functions included:
 
 # Standard library imports
 from math import sqrt
-import copy
 import warnings
 
 # Third party imports
@@ -126,14 +125,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data["TEVC"] = start_i_cost
 
         # Define starting battery capacity, this does not change
-        data["TWWB"] = copy.deepcopy(data["TEWW"])
+        data["TWWB"] = np.copy(data["TEWW"])
         for veh in range(len(titles['VTTI'])):
             if (veh < 18) or (veh > 23):
                 # Set starting cumulative battery capacities to 0 for ICE vehicles
                 data["TWWB"][0, veh, 0] = 0
 
         # Save initial cost matrix (BTCLi from FORTRAN model)
-        data["BTCI"] = copy.deepcopy(data["BTTC"])
+        data["BTCI"] = np.copy(data["BTTC"])
     elif year > 2012:
         # Copy over TEVC and TWWB values
         data['TEVC'] = np.copy(time_lag['TEVC'])
