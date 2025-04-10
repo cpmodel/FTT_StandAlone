@@ -42,8 +42,10 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
-from SourceCode.Heat.ftt_h_sales import get_sales
-from SourceCode.Heat.ftt_h_lcoh import get_lcoh
+from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
+from SourceCode.Heat.ftt_h_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -83,13 +85,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
      # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
-    jti = {category: index for index, category in enumerate(titles['JTI'])}
-
-    fuelvars = ['FR_1', 'FR_2', 'FR_3', 'FR_4', 'FR_5', 'FR_6',
-                'FR_7', 'FR_8', 'FR_9', 'FR_10', 'FR_11', 'FR_12']
 
     sector = 'residential'
-    #sector_index = titles['Sectors_short'].index(sector)
 
     data['PRSC14'] = np.copy(time_lag['PRSC14'] )
     if year == 2014:
@@ -97,7 +94,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # Calculate the LCOH for each heating technology
     # Call the function
-    data = get_lcoh(data, titles)
+    carbon_costs = set_carbon_tax(data, c4ti)
+    data = get_lcoh(data, titles, carbon_costs)
 
     # %% First initialise if necessary
     # Initialise in case of stock solution specification
@@ -152,8 +150,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Fuel use for heating
                 data['HJHF'][r, fuel, 0] = np.sum(data['HEWF'][r, :, 0] * data['HJET'][0, :, fuel])
                 # Fuel use for total residential sector
+                # 0.0859 is the conversion factor from GWh to th toe
                 if data['HJFC'][r, fuel, 0] > 0.0:
-                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
+                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0] * 0.08598
 
         # Investment (= capacity additions) by technology (in GW/y)
         if year > 2014:
@@ -194,15 +193,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if data['HJFC'][r, fuel, 0] > 0.0:
                     data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
-        # Calculate the LCOT for each vehicle type.
-        # Call the function
-        data = get_lcoh(data, titles)
+        # Calculate the LCOH for each heating technology.
+        carbon_costs = set_carbon_tax(data, c4ti)
+        data = get_lcoh(data, titles, carbon_costs)
 
 # %% Simulation of stock and energy specs
 #    t0 = time.time()
     # Stock based solutions first
 #    if np.any(specs[sector] < 5):
-
+    # TODO: change this to start year FTT:H (also in update??)
+    data["FU14A"] = np.copy(data['HJHF'])
+    data['FU14B'] = data["HJEF"] * data["HJFC"]
+    
     # Endogenous calculation takes over from here
     if year > histend['HEWF']:
 
@@ -213,7 +215,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # First, fill the time loop variables with the their lagged equivalents
         for var in time_lag.keys():
             data_dt[var] = np.copy(time_lag[var])
-
+            
+            data["FU14A"] = time_lag["FU14A"]
+            data["FU14B"] = time_lag["FU14B"]
         
         # Create the regulation variable
         # Test that proved that the implimination of tanh across python and fortran is different
@@ -232,6 +236,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
+        
 
         ############## Computing new shares ##################
 
@@ -242,7 +247,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * t * dt
             rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * (t-1) * dt
 
-            endo_eol = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
 
             for r in range(len(titles['RTI'])):
 
@@ -294,7 +298,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         F[b2, b1] = (1.0 - Fik) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
                                     * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
 
-                        #Runge-Kutta market share dynamiccs
+                        # Runge-Kutta market share dynamiccs
                         k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
                         k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
                         k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
@@ -361,7 +365,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         FE[b1, b2] = FEik*(1.0-isReg[r, b1])
                         FE[b2, b1] = FEki*(1.0-isReg[r, b2])
 
-                        #Runge-Kutta market share dynamiccs
+                        # Runge-Kutta market share dynamiccs
                         kE_1 = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
                         kE_2 = (SE_i+dt*kE_1/2)*(SE_k-dt*kE_1/2)* (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
                         kE_3 = (SE_i+dt*kE_2/2)*(SE_k-dt*kE_2/2) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
@@ -377,7 +381,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                 endo_gen = endo_shares * rhudt[r, np.newaxis]
 
-                endo_eol[r] = np.sum(dSik, axis=1)
 
                 # -----------------------------------------------------
                 # Step 3: Exogenous sales additions
@@ -394,13 +397,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation. Otherwise, the corrections won't line up with the market shares.
 
 
-                # Convert exogenous shares to exogenous generation. Exogenous sharess no longer need to add up to 1. Beware removals!
-                for b in range (len(titles['HTTI'])):
-                    if data['HWSA'][r, b, 0] < 0.0:
-                        data['HWSA'][r, b, 0] = 0.0
+                # Convert exogenous shares to exogenous generation. Exogenous shares no longer need to add up to 1. Beware removals!
+                # for b in range (len(titles['HTTI'])):
+                #     if data['HWSA'][r, b, 0] < 0.0:
+                #         data['HWSA'][r, b, 0] = 0.0
                 
                 dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
-
                 # Check endogenous shares plus additions for a single time step does not exceed regulated shares
                 reg_vs_exog = ((data['HWSA'][r, :, 0]*Utot/no_it + endo_gen) > data['HREG'][r, :, 0]*Utot) & (data['HREG'][r, :, 0] >= 0.0)
                 # Filter capacity additions based on regulated shares
@@ -442,27 +444,43 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     Negative market shares detected! Critical error!
                     """.format(sector, titles['RTI'][r], year)
                     warnings.warn(msg)
-#                        t4 = time.time()
-#                        print("Share equation takes {}".format(t4-t3))
+#                      
 
             ############## Update variables ##################
-            # Useful heat by boiler
+            
             data['HEWG'][:, :, 0] = data['HEWS'][:, :, 0] * rhudt[:, 0, 0, np.newaxis]
+            
+            #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
+            data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
+                                    data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
+
+            # New additions (HEWI)
+            data['HEWI'], hewi_t = get_sales(
+                  data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
+                  data["HEWS"], data_dt["HEWS"],
+                  data["HEWI"], 1/data['HETR'][:, :, 0],
+                  dt
+                  )
+            
+            # Change capacity and sales after mandate
+            data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
+                data['HEWK'], data["hp mandate"], data['HEWI'], hewi_t, year)
+            
+            # Calculate HEWG, HEWS and HEWF after mandates  
+            
+            # Useful heat by boiler
+            data['HEWG'][:, :, 0] = data['HEWK'][:, :, 0] * data['BHTC'][:, :, c4ti["13 Capacity factor mean"]] * 1000
+            
+            data['HEWS'][:, :, 0] = data['HEWG'][:, :, 0] / np.sum(data['HEWG'][:, :, 0], axis=1)[:, None]
 
             # Final energy by boiler
             data['HEWF'][:, :, 0] = divide(data['HEWG'][:, :, 0],
                                              data['BHTC'][:, :, c4ti["9 Conversion efficiency"]])
-
-            # Capacity by boiler
-            data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                              data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
-
-            # EmissionsFis
+            
+            # Emissions
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
-
-            # New additions (HEWI)
-            data, hewi_t = get_sales(data, data_dt, time_lag, titles, dt, t, endo_eol)
-
+            
+            
             # TODO: HEWP = HFPR not HFFC
             #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
 
@@ -482,11 +500,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Final energy demand for heating purposes
             data['HJHF'][:, :, 0] = np.matmul(data['HEWF'][:, :, 0], data['HJET'][0, :, :])
 
-            # Final energy demand of the residential sector (incl. non-heat)
-            # For the time being, this is calculated as a simply scale-up
-            for fuel in range(len(titles['JTI'])):
-                if data['HJFC'][r, fuel, 0] > 0.0:
-                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
 
             ############## Learning-by-doing ##################
 
@@ -534,13 +547,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Update the time-loop variables
             # =================================================================
 
-            #Calculate levelised cost again
-            data = get_lcoh(data, titles)
+            # Calculate levelised cost again
+            carbon_costs = set_carbon_tax(data, c4ti)
+            data = get_lcoh(data, titles, carbon_costs)
 
-            #Update time loop variables:
+            # Update time loop variables:
             for var in data_dt.keys():
 
                 data_dt[var] = np.copy(data[var])
 
+        
 
+        if year == 2050 and t == no_it:
+            print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12, 0])/10**6:.3f} M GWh")
+            
     return data
