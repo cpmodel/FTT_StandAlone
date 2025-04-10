@@ -65,6 +65,8 @@ from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_ye
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
+
+
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
@@ -167,8 +169,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['RERY'] = rery
         data['MRED'] = mred
         data['MRES'] = mres
-
+        
         data = get_lcoe(data, titles)
+
+
         data = rldc(data, time_lag, iter_lag, year, titles)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
@@ -233,6 +237,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data = get_lcoe(data, titles)
 
 
+
     #%%
     # Up to the last year of historical market share data
     elif year <= histend['MEWG']:
@@ -274,6 +279,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
+
+
         # Call RLDC function for capacity and load factor by LB, and storage costs
         if year >= 2013:
 
@@ -477,6 +484,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
+
+
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
             # Hereafter, the lagged variable will have these values stored
@@ -812,6 +821,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update LCOE
             # =================================================================
             data = get_lcoe(data, titles)
+
 
             # =================================================================
             # Update the time-loop variables data_dt
