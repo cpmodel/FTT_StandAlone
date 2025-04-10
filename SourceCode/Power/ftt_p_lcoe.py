@@ -7,6 +7,8 @@ Power LCOE FTT module.
 
 
 Functions included:
+    - set carbon_tax
+        Determine carbon tax from REPP
     - get_lcoe
         Calculate levelized costs
 
@@ -53,6 +55,7 @@ def set_carbon_tax(data, c2ti, year):
 # -----------------------------------------------------------------------------
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
+  
 def get_lcoe(data, titles):
     """
     Calculate levelized costs.
@@ -62,191 +65,137 @@ def get_lcoe(data, titles):
 
     Parameters
     -----------
-    data: dictionary of NumPy arrays
-        Model variables for the current year.
-        Variable names are keys and the values are 3D NumPy arrays.
+    data: dictionary
+        Data is a container that holds all cross-sectional (of time) for all
+        variables. Variable names are keys and the values are 3D NumPy arrays.
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
 
     Returns
     ----------
     data: dictionary
-        Updated values:
-            The different LCOE variants (METC, MECW ..)
-            The standard deviation of LCOE (MTCD)
-            The components of LCOE (MCFC, MWIC)
-
-    Notes
-    ---------
-    BCET = cost matrix 
-    MEWL = Average capacity factor
-    MEWT = Subsidies
-    MTFT = Fuel tax
-    
+        Data is a container that holds all cross-sectional (of time) data for
+        all variables.
+        Variable names are keys and the values are 3D NumPy arrays.
+        The values inside the container are updated and returned to the main
+        routine.
     """
 
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
+
+    # Cost matrix
+    bcet = data['BCET']
+
+    # Plant lifetime
+    lt = bcet[:, :, c2ti['9 Lifetime (years)']]
+    bt = bcet[:, :, c2ti['10 Lead Time (years)']]
+    max_lt = int(np.max(bt + lt))
+
+    # Define masks to turn off cost components before or after construction 
+    full_lt_mat = np.arange(max_lt)
+    bt_mask = full_lt_mat <= (bt[..., None] - 1)
+    lt_mask = full_lt_mat <= (bt[..., None] + lt[..., None] - 1)
+    bt_mask_out = ~bt_mask
+    lt_mask = lt_mask & bt_mask_out
+
+    # Capacity factor of marginal unit (for decision-making)
+    cf_mu = bcet[:, :, c2ti['11 Decision Load Factor']]
+    cf_mu[cf_mu < 0.000001] = 0.000001
+    conv_mu = 1 / (bt[..., None] * cf_mu[..., None] * 8766) * 1000
+
+    # Average capacity factor (for electricity price)
+    cf_av = data['MEWL'][:, :, 0]
+    cf_av[cf_av < 0.000001] = 0.000001
+    conv_av = 1 / (bt[..., None] * cf_av[..., None] * 8766) * 1000
+        
+    def get_cost_component(base_cost, conversion_factor, mask):
+        '''Mask costs during build or life time, and apply
+        conversion to generation where appropriate'''
+        cost = np.multiply(base_cost[..., None], conversion_factor)
+        return np.multiply(cost, mask)
+
+    it_mu = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_mu, bt_mask)
+    it_av = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_av, bt_mask)
+    dit_mu = get_cost_component(bcet[:, :, c2ti['4 std ($/MWh)']], conv_mu, bt_mask)
+    st = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']] * data['MEWT'][:, :, 0], conv_mu, bt_mask)
+    ft = get_cost_component(bcet[:, :, c2ti['5 Fuel ($/MWh)']], 1, lt_mask)
+    dft = get_cost_component(bcet[:, :, c2ti['6 std ($/MWh)']], 1, lt_mask)
+    fft = get_cost_component(bcet[:, :, c2ti['5 Fuel ($/MWh)']] * data['MTFT'][:, :, 0], 1, lt_mask)
+    omt = get_cost_component(bcet[:, :, c2ti['7 O&M ($/MWh)']], 1, lt_mask)
+    domt = get_cost_component(bcet[:, :, c2ti['8 std ($/MWh)']], 1, lt_mask)
+    ct = get_cost_component(bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']], 1, lt_mask)
     
-    def extract_costs(column, mask, bcet, max_lt, conv_factor=None):
-        '''
-        Extract costs from the 'bcet' data, apply masking to zero out specific
-        elements, and optionally scale the values based on a conversion factor.
-        
-        Scaling adjusts the extracted data values using a conversion factor for 
-        unit conversion, normalization, or context-specific adjustments.
-        '''
-        
-        # Extract the matrix with data from the specified column
-        matrix = bcet[:, c2ti[column], np.newaxis] * np.ones((1, max_lt))
-        
-        if conv_factor is not None:
-            matrix *= conv_factor[:, np.newaxis]
+    # Who pays for storage, and total storage costs
+    msal_rounded = np.rint(data['MSAL'][:, 0, 0])
+    storage_sum = (data['MSSP'] + data['MLSP']) / 1000
+    marg_storage_sum = (data['MSSM'] + data['MLSM']) / 1000
+    
+    # Storage cost
+    stor_mask = (msal_rounded >= 2)
+    stor_cost = np.where(stor_mask, storage_sum, 0)
+    stor_cost = get_cost_component(stor_cost[:, :, 0], 1, lt_mask)
+    dstor_cost = 0.2 * stor_cost  # Assume standard deviation of 20%
+    
+    # Marginal storage cost
+    marg_mask = (msal_rounded >= 3)
+    marg_stor_cost = np.where(marg_mask, marg_storage_sum, 0)
+    marg_stor_cost = get_cost_component(marg_stor_cost[:, :, 0], 1, lt_mask)
+    
+    
+    # Net present value calculations
+    # Discount rate
+    dr = bcet[:, :, c2ti['17 Discount Rate (%)'], None]
+    denominator = (1 + dr) ** full_lt_mat
 
-        # Apply the mask to zero out specific elements if a mask is provided; otherwise, return the unmasked matrix
-        return np.where(mask, matrix, 0)
+    # 1 – Expenses
+    npv_expenses_mu_bare = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator
+    npv_expenses_mu_co2 = npv_expenses_mu_bare + ct / denominator
+    npv_expenses_mu_policy = npv_expenses_mu_co2 + (fft + st) / denominator
+    npv_expenses_av_all_policy = (it_av + ft + ct + omt + stor_cost + fft + st + ct) / denominator
 
-    for r in range(len(titles['RTI'])):
+    # 2 – Utility
+    npv_utility = np.where(lt_mask, 1, 0) / denominator
 
-        # Cost matrix
-        bcet = data['BCET'][r, :, :]
+    # 3 – Standard deviation (propagation of error)
+    npv_std = np.sqrt(dit_mu ** 2 + dft ** 2 + domt ** 2 + dstor_cost**2) / denominator
+    
+    utility_sum = np.sum(npv_utility, axis=2)
+    
+    
+    # 1-levelised cost variants in $/MWh
+    lcoe_bare = np.sum(npv_expenses_mu_bare, axis=2) / utility_sum
+    lcoe_mu_all_policies = np.sum(npv_expenses_mu_policy, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+    lcoeco2 = np.sum(npv_expenses_mu_co2, axis=2) / utility_sum
+    lcoe_av = np.sum(npv_expenses_av_all_policy, axis=2) / utility_sum
+    dlcoe = np.sum(npv_std, axis=2) / utility_sum
 
-        # Plant lifetime
-        lt = bcet[:, c2ti['9 Lifetime (years)']]
-        bt = bcet[:, c2ti['10 Lead Time (years)']]
-        max_lt = int(np.max(bt+lt))
+    # LCOE augmented with gamma values
+    lcoe_mu_gamma = lcoe_mu_all_policies + data['MGAM'][:, :, 0]
 
-        # Define (matrix) masks to turn off cost components before or after contruction
-        full_lt_mat = np.linspace(np.zeros(len(titles['T2TI'])), max_lt - 1, num=max_lt, axis=1, endpoint=True)
-        lt_max_mat = np.concatenate([(lt + bt - 1)[:, np.newaxis]] * max_lt, axis=1)
-        bt_max_mat = np.concatenate([(bt - 1)[:, np.newaxis]] * max_lt, axis=1)
+    # Pass to variables that are stored outside.
+    data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes
+    data['MECW'][:, :, 0] = lcoeco2         # The real bare LCOE with taxes
+    data['MECC'][:, :, 0] = lcoe_av         # The average LCOE costs including policies
+    data['METC'][:, :, 0] = lcoe_mu_gamma   # As seen by consumer (generalised cost)
+    data['MTCD'][:, :, 0] = dlcoe           # Variation on the LCOE distribution
 
-        bt_mask = full_lt_mat <= bt_max_mat
-        lt_mask = (bt_max_mat < full_lt_mat) & (full_lt_mat <= lt_max_mat)
+    data['MWIC'][:, :, 0] = bcet[:, :, 2]
+    data['MWFC'][:, :, 0] = bcet[:, :, 4]
+    data['MCOC'][:, :, 0] = bcet[:, :, 0]
 
-        # Capacity factor of marginal unit (for decision-making). Trap for very low CF
-        cf_mu = np.maximum(bcet[:, c2ti['11 Decision Load Factor']], 0.000001)        
+    mwmc_condition = np.rint(data['MSAL'][:, 0, 0]) > 1
+    data['MWMC'][:, :, 0] = np.where(mwmc_condition[:, None], 
+                                 bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6] + (data['MSSP'][:, :, 0] + data['MLSP'][:, :, 0]) / 1000,
+                                 bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6])
 
-        # Average capacity factor (for electricity price). Trap for very low CF
-        cf_av = np.maximum(data['MEWL'][r, :, 0], 0.000001)
+    data['MMCD'][:, :, 0] = np.sqrt(bcet[:, :, 1] ** 2 + bcet[:, :, 5] ** 2 + bcet[:, :, 7] ** 2)
 
-        # Factor to go from capacity to generation, and split costs over build time
-        conv_av = 1 / bt / cf_av / 8766 * 1000
-        conv_mu = 1 / bt / cf_mu / 8766 * 1000
-
-        # Discount rate
-        dr = bcet[:, c2ti['17 Discount Rate (%)'], np.newaxis]
-
-        # Initialse the levelised cost components
-        # Average investment cost of marginal unit (new investments) + std
-        it_mu = extract_costs('3 Investment ($/kW)', bt_mask, bcet, max_lt, conv_mu)
-        dit_mu = extract_costs('4 std ($/MWh)', bt_mask, bcet, max_lt, conv_mu)
-        
-        # Average investment costs of across all units (for electricity price)
-        it_av = extract_costs('3 Investment ($/kW)', bt_mask, bcet, max_lt, conv_av)
-
-        # Subsidies - only valid for marginal unit
-        st = extract_costs('3 Investment ($/kW)', bt_mask, bcet, max_lt, conv_mu)
-        st *= data['MEWT'][r, :, :]
-
-        # Average fuel costs and standard deviation
-        ft = extract_costs('5 Fuel ($/MWh)', lt_mask, bcet, max_lt)
-        dft = extract_costs('6 std ($/MWh)', lt_mask, bcet, max_lt)
-
-        # fuel tax/subsidies
-        fft = data['MTFT'][r, :, 0, np.newaxis] * np.ones((1, max_lt))
-        fft = np.where(lt_mask, fft, 0)
-
-        # Operation & maintenance cost and standard deviation
-        omt = extract_costs('7 O&M ($/MWh)', lt_mask, bcet, max_lt)
-        domt = extract_costs('8 std ($/MWh)', lt_mask, bcet, max_lt)
-
-        # Carbon costs and standard deviation (latter set to zero)
-        ct = extract_costs('1 Carbon Costs ($/MWh)', lt_mask, bcet, max_lt)
-        dct = extract_costs('2 std ($/MWh)', lt_mask, bcet, max_lt)
-
-        # Energy production over the lifetime
-        energy_prod = lt_mask.astype(float)
-
-        # Storage costs and marginal costs (lifetime only)
-        stor_cost, marg_stor_cost = np.zeros_like(ft), np.zeros_like(ft)
-        
-        # Who pays for storage costs?
-        if np.rint(data['MSAL'][r, 0, 0]) in [2]:
-            stor_cost = (data['MSSP'][r, :, 0, np.newaxis] + data['MLSP'][r, :, 0, np.newaxis]) / 1000
-        elif np.rint(data['MSAL'][r, 0, 0]) in [3, 4, 5]:
-            stor_cost = (data['MSSP'][r, :, 0, np.newaxis] + data['MLSP'][r, :, 0, np.newaxis]) / 1000
-            marg_stor_cost = (data['MSSM'][r, :, 0, np.newaxis] + data['MLSM'][r, :, 0, np.newaxis]) / 1000
-
-        stor_cost = np.where(lt_mask, stor_cost, 0)
-        marg_stor_cost = np.where(lt_mask, marg_stor_cost, 0)
-        dstor_cost = 0.2 * stor_cost  # Assume standard deviation of 20%
-
-        
-        ## Net present value calculations
-        
-        # Discount rate
-        denominator = (1 + dr)**full_lt_mat
-        
-        # 1a – Expenses – marginal units
-        npv_expenses_mu_no_policy      = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator 
-        npv_expenses_mu_only_co2       = npv_expenses_mu_no_policy + ct / denominator
-        npv_expenses_mu_all_policies   = npv_expenses_mu_no_policy + (ct + fft + st) / denominator 
-        
-        # 1b – Expenses – average LCOEs
-        npv_expenses_no_policy        = (it_av + ft + omt + stor_cost) / denominator  
-        npv_expenses_all_but_co2      = npv_expenses_no_policy + (fft + st) / denominator
-        
-        # 2 – Utility
-        npv_utility = energy_prod / denominator
-        utility_tot = np.sum(npv_utility, axis=1) 
-        
-        # 3 – Standard deviation (propagation of error)
-        npv_std = np.sqrt(dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2) / denominator  
-        
-        # 4a – levelised cost – marginal units 
-        lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
-        lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
-        lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
-        lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
-
-        # 4b levelised cost – average units 
-        lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]    
-        
-        # Standard deviation of LCOE
-        dlcoe                   = np.sum(npv_std, axis=1) / utility_tot
-
-        # Pass to variables that are stored outside.
-        data['MEWC'][r, :, 0] = lcoe_mu_no_policy       # The real bare LCOE without taxes
-        data['MECW'][r, :, 0] = lcoe_mu_only_co2        # Bare LCOE with CO2 costs
-        data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
-        data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
-        data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
-
-
-        # MWMC: FTT Marginal costs power generation ($/MWh)
-        if np.rint(data['MSAL'][r, 0, 0]) > 1: # rint rounds to nearest int
-            data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6] + (data['MSSP'][r, :, 0] + data['MLSP'][r, :, 0])/1000
-        else:
-            data['MWMC'][r, :, 0] = bcet[:, 0] + bcet[:, 4] + bcet[:, 6]
-
-
-        # Marginal cost standard deviation (MMCD)
-        data['MMCD'][r, :, 0] = np.sqrt(
-            bcet[:, 1] ** 2 + bcet[:, 5] ** 2 + bcet[:, 7] ** 2
-        )
-        
-    # Output variables
-    data['MWIC'][:, :, 0] = data['BCET'][:, :, c2ti['3 Investment ($/kW)']]      # Investment cost component LCOE ($/kW)
-    data['MWFC'][:, :, 0] = data['BCET'][:, :, c2ti['5 Fuel ($/MWh)']]           # Fuel cost component of the LCOE ($/MWh)
-    data['MCOC'][:, :, 0] = data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]   # Carbon cost component of the LCOE ($/MWh)
-    data['MCFC'][:, :, 0] = data['BCET'][:, :, c2ti['11 Decision Load Factor']]  # The (marginal) capacity factor
-        
+      
     # Check if METC is nan
     if np.isnan(data['METC']).any():
         nan_indices_metc = np.where(np.isnan(data['METC']))
         raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
-        
-        
+              
 
     return data

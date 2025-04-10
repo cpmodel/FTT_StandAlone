@@ -65,7 +65,6 @@ from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_ye
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-from SourceCode.Power.ftt_p_lcoe2 import get_lcoe2, set_carbon_tax
 
 
 from SourceCode.Power.ftt_p_surv import survival_function
@@ -172,7 +171,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRES'] = mres
         
         data = get_lcoe(data, titles)
-        data = get_lcoe2(data, titles)
 
 
         data = rldc(data, time_lag, iter_lag, year, titles)
@@ -237,7 +235,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
         data = get_lcoe(data, titles)
-        data = get_lcoe2(data, titles)
 
 
 
@@ -282,7 +279,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
-            time_lag = get_lcoe2(data, titles)
 
 
         # Call RLDC function for capacity and load factor by LB, and storage costs
@@ -488,7 +484,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles)
-            data = get_lcoe2(data, titles)
 
 
             # Historical differences between demand and supply.
@@ -826,7 +821,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update LCOE
             # =================================================================
             data = get_lcoe(data, titles)
-            data = get_lcoe2(data, titles)
 
 
             # =================================================================
