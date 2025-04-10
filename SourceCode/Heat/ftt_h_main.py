@@ -43,7 +43,6 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.Heat.ftt_h_hjef import compute_hjef
 from SourceCode.Heat.ftt_h_sales_and_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
@@ -501,9 +500,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Final energy demand for heating purposes
             data['HJHF'][:, :, 0] = np.matmul(data['HEWF'][:, :, 0], data['HJET'][0, :, :])
 
-            # Final energy demand of the residential sector (incl. non-heat)
-            # TODO: For the time being, this is calculated as a simply scale-up
-            data["HJEF"] = compute_hjef(data, titles)
 
             ############## Learning-by-doing ##################
 
