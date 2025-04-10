@@ -44,7 +44,7 @@ from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 from SourceCode.sector_coupling.battery_lbd import battery_costs
-from SourceCode.Transport.ftt_tr_sales_and_mandate import implement_mandate
+from SourceCode.Transport.ftt_tr_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 

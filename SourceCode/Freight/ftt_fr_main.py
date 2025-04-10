@@ -34,7 +34,7 @@ import numpy as np
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
 from SourceCode.support.divide import divide
-from SourceCode.Freight.ftt_fr_sales_and_mandate import implement_mandate
+from SourceCode.Freight.ftt_fr_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs

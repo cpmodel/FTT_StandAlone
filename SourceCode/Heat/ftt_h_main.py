@@ -43,7 +43,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.Heat.ftt_h_sales_and_mandate import implement_mandate
+from SourceCode.Heat.ftt_h_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 
