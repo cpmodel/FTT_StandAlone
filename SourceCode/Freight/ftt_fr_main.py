@@ -347,7 +347,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1E6)
 
 
-                zjet = data['ZJET'][0, :, :]
+                zjet = data['ZJET'][0, :, :].copy()
                 for veh in range(len(titles['FTTI'])):
                     for fuel in range(len(titles['JTI'])):
                         #  Middle distillates
