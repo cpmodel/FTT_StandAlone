@@ -154,15 +154,10 @@ def get_lcot(data, titles, carbon_costs, year):
         dft = np.ones([len(titles['VTTI']), int(max_lt)])
         dft = dft * bttc[:, c3ti['4 std fuel cost'], np.newaxis] / ns / ff
         dft = np.where(mask, dft, 0)
-        
+               
         # Average carbon costs
         ct = np.ones([len(titles['VTTI']), int(max_lt)])
-        ct = ct * carbon_c[:, np.newaxis]
-        ct = np.where(mask, ct, 0)
-        
-        # Average carbon costs
-        ct = np.ones([len(titles['VTTI']), int(max_lt)])
-        ct = ct * carbon_c[:, np.newaxis] * tf_carbon           #     Multiply by taxable fuel, as EV emissions separately taxed)
+        ct = ct * carbon_c[:, np.newaxis] * tf_carbon   # Multiply by taxable fuel, as EV emissions separately taxed)
         ct = np.where(mask, ct, 0)
 
         # Fuel tax costs
