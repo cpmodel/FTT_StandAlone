@@ -131,10 +131,10 @@ def vehicle_to_grid(data, time_lag, year, titles):
     # Assume linearly increasing share cars are suitable
     if year < 2025:
         tech_readiness = 0
-    elif year > 2035:
+    elif year > 2040:
         tech_readiness = 1
     else:
-        tech_readiness = (year-2024) * 0.1
+        tech_readiness = (year-2024) * 1/15
     
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
