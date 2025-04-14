@@ -103,6 +103,7 @@ df_demand_vectors.iloc[3, :] = output_all[scen]['HYD4'][:,0,0,:].sum(axis=0)
 df_demand_wide = df_demand_vectors.loc[:, tl_out]*1e-3
 df_demand_long = df_demand_wide.reset_index().melt(id_vars='index', var_name='Year', value_name='Value')# tolong
 df_demand_long.rename(columns={'index': 'Demand factor'}, inplace=True)
+df_demand_long['Unit'] = 'Mt H2-equivalent'
 
 df_demand_long.to_csv(os.path.join('Graphs', 'Demand_v{}.csv'.format(version)), index=False)
         
@@ -113,10 +114,10 @@ agg_tech = 'ELEC'
 tech_titles = conv.index[conv[agg_tech] == 1].tolist()
 idx = [conv.index.get_loc(i) for i in tech_titles]
 
-#scen = 'S3'
-scen = 'S0'
+scen = 'S3'
+#scen = 'S0'
 
-df_lcoh_long = pd.DataFrame(columns = ['Technology', 'Regional aggregation', 'Year', 'Value'])
+df_lcoh_long = pd.DataFrame(columns = ['Technology', 'Regional aggregation', 'Year', 'Value', 'Unit'])
 
 for i, t in enumerate(idx):
 
@@ -138,52 +139,52 @@ for i, t in enumerate(idx):
     
     for year, val in df_lcoh_avg.items():
         df_lcoh_long = pd.concat([df_lcoh_long, 
-                                 pd.DataFrame({'Technology': [techlbl], 
-                                               'Regional aggregation': ['Global average electrolytic'],
-                                               'Year': [year], 'Value': [val]})], ignore_index = True)
+                                 pd.DataFrame({'Technology': [techlbl + ' average electrolytic'], 
+                                               'Regional aggregation': ['Global'],
+                                               'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
     # Global Average SMR
     lcoh_avg_smr = np.mean(output_all[scen][var_lcoh][:, 0, 0, :]*
                            inflator[:, None]
                        , axis=0, 
                        where=cond)
     df_lcoh_avg_smr = pd.Series(lcoh_avg_smr, index=tl)[tl_out]
-    for year, value in df_lcoh_avg_smr.items():
+    for year, val in df_lcoh_avg_smr.items():
         df_lcoh_long = pd.concat([df_lcoh_long,
-                                  pd.DataFrame({'Technology': [techlbl], 
-                                                'Regional aggregation': ['Global average SMR'],
-                                                'Year': [year], 'Value': [val]})], ignore_index = True)
+                                  pd.DataFrame({'Technology': [techlbl + ' average SMR'], 
+                                                'Regional aggregation': ['Global'],
+                                                'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 
     # Global maximum value
     lcoh_max = np.max(output_all[scen][var_lcoh][:, t, 0, :]*
                           inflator[:, None]
                       , axis=0)
     df_lcoh_max = pd.Series(lcoh_max, index=tl)[tl_out]
-    for year, value in df_lcoh_max.items():
+    for year, val in df_lcoh_max.items():
         df_lcoh_long = pd.concat([df_lcoh_long,
-                                  pd.DataFrame({'Technology': [techlbl], 
-                                                'Regional aggregation': ['Global maximum LCOH'],
-                                                'Year': [year], 'Value': [val]})], ignore_index = True)
+                                  pd.DataFrame({'Technology': [techlbl + ' maximum LCOH'], 
+                                                'Regional aggregation': ['Global'],
+                                                'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 
     # Global minimum value
     lcoh_min = np.min(output_all[scen][var_lcoh][:, t, 0, :]*
                           inflator[:, None]
                       , axis=0)
     df_lcoh_min = pd.Series(lcoh_min, index=tl)[tl_out]
-    for year, value in df_lcoh_min.items():
+    for year, val in df_lcoh_min.items():
         df_lcoh_long = pd.concat([df_lcoh_long,
-                                  pd.DataFrame({'Technology': [techlbl], 
-                                            'Regional aggregation': 'Global minimum LCOH',
-                                                'Year': [year], 'Value': [val]})], ignore_index = True)
+                                  pd.DataFrame({'Technology': [techlbl + ' minimum LCOH'], 
+                                            'Regional aggregation': 'Global',
+                                                'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 
     # Brazil, Australia, China, Germany, US, Japan
     for j, r in enumerate([43, 36, 40, 2, 33, 47]):
         reg = ' '.join(titles['RTI'][r].split(' ')[1:-1])
         df_lcoh_r = pd.Series(output_all[scen][var_lcoh][r, t, 0, :]*inflator[r, None], index=tl)[tl_out]
-        for year, value in df_lcoh_r.items():
+        for year, val in df_lcoh_r.items():
             df_lcoh_long = pd.concat([df_lcoh_long,
                                       pd.DataFrame({'Technology': [techlbl], 
                                                     'Regional aggregation': [reg],
-                                                    'Year': [year], 'Value': [val]})], ignore_index = True)
+                                                    'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 
 
 
@@ -194,7 +195,7 @@ df_lcoh_long.to_csv(os.path.join('Graphs', 'LCOH_range_single_scen_v{}.csv'.form
 
 years = [2035, 2050]
 
-df_green_h2_demand_long = pd.DataFrame(columns = ['Scenario', 'Year', 'Value'])
+df_green_h2_demand_long = pd.DataFrame(columns = ['Scenario', 'Year', 'Value', 'Unit'])
 
 for y, year in enumerate(years):
     
@@ -206,12 +207,14 @@ for y, year in enumerate(years):
         df_green_h2_demand_long = pd.concat([df_green_h2_demand_long,
                                             pd.DataFrame({'Scenario': [scen_dict[scen]],
                                                          'Year': [year], 
-                                                         'Value': [output_all[scen]['WGRM'][:, 0, 0, idx].sum()*1e-3]})], ignore_index = True)
+                                                         'Value': [output_all[scen]['WGRM'][:, 0, 0, idx].sum()*1e-3],
+                                                         'Unit': ['Mt H2']})], ignore_index = True)
 #        green_h2_demand.append(output_all[scen]['WGRM'][:, 0, 0, idx].sum()*1e-3)
     df_green_h2_demand_long = pd.concat([df_green_h2_demand_long,
                                         pd.DataFrame({'Scenario': ['Total'],
                                                       'Year': [year], 
-                                                      'Value': [output_all[scen]['HYDT'][:, 0, 0, idx].sum()*1e-3]})], ignore_index = True)
+                                                      'Value': [output_all[scen]['HYDT'][:, 0, 0, idx].sum()*1e-3],
+                                                      'Unit': ['Mt H2']})], ignore_index = True)
 #       green_h2_demand.append(output_all[scen]['HYDT'][:, 0, 0, idx].sum()*1e-3)
 
 
@@ -224,7 +227,7 @@ year = 2050
 y = tl.tolist().index(year)
 
 df_brazil_vs_world_long = pd.DataFrame(columns = ['Technology group', 'Regional aggregation', 
-                                                  'Scenario', 'Indicator', 'Value'])
+                                                  'Scenario', 'Indicator', 'Value', 'Unit'])
 
 for s, scen in enumerate(scen_dict.keys()):
     
@@ -244,16 +247,18 @@ for s, scen in enumerate(scen_dict.keys()):
         prod_ls_brazil.append(prod_brazil*100)
         df_brazil_vs_world_long = pd.concat([df_brazil_vs_world_long,
                                             pd.DataFrame({'Technology group': [agg_techs2[t]], 'Regional aggregation': ['Brazil'],
-                                                         'Scenario': [scen_dict[scen]], 'Indicator': ['Production'], 
-                                                         'Value': [prod_brazil*100]})], ignore_index = True)
+                                                         'Scenario': [scen_dict[scen]], 'Indicator': ['Percentage of production'], 
+                                                         'Value': [prod_brazil*100],
+                                                         'Unit': ['% of production']})], ignore_index = True)
         
         prod_glo = output_all[scen][var_prod][:, idx, 0, y].sum()
         prod_glo = prod_glo / (output_all[scen][var_prod][:, :, 0, y].sum())
         prod_ls_glo.append(prod_glo*100)   
         df_brazil_vs_world_long = pd.concat([df_brazil_vs_world_long,
                                             pd.DataFrame({'Technology group': [agg_techs2[t]], 'Regional aggregation': ['World'],
-                                                         'Scenario': [scen_dict[scen]], 'Indicator': ['Production'], 
-                                                         'Value': [prod_glo*100]})], ignore_index = True)
+                                                         'Scenario': [scen_dict[scen]], 'Indicator': ['Percentage of production'], 
+                                                         'Value': [prod_glo*100],
+                                                         'Unit': ['% of production']})], ignore_index = True)
 
         if tech == 'ELEC':
             idx = [8, 9, 10]
@@ -264,7 +269,8 @@ for s, scen in enumerate(scen_dict.keys()):
         df_brazil_vs_world_long = pd.concat([df_brazil_vs_world_long,
                                             pd.DataFrame({'Technology group': [agg_techs2[t]], 'Regional aggregation': ['Brazil'],
                                                          'Scenario': [scen_dict[scen]], 'Indicator': ['Levelised cost of Hydrogen'], 
-                                                         'Value': [lcoh_brazil*100]})], ignore_index = True)
+                                                         'Value': [lcoh_brazil],
+                                                         'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 
         lcoh_glo = np.mean(output_all[scen]['HYCC'][:, idx, 0, y] * inflator[:, None, None],
                                  where=output_all[scen][var_prod][:, idx, 0, y]>0.0)
@@ -272,7 +278,8 @@ for s, scen in enumerate(scen_dict.keys()):
         df_brazil_vs_world_long = pd.concat([df_brazil_vs_world_long,
                                             pd.DataFrame({'Technology group': [agg_techs2[t]], 'Regional aggregation': ['World'],
                                                          'Scenario': [scen_dict[scen]], 'Indicator': ['Levelised cost of Hydrogen'], 
-                                                         'Value': [lcoh_glo*100]})], ignore_index = True)
+                                                         'Value': [lcoh_glo],
+                                                         'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 
 
 df_brazil_vs_world_long.to_csv(os.path.join('Graphs', 'Brazil_vs_world_v{}.csv'.format(version)), index=False)
@@ -295,6 +302,8 @@ for s, scen in enumerate(scen_dict.keys()):
 
     df_production_long = pd.concat([df_production_long, df_prod_long])
 
+df_production_long['Unit'] = 'Mt H2'
+
 df_production_long.to_csv(os.path.join('Graphs', 'Production_polbrief_by_scen_v{}.csv'.format(version)), index=False)
 
 
@@ -302,7 +311,7 @@ df_production_long.to_csv(os.path.join('Graphs', 'Production_polbrief_by_scen_v{
 tl_out = np.arange(2025, 2050+1)
 
 df_lcoh_polbrief_long = pd.DataFrame(columns=['Technology group', 'Scenario',
-                                           'Year', 'Value'])
+                                           'Year', 'Value', 'Unit'])
 
 
 for s, scen in enumerate(scen_dict.keys()):
@@ -329,8 +338,11 @@ for s, scen in enumerate(scen_dict.keys()):
              df_lcoh_polbrief_long = pd.concat([df_lcoh_polbrief_long,
                                                 pd.DataFrame({'Technology group': [agg_techs2[t]], 
                                                               'Scenario': [scen_dict[scen]],
-                                                              'Year': [year], 'Value': [value]})])
+                                                              'Year': [year], 'Value': [value],
+                                                              'Unit': ['Euro(2024)/kg H2']})])
          
 
 df_lcoh_polbrief_long.to_csv(os.path.join('Graphs', 'LCOH_polbrief_by_scen_v{}.csv'.format(version)), index=False)
 
+
+# %%
