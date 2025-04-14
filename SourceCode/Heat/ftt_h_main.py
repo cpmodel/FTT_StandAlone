@@ -43,7 +43,6 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.Heat.ftt_h_lcoh2 import get_lcoh2
 from SourceCode.Heat.ftt_h_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
@@ -97,7 +96,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     # Call the function
     carbon_costs = set_carbon_tax(data, c4ti)
     data = get_lcoh(data, titles, carbon_costs)
-    data = get_lcoh2(data, titles, carbon_costs)
 
 
     # %% First initialise if necessary
