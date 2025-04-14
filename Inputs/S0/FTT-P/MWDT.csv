@@ -11,8 +11,8 @@
 10 OCGT + CCS,0,0,0,0,1,0
 11 Biomass,0,0,1,0,0,0
 12 Biomass + CCS,0,0,1,0,0,0
-13 Large Hydro,0,0,0,0,0,1
-14 Pumped Hydro,0,0,0,0,0,1
+13 Large Hydro,0,0,0,0,1,0
+14 Pumped Hydro,0,0,0,0,1,0
 15 Geothermal,1,0,0,0,0,0
 16 Marine,0,0,0,0,0,1
 17 Onshore,0,0,0,0,0,1

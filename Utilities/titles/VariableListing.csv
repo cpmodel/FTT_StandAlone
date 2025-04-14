@@ -47,9 +47,7 @@ MRED,Natural resources and REN full technical potentials (PJ),PJ,RTI,ERTI,NA,TIM
 MPTR,Extraction rate of resources,na,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MMCD,FTT:Power standard deviation of marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSR,FTT:Power long-term storage raw costs (2013$/GWh),2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,,,,Y
-MLSPX,Exogenous MLSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MLSP,FTT:Power long-term storage costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MLSMX,Exogenous MLSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -69,19 +67,15 @@ MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MGAMX,Exogenous MGAM (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MGAM,FTT:Power Gamma values ($2013/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWP,FTT:Power marginal costs of fuels ($2013/GJ),$2013/GJ,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEWLX,Exogenous MEWL (from E3ME run),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWL,FTT:Power load factors (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEWKX,Exogenous MEWK (from E3ME run),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWK,FTT-P Capacity by technology (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 MEWI,FTT-P Installed capacity additions (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEWGX,Exogenous MEWG (from E3ME run),GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MEWG,FTT-P Generation by technology (GWh),GWh,RTI,T2TI,NA,TIME,FTT-P,-,2022,2001,-,Y,Y
 MEWE,FTT:Power CO2 emissions,MtCO2/y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWDX,Exogenous demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
@@ -359,7 +353,6 @@ FU14B,Fuel demand for heating in 2014,ktoe,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 MCSC,FTT:Power cost-supply curves,na,RTI,ERTI,CSCTI,NA,FTT-P,-,-,2001,-,Y,Y
 MCRT,FTT:Power curtailment of VRE (% of generation),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCRG,Curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-MCOCX,Carbon costs by technology from E3ME,2013$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,Y,Y
 REPPX,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,2010,,,
 REPP2X,FTT:Tr regional emission price,(euro/tC),RTI,NA,NA,TIME,FTT:Tr,,,2010,,,
 REPP3X,FTT:Fr regional emissions price,(euro/tC),RTI,NA,NA,TIME,FTT:Fr,,,2010,,,
@@ -381,10 +374,6 @@ IFT2,FTT-IH-FBT Fuel tax (2010 Euros/MWh),2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH
 IFT3,FTT-IH-MTM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,-,Y,Y
 IFT4,FTT-IH-NMM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,-,Y,Y
 IFT5,FTT-IH-OIS Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,-,Y,Y
-MEWSX,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MWMCX,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MMCDX,FTT:Power standard deviation of marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-MTCDX,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 RZFT,FTT-Fr Fuel tax,$/MJ,RTI,NA,NA,TIME,FTT-Fr,-,-,2018,-,,
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
