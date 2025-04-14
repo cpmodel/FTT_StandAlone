@@ -1,9 +1,32 @@
+# -*- coding: utf-8 -*-
+"""
+=========================================
+run_file.py
+=========================================
+Run file for FTT Stand alone.
+#############################
+
+
+Programme calls the FTT stand-alone model run class, and executes model run.
+Call this file from the command line (or terminal) to run FTT Stand Alone.
+
+Local library imports:
+
+    Model Class:
+
+    - `ModelRun <model_class.html>`__
+        Creates a new instance of the ModelRun class
+
+
+"""
+
 
 # Local library imports
 from SourceCode.model_class import ModelRun
 from SourceCode.support.divide import divide
 import numpy as np
 import pandas as pd
+import os
 
 
 # Instantiate the run
