@@ -90,8 +90,15 @@ def share_transport_batteries(data, titles):
     capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
     
     # Share of either repurposed or V2G batteries
-    storage_ratio = ( (data["Second-hand battery stock"] + data["V2G battery stock"])
-                    / capacity_batteries_power )
+    with np.errstate(divide='ignore', invalid='ignore'):
+        storage_ratio = ( (data["Second-hand battery stock"] + data["V2G battery stock"])
+                        / capacity_batteries_power )
+    
+    # Capture divide by zero
+    mean_storage_ratio = np.nanmean(storage_ratio)
+    storage_ratio = np.where(np.isnan(storage_ratio), mean_storage_ratio, storage_ratio)
+    
+    return storage_ratio
     
     
     return storage_ratio

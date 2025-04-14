@@ -310,10 +310,10 @@ def get_lcoe(data, titles, year):
                                         bcet[:, 5] * bcet[:, 5] +
                                         bcet[:, 7] * bcet[:, 7])
         
-        # Check if METC is nan
-        if np.isnan(data['METC']).any():
-            nan_indices_metc = np.where(np.isnan(data['METC']))
-            raise ValueError(f"NaN values detected in lcoe ('metc') in  "
-                             f"region {nan_indices_metc[0]} and technology {nan_indices_metc[1]}")
+    # Check if METC is nan
+    if np.isnan(data['METC']).any():
+        nan_indices_metc = np.where(np.isnan(data['METC']))
+        raise ValueError(f"NaN values detected in lcoe ('metc') in  "
+                         f"region {nan_indices_metc[0]} and technology {nan_indices_metc[1]}")
 
     return data

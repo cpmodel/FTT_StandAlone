@@ -571,9 +571,9 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
             # EURO 2015 / additional GWh
             
             # Total VRE generation
-            vre = np.sum(Svar * data['MEWG'][r, :, 0])
+            vre = max(0.00001, np.sum(Svar * data['MEWG'][r, :, 0]))
             # CSP also taken into account for long-term storage needs
-            vre_long = vre + data['MEWG'][r, 19, 0]
+            vre_long = max(0.00001, vre + data['MEWG'][r, 19, 0])
             
             # Wind (note we're using a different rldc outcome!)
             Hp_wind = rldc_prod_wind[7]
