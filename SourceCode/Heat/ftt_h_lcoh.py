@@ -50,7 +50,7 @@ def set_carbon_tax(data, c4ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    carbon_costs = (data["REPP_HX"][:, :, 0]                               # Carbon price in euro / tC
+    carbon_costs = (data["REPP4X"][:, :, 0]                               # Carbon price in euro / tC
 
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
                     / 3.666 / 1000 / 1000                                # Conversion from C to CO2 and MWh to kWh, kg to tonne 
@@ -112,7 +112,7 @@ def get_lcoh(data, titles, carbon_costs):
 
     it = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/Kw)']], conv_cf, bt_mask)
     dit = get_cost_component(bhtc[:, :, c4ti['2 Inv Cost SD']], conv_cf, bt_mask)
-    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/Kw)']] * data['HTVS'][:, :, 0], 1, lt_mask)
+    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/Kw)']] * data['HTVS'][:, :, 0], conv_cf, bt_mask)
     ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], conv_ce, lt_mask)
