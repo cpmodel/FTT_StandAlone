@@ -263,7 +263,9 @@ def comparison_str(clean_tech, fossil_tech):
     elif clean_tech == "11 Heatpump AirWater" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
         output_str = "Water-air HP vs gas"
         
-    elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["2 Petrol Mid", "3 Petrol Lux"]:
+    
+
+    elif clean_tech in  ["19 Electric Econ", "20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["1 Petrol Econ", "2 Petrol Mid", "3 Petrol Lux"]:
         output_str = "Electric car vs diesel"
     elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["8 Diesel Mid", "9 Diesel Lux"]:
         output_str = "Electric car vs petrol"
@@ -725,7 +727,7 @@ for mi, model in enumerate(models):
     ax.set_ylabel('')
     
     ax.set_title(repl_dict[model])
-    ax.set_xlim(-3, 10)   
+    ax.set_xlim(-2, 12)   
     #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     
