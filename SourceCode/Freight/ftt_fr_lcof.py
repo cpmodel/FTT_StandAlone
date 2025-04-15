@@ -252,9 +252,8 @@ def get_lcof(data, titles, carbon_costs, year):
         npv_expenses1 = (npv_expenses1/denominator)
         npv_utility = 1/denominator
         
-        # Remove 1s for tech with small lifetime than max
-        npv_utility[npv_utility==1] = 0
-        npv_utility[:,0] = 1
+        # Remove utility after end lifetime
+        npv_utility = np.where(mask, npv_utility, 0)
         LCOF = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
 
         # MODIFIED: Corrected standard deviation calculation

@@ -203,8 +203,8 @@ def get_lcot(data, titles, carbon_costs, year):
         npv_expenses3 = (vtt + ct + fft + rtt) / denominator
         # 2-Utility
         npv_utility = 1 / denominator
-        # Remove 1s for tech with small lifetime than max
-        npv_utility[npv_utility == 1] = 0
+        # Remove utility after end lifetime
+        npv_utility = np.where(mask, npv_utility, 0)
         npv_utility[:, 0] = 1
         
         # 3-Standard deviation (propagation of error)
