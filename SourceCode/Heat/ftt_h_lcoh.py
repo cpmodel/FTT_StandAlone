@@ -110,9 +110,9 @@ def get_lcoh(data, titles, carbon_costs):
         cost = np.multiply(base_cost[..., None], conversion_factor)
         return np.multiply(cost, mask)
 
-    it = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/Kw)']], conv_cf, bt_mask)
+    it = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']], conv_cf, bt_mask)
     dit = get_cost_component(bhtc[:, :, c4ti['2 Inv Cost SD']], conv_cf, bt_mask)
-    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/Kw)']] * data['HTVS'][:, :, 0], conv_cf, bt_mask)
+    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * data['HTVS'][:, :, 0], conv_cf, bt_mask)
     ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], conv_ce, lt_mask)
