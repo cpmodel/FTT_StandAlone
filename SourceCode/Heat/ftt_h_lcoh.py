@@ -56,7 +56,7 @@ def set_carbon_tax(data, c4ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    carbon_costs = (data["REPP_HX"][:, :, 0]                             # Carbon price in euro / tC
+    carbon_costs = (data["REPPHX"][:, :, 0]                             # Carbon price in euro / tC
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
                     / 3.666 / 1000 / 1000                                # Conversion from C to CO2 and MWh to kWh, kg to tonne 
                     )
@@ -111,7 +111,7 @@ def get_lcoh(data, titles, carbon_costs):
         # Initialse the levelised cost components
         # Average investment cost
         it = np.zeros([len(titles['HTTI']), int(max_lt)])
-        it[:, 0,np.newaxis] = data['BHTC'][r,:, c4ti['1 Inv cost mean (EUR/Kw)'],np.newaxis]/(cf*1000)
+        it[:, 0,np.newaxis] = data['BHTC'][r,:, c4ti['1 Inv cost mean (EUR/kW)'],np.newaxis]/(cf*1000)
 
 
         # Standard deviation of investment cost
