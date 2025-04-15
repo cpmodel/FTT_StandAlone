@@ -241,7 +241,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         ############## Computing new shares ##################
 
-        #Start the computation of shares
+        # Start the computation of shares
         for t in range(1, no_it+1):
 
             # Interpolate to prevent staircase profile.
@@ -255,8 +255,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     continue
 
             ############################ FTT ##################################
-#                        t3 = time.time()
-#                        print("Solving {}".format(titles["RTI"][r]))
                 # Initialise variables related to market share dynamics
                 # DSiK contains the change in shares
                 dSik = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
