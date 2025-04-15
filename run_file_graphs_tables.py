@@ -63,7 +63,7 @@ y_2024 = tl.tolist().index(2024)
 inflator = output_all['S0']['PRSC'][:, 0, 0, y_2024] / output_all['S0']['EX'][:, 0, 0, y_2024]
 # Set inflator to average EU price levels (~Eurozone)
 inflator = inflator* 0 + 1.3
-version = 3
+version = 10
 
 dem_vectors =['NH3 for fertiliser', 'NH3 for chemicals', 'MeOH for chemicals', ' H2 for oil refining']
 
@@ -132,25 +132,23 @@ for i, t in enumerate(idx):
     # Global Average electrolytic
     lcoh_avg = np.mean(output_all[scen][var_lcoh][:, t, 0, :]*
                            inflator[:, None]
-                       , axis=0, 
-                       where=cond)
+                       , axis=0)
     
     df_lcoh_avg = pd.Series(lcoh_avg, index=tl).fillna(0)[tl_out]
     
     for year, val in df_lcoh_avg.items():
         df_lcoh_long = pd.concat([df_lcoh_long, 
-                                 pd.DataFrame({'Technology': [techlbl + ' average electrolytic'], 
+                                 pd.DataFrame({'Technology': ['Global average electrolytic '+techlbl], 
                                                'Regional aggregation': ['Global'],
                                                'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
     # Global Average SMR
-    lcoh_avg_smr = np.mean(output_all[scen][var_lcoh][:, 0, 0, :]*
-                           inflator[:, None]
-                       , axis=0, 
-                       where=cond)
+    lcoh_avg_smr = np.mean(output_all[scen][var_lcoh][:, [0,2], 0, :]*
+                           inflator[:, None, None]
+                       , axis=(0,1))
     df_lcoh_avg_smr = pd.Series(lcoh_avg_smr, index=tl)[tl_out]
     for year, val in df_lcoh_avg_smr.items():
         df_lcoh_long = pd.concat([df_lcoh_long,
-                                  pd.DataFrame({'Technology': [techlbl + ' average SMR'], 
+                                  pd.DataFrame({'Technology': ['Global average FF'], 
                                                 'Regional aggregation': ['Global'],
                                                 'Year': [year], 'Value': [val], 'Unit': ['Euro(2024)/kg H2']})], ignore_index = True)
 

@@ -149,7 +149,8 @@ def get_lcoh(data, titles):
         # Variable OPEX
         opex_var = np.zeros([len(titles['HYTI']), int(max_lt)])
         opex_var = opex_var + (
-            data['BCHY'][r,:, c7ti['Variable OPEX, mean, €/kg H2 prod'],np.newaxis])
+            data['BCHY'][r,:, c7ti['Variable OPEX, mean, €/kg H2 prod'],np.newaxis] + 
+            data['BCHY'][r,:, c7ti['Additional OPEX, mean, €/kg H2 prod.'],np.newaxis])
         opex_var = np.where(lt_mask, opex_var, 0)
 
         # st.dev variable opex

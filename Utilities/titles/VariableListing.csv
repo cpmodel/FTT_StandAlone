@@ -461,18 +461,18 @@ HYIC,CAPEX factor of the hydrogen production equipment,Euro per kt H2 cap,RTI,HY
 HYIT,Total CAPEX factor,Euro per kt H2 cap,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,
 PRSC,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,General,-,-,2010,From E3ME results,Y,Y,
 WGFL,Green hydrogen demand floor level,ktH2,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WWIC,Onshore wind CAPEX,EUR/kW,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WOIC,Offshore wind CAPEX,EUR/kW,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WSIC,Solar CAPEX,EUR/kW,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WWOM,Onshore wind OPEX,EUR/MWh,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WOOM,Offshore wind OPEX,EUR/MWh,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WSOM,Solar OPEX,EUR/MWh,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WWLF,Onshore wind load factor,%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WOLF,Offshore wind load factor,%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WSLF,Solar load factor,%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
-WWSH,Share of dedicated green power tech that is onshore wind,%,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
-WOSH,Share of dedicated green power tech that is offshore wind,%,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
-WSSH,Share of dedicated green power tech that is solar,%,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
+WWIC,Onshore wind CAPEX,EUR/kW,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WOIC,Offshore wind CAPEX,EUR/kW,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WSIC,Solar CAPEX,EUR/kW,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WWOM,Onshore wind OPEX,EUR/MWh,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WOOM,Offshore wind OPEX,EUR/MWh,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WSOM,Solar OPEX,EUR/MWh,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WWLF,Onshore wind load factor,%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WOLF,Offshore wind load factor,%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WSLF,Solar load factor,%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WWSH,Share of dedicated green power tech that is onshore wind,%,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WOSH,Share of dedicated green power tech that is offshore wind,%,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,Not in master file
+WSSH,Share of dedicated green power tech that is solar,%,RTI,NA,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,Not in master file
 EX,Exchange rate index,-,RTI,NA,NA,TIME,General,,,2010,From E3ME results,Y,Y,
 HYEF,Hydrogen production emission factor,kg CO2 / kg H2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
 HYJF,Energy consumption for hydrogen production,ktoe,RTI,JTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,

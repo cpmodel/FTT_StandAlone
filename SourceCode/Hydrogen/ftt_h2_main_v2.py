@@ -109,15 +109,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     
     # Manual adjustment of lifetimes for new technologies
     idx = [i for i in range(len(titles['HYTI'])) if i not in [0, 2]]
-    if 2021 < year < 2028:
+    if 2021 < year < 2035:
         
         # Increase lifetime for novel technologies by a factor of ten, and
         # reduce over time.
-        lifetime_adjust[:, idx] = 10 
+        lifetime_adjust[:, idx] = 15 
         
-    elif 2027 < year < 2038:
+    elif 2034 < year < 2045:
         
-        lifetime_adjust[:, idx] = 10 * (1 - (2038-year)/(2038 - 2028))
+        lifetime_adjust[:, idx] = 15 * (1 - (2045-year)/(2045 - 2034))
         
     
     
@@ -576,10 +576,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             for tech in range(len(titles['HYTI'])):
 
                 if data['HYWW'][0, tech, 0] > 0.1:
-
+                    
+                    # CAPEX
                     data['BCHY'][:, tech, c7ti['CAPEX, mean, €/kg H2 cap']] = data_dt['BCHY'][:, tech, c7ti['CAPEX, mean, €/kg H2 cap']] * \
                         (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])
-                        
+                    # Fixed OPEX
+                    data['BCHY'][:, tech, c7ti['Fixed OPEX, mean, €/kg H2 cap/y']] = data_dt['BCHY'][:, tech, c7ti['Fixed OPEX, mean, €/kg H2 cap/y']] * \
+                        (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])
+                    # Variable OPEX
+                    data['BCHY'][:, tech, c7ti['Variable OPEX, mean, €/kg H2 prod']] = data_dt['BCHY'][:, tech, c7ti['Variable OPEX, mean, €/kg H2 prod']] * \
+                        (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])                        
+            
             # Store the investment component
             data['HYIC'][:, :, 0] = data['BCHY'][:, :, c7ti['CAPEX, mean, €/kg H2 cap']]
             

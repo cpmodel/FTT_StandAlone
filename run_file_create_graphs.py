@@ -79,7 +79,7 @@ inflator = output_all['S0']['PRSC'][:, 0, 0, y_2024] / output_all['S0']['EX'][:,
 # Set inflator to average EU price levels (~Eurozone)
 inflator = inflator* 0 + 1.3
 
-version = 3
+version = 10
 
 # %% Setup converters and colour maps
 
@@ -958,8 +958,7 @@ for i, t in enumerate(idx):
     # Global Average        
     lcoh_avg = np.mean(output_all[scen][var_lcoh][:, t, 0, :]*
                            inflator[:, None]
-                       , axis=0, 
-                       where=cond)
+                       , axis=0)
     df_lcoh_avg = pd.Series(lcoh_avg, index=tl)    
     
     axes_flat[i].plot(np.asarray(tl_out),
@@ -967,18 +966,18 @@ for i, t in enumerate(idx):
                     color= "black",
                     label='Global average electrolytic',
                     linestyle='dashed')
+    print("{}: {} - {}".format(titles['HYTI'][t], df_lcoh_avg[2025], df_lcoh_avg[2050]))
     
     # Global Average        
-    lcoh_avg_smr = np.mean(output_all[scen][var_lcoh][:, 0, 0, :]*
-                           inflator[:, None]
-                       , axis=0, 
-                       where=cond)
+    lcoh_avg_smr = np.mean(output_all[scen][var_lcoh][:, [0,2], 0, :]*
+                           inflator[:, None, None]
+                       , axis=(0,1))
     df_lcoh_avg_smr = pd.Series(lcoh_avg_smr, index=tl)    
     
     axes_flat[i].plot(np.asarray(tl_out),
                     df_lcoh_avg_smr[tl_out].values,
                     color= "black",
-                    label='Global average SMR',
+                    label='Global average FF',
                     linestyle='dotted')
     
     # Maximum value
@@ -991,7 +990,10 @@ for i, t in enumerate(idx):
     lcoh_min = np.min(output_all[scen][var_lcoh][:, t, 0, :]*
                           inflator[:, None]
                       , axis=0)
-    df_lcoh_min = pd.Series(lcoh_min, index=tl)    
+    df_lcoh_min = pd.Series(lcoh_min, index=tl) 
+    
+    print("{}: {} - {}".format(titles['HYTI'][t], df_lcoh_min[2025], df_lcoh_min[2050]))
+    print("{}: {} - {}".format(titles['HYTI'][t], df_lcoh_max[2025], df_lcoh_max[2050]))
 
     # Shaded area representing variability
     axes_flat[i].fill_between(np.asarray(tl_out),
@@ -1287,43 +1289,6 @@ reg_idx = 3
 
 for s, scen in enumerate(scen_dict.keys()):
     
-    # for t, tech in enumerate(agg_techs2[:-1]):
-    
-    #     tech_titles = conv2.index[conv2[tech] == 1].tolist()
-    #     idx = [conv2.index.get_loc(i) for i in tech_titles]
-    
-
-        
-    #     # Global weighted average by individual technology
-    #     lcoh_weight = divide(output_all[scen][var_weight][:, idx, 0, :],
-    #                          output_all[scen][var_weight][:, idx, 0, :].sum(axis=0).sum(axis=0)[None, None, :])
-        
-    #     lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] * lcoh_weight, axis=0).sum(axis=0)
-    #     lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] * inflator[:, None, None] , axis=(0,1))
-
-    #     # lcoh_avg = np.sum(output_all[scen][var_lcoh][:, idx, 0, :] * lcoh_weight, axis=0).sum(axis=0)
-    #     # lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] , axis=(0,1))
-
-    #     df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
-        
-    #     axes[0,s].plot(np.asarray(tl_out),
-    #                     df_lcoh_avg[tl_out].values,
-    #                     label=tech,
-    #                     color=tech_colors2[t]) 
-        
-    #     axes[0,s].set_title(scen_dict[scen])
-        
-    # axes[0,s].set_xlim([tl_out[0], tl_out[-1]]);
-    # axes[0,s].set_ylim([0, 7])
-    # axes[0,s].grid(alpha=0.4, color="#E3E3E3");
-    # axes[0,s].tick_params('x', labelrotation=60)
-    # axes[0,s].set_ylabel('Levelised cost\nEuro(2024)/kg H$_2$')  
-    # axes[0,s].label_outer()
-    # # axes[0,s].set_xticks([2025, 2030, 2040, 2050]) 
-    
-    # # for s, scen in enumerate(scen_dict.keys()):
-        
-    prod = output_all[scen][var_prod][:, idx, 0, :].sum(axis=0).sum(axis=0) * 1e-3
     prod = np.matmul(conv2.iloc[:, :-1].T, output_all[scen][var_prod].sum(axis=0)[:, 0, :]) * 1e-3
     df_prod = pd.DataFrame(prod.values, index=agg_techs2[:-1], columns=tl)
     
@@ -1399,6 +1364,7 @@ for s, scen in enumerate(scen_dict.keys()):
          # lcoh_avg2 = np.mean(output_all[scen][var_lcoh][:, idx, 0, :] , axis=(0,1))
 
          df_lcoh_avg = pd.Series(lcoh_avg2, index=tl)
+         print("{} - {}: {}".format(scen, tech, df_lcoh_avg[2025] - df_lcoh_avg[2050]))
         
          axes[s].plot(np.asarray(tl_out),
                          df_lcoh_avg[tl_out].values,
