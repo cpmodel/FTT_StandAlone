@@ -31,7 +31,9 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
+#from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
+from SourceCode.Freight.ftt_fr_lcof2 import get_lcof, set_carbon_tax
+
 from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
 from SourceCode.support.divide import divide
 from SourceCode.Freight.ftt_fr_mandate import implement_mandate
@@ -139,6 +141,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         carbon_costs = set_carbon_tax(data, c6ti)
         data = get_lcof(data, titles, carbon_costs, year)
+
         
         if year == histend["RFLZ"]:
             # Calculate levelised cost
