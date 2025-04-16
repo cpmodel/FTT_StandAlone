@@ -407,8 +407,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 cap=data["TEWK"],
                 cap_dt=data_dt["TEWK"], 
                 cap_lag=time_lag["TEWK"],
-                shares=data["TEWS"],
-                shares_dt=data_dt["TEWS"],
                 sales_or_investment_in=data["TEWI"],
                 timescales=data['BTTC'][:, :, c3ti['8 lifetime']],
                 dt=dt

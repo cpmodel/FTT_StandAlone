@@ -714,8 +714,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Update investment. Note that sum(mewi_t) not exactly mewi
             _, mewi_t = get_sales(
-                data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWS"], 
-                data_dt["MEWS"], data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
+                data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWI"],
+                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
             
             data["MEWI"] = get_sales_yearly(
                 data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],

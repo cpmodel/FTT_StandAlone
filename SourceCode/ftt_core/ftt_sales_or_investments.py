@@ -7,8 +7,7 @@ Created on Thu Feb 15 09:09:50 2024
 
 import numpy as np
 
-def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in, 
-               timescales, dt):
+def get_sales(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
     """
     Calculate new sales/investments for all FTT models (e.g. TEWI)
 
@@ -28,10 +27,6 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
         Capacity at the previous timestep dt
     cap_lag: np.array
         Capacity at the previous year
-    shares: np.array
-        Current shares (e.g. TEWS, MEWS)
-    shares_dt: np.array
-        Shares at the previous timestep dt
     timescales: np.array
         Average lifetime of the various technologies
     dt: float
@@ -48,23 +43,23 @@ def get_sales(cap, cap_dt, cap_lag, shares, shares_dt, sales_or_investment_in,
     """
     # Find capacity and share growth since last time step
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
-    share_growth_dt = shares[:, :, 0] - shares_dt[:, :, 0]
     cap_growth_dt = cap[:, :, 0] - cap_dt[:, :, 0]
 
     # Calculate share_depreciation
-    share_depreciation = shares_dt[:, :, 0] * dt / timescales
+    cap_depreciation = cap_lag[:, :, 0] * dt / timescales
     
     # If there is growth, depreciation is fully replaced.
     # Where capacity has decreased, we only replace depreciated capacity
     # if the depreciation > capacity loss
     conditions = [
         (cap_growth >= 0.0),
-        (-share_depreciation < share_growth_dt) & (share_growth_dt < 0)
+        (cap_depreciation > -cap_growth_dt) & (cap_growth < 0)
     ]
-
+    
+    # Using cap_lag here to at least not depreciate brand-new assets
     outputs_eol = [
-        cap_dt[:, :, 0] * dt / timescales,
-        (share_growth_dt + share_depreciation) * cap_lag[:, :, 0] 
+        cap_depreciation,
+        cap_depreciation + cap_growth_dt
     ]
 
     # Three end-of-life (eol) replacement options, depending on conditions

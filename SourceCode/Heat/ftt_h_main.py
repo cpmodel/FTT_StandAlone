@@ -456,7 +456,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # New additions (HEWI)
             data['HEWI'], hewi_t = get_sales(
                   data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
-                  data["HEWS"], data_dt["HEWS"],
                   data["HEWI"], data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
                   dt
                   )

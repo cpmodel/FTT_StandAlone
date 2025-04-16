@@ -207,8 +207,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                     cap=data["ZEWK"],
                     cap_dt=data_dt["ZEWK"], 
                     cap_lag=time_lag["ZEWK"],
-                    shares=data["ZEWS"],
-                    shares_dt=data_dt["ZEWS"],
                     sales_or_investment_in=data["ZEWI"],
                     timescales=data['BZTC'][:, :, c6ti['8 Lifetime (y)']],
                     dt=dt,
