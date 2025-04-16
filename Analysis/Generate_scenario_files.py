@@ -153,7 +153,7 @@ def policy_change(df, policy):
         case "EV truck mandate regulation":
             df.iloc[list(range(25)), 23:] = 0
         case "EV truck mandate":
-            df.iloc[:, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+            df.iloc[:, 1] = 2040       # The EV mandates are coded as a function; this switch turns it on
         case "EV truck mandate half":
             
             df.iloc[:, 1] = 2055       # The EV mandates are coded as a function; this switch turns it on
@@ -220,7 +220,7 @@ def policy_change(df, policy):
         
         
 # Import policies from policies.csv in same folder
-policies = pd.read_csv(os.path.join(current_dir, "Policies_sector_by_policy.csv"))
+policies = pd.read_csv(os.path.join(current_dir, "Policies_by_sector.csv"))
 
 policy_packages = list(policies.keys()[9:])
 #policy_packages = ["Carbon tax", "and_subsidies", "and_mandates", "Subsidies", "Mandates"]

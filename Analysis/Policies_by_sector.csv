@@ -1,17 +1,17 @@
 ﻿Policy,Model,Variable,Description,,,,,,FTT-P,FTT-Tr,FTT-H,FTT-Fr,All minus FTT-P,All minus FTT-Tr,All minus FTT-H,All minus FTT-Fr
 MEWT,FTT-P,MEWT,30% subsidies on all renewables except solar,,,,,,1,0,0,0,0,1,1,1
-Power REPP,FTT-P,REPPX,Constant carbon price at €100 per tonne CO2 power sector,,,,,,1,0,0,0,0,1,1,1
+Power REPP,FTT-P,REPPX,Constant carbon price at €200 per tonne CO2 power sector,,,,,,0,0,0,0,0,0,0,0
 Coal phase-out,FTT-P,coal phaseout,Linearly decrease capacity of coal from 2024 to 2035; active phase-out,,,,,,1,0,0,0,0,1,1,1
 EV mandate regulation,FTT-Tr,TREG,No new fossil cars from 2035,,,,,,0,1,0,0,1,0,1,1
 EV mandate exogenous sales,FTT-Tr,EV mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,1,0,0,1,0,1,1
 BRR strong subsidy,FTT-Tr,Base registration rate,30% purchase rebate on EVS,,,,,,0,1,0,0,1,0,1,1
-Transport REPP,FTT-Tr,REPP2X,Constant carbon price at €100 per tonne CO2,,,,,,0,1,0,0,1,0,1,1
+Transport REPP,FTT-Tr,REPP2X,Constant carbon price at €200 per tonne CO2,,,,,,0,1,0,0,1,0,1,1
 ZTVT strong subsidy,FTT-Fr,ZTVT,30% purchase subsidy on small EV truck,,,,,,0,0,0,1,1,1,1,0
-EV truck mandate regulation,FTT-Fr,ZREG,No new fossil cars from 2035,,,,,,0,0,0,1,1,1,1,0
-EV truck mandate exogenous sales,FTT-Fr,EV truck mandate,"Same as heat mandate: get extra sales, and then in 2035, stop sales altogether",,,,,,0,0,0,1,1,1,1,0
-Freight REPP,FTT-Fr,REPP3X,Constant carbon price at €100 per tonne CO2 in freight,,,,,,0,0,0,1,1,1,1,0
+EV truck mandate regulation,FTT-Fr,ZREG,No new fossil cars from 2040,,,,,,0,0,0,1,1,1,1,0
+EV truck mandate,FTT-Fr,EV truck mandate,"Same as heat mandate: get extra sales, and then in 2040, stop sales altogether",,,,,,0,0,0,1,1,1,1,0
+Freight REPP,FTT-Fr,REPP3X,Constant carbon price at €200 per tonne CO2 in freight,,,,,,0,0,0,1,1,1,1,0
 HTVS strong subsidy,FTT-H,HTVS,30% purchase subsidy on heat pumps,,,,,,0,0,1,0,1,1,0,1
 Heat pump mandate 2035 regulation,FTT-H,HREG,Regulate out fossilf fuels in 2035,,,,,,0,0,1,0,1,1,0,1
 Heat pump mandate exogenous sales,FTT-H,hp mandate,"Linearly increasing sales of heat pump from 2024 to 2035, decrease fossil heating technologies (using switch)",,,,,,0,0,1,0,1,1,0,1
-Heat REPP,FTT-H,REPP4X,Constant carbon price at €100 per tonne CO2,,,,,,0,0,1,0,1,1,0,1
+Heat REPP,FTT-H,REPP4X,Constant carbon price at €200 per tonne CO2,,,,,,0,0,1,0,1,1,0,1
 Sector coupling,General,SectorCouplingAssumps,Turn on second hand batteries,,,,,,1,1,1,1,1,1,1,1
