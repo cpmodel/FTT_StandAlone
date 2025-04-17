@@ -41,11 +41,11 @@ def get_sales(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
         investment or sales at time t
     
     """
-    # Find capacity and share growth since last time step
+    # Find capacity growth since last time step
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
     cap_growth_dt = cap[:, :, 0] - cap_dt[:, :, 0]
 
-    # Calculate share_depreciation
+    # Calculate capacity depreciation
     cap_depreciation = cap_lag[:, :, 0] * dt / timescales
     
     # If there is growth, depreciation is fully replaced.
@@ -84,7 +84,7 @@ def get_sales(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
     return sales_or_investment, sales_dt
 
 
-def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, timescales):
+def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales):
     """
     Calculate new sales/investments for all FTT models before simulation starts (e.g. TEWI)
 
@@ -102,10 +102,6 @@ def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, t
         capacity (e.g. TEWK, MEWK)
     cap_lag: np.array
         capacity at the previous year
-    shares: np.array
-        current shares (e.g. TEWS, MEWS)
-    shares_lag: np.array
-        shares at the end of previous year
     timescales: np.array
         the average lifetime of the various technologies
 
@@ -115,24 +111,23 @@ def get_sales_yearly(cap, cap_lag, shares, shares_lag, sales_or_investment_in, t
         investment or sales up to and including time t
     
     """
-    # Find capacity and share growth since last year
+    # Find capacity growth since last year
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
-    share_growth = shares[:, :, 0] - shares_lag[:, :, 0]
 
-    # Calculate share_depreciation
-    share_depreciation = shares_lag[:, :, 0] / timescales
+    # Calculate capacity depreciation
+    cap_depreciation = cap_lag[:, :, 0] / timescales
     
     # If there is growth, end-of-life replacements take place fully
     # Where capacity has decreased, we only replace eol capacity
     # if the eol_replacement > capacity loss
     conditions = [
         (cap_growth >= 0.0),
-        (-share_depreciation < share_growth) & (share_growth < 0)
+        (cap_depreciation > -cap_growth) & (cap_growth < 0)
     ]
 
     outputs = [
-        cap_lag[:, :, 0] / timescales,
-        (share_growth + share_depreciation) * cap_lag[:, :, 0]
+        cap_depreciation,
+        cap_depreciation + cap_growth
     ]
 
     # Three end-of-life (eol) replacement options, depending on conditions
