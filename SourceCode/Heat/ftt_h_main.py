@@ -44,7 +44,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 from SourceCode.Heat.ftt_h_mandate import implement_mandate
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 
 
 # -----------------------------------------------------------------------------
@@ -157,12 +157,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Investment (= capacity additions) by technology (in GW/y)
         if year > 2014:
-            data["HEWI"][:, :, 0] = ((data["HEWK"][:, :, 0] - time_lag["HEWK"][:, :, 0])
-                                        + time_lag["HEWK"][:, :, 0] * data["HETR"][:, :, 0])
-            # Prevent HEWI from going negative
-            data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
-                                                0.0,
-                                                data['HEWI'][:, :, 0])
+            data["HEWI"] = get_sales_yearly(data["HEWK"], time_lag["HEWK"],
+                              data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']],
+                              year)
+            
             
             bi = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
             for r in range(len(titles['RTI'])):
