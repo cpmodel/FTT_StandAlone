@@ -718,8 +718,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
             
             data["MEWI"] = get_sales_yearly(
-                data["MEWK"], time_lag["MEWK"], data["MEWS"], time_lag["MEWS"],
-                data["MEWI"], data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
+                data["MEWK"], time_lag["MEWK"], data["MEWI"],
+                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
             
 
             earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
