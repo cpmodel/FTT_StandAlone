@@ -100,7 +100,7 @@ def get_lcoh(data, titles, carbon_costs):
     conv_cf = 1 / (cf * 1000)
 
     # Conversion efficiency
-    ce = data['BHTC'][: ,: , c4ti['9 Conversion efficiency'], np.newaxis]
+    ce = data['BHTC'][:, : , c4ti['9 Conversion efficiency'], np.newaxis]
     ce[ce < 0.0001] = 0.0001
     conv_ce = 1 / ce
     

@@ -165,7 +165,7 @@ def get_lcof(data, titles, carbon_costs, year):
     
     bztc = data['BZTC']
     
-    # Heating device lifetimes and build year
+    # Lifetimes and build years
     lt = bztc[:, :, c6ti['8 Lifetime (y)']]
     max_lt = int(np.max(lt))
     full_lt_mat = np.arange(max_lt)
