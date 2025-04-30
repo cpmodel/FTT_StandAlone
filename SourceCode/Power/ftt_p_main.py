@@ -381,20 +381,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # C02 emissions for carbon costs (MtC02)
                 data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
 
-                # Capacities
-                #data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
-
-                # Investment (eq 8 Mercure EP48 2012)
-#                data['MEWI'][r, :, 0] = (np.minimum(data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0], np.zeros(len(titles['T2TI']))) +
-#                                         time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']])
-
-                cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
-                cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
-                data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
-                                                 cap_diff + cap_drpctn,
-                                                 cap_drpctn)
-
-
                 # TODO: Clean this up - for now just an ugly loop
                 for t in range(len(titles['T2TI'])):
 
@@ -423,7 +409,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                         data['MESC'][r,t,0] = 0.0
                         data['MELF'][r,t,0] = time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']]
 
-
+            data["MEWI"] = get_sales_yearly(
+                            data["MEWK"], time_lag["MEWK"], data["MEWI"],
+                            data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
 
             # =============================================================
             # Learning-by-doing
