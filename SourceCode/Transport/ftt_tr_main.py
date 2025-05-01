@@ -44,7 +44,7 @@ from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 from SourceCode.sector_coupling.battery_lbd import battery_costs
-from SourceCode.Transport.ftt_tr_mandate import implement_mandate
+from SourceCode.Transport.ftt_tr_mandate import implement_seeding, implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 
@@ -412,7 +412,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dt=dt
                 )
             
-            # Implement a mandate if possible. 
+            # Implement seeding (small mandate, dependent on overall green sales). 
+            data["TEWI"], tewi_t, data["TEWK"] = implement_seeding(
+              data['TEWK'], 1, data['TEWI'], tewi_t, year
+                )
+            
+            # Implement a mandate 
             data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
               data['TEWK'], data["EV mandate"], data['TEWI'], tewi_t, year
                 )

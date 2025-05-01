@@ -43,7 +43,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.Heat.ftt_h_mandate import implement_mandate
+from SourceCode.Heat.ftt_h_mandate import implement_mandate, implement_seeding
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 
 
@@ -457,6 +457,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                   data["HEWI"], data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
                   dt
                   )
+            
+            # Change capacity and sales with seeding
+            data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
+                data['HEWK'], 1, data['HEWI'], hewi_t, year)
             
             # Change capacity and sales after mandate
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(

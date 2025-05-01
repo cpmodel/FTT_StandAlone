@@ -35,7 +35,7 @@ from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 
 from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
 from SourceCode.support.divide import divide
-from SourceCode.Freight.ftt_fr_mandate import implement_mandate
+from SourceCode.Freight.ftt_fr_mandate import implement_seeding, implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs
@@ -212,6 +212,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                     dt=dt,
                  
                     )
+            
+            data['ZEWI'], zewi_t, data['ZEWK'] = implement_seeding(
+                            data['ZEWK'], 1, data['ZEWI'], zewi_t,
+                            n_veh_classes, year)
             
             data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
                             data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t,
