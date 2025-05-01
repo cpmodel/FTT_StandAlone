@@ -1344,6 +1344,7 @@ def run_model():
 message_cache = []
 
 if __name__ == '__main__':
+    # This seems hard-coded in the front-end.. 
     port = 5000
 
     if PRODUCTION:
