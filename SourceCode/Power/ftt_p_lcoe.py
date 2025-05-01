@@ -267,7 +267,7 @@ def get_lcoe(data, titles, year):
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
         lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
-        lcoe_mu_gamma           = lcoe_mu_all_policies * (1 + bcet[:, c2ti['22 Gamma']])
+        lcoe_mu_gamma_vf        = lcoe_mu_all_policies * (1 + bcet[:, c2ti['22 Gamma']]) / bcet[:, c2ti['23 Value factor']]
         lcoe_mu_no_policy_battery_only = np.sum(npv_expenses_mu_no_policy_battery_only, axis=1) / utility_tot 
 
 
@@ -287,7 +287,7 @@ def get_lcoe(data, titles, year):
         data["MECC"][r, :, 0] = lcoe_all_but_co2            # LCOE with policy, without CO2 costs
         data["MECC only CO2"][r, :, 0] = lcoe_only_co2      # Bare LCOE without policy, average CF, CO2 costs
         data["MECC incl CO2"][r, :, 0] = lcoe_all           # LCOE without gamma with all the rest
-        data['METC'][r, :, 0] = lcoe_mu_gamma               # As seen by consumer (generalised cost)
+        data['METC'][r, :, 0] = lcoe_mu_gamma_vf               # As seen by consumer (generalised cost)
         data["MECW battery only"][r, :, 0] = lcoe_mu_no_policy_battery_only   # LCOE without policy with only short-term storage costs
         data['MLCO'][r, :, 0] = lcoo                        # Levelised cost of operation
         data['MTCD'][r, :, 0] = dlcoe                       # Standard deviation LCOE 
