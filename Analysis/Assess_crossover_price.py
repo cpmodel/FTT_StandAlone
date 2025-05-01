@@ -199,7 +199,7 @@ def get_crossover_year(output, model, biggest_techs_clean,
     return crossover_years
 
 #%% =========================================================================
-# First figure of script: globally averaged costs over time by region
+# First figure: Baseline costs difference over time by region
 # ============================================================================
 
 rows = []
@@ -254,9 +254,9 @@ def comparison_str(clean_tech, fossil_tech):
     elif clean_tech == "19 Solar PV" and fossil_tech == "7 CCGT":
         output_str = "New solar vs existing gas"
     elif clean_tech == "17 Onshore" and fossil_tech == "3 Coal":
-        output_str = "New wind vs existing coal"
+        output_str = "New onshore wind vs existing coal"
     elif clean_tech == "17 Onshore" and fossil_tech == "7 CCGT":
-        output_str = "New wind vs existing gas"
+        output_str = "New onshore wind vs existing gas"
     
     elif clean_tech == "12 Heatpump AirAir" and fossil_tech in ["3 Gas", "4 Gas condensing"]:
         output_str = "Air-air HP vs gas"
@@ -266,9 +266,9 @@ def comparison_str(clean_tech, fossil_tech):
     
 
     elif clean_tech in  ["19 Electric Econ", "20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["1 Petrol Econ", "2 Petrol Mid", "3 Petrol Lux"]:
-        output_str = "Electric car vs diesel"
-    elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["8 Diesel Mid", "9 Diesel Lux"]:
         output_str = "Electric car vs petrol"
+    elif clean_tech in  ["20 Electric Mid", "21 Electric Lux"] and fossil_tech in ["8 Diesel Mid", "9 Diesel Lux"]:
+        output_str = "Electric car vs diesel"
         
     elif clean_tech == "BEV HDT" and fossil_tech == "Diesel HDT":
         output_str = "Heavy-duty BEV truck vs diesel"
@@ -291,8 +291,8 @@ def comparison_str(clean_tech, fossil_tech):
 linestyle_mapping = {
     'New solar vs existing coal': '-',
     'New solar vs existing gas': '--',
-    'New wind vs existing coal': '-.',
-    'New wind vs existing gas': ':',
+    'New onshore wind vs existing coal': '-.',
+    'New onshore wind vs existing gas': ':',
     
     'Air-air HP vs gas': '-',
     'Water-air HP vs gas': '--',
@@ -375,17 +375,14 @@ for mi, model in enumerate(models):
         
         # Get the linestyle for the current comparison
         linestyle = linestyle_mapping.get(clean_vs_fossil_str, '-')
-        
         line, = ax.plot(years, y_values, label=r, linestyle=linestyle, c=region_colors[ri])
         
         # Track the linestyle (tech) and color (region) used
         used_linestyles[clean_vs_fossil_str] = linestyle
         
-        
         # Find intersections with y=0
         intersections = find_intersections(years, y_values)
-        
-        
+
         # Plot markers at intersections with the same color as the line
         for x_cross in intersections:
             ax.plot(x_cross, 0, 'o', color=line.get_color(), markersize=4)  # Use the line color for the markers
@@ -400,10 +397,6 @@ for mi, model in enumerate(models):
     
     if mi % 2 == 0:  # Add y-label only to the leftmost subplots
         ax.set_ylabel("Levelised costs difference (%)")
-   
-    # # Remove the top and right frame
-    # ax.spines['top'].set_visible(False)
-    # ax.spines['right'].set_visible(False)
 
     # Set xlim between 2025 and 2050
     ax.set_xlim(2025, 2050)   

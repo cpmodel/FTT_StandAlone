@@ -298,16 +298,6 @@ def combined_policies_saved_emissions_2050():
     return  emissions_tot_2050_S0 - total_emissions_all_policies
 
 def set_up_list_saved_emissions(emissions, function):
-    # if all_policies_or_mandates == "All policies":
-    #     sectoral_saved_emissions = [function("FTT:P", "half FTT-P", emissions),
-    #                                 function("FTT:H", "half FTT-H", emissions),
-    #                                 function("FTT:Tr", "half FTT-Tr", emissions),
-    #                                 function("FTT:Fr", "half FTT-Fr", emissions)]
-    # elif all_policies_or_mandates == "Mandates":
-    #     sectoral_saved_emissions = [function("FTT:P", "sxp half - P mand", emissions),
-    #                                 function("FTT:H", "sxp half - H mand", emissions),
-    #                                 function("FTT:Tr", "sxp half - Tr mand", emissions),
-    #                                 function("FTT:Fr", "sxp half - Fr mand", emissions)]
         
     if all_policies_or_mandates == "All policies":
         sectoral_saved_emissions = [function("FTT:P", "FTT-P", emissions),
@@ -398,7 +388,6 @@ def plot_stacked_bar_chart(data, axis):
     axis.spines['top'].set_visible(False)
     axis.spines['right'].set_visible(False)
     
-   
     
     # Calculate the x-coordinates for the end of the middle and bottom bars
     mid_bar_x = data.iloc[1, :].sum()  # Middle of the second bar
@@ -441,9 +430,7 @@ total_saved_emissions_2050 = np.sum(sectoral_saved_emissions_2050) - np.sum(emis
 share_saved = total_saved_emissions_2050 / np.sum(emissions_2050_S0) * 100
 total_saved_emissions_cum = np.sum(sectoral_saved_emissions) - np.sum(emissions_from_2025_combined_policies)
 share_saved_cum = total_saved_emissions_cum / np.sum(emissions_from_2025_S0) * 100
+
 print(f"The additional emissions savings in 2050: {total_saved_emissions_2050:.0f} MtCO2, or {share_saved:.1f}%")
 print(f"The additional cumulative emissions savings: {total_saved_emissions_cum:.0f} MtCO2, or {share_saved_cum:.1f}%")
 
-
-
-# %%
