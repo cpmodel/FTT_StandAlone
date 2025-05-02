@@ -109,8 +109,12 @@ def save_fig(fig, fig_dir, title):
     # Save the graph as an editable svg file
     output_file = os.path.join(fig_dir, f'{title}.svg')
     output_file2 = os.path.join(fig_dir, f'{title}.png')
+    output_file3 = os.path.join(fig_dir, f'{title}.pdf')
+
     fig.savefig(output_file, format="svg", bbox_inches='tight')
     fig.savefig(output_file2, format="png", bbox_inches='tight')
+    fig.savefig(output_file3, format="pdf", bbox_inches='tight')
+
     
 def save_data(df, fig_dir, title):
     '''Saved the dataframe with all the data for the figure'''

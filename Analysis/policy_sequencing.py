@@ -82,7 +82,7 @@ sales_diff.plot(
 )
 
 axes[0].set_ylabel("Additional sales (1000)")
-axes[0].set_xlabel("Year")
+#axes[0].set_xlabel("Year")
 
 
 sales_ratio.plot(
@@ -94,15 +94,28 @@ sales_ratio.plot(
 
 axes[1].set_ylim(bottom=1)
 axes[1].set_ylabel("Sales ratio")
-axes[1].set_xlabel("Year")
+#axes[1].set_xlabel("Year")
 
 for ax in axes:
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
-axes[0].text(-0.1, 1.06, 'a', transform=axes[0].transAxes, fontweight='bold', va='top', ha='right')
-axes[1].text(-0.1, 1.06, 'b', transform=axes[1].transAxes, fontweight='bold', va='top', ha='right')
+axes[0].text(-0.1, 1.08, 'a', transform=axes[0].transAxes, fontweight='bold', va='top', ha='right')
+axes[1].text(-0.1, 1.08, 'b', transform=axes[1].transAxes, fontweight='bold', va='top', ha='right')
 
 fig.tight_layout()
+save_fig(fig, fig_dir, "Figure 5 - Policy sequencing.svg")
+
+sales_diff = sales_diff.reset_index()
+sales_diff = sales_diff.rename(columns={'index': 'Year'})
+
+sales_ratio = sales_ratio.reset_index()
+sales_ratio = sales_ratio.rename(columns={'index': 'Year'})
+
+save_data(sales_diff, fig_dir, "Figure 5a - Additional sales")
+save_data(sales_ratio, fig_dir, 'Figure 5b - Ratio sales carbon price vs no policy')
+
+
+
 
 

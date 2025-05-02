@@ -195,7 +195,6 @@ for mi, model in enumerate(models):
     ax.title.set_position((1.07, ax.title.get_position()[1]))
     fig.subplots_adjust(hspace=.4)
 
-    
 
 # Initialize an empty DataFrame to collect the results
 df_list = []

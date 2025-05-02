@@ -344,18 +344,17 @@ def find_intersections(x, y):
 # Setup for the plot
 fig, axs = plt.subplots(2, 2, figsize=(7.2, 6.2), sharey=True)
 axs = axs.flatten()
-rows = []
 
 # Create custom legend handles and labels for the linestyles
 custom_lines = [Line2D([0], [0], color='black', linestyle=linestyle_mapping[key]) for key in linestyle_mapping]
 custom_labels = list(linestyle_mapping.keys())
 region_colors = [plt.rcParams['axes.prop_cycle'].by_key()['color'][i] for i in range(len(regions))]
 
+perc_diff_out = pd.DataFrame(columns=["Model", "Region", "Clean tech", "Fossil tech"] + list(years))
+
 for mi, model in enumerate(models):
     percentage_difference = get_price_differences_percentage(model, years, regions)      
     ax = axs[mi]  
-    
-    perc_difference_all = get_price_differences_percentage(model, years, regions_all) 
     
     # Track the linestyles used in this subplot
     used_linestyles = {}
@@ -366,30 +365,28 @@ for mi, model in enumerate(models):
         if skip_model_region_combo(model, regions[r]):
             continue
         
-        y_values = percentage_difference[ri]
+        pr_diff = percentage_difference[ri]
         
         # Generate the output_str for the current comparison
         clean_tech = df_cy.loc[df_cy['Region'] == r, 'Clean tech name'].values[mi]
         fossil_tech = df_cy.loc[df_cy['Region'] == r, 'Fossil tech name'].values[mi]
         clean_vs_fossil_str = comparison_str(clean_tech, fossil_tech)
         
-        # Get the linestyle for the current comparison
+        perc_diff_out.loc[len(perc_diff_out)] = [model, r, clean_tech, fossil_tech] + list(pr_diff)
+
+        # Get the linestyle for the current comparison, and save it
         linestyle = linestyle_mapping.get(clean_vs_fossil_str, '-')
-        line, = ax.plot(years, y_values, label=r, linestyle=linestyle, c=region_colors[ri])
-        
-        # Track the linestyle (tech) and color (region) used
         used_linestyles[clean_vs_fossil_str] = linestyle
         
+        # Plot the price difference
+        line, = ax.plot(years, pr_diff, label=r, linestyle=linestyle, c=region_colors[ri])
+        
         # Find intersections with y=0
-        intersections = find_intersections(years, y_values)
+        intersections = find_intersections(years, pr_diff)
 
         # Plot markers at intersections with the same color as the line
         for x_cross in intersections:
             ax.plot(x_cross, 0, 'o', color=line.get_color(), markersize=4)  # Use the line color for the markers
-        
-        row = {"Region": r, "Model": model, "2025 %diff": y_values[0],
-               "2035 %diff": y_values[1], "2050 %diff": y_values[2]}
-        rows.append(row)
     
     
     ax.axhline(0, color='grey', linewidth=1)  # Adding horizontal line at y=0
@@ -433,8 +430,7 @@ plt.tight_layout()
 
 # Save the graph as an editable svg file
 save_fig(fig, fig_dir, "Figure 2 - Baseline_price_differences")
-df_perc_difference = pd.DataFrame(rows)
-save_data(df_perc_difference, fig_dir, "Figure 2 - Baseline_price_difference")
+save_data(perc_diff_out, fig_dir, "Figure 2 - Baseline_price_difference")
 
 
 
@@ -731,12 +727,12 @@ for mi, model in enumerate(models):
     # Set vertical grid lines
     ax.xaxis.grid(True)
     
-    save_data(df_difference, fig_dir, f"Figure 5 - Boxplot crossover years {repl_dict[model]}")
+    save_data(df_difference, fig_dir, f"Figure 6- Boxplot crossover years {repl_dict[model]}")
 
     
 # Adjust spacing between subplots
 plt.subplots_adjust(hspace=0.4, wspace=0.2)    
-save_fig(fig, fig_dir, "Figure 5 - Boxplot crossover years")
+save_fig(fig, fig_dir, "Figure 6 - Boxplot crossover years")
 
 #%% =========================================================================
 #  Fourth figure: timelines by sector by country
