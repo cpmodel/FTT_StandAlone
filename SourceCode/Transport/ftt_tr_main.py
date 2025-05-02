@@ -411,8 +411,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # New additions (TEWI)
             data["TEWI"], tewi_t = get_sales(
-                data["TEWK"], data_dt["TEWK"], time_lag["TEWK"], data["TEWS"], 
-                data_dt["TEWS"], data["TEWI"], data['BTTC'][:, :, c3ti['8 lifetime']], dt)
+                cap=data["TEWK"],
+                cap_dt=data_dt["TEWK"], 
+                cap_lag=time_lag["TEWK"],
+                sales_or_investment_in=data["TEWI"],
+                timescales=data['BTTC'][:, :, c3ti['8 lifetime']],
+                dt=dt
+                )
             
            
             # Fuel use
