@@ -411,7 +411,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             data["MEWI"] = get_sales_yearly(
                             data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                            data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
+                            data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
 
             # =============================================================
             # Learning-by-doing
