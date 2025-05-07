@@ -75,12 +75,11 @@ def get_lcot(data, titles, carbon_costs, year):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
     # Taxable categories for fuel - not all fuels subject to fuel tax
-    tf = np.ones([len(titles['VTTI']), 1])
+    taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI']), 1])
     # Make vehicles that do not use petrol/diesel exempt
-    tf[12:15] = 0   # CNG
-    tf[18:21] = 0   # EVs
-    tf[24:27] = 0   # Hydrogen
-    taxable_fuels = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+    taxable_fuels[:, 12:15] = 0   # CNG
+    taxable_fuels[:, 18:21] = 0   # EVs
+    taxable_fuels[:, 24:27] = 0   # Hydrogen
     
     tf_carbon = np.ones([len(titles['VTTI']), 1])
     tf_carbon[18:21] = 0   # EVs
