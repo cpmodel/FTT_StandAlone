@@ -15,7 +15,9 @@ The FTT family of models are based on [evolutionary economics](https://en.wikipe
 This repository contains the public standalone version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
 
 ## Installation
-1. Run the install_ce_conda_3.9_external_users.cmd script in _Python_installation to install the prerequisite packages. On top of Anaconda's standard packages, bottle and paste are required. You can install these two packages with pip. Paste is being deprecated. If you cannot install paste, you can remove calls to paste in the Backend_FTT.py.
+1. Run the install_ce_conda_3.9_external_users.cmd script in _Python_installation to install the prerequisite packages. On top of Anaconda's standard packages, bottle and paste are required. You can install these two packages with pip. Paste is being deprecated; If you cannot install paste, you can remove calls to paste in the Backend_FTT.py (this might prevent you from opening two instances at the same time). 
+
+The model has been tested on Windows, using Python 3.10 and 3.11. 
 
 ## Running the model
 1. You can run the front-end of the model in your browser by double clicking FTT_Stand_Alone_Launcher.cmd. Select the models to run and scenarios and explore the output. S0 is the baseline scenario. Output is available via the frontend, but also in the Output folder as a pickle file. Running the code should take a few minutes. 
