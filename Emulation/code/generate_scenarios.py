@@ -14,7 +14,7 @@ def main():
     round_decimals = config['round_decimals']
     scen_levels_path = config['scen_levels_path']
     
-    combined_df = scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals, output_path=scen_levels_path)
+    combined_df = scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals = 3, output_path=scen_levels_path)
     print(f"Scenarios saved to {scen_levels_path}")
 
 if __name__ == "__main__":

@@ -156,17 +156,28 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
                     print(f'No ambition level for {country} in {policy_parameter}')
 
                 # Handle rollback for certain technologies TODO generalise
-                # if (country == 'US') & (policy_parameter == 'phase_pol'):
-                #     roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                if (country == 'US') & (policy_parameter == 'price_pol'):
+                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
                 
-                #     if (technology in roll_back_techs) & (ambition >= 0.5):
-                #         continue
-                #     elif (technology not in roll_back_techs) & (ambition < 0.5):
-                #         continue
-                #     elif (technology in roll_back_techs) & (ambition < 0.5):
-                #         ambition = (0.5 - ambition) / 0.5
-                #     elif (technology not in roll_back_techs) & (ambition >= 0.5):
-                #         ambition = (ambition - 0.5) / 0.5
+                    # if (technology in roll_back_techs) & (ambition >= 0.5):
+                    #     continue
+                    # elif (technology not in roll_back_techs) & (ambition < 0.5):
+                    #     continue
+                    # elif (technology in roll_back_techs) & (ambition < 0.5):
+                    #     ambition = (0.5 - ambition) / 0.5
+                    # elif (technology not in roll_back_techs) & (ambition >= 0.5):
+                    #     ambition = (ambition - 0.5) / 0.5
+
+                                # Handle rollback for certain technologies TODO generalise
+                if (country == 'US') & (policy_parameter == 'price_pol'):
+                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                
+                    if (ambition >= 0.5):
+                        ambition = (ambition - 0.5) / 0.5
+                    elif (technology in roll_back_techs) & (ambition < 0.5):
+                        ambition = (0.5 - ambition) / -0.5 # negative to reverse direction for rollback techs
+                    elif (technology not in roll_back_techs) & (ambition < 0.5):
+                        ambition = 0 # all other techs set to 0 below 0.5 ambition
 
                 # Extract meta data and bounds
                 meta = amb_df.iloc[row, 0:5]
@@ -261,7 +272,7 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
         
         
         # Multiply all values in the row (except country col and 2010) by the ambition value
-        cp_df.iloc[index, 14:] = round((cp_df.iloc[index, 14:] * ambition), 2)
+        cp_df.iloc[index, 12:] = round((cp_df.iloc[index, 12:] * ambition), 2)
         
     # Store single sheet
     updated_input_data[new_scen_code][sheet_name] = cp_df
@@ -299,34 +310,6 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
         for param, col in updates.items():
             cost_matrix.loc[tech_update, col] = scen_level[param]
 
-def update_discount_rates(cost_matrix, technology, updates, scen_level,
-                          tech_rates, scalar, min_rate, max_rate): ## Do we even need this?
-    
-    # Create country specific sheet
-    country = cost_matrix.loc[i, 'Unnamed: 1']
-    country_df = cost_matrix.iloc[i:i + tech_number + 1, :].reset_index(drop=True)
-
-    # Scale and shift to the target range
-    #scaled_rates = min_rate + (max_rate - min_rate) * scalar * normalized_rates
-    min_rate = 0.01 # generalise to take these from config
-    max_rate = 0.2
-
-    # normalise the rates
-    country_df.iloc[1:, 17] = country_df.iloc[1:, 17] / max_rate
-    
-    
-    
-    ############ Convert rates to an array
-    rates = np.array(list(tech_rates.values()))
-    
-    # Normalize rates relative to their maximum value
-    normalized_rates = rates / rates.max()
-    
-    # Scale and shift to the target range
-    scaled_rates = min_rate + (max_rate - min_rate) * scalar * normalized_rates
-    
-    # Map scaled values back to tech names
-    return {tech: scaled_rate for tech, scaled_rate in zip(tech_rates.keys(), scaled_rates)}
 
 def inputs_vary_general(updated_input_data, scen_level, updates_config, region_groups, cost_matrix_structure):
     '''
@@ -355,22 +338,17 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         country = cost_matrix.loc[i, 'Unnamed: 1']
         country_df = cost_matrix.iloc[i:i + tech_number + 1, :].reset_index(drop=True)
 
-        # Scale and shift to the target range
-        #scaled_rates = min_rate + (max_rate - min_rate) * scalar * normalized_rates
-        min_rate = 0.01 # generalise to take these from config
-        max_rate = 0.2
+        # scen level for discount rate coefficient
+        scen_discr = scen_level['discr']
+        # scale between 0.5 and 2
+        discount_rate = scen_discr**2 + (0.5 * scen_discr) + 0.5
 
-        # normalise the rates
-        country_df.iloc[1:, 17] = country_df.iloc[1:, 17] / max_rate
+        
 
-        # Apply scaling based on regional discount rate
-        if country in region_groups['GN']:
-            # scale and shift to target range
-            country_df.iloc[1:, 17] = min_rate + (max_rate - min_rate) * scen_level['north_discr'] * country_df.iloc[1:, 17]
+        # multiply current discount rate by new discount rate coefficient
+        country_df.iloc[1:, 17] = discount_rate * country_df.iloc[1:, 17]
 
-        else:
-            country_df.iloc[1:, 17] = min_rate + (max_rate - min_rate) * scen_level['south_discr'] * country_df.iloc[1:, 17]
-
+        country_df.iloc[1:, 17] = country_df.iloc[1:, 17].astype(float).round(3)
 
         # Columns adjust
         country_df.loc[0] = [''] + country_df.loc[0][1:].astype(str).tolist()   
@@ -532,7 +510,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in tqdm(range(len(scen_levels['scenario'])), desc="Processing Scenarios", unit="scenario"):
+    for i in tqdm(range(500,502), desc="Processing Scenarios", unit="scenario"): # len(scen_levels['scenario'])
         
 
         #updated_input_data = defaultdict(lambda: defaultdict(dict))

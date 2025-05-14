@@ -73,7 +73,7 @@ def uncertainty_generator(ranges, Nscens=1, sampling_method=lhs, round_decimals=
     
     return uncertainty_df
 
-def scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals=2, output_path=None):
+def scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals=3, output_path=None):
     """
     Combines ambition levels and uncertainty levels into comprehensive scenarios and saves to a CSV file.
     
@@ -89,8 +89,8 @@ def scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals=2,
     Returns:
     - pd.DataFrame, DataFrame containing the combined scenario data
     """
-    ambition_df = ambition_generator(regions, params, Nscens, round_decimals)
-    uncertainty_df = uncertainty_generator(ranges, Nscens, round_decimals=round_decimals)
+    ambition_df = ambition_generator(regions, params, Nscens, round_decimals = 2)
+    uncertainty_df = uncertainty_generator(ranges, Nscens, round_decimals=3)
     combined_df = pd.concat([ambition_df, uncertainty_df], axis=1)
     combined_df['scenario'] = [f"{scen_code}_{i+1}" for i in range(Nscens)]
     
