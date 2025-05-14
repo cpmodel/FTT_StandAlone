@@ -18,9 +18,8 @@
     "lead_offshore": [2, 8],
     "lead_onshore": [1, 4],
     "lead_solar": [1, 4],
-    "south_discr": [0, 1],
-    "north_discr": [0, 1],
-    "elec_demand": [0.6, 1.4],
+    "discr": [0, 1],
+    "elec_demand": [0.5, 1.5],
     "ccgt_price": [0, 1],
     "coal_price": [0, 1],
     "tech_potential": [0, 1]
@@ -50,14 +49,13 @@
       "std_col": 6
     },
     "Discount Rate": {
-      "north_discr": 17,
-      "south_discr": 17
+      "discr": 17
     }
   },
   "Nscens": 500,
   "scen_code": "S3",
   "scenarios": {"base": "S0", "ambitious": "S3"},
-  "round_decimals": 2,
+  "round_decimals": 3,
   "output_dir": "Inputs",
   "batch_output_dir": "output/batches/",
   "vars_to_compare": ["MEFI", "MEWT", "MEWR"],
@@ -76,9 +74,9 @@
     "tech_number": 22
   },
   "run_compare_scenarios": false,
-  "run_ambition_vary": false,
-  "run_run_simulations": true,
-  "run_output_manipulation": true,
+  "run_ambition_vary": true,
+  "run_run_simulations": false,
+  "run_output_manipulation": false,
   "region_groups": {
     "EA": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", "NL", "AT", "PT", "FI", "SW", "UK", "CZ", "EN", "CY", "LV", "LT", "HU", "MT", "PL", "SI", "SK", "BG", "RO", "HR", "NO", "CH", "IS"],
     "RGN": ["TR", "MK", "CA", "AU", "NZ", "RS", "RA", "KR"],
