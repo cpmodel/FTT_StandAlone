@@ -114,29 +114,29 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['ZEWK'] = data['ZEWS'] * rflz_reshaped
         
         # Find total service area in Mvkm, first by tech, then by vehicle class
-        data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 10e6
-        data['ZESG'] = sum_over_classes(data['ZEVV'])
+        data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis]
+        data['ZESG'] = sum_over_classes(data['ZEVV']) / 1e6
         
         # Calculate demand in million ton vehicle-km OR million passenger vehicle km, per vehicle class
-        data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis]
+        data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis] / 1e6
         data['RVKZ'] = sum_over_classes(data['ZEST'])
         
         # Emissions 
         data['ZEWE'] = (data['ZEVV']
                         * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)'], np.newaxis]
-                        * (1 - data['ZBFM']) / (1e6) )
+                        * (1 - data['ZBFM']) / (1e9) )
         
         for r in range(len(titles['RTI'])):
         
             for veh in range(len(titles['FTTI'])):
                 for fuel in range(len(titles['JTI'])):
                     if titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][0, veh, fuel] == 1:
-                        # No biofuel blending mandate in the historical period
-                        zjet[veh, fuel] = 0
+                        # biofuel blending mandate
+                        zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r, 0, 0]
                         
             # Find fuel use
             data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
-                                    data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
+                                    data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41868000
         
         carbon_costs = set_carbon_tax(data, c6ti)
         data = get_lcof(data, titles, carbon_costs, year)
@@ -233,15 +233,15 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             
             # Find total service area and demand, first by tech, then by vehicle class     
-            data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 10e6
-            data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis]
-            data['ZESG'] = sum_over_classes(data['ZEVV'])
+            data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis]
+            data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis] / 1e6
+            data['ZESG'] = sum_over_classes(data['ZEVV']) / 1e6
             data['RVKZ'] = sum_over_classes(data['ZEST'])
                                     
             # Emissions
             data['ZEWE'] = ( data['ZEVV']
                             * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)'], None]
-                            * (1 - data['ZBFM']) / 1e6 )
+                            * (1 - data['ZBFM']) / 1e9 )
             
             
             # Reopen country loop
@@ -269,7 +269,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
                 # Fuel use by fuel type - Convert TJ (BZTC * ZEVV) to ktoe, so divide by 41.868
                 data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
-                                    data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
+                                    data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41868000
             
 
             
