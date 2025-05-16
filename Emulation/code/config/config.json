@@ -66,7 +66,7 @@
   "base_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx",
   "ambitious_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S3.xlsx",
   "comparison_path": "Emulation/data/comparisons/S0_S3_comparison.xlsx",
-  "carbon_price_path": "Emulation/data/variable_data/carbon_price/S3_REPP.csv",
+  "carbon_price_path": "Emulation/data/variable_data/carbon_price/REPPX_amb.csv",
   "cost_matrix_var": "BCET",
   "cost_matrix_structure": {
     "regions": 71,

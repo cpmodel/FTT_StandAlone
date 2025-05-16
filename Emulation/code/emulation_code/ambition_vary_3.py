@@ -246,23 +246,30 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
     Returns:
     '''
 
-    # load carbon price data
+    # load ambitious carbon price data
     cp_df = pd.read_csv(carbon_price_path)
     cp_df = cp_df.rename(columns={'Unnamed: 0': ''})
     cp_df = cp_df.astype({col: 'float64' for col in cp_df.columns[1:]})  # Force float dtype
     cp_df.iloc[:, 1:] = cp_df.iloc[:, 1:].astype(float)
+    cp_df = cp_df.set_index('')
+    # load baseline carbon price data
+    base_cp_df = pd.read_csv("Inputs/S0/General/REPPX.csv")
+    base_cp_df = base_cp_df.rename(columns={'Unnamed: 0': ''})
+    base_cp_df.iloc[:, 1:] = base_cp_df.iloc[:, 1:].astype(float)
+    base_cp_df = base_cp_df.set_index('')
 
+    # Calculate the difference between the two carbon prices
+    diff_cp_df = cp_df- base_cp_df
 
+    # Get meta data
     new_scen_code = scen_level.loc['scenario']
     sheet_name = 'REPPX' # hardcoded for now, handle via dimensions later
     
-
-
     # Region list from updated scenario levels, not DRY
     regions = list({country.split('_')[0] for country in scen_level.index if country.endswith('_pol')})
 
-    for index, row in cp_df.iterrows():
-        country = row['']
+    for index, row in base_cp_df.iterrows():
+        country = index
 
         # assign ambition levels
         if country in regions:
@@ -270,12 +277,21 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
         else:
             print(f'No ambition level for {country} in carbon price')
         
-        
-        # Multiply all values in the row (except country col and 2010) by the ambition value
-        cp_df.iloc[index, 12:] = round((cp_df.iloc[index, 12:] * ambition), 2)
-        
+        # Multiply all values in the diff row from start year
+        # Hardcoded to 2024, not sim start, 
+        diff_cp_df.loc[index, diff_cp_df.columns[12:]] = \
+            (diff_cp_df.loc[index, diff_cp_df.columns[12:]] * ambition \
+             ).round(2)
+
+        # Add the diff row to the base row
+        base_cp_df.loc[index, base_cp_df.columns[12:]] = \
+            round((base_cp_df.loc[index, base_cp_df.columns[12:]] \
+                    + diff_cp_df.loc[index, diff_cp_df.columns[12:]]), 2)
+
     # Store single sheet
-    updated_input_data[new_scen_code][sheet_name] = cp_df
+    updated_input_data[new_scen_code][sheet_name] = base_cp_df
+        
+
 
 def update_cost_matrix(cost_matrix, technology, updates, scen_level):
     """
@@ -451,7 +467,7 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
                     os.makedirs(new_output_dir, exist_ok=True)
                     output_path = os.path.join(new_output_dir, f"{sheet_name}.csv")
                     
-                    df.to_csv(output_path, index=False)
+                    df.to_csv(output_path, index=True)
 
                 else:
                     for country in updated_input_data[new_scen_code][sheet_name].keys():
