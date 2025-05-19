@@ -93,7 +93,8 @@ def get_lcot(data, titles, year):
     ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
     # Fuel tax costs
-    fft = get_cost_elem(data['RTFT'][:, :, 0], en / ns / ff * taxable_fuels, lt_mask )
+    # RTFT must be converted from $/litre to $/MJ (assuming 35 MJ/l)
+    fft = get_cost_elem(data['RTFT'][:, :, 0] / 35, en / ns / ff * taxable_fuels, lt_mask )
     omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], 1 / ns / ff, lt_mask)
     domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], 1 / ns / ff, lt_mask)
     # Yearly road tax cost
