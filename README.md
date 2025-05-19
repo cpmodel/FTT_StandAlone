@@ -1,4 +1,5 @@
 # FTT StandAlone
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15463411.svg)](https://doi.org/10.5281/zenodo.15463411)
 
 ## Future Technology Transformation
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
