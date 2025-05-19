@@ -8,7 +8,6 @@ including the cross-sectoral effects.
 @author: fjmn202
 """
 
-# Import the results pickle file
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -19,6 +18,7 @@ from matplotlib.font_manager import FontProperties
 from preprocessing import get_output, get_metadata, save_fig, save_data
 import config
 
+# Import the results pickle file
 output_file = "Results_sxp.pickle"
 output_S0 = get_output(output_file, "S0")
 titles, fig_dir, tech_titles, models, cap_vars = get_metadata()
@@ -40,7 +40,6 @@ price_names = config.PRICE_NAMES
 repl_dict = config.REPL_DICT2
 shares_vars = {"FTT:P": "MEWS", "FTT:Tr": "TEWS", "FTT:H": "HEWS", "FTT:Fr": "ZEWS"}
 operation_cost_name = {"FTT:P": "MLCO"}
-# TODO: should carbon tax be part of this? Probably not, right?
 
 # Define the year of interest
 year = 2030
@@ -206,9 +205,6 @@ rows = []
 for model in models:
     # Get the bit of the model name after the colon (like Fr)
     model_abb = model.split(':')[1]
-    output_ct = get_output(output_file, f"sxp - {model_abb} CT")
-    output_sub = get_output(output_file, f"sxp - {model_abb} subs")
-    output_man = get_output(output_file, f"sxp - {model_abb} mand")
     
     biggest_techs_clean = find_biggest_tech(output_S0, clean_techs, year, model, regions)
     biggest_techs_fossil = find_biggest_tech_fossil(output_S0, dirty_techs, biggest_techs_clean, year, model, regions)
@@ -218,9 +214,6 @@ for model in models:
     prices_dirty = get_prices(output_S0, year, model, biggest_techs_fossil, regions)
     
     crossover_years = get_crossover_year(output_S0, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
-    crossover_years_ct = get_crossover_year(output_ct, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
-    crossover_years_sub = get_crossover_year(output_sub, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
-    crossover_years_man = get_crossover_year(output_man, model, biggest_techs_clean, biggest_techs_fossil, price_names, regions)
 
     
     for r in regions:
@@ -234,9 +227,6 @@ for model in models:
         "Fossil tech name": fossil_tech_names[r],
         "Fossil price (2030)": prices_dirty[r],
         "Cross-over": crossover_years[r],
-        "Cross-over carbon tax": crossover_years_ct[r],
-        "Cross-over subsidies": crossover_years_sub[r],
-        "Cross-over mandates": crossover_years_man[r],
          }
         rows.append(row)
 
@@ -244,8 +234,7 @@ for model in models:
 df_cy = pd.DataFrame(rows, columns=["Region", "Sector",
                                  "Clean technology", "Clean tech name", "Clean price (2030)", 
                                  "Fossil technology", "Fossil tech name", "Fossil price (2030)", 
-                                 "Cross-over", "Cross-over carbon tax",
-                                 "Cross-over subsidies", "Cross-over mandates"])
+                                 "Cross-over"])
 
 
 def comparison_str(clean_tech, fossil_tech):
@@ -448,9 +437,7 @@ output_trpolicies = get_output(output_file, "sxp - Tr mand")
 output_frpolicies = get_output(output_file, "sxp - Fr mand")
 output_all_mandates = get_output(output_file, "Mandates")
 
-#output_all_policies = get_output(output_file, "sxp - All policies")
-
-output_files = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_mandates]
+output_scens = [output_S0, output_ppolicies, output_hpolicies, output_trpolicies, output_frpolicies, output_all_mandates]
 policy_names = ["Baseline", "Coal phase-out", "Heat pump mandates", "EV mandates", "EV truck mandates", "All mandates"]
 
 
@@ -562,7 +549,7 @@ if average_prices_first == False:
         fossil_tech_dict = {i: fossil_tech_variable[model] for i in range(1, 72)}
         
         
-        for policy, output in zip(policy_names, output_files):    
+        for policy, output in zip(policy_names, output_scens):    
             crossover_years = get_crossover_year(output, model,
                                     clean_tech_dict, fossil_tech_dict, price_names, regions_all)
             weights = get_weights(output, model, cap_vars)
@@ -600,7 +587,7 @@ elif average_prices_first == True:
             print(fossil_costs_S0)
             print(clean_costs_S0)
         
-        for policy, output in zip(policy_names[1:], output_files[1:]):  
+        for policy, output in zip(policy_names[1:], output_scens[1:]):  
             fossil_costs = get_weighted_costs(output, model, fossil_tech_variable[model], year_inds)
             clean_costs = get_weighted_costs(output, model, clean_tech_variable[model], year_inds)
             year = interpolate_crossover_year(clean_costs, fossil_costs)
@@ -635,7 +622,6 @@ table = ax.table(cellText=table.values, rowLabels=table.index,
                  cellLoc='center', loc='center')
 
 table.auto_set_font_size(False)
-#table.set_fontsize(10)
 table.scale(1.2, 1.2)
 
 header_color = '#40466e'
@@ -663,7 +649,6 @@ plt.title("How much is cost-parity brought forward?", fontweight='bold')
 
 fig, axs = plt.subplots(2, 2, figsize=(7.2, 4.5), sharey=True)
 axs = axs.flatten()
-#seaborn.set(style = 'whitegrid') 
 
 # Expand the dataframe to make it suitable for the boxplot
 # Initialize an empty DataFrame to collect the results
@@ -717,7 +702,6 @@ for mi, model in enumerate(models):
     
     ax.set_title(repl_dict[model])
     ax.set_xlim(-2, 12)   
-    #ax.tick_params(axis='x', rotation=45)   # Rotate x-axis labels
     ax.set_xlabel('')                       # Remove x-axis label
     
     # Remove the top and right frame
@@ -733,4 +717,3 @@ for mi, model in enumerate(models):
 # Adjust spacing between subplots
 plt.subplots_adjust(hspace=0.4, wspace=0.2)    
 save_fig(fig, fig_dir, "Figure 6 - Boxplot crossover years")
-

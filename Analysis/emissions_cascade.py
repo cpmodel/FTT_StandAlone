@@ -5,7 +5,6 @@ Created on Mon Jul 22 10:35:01 2024
 @author: Femke Nijsse
 """
 #%%
-# Import the results pickle file
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -25,12 +24,13 @@ model_names = [repl_dict[model] for model in models]
 # Define the shares, prices of interest
 emissions_names = {"FTT:P": "MEWE", "FTT:Tr": "TEWE", "FTT:H": "HEWE", "FTT:Fr": "ZEWE"}
 
+# Import the results pickle file
 all_policies_or_mandates = "All policies"
 if all_policies_or_mandates == "All policies":
+    
     # Don't forget to include sxp - All policies when getting these results.. 
     output_file = "Results_sectors.pickle"
     output_baseline = get_output(output_file, "S0")
-    #output_all_policies = get_output(output_file, "sxp half - All policies")
     output_all_policies = get_output(output_file, "sxp - All policies")
 
 
@@ -49,10 +49,8 @@ if all_policies_or_mandates == "All policies":
 if all_policies_or_mandates == "Mandates":
     output_file = "Results_sxp.pickle"
     output_baseline = get_output(output_file, "S0")
-    #output_all_policies = get_output(output_file, "Mandates half")
     output_all_policies = get_output(output_file, "Mandates")
 
-    single_mand_list = ["sxp half - P mand", "sxp half - H mand", "sxp half - Tr mand", "sxp half - Fr mand"]
     single_mand_list = ["sxp - P mand", "sxp - H mand", "sxp - Tr mand", "sxp - Fr mand"]
 
     models_to_scenarios =  {"FTT:H": single_mand_list,
@@ -64,6 +62,7 @@ if all_policies_or_mandates == "Mandates":
 
 def get_total_emissions(output, model):
     """Sum over regions and technologies"""
+    
     if model in ["FTT:P", "FTT:H", "FTT:Fr"]:
         emission_m = np.sum(output[emissions_names[model]], axis=(0, 1, 2))
     elif model == "FTT:Tr":
@@ -94,12 +93,10 @@ def scale_total_emissions(emissions_m, model):
     
     scaling_factor = emissions_2022[model] / emissions_m[ind_2022]
     emissions_m_rescaled = emissions_m * scaling_factor
-    #emissions_m_rescaled = emissions_m
-   
+  
     
     return emissions_m_rescaled
     
-
 
 # Compute overall CO2 reductions per sector
 emissions = {}

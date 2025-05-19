@@ -5,7 +5,6 @@ Created on Wed Jul 17 09:18:35 2024
 @author: Femke Nijsse
 """
 
-# Import the results pickle file
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,7 +12,7 @@ import matplotlib.pyplot as plt
 from preprocessing import get_metadata, get_output, save_fig, save_data
 import config
 
-# To do: change this to individual_policies (now that the carbon tax has a massive effect)
+# Import the results pickle file
 output_file = "Results_sxp.pickle"
 
 output_S0 = get_output(output_file, "S0")
@@ -37,13 +36,11 @@ tech_names = {}             # The titles of the technology names
 
 
 # Group the technologies in a coarser classification:
-    
 grouping_power = {"Coal": [2,3], "Gas and oil": [1, 6, 7, 8, 9], 
                   "Nuclear": [0], "Biomass + other": [4, 5, 8, 9, 12, 13],
                   "Hydropower": [12, 13], "Offshore wind": [17], "Onshore wind": [16], "Solar": [18, 19]}
 
-
-grouping_heat = { "Coal": [6], "Oil": [0, 1], "Gas": [2, 3], "Biomass": [4, 5],
+grouping_heat =  { "Coal": [6], "Oil": [0, 1], "Gas": [2, 3], "Biomass": [4, 5],
                   "District heating": [7], "Electric": [8],
                   "Hydronic heat pump": [9, 10], "Air-air heat pump": [11], "Solar thermal": [12]}
 
@@ -51,11 +48,6 @@ grouping_transport = {"Petrol": [0, 1, 2, 4, 5, 6], "Diesel": [6, 7, 8, 9, 10, 1
                       "CNG": [12, 13, 14], "Hybrid": [15, 16, 17],
                       "Plug-in hybrid": [21, 22, 23], "Electric": [18, 19, 20],  "Hydrogen": [24, 25, 26]
                       }
-grouping_freight = {"Petrol": [1, 2, 3, 6, 7, 8], "Diesel": [11, 12, 13, 16, 17, 18],
-                    "CNG/LPG": [21, 22, 23], "Hybrid": [26, 27, 28],
-                    "Electric": [31, 32, 33], "Hydrogen": [41, 42, 43], 
-                    "Biofuel": [36, 37, 38]
-                    }
 
 grouping_freight = {"Petrol": [2, 3, 7, 8], "Diesel": [12, 13, 17, 18],
                     "CNG/LPG": [22, 23], "Hybrid": [27, 28],
@@ -69,7 +61,6 @@ green_transport = ["Electric"]
 green_freight = ["Electric"]
 
 green_all = {"FTT:P": green_power, "FTT:H": green_heat, "FTT:Tr": green_transport, "FTT:Fr": green_freight}
-
 
 
 
@@ -255,11 +246,6 @@ def plot_column(model_dfs, col, col_title):
             legend = ax.legend(handles, labels, title=legend_titles[model],
                       labelspacing=0.1, frameon=False,
                       bbox_to_anchor=(1.0, 1.0), loc='upper left')
-            
-           # # Manually set the alignment of each text object in the legend
-           #  for text in legend.get_texts():
-           #      text.set_horizontalalignment('left')
-        
         
             # Access the legend's title and increase vertical padding
             legend.get_title().set_position((0, 5))  # The numbers are x, y offsets

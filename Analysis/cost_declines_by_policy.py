@@ -8,19 +8,18 @@ based on the policy.
 @author: Femke Nijsse
 """
 
-# Import the results pickle file
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as ticker
 
-
 from preprocessing import get_output, get_metadata, save_fig, save_data
 
 import config
 
 #%%
+# Import the results pickle file
 output_file = "Results_sxp.pickle"
 titles, fig_dir, tech_titles, models, shares_vars = get_metadata()
 
@@ -128,7 +127,7 @@ for model in models:
 fig, axs = plt.subplots(2, 2, figsize=(3.5, 3.8), sharey=True)
 axs = axs.flatten()
 
-# Get 4 colours from the "rocket" palette
+# Get 4 colours from the "mako" palette
 colours = sns.color_palette("mako", 4)
 
 def custom_xaxis_formatter(x, pos):
@@ -177,10 +176,9 @@ for mi, model in enumerate(models):
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))
 
     ax.set_ylim(-15, 40)
-    # Set the x-axis major ticks to be at intervals of 2 years
     
+    # Set the major x-axis ticks to be at set intervals for heat
     if mi == 1:
-        # Apply the custom formatter to the x-axis
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(custom_xaxis_formatter))
     
     ax.grid(True, axis='y', linewidth=0.3)
@@ -218,9 +216,4 @@ final_df = final_df[['Model', 'Scenario'] + years]
 # Save the graph and its data
 save_fig(fig, fig_dir, "Figure 3 - Global_price_perc_diff_timeseries_by_policy")
 save_data(final_df, fig_dir, "Figure 3 - Global_price_perc_diff_timeseries_by_policy")
-
-
-
-
-
 
