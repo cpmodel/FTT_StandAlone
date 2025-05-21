@@ -114,7 +114,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['ZEWK'] = data['ZEWS'] * rflz_reshaped
         
         # Find total service area in Mvkm, first by tech, then by vehicle class
-        data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 10e6
+        data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 1e6
         data['ZESG'] = sum_over_classes(data['ZEVV'])
         
         # Calculate demand in million ton vehicle-km OR million passenger vehicle km, per vehicle class
@@ -233,7 +233,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             
             # Find total service area and demand, first by tech, then by vehicle class     
-            data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 10e6
+            data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 1e6
             data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis]
             data['ZESG'] = sum_over_classes(data['ZEVV'])
             data['RVKZ'] = sum_over_classes(data['ZEST'])
