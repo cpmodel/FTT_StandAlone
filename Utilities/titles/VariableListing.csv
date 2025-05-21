@@ -154,6 +154,7 @@ TWSA,FTT-Transport Exogenous vehicle sales (must sum to zero),th-veh,RTI,VTTI,NA
 TWIY,FTT-Transport Investment in private vehicles,2000$M (Correct year?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TVFP,FTT-Transport,$2012/vkm (?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TTVT,FTT-Transport Vehicle tax,th $/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+Base registration rate,FTT-Transport relevative registration tax,share of purchase cost,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 TTRT,FTT-Transport Road tax,$/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 TREG,FTT-Transport Regulations,share of technology,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 TLCD,FTT-Transport log(levelised costs),,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
@@ -360,6 +361,7 @@ MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,
 MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 REPPX,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,2010,,,
+REPPT,FTT:T regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-Tr,,,2010,,,
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
