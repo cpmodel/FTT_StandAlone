@@ -1,5 +1,5 @@
 {
-  "regions": ["EA", "US", "CN", "IN", "BR", "JA", "SA", "RGS", "RGN"],
+  "regions": ["EA", "US", "CN", "IN", "RGS", "RGN"],
   "reg_rollback" : ["US"],
   "params": {
     "general": {
@@ -13,13 +13,13 @@
   "ranges": {
     "learning_solar": [-0.405, -0.233],
     "learning_wind": [-0.276, -0.112],
-    "lifetime_solar": [20, 40],
-    "lifetime_wind": [20, 40],
+    "lifetime_solar": [25, 35],
+    "lifetime_wind": [25, 35],
     "lead_offshore": [2, 8],
     "lead_onshore": [1, 4],
     "lead_solar": [1, 4],
     "discr": [0, 1],
-    "elec_demand": [0.5, 1.5],
+    "elec_demand": [0, 1],
     "ccgt_price": [0, 1],
     "coal_price": [0, 1],
     "tech_potential": [0, 1]
@@ -75,12 +75,12 @@
   },
   "run_compare_scenarios": false,
   "run_ambition_vary": true,
-  "run_run_simulations": false,
-  "run_output_manipulation": false,
+  "run_run_simulations": true,
+  "run_output_manipulation": true,
   "region_groups": {
     "EA": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", "NL", "AT", "PT", "FI", "SW", "UK", "CZ", "EN", "CY", "LV", "LT", "HU", "MT", "PL", "SI", "SK", "BG", "RO", "HR", "NO", "CH", "IS"],
-    "RGN": ["TR", "MK", "CA", "AU", "NZ", "RS", "RA", "KR"],
-    "RGS": ["MX", "AR", "CO", "LA", "TW", "ID", "AS", "OP", "RW", "UE", "SD", "NG",
+    "RGN": [ "JA", "TR", "MK", "CA", "AU", "NZ", "RS", "RA", "KR"],
+    "RGS": ["SA", "BR", "MX", "AR", "CO", "LA", "TW", "ID", "AS", "OP", "RW", "UE", "SD", "NG",
     "ON", "OC", "MY", "KZ", "AN", "AC", "AW", "AE", "ZA", "EG", "DC", "KE", 
     "UA", "PK"],
     "GN": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", 

@@ -354,16 +354,19 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         country = cost_matrix.loc[i, 'Unnamed: 1']
         country_df = cost_matrix.iloc[i:i + tech_number + 1, :].reset_index(drop=True)
 
-        # scen level for discount rate coefficient
-        scen_discr = scen_level['discr']
-        # scale between 0.5 and 2
-        discount_rate = scen_discr**2 + (0.5 * scen_discr) + 0.5
+        # Discount rate adjustment bounds, hardocded like this for readability
+        max_addition = 0.03
+        max_subtraction = -0.03
+        # Apply scenario level
+        diff = max_addition - max_subtraction
+        diff = diff * scen_level['discr']
+        # Calculate the new edit to discount rate
+        discr_change = max_subtraction + diff
 
-        
 
-        # multiply current discount rate by new discount rate coefficient
-        country_df.iloc[1:, 17] = discount_rate * country_df.iloc[1:, 17]
-
+        # edit current discount rate by new discount rate additive value
+        country_df.iloc[1:, 17] = (discr_change + country_df.iloc[1:, 17]).clip(lower=0.02)
+        # round to 3 decimal places
         country_df.iloc[1:, 17] = country_df.iloc[1:, 17].astype(float).round(3)
 
         # Columns adjust
@@ -404,24 +407,38 @@ def inputs_vary_special(updated_input_data, scen_level, titles): # need to add p
         reg_short = titles['RTI_short'][reg]
         reg_long = titles['RTI'][reg]
 
-
+        # Load baseline demand data
         mewd_base = pd.read_csv(f'Inputs/S0/FTT-P/MEWDX_{reg_short}.csv')
         # Calculate growth rate
         mewd_grate = mewd_base.iloc[7, 13:].pct_change().fillna(0)
-        # Calculate new growth rate based on scenario level
-        mewd_grate_new = mewd_grate[1:] * scen_level['elec_demand']
         
+        
+        # Calculate bounds for growth rate
+        mewd_grate_upper = (mewd_grate[1:] * 1.2)    
+        mewd_grate_lower = (mewd_grate[1:] * 0.8) 
+
+        # Calculate growth rate based on scenario level
+        mewd_grate_diff = mewd_grate_upper - mewd_grate_lower
+        mewd_grate_diff = mewd_grate_diff * scen_level['elec_demand']
+
         # Calculate & insert new growth rate after 2022 - add in BCET end year from variable_listing
+        mewd_grate_new = mewd_grate_lower + mewd_grate_diff
+        # Create new dataframe for updated demand
         mewd_updated = mewd_base.copy()
 
-
-        for i in range(1, len(mewd_updated.iloc[7, 14:])):
-            mewd_updated.iloc[7, 13 + i] = round((1 + mewd_grate_new.iloc[i-1]) * mewd_updated.iloc[7, 14 + i], 4) 
-                                                                                   
+        # Loop through years and update demand
+        for i in range(0, len(mewd_updated.iloc[7, 14:])):
+            # Update demand with new growth rate 
+            mewd_updated.iloc[7, 14 + i] = round((1 + mewd_grate_new.iloc[i]) * mewd_updated.iloc[7, 13 + i], 4) 
+        
+        # Rename columns
         mewd_updated.rename(columns={mewd_updated.columns[0]: ''}, inplace=True)
 
         # Export to dict
         updated_input_data[scen_code][sheet_name_1][reg_short] = mewd_updated
+
+        #########################################
+
 
         ### Technical potential
         tech_base = pd.read_csv(f'Inputs/S0/General/MCSC_{reg_short}.csv')
@@ -526,7 +543,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in tqdm(range(500,502), desc="Processing Scenarios", unit="scenario"): # len(scen_levels['scenario'])
+    for i in tqdm(range(0, len(scen_levels['scenario'])), desc="Processing Scenarios", unit="scenario"): # len(scen_levels['scenario'])
         
 
         #updated_input_data = defaultdict(lambda: defaultdict(dict))
