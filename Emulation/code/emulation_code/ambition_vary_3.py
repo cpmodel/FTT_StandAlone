@@ -265,6 +265,7 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
     new_scen_code = scen_level.loc['scenario']
     sheet_name = 'REPPX' # hardcoded for now, handle via dimensions later
     
+
     # Region list from updated scenario levels, not DRY
     regions = list({country.split('_')[0] for country in scen_level.index if country.endswith('_pol')})
 
@@ -306,7 +307,7 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
     Returns:
     - dataframe containing updated cost matrix
     """
-
+    
     tech_update = cost_matrix['Unnamed: 1'] == technology
     if 'std_col' in updates:
         # Handle fuel price updates
@@ -321,6 +322,8 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
         fuel_vary = fuel_diff * scen_level[f"{technology.lower()}_price"]
         fuel_price_new = fuel_lower + fuel_vary
         cost_matrix.loc[tech_update, price_col] = fuel_price_new
+
+
     else:
         # Handle technology updates
         for param, col in updates.items():
@@ -382,6 +385,118 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         country_df = country_df[1:].reset_index(drop=True)        
         
         updated_input_data[scen_code][sheet_name][country] = country_df # needs generalising
+    
+        # Update substitution matrix
+        sheet_name_2 = 'MEWA'
+        mewa_country = pd.read_csv(f'Inputs/S0/FTT-P/MEWA_{country}.csv')
+        # Columns adjust
+        mewa_country.columns = [''] + mewa_country.columns[1:].astype(str).tolist()  
+        # Create dictionary for mewa
+        updated_input_data[scen_code][sheet_name_2] = {}
+
+
+        # Set lead time for CSP
+        if scen_level['lead_solar'] < 2:
+            csp_lead = 2
+        else:
+            csp_lead = scen_level['lead_solar']
+
+        # loop through technologies
+        for j in range(22):
+            # Update onshore row
+            if j == 16:
+                # loop through columns
+                for tech in range(1, 23):
+                    # onshore
+                    if tech == 17:
+                        mewa_country.iloc[j, tech] = 0
+                    # offshore
+                    elif tech == 18:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] / scen_level['lifetime_wind']
+                    # solar pv
+                    elif tech == 19:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] / scen_level['lifetime_solar']
+                    # csp
+                    elif tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] / scen_level['lifetime_solar']
+                    else:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] /  country_df.iloc[tech-1, 9]
+            # Update offshore row
+            if j == 17:
+                # loop through columns
+                for tech in range(1, 23):
+                    # onshore
+                    if tech == 17:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] / scen_level['lifetime_wind']
+                    # offshore
+                    elif tech == 18:
+                        mewa_country.iloc[j, tech] = 0
+                    # solar pv
+                    elif tech == 19:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] / scen_level['lifetime_solar']
+                    # csp
+                    elif tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] / scen_level['lifetime_solar']
+                    else:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] /  country_df.iloc[tech-1, 9]
+
+            # Update solar pv row
+            if j == 18:
+                # loop through columns
+                for tech in range(1, 23):
+                    # onshore
+                    if tech == 17:
+                       mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] / scen_level['lifetime_wind']
+                    # offshore
+                    elif tech == 18:
+                       mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] / scen_level['lifetime_wind']
+                    # solar pv
+                    elif tech == 19:
+                        mewa_country.iloc[j, tech] = 0
+                    # csp
+                    elif tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] / scen_level['lifetime_solar']
+                    else:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] /  country_df.iloc[tech-1, 9]
+
+
+                # Update csp row
+            if j == 19:
+                # loop through columns
+                for tech in range(1, 23):
+                    # onshore
+                    if tech == 17:
+                       mewa_country.iloc[j, tech] = 100 / csp_lead / scen_level['lifetime_wind']
+                    # offshore
+                    elif tech == 18:
+                       mewa_country.iloc[j, tech] = 100 / csp_lead / scen_level['lifetime_wind']
+                    # solar pv
+                    elif tech == 19:
+                        mewa_country.iloc[j, tech] = 0
+                    # csp
+                    elif tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / csp_lead / scen_level['lifetime_solar']
+                    else:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] /  country_df.iloc[tech-1, 9]
+
+
+            # Update other rows
+            else:
+                for tech in range(1, 23):
+                    if tech == 17:
+                        mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_wind']  
+                    if tech == 18:
+                        mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_wind'] 
+                    if tech == 19:
+                        mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_solar']
+                    if tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_solar']
+
+        
+        # Save to dictionary
+        updated_input_data[scen_code][sheet_name_2][country] = mewa_country # needs generalising
+
+        
 
     return updated_input_data 
 
