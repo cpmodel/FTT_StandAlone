@@ -1,0 +1,12 @@
+scenario,EA_phase_pol,EA_price_pol,EA_cp_pol,US_phase_pol,US_price_pol,US_cp_pol,CN_phase_pol,CN_price_pol,CN_cp_pol,IN_phase_pol,IN_price_pol,IN_cp_pol,RGS_phase_pol,RGS_price_pol,RGS_cp_pol,RGN_phase_pol,RGN_price_pol,RGN_cp_pol,learning_solar,learning_wind,lifetime_solar,lifetime_wind,lead_offshore,lead_onshore,lead_solar,discr,elec_demand,ccgt_price,coal_price,tech_potential
+S3_baseline,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,26,3,1,1,0.5,0.5,0.5,0.5,0.5
+S3_sol_low_life,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,25,26,3,1,1,0.5,0.5,0.5,0.5,0.5
+S3_sol_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,26,3,1,4,0.5,0.5,0.5,0.5,0.5
+S3_sol_low_lf_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,25,26,3,1,4,0.5,0.5,0.5,0.5,0.5
+S3_onsh_low_life,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,25,3,1,1,0.5,0.5,0.5,0.5,0.5
+S3_onsh_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,26,3,4,1,0.5,0.5,0.5,0.5,0.5
+S3_onsh_high_lf_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,35,3,4,1,0.5,0.5,0.5,0.5,0.5
+S3_offsh_high_life,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,35,3,1,1,0.5,0.5,0.5,0.5,0.5
+S3_offsh_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,35,3,1,1,0.5,0.5,0.5,0.5,0.5
+S3_offsh_high_lf_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,35,8,1,1,0.5,0.5,0.5,0.5,0.5
+S3_csp_high_lf_high_lead,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,40,26,3,1,1,0.5,0.5,0.5,0.5,0.5
