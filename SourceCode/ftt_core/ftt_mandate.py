@@ -39,10 +39,10 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=
         current_share = current_green / total_sales
         
         # Skip country if sales already enough
-        if current_share >= mandate_share: 
+        if current_share >= mandate_share[r, 0, 0]: 
             continue
         
-        target_green = total_sales * mandate_share
+        target_green = total_sales * mandate_share[r, 0, 0]
         
         # First, use local proportions if there are sales locally
         if current_green > 0:
@@ -69,3 +69,27 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=
             sales_after_mandate[r, non_green_indices, 0] = remaining_sales / len(non_green_indices)
                     
     return sales_after_mandate
+
+def implement_mandate(cap, mandates, cum_sales_in, sales_in, green_techs):
+    '''Implement mandate: recompute sales, update capacity'''
+    
+    # Only run code if there is a mandate in at least one region
+    if np.sum(mandates) > 0:
+        
+        green_indices = [i for i, x in enumerate(green_techs[0]) if x]
+        sales_after_mandate = get_new_sales_under_mandate(sales_in, mandates, green_indices)
+
+        # Update capacity
+        sales_difference = sales_after_mandate - sales_in
+        cap = cap + sales_difference
+        cap[:, :, 0] = np.maximum(cap[:, :, 0], 0)
+        
+        # Update cumulative sales
+        cum_sales_after_mandate = np.copy(cum_sales_in)
+        cum_sales_after_mandate[:, :, 0] += sales_difference[:, :, 0]
+        
+        return cum_sales_after_mandate, sales_after_mandate, cap
+    
+    # Return inputs directly if there is no mandate
+    else:
+        return cum_sales_in, sales_in, cap

@@ -232,16 +232,18 @@ def set_up_cols(model, var, var_dict, dims, timeline_dict):
     if len(dimensions) == 1:
         cdim = 1
         col_title = ['NA']
+    
     # If there are multiple columns and the column isn' time
     elif dimensions[1] != 'TIME':
         cdim = len(dims[var_dict[model][var]['Dims'][1]])
         col_title = dims[var_dict[model][var]['Dims'][1]]
+
     # If the second dimension is time
     else:
+        if var not in timeline_dict:
+            raise KeyError(f"{var} not found in timeline_dict. Have you added it to FTT_variables?")
         cdim = len(timeline_dict[var])
         col_title = timeline_dict.get(var, [])
-        if not col_title:
-            print(f"KeyError: {var} not found in timeline_dict.")
 
     return cdim, col_title
 

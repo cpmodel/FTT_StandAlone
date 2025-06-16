@@ -43,7 +43,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.Heat.ftt_h_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 
@@ -458,14 +458,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # New additions (HEWI)
             data['HEWI'], hewi_t = get_sales(
                   data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
-                  data["HEWS"], data_dt["HEWS"],
                   data["HEWI"], data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
                   dt
                   )
             
             # Change capacity and sales after mandate
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
-                data['HEWK'], data["hp mandate"], data['HEWI'], hewi_t, year)
+                data['HEWK'], data["HMAN"], data['HEWI'], hewi_t,
+                data["BHTC"][:, :, c4ti["21 Techs under mandate"]])
             
             # Calculate HEWG, HEWS and HEWF after mandates  
             
