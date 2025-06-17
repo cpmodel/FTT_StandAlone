@@ -425,30 +425,32 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             CO2_corr = np.ones(len(titles['RTI']))
             emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = data['TJET'][0, :, :]
+            
+            JTI = titles['JTI']
+            biofuels = [i for i, name in enumerate(JTI) if name == '11 Biofuels']
+            middle_dists = [i for i, name in enumerate(JTI) if name == '5 Middle distillates']
+            TJET = data['TJET'][0]
 
             for r in range(len(titles['RTI'])):
                 if data['RFLT'][r, 0, 0] > 0.0:
-                    CO2_corr[r] = (data['TESH'][r, :, 0]*data['TESF'][r, :, 0] *
-                                   data['TETH'][r, :, 0]).sum()/(data['TESH'][r, :, 0]*data['TESF'][r, :, 0]).sum()
+                    CO2_corr[r] = (data['TESH'][r, :, 0] * data['TESF'][r, :, 0] 
+                                   * data['TETH'][r, :, 0]).sum() / (data['TESH'][r, :, 0]
+                                                                     * data['TESF'][r, :, 0]).sum()
+                    
+                    biofuel_mand = data['RBFM'][r, 0, 0]
 
-                for fuel in range(len(titles['JTI'])):
-
-                    for veh in range(len(titles['VTTI'])):
-
-                        # Middle distillates
-                        if titles['JTI'][fuel] == '5 Middle distillates' and data['TJET'][0, veh, fuel] == 1:
-
-                            # Mix with biofuels/hydrogen if there's a biofuel mandate or hydrogen mandate
-                            fuel_converter[veh, fuel] = data['TJET'][0,
-                                                                     veh, fuel] * (1.0 - data['RBFM'][r, 0, 0])
-
-                            # Emission correction factor
-                            emis_corr[r, veh] = 1.0 - data['RBFM'][r, 0, 0]
-
-                        elif titles['JTI'][fuel] == '11 Biofuels' and data['TJET'][0, veh, fuel] == 1:
-
-                            fuel_converter[veh, fuel] = data['TJET'][0,
-                                                                     veh, fuel] * data['RBFM'][r, 0, 0]
+                # Middle distillates
+                for fuel in middle_dists:
+                     for veh in range(len(titles['VTTI'])):
+                         if TJET[veh, fuel] == 1:
+                             # Mix with biofuels/hydrogen if there's a mandate
+                             fuel_converter[veh, fuel] = TJET[veh, fuel] * (1.0 - biofuel_mand)
+                             emis_corr[r, veh] = 1.0 - biofuel_mand
+                
+                for fuel in biofuels:
+                   for veh in range(len(titles['VTTI'])):
+                       if TJET[veh, fuel] == 1:
+                           fuel_converter[veh, fuel] = TJET[veh, fuel] * biofuel_mand
 
                 # Calculate fuel use - passenger car only! Therefore this will
                 # differ from E3ME results
