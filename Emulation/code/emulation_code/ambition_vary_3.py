@@ -309,10 +309,11 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
     """
     
     tech_update = cost_matrix['Unnamed: 1'] == technology
-    if 'std_col' in updates:
+    if 'std_col' in updates: # this is used to identify ffuel techs GENERALISE
         # Handle fuel price updates
         price_col = updates[f"{technology.lower()}_price"]
         std_col = updates['std_col']
+        lead_col = updates[f"lead_{technology.lower()}"]
         
         fuel_price = cost_matrix.loc[tech_update, price_col]
         fuel_std = cost_matrix.loc[tech_update, std_col]
@@ -322,12 +323,25 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
         fuel_vary = fuel_diff * scen_level[f"{technology.lower()}_price"]
         fuel_price_new = fuel_lower + fuel_vary
         cost_matrix.loc[tech_update, price_col] = fuel_price_new
+        
+        # Update lead times # not generalised
+        cost_matrix.loc[tech_update, 10] = scen_level[f"lead_{technology.lower()}"]
 
 
     else:
         # Handle technology updates
         for param, col in updates.items():
-            cost_matrix.loc[tech_update, col] = scen_level[param]
+            if param.startswith("lead"):
+                # handle solar name
+                if technology.lower() == 'solar pv':
+                    technology = 'solar'  # Handle specific case for solar PV
+                
+                # Update lead times
+                cost_matrix.loc[tech_update, col] = scen_level[f"lead_{technology.lower()}"] 
+            else:
+                cost_matrix.loc[tech_update, col] = scen_level[param]
+
+
 
 
 def inputs_vary_general(updated_input_data, scen_level, updates_config, region_groups, cost_matrix_structure):
@@ -353,6 +367,10 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
     # Apply updates for technologies and fuels
     for technology, updates in updates_config.items():
         update_cost_matrix(cost_matrix, technology, updates, scen_level)
+
+    # Update leads for all techs with commissioning time
+    all_tech_rows = (cost_matrix.index % 23) > 0  # Exclude the first row which is the header
+    cost_matrix.loc[all_tech_rows, 10] = cost_matrix.loc[all_tech_rows, 10] + scen_level["lead_commission"]
 
     # Divide into country sheets and vary discount rates
     for i in range(0, len(cost_matrix), tech_number+1):
@@ -398,13 +416,61 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         
 
         # Set lead time for CSP
-        if scen_level['lead_solar'] < 2:
+        if scen_level['lead_solar'] + scen_level['lead_commission'] < 2:
             csp_lead = 2
         else:
-            csp_lead = scen_level['lead_solar']
+            csp_lead = scen_level['lead_solar'] + scen_level['lead_commission']
 
         # loop through technologies
         for j in range(22):
+            # update coal row
+            if j == 2:
+                # loop through columns
+                for tech in range(1, 23):
+                    # coal
+                    if tech == 3:
+                        mewa_country.iloc[j, tech] = 0
+                    # ccgt
+                    elif tech == 7:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / country_df.iloc[tech-1, 9]
+                    # onshore
+                    elif tech == 17:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_wind']
+                    # offshore
+                    elif tech == 18:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_wind']
+                    # solar pv
+                    elif tech == 19:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_solar']
+                    # csp
+                    elif tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_solar']
+                    else:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / country_df.iloc[tech-1, 9]
+            # update gas row
+            if j == 6:
+                # loop through columns
+                for tech in range(1, 23):
+                    # coal
+                    if tech == 3:
+                        mewa_country.iloc[j, tech] =  100 / scen_level['lead_ccgt'] / country_df.iloc[tech-1, 9]
+                    # ccgt
+                    elif tech == 7:
+                        mewa_country.iloc[j, tech] = 0
+                    # onshore
+                    elif tech == 17:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_wind']
+                    # offshore
+                    elif tech == 18:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_wind']
+                    # solar pv
+                    elif tech == 19:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_solar']
+                    # csp
+                    elif tech == 20:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_solar']
+                    else:
+                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / country_df.iloc[tech-1, 9]
             # Update onshore row
             if j == 16:
                 # loop through columns

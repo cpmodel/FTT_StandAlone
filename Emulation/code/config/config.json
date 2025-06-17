@@ -19,7 +19,7 @@
     "lead_onshore": [1, 2],
     "lead_solar": [1, 2],
     "lead_ccgt": [1, 3],
-    "lead_coal": [2, 4],
+    "lead_coal": [2, 3],
     "lead_commission": [0, 2],
     "discr": [0, 1],
     "elec_demand": [0, 1],
@@ -45,17 +45,19 @@
     },
     "CCGT": {
       "ccgt_price": 5,
-      "std_col": 6
+      "std_col": 6,
+      "lead_ccgt": 10
     },
     "Coal": {
       "coal_price": 5,
-      "std_col": 6
+      "std_col": 6,
+      "lead_coal": 10
     },
     "Discount Rate": {
       "discr": 17
     }
   },
-  "Nscens": 5,
+  "Nscens": 500,
   "scen_code": "S3",
   "scenarios": {"base": "S0", "ambitious": "S3"},
   "round_decimals": 3,
@@ -65,7 +67,7 @@
   "vars_non_costmatrix": ["MEWD", "MCSC"],
   "general_vars": ["MCSC"],
   "batch_size": 50,
-  "scen_levels_path": "Emulation/data/scenarios/new_lead_check.csv",
+  "scen_levels_path": "Emulation/data/scenarios/S3_scen_levels.csv",
   "base_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx",
   "ambitious_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S3.xlsx",
   "comparison_path": "Emulation/data/comparisons/S0_S3_comparison.xlsx",
