@@ -29,7 +29,7 @@ def load_titles():
     titles_path = os.path.join(dir_root, 'Utilities', 'titles', titles_file)
     
     if not os.path.isfile(titles_path):
-        print('Classification titles file not found.')
+        raise FileNotFoundError(f"Classification titles file not found at: {titles_path}")
 
     df = pd.read_csv(titles_path, header=None, keep_default_na=False, dtype=str)
 
