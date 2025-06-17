@@ -426,9 +426,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
             fuel_converter = data['TJET'][0, :, :]
             
-            JTI = titles['JTI']
-            biofuels = [i for i, name in enumerate(JTI) if name == '11 Biofuels']
-            middle_dists = [i for i, name in enumerate(JTI) if name == '5 Middle distillates']
+            JTI = titles['JTI']         # Fuel classification
+            biofuel_ind = JTI.index('11 Biofuels')
+            middle_dist_ind = JTI.index('5 Middle distillates')
             TJET = data['TJET'][0]
 
             for r in range(len(titles['RTI'])):
@@ -439,18 +439,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     
                     biofuel_mand = data['RBFM'][r, 0, 0]
 
-                # Middle distillates
-                for fuel in middle_dists:
-                     for veh in range(len(titles['VTTI'])):
-                         if TJET[veh, fuel] == 1:
-                             # Mix with biofuels/hydrogen if there's a mandate
-                             fuel_converter[veh, fuel] = TJET[veh, fuel] * (1.0 - biofuel_mand)
-                             emis_corr[r, veh] = 1.0 - biofuel_mand
-                
-                for fuel in biofuels:
-                   for veh in range(len(titles['VTTI'])):
-                       if TJET[veh, fuel] == 1:
-                           fuel_converter[veh, fuel] = TJET[veh, fuel] * biofuel_mand
+                for veh in range(len(titles['VTTI'])):
+                    
+                    if TJET[veh, middle_dist_ind] == 1:
+                        # Mix with biofuels/hydrogen if there's a mandate
+                        fuel_converter[veh, middle_dist_ind] = TJET[veh, middle_dist_ind] * (1.0 - biofuel_mand)
+                        fuel_converter[veh, biofuel_ind] = TJET[veh, biofuel_ind] * biofuel_mand
+                        
+                        emis_corr[r, veh] = 1.0 - biofuel_mand
 
                 # Calculate fuel use - passenger car only! Therefore this will
                 # differ from E3ME results
