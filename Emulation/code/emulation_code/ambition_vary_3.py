@@ -155,29 +155,29 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
                 else:
                     print(f'No ambition level for {country} in {policy_parameter}')
 
-                # Handle rollback for certain technologies TODO generalise
-                if (country == 'US') & (policy_parameter == 'price_pol'):
-                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                # # Handle rollback for certain technologies TODO generalise
+                # if (country == 'US') & (policy_parameter == 'price_pol'):
+                #     roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
                 
-                    # if (technology in roll_back_techs) & (ambition >= 0.5):
-                    #     continue
-                    # elif (technology not in roll_back_techs) & (ambition < 0.5):
-                    #     continue
-                    # elif (technology in roll_back_techs) & (ambition < 0.5):
-                    #     ambition = (0.5 - ambition) / 0.5
-                    # elif (technology not in roll_back_techs) & (ambition >= 0.5):
-                    #     ambition = (ambition - 0.5) / 0.5
+                #     # if (technology in roll_back_techs) & (ambition >= 0.5):
+                #     #     continue
+                #     # elif (technology not in roll_back_techs) & (ambition < 0.5):
+                #     #     continue
+                #     # elif (technology in roll_back_techs) & (ambition < 0.5):
+                #     #     ambition = (0.5 - ambition) / 0.5
+                #     # elif (technology not in roll_back_techs) & (ambition >= 0.5):
+                #     #     ambition = (ambition - 0.5) / 0.5
 
-                                # Handle rollback for certain technologies TODO generalise
-                if (country == 'US') & (policy_parameter == 'price_pol'):
-                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                #                 # Handle rollback for certain technologies TODO generalise
+                # if (country == 'US') & (policy_parameter == 'price_pol'):
+                #     roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
                 
-                    if (ambition >= 0.5):
-                        ambition = (ambition - 0.5) / 0.5
-                    elif (technology in roll_back_techs) & (ambition < 0.5):
-                        ambition = (0.5 - ambition) / -0.5 # negative to reverse direction for rollback techs
-                    elif (technology not in roll_back_techs) & (ambition < 0.5):
-                        ambition = 0 # all other techs set to 0 below 0.5 ambition
+                #     if (ambition >= 0.5):
+                #         ambition = (ambition - 0.5) / 0.5
+                #     elif (technology in roll_back_techs) & (ambition < 0.5):
+                #         ambition = (0.5 - ambition) / -0.5 # negative to reverse direction for rollback techs
+                #     elif (technology not in roll_back_techs) & (ambition < 0.5):
+                #         ambition = 0 # all other techs set to 0 below 0.5 ambition
 
                 # Extract meta data and bounds
                 meta = amb_df.iloc[row, 0:5]
@@ -341,6 +341,9 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
     scen_code = scen_level['scenario']
     sheet_name = 'BCET' 
     updated_input_data[scen_code][sheet_name] = {}
+    # Create dictionary for mewa
+    sheet_name_2 = 'MEWA'
+    updated_input_data[scen_code][sheet_name_2] = {}
     
     # Load baseline data
     cost_matrix = load_cost_matrix("Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx", ['BCET'], cost_matrix_structure) # GENERALISE
@@ -386,14 +389,13 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         
         updated_input_data[scen_code][sheet_name][country] = country_df # needs generalising
     
+    
+        # Create a new sheet for MEWA - substitution matrix
         # Update substitution matrix
-        sheet_name_2 = 'MEWA'
         mewa_country = pd.read_csv(f'Inputs/S0/FTT-P/MEWA_{country}.csv')
         # Columns adjust
         mewa_country.columns = [''] + mewa_country.columns[1:].astype(str).tolist()  
-        # Create dictionary for mewa
-        updated_input_data[scen_code][sheet_name_2] = {}
-
+        
 
         # Set lead time for CSP
         if scen_level['lead_solar'] < 2:
