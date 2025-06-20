@@ -3,6 +3,7 @@
 
 import numpy as np
 
+from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_mandate import get_new_sales_under_mandate, get_mandate_share
 
 
@@ -30,8 +31,9 @@ def implement_seeding(cap, seeding, cum_sales_in, sales_in, n_veh_classes, year)
         sales_in_class = sales_in[:, veh_class::n_veh_classes, :]
         green_indices_class = [6]
         
-        # Step 4: Apply mandate adjustments with global shares and strict enforcement
-        green_share = np.sum(sales_in_class[:, green_indices_class])/np.sum(sales_in_class)
+        # Apply mandate adjustments with global shares and strict enforcement
+        # Seed set to zero if the class is empty
+        green_share = divide(np.sum(sales_in_class[:, green_indices_class]), np.sum(sales_in_class) )
         mandate_share = get_mandate_share(year, MANDATE_START_YEAR, mandate_end_year) * 0.15 * green_share
         
         # If the mandate is turned off that specific year, go to next vehicle class
