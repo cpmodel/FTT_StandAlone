@@ -63,12 +63,7 @@ def uncertainty_generator(ranges, Nscens=1, sampling_method=lhs, round_decimals=
     """
     uncertainty_df = pd.DataFrame()
     for var, (lower, upper) in ranges.items():
-        integer_vars = ['lifetime_solar', 'lifetime_wind', 'lead_offshore', 'lead_onshore', 'lead_solar']
-        if var in integer_vars:
-            samples = generate_samples(sampling_method, Nscens, lower, upper, round_decimals = 0)
-        else:
-            samples = generate_samples(sampling_method, Nscens, lower, upper, round_decimals)
-        
+        samples = generate_samples(sampling_method, Nscens, lower, upper, round_decimals)
         uncertainty_df[var] = samples.flatten()
     
     return uncertainty_df

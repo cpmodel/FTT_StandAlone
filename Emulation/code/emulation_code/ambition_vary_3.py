@@ -155,29 +155,17 @@ def pol_vary_general(updated_input_data, input_data, scen_level, compare_data, s
                 else:
                     print(f'No ambition level for {country} in {policy_parameter}')
 
-                # # Handle rollback for certain technologies TODO generalise
-                # if (country == 'US') & (policy_parameter == 'price_pol'):
-                #     roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
-                
-                #     # if (technology in roll_back_techs) & (ambition >= 0.5):
-                #     #     continue
-                #     # elif (technology not in roll_back_techs) & (ambition < 0.5):
-                #     #     continue
-                #     # elif (technology in roll_back_techs) & (ambition < 0.5):
-                #     #     ambition = (0.5 - ambition) / 0.5
-                #     # elif (technology not in roll_back_techs) & (ambition >= 0.5):
-                #     #     ambition = (ambition - 0.5) / 0.5
 
-                #                 # Handle rollback for certain technologies TODO generalise
-                # if (country == 'US') & (policy_parameter == 'price_pol'):
-                #     roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
+                # Handle rollback for certain technologies TODO generalise
+                if (country == 'US') & (policy_parameter == 'price_pol'):
+                    roll_back_techs = ["Onshore", "Offshore", "Solar PV"]
                 
-                #     if (ambition >= 0.5):
-                #         ambition = (ambition - 0.5) / 0.5
-                #     elif (technology in roll_back_techs) & (ambition < 0.5):
-                #         ambition = (0.5 - ambition) / -0.5 # negative to reverse direction for rollback techs
-                #     elif (technology not in roll_back_techs) & (ambition < 0.5):
-                #         ambition = 0 # all other techs set to 0 below 0.5 ambition
+                    if (ambition >= 0.5):
+                        ambition = (ambition - 0.5) / 0.5
+                    elif (technology in roll_back_techs) & (ambition < 0.5):
+                        ambition = (0.5 - ambition) / -0.5 # negative to reverse direction for rollback techs
+                    elif (technology not in roll_back_techs) & (ambition < 0.5):
+                        ambition = 0 # all other techs set to 0 below 0.5 ambition
 
                 # Extract meta data and bounds
                 meta = amb_df.iloc[row, 0:5]
@@ -403,9 +391,22 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         # Make the first row the column headers
         country_df.columns = country_df.iloc[0]
         # Drop the first row now that it is the header
-        country_df = country_df[1:].reset_index(drop=True)        
+        country_df = country_df[1:].reset_index(drop=True)   
+
+        ## Round lead and lifetimes to intergers for inputs
+        # keep seperate to capture difference in substitution matrix
+        # Ensure columns are numeric (in country_df, not country_df_rounded)
+        country_df_rounded = country_df.copy()
+        # Convert columns to numeric, coercing errors to NaN
+        country_df_rounded['9 Lifetime (years)'] = pd.to_numeric(country_df_rounded['9 Lifetime (years)'], errors='coerce')
+        country_df_rounded['10 Lead Time (years)'] = pd.to_numeric(country_df_rounded['10 Lead Time (years)'], errors='coerce')
+
+        # Now round and convert to pandas nullable integer type (Int64)
+        country_df_rounded['9 Lifetime (years)'] = country_df_rounded['9 Lifetime (years)'].round().astype('Int64')
+        country_df_rounded['10 Lead Time (years)'] = country_df_rounded['10 Lead Time (years)'].round().astype('Int64')        
         
-        updated_input_data[scen_code][sheet_name][country] = country_df # needs generalising
+        # Store for saving
+        updated_input_data[scen_code][sheet_name][country] = country_df_rounded # needs generalising
     
     
         # Create a new sheet for MEWA - substitution matrix
@@ -560,7 +561,6 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                     if tech == 20:
                         mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_solar']
 
-        
         # Save to dictionary
         updated_input_data[scen_code][sheet_name_2][country] = mewa_country # needs generalising
 
