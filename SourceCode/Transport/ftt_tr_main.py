@@ -40,6 +40,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
+from SourceCode.Transport.emission_corrections import co2_correction, emission_correction
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
@@ -420,49 +421,52 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 )
             
            
-            # Fuel use
+            # Fuel use and emissions
             # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
+            
+            # CO2 corrections
+            TESH = data['TESH'][:, :, 0]   # Vehicle sales history
+            TESF = data['TESF'][:, :, 0]   # Survival function
+            TETH = data['TETH'][:, :, 0]   # Efficiency correction by age (less efficient in past)
+            RFLT = data['RFLT'][:, 0, 0]   # Fleet stocks in use (from survival)
+            
+            numer = (TESH * TESF * TETH).sum(axis=1)
+            total_fleet = (TESH * TESF).sum(axis=1)
+            
             CO2_corr = np.ones(len(titles['RTI']))
+            valid = RFLT > 0.0
+            CO2_corr[valid] = numer[valid] / total_fleet[valid]
+            
+            # Emission corrections
             emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
-            fuel_converter = data['TJET'][0, :, :]
+            fuel_converter = np.tile(data['TJET'][0, :, :], (len(titles['RTI']), 1, 1))            
             
             JTI = titles['JTI']         # Fuel classification
             biofuel_ind = JTI.index('11 Biofuels')
             middle_dist_ind = JTI.index('5 Middle distillates')
-            TJET = data['TJET'][0]
-
-            for r in range(len(titles['RTI'])):
-                if data['RFLT'][r, 0, 0] > 0.0:
-                    CO2_corr[r] = (data['TESH'][r, :, 0] * data['TESF'][r, :, 0] 
-                                   * data['TETH'][r, :, 0]).sum() / (data['TESH'][r, :, 0]
-                                                                     * data['TESF'][r, :, 0]).sum()
-                    
-                    biofuel_mand = data['RBFM'][r, 0, 0]
-
-                for veh in range(len(titles['VTTI'])):
-                    
-                    if TJET[veh, middle_dist_ind] == 1:
-                        # Mix with biofuels/hydrogen if there's a mandate
-                        fuel_converter[veh, middle_dist_ind] = TJET[veh, middle_dist_ind] * (1.0 - biofuel_mand)
-                        fuel_converter[veh, biofuel_ind] = TJET[veh, biofuel_ind] * biofuel_mand
-                        
-                        emis_corr[r, veh] = 1.0 - biofuel_mand
-
-                # Calculate fuel use - passenger car only! Therefore this will
-                # differ from E3ME results
-                # TEWG:                          mkm driven
-                # Convert energy unit (1/41.868) ktoe/TJ
-                # Energy demand (BBTC)           MJ/km
-
-                # Fuel use
-                data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]
-                                                   * data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]
-                                                   * CO2_corr[r] / 41.868))
-
-                # Emissions
-                data['TEWE'][r, :, 0] = (data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
-                                         * CO2_corr[r] * emis_corr[r, :] / 1e6)
-
+            
+            biofuel_mand = data['RBFM'][:, 0, 0]
+            
+            # Boolean mask for vehicles that use middle distillates
+            TJET_middle = data['TJET'][0, :, middle_dist_ind] == 1
+            emis_corr[valid] = 1.0 - biofuel_mand[valid, None] * TJET_middle[None, :]
+            
+            # Adjust fuel shares to account for biofuel mandates in middle distillate fuels
+            fuel_converter[:, :, middle_dist_ind] *= (1.0 - biofuel_mand[:, None]) * TJET_middle
+            fuel_converter[:, :, biofuel_ind] *= biofuel_mand[:, None] * TJET_middle
+            
+            # Precompute factors per region and vehicle
+            factors = data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['9 energy use (MJ/km)']] * CO2_corr[:, None] / 41.868
+            
+            # Fuel use (matrix multiplication over vehicles and fuels)
+            # TODO: Fix double counting for hybrids and PHEVs
+            data['TJEF'][:, :, 0] = np.einsum('v f r, r v -> r f', fuel_converter.transpose(1, 2, 0), factors)
+            
+            # Emissions
+            data['TEWE'][:, :, 0] = (data['TEWG'][:, :, 0] * data['BTTC'][:, :, c3ti['14 CO2Emissions']]
+                                     * CO2_corr[:, None] * emis_corr / 1e6)
+            
+            
             ############## Learning-by-doing ##################
 
             # Cumulative global learning
