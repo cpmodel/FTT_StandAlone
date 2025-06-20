@@ -25,7 +25,7 @@ def get_survival_ratio(survival_function_array):
     """
     survival_ratio = survival_function_array[:, :-1, :] / survival_function_array[:, 1:, :]
     survival_ratio = survival_ratio.reshape(71, 1, 22)
-    
+
     return survival_ratio
 
 def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
@@ -37,6 +37,7 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     """
     capacity_growth = capacity - lagged_capacity
     new_cars = capacity_growth[:, :, 0] + scrappage[:, :, 0]
+    
     # Set new cars to zero
     new_cars = np.where(new_cars < 0, 0, new_cars)
     
@@ -45,7 +46,7 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     # Sum over each age bracket. This should be equal to TEWK.
     sum_age_matrix = np.sum(age_matrix, axis=2, keepdims=True)
     
-        # Check for NaNs
+    # Check for NaNs
     if np.any(np.isnan(sum_age_matrix)):
         print("NaN values found in sum_age_matrix.")
     
@@ -53,8 +54,8 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
         print("NaN values found in age_matrix.")
     
     # Normalise age_matrix, so that in each country + car, it sums to overall capacity TEWK.
-    age_matrix = np.divide(age_matrix * capacity, sum_age_matrix, \
-                           where=sum_age_matrix!=0, out=np.zeros_like(age_matrix))
+    age_matrix = np.divide(age_matrix * capacity, sum_age_matrix, 
+                           where=sum_age_matrix!=0, out=np.zeros_like(age_matrix) )
 
     return age_matrix
 
@@ -93,13 +94,13 @@ def survival_function(data, time_lag, histend, year, titles):
     
     # We assume a linearly decreasing distribution of ages at initialisation
     if np.sum(time_lag["RLTA"]) == 0:
-        initialise_age_matrix(data, titles)   
+        initialise_age_matrix(data, titles)
     
     # After the first year of historical data, we start calculating the age
     # matrix endogenously.
     else:
         
-        # Move all vehicles one year up
+        # Move all vehicles one year up in the age-tracking matrix
         data['RLTA'][..., :-1] = np.copy(time_lag['RLTA'][..., 1:])
         
         # Apply the survival ratio
@@ -109,19 +110,21 @@ def survival_function(data, time_lag, histend, year, titles):
         survival = np.sum(data['RLTA'], axis=-1)
         scrappage = time_lag['TEWK'][..., 0] - survival
         
-        # Vectorized condition for scrappage
-        data['REVS'][..., 0] = np.where(scrappage > 0, scrappage, 0)
+        # Scappage by country and technology: remove negative values
+        data['REVS'][..., 0] = np.where(scrappage > 0, scrappage, 0)        
         
-        
-        # Warning if more cars survive than existed previous timestep:
+        # Raise error if more cars survive than existed in the previous timestep
         for r in range(data['RLTA'].shape[0]):
             for veh in range(data['RLTA'].shape[1]):
-                if not np.isclose(time_lag['TEWK'][r, veh, 0], survival[r, veh], atol=1e-6) and time_lag['TEWK'][r, veh, 0] < survival[r, veh]:
-                    msg = (f"Error! \n"
-                           f"Check year {year}, region - {titles['RTI'][r]}, vehicle - {titles['VTTI'][veh]}\n"
-                           "More cars survived than what was in the fleet before:\n"
-                           f"{time_lag['TEWK'][r, veh, 0]:.8f} versus {np.sum(data['RLTA'][r, veh, :]):.8f}")
-                    print(msg)
+                total = time_lag['TEWK'][r, veh, 0]
+                survived = survival[r, veh]
+                # Survived needs to be smaller than total up to rounding errors
+                if not np.isclose(total, survived, atol=1e-6) and total < survived:
+                    raise ValueError(
+                        f"More cars survived than we had to start with in {year}:\n"
+                        f"Region: {titles['RTI'][r]}, Vehicle: {titles['VTTI'][veh]}\n"
+                        f"Survived cars = {survived:.5f}, but fleet before = {total:.5f}"
+            )
     
     data["RLTA"] = add_new_cars_age_matrix(
                 data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]

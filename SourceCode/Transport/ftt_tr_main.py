@@ -225,7 +225,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                      * CO2_corr[r] * emis_corr[r, :] / 1e6)
     
     # Call the survival function routine, updating scrappage and age matrix:
-    if year <= np.max(data["TDA1"][:, 0, 0]):
+    if year <= np.min(data["TDA1"][:, 0, 0]):
         data = survival_function(data, time_lag, histend, year, titles)
         
 
