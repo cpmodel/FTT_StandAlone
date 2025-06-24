@@ -127,6 +127,7 @@ RHUD,FTT-Heat Useful energy demand,GWh/y,RTI,NA,NA,TIME,FTT-H,,,2001,,,
 HTVS,FTT-Heat Subsidy on investment cost,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HTRT,FTT-Heat Subsidy/tax on fuel use,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HREG,FTT-Heat Regulations on heating technologies,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
+HMAN,FTT-H minimum sales mandate,,RTI,NA,NA,TIME,FTT-H,,,2001,,,
 HWSA,FTT-Heat Exogenous market share changes,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HEFI,FTT-Heat Feed-in-tariff,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HETR,FTT-Heat Turn-over rate,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
@@ -361,7 +362,7 @@ MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,
 MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 REPPX,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,2010,,,
-REPPT,FTT:T regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-Tr,,,2010,,,
+REPPHX,FTT:H carbon tax,euro/tC,RTI,NA,NA,TIME,FTT-H,-,-,2010,,Y,Y
 MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y

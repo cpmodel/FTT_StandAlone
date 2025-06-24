@@ -232,16 +232,18 @@ def set_up_cols(model, var, var_dict, dims, timeline_dict):
     if len(dimensions) == 1:
         cdim = 1
         col_title = ['NA']
+    
     # If there are multiple columns and the column isn' time
     elif dimensions[1] != 'TIME':
         cdim = len(dims[var_dict[model][var]['Dims'][1]])
         col_title = dims[var_dict[model][var]['Dims'][1]]
+
     # If the second dimension is time
     else:
+        if var not in timeline_dict:
+            raise KeyError(f"{var} not found in timeline_dict. Have you added it to FTT_variables?")
         cdim = len(timeline_dict[var])
         col_title = timeline_dict.get(var, [])
-        if not col_title:
-            print(f"KeyError: {var} not found in timeline_dict.")
 
     return cdim, col_title
 
@@ -299,21 +301,14 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 
 # Core functions for the main programme
 def directories_setup():
-    """ Set up directory masterfile, the directory above it, and the databank directory"""
+    """ Set up directory masterfile and the general input directory"""
+    
     dir_file = os.path.dirname(os.path.realpath(__file__))
     dir_root = Path(dir_file).parents[1] 
     dir_inputs = os.path.join(dir_root, "Inputs")  
     dir_masterfiles = os.path.join(dir_root, "Inputs", "_MasterFiles")
-    # Classifications
-
-    titles_file = 'classification_titles.xlsx'
-    # Check that classification titles workbook exists
-    titles_path = os.path.join(dir_root, 'Utilities', 'titles', titles_file)
     
-    if not os.path.isfile(titles_path):
-        print(f'Classification titles file not found at {titles_path}.')
-    
-    return dir_inputs, dir_masterfiles, titles_path
+    return dir_inputs, dir_masterfiles
 
 
 def variable_setup(dir_masterfiles, models):
@@ -370,8 +365,9 @@ def variable_setup(dir_masterfiles, models):
 
     return variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict
 
-def get_model_classification(titles_path, variables_df):
+def get_model_classification(variables_df):
     """Get the dimensions for the classifications"""
+    
     dims = list(pd.concat([variables_df['RowDim'], variables_df['ColDim'], variables_df['3DDim']]))
     dims = list(set([dim for dim in dims if dim not in ['TIME', np.nan, 0]]))
     dims = {dim: None for dim in dims}
@@ -404,7 +400,7 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
     """
     
     # Define paths, directories and subfolders
-    dir_inputs, dir_masterfiles, titles_path = directories_setup()
+    dir_inputs, dir_masterfiles = directories_setup()
     variables_df_dict, var_dict, vars_to_convert, scenarios, timeline_dict = \
             variable_setup(dir_masterfiles, models)
             
@@ -414,7 +410,7 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
         overwrite_existing_csvs = overwrite_existing_csvs_input    # Reset to input value for each model
         
         variables_df = variables_df_dict[model]
-        dims = get_model_classification(titles_path, variables_df)
+        dims = get_model_classification(variables_df)
         gamma_options = {"Ask user input": ask_user_input, 
                           "Overwrite user input": None}    
         
