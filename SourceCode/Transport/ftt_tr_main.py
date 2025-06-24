@@ -182,7 +182,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
     # Fuel use and emissions
     
-    regions = np.where(data['TDA1'][:, 0, 0] == year)[0]
+    regions = np.where(year <= data['TDA1'][:, 0, 0])[0]
     # First: correct for age effects, with older vehicles emitting more CO2
     co2_corrct, has_fleet = co2_corr(data, titles, regions)
     # Then, correct for the biofuel mandate, reducing emissions

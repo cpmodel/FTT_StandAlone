@@ -34,7 +34,8 @@ def co2_corr(data, titles, regions=None):
     CO2_corr = np.ones(len(regions))
     region_has_fleet = RFLT > 0.0
     CO2_corr[region_has_fleet] = numer[region_has_fleet] / total_fleet[region_has_fleet]
-
+    
+    # The CO2 correction is slightly underestimated for historical data, and may overestimate it for future fleets
     return CO2_corr, region_has_fleet
 
 
@@ -95,7 +96,6 @@ def compute_emissions_and_fuel_use(data, titles, CO2_corr, biofuel_corr, fuel_co
                           * data['BTTC'][regions, :, c3ti['9 energy use (MJ/km)']]
                           * CO2_corr[:, None] / 41.868)
     
-    # TODO: are we double counting hybrid fuel use? Fuel converter is 1 for both electricity and fuel
     data['TJEF'][regions, :, 0] = np.einsum('v f r, r v -> r f',
                                            fuel_converter.transpose(1, 2, 0),
                                            energy_use_per_tech)
