@@ -67,7 +67,7 @@ def biofuel_corr(data, titles, region_has_fleet, regions=None):
     middle_dist_ind = JTI.index('5 Middle distillates')
 
     biofuel_mand = data['RBFM'][regions, 0, 0]
-    TJET_middle = data['TJET'][0, :, middle_dist_ind] == 1
+    TJET_middle = data['TJET'][0, :, middle_dist_ind] != 0
 
     biofuel_corr[region_has_fleet, :] = 1.0 - biofuel_mand[region_has_fleet, None] * TJET_middle[None, :]
     fuel_converter[:, :, middle_dist_ind] *= (1.0 - biofuel_mand[:, None]) * TJET_middle
