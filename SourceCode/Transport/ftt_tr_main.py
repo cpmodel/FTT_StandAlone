@@ -40,7 +40,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
-from SourceCode.Transport.emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
+from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
