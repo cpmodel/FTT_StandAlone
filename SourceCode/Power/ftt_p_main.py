@@ -58,11 +58,14 @@ Functions included:
 
 # Third party imports
 import numpy as np
+import time
+import copy
 
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.Power.ftt_p_rldc import rldc
+from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs, early_scrapping_costs_vectorised
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
@@ -372,33 +375,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # C02 emissions for carbon costs (MtC02)
                 data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
 
-                # TODO: Clean this up - for now just an ugly loop
-                for t in range(len(titles['T2TI'])):
-
-                    if data['MEWK'][r, t, 0] - time_lag['MEWK'][r, t, 0] >= 0.0:
-
-                        earlysc[r, t] = 0.0
-                        lifetsc[r, t] = time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']]
-                        data['MESC'][r,t,0] = 0.0
-
-                    else:
-
-                        earlysc[r, t] = data['MEWK'][r, t, 0] - time_lag['MEWK'][r, t, 0]
-                        lifetsc[r, t] = (1.0 - data['MEWK'][r, t, 0]/np.sum(data['MEWK'][r, :, 0])) * data['MEWK'][r, t, 0] / earlysc[r, t]*5
-
-                    if (lifetsc[r, t]-time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']]) < 0.0:
-
-                        data['MESC'][r,t,0] = -earlysc[r, t] * (
-                                time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']] -
-                                lifetsc[r, t]/data['BCET'][r, t, c2ti['9 Lifetime (years)']]*
-                                time_lag['BCET'][r, t, c2ti['3 Investment ($/kW)']])
-
-                        data['MELF'][r,t,0] = lifetsc[r, t]
-
-                    else:
-
-                        data['MESC'][r,t,0] = 0.0
-                        data['MELF'][r,t,0] = time_lag['BCET'][r, t, c2ti['9 Lifetime (years)']]
+            # Compute early scrapping costs and de facto timeline
+            # TODO: check it makes sense. It does not seem to be used elsewhere
+            early_scrapping_costs_vectorised(data, time_lag, c2ti)
 
             data["MEWI"] = get_sales_yearly(
                             data["MEWK"], time_lag["MEWK"], data["MEWI"],
@@ -681,40 +660,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data["MEWK"], time_lag["MEWK"], data["MEWI"],
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
             
+            # # Compute the costs of early scrapping and the new effective lifetimes
+            # data1 = copy.deepcopy(data)
+            # data2 = copy.deepcopy(data)
+            # data_dt1 = copy.deepcopy(data_dt)
+            # data_dt2 = copy.deepcopy(data_dt)
 
-            earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-            lifetsc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-
-            for r in range(len(titles['RTI'])):
-            # TODO: Clean this up - for now just an ugly loop
-                for tech in range(len(titles['T2TI'])):
-
-                    if data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0] >= 0.0:
-
-                        earlysc[r, tech] = 0.0
-                        lifetsc[r, tech] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
-                        data['MESC'][r, tech, 0] = 0.0
-
-                    else:
-
-                        earlysc[r, tech] = data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0]
-                        lifetsc[r, tech] = ((1.0 - data['MEWK'][r, tech, 0]/np.sum(data['MEWK'][r, :, 0])) 
-                                            * (data['MEWK'][r, tech, 0] / earlysc[r, tech]) * 5 )
-
-                    if (lifetsc[r, tech] - data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]) < 0.0:
-
-                        data['MESC'][r, tech, 0] = -earlysc[r, tech] * (
-                                (data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] - lifetsc[r, tech]) /
-                                data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] *
-                                data_dt['BCET'][r, tech, c2ti['3 Investment ($/kW)']])
-
-                        data['MELF'][r, tech, 0] = lifetsc[r, tech]
-
-                    else:
-
-                        data['MESC'][r, tech, 0] = 0.0
-                        data['MELF'][r, tech, 0] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
-
+            # # Loop version
+            # start = time.time()
+            # mesc_loop, melf_loop = early_scrapping_costs(data1, data_dt1, c2ti, titles)
+            # print("Loop version time:", time.time() - start)
+            
+            # # Vectorised version
+            # start = time.time()
+            # mesc_vec, melf_vec = early_scrapping_costs_vectorised(data2, data_dt2, c2ti)
+            # print("Vectorised version time:", time.time() - start)
+            
+            # # Accuracy check
+            # print("Max difference in MESC:", np.max(np.abs(mesc_loop - mesc_vec)))
+            # print("Max difference in MELF:", np.max(np.abs(melf_loop - melf_vec)))
+            
+            mesc_vec, melf_vec = early_scrapping_costs_vectorised(data, data_dt, c2ti)
             # =============================================================
             # Learning-by-doing
             # =============================================================
