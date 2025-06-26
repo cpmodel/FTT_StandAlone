@@ -65,8 +65,6 @@ from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_ye
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-
-
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_shares import shares
 from SourceCode.Power.ftt_p_costc import cost_curves
@@ -588,16 +586,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
                 #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
             
-            if np.any(np.isnan(data['MEWS'])):
-                print(f"NaNs found in MEWS in {year}")
-            if ~np.any(np.isclose(data['MEWS'][:,:,0].sum(axis=1), 1.0)):
-                print(f"Sum of MEWS does not add up to 1 in {year}")
-            if np.any(data['MEWS'][:,:,0]< 0.0):
-                print(f"Negative MEWS found in {year}")
-                r_err, t_err = np.unravel_index(np.nanargmin(data['MEWS'][:,:,0]), data['MEWS'][:,:,0].shape)
-                
-                print(data['MEWS'][r_err, t_err, 0], titles['RTI'][r_err], titles["T2TI"][t_err])
-
+            
             # =================================================================
             # Residual load-duration curve
             # =================================================================

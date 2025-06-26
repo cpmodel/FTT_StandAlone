@@ -255,14 +255,21 @@ def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
     return mews, mewl, mewg, mewk
 
 def check_shares_output(mews, mewl, mewg, mewk):
-
-    # Check for NaN values in 'mewg'
-    if np.isnan(mewg).any():
-        nan_indices_mewg = np.where(np.isnan(mewg))
-        raise ValueError(f"NaN values detected in 'mewg' at indices: {nan_indices_mewg}. Please check shares.")
+    '''Check for nans, whether shares add up to 1, and whether there are
+    negative shares '''
     
     # Check for NaN values in 'mewk'
     if np.isnan(mewk).any():
         nan_indices_mewk = np.where(np.isnan(mewk))
         raise ValueError(f"NaN values detected in 'mewk' at indices: {nan_indices_mewk}. Please check shares.")
+        
+    region_sums = mews.sum(axis=1)
+    if not np.all(np.abs(region_sums - 1.0) < 1e-8):
+        raise ValueError("Sum of MEWS does not add up to 1")
+    
+    if np.any(mews < 0.0):
+        r_err, t_err = np.unravel_index(np.nanargmin(mews[:, :, 0]), mews[:, :, 0].shape)
+        print(f'{mews[r_err, t_err, 0]}, Region: {r_err} and technology {t_err}')
+        raise ValueError("Negative MEWS found")
+
     

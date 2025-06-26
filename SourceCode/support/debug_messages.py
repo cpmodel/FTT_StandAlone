@@ -6,7 +6,7 @@ Created on Thu Dec 21 11:46:06 2023
 """
 
 def input_functions_message(scen, var, dims, read, timeline="None", reg_index = "None"):
-    print("Critical error running input_functions, reading in csv files for {var}:")
+    print(f"Critical error running input_functions, reading in csv files for {var}:")
     print(f"Scenario is {scen}")
     print(f'Variable is {var} with dimensions {dims[var]}')
     print(f"Region is {reg_index}")
