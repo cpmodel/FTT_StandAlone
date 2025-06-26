@@ -37,6 +37,9 @@ def early_scrapping_costs(data, data_dt, c2ti, titles):
 
 
 def early_scrapping_costs_vectorised(data, data_dt, c2ti):
+    ''' Computes the cost of early scrappage. The values are nonzero for the
+    baseline scenario, so take these values with a big grain of salt'''
+    
     rdim, tdim = data['MEWK'].shape[:2]
     earlysc = np.zeros((rdim, tdim))
     lifetsc = np.zeros_like(earlysc)
