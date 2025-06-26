@@ -42,6 +42,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
+from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 from SourceCode.Transport.ftt_tr_mandate import implement_seeding, implement_mandate
@@ -179,50 +180,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Save initial cost matrix (BTCLi from FORTRAN model)
             data["BTCI"] = np.copy(data["BTTC"])
 
-            # This corrects for higher emissions/fuel use at older age depending how fast the fleet has grown
-            CO2_corr = np.ones(len(titles['RTI']))
-
-            # Fuel use
-            # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
-            emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
-            fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = data['TJET'][0, :, :]
-
-        
-            if data['RFLT'][r, 0, 0] > 0.0:
-                CO2_corr[r] = (
-                    (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]* data['TETH'][r, :, 0]).sum() 
-                    / (data['TESH'][r, :, 0] * data['TESF'][r, :, 0]).sum()
-                    )
-
-            for fuel in range(len(titles['JTI'])):
-
-                for veh in range(len(titles['VTTI'])):
-
-                    if titles['JTI'][fuel] == '5 Middle distillates' and data['TJET'][0, veh, fuel] == 1:  # Middle distillates
-
-                        # Mix with biofuels/hydrogen if there's a biofuel mandate or hydrogen mandate
-                        fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * (1.0 - data['RBFM'][r, 0, 0])
-
-                        # Emission correction factor
-                        emis_corr[r, veh] = 1.0 - data['RBFM'][r, 0, 0]
-
-                    elif titles['JTI'][fuel] == '11 Biofuels'  and data['TJET'][0, veh, fuel] == 1:
-
-                        fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * data['RBFM'][r, 0, 0]
-
-            # Calculate fuel use - passenger car only! Therefore this will
-            # differ from E3ME results
-            # TEWG:                          mkm driven
-            # Convert energy unit (1/41.868) ktoe/TJ
-            # Energy demand (BTTC)           MJ/km
-
-            data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]*\
-                                    data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']]*CO2_corr[r]/41.868))
-
-            # Emissions
-            data['TEWE'][r, :, 0] = (data['TEWG'][r, :, 0] * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
-                                     * CO2_corr[r] * emis_corr[r, :] / 1e6)
+    # Fuel use and emissions
+    
+    regions = np.where(year <= data['TDA1'][:, 0, 0])[0]
+    # First: correct for age effects, with older vehicles emitting more CO2
+    co2_corrct, has_fleet = co2_corr(data, titles, regions)
+    # Then, correct for the biofuel mandate, reducing emissions
+    biofuel_corrct, fuel_converter = biofuel_corr(data, titles, has_fleet, regions)
+    # Finally, compute TEWE (emissions) and TJEF (fuel use) (TO BE FIXED to avoid double counting)
+    compute_emissions_and_fuel_use(data, titles, co2_corrct, biofuel_corrct, fuel_converter, c3ti, regions)
     
     # Call the survival function routine, updating scrappage and age matrix:
     if year <= np.min(data["TDA1"][:, 0, 0]):
@@ -428,49 +394,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['TEWS'][r, :, 0] = data['TEWK'][r, :, 0] / np.sum(data['TEWK'][r, :, 0])
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
-            # Fuel use
-            # Compute fuel use as distance driven times energy use, corrected by the biofuel mandate.
-            CO2_corr = np.ones(len(titles['RTI']))
-            emis_corr = np.ones([len(titles['RTI']), len(titles['VTTI'])])
-            fuel_converter = np.zeros([len(titles['VTTI']), len(titles['JTI'])])
-            fuel_converter = data['TJET'][0, :, :]
-
-            for r in range(len(titles['RTI'])):
-                if data['RFLT'][r, 0, 0] > 0.0:
-                    CO2_corr[r] = (data['TESH'][r, :, 0]*data['TESF'][r, :, 0]* \
-                             data['TETH'][r, :, 0]).sum()/(data['TESH'][r, :, 0]*data['TESF'][r, :, 0]).sum()
-
-                for fuel in range(len(titles['JTI'])):
-
-                    for veh in range(len(titles['VTTI'])):
-
-                        if titles['JTI'][fuel] == '5 Middle distillates' and data['TJET'][0, veh, fuel] ==1:  # Middle distillates
-
-                            # Mix with biofuels/hydrogen if there's a biofuel mandate or hydrogen mandate
-                            fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * (1.0 - data['RBFM'][r, 0, 0])
-
-                            # Emission correction factor
-                            emis_corr[r, veh] = 1.0 - data['RBFM'][r, 0, 0]
-
-                        elif titles['JTI'][fuel] == '11 Biofuels'  and data['TJET'][0, veh, fuel] == 1:
-
-                            fuel_converter[veh, fuel] = data['TJET'][0, veh, fuel] * data['RBFM'][r, 0, 0]
-
-                # Calculate fuel use - passenger car only! Therefore this will
-                # differ from E3ME results
-                # TEWG:                          mkm driven
-                # Convert energy unit (1/41.868) ktoe/TJ
-                # Energy demand (BBTC)           MJ/km
-
-                # Fuel use
-                data['TJEF'][r, :, 0] = (np.matmul(np.transpose(fuel_converter), data['TEWG'][r, :, 0]
-                                        * data['BTTC'][r, :, c3ti['9 energy use (MJ/km)']] 
-                                        * CO2_corr[r] / 41.868))
-
-                # Emissions
-                data['TEWE'][r, :, 0] = ( data['TEWG'][r, :, 0]
-                                         * data['BTTC'][r, :, c3ti['14 CO2Emissions']]
-                                         * CO2_corr[r] * emis_corr[r,:] / 1e6 )
+            # Fuel use and emissions
+            
+            # First: correct for age effects, with older vehicles emitting more CO2
+            co2_corrct, region_has_fleet = co2_corr(data, titles)
+            # Then, adjust fuel use and emissions factors for biofuel mandate
+            biofuel_corrct, fuel_converter = biofuel_corr(data, titles, region_has_fleet)
+            # Finally, compute TEWE (emissions) and TJEF (fuel use)
+            compute_emissions_and_fuel_use(data, titles, co2_corrct, biofuel_corrct, fuel_converter, c3ti)
 
             ############## Learning-by-doing ##################
 
