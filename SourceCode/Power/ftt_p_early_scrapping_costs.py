@@ -60,7 +60,8 @@ def early_scrapping_costs_vectorised(data, data_dt, c2ti):
     earlysc[mask_neg] = delta_mewk[mask_neg]
     total_mewk = np.sum(data['MEWK'][:, :, 0], axis=1, keepdims=True)
     
-    # Early scrapping lifetimes from the rate of decline (smaller than planned lifetimes e.g. <40 years for coal)
+    # Early scrapping lifetimes from the rate of decline 
+    # that is, smaller than planned lifetimes (e.g. <40 years for coal)
     # This is calculated assuming a logistic trajectory, hence the (1-f)f/(df/dt).
     # Factor 5 comes from time scaling, i.e. 5 time constants in logistic diffusion from 50% to 1%, consistent with Aij matrix
     lifetsc[mask_neg] = ((1.0 - data['MEWK'][:, :, 0] / total_mewk)

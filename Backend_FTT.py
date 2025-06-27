@@ -1344,13 +1344,13 @@ if __name__ == '__main__':
     port = 5000
 
     if PRODUCTION:
-        start = lambda: run(host='localhost', port=int(port), reloader=False)
+        start = lambda: run(host='localhost', port=int(port), server='paste', reloader=False)
         thr = Thread(target=start)
         thr.daemon = True
         thr.start()
 
     else:
         print("Manager running in development mode...")
-        run(host='localhost', port=int(port), reloader=True)
+        run(host='localhost', port=int(port), server='paste', reloader=True)
 
     webbrowser.open(f'http://localhost:{port}/main')
