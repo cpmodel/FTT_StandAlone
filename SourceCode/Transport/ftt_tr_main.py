@@ -32,7 +32,6 @@ Functions included:
 
 # Standard library imports
 from math import sqrt
-import warnings
 
 # Third party imports
 import numpy as np
