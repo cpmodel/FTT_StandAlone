@@ -20,5 +20,6 @@ def divide(a, b):
         a, b,
         # Use `zeros()`, not `zeros_like()`, to ensure type is `float`
         out=np.zeros(a.shape),
-        where=~np.isclose(b, 0),
+        # Use absolute value of b, rather than isclose, for performance
+        where=np.abs(b) > 1e-12, 
         casting='unsafe')

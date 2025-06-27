@@ -229,7 +229,7 @@ def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
 
         # Use modified capacity and modified total capacity to recalulate market shares
         # This method will mean any capacities set to zero will result in zero shares
-        # It avoids negatuve shares
+        # It avoids negative shares
         # All other capacities will be stretched, depending on the magnitude of dUtot and how much of a change this makes to total capacity
         # If dUtot is small and implemented in a way which will not under or over estimate capacity greatly, MWKA is fairly accurate
 

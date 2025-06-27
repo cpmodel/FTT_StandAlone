@@ -39,6 +39,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
@@ -146,10 +147,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Correction to market shares
             # Sometimes historical market shares do not add up to 1.0
-            if (~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-9)
-                    and np.sum(data['TEWS'][r, :, 0]) > 0.0):
-                data['TEWS'][r, :, 0] = np.divide(data['TEWS'][r, :, 0],
-                                                  np.sum(data['TEWS'][r, :, 0]))
+            share_sum = np.sum(data['TEWS'][r, :, 0])
+            if (abs(share_sum - 1.0) > 1e-9) and (share_sum > 0.0):
+                data['TEWS'][r, :, 0] /= share_sum
 
             # Computes initial values for the capacity factor, numbers of
             # vehicles by technology and distance driven
@@ -386,18 +386,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data['TEWS'][r, :, 0] = (
                     endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
 
-                # Check shares sum to 1
-                if ~np.isclose(np.sum(data['TEWS'][r, :, 0]), 1.0, atol=1e-3):
-                    msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
-                    Sum of market shares do not add to 1.0 (instead: {np.sum(data['TEWS'][r, :, 0])})
-                    """
-                    warnings.warn(msg)
-
-                if np.any(data['TEWS'][r, :, 0] < 0.0):
-                    msg = f"""Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}
-                    Negative market shares detected! Critical error!
-                    """
-                    warnings.warn(msg)
+            # Raise error if there are negative values 
+            # or regional market shares do not add up to one
+            check_market_shares(data['TEWS'], titles, sector, year)
+                
 
             ############## Update variables ##################
 
