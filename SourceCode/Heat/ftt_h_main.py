@@ -35,13 +35,13 @@ Functions included:
 """
 # Standard library imports
 from math import sqrt
-import warnings
 
 # Third party imports
 import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 from SourceCode.ftt_core.ftt_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
@@ -124,21 +124,22 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 #data['HESR'][:, :, 0] = data['HEWF'][:, :, 0]
                 #data['HESR'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["19 RES calc"]] / np.sum(data['HEWF'] * data['BHTC'][r, :, c4ti["19 RES calc"]])
 
-                # CORRECTION TO MARKET SHARES
-                # Sometimes historical market shares do not add up to 1.0
-                if (~np.isclose(np.sum(data['HEWS'][r, :, 0]), 0.0, atol=1e-9)
-                        and np.sum(data['HEWS'][r, :, 0]) > 0.0 ):
-                    data['HEWS'][r, :, 0] = np.divide(data['HEWS'][r, :, 0],
-                                                       np.sum(data['HEWS'][r, :, 0]))
+        # CORRECTION TO MARKET SHARES
+        # Sometimes historical market shares do not add up to 1.0
+        hews = data['HEWS'][:, :, 0]
+        region_sums = hews.sum(axis=1)
+        
+        needs_correction = (np.abs(region_sums - 1.0) > 1e-9) & (region_sums > 0.0)
+        data['HEWS'][needs_correction, :, 0] /= region_sums[needs_correction, np.newaxis]
                     
-            # Normalise HEWG to RHUD
-            data['HEWG'][r, :, 0] = data['HEWS'][r, :, 0] * data['RHUD'][r, 0, 0]
+        # Normalise HEWG to RHUD
+        data['HEWG'][:, :, 0] = data['HEWS'][:, :, 0] * data['RHUD'][:, :, 0]
         
         # Recalculate HEWF based on RHUD
         data['HEWF'][:, :, 0] = data['HEWG'][:, :, 0] / data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
         # Capacity by boiler
-        #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
+        # Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
         data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
                                 data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
         
@@ -430,22 +431,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if (np.sum(endo_gen) + dUtot) > 0.0:
                     data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
 
-                #print("Year:", year)
-                #print("Region:", titles['RTI'][r])
-                #print("Sum of market shares:", np.sum(data['HEWS'][r, :, 0]))
 
-                if ~np.isclose(np.sum(data['HEWS'][r, :, 0]), 1.0, atol=1e-2):
-                    msg = """Sector: {} - Region: {} - Year: {}
-                    Sum of market shares do not add to 1.0 (instead: {})
-                    """.format(sector, titles['RTI'][r], year, np.sum(data['HEWS'][r, :, 0]))
-                    warnings.warn(msg)
-
-                if np.any(data['HEWS'][r, :, 0] < 0.0):
-                    msg = """Sector: {} - Region: {} - Year: {}
-                    Negative market shares detected! Critical error!
-                    """.format(sector, titles['RTI'][r], year)
-                    warnings.warn(msg)
-#                      
+            # Raise error if there are negative values 
+            # or regional market shares do not add up to one
+            check_market_shares(data['HEWS'], titles, sector, year)
 
             ############## Update variables ##################
             
