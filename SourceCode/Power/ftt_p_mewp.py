@@ -119,6 +119,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
         # If MPRI == 2 --> estimate a costs based on a merit order
         elif data["MPRI"][r] == 2:
 
+            # Generation in each load band
             glb_dict = {0: data["MWG1"][r, :, 0], 1: data["MWG2"][r, :, 0], 2: data["MWG3"][r, :, 0],
                         3: data["MWG4"][r, :, 0], 4: data["MWG5"][r, :, 0], 5: data["MWG6"][r, :, 0]}
             n_loadbands = len(glb3[0])
@@ -126,7 +127,6 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             # Loop over load bands
             for LB in range(n_loadbands):
                 mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])  # Initialize marginal costs array
-                
 
                 # Only select technologies with non-zero generation in each load band
                 # Remove carbon tax, because they are added in the PJR routine # TODO: change this for Standalone
@@ -142,7 +142,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
                 else:
                     data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
 
-                   
+            # Adjust "Maximum Load Band Price" to reflect other costs   
             data["MLBP"][r, 4, 0] *= 1.25 # To reflect increased costs due to start-up and switch off
             data["MLBP"][r, 3, 0] *= 1.1  # Same as above but there is less intermittency
             data["MLBP"][r, 2, 0] *= 1.05
