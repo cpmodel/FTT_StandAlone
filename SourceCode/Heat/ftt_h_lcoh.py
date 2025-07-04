@@ -162,7 +162,7 @@ def get_lcoh(data, titles, carbon_costs):
     dlcoh = np.sqrt(variance_plus_dcf) / utility_sum
     
     # LCOH augmented with non-pecuniary costs
-    tlcohg = tlcoh + data['BHTC'][:, :, c4ti['12 Gamma value']]
+    tlcohg = tlcoh * (1 + data['BHTC'][:, :, c4ti['12 Gamma value']])
     
     # Pay-back thresholds
     pb = data['BHTC'][:, :, c4ti['16 Payback time, mean']]
