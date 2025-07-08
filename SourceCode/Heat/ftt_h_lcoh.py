@@ -10,7 +10,7 @@ ftt_h_lcoh.py
 Domestic Heat FTT module.
 
 
-This is the main file for FTT: Heat, which models technologicaldiffusion of
+This is the main file for FTT: Heat, which models technological diffusion of
 domestic heat technologies due to consumer decision making. 
 Consumers compare the **levelised cost of heat**, which leads to changes in the
 market shares of different technologies.
@@ -83,7 +83,7 @@ def get_lcoh(data, titles, carbon_costs):
     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     
-    #Cost matrix
+    # Cost matrix
     bhtc = data['BHTC']
     
     # Heating device lifetimes and build year
@@ -115,7 +115,7 @@ def get_lcoh(data, titles, carbon_costs):
     st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * data['HTVS'][:, :, 0], conv_cf, bt_mask)
     ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
-    dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], conv_ce, lt_mask)
+    dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
     fft = get_cost_component(data['HTRT'][:, :, 0], conv_ce, lt_mask)
     omt = get_cost_component(bhtc[:, :, c4ti['3 O&M mean (EUR/kW)']], conv_cf, lt_mask)
     domt = get_cost_component(bhtc[:, :, c4ti['4 O&M SD']], conv_cf, lt_mask)
