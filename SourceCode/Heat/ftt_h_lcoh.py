@@ -10,7 +10,7 @@ ftt_h_lcoh.py
 Domestic Heat FTT module.
 
 
-This is the main file for FTT: Heat, which models technologicaldiffusion of
+This is the main file for FTT: Heat, which models technological diffusion of
 domestic heat technologies due to consumer decision making. 
 Consumers compare the **levelised cost of heat**, which leads to changes in the
 market shares of different technologies.
@@ -120,7 +120,7 @@ def get_lcoh(data, titles, carbon_costs):
     
     # Fuel costs and carbon costs
     ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
-    dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], conv_ce, lt_mask)
+    dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
     
     # Subsidies or tax on investment costs
@@ -146,7 +146,7 @@ def get_lcoh(data, titles, carbon_costs):
     
     # 2 – Standard deviation (propagation of error)
     variance_terms = dit**2 + dft**2 + domt**2
-    summed_variance = np.sum(variance_terms/(denominator**2), axis=2)
+    summed_variance = np.sum(variance_terms / denominator**2, axis=2)
     variance_plus_dcf = summed_variance + (np.sum(npv_expenses_all, axis=2)/cf[:, :, 0]*dcf[:, :, 0])**2
     
     # 3 – Utility
