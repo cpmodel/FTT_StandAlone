@@ -55,7 +55,6 @@ def set_carbon_tax(data, c2ti, year):
 # -----------------------------------------------------------------------------
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
-  
 def get_lcoe(data, titles):
     """
     Calculate levelized costs.
@@ -186,7 +185,8 @@ def get_lcoe(data, titles):
 
     mwmc_condition = np.rint(data['MSAL'][:, 0, 0]) > 1
     data['MWMC'][:, :, 0] = np.where(mwmc_condition[:, None], 
-                                 bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6] + (data['MSSP'][:, :, 0] + data['MLSP'][:, :, 0]) / 1000,
+                                 bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6]
+                                 + (data['MSSP'][:, :, 0] + data['MLSP'][:, :, 0]) / 1000,
                                  bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6])
 
     data['MMCD'][:, :, 0] = np.sqrt(bcet[:, :, 1] ** 2 + bcet[:, :, 5] ** 2 + bcet[:, :, 7] ** 2)

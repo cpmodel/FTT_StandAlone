@@ -43,6 +43,9 @@ scens = model.scenarios
 # Call the 'run' method of the ModelRun class to solve the model
 model.run()
 
+import cProfile
+cProfile.run('model.run()')
+
 # Fetch ModelRun attributes, for examination
 # Output of the model
 output_all = model.output
