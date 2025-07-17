@@ -65,7 +65,7 @@ import copy
 from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.Power.ftt_p_rldc import rldc
-from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs, early_scrapping_costs_vectorised
+from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
@@ -375,9 +375,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # C02 emissions for carbon costs (MtC02)
                 data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
 
-            # Compute early scrapping costs and de facto timeline
+            # Compute early scrapping costs
             # TODO: check it makes sense. It does not seem to be used elsewhere
-            early_scrapping_costs_vectorised(data, time_lag, c2ti)
+            early_scrapping_costs(data, time_lag, c2ti)
 
             data["MEWI"] = get_sales_yearly(
                             data["MEWK"], time_lag["MEWK"], data["MEWI"],
@@ -659,28 +659,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MEWI"] = get_sales_yearly(
                 data["MEWK"], time_lag["MEWK"], data["MEWI"],
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-            
-            # # Compute the costs of early scrapping and the new effective lifetimes
-            # data1 = copy.deepcopy(data)
-            # data2 = copy.deepcopy(data)
-            # data_dt1 = copy.deepcopy(data_dt)
-            # data_dt2 = copy.deepcopy(data_dt)
 
-            # # Loop version
-            # start = time.time()
-            # mesc_loop, melf_loop = early_scrapping_costs(data1, data_dt1, c2ti, titles)
-            # print("Loop version time:", time.time() - start)
-            
-            # # Vectorised version
-            # start = time.time()
-            # mesc_vec, melf_vec = early_scrapping_costs_vectorised(data2, data_dt2, c2ti)
-            # print("Vectorised version time:", time.time() - start)
-            
-            # # Accuracy check
-            # print("Max difference in MESC:", np.max(np.abs(mesc_loop - mesc_vec)))
-            # print("Max difference in MELF:", np.max(np.abs(melf_loop - melf_vec)))
-            
-            mesc_vec, melf_vec = early_scrapping_costs_vectorised(data, data_dt, c2ti)
+            # TODO: review, compute cost of early scrapping
+            mesc_vec, melf_vec = early_scrapping_costs(data, data_dt, c2ti)
             # =============================================================
             # Learning-by-doing
             # =============================================================
