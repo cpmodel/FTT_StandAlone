@@ -7,36 +7,7 @@ Created on Thu Jun 26 16:07:31 2025
 
 import numpy as np
 
-def early_scrapping_costs(data, data_dt, c2ti, titles):
-    earlysc = np.zeros((len(titles['RTI']), len(titles['T2TI'])))
-    lifetsc = np.zeros_like(earlysc)
-
-    for r in range(len(titles['RTI'])):
-        for tech in range(len(titles['T2TI'])):
-
-            if data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0] >= 0.0:
-                earlysc[r, tech] = 0.0
-                lifetsc[r, tech] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
-                data['MESC'][r, tech, 0] = 0.0
-            else:
-                earlysc[r, tech] = data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0]
-                lifetsc[r, tech] = ((1.0 - data['MEWK'][r, tech, 0]/np.sum(data['MEWK'][r, :, 0])) 
-                                    * (data['MEWK'][r, tech, 0] / earlysc[r, tech]) * 5)
-
-            if (lifetsc[r, tech] - data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]) < 0.0:
-                data['MESC'][r, tech, 0] = -earlysc[r, tech] * (
-                    (data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] - lifetsc[r, tech]) /
-                    data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']] *
-                    data_dt['BCET'][r, tech, c2ti['3 Investment ($/kW)']])
-                data['MELF'][r, tech, 0] = lifetsc[r, tech]
-            else:
-                data['MESC'][r, tech, 0] = 0.0
-                data['MELF'][r, tech, 0] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
-
-    return data['MESC'][:, :, 0], data['MELF'][:, :, 0]
-
-
-def early_scrapping_costs_vectorised(data, data_dt, c2ti):
+def early_scrapping_costs(data, data_dt, c2ti):
     ''' Computes the cost of early scrappage. The values are nonzero for the
     baseline scenario, so take these values with a big grain of salt'''
     
