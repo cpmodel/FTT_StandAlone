@@ -58,8 +58,6 @@ Functions included:
 
 # Third party imports
 import numpy as np
-import time
-import copy
 
 # Local library imports
 from SourceCode.support.divide import divide
