@@ -130,8 +130,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Store gamma values in the cost matrix (in case it varies over time)
     data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
-   
-
     # Copy over PRSC/EX values
 
     data['PRSC13'] = np.copy(time_lag['PRSC13'] )
@@ -408,7 +406,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
-            stop = 1
 
             # Learning-by-doing effects on investment
     #        for tech in range(len(titles['T2TI'])):
@@ -417,8 +414,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     #                                                                       (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
 
             # Investment in terms of power technologies:
-            for r in range(len(titles['RTI'])):
-                data['MWIY'][r, :, 0] = time_lag['MWIY'][r, :, 0] + data['MEWI'][r, :, 0]*data['BCET'][r, :, c2ti['3 Investment ($/kW)']] / 1.33
+            data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
 
             # =====================================================================
             # Cost-supply curve
@@ -553,16 +549,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'] = mewl
             data['MEWG'] = mewg
             data['MEWK'] = mewk
-            
-            # if year in [2021, 2022]:
-            #     print(f'Belgium MEWD {year}:{t} is {data["MEWD"][1, 7, 0]:.0f} after shares')
-            #     print(f'Belgium MEWDt {year}:{t} is {MEWDt[0]:.0f} after shares')
-            #     print(f'Belgium solar MEWG in {year}:{t} is {data["MEWG"][0, 18, 0]:.0f} after shares')
-                #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
-            # if year in [2049, 2050]:
-            #     print(f'Sum solar MEWK in {year}:{t} is {np.sum(data["MEWK"][:, 18]):.0f} after shares')
-                #print(f'Sum solar MEWS in {year}:{t} is {np.sum(data["MEWS"][:, 18]):.1f} after shares')
-            
+                        
             
             # =================================================================
             # Residual load-duration curve
@@ -707,12 +694,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = (
                             data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']] 
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
-            
-            
-            # Investment (1.33 an exchange rate factor, code differs from FORTRAN)
-            data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
-                                     + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
-            
+                        
 
             # =================================================================
             # Cost-Supply curves
@@ -754,5 +736,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 if domain[var] == 'FTT-P':
 
                     data_dt[var] = np.copy(data[var])
+        
+        # TODO: average over 3 years like FORTRAN? 
+        # Investment (1.33 an exchange rate factor)
+        data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
         
     return data
