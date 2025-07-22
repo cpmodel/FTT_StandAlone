@@ -20,7 +20,7 @@ including storage costs and marginal costs for wind and solar.
 
 FTT: Power also includes **dispatchers decisions**; dispatchers decide when different technologies
 supply the power grid. Investor decisions and dispatcher decisions are matched up, which is an
-example of a stable marraige problem.
+example of a stable marriage problem.
 
 Costs in the model change due to endogenous learning curves, costs for electricity
 storage, as well as increasing marginal costs of resources calculated using cost-supply
@@ -74,7 +74,7 @@ from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
 from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
-from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power, battery_costs
+from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 
 
 
@@ -117,7 +117,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     survival_function is currently unused.
     """
     
-    
+    sector = 'power'
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
 
@@ -177,7 +177,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRES'] = mres
 
         data = get_lcoe(data, titles, year)
-        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, titles, histend)
+        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, 1, titles, histend)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
@@ -292,7 +292,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year >= 2013: # Still in historical period
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, titles, histend)
+            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, 1, titles, histend)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -618,7 +618,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
-            data = rldc(data, MEWDt, time_lag, data_dt, year, titles, histend)
+            data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend)
             
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]

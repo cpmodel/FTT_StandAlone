@@ -294,17 +294,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data["BZTC initial"] = np.copy(data_dt['BZTC initial'])
             
             # Battery learning
-            battery_cost_frac = battery_costs(data, time_lag, year, titles)
-            
-            
-            for tech in range(len(titles['FTTI'])):
-                    
-                # Only for those tech with batteries
-                if np.any(data["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']] > 0):
-                    
-                    data["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']] = (
-                        data['BZTC initial'][:, tech, c6ti['17 Battery cost ($/kWh)']]
-                        * battery_cost_frac )
+            data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
             
             # Save battery cost
             nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
@@ -326,7 +316,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                             
                             nonbat_cost_dt[:, tech, 0] = (
                                     data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
-                                    - data_dt["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']]  
+                                    - data_dt['Battery price'][:, 0, 0]  
                                     * data_dt["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']]
                                     )
                             
@@ -335,7 +325,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
                             data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] = (
                                     nonbat_cost[:, tech, 0] 
-                                    + (data["BZTC"][:, tech, c6ti['17 Battery cost ($/kWh)']]  
+                                    + (data['Battery price'][:, 0, 0]
                                     * data["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']])
                                     )
                             

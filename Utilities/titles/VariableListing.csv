@@ -164,8 +164,8 @@ TLCD,FTT-Transport log(levelised costs) variation,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,
 TJET,FTT-Transport Fuel converter,,NA,VTTI,JTI,NA,FTT-Tr,,,,,,
 TJEF,FTT-Transport fuel use,ktoe,RTI,JTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TGAM,FTT-Transport Gamma Values,,RTI,VTTI,NA,TIME,FTT-Tr,,,2014,,,
-TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,Y,Y
-TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2022,1990,,Y,Y
+TEWW,FTT-Transport cumulative sales,th-veh,NA,VTTI,NA,TIME,FTT-Tr,,2022,2012,,Y,Y
+TEWS,FTT-Transport Market shares,,RTI,VTTI,NA,TIME,FTT-Tr,,2023,1990,,Y,Y
 TEWK,FTT-Transport fleet size,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWI,FTT-Transport sales,th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
 TEWG,FTT-Transport demand by technology,mln km/y,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,Y,Y
@@ -183,9 +183,8 @@ TEGC,FTT-Transport Levelised cost of transport with tax + non-pecuniary,$/pkm,RT
 TEFF,FTT-Transport ,,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TECD,FTT-Transport Levelised cost of transport variations ,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TE3P,FTT-Tr Fuel Prices ,2013 $/toe,RTI,JTI,NA,TIME,FTT-Tr,,2016,2010,,,
-TEVC,FTT-Tr starting EV cost (no battery),USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
+TEVC,FTT-Tr cost of EV without battery,USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 TWWB,FTT-Tr starting cumulative battery capacity,MWh,NA,VTTI,NA,TIME,FTT-Tr,,,2012,,,
-TEBC,FTT-Tr battery cost,USD/kWh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
 TWIC,FTT-Tr Vehicle purchase price,USD/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
 TWFC,FTT-Tr Fuel cost component,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2012,,,Y
 RVKM,FTT-Transport Passenger road driving demand,km/y/veh,RTI,NA,NA,TIME,FTT-Tr,,,2001,,,
@@ -386,5 +385,5 @@ SectorCouplingAssumps,Assumptions for sector coupling,,NA,SCA,NA,NA,General,-,-,
 V2G battery stock,Available EV battery stock given participation rate and use,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 Battery cap additions,Capacity additions per timestep per model,GWh,models_w_batteries,noit,NA,TIME,General,-,-,2020,-,-,-
 Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
-Cumulative total batcap start,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
 ZEVC,Starting non-battery costs of a truck,USD/veh,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,
+Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,General,2018,2023,2018,,,

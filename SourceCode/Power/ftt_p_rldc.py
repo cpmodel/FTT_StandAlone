@@ -34,7 +34,7 @@ def feqs(a):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
+def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     """
     Calculate RLDCs.
 
@@ -280,6 +280,9 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
     # Bool to indicate which tech is VRE and which is not
     Svar = data['MWDD'][0, :, 5]
     Snotvar = 1 - data['MWDD'][0, :, 5]
+    
+    data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+
 
     for r in range(len(titles['RTI'])):
         # if Sw[r] + Ss[r] == 0:
@@ -513,8 +516,7 @@ def rldc(data, MEWDt, time_lag, data_dt, year, titles, histend):
             # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
             
             # Apply learning rate to levelised cost of storage (MSCC and MLCC)
-            battery_cost_frac = battery_costs(data, time_lag, year, titles)
-            data['MSCC'][:,0,0] = 0.18 * 1e6 * battery_cost_frac
+            data['MSCC'][:,0,0] = data['Battery price'][:, 0, 0] / 1000 * 1.25 * 1e6  # Times 1.25 based on BNEF LCOS calculations vs battery pack price
             data['MLCC'][:,0,0] = 0.32 * 1e6 * ( data_dt['MLSC'][:, 0, 0].sum() / data['MLSC_histend'] ) ** learning_exp_ls
         
         # Assumed levelised cost of storage: 0.20 EURO/kWh initially
