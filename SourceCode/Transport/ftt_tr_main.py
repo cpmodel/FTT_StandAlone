@@ -211,8 +211,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             data_dt[var] = np.copy(time_lag[var])
 
-        data_dt['TWIY'] = np.zeros(
-            [len(titles['RTI']), len(titles['VTTI']), 1])
 
         # Create the regulation variable
         division = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
@@ -482,15 +480,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                 * (1.0 + data['BTTC'][:, veh, c3ti['16 Learning exponent']]
                                    * dw[veh] / data['TEWW'][0, veh, 0])
 
-                # Investment in terms of car purchases:
-                for r in range(len(titles['RTI'])):
-
-                    data['TWIY'][r, :, 0] = (data_dt['TWIY'][r, :, 0] + data['TEWI'][r, :, 0] * dt
-                                             * data['BTTC'][r, :, c3ti['1 Prices cars (USD/veh)']] / 1.33
-                                             )
 
             # Save battery costs for front end
-             # Save battery cost
             data["TEBC"] = np.zeros(
                 [len(titles['RTI']), len(titles['VTTI']), 1])
             data["TEBC"][:, :, 0] = data["BTTC"][:,
@@ -507,6 +498,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             for var in data_dt.keys():
 
                 data_dt[var] = np.copy(data[var])
+
+        # Investment in terms of car purchases
+        data['TWIY'][:, :, 0] = (data['TEWI'][:, :, 0] 
+                                 * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33
+                                 )
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)

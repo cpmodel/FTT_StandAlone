@@ -136,19 +136,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     if year > histend['RVKZ']:
 
         data_dt = {}
-        data_dt['ZWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
         for var in time_lag.keys():
 
-            if var.startswith("R"):
+            if var.startswith(("R", "Z")):
 
                 data_dt[var] = np.copy(time_lag[var])
 
-        for var in time_lag.keys():
-
-            if var.startswith("Z"):
-
-                data_dt[var] = np.copy(time_lag[var])
 
         # Find if there is a regulation and if it is exceeded
 
@@ -389,11 +383,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             (1.0 + data['ZLER'][tech] * dw[tech]/data['ZEWW'][0, tech, 0])
 
 
-            # Calculate total investment by technology in terms of truck purchases
-            for r in range(len(titles['RTI'])):
-                data['ZWIY'][r, :, 0] = data_dt['ZWIY'][r, :, 0] + \
-                data['ZEWY'][r, :, 0]*dt*data['ZCET'][r, :, c6ti['1 Price of vehicles (USD/vehicle)']]*1.263
-
             # Calculate levelised cost again
             data = get_lcof(data, titles)
 
@@ -401,15 +390,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update time loop variables:
             for var in time_lag.keys():
 
-                if var.startswith("R"):
+                if var.startswith(("R", "Z")):
 
                     data_dt[var] = np.copy(data[var])
 
-            for var in time_lag.keys():
-
-                if var.startswith("Z"):
-
-                    data_dt[var] = np.copy(data[var])
+        
+        # Calculate total investment by technology in terms of truck purchases
+        data['ZWIY'][:, :, 0] = data['ZEWY'][:, :, 0] * data['ZCET'][:, :, c6ti['1 Price of vehicles (USD/vehicle)']] * 1.263
 
 
     return data

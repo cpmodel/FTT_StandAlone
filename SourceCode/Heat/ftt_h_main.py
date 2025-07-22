@@ -526,8 +526,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Total investment in new capacity in a year (m 2014 euros):
             # HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-            # BHTC are the investment costs (2014Euro/kW)
-            data['HWIY'][:,:,0] = data['HWIY'][:,:,0] + data['HEWI'][:,:,0]*dt*data['BHTC'][:,:,0]/data['PRSC14'][:,0,0,np.newaxis]
+            
             # Save investment cost for front end
             data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
             # Save efficiency for front end
@@ -547,7 +546,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data_dt[var] = np.copy(data[var])
 
         
-
+        # Total investment costs
+        data['HWIY'][:,:,0] = (data['HEWI'][:,:,0] * data['BHTC'][:,:, c4ti['1 Inv cost mean (EUR/kW)']]
+                               / data['PRSC14'][:, 0, 0, np.newaxis] )
+        
         if year == 2050 and t == no_it:
             print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12, 0])/10**6:.3f} M GWh")
             
