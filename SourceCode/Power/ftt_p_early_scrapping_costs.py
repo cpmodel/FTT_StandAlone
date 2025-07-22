@@ -7,7 +7,7 @@ Created on Thu Jun 26 16:07:31 2025
 
 import numpy as np
 
-def early_scrapping_costs(data, data_dt, c2ti):
+def early_scrapping_costs(data, lagged_data, c2ti):
     ''' Computes the cost of early scrappage. The values are nonzero for the
     baseline scenario, so take these values with a big grain of salt'''
     
@@ -18,12 +18,12 @@ def early_scrapping_costs(data, data_dt, c2ti):
     lifetime_idx = c2ti['9 Lifetime (years)']
     investment_idx = c2ti['3 Investment ($/kW)']
 
-    delta_mewk = data['MEWK'][:, :, 0] - data_dt['MEWK'][:, :, 0]
+    delta_mewk = data['MEWK'][:, :, 0] - lagged_data['MEWK'][:, :, 0]
     
     # If there is capacity growth
     mask_pos = delta_mewk >= 0.0
     earlysc[mask_pos] = 1e-10       # Small value to avoid dividing by zero
-    lifetsc[mask_pos] = data_dt['BCET'][:, :, lifetime_idx][mask_pos]
+    lifetsc[mask_pos] = lagged_data['BCET'][:, :, lifetime_idx][mask_pos]
     data['MESC'][:, :, 0][mask_pos] = 0.0
     
     # If there is capacity loss
@@ -40,14 +40,14 @@ def early_scrapping_costs(data, data_dt, c2ti):
                          * 5.0)[mask_neg]
     
     # Compare theoretical lifetime with achieved lifetime
-    bcet_lifetime = data_dt['BCET'][:, :, lifetime_idx]
+    bcet_lifetime = lagged_data['BCET'][:, :, lifetime_idx]
     lifetime_shortfall = lifetsc - bcet_lifetime
     mask_short = lifetime_shortfall < 0.0
     
     # Compute costs of early scrappage using investment costs
     data['MESC'][:, :, 0][mask_short] = -earlysc[mask_short] * (
         -lifetime_shortfall[mask_short] / bcet_lifetime[mask_short] *
-        data_dt['BCET'][:, :, investment_idx][mask_short]
+        lagged_data['BCET'][:, :, investment_idx][mask_short]
     )
     data['MELF'][:, :, 0][mask_short] = lifetsc[mask_short]
 
