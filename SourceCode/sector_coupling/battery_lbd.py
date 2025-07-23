@@ -33,13 +33,16 @@ def quarterly_bat_add_power(no_it, data, data_dt, titles):
     return np.sum(quarterly_deployment_new)
 
 def get_start_cap(data, titles):
-    '''Get initial capacity'''
+    '''Get initial capacity. Note that this may overestimate capacity, as 
+    historical battery sizes smaller than current ones in EVs'''
     
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
+    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
+
     
     start_cap = (
-        np.sum(data["TEWW"][0, 18:24]) / 1000
+        np.sum(data["TEWK"][:, :, 0] * data['BTTC'][:, :, c3ti['18 Battery cap (kWh)']] / 1e3)
         + np.sum(data["MSSC"] * sector_coupling_assumps["GW to GWh"])
         + np.sum(data["ZEWK"][:, :, 0] * data["BZTC"][:, :, c6ti['16 Battery capacity (kWh)']] / 1e6)
         )
@@ -65,7 +68,7 @@ def battery_costs(data, data_dt, time_lag, year, t, titles, histend):
         
         # Approximate Wright's law
         data['Battery price'] = (time_lag["Battery price"]
-                    * (1.0 + battery_learning_exp * battery_additions / data['Cumulative total batcap'])  
+                    * (1.0 + battery_learning_exp * battery_additions / time_lag['Cumulative total batcap'])  
                        )
     
     return data

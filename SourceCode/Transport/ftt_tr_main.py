@@ -33,7 +33,6 @@ Functions included:
 
 # Standard library imports
 from math import sqrt
-import copy
 import warnings
 
 # Third party imports
