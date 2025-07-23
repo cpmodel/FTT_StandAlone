@@ -1,0 +1,15 @@
+22/07/2025
+
+1) Altered the classification_titles.xlsx from Utilities to include the Rooftop Solar technology as number 23
+
+2) Added the information for Rooftop Solar technology in a new spreadsheet called "FTT-P-22x71_2024_S0_RooftopSolar" based from "FTT-P-22x71_2024_S0" in "Inputs\_MasterFiles\FTT-P" (The last updated was "MEWW")
+
+23/07/2025
+
+1) Renamed the spreadsheet to "FTT-P-22x71_2024_S0" and changed the name of the original ones to include "OLD"
+
+2) Finished adding the rooftop solar installation in tabs of "FTT-P-22x71_2024_S0"
+
+3) Tried to run the model by using the "FTT_Stand_Alone_Launcher" and then the "manager.bat" selecting scenario S0 and FFT-P 
+
+4) Had an error. Had to add number 11 (corresponding to Solar PV) in line 270 of the script ftt_p_costc.py

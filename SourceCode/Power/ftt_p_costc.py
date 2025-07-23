@@ -267,7 +267,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Resources classification:
     # Correspondence vector between NT2 and NER (Technologies and resources: if I = Tech, II(I) = resource)
     # Setting storage to biomass, as it's turned off
-    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 4, 4]
+    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 4, 4, 11]
 
     # BCSC is natural resource data with dimensions NER NR and length of cost axis k
 
