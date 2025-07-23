@@ -210,15 +210,17 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     learning_exp_ss = -0.2945 # = -(0.421 + 0.168)/2: average for flow and li-ion batteries, and mid-length storage may be included here.
     learning_exp_ls = -0.129  # Both from Way paper (https://www.inet.ox.ac.uk/files/energy_transition_paper-INET-working-paper.pdf), latter less reliable due to data constraints
     
-    
 
     # Gross (pre-curtailment) wind and solar shares for all regions
     Sw = np.divide(np.sum(data['MEWG'][:, [16, 17], 0] / (1 - data_dt['MCTN'][:, [16, 17], 0]), axis=1) ,
                    e_dem[:],
-                   where=~np.isclose(e_dem[:], 0.0))
+                   where=e_dem != 0)
     Ss = np.divide(data['MEWG'][:, 18, 0] / (1 - data_dt["MCTN"][:, 18, 0]),
                    e_dem[:],
-                   where=~np.isclose(e_dem[:], 0.0))
+                   where=e_dem != 0)
+    
+    Sw = np.minimum(1.3, Sw)   # Only calibrated until roughly 120%, odd behaviour above
+    Ss = np.minimum(1.3, Ss)   # Only calibrated until roughly 120%, odd behaviour above
 
     # Format matrix including Sw and Ss powers and cross terms
     # template: [1 Sw Ss Sw^2 Sw*Ss Ss^2 Sw^3 Sw^2*Ss Sw*Ss^2 Ss^3]
