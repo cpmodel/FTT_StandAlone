@@ -364,7 +364,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Net curtailed generation
                 # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
                 # On average 45% of curtailed electricity can be reused for long-term storage:
-                # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
+                # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full, Figure 17
                 data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
                 # Impact of net curtailment on load factors for VRE technologies
                 # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
