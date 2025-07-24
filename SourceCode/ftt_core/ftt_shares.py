@@ -36,7 +36,7 @@ def shares(dt, t, shares_dt, costs_dt, costs_sd_dt, subst,
     # Get pairwise indices. triu_indices returns the indices of the upper triangle of a matrix
     b1, b2 = np.triu_indices(num_techs, k=1)
     
-    # Get skip mask for all regions
+    # Skip technologies with zero market shares or costs
     skip_mask = _skip_criteria(shares_dt, costs_dt, costs_sd_dt, subst, b1, b2)
     
     # Convert regions to list for iteration
