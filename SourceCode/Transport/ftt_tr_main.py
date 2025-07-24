@@ -30,18 +30,20 @@ Functions included:
         
 """
 
-# Standard library imports
-from math import sqrt
-
 # Third party imports
 import numpy as np
 
 # Local library imports
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_shares import shares
+from SourceCode.ftt_core.ftt_regulatory_policies import implement_regulatory_policies
+
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
+
+from SourceCode.Transport.ftt_tr_shares import shares_transport
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
 
@@ -237,80 +239,48 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rfltt = time_lag['RFLT'][:, 0, 0] + \
                 (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
+            # Create a mask for regions that should be processed (TDA check)
+            # Skip regions for which more recent data is available
+            region_mask = data['TDA1'][:, 0, 0] < year
+            
+            # Get list of regions to process (in simulation period and with non-zero demand)
+            regions = np.where((rfltt > 0) & region_mask)[0]
+
+            # Speed comparison between new vectorized shares and original shares_transport
+            if year % 5 == 0:  # Test every 5 years to avoid too much output
+                import time as timing_module
+                
+                # Test original shares_transport function
+                start_time = timing_module.time()
+                endo_shares_old, endo_capacity_old = shares_transport(data_dt, data, year, rfltt, isReg, titles, c3ti, dt)
+                time_old = timing_module.time() - start_time
+                
+                # Test new vectorized shares function
+                start_time = timing_module.time()
+                endo_shares, endo_capacity = shares(
+                    dt, t, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
+                    data['TEWA'], data['BTTC'][:, :, c3ti['17 Turnover rate']],
+                    isReg, rfltt, regions
+                )
+                time_new = timing_module.time() - start_time
+                
+                # Calculate speedup and check accuracy
+                speedup = time_old / time_new if time_new > 0 else float('inf')
+                accuracy = np.allclose(endo_shares_old, endo_shares, atol=1e-10)
+                
+                print(f"Year {year}: old_shares={time_old*1000:.1f}ms, new_shares={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={accuracy}")
+            else:
+                # Normal operation - just use the new vectorized shares
+                endo_shares, endo_capacity = shares(
+                    dt, t, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
+                    data['TEWA'], data['BTTC'][:, :, c3ti['17 Turnover rate']],
+                    isReg, rfltt, regions
+                )
+
             for r in range(len(titles['RTI'])):
-                # Skip regions for which more recent data is available
-                if data['TDA1'][r, 0, 0] >= year:
+                if data['TDA1'][r, 0, 0] >= year or rfltt[r] == 0:
                     continue
-
-                if rfltt[r] == 0.0:
-                    continue
-
-                ############################ FTT ##################################
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSik = np.zeros([len(titles['VTTI']), len(titles['VTTI'])])
-
-                # F contains the preferences
-                F = np.ones([len(titles['VTTI']), len(titles['VTTI'])])*0.5
-
-                # TODO: Check Specs dimensions
-                # if np.any(specs[sector][r, :] == 1):  # FTT Specification
-
-                for v1 in range(len(titles['VTTI'])):
-
-                    # Skip technologies with zero market share or zero costs
-                    if not (data_dt['TEWS'][r, v1, 0] > 0.0 and
-                            data_dt['TELC'][r, v1, 0] != 0.0 and
-                            data_dt['TLCD'][r, v1, 0] != 0.0):
-                        continue
-
-                    S_veh_i = data_dt['TEWS'][r, v1, 0]
-
-                    for v2 in range(v1):
-
-                        # Skip technologies with zero market share or zero costs
-                        if not (data_dt['TEWS'][r, v2, 0] > 0.0 and
-                                data_dt['TELC'][r, v2, 0] != 0.0 and
-                                data_dt['TLCD'][r, v2, 0] != 0.0):
-                            continue
-
-                        S_veh_k = data_dt['TEWS'][r, v2, 0]
-                        Aik = data['TEWA'][0, v1, v2] * \
-                            data['BTTC'][r, v1, c3ti['17 Turnover rate']]
-                        Aki = data['TEWA'][0, v2, v1] * \
-                            data['BTTC'][r, v2, c3ti['17 Turnover rate']]
-
-                        # Propagating width of variations in perceived costs
-                        dFik = 1.414 * sqrt((data_dt['TLCD'][r, v1, 0] * data_dt['TLCD'][r, v1, 0]
-                                             + data_dt['TLCD'][r, v2, 0] * data_dt['TLCD'][r, v2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['TELC'][r, v2, 0]
-                                                         - data_dt['TELC'][r, v1, 0]) / dFik))
-                        # Preferences are then adjusted for regulations
-                        F[v1, v2] = (Fik * (1.0 - isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2]
-                                     * (1.0 - isReg[r, v1]) + 0.5 * (isReg[r, v1] * isReg[r, v2]))
-                        F[v2, v1] = ((1.0 - Fik) * (1.0 - isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1]
-                                     * (1.0-isReg[r, v2]) + 0.5 * (isReg[r, v2] * isReg[r, v1]))
-
-                        # Runge-Kutta market share dynamiccs
-                        k_1 = S_veh_i*S_veh_k * (Aik*F[v1, v2] - Aki*F[v2, v1])
-                        k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2) * \
-                            (Aik*F[v1, v2] - Aki*F[v2, v1])
-                        k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * \
-                            (Aik*F[v1, v2] - Aki*F[v2, v1])
-                        k_4 = (S_veh_i+dt*k_3)*(S_veh_k-dt*k_3) * \
-                            (Aik*F[v1, v2] - Aki*F[v2, v1])
-
-                        # Market share dynamics
-                        # dSik[v1, v2] = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])*dt
-                        dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
-                        dSik[v2, v1] = -dSik[v1, v2]
-
-                # Calculate temporary market shares and temporary capacity from endogenous results
-                endo_shares = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1)
-                endo_capacity = endo_shares * rfltt[r, np.newaxis]
-
+                
                 Utot = rfltt[r]
                 dUkTK = np.zeros([len(titles['VTTI'])])
                 dUkREG = np.zeros([len(titles['VTTI'])])
@@ -324,7 +294,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     TWSA_scalar = data['TWSA'][r, :,
                                                0].sum() / (0.8 * rfltt[r] / 13)
                 # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity)
+                reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity[r])
                                > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
 
                 # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
@@ -335,7 +305,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
                 # if rflt (i.e. total demand) had not grown.
 
-                dUkREG = -(endo_capacity - endo_shares *
+                dUkREG = -(endo_capacity[r] - endo_shares[r] *
                            rfllt[r, np.newaxis]) * isReg[r, :].reshape([len(titles['VTTI'])])
 
                 # Sum effect of exogenous sales additions (if any) with effect of regulations.
@@ -347,7 +317,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # All other capacities will be streched
 
                 data['TEWS'][r, :, 0] = (
-                    endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
+                    endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
+            
+            sales = implement_regulatory_policies(endo_shares, endo_capacity, regions,
+                                          data['TEWS'], data['TWSA'], data['TREG'], isReg,
+                                          rfltt, rfllt, no_it, titles)
 
             # Raise error if there are negative values 
             # or regional market shares do not add up to one
