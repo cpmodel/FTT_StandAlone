@@ -40,11 +40,13 @@ from math import sqrt
 import numpy as np
 
 # Local library imports
+from SourceCode.ftt_core.ftt_shares import shares
+from SourceCode.ftt_core.ftt_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.ftt_core.ftt_mandate import implement_mandate
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 
 # -----------------------------------------------------------------------------
@@ -249,6 +251,117 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * t * dt
             rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * (t-1) * dt
 
+            # Get regions with non-zero heat demand
+            regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
+            
+            # Speed comparison between new vectorized shares and original heat shares
+            if year % 5 == 0 and t == 4:  # Test every 5 years at t==4 like transport
+                import time as timing_module
+                
+                # Test original heat shares function (region by region)
+                start_time = timing_module.time()
+                original_results = {}
+                sqrt2 = np.sqrt(2)
+                
+                for r in regions:
+                    dSik_original = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
+                    F_original = np.ones([len(titles['HTTI']), len(titles['HTTI'])]) * 0.5
+
+                    # Original normal replacements loop
+                    for b1 in range(len(titles['HTTI'])):
+                        if not (data_dt['HEWS'][r, b1, 0] > 0.0 and
+                               data_dt['HGC1'][r, b1, 0] != 0.0 and
+                               data_dt['HWCD'][r, b1, 0] != 0.0):
+                            continue
+
+                        S_i = data_dt['HEWS'][r, b1, 0]
+
+                        for b2 in range(b1):
+                            if not (data_dt['HEWS'][r, b2, 0] > 0.0 and
+                                   data_dt['HGC1'][r, b2, 0] != 0.0 and
+                                   data_dt['HWCD'][r, b2, 0] != 0.0):
+                                continue
+
+                            S_k = data_dt['HEWS'][r, b2, 0]
+
+                            # Original cost calculations
+                            dFik = sqrt2 * sqrt((data_dt['HWCD'][r, b1, 0] * data_dt['HWCD'][r, b1, 0] 
+                                                 + data_dt['HWCD'][r, b2, 0] * data_dt['HWCD'][r, b2, 0]))
+
+                            Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['HGC1'][r, b2, 0]
+                                                       - data_dt['HGC1'][r, b1, 0]) / dFik))
+
+                            # Original regulation adjustment
+                            F_original[b1, b2] = Fik * (1.0 - isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2] \
+                                        * (1.0 - isReg[r, b1]) + 0.5 * (isReg[r, b1] * isReg[r, b2])
+                            F_original[b2, b1] = (1.0 - Fik) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
+                                        * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
+
+                            # Original RK4 integration
+                            k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F_original[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F_original[b2,b1]*data['HETR'][r,b1, 0])
+                            k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (data['HEWA'][0,b1, b2]*F_original[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F_original[b2,b1]*data['HETR'][r,b1, 0])
+                            k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F_original[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F_original[b2,b1]*data['HETR'][r,b1, 0])
+                            k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (data['HEWA'][0,b1, b2]*F_original[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F_original[b2,b1]*data['HETR'][r,b1, 0])
+
+                            dSik_original[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
+                            dSik_original[b2, b1] = -dSik_original[b1, b2]
+
+                    original_results[r] = dSik_original
+                
+                time_old = timing_module.time() - start_time
+                
+                # Test new vectorized shares function
+                start_time = timing_module.time()
+                dSij_all_new = shares(
+                    dt=dt, 
+                    t=t, 
+                    shares_dt=data_dt["HEWS"], 
+                    costs_dt=data_dt["HGC1"], 
+                    costs_sd_dt=data_dt["HWCD"], 
+                    subst=data["HEWA"],
+                    turnover_rate=data["HETR"][:, :, 0], 
+                    isReg=isReg, 
+                    demand=rhudt[:, 0, 0],
+                    regions=regions,
+                    return_dSij=True
+                )
+                time_new = timing_module.time() - start_time
+                
+                # Calculate speedup and check global accuracy
+                speedup = time_old / time_new if time_new > 0 else float('inf')
+                
+                # Check global accuracy by comparing all results
+                all_match = True
+                max_global_diff = 0.0
+                for r in regions:
+                    region_match = np.allclose(original_results[r], dSij_all_new[r], rtol=1e-12, atol=1e-15)
+                    region_max_diff = np.max(np.abs(original_results[r] - dSij_all_new[r]))
+                    max_global_diff = max(max_global_diff, region_max_diff)
+                    all_match = all_match and region_match
+                
+                print(f"Year {year}: old_heat={time_old*1000:.1f}ms, new_heat={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={all_match}, max_diff={max_global_diff:.2e}")
+                
+                # Use new results for this iteration
+                dSij_all_normal = dSij_all_new
+                
+            else:
+                # Normal operation - just use the new vectorized shares
+                if len(regions) > 0:
+                    dSij_all_normal = shares(
+                        dt=dt, 
+                        t=t, 
+                        shares_dt=data_dt["HEWS"], 
+                        costs_dt=data_dt["HGC1"], 
+                        costs_sd_dt=data_dt["HWCD"], 
+                        subst=data["HEWA"],
+                        turnover_rate=data["HETR"][:, :, 0], 
+                        isReg=isReg, 
+                        demand=rhudt[:, 0, 0],
+                        regions=regions,
+                        return_dSij=True
+                    )
+                else:
+                    dSij_all_normal = np.zeros((len(titles['RTI']), len(titles['HTTI']), len(titles['HTTI'])))
 
             for r in range(len(titles['RTI'])):
 
@@ -256,61 +369,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     continue
 
             ############################ FTT ##################################
-#                        t3 = time.time()
-#                        print("Solving {}".format(titles["RTI"][r]))
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSik = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
-
-                # F contains the preferences
-                F = np.ones([len(titles['HTTI']), len(titles['HTTI'])]) * 0.5
+                # USE NEW RESULTS FROM GENERIC SHARES FUNCTION
+                dSik = dSij_all_normal[r]
 
                 # -----------------------------------------------------
-                # Step 1: Endogenous EOL replacements
-                # -----------------------------------------------------
-                for b1 in range(len(titles['HTTI'])):
-
-                    if  not (data_dt['HEWS'][r, b1, 0] > 0.0 and
-                             data_dt['HGC1'][r, b1, 0] != 0.0 and
-                             data_dt['HWCD'][r, b1, 0] != 0.0):
-                        continue
-
-                    S_i = data_dt['HEWS'][r, b1, 0]
-
-                    for b2 in range(b1):
-
-                        if  not (data_dt['HEWS'][r, b2, 0] > 0.0 and
-                                 data_dt['HGC1'][r, b2, 0] != 0.0 and
-                                 data_dt['HWCD'][r, b2, 0] != 0.0):
-                            continue
-
-                        S_k = data_dt['HEWS'][r, b2, 0]
-
-                        # Propagating width of variations in perceived costs
-                        dFik = 1.414 * sqrt((data_dt['HWCD'][r, b1, 0] * data_dt['HWCD'][r, b1, 0] 
-                                             + data_dt['HWCD'][r, b2, 0] * data_dt['HWCD'][r, b2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['HGC1'][r, b2, 0]
-                                                   - data_dt['HGC1'][r, b1, 0]) / dFik))
-
-                        # Preferences are then adjusted for regulations
-                        F[b1, b2] = Fik * (1.0 - isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2] \
-                                    * (1.0 - isReg[r, b1]) + 0.5 * (isReg[r, b1] * isReg[r, b2])
-                        F[b2, b1] = (1.0 - Fik) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
-                                    * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
-
-                        # Runge-Kutta market share dynamiccs
-                        k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-
-                        dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
-                        dSik[b2, b1] = -dSik[b1, b2]
-
-                # -----------------------------------------------------
-                # Step 2: Endogenous premature replacements
+                # Step 2: Endogenous premature replacements (UNCHANGED)
                 # -----------------------------------------------------
                 # Initialise variables related to market share dynamics
                 # DSiK contains the change in shares

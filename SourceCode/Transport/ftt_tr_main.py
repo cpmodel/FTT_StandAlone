@@ -240,15 +240,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rfltt = time_lag['RFLT'][:, 0, 0] + \
                 (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
-            # Create a mask for regions that should be processed (TDA check)
-            # Skip regions for which more recent data is available
-            region_mask = data['TDA1'][:, 0, 0] < year
-            
-            # Get list of regions to process (in simulation period and with non-zero demand)
-            regions = np.where((rfltt > 0) & region_mask)[0]
+            # Skip regions for which more recent data is available or with zero demand            
+            regions = np.where((rfltt > 0) & (data['TDA1'][:, 0, 0] < year))[0]
 
             # Speed comparison between new vectorized shares and original shares_transport
-            if year % 5 == 0:  # Test every 5 years to avoid too much output
+            if year % 5 == 0 and t==no_it:  # Test every 5 years to avoid too much output
                 import time as timing_module
                 
                 # Test original shares_transport function
@@ -301,7 +297,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                        > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
 
                         dUkTK = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
-                        dUkREG = -(endo_capacity[r] - endo_shares[r] * rfllt[r, np.newaxis]) * isReg[r, :].reshape([len(titles['VTTI'])])
+                        dUkREG = -(endo_capacity[r] - endo_shares[r] * rfltt[r, np.newaxis]) * isReg[r, :].reshape([len(titles['VTTI'])])
 
                         dUk = dUkTK + dUkREG
                         dUtot = np.sum(dUk)
@@ -314,7 +310,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 start_time = timing_module.time()
                 data_TEWS_new_method = implement_regulatory_policies(endo_shares, endo_capacity, regions,
                                               data_TEWS_before_reg, data['TWSA'], data['TREG'], isReg,
-                                              rfltt, rfllt, no_it, titles)
+                                              rfltt, rfllt, no_it, data['BTTC'][:, :, c3ti['8 lifetime']])
                 time_new_reg = timing_module.time() - start_time
                 
                 # Compare results
@@ -329,7 +325,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Normal operation - just use the vectorized regulatory policies
                 data['TEWS'] = implement_regulatory_policies(endo_shares, endo_capacity, regions,
                                           data['TEWS'], data['TWSA'], data['TREG'], isReg,
-                                          rfltt, rfllt, no_it, titles)
+                                          rfltt, rfllt, no_it, data['BTTC'][:, :, c3ti['8 lifetime']])
 
 
             # Raise error if there are negative values 
