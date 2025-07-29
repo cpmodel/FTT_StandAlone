@@ -36,7 +36,7 @@ import time
 
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
-from SourceCode.ftt_core.ftt_shares import shares
+from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.ftt_core.ftt_regulatory_policies import implement_regulatory_policies
 
 from SourceCode.support.divide import divide
@@ -244,38 +244,46 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             regions = np.where((rfltt > 0) & (data['TDA1'][:, 0, 0] < year))[0]
 
             # Speed comparison between new vectorized shares and original shares_transport
-            if year % 5 == 0 and t==no_it:  # Test every 5 years to avoid too much output
+            if year % 10 == 0 and t==no_it:  # Test every 10 years to avoid too much output
                 import time as timing_module
                 
                 # Test original shares_transport function
                 start_time = timing_module.time()
                 endo_shares_old, endo_capacity_old = shares_transport(data_dt, data, year, rfltt, isReg, titles, c3ti, dt)
                 time_old = timing_module.time() - start_time
+                                
                 
-                # Test new vectorized shares function
+                # Test jitted shares function
                 start_time = timing_module.time()
-                endo_shares, endo_capacity = shares(
-                    dt, t, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
-                    data['TEWA'], data['BTTC'][:, :, c3ti['17 Turnover rate']],
-                    isReg, rfltt, regions
+                change_in_shares = shares_change(
+                    dt, t, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
+                    data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
+                    isReg, len(titles['RTI']), len(titles['VTTI'])
                 )
-                time_new = timing_module.time() - start_time
+                endo_shares_jit = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+                endo_shares_jit[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
+                endo_capacity = endo_shares_jit * rfltt[:, np.newaxis]
+                time_jit = timing_module.time() - start_time
+                
                 
                 # Calculate speedup and check accuracy
-                speedup = time_old / time_new if time_new > 0 else float('inf')
-                accuracy = np.allclose(endo_shares_old, endo_shares, atol=1e-10)
+                speedup_jit = time_old / time_jit if time_jit > 0 else float('inf')
+                accuracy_jit = np.allclose(endo_shares_old, endo_shares_jit, atol=1e-10)
                 
-                print(f"Year {year}: old_shares={time_old*1000:.1f}ms, new_shares={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={accuracy}")
+                print(f"Year {year}: TRANSPORT SHARES - old={time_old*1000:.1f}ms, new={time_jit*1000:.1f}ms, speedup={speedup_jit:.1f}x, accurate={accuracy_jit}")
+                
             else:
-                # Normal operation - just use the new vectorized shares
-                endo_shares, endo_capacity = shares(
-                    dt, t, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
-                    data['TEWA'], data['BTTC'][:, :, c3ti['17 Turnover rate']],
-                    isReg, rfltt, regions
+                change_in_shares = shares_change(
+                    dt, t, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
+                    data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
+                    isReg, len(titles['RTI']), len(titles['VTTI'])
                 )
+                endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+                endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
+                endo_capacity = endo_shares * rfltt[:, np.newaxis]
 
             # Test vectorized regulatory policies function against old implementation
-            if year % 5 == 0:  # Test every 5 years
+            if year % 10 == 0 and t==no_it:  # Test every 10 years
                 import time as timing_module
                 
                 # Store old TEWS for comparison
@@ -317,7 +325,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 reg_speedup = time_old_reg / time_new_reg if time_new_reg > 0 else float('inf')
                 reg_accuracy = np.allclose(data_TEWS_old_method, data_TEWS_new_method, atol=1e-10)
                 
-                print(f"Year {year}: old_reg={time_old_reg*1000:.1f}ms, new_reg={time_new_reg*1000:.1f}ms, reg_speedup={reg_speedup:.1f}x, reg_accurate={reg_accuracy}")
+                print(f"Year {year}: TRANSPORT REGULATORY POLICIES - old={time_old_reg*1000:.1f}ms, new={time_new_reg*1000:.1f}ms, speedup={reg_speedup:.1f}x, accurate={reg_accuracy}")
                 
                 # Use the new method result
                 data['TEWS'] = data_TEWS_new_method

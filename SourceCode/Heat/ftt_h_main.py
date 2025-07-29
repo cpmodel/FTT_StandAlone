@@ -40,7 +40,7 @@ from math import sqrt
 import numpy as np
 
 # Local library imports
-from SourceCode.ftt_core.ftt_shares import shares
+from SourceCode.ftt_core.ftt_shares import shares_premature, shares_change
 from SourceCode.ftt_core.ftt_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
@@ -255,7 +255,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
             
             # Speed comparison between new vectorized shares and original heat shares
-            if year % 5 == 0 and t == 4:  # Test every 5 years at t==4 like transport
+            if year % 10 == 0 and t == 4:  # Test every 10 years at t==4 like transport
                 import time as timing_module
                 
                 # Test original heat shares function (region by region)
@@ -312,18 +312,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 
                 # Test new vectorized shares function
                 start_time = timing_module.time()
-                dSij_all_new = shares(
-                    dt=dt, 
-                    t=t, 
+                change_in_shares = shares_change(
+                    dt=dt,
+                    t=t,
+                    regions=regions,
                     shares_dt=data_dt["HEWS"], 
                     costs_dt=data_dt["HGC1"], 
                     costs_sd_dt=data_dt["HWCD"], 
-                    subst=data["HEWA"],
-                    turnover_rate=data["HETR"][:, :, 0], 
-                    isReg=isReg, 
-                    demand=rhudt[:, 0, 0],
-                    regions=regions,
-                    return_dSij=True
+                    subst=data["HEWA"] * data["HETR"], 
+                    isReg=isReg,
+                    num_regions = len(titles['RTI']),
+                    num_techs = len(titles['HTTI']),
                 )
                 time_new = timing_module.time() - start_time
                 
@@ -334,35 +333,151 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 all_match = True
                 max_global_diff = 0.0
                 for r in regions:
-                    region_match = np.allclose(original_results[r], dSij_all_new[r], rtol=1e-12, atol=1e-15)
-                    region_max_diff = np.max(np.abs(original_results[r] - dSij_all_new[r]))
+                    region_match = np.allclose(np.sum(original_results[r], axis=1), change_in_shares[r], rtol=1e-12, atol=1e-15)
+                    region_max_diff = np.max(np.abs(np.sum(original_results[r], axis=1) - change_in_shares[r]))
                     max_global_diff = max(max_global_diff, region_max_diff)
                     all_match = all_match and region_match
                 
-                print(f"Year {year}: old_heat={time_old*1000:.1f}ms, new_heat={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={all_match}, max_diff={max_global_diff:.2e}")
+                print(f"Year {year}: HEAT NORMAL REPLACEMENTS - old={time_old*1000:.1f}ms, new={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={all_match}, max_diff={max_global_diff:.2e}")
                 
-                # Use new results for this iteration
-                dSij_all_normal = dSij_all_new
                 
             else:
                 # Normal operation - just use the new vectorized shares
                 if len(regions) > 0:
-                    dSij_all_normal = shares(
-                        dt=dt, 
-                        t=t, 
+                    change_in_shares = shares_change(
+                        dt=dt,
+                        t=t,
+                        regions=regions,
                         shares_dt=data_dt["HEWS"], 
                         costs_dt=data_dt["HGC1"], 
                         costs_sd_dt=data_dt["HWCD"], 
-                        subst=data["HEWA"],
-                        turnover_rate=data["HETR"][:, :, 0], 
-                        isReg=isReg, 
-                        demand=rhudt[:, 0, 0],
-                        regions=regions,
-                        return_dSij=True
+                        subst=data["HEWA"] * data["HETR"], 
+                        isReg=isReg,
+                        num_regions = len(titles['RTI']),
+                        num_techs = len(titles['HTTI']),
                     )
                 else:
                     dSij_all_normal = np.zeros((len(titles['RTI']), len(titles['HTTI']), len(titles['HTTI'])))
 
+            # Calculate scrappage rate for all regions
+            SR_all = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
+            for r in range(len(titles['RTI'])):
+                SR = divide(np.ones(len(titles['HTTI'])),
+                            data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :, 0]
+                SR_all[r, :] = np.where(SR<0.0, 0.0, SR)
+
+            # Use vectorized premature shares function for all regions with demand
+            if len(regions) > 0:
+                # Speed test for premature replacements (same timing as normal replacements)
+                if year % 10 == 0 and t == 4:  # Test every 10 years at t==4
+                    import time as timing_module
+                    
+                    # Test original premature replacements function (region by region)
+                    start_time = timing_module.time()
+                    original_premature_results = {}
+                    
+                    for r in regions:
+                        dSEik_original = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
+                        FE_original = np.ones([len(titles['HTTI']), len(titles['HTTI'])]) * 0.5
+                        
+                        for b1 in range(len(titles['HTTI'])):
+                            if not (data_dt['HEWS'][r, b1, 0] > 0.0 and
+                                    data_dt['HGC2'][r, b1, 0] != 0.0 and
+                                    data_dt['HGD2'][r, b1, 0] != 0.0 and
+                                    data_dt['HGC3'][r, b1, 0] != 0.0 and
+                                    data_dt['HGD3'][r, b1, 0] != 0.0 and
+                                    SR_all[r, b1] > 0.0):
+                                continue
+
+                            SE_i = data_dt['HEWS'][r, b1, 0]
+
+                            for b2 in range(b1):
+                                if not (data_dt['HEWS'][r, b2, 0] > 0.0 and
+                                        data_dt['HGC2'][r, b2, 0] != 0.0 and
+                                        data_dt['HGD2'][r, b2, 0] != 0.0 and
+                                        data_dt['HGC3'][r, b2, 0] != 0.0 and
+                                        data_dt['HGD3'][r, b2, 0] != 0.0 and
+                                        SR_all[r, b2] > 0.0):
+                                    continue
+
+                                SE_k = data_dt['HEWS'][r, b2, 0]
+
+                                # Original premature replacement calculations
+                                dFEik_orig = 1.414 * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
+                                dFEki_orig = 1.414 * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
+
+                                FEik_orig = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b2, 0]-data_dt['HGC3'][r, b1, 0])/dFEik_orig))
+                                FEki_orig = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b1, 0]-data_dt['HGC3'][r, b2, 0])/dFEki_orig))
+
+                                # Original regulation adjustment for premature
+                                FE_original[b1, b2] = FEik_orig*(1.0-isReg[r, b1])
+                                FE_original[b2, b1] = FEki_orig*(1.0-isReg[r, b2])
+
+                                # Original RK4 integration for premature
+                                kE_1_orig = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE_original[b1,b2]*SR_all[r, b2]- data['HEWA'][0,b2, b1]*FE_original[b2,b1]*SR_all[r, b1])
+                                kE_2_orig = (SE_i+dt*kE_1_orig/2)*(SE_k-dt*kE_1_orig/2)* (data['HEWA'][0,b1, b2]*FE_original[b1,b2]*SR_all[r, b2]- data['HEWA'][0,b2, b1]*FE_original[b2,b1]*SR_all[r, b1])
+                                kE_3_orig = (SE_i+dt*kE_2_orig/2)*(SE_k-dt*kE_2_orig/2) * (data['HEWA'][0,b1, b2]*FE_original[b1,b2]*SR_all[r, b2]- data['HEWA'][0,b2, b1]*FE_original[b2,b1]*SR_all[r, b1])
+                                kE_4_orig = (SE_i+dt*kE_3_orig)*(SE_k-dt*kE_3_orig) * (data['HEWA'][0,b1, b2]*FE_original[b1,b2]*SR_all[r, b2]- data['HEWA'][0,b2, b1]*FE_original[b2,b1]*SR_all[r, b1])
+
+                                dSEik_original[b1, b2] = dt*(kE_1_orig+2*kE_2_orig+2*kE_3_orig+kE_4_orig)/6
+                                dSEik_original[b2, b1] = -dSEik_original[b1, b2]
+                        
+                        original_premature_results[r] = dSEik_original
+                    
+                    time_premature_old = timing_module.time() - start_time
+                    
+                    # Test new vectorized premature shares function
+                    start_time = timing_module.time()
+                    dSEij_all_new = shares_premature(
+                        dt=dt,
+                        shares_dt=data_dt["HEWS"], 
+                        costs_marginal_dt=data_dt["HGC2"],  # Marginal costs (HGC2)
+                        costs_marginal_sd_dt=data_dt["HGD2"],  # SD Marginal costs (HGD2)
+                        costs_payback_dt=data_dt["HGC3"],  # Payback costs (HGC3)
+                        costs_payback_sd_dt=data_dt["HGD3"],  # SD Payback costs (HGD3)
+                        subst=data["HEWA"],
+                        scrappage_rate=SR_all,
+                        isReg=isReg, 
+                        regions=regions
+                    )
+                    time_premature_new = timing_module.time() - start_time
+                    
+                    # Calculate speedup and check global accuracy for premature
+                    speedup_premature = time_premature_old / time_premature_new if time_premature_new > 0 else float('inf')
+                    
+                    # Check global accuracy by comparing all premature results
+                    all_match_premature = True
+                    max_global_diff_premature = 0.0
+                    for r in regions:
+                        region_match = np.allclose(original_premature_results[r], dSEij_all_new[r], rtol=1e-12, atol=1e-15)
+                        region_max_diff = np.max(np.abs(original_premature_results[r] - dSEij_all_new[r]))
+                        max_global_diff_premature = max(max_global_diff_premature, region_max_diff)
+                        all_match_premature = all_match_premature and region_match
+                    
+                    print(f"Year {year}: HEAT PREMATURE REPLACEMENTS - old={time_premature_old*1000:.1f}ms, new={time_premature_new*1000:.1f}ms, speedup={speedup_premature:.1f}x, accurate={all_match_premature}, max_diff={max_global_diff_premature:.2e}")
+                    
+                    # Use new results for this iteration
+                    dSEij_all = dSEij_all_new
+                else:
+                    # Normal operation - just use the new vectorized premature shares
+                    dSEij_all = shares_premature(
+                        dt=dt,
+                        shares_dt=data_dt["HEWS"], 
+                        costs_marginal_dt=data_dt["HGC2"],  # Marginal costs (HGC2)
+                        costs_marginal_sd_dt=data_dt["HGD2"],  # SD Marginal costs (HGD2)
+                        costs_payback_dt=data_dt["HGC3"],  # Payback costs (HGC3)
+                        costs_payback_sd_dt=data_dt["HGD3"],  # SD Payback costs (HGD3)
+                        subst=data["HEWA"],
+                        scrappage_rate=SR_all,
+                        isReg=isReg, 
+                        regions=regions
+                    )
+            else:
+                dSEij_all = np.zeros((len(titles['RTI']), len(titles['HTTI']), len(titles['HTTI'])))
+            
+            #calculate temportary market shares and temporary capacity from endogenous results
+            endo_shares = data_dt['HEWS'][:, :, 0] + change_in_shares + np.sum(dSEij_all, axis=2)
+            
             for r in range(len(titles['RTI'])):
 
                 if rhudt[r] == 0.0:
@@ -370,81 +485,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             ############################ FTT ##################################
                 # USE NEW RESULTS FROM GENERIC SHARES FUNCTION
-                dSik = dSij_all_normal[r]
 
                 # -----------------------------------------------------
-                # Step 2: Endogenous premature replacements (UNCHANGED)
+                # Step 2: Endogenous premature replacements (VECTORIZED)
                 # -----------------------------------------------------
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSEik = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
-
-                # F contains the preferences
-                FE = np.ones([len(titles['HTTI']), len(titles['HTTI'])])*0.5
-
-                # Intermediate shares: add the EoL effects before continuing
-                # intermediate_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1)
-
-                # Scrappage rate
-                SR = divide(np.ones(len(titles['HTTI'])),
-                            data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :, 0]
-                SR = np.where(SR<0.0, 0.0, SR)
-
-                for b1 in range(len(titles['HTTI'])):
-
-                    if not (data_dt['HEWS'][r, b1, 0] > 0.0 and
-                            data_dt['HGC2'][r, b1, 0] != 0.0 and
-                            data_dt['HGD2'][r, b1, 0] != 0.0 and
-                            data_dt['HGC3'][r, b1, 0] != 0.0 and
-                            data_dt['HGD3'][r, b1, 0] != 0.0 and
-                            SR[b1] > 0.0):
-                        continue
-
-                    SE_i = data_dt['HEWS'][r, b1, 0]
-
-                    for b2 in range(b1):
-
-                        if not (data_dt['HEWS'][r, b2, 0] > 0.0 and
-                                data_dt['HGC2'][r, b2, 0] != 0.0 and
-                                data_dt['HGD2'][r, b2, 0] != 0.0 and
-                                data_dt['HGC3'][r, b2, 0] != 0.0 and
-                                data_dt['HGD3'][r, b2, 0] != 0.0 and
-                                SR[b2] > 0.0):
-                            continue
-
-                        SE_k = data_dt['HEWS'][r, b2, 0]
-
-                        # NOTE: Premature replacements are optional for
-                        # consumers. It is possible that NO premature
-                        # replacements take place
-
-                        # Propagating width of variations in perceived costs
-                        dFEik = 1.414 * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
-                        dFEki = 1.414 * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        FEik = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b2, 0]-data_dt['HGC3'][r, b1, 0])/dFEik))
-                        FEki = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b1, 0]-data_dt['HGC3'][r, b2, 0])/dFEki))
-
-                        # Preferences are then adjusted for regulations
-                        FE[b1, b2] = FEik*(1.0-isReg[r, b1])
-                        FE[b2, b1] = FEki*(1.0-isReg[r, b2])
-
-                        # Runge-Kutta market share dynamiccs
-                        kE_1 = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_2 = (SE_i+dt*kE_1/2)*(SE_k-dt*kE_1/2)* (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_3 = (SE_i+dt*kE_2/2)*(SE_k-dt*kE_2/2) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_4 = (SE_i+dt*kE_3)*(SE_k-dt*kE_3) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-
-                        dSEik[b1, b2] = dt*(kE_1+2*kE_2+2*kE_3+kE_4)/6
-                        dSEik[b2, b1] = -dSEik[b1, b2]
-
-                #calculate temportary market shares and temporary capacity from endogenous results
-                endo_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1) + np.sum(dSEik, axis=1)
+                # USE NEW RESULTS FROM VECTORIZED PREMATURE SHARES FUNCTION
                 
-                endo_capacity = endo_shares * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
+                
+                endo_capacity = endo_shares[r] * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
 
-                endo_gen = endo_shares * rhudt[r, np.newaxis]
+                endo_gen = endo_shares[r] * rhudt[r, np.newaxis]
 
 
                 # -----------------------------------------------------
@@ -478,7 +528,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_gen - endo_shares * rhudlt[r,np.newaxis]) * isReg[r, :].reshape([len(titles['HTTI'])])
+                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * isReg[r, :].reshape([len(titles['HTTI'])])
                      
 
                 # Sum effect of exogenous sales additions (if any) with

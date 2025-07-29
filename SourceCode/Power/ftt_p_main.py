@@ -62,12 +62,16 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+from SourceCode.ftt_core.ftt_shares import shares_change
+
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from SourceCode.Power.ftt_p_dspch import dspch
+from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
-from SourceCode.Power.ftt_p_shares import shares
+from SourceCode.Power.ftt_p_shares import shares_original
+import time
 from SourceCode.Power.ftt_p_costc import cost_curves
 
 
@@ -532,19 +536,71 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             if t == no_it:
                 data["MEWD"] = np.copy(data['MEWDX'])
             
-
+            # Find valid regions (where demand > 0)
+            valid_regions = np.where(MEWDt > 0.0)[0]
+            
             # =================================================================
             # Shares equation
             # =================================================================
-            mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt,
+            # Speed comparison between new and original power shares implementation
+            if (year+1) % 10 == 0 and t == 1:  # Test every 10 years to avoid too much output
+                import time as timing_module
+                
+                # Test original shares function
+                start_time = timing_module.time()
+                endo_shares_old = shares_original(dt, t, T_Scal, MEWDt,
                                             data_dt['MEWS'], data_dt['METC'],
-                                            data_dt['MTCD'], data['MWKA'],
+                                            data_dt['MTCD'], 
                                             data_dt['MES1'], data_dt['MES2'],
-                                            data['MEWA'], isReg, data_dt['MEWK'],
-                                            time_lag['MEWK'], data['MEWR'],
-                                            data_dt['MEWL'], time_lag['MEWS'],
-                                            data['MWLO'],
-                                            len(titles['RTI']), len(titles['T2TI']), no_it)
+                                            data['MEWA'], isReg, 
+                                            len(titles['RTI']), len(titles['T2TI']), no_it, year)
+                time_old = timing_module.time() - start_time
+                
+                
+                # Test original shares function
+                start_time = timing_module.time()
+                change_in_shares = shares_change(dt, t, valid_regions,
+                                            data_dt['MEWS'], data_dt['METC'],
+                                            data_dt['MTCD'], 
+                                            data['MEWA'] / T_Scal, isReg, 
+                                            len(titles['RTI']), len(titles['T2TI']),
+                                            upper_limit=data_dt['MES1'],
+                                            lower_limit=data_dt['MES2'],
+                                            limits_active=True)
+                endo_shares_jitted = data_dt['MEWS'][:, :, 0] + change_in_shares
+                time_jitted = timing_module.time() - start_time
+                
+                
+               
+                # Calculate speedup and check accuracy
+                speedup_jitted = time_old / time_jitted if time_jitted > 0 else float('inf')
+                accuracy_shares_jitted = np.allclose(endo_shares_old, endo_shares_jitted, atol=1e-10)
+
+                
+                print(f"Year {year}: Power shares - old={time_old*1000:.1f}ms, jitted={time_jitted*1000:.1f}ms, speedup={speedup_jitted:.1f}x, accurate={accuracy_shares_jitted}")
+
+                
+                # Use the new implementation for this test year
+                endo_shares = endo_shares_jitted
+            else:
+                change_in_shares = shares_change(dt, t, valid_regions,
+                                            data_dt['MEWS'], data_dt['METC'],
+                                            data_dt['MTCD'], 
+                                            data['MEWA'] / T_Scal, isReg, 
+                                            len(titles['RTI']), len(titles['T2TI']),
+                                            upper_limit=data_dt['MES1'],
+                                            lower_limit=data_dt['MES2'],
+                                            limits_active=True)
+                endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
+            
+            
+            mews, mewl, mewg, mewk = policies_old(len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
+                                                  data['MWLO'], time_lag['MEWS'],
+                                                  endo_shares, MEWDt,  data_dt['MEWK'],
+                                                  isReg, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
+            
+            
+            
             data['MEWS'] = mews
             data['MEWL'] = mewl
             data['MEWG'] = mewg
@@ -742,3 +798,129 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
         
     return data
+
+
+# %% Testing functions for new shares implementation
+# -----------------------------------------------------------------------------
+
+def test_shares_comparison(data, time_lag, titles, domain, year, histend):
+    """
+    Test the new shares implementation against the original.
+    """
+    print("\n" + "="*60)
+    print("Testing Power Shares Implementation")
+    print("="*60)
+    
+    # Get necessary data and parameters
+    dt = 1.0  # Use 1-year timestep for testing
+    t = 50  # Example timestep
+    T_Scal = 1.0  # Power scaling factor
+    no_it = 100  # Total number of iterations
+    
+    # Extract required arrays
+    MEWDt = data['MEWD'][:, 0]  # Demand
+    mews_dt = data['MEWS']  # Market shares
+    metc_dt = data['METC']  # Total costs
+    mtcd_dt = data['MTCD']  # Cost standard deviations
+    mwka = data['MWKA']  # Capacity targets
+    mes1_dt = data['MES1']  # Upper constraints
+    mes2_dt = data['MES2']  # Lower constraints
+    mewa = data['MEWA']  # Substitution matrix
+    mewk_dt = data['MEWK']  # Capacity
+    mewr = data['MEWR']  # Regulations
+    mewl_dt = data['MEWL']  # Load factors
+    mwlo = data['MWLO']  # New technology load factors
+    
+    # Lag variables
+    mewk_lag = time_lag['MEWK']
+    mews_lag = time_lag['MEWS']
+    
+    # Get regulation array
+    rti = len(titles['RTI'])
+    t2ti = len(titles['T2TI'])
+    isReg = np.zeros((rti, t2ti))
+    for reg_tech in titles['REGTECH']:
+        if reg_tech in titles['T2TI']:
+            tech_idx = titles['T2TI'].index(reg_tech)
+            isReg[:, tech_idx] = 1.0
+    
+    # Test different scenarios
+    test_scenarios = [(10, "Every 10 years"), (20, "Every 20 years"), (1, "Every year")]
+    
+    for test_interval, description in test_scenarios:
+        print(f"\nTesting {description}:")
+        print("-" * 40)
+        
+        total_time_old = 0
+        total_time_new = 0
+        max_diff = 0
+        test_count = 0
+        
+        # Test every N years from start to end
+        for test_year in range(histend + test_interval, year + 1, test_interval):
+            test_count += 1
+            print(f"Year {test_year}...", end=" ")
+            
+            # Test original implementation
+            start_time = time.time()
+            mews_old, mewl_old, mewg_old, mewk_old = shares_original(
+                dt, t, T_Scal, MEWDt, mews_dt, metc_dt, mtcd_dt,
+                mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
+                mewl_dt, mews_lag, mwlo, rti, t2ti, no_it
+            )
+            time_old = time.time() - start_time
+            total_time_old += time_old
+            
+            # Test new implementation
+            start_time = time.time()
+            mews_new, mewl_new, mewg_new, mewk_new = shares_generic_wrapper(
+                dt, t, T_Scal, MEWDt, mews_dt, metc_dt, mtcd_dt,
+                mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
+                mewl_dt, mews_lag, mwlo, rti, t2ti, no_it
+            )
+            time_new = time.time() - start_time
+            total_time_new += time_new
+            
+            # Compare results
+            diff_mews = np.max(np.abs(mews_new - mews_old))
+            diff_mewl = np.max(np.abs(mewl_new - mewl_old))
+            diff_mewg = np.max(np.abs(mewg_new - mewg_old))
+            diff_mewk = np.max(np.abs(mewk_new - mewk_old))
+            
+            current_max_diff = max(diff_mews, diff_mewl, diff_mewg, diff_mewk)
+            max_diff = max(max_diff, current_max_diff)
+            
+            print(f"Max diff: {current_max_diff:.2e}")
+        
+        # Calculate speedup
+        if total_time_new > 0:
+            speedup = total_time_old / total_time_new
+        else:
+            speedup = float('inf')
+        
+        print(f"\nResults for {description}:")
+        print(f"  Original time: {total_time_old:.4f}s")
+        print(f"  New time:      {total_time_new:.4f}s")
+        print(f"  Speedup:       {speedup:.2f}x")
+        print(f"  Max difference: {max_diff:.2e}")
+        print(f"  Tests run:     {test_count}")
+        
+        # Check if results are equivalent
+        if max_diff < 1e-10:
+            print(f"  ✓ Results are numerically identical")
+        elif max_diff < 1e-6:
+            print(f"  ✓ Results are very close (acceptable)")
+        else:
+            print(f"  ⚠ Results differ significantly")
+    
+    print("\n" + "="*60)
+    print("Power shares testing complete!")
+    print("="*60)
+
+
+if __name__ == "__main__":
+    # Example of how to run the test
+    print("To test the power shares implementation:")
+    print("1. Load your FTT power data")
+    print("2. Call: test_shares_comparison(data, time_lag, titles, domain, year, histend)")
+    print("This will compare the original and new implementations for accuracy and speed.")
