@@ -244,7 +244,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             regions = np.where((rfltt > 0) & (data['TDA1'][:, 0, 0] < year))[0]
 
             # Speed comparison between new jitted shares and original shares_transport
-            if year % 10 == 0 and t==no_it:  # Test every 10 years to avoid too much output
+            if year in [2020, 2050] and t==no_it:  # Test every 10 years to avoid too much output
                 import time as timing_module
                 
                 # Test original shares_transport function
@@ -256,7 +256,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Test jitted shares function
                 start_time = timing_module.time()
                 change_in_shares = shares_change(
-                    dt, t, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
+                    dt, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
                     data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
                     isReg, len(titles['RTI']), len(titles['VTTI'])
                 )
@@ -270,11 +270,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 speedup_jit = time_old / time_jit if time_jit > 0 else float('inf')
                 accuracy_jit = np.allclose(endo_shares_old, endo_shares_jit, atol=1e-10)
                 
-                print(f"Year {year}: TRANSPORT SHARES - old={time_old*1000:.1f}ms, new={time_jit*1000:.1f}ms, speedup={speedup_jit:.1f}x, accurate={accuracy_jit}")
+                print(f"\nYear {year}: TRANSPORT SHARES - old={time_old*1000:.1f}ms, new={time_jit*1000:.1f}ms, speedup={speedup_jit:.1f}x, accurate={accuracy_jit}")
                 
             else:
                 change_in_shares = shares_change(
-                    dt, t, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
+                    dt, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
                     data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
                     isReg, len(titles['RTI']), len(titles['VTTI'])
                 )
@@ -325,7 +325,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 reg_speedup = time_old_reg / time_new_reg if time_new_reg > 0 else float('inf')
                 reg_accuracy = np.allclose(data_TEWS_old_method, data_TEWS_new_method, atol=1e-10)
                 
-                print(f"Year {year}: TRANSPORT REGULATORY POLICIES - old={time_old_reg*1000:.1f}ms, new={time_new_reg*1000:.1f}ms, speedup={reg_speedup:.1f}x, accurate={reg_accuracy}")
+                #print(f"Year {year}: TRANSPORT REGULATORY POLICIES - old={time_old_reg*1000:.1f}ms, new={time_new_reg*1000:.1f}ms, speedup={reg_speedup:.1f}x, accurate={reg_accuracy}")
                 
                 # Use the new method result
                 data['TEWS'] = data_TEWS_new_method

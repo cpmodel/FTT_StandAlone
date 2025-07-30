@@ -543,7 +543,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Shares equation
             # =================================================================
             # Speed comparison between new and original power shares implementation
-            if (year+1) % 10 == 0 and t == 1:  # Test every 10 years to avoid too much output
+            if year in [histend['MEWG'] + 1, 2050] and t == 1:  # Test every 10 years to avoid too much output
                 import time as timing_module
                 
                 # Test original shares function
@@ -559,7 +559,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 
                 # Test original shares function
                 start_time = timing_module.time()
-                change_in_shares = shares_change(dt, t, valid_regions,
+                change_in_shares = shares_change(dt, valid_regions,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], 
                                             data['MEWA'] / T_Scal, isReg, 
@@ -577,13 +577,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 accuracy_shares_jitted = np.allclose(endo_shares_old, endo_shares_jitted, atol=1e-10)
 
                 
-                print(f"Year {year}: Power shares - old={time_old*1000:.1f}ms, jitted={time_jitted*1000:.1f}ms, speedup={speedup_jitted:.1f}x, accurate={accuracy_shares_jitted}")
-
+                print(f"\nYear {year}: POWER SHARES - old={time_old*1000:.1f}ms, jitted={time_jitted*1000:.1f}ms, speedup={speedup_jitted:.1f}x, accurate={accuracy_shares_jitted}")
                 
                 # Use the new implementation for this test year
                 endo_shares = endo_shares_jitted
             else:
-                change_in_shares = shares_change(dt, t, valid_regions,
+                change_in_shares = shares_change(dt, valid_regions,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], 
                                             data['MEWA'] / T_Scal, isReg, 

@@ -255,7 +255,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
             
             # Speed comparison between new vectorized shares and original heat shares
-            if year == histend['HEWF'] + 1 and t in [1, 2]:  # Test first year of simulation at t in [1,2]
+            if year in [histend['HEWF'] + 1, 2050] and t == 1:  # Test first year of simulation at t in [1,2]
                 import time as timing_module
                 
                 # Test original heat shares function (region by region)
@@ -314,11 +314,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 start_time = timing_module.time()
                 change_in_shares = shares_change(
                     dt=dt,
-                    t=t,
                     regions=regions,
                     shares_dt=data_dt["HEWS"], 
-                    costs_dt=data_dt["HGC1"], 
-                    costs_sd_dt=data_dt["HWCD"], 
+                    costs=data_dt["HGC1"], 
+                    costs_sd=data_dt["HWCD"], 
                     subst=data["HEWA"] * data["HETR"], 
                     isReg=isReg,
                     num_regions = len(titles['RTI']),
@@ -338,7 +337,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     max_global_diff = max(max_global_diff, region_max_diff)
                     all_match = all_match and region_match
                 
-                print(f"Year {year}: HEAT NORMAL REPLACEMENTS - old={time_old*1000:.1f}ms, new={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={all_match}, max_diff={max_global_diff:.2e}")
+                print(f"\nYear {year}: HEAT NORMAL REPLACEMENTS - old={time_old*1000:.1f}ms, new={time_new*1000:.1f}ms, speedup={speedup:.1f}x, accurate={all_match}, max_diff={max_global_diff:.2e}")
                 
                 
             else:
@@ -346,11 +345,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if len(regions) > 0:
                     change_in_shares = shares_change(
                         dt=dt,
-                        t=t,
                         regions=regions,
                         shares_dt=data_dt["HEWS"], 
-                        costs_dt=data_dt["HGC1"], 
-                        costs_sd_dt=data_dt["HWCD"], 
+                        costs=data_dt["HGC1"], 
+                        costs_sd=data_dt["HWCD"], 
                         subst=data["HEWA"] * data["HETR"], 
                         isReg=isReg,
                         num_regions = len(titles['RTI']),
@@ -367,7 +365,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Use vectorized premature shares function for all regions with demand
             if len(regions) > 0:
                 # Speed test for premature replacements (same timing as normal replacements)
-                if year == histend['HEWF'] + 1 and t in [1, 2]:  # Test in first year simulation at t in [1,2]
+                if year in [histend['HEWF'] + 1, 2050] and t == 1:  # Test in first year simulation at t in [1,2]
                     import time as timing_module
                     
                     # Test original premature replacements function (region by region)
@@ -430,10 +428,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     changes_in_shares_prem_repl = shares_premature(
                         dt=dt,
                         shares_dt=data_dt["HEWS"], 
-                        costs_m_dt=data_dt["HGC2"],  # Marginal costs (HGC2)
-                        costs_m_sd_dt=data_dt["HGD2"],  # SD Marginal costs (HGD2)
-                        costs_p_dt=data_dt["HGC3"],  # Payback costs (HGC3)
-                        costs_p_sd_dt=data_dt["HGD3"],  # SD Payback costs (HGD3)
+                        costs_marg=data_dt["HGC2"],  # Marginal costs (HGC2)
+                        costs_marg_sd=data_dt["HGD2"],  # SD Marginal costs (HGD2)
+                        costs_payb=data_dt["HGC3"],  # Payback costs (HGC3)
+                        costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
                         scrappage_rate=SR_all,
                         subst=data["HEWA"],
                         isReg=isReg, 
@@ -462,10 +460,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     changes_in_shares_prem_repl = shares_premature(
                         dt=dt,
                         shares_dt=data_dt["HEWS"], 
-                        costs_m_dt=data_dt["HGC2"],  # Marginal costs (HGC2)
-                        costs_m_sd_dt=data_dt["HGD2"],  # SD Marginal costs (HGD2)
-                        costs_p_dt=data_dt["HGC3"],  # Payback costs (HGC3)
-                        costs_p_sd_dt=data_dt["HGD3"],  # SD Payback costs (HGD3)
+                        costs_marg=data_dt["HGC2"],  # Marginal costs (HGC2)
+                        costs_marg_sd=data_dt["HGD2"],  # SD Marginal costs (HGD2)
+                        costs_payb=data_dt["HGC3"],  # Payback costs (HGC3)
+                        costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
                         scrappage_rate=SR_all,
                         subst=data["HEWA"],
                         isReg=isReg, 
