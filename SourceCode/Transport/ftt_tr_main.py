@@ -243,7 +243,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Skip regions for which more recent data is available or with zero demand            
             regions = np.where((rfltt > 0) & (data['TDA1'][:, 0, 0] < year))[0]
 
-            # Speed comparison between new vectorized shares and original shares_transport
+            # Speed comparison between new jitted shares and original shares_transport
             if year % 10 == 0 and t==no_it:  # Test every 10 years to avoid too much output
                 import time as timing_module
                 
