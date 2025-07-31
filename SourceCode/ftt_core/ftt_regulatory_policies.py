@@ -115,7 +115,7 @@ def implement_regulatory_policies(endo_shares, endo_capacity, regions, shares,
         Share of investment in a certain technology stopped (num_regions, num_techs).
     demand : ndarray
         Current demand (num_regions,)
-    demand : ndarray
+    demand_dt : ndarray
         Demand in previous timestep (num_regions,)
     no_it : int
         Number of time iterations
