@@ -37,7 +37,6 @@ import time
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
-from SourceCode.ftt_core.ftt_regulatory_policies import implement_regulatory_policies
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
@@ -295,58 +294,44 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
                 endo_capacity = endo_shares * rfltt[:, np.newaxis]
 
-            # Test vectorized regulatory policies function against old implementation
-            if year % 10 == 0 and t==no_it:  # Test every 10 years
-                import time as timing_module
+            
+            # Implement exogenous sales and correct for stretching
+            for r in regions:
+                if r < len(titles['RTI']):  # Safety check
+                    dUkTK = np.zeros([len(titles['VTTI'])])
+                    dUkREG = np.zeros([len(titles['VTTI'])])
+                    TWSA_scalar = 1.0
+                    
+                    # Check that exogenous sales additions aren't too large
+                    # As a proxy it can't be greater than 80% of the fleet size
+                    # divided by 13 (the average lifetime of vehicles)
+                    if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
+                        TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
                 
-                # Store old TEWS for comparison
-                data_TEWS_before_reg = np.copy(data['TEWS'])
-                
-                # Test old loop-based implementation (for comparison)
-                start_time = timing_module.time()
-                data_TEWS_old_method = np.copy(data_TEWS_before_reg)
-                for r in regions:
-                    if r < len(titles['RTI']):  # Safety check
-                        dUkTK = np.zeros([len(titles['VTTI'])])
-                        dUkREG = np.zeros([len(titles['VTTI'])])
-                        TWSA_scalar = 1.0
+                    # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                    reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity[r])
+                                   > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
+                    
+                    # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                    dUkTK = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
+                    
+                    # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
+                    # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                    # if rflt (i.e. total demand) had not grown.
+                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfltt[r, np.newaxis]) * reg_constr[r, :].reshape([len(titles['VTTI'])])
+                    
+                    # Sum effect of exogenous sales additions (if any) with effect of regulations.
+                    dUk = dUkTK + dUkREG
+                    dUtot = np.sum(dUk)
+                    
+                    # Calculate changes to endogenous capacity, and use to find new market shares
+                    # Zero capacity will result in zero shares
+                    # All other capacities will be streched
 
-                        if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
-                            TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
-                        
-                        reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity[r])
-                                       > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
+                    data['TEWS'][r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
+            
+                
 
-                        dUkTK = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
-                        dUkREG = -(endo_capacity[r] - endo_shares[r] * rfltt[r, np.newaxis]) * reg_constr[r, :].reshape([len(titles['VTTI'])])
-
-                        dUk = dUkTK + dUkREG
-                        dUtot = np.sum(dUk)
-
-                        data_TEWS_old_method[r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
-                
-                time_old_reg = timing_module.time() - start_time
-                
-                # Test new vectorized implementation
-                start_time = timing_module.time()
-                data_TEWS_new_method = implement_regulatory_policies(endo_shares, endo_capacity, regions,
-                                              data_TEWS_before_reg, data['TWSA'], data['TREG'], reg_constr,
-                                              rfltt, rfllt, no_it, data['BTTC'][:, :, c3ti['8 lifetime']])
-                time_new_reg = timing_module.time() - start_time
-                
-                # Compare results
-                reg_speedup = time_old_reg / time_new_reg if time_new_reg > 0 else float('inf')
-                reg_accuracy = np.allclose(data_TEWS_old_method, data_TEWS_new_method, atol=1e-10)
-                
-                #print(f"Year {year}: TRANSPORT REGULATORY POLICIES - old={time_old_reg*1000:.1f}ms, new={time_new_reg*1000:.1f}ms, speedup={reg_speedup:.1f}x, accurate={reg_accuracy}")
-                
-                # Use the new method result
-                data['TEWS'] = data_TEWS_new_method
-            else:
-                # Normal operation - just use the vectorized regulatory policies
-                data['TEWS'] = implement_regulatory_policies(endo_shares, endo_capacity, regions,
-                                          data['TEWS'], data['TWSA'], data['TREG'], reg_constr,
-                                          rfltt, rfllt, no_it, data['BTTC'][:, :, c3ti['8 lifetime']])
 
 
             # Raise error if there are negative values 
