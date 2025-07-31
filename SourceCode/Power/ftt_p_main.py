@@ -486,11 +486,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
         np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0],
                   out=division, where=data['MEWR'][:, :, 0] > 0)
-        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
        
 
-        isReg[data['MEWR'][:, :, 0] == 0.0] = 1.0
-        isReg[data['MEWR'][:, :, 0] == -1.0] = 0.0
+        reg_constr[data['MEWR'][:, :, 0] == 0.0] = 1.0
+        reg_constr[data['MEWR'][:, :, 0] == -1.0] = 0.0
 
         # Call the survival function routine.
 #        data = survival_function(data, time_lag, histend, year, titles)
@@ -552,7 +552,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], 
                                             data_dt['MES1'], data_dt['MES2'],
-                                            data['MEWA'], isReg, 
+                                            data['MEWA'], reg_constr, 
                                             len(titles['RTI']), len(titles['T2TI']), no_it, year)
                 time_old = timing_module.time() - start_time
                 
@@ -562,7 +562,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 change_in_shares = shares_change(dt, valid_regions,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], 
-                                            data['MEWA'] / T_Scal, isReg, 
+                                            data['MEWA'] / T_Scal, reg_constr, 
                                             len(titles['RTI']), len(titles['T2TI']),
                                             upper_limit=data_dt['MES1'],
                                             lower_limit=data_dt['MES2'],
@@ -585,7 +585,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 change_in_shares = shares_change(dt, valid_regions,
                                             data_dt['MEWS'], data_dt['METC'],
                                             data_dt['MTCD'], 
-                                            data['MEWA'] / T_Scal, isReg, 
+                                            data['MEWA'] / T_Scal, reg_constr, 
                                             len(titles['RTI']), len(titles['T2TI']),
                                             upper_limit=data_dt['MES1'],
                                             lower_limit=data_dt['MES2'],
@@ -596,7 +596,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             mews, mewl, mewg, mewk = policies_old(len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
                                                   data['MWLO'], time_lag['MEWS'],
                                                   endo_shares, MEWDt,  data_dt['MEWK'],
-                                                  isReg, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
+                                                  reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
             
             
             
@@ -837,11 +837,11 @@ def test_shares_comparison(data, time_lag, titles, domain, year, histend):
     # Get regulation array
     rti = len(titles['RTI'])
     t2ti = len(titles['T2TI'])
-    isReg = np.zeros((rti, t2ti))
+    reg_constr = np.zeros((rti, t2ti))
     for reg_tech in titles['REGTECH']:
         if reg_tech in titles['T2TI']:
             tech_idx = titles['T2TI'].index(reg_tech)
-            isReg[:, tech_idx] = 1.0
+            reg_constr[:, tech_idx] = 1.0
     
     # Test different scenarios
     test_scenarios = [(10, "Every 10 years"), (20, "Every 20 years"), (1, "Every year")]
@@ -864,7 +864,7 @@ def test_shares_comparison(data, time_lag, titles, domain, year, histend):
             start_time = time.time()
             mews_old, mewl_old, mewg_old, mewk_old = shares_original(
                 dt, t, T_Scal, MEWDt, mews_dt, metc_dt, mtcd_dt,
-                mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
+                mwka, mes1_dt, mes2_dt, mewa, reg_constr, mewk_dt, mewk_lag, mewr,
                 mewl_dt, mews_lag, mwlo, rti, t2ti, no_it
             )
             time_old = time.time() - start_time
@@ -874,7 +874,7 @@ def test_shares_comparison(data, time_lag, titles, domain, year, histend):
             start_time = time.time()
             mews_new, mewl_new, mewg_new, mewk_new = shares_generic_wrapper(
                 dt, t, T_Scal, MEWDt, mews_dt, metc_dt, mtcd_dt,
-                mwka, mes1_dt, mes2_dt, mewa, isReg, mewk_dt, mewk_lag, mewr,
+                mwka, mes1_dt, mes2_dt, mewa, reg_constr, mewk_dt, mewk_lag, mewr,
                 mewl_dt, mews_lag, mwlo, rti, t2ti, no_it
             )
             time_new = time.time() - start_time

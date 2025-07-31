@@ -218,9 +218,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Create the regulation variable
         division = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
                           [:, :, 0]), data['TREG'][:, :, 0])  # 0 when dividing by 0
-        isReg = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
-        isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
-        isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
+        reg_constr = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
+        reg_constr[data['TREG'][:, :, 0] == 0.0] = 1.0
+        reg_constr[data['TREG'][:, :, 0] == -1.0] = 0.0
 
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
@@ -249,7 +249,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 
                 # Test original shares_transport function
                 start_time = timing_module.time()
-                endo_shares_old, endo_capacity_old = shares_transport(data_dt, data, year, rfltt, isReg, titles, c3ti, dt)
+                endo_shares_old, endo_capacity_old = shares_transport(data_dt, data, year, rfltt, reg_constr, titles, c3ti, dt)
                 time_old = timing_module.time() - start_time
                                 
                 
@@ -258,7 +258,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 change_in_shares = shares_change(
                     dt, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
                     data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
-                    isReg, len(titles['RTI']), len(titles['VTTI'])
+                    reg_constr, len(titles['RTI']), len(titles['VTTI'])
                 )
                 endo_shares_jit = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
                 endo_shares_jit[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
@@ -276,7 +276,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 change_in_shares = shares_change(
                     dt, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
                     data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
-                    isReg, len(titles['RTI']), len(titles['VTTI'])
+                    reg_constr, len(titles['RTI']), len(titles['VTTI'])
                 )
                 endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
                 endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
@@ -305,7 +305,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                        > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
 
                         dUkTK = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
-                        dUkREG = -(endo_capacity[r] - endo_shares[r] * rfltt[r, np.newaxis]) * isReg[r, :].reshape([len(titles['VTTI'])])
+                        dUkREG = -(endo_capacity[r] - endo_shares[r] * rfltt[r, np.newaxis]) * reg_constr[r, :].reshape([len(titles['VTTI'])])
 
                         dUk = dUkTK + dUkREG
                         dUtot = np.sum(dUk)
@@ -317,7 +317,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Test new vectorized implementation
                 start_time = timing_module.time()
                 data_TEWS_new_method = implement_regulatory_policies(endo_shares, endo_capacity, regions,
-                                              data_TEWS_before_reg, data['TWSA'], data['TREG'], isReg,
+                                              data_TEWS_before_reg, data['TWSA'], data['TREG'], reg_constr,
                                               rfltt, rfllt, no_it, data['BTTC'][:, :, c3ti['8 lifetime']])
                 time_new_reg = timing_module.time() - start_time
                 
@@ -332,7 +332,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             else:
                 # Normal operation - just use the vectorized regulatory policies
                 data['TEWS'] = implement_regulatory_policies(endo_shares, endo_capacity, regions,
-                                          data['TEWS'], data['TWSA'], data['TREG'], isReg,
+                                          data['TEWS'], data['TWSA'], data['TREG'], reg_constr,
                                           rfltt, rfllt, no_it, data['BTTC'][:, :, c3ti['8 lifetime']])
 
 

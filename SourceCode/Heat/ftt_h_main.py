@@ -233,9 +233,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
-        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
-        isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
-        isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr[data['HREG'][:, :, 0] == 0.0] = 1.0
+        reg_constr[data['HREG'][:, :, 0] == -1.0] = 0.0
     
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
@@ -292,10 +292,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                                        - data_dt['HGC1'][r, b1, 0]) / dFik))
 
                             # Original regulation adjustment
-                            F[b1, b2] = Fik * (1.0 - isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2] \
-                                        * (1.0 - isReg[r, b1]) + 0.5 * (isReg[r, b1] * isReg[r, b2])
-                            F[b2, b1] = (1.0 - Fik) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
-                                        * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
+                            F[b1, b2] = Fik * (1.0 - reg_constr[r, b1]) * (1.0 - reg_constr[r, b2]) + reg_constr[r, b2] \
+                                        * (1.0 - reg_constr[r, b1]) + 0.5 * (reg_constr[r, b1] * reg_constr[r, b2])
+                            F[b2, b1] = (1.0 - Fik) * (1.0 - reg_constr[r, b2]) * (1.0 - reg_constr[r, b1]) + reg_constr[r, b1] \
+                                        * (1.0 - reg_constr[r, b2]) + 0.5 * (reg_constr[r, b2] * reg_constr[r, b1])
 
                             # Original RK4 integration
                             k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
@@ -319,7 +319,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     costs=data_dt["HGC1"], 
                     costs_sd=data_dt["HWCD"], 
                     subst=data["HEWA"] * data["HETR"], 
-                    isReg=isReg,
+                    reg_constr=reg_constr,
                     num_regions = len(titles['RTI']),
                     num_techs = len(titles['HTTI']),
                 )
@@ -350,7 +350,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         costs=data_dt["HGC1"], 
                         costs_sd=data_dt["HWCD"], 
                         subst=data["HEWA"] * data["HETR"], 
-                        isReg=isReg,
+                        reg_constr=reg_constr,
                         num_regions = len(titles['RTI']),
                         num_techs = len(titles['HTTI']),
                     )
@@ -406,8 +406,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                                 FEki = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b1, 0]-data_dt['HGC3'][r, b2, 0])/dFEki))
 
                                 # Original regulation adjustment for premature
-                                FE[b1, b2] = FEik*(1.0-isReg[r, b1])
-                                FE[b2, b1] = FEki*(1.0-isReg[r, b2])
+                                FE[b1, b2] = FEik*(1.0-reg_constr[r, b1])
+                                FE[b2, b1] = FEki*(1.0-reg_constr[r, b2])
 
                                 # Original RK4 integration for premature
                                 kE_1 = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR_all[r, b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR_all[r, b1])
@@ -434,7 +434,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
                         scrappage_rate=SR_all,
                         subst=data["HEWA"],
-                        isReg=isReg, 
+                        reg_constr=reg_constr, 
                         regions=regions,
                         num_regions = len(titles['RTI']),
                         num_techs = len(titles['HTTI']),
@@ -466,7 +466,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
                         scrappage_rate=SR_all,
                         subst=data["HEWA"],
-                        isReg=isReg, 
+                        reg_constr=reg_constr, 
                         regions=regions,
                         num_regions = len(titles['RTI']),
                         num_techs = len(titles['HTTI']),
@@ -525,7 +525,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * isReg[r, :].reshape([len(titles['HTTI'])])
+                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * reg_constr[r, :].reshape([len(titles['HTTI'])])
                      
 
                 # Sum effect of exogenous sales additions (if any) with
