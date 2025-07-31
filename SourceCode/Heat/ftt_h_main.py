@@ -432,8 +432,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         costs_marg_sd=data_dt["HGD2"],  # SD Marginal costs (HGD2)
                         costs_payb=data_dt["HGC3"],  # Payback costs (HGC3)
                         costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
-                        scrappage_rate=SR_all,
-                        subst=data["HEWA"],
+                        #scrappage_rate=SR_all,
+                        subst=data["HEWA"] * SR_all[:, :, np.newaxis],
                         reg_constr=reg_constr, 
                         regions=regions,
                         num_regions = len(titles['RTI']),
@@ -464,8 +464,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         costs_marg_sd=data_dt["HGD2"],  # SD Marginal costs (HGD2)
                         costs_payb=data_dt["HGC3"],  # Payback costs (HGC3)
                         costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
-                        scrappage_rate=SR_all,
-                        subst=data["HEWA"],
+                        #scrappage_rate=SR_all,
+                        subst=data["HEWA"] * SR_all[:, :, np.newaxis],
                         reg_constr=reg_constr, 
                         regions=regions,
                         num_regions = len(titles['RTI']),

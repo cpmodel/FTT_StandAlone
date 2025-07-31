@@ -199,7 +199,7 @@ def shares_premature(
     shares_dt,
     costs_marg, costs_marg_sd,
     costs_payb, costs_payb_sd,
-    scrappage_rate, subst, reg_constr,
+    subst, reg_constr,
     num_regions, num_techs
     ):
     
@@ -244,8 +244,7 @@ def shares_premature(
         for tech_i in range(num_techs):
             if not (shares_dt[r, tech_i, 0] > 0.0 and
                     costs_marg[r, tech_i, 0] != 0.0 and
-                    costs_payb[r, tech_i, 0] != 0.0 and
-                    scrappage_rate[r, tech_i] > 0.0):
+                    costs_payb[r, tech_i, 0] != 0.0):
                 continue
     
             S_i = shares_dt[r, tech_i, 0]
@@ -253,8 +252,7 @@ def shares_premature(
             for tech_j in range(tech_i):
                 if not (shares_dt[r, tech_j, 0] > 0.0 and
                         costs_marg[r, tech_j, 0] != 0.0 and
-                        costs_payb[r, tech_j, 0] != 0.0 and
-                        scrappage_rate[r, tech_j] > 0.0):
+                        costs_payb[r, tech_j, 0] != 0.0):
                     continue
     
                 S_j = shares_dt[r, tech_j, 0]
@@ -273,8 +271,9 @@ def shares_premature(
                 F[tech_j, tech_i] = Fij * (1.0 - reg_constr[r, tech_i])
                 F[tech_i, tech_j] = Fji * (1.0 - reg_constr[r, tech_j])
                 
-                delta_AFG = (subst[0, tech_i, tech_j] * F[tech_j, tech_i] * scrappage_rate[r, tech_j]
-                           - subst[0, tech_j, tech_i] * F[tech_i, tech_j] * scrappage_rate[r, tech_i])
+                
+                delta_AFG = (subst[r, tech_i, tech_j] * F[tech_j, tech_i]
+                           - subst[r, tech_j, tech_i] * F[tech_i, tech_j])
                 
                 # Change in shares = S_i * S_j * delta_AFG
                 dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt)
