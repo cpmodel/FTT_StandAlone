@@ -557,16 +557,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 time_old = timing_module.time() - start_time
                 
                 
-                # Test original shares function
+                # The core FTT equations, taking into account old shares, costs and regulations
                 start_time = timing_module.time()
-                change_in_shares = shares_change(dt, valid_regions,
-                                            data_dt['MEWS'], data_dt['METC'],
-                                            data_dt['MTCD'], 
-                                            data['MEWA'] / T_Scal, reg_constr, 
-                                            len(titles['RTI']), len(titles['T2TI']),
-                                            upper_limit=data_dt['MES1'],
-                                            lower_limit=data_dt['MES2'],
-                                            limits_active=True)
+                change_in_shares = shares_change(
+                    dt=dt,
+                    regions=valid_regions,
+                    shares_dt=data_dt['MEWS'],
+                    costs=data_dt['METC'],
+                    costs_sd=data_dt['MTCD'],
+                    subst=data['MEWA'] / T_Scal,
+                    reg_constr=reg_constr,
+                    num_regions=len(titles['RTI']),
+                    num_techs=len(titles['T2TI']),
+                    upper_limit=data_dt['MES1'],
+                    lower_limit=data_dt['MES2'],
+                    limits_active=True)
                 endo_shares_jitted = data_dt['MEWS'][:, :, 0] + change_in_shares
                 time_jitted = timing_module.time() - start_time
                 
@@ -582,14 +587,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Use the new implementation for this test year
                 endo_shares = endo_shares_jitted
             else:
-                change_in_shares = shares_change(dt, valid_regions,
-                                            data_dt['MEWS'], data_dt['METC'],
-                                            data_dt['MTCD'], 
-                                            data['MEWA'] / T_Scal, reg_constr, 
-                                            len(titles['RTI']), len(titles['T2TI']),
-                                            upper_limit=data_dt['MES1'],
-                                            lower_limit=data_dt['MES2'],
-                                            limits_active=True)
+                # The core FTT equations, taking into account old shares, costs and regulations
+                change_in_shares = shares_change(
+                    dt=dt,
+                    regions=valid_regions,
+                    shares_dt=data_dt['MEWS'],
+                    costs=data_dt['METC'],
+                    costs_sd=data_dt['MTCD'],
+                    subst=data['MEWA'] / T_Scal,
+                    reg_constr=reg_constr,
+                    num_regions=len(titles['RTI']),
+                    num_techs=len(titles['T2TI']),
+                    upper_limit=data_dt['MES1'],
+                    lower_limit=data_dt['MES2'],
+                    limits_active=True)
                 endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
             
             

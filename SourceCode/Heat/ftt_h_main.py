@@ -428,11 +428,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     changes_in_shares_prem_repl = shares_premature(
                         dt=dt,
                         shares_dt=data_dt["HEWS"], 
-                        costs_marg=data_dt["HGC2"],  # Marginal costs (HGC2)
-                        costs_marg_sd=data_dt["HGD2"],  # SD Marginal costs (HGD2)
-                        costs_payb=data_dt["HGC3"],  # Payback costs (HGC3)
-                        costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
-                        #scrappage_rate=SR_all,
+                        costs_marg=data_dt["HGC2"],         # Marginal costs (HGC2)
+                        costs_marg_sd=data_dt["HGD2"],      # SD Marginal costs (HGD2)
+                        costs_payb=data_dt["HGC3"],         # Payback costs (HGC3)
+                        costs_payb_sd=data_dt["HGD3"],      # SD Payback costs (HGD3)
                         subst=data["HEWA"] * SR_all[:, :, np.newaxis],
                         reg_constr=reg_constr, 
                         regions=regions,
@@ -460,11 +459,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     changes_in_shares_prem_repl = shares_premature(
                         dt=dt,
                         shares_dt=data_dt["HEWS"], 
-                        costs_marg=data_dt["HGC2"],  # Marginal costs (HGC2)
-                        costs_marg_sd=data_dt["HGD2"],  # SD Marginal costs (HGD2)
-                        costs_payb=data_dt["HGC3"],  # Payback costs (HGC3)
-                        costs_payb_sd=data_dt["HGD3"],  # SD Payback costs (HGD3)
-                        #scrappage_rate=SR_all,
+                        costs_marg=data_dt["HGC2"],         # Marginal costs (HGC2)
+                        costs_marg_sd=data_dt["HGD2"],      # SD Marginal costs (HGD2)
+                        costs_payb=data_dt["HGC3"],         # Payback costs (HGC3)
+                        costs_payb_sd=data_dt["HGD3"],      # SD Payback costs (HGD3)
                         subst=data["HEWA"] * SR_all[:, :, np.newaxis],
                         reg_constr=reg_constr, 
                         regions=regions,
@@ -472,7 +470,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                         num_techs = len(titles['HTTI']),
                     )
 
-            # calculate temporary market shares and temporary capacity from endogenous results
+            # Calculate endogenous market shares from changes
             endo_shares = data_dt['HEWS'][:, :, 0] + change_in_shares + changes_in_shares_prem_repl
             
             for r in range(len(titles['RTI'])):

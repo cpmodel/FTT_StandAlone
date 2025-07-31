@@ -256,9 +256,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # Test jitted shares function
                 start_time = timing_module.time()
                 change_in_shares = shares_change(
-                    dt, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
-                    data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
-                    reg_constr, len(titles['RTI']), len(titles['VTTI'])
+                    dt=dt,
+                    regions=regions,
+                    shares_dt=data_dt["TEWS"],
+                    costs=data_dt["TELC"],
+                    costs_sd=data_dt["TLCD"],
+                    subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
+                    reg_constr=reg_constr,
+                    num_regions=len(titles['RTI']),
+                    num_techs=len(titles['VTTI'])
                 )
                 endo_shares_jit = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
                 endo_shares_jit[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
@@ -273,10 +279,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 print(f"\nYear {year}: TRANSPORT SHARES - old={time_old*1000:.1f}ms, new={time_jit*1000:.1f}ms, speedup={speedup_jit:.1f}x, accurate={accuracy_jit}")
                 
             else:
+                # The core FTT equations, taking into account old shares, costs and regulations
                 change_in_shares = shares_change(
-                    dt, regions, data_dt["TEWS"], data_dt["TELC"], data_dt["TLCD"],
-                    data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
-                    reg_constr, len(titles['RTI']), len(titles['VTTI'])
+                    dt=dt,
+                    regions=regions,
+                    shares_dt=data_dt["TEWS"],
+                    costs=data_dt["TELC"],
+                    costs_sd=data_dt["TLCD"],
+                    subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
+                    reg_constr=reg_constr,
+                    num_regions=len(titles['RTI']),
+                    num_techs=len(titles['VTTI'])
                 )
                 endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
                 endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
