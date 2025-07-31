@@ -9,10 +9,13 @@ Two versions of the shares equation are included in the file.
 2. The shares equation for premature replacements as described in Knobloch (2017)
 """
 
-import numpy as np
-from numba import njit
 from math import sqrt
 
+import numpy as np
+from numba import njit
+
+# Parameter to approximate the cumulative distribution function of the cost comparison
+CDF_APPROX = 1.25 / sqrt(2) 
 
 def shares_change(
     dt, regions,
@@ -23,17 +26,18 @@ def shares_change(
     ):
     '''This is a wrapper function for the jitted shares function. We want
     to always give the same types into the function for rapid compile'''
-    
+
     if not limits_active:
         upper_limit = np.empty((num_regions, num_techs, 1))
         lower_limit = np.empty((num_regions, num_techs, 1))
-    
+
     change_in_shares = shares_change_jitted(dt, regions, shares_dt, costs, costs_sd,
                subst, reg_constr, num_regions, num_techs,
                upper_limit, lower_limit, limits_active)
-    
+
     return change_in_shares
-    
+
+
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True, cache=True)
 def shares_change_jitted(
@@ -52,7 +56,7 @@ def shares_change_jitted(
     Parameters
     ----------
     dt : float
-        The time step size.
+        Time step size
     shares_dt, costs, costs_sd : ndarray
         Shares and cost arrays used in the calculation of market shares. 
     subst, reg_constr : ndarray
@@ -87,9 +91,10 @@ def shares_change_jitted(
         # Market share constraints (if any)
         Gijmax = np.ones((num_techs))
         Gijmin = np.ones((num_techs))
+        
 
         for tech_i in range(num_techs):
-            
+
             S_i = shares_dt[r, tech_i, 0]
             if not (S_i > 0.0 and
                     costs[r, tech_i, 0] != 0.0):
@@ -107,11 +112,12 @@ def shares_change_jitted(
                     continue
 
                 # Propagating width of variations in perceived costs
-                dFij = np.sqrt(2) * np.sqrt(costs_sd[r, tech_i, 0] * costs_sd[r, tech_i, 0]
-                                          + costs_sd[r, tech_j, 0] * costs_sd[r, tech_j, 0])
+                dFij = np.sqrt(  costs_sd[r, tech_i, 0] * costs_sd[r, tech_i, 0]
+                               + costs_sd[r, tech_j, 0] * costs_sd[r, tech_j, 0])
 
-                # Consumer preference incl. uncertainty
-                Fij = 0.5 * (1 + np.tanh(1.25 * (costs[r, tech_j, 0] - costs[r, tech_i, 0]) / dFij))
+                # Consumer preference incl. uncertainty.
+                # ERF is approximated with tanh, using the CDF_APPROX of 1.25/sqrt(2)
+                Fij = 0.5 * (1 + np.tanh(CDF_APPROX * (costs[r, tech_j, 0] - costs[r, tech_i, 0]) / dFij))
 
                 # Adjust preferences for regulated constraints
                 F[tech_i, tech_j], F[tech_j, tech_i] = _apply_regulation_adjustment(
@@ -136,7 +142,7 @@ def shares_change_jitted(
     return dSij_sum
 
 
-# Jit-in-time compilation. Comment this line out if you need to debug *in* the function 
+# Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True, inline='always')
 def _apply_regulation_adjustment(Fij, Fji, reg_i, reg_j):
     """
@@ -162,17 +168,17 @@ def _apply_regulation_adjustment(Fij, Fji, reg_i, reg_j):
         Preferences adjusted for regulation effects
     """
     
-    # i→j preference with regulation adjustment  
+    # i→j preference with regulation adjustment
     Fij_reg = (Fji * (1.0 - reg_j) * (1.0 - reg_i)    # Base preference term
                + reg_i * (1.0 - reg_j)                # i blocked → favor j
                + 0.5 * (reg_j * reg_i))               # Both blocked → neutral
     
     # j→i preference with regulation adjustment
     Fji_reg = (Fij * (1.0 - reg_i) * (1.0 - reg_j)    # Base preference term
-               + reg_j * (1.0 - reg_i)                # j blocked → favor i  
+               + reg_j * (1.0 - reg_i)                # j blocked → favor i
                + 0.5 * (reg_i * reg_j))               # Both blocked → neutral
     
-    return Fij_reg, Fji_reg   
+    return Fij_reg, Fji_reg
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
@@ -210,7 +216,7 @@ def shares_premature(
     Parameters
     ----------
     dt : float
-        The time step size.
+        Time step size
     shares_dt costs, costs_sd : ndarray
         Shares in previous timestep
     costs_marg, costs_marg_sd : ndarray
@@ -258,13 +264,14 @@ def shares_premature(
                 S_j = shares_dt[r, tech_j, 0]
     
                 # Original premature replacement calculations
-                dFij = 1.414 * sqrt((costs_payb_sd[r, tech_i, 0] * costs_payb_sd[r, tech_i, 0]
-                                   + costs_marg_sd[r, tech_j, 0] * costs_marg_sd[r, tech_j, 0]))
-                dFji = 1.414 * sqrt((costs_marg_sd[r, tech_i, 0] * costs_marg_sd[r, tech_i, 0]
-                                   + costs_payb_sd[r, tech_j, 0] * costs_payb_sd[r, tech_j, 0]))
-    
-                Fij = 0.5 * (1 + np.tanh(1.25 * (costs_marg[r, tech_j, 0] - costs_payb[r, tech_i, 0]) / dFij))
-                Fji = 0.5 * (1 + np.tanh(1.25 * (costs_marg[r, tech_i, 0] - costs_payb[r, tech_j, 0]) / dFji))
+                dFij = sqrt(  costs_payb_sd[r, tech_i, 0] * costs_payb_sd[r, tech_i, 0]
+                            + costs_marg_sd[r, tech_j, 0] * costs_marg_sd[r, tech_j, 0])
+                dFji = sqrt(  costs_marg_sd[r, tech_i, 0] * costs_marg_sd[r, tech_i, 0]
+                            + costs_payb_sd[r, tech_j, 0] * costs_payb_sd[r, tech_j, 0])
+                
+                # ERF is approximated with tanh, using the CDF_APPROX of 1.25/sqrt(2)
+                Fij = 0.5 * (1 + np.tanh(CDF_APPROX * (costs_marg[r, tech_j, 0] - costs_payb[r, tech_i, 0]) / dFij))
+                Fji = 0.5 * (1 + np.tanh(CDF_APPROX * (costs_marg[r, tech_i, 0] - costs_payb[r, tech_j, 0]) / dFji))
     
                 # Original regulation adjustment for premature replacements
                 # TODO: replace these with the correct adjustments for preferences
