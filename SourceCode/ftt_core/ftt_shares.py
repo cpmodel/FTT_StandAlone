@@ -58,9 +58,11 @@ def shares_change_jitted(
     dt : float
         Time step size
     shares_dt, costs, costs_sd : ndarray
-        Shares and cost arrays used in the calculation of market shares. 
-    subst, reg_constr : ndarray
-        Substitution matrix (determines speed) and regulation (to slow growth)
+        Shares, costs and standard deviation of costs at previous timestep
+    subst, 
+        Substitution matrix (determines speed), called Aij in paper
+    reg_constr : ndarray
+        Regulatory constraints: stops share changes to this tech
     num_regions, num_techs : int
         Number of regions and technologies
     upper_limit_dt, lower_limit_dt : ndarray
