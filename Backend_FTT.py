@@ -132,6 +132,7 @@ def run_model():
     yield("data: items;{};\n".format(len(scenarios) * (int(endyear) - model.timeline[0] + 1)))
 
     scenarios_log = {}
+    total_elapsed_time = 0
     for scenario in scenarios:
 
         start_time = time.time()
@@ -141,6 +142,8 @@ def run_model():
         try:
             #Solve the model for each year
             for year_index, year in enumerate(model.timeline):
+                year_start_time = time.time()  # Time this specific year
+                
                 model.variables, model.lags = model.solve_year(year,year_index,scenario)
 
                 # Populate output container
@@ -150,10 +153,9 @@ def run_model():
                     else:
                         model.output[scenario][var][:, :, :, 0] = model.variables[var]
 
-                elapsed_time = time.time() - start_time
+                year_elapsed_time = time.time() - year_start_time  # Time for this year only
                 yield("event: processing\n")
-                yield("data: progress;{}; \n".format(year))
-                yield("data: elapsed;{} \n\n".format(elapsed_time))
+                yield("data: progress;{};{};{} \n\n".format(year, "", year_elapsed_time))
 
                 message = 'done'
         except (KeyError, FileNotFoundError) as e:
@@ -167,9 +169,16 @@ def run_model():
         # Update scenario log
         scenarios_log[scenario] = {}
         scenarios_log[scenario]['run'] = datetime.datetime.timestamp(datetime.datetime.now())
-        scenarios_log[scenario]['description'] = "Test Scenario, provided by Cambridge Econometrics"
+        if scenario == "S0":
+            scenarios_log[scenario]['description'] = "Baseline scenario (S0) with limited policies"
+        else:
+            scenarios_log[scenario]['description'] = f"Policy scenario {scenario}"
         scenarios_log[scenario]['years'] = [str(x) for x in model.timeline]
         print(scenarios_log)
+
+        # Calculate total elapsed time for this scenario and add to overall total
+        scenario_elapsed_time = time.time() - start_time
+        total_elapsed_time += scenario_elapsed_time
 
     run_entries_cache = {}
     # Save output for all scenarios to pickle
@@ -194,7 +203,7 @@ def run_model():
         yield("data: finished_w_errors\n\n")
     else:
         yield("event: processing\n")
-        yield(f"data: message;message:Finished processing scenarios in {elapsed_time:.2f} s; \n\n")
+        yield(f"data: message;message:Finished processing scenarios in {total_elapsed_time:.2f} s; \n\n")
         yield("event: status_change\n")
         yield("data: finished\n\n")
 
@@ -1285,6 +1294,8 @@ def run_model():
         try:
             # Solve the model for each year
             for year_index, year in enumerate(model.timeline):
+                year_start_time = time.time()  # Time this specific year
+                
                 model.variables, model.lags = model.solve_year(year,year_index,scenario)
 
                 # Populate output container
@@ -1294,10 +1305,9 @@ def run_model():
                     else:
                         model.output[scenario][var][:, :, :, 0] = model.variables[var]
 
-                elapsed_time = time.time() - start_time
+                year_elapsed_time = time.time() - year_start_time  # Time for this year only
                 yield("event: processing\n")
-                yield(f"data: progress;{year}; \n")
-                yield(f"data: elapsed;{elapsed_time} \n\n")
+                yield(f"data: progress;{year};;{year_elapsed_time} \n\n")
 
                 message = 'done'
         except (KeyError, FileNotFoundError) as e:
@@ -1329,7 +1339,7 @@ def run_model():
         yield("data: finished_w_errors\n\n")
     else:
         yield("event: processing\n")
-        yield(f"data: message;message:Finished processing scenarios in {elapsed_time:.3f}; \n\n")
+        yield("data: message;message:Finished processing scenarios; \n\n")
         yield("event: status_change\n")
         yield("data: finished\n\n")
 
