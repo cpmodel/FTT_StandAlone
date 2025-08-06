@@ -202,7 +202,7 @@ def _rk4_integration(
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True, cache=True)
-def shares_premature(
+def shares_change_premature(
     dt, regions,
     shares_dt,
     costs_marg, costs_marg_sd,

@@ -60,9 +60,11 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.ftt_core.ftt_shares import shares_change
+
+from SourceCode.support.divide import divide
+from SourceCode.support.check_market_shares import check_market_shares
 
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
@@ -70,7 +72,6 @@ from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
-from SourceCode.Power.ftt_p_shares import shares_original
 from SourceCode.Power.ftt_p_costc import cost_curves
 
 
@@ -541,75 +542,30 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Shares equation
             # =================================================================
-            # Speed comparison between new and original power shares implementation
-            if year in [histend['MEWG'] + 1, 2050] and t == 1:  # Test every 10 years to avoid too much output
-                import time as timing_module
-                
-                # Test original shares function
-                start_time = timing_module.time()
-                endo_shares_old = shares_original(dt, t, T_Scal, MEWDt,
-                                            data_dt['MEWS'], data_dt['METC'],
-                                            data_dt['MTCD'], 
-                                            data_dt['MES1'], data_dt['MES2'],
-                                            data['MEWA'], reg_constr, 
-                                            len(titles['RTI']), len(titles['T2TI']), no_it, year)
-                time_old = timing_module.time() - start_time
-                
-                
-                # The core FTT equations, taking into account old shares, costs and regulations
-                start_time = timing_module.time()
-                change_in_shares = shares_change(
-                    dt=dt,
-                    regions=valid_regions,
-                    shares_dt=data_dt['MEWS'],       # Shares at previous t
-                    costs=data_dt['METC'],           # Costs
-                    costs_sd=data_dt['MTCD'],        # Standard deviation costs
-                    subst=data['MEWA'] / T_Scal,     # Timescale of substitution
-                    reg_constr=reg_constr,           # Constraint due to regulation
-                    num_regions=len(titles['RTI']),  # Number of regions
-                    num_techs=len(titles['T2TI']),   # Number of techs
-                    upper_limit=data_dt['MES1'],     # Any techs with an opper limit
-                    lower_limit=data_dt['MES2'],     # Any techs with a lower limit
-                    limits_active=True)              # Defaults to False
-                
-                endo_shares_jitted = data_dt['MEWS'][:, :, 0] + change_in_shares
-                time_jitted = timing_module.time() - start_time
-                
-                
-               
-                # Calculate speedup and check accuracy
-                speedup_jitted = time_old / time_jitted if time_jitted > 0 else float('inf')
-                accuracy_shares_jitted = np.allclose(endo_shares_old, endo_shares_jitted, atol=1e-10)
 
-                
-                print(f"\nYear {year}: POWER SHARES - old={time_old*1000:.1f}ms, jitted={time_jitted*1000:.1f}ms, speedup={speedup_jitted:.1f}x, accurate={accuracy_shares_jitted}")
-                
-                # Use the new implementation for this test year
-                endo_shares = endo_shares_jitted
-            else:
-                # The core FTT equations, taking into account old shares, costs and regulations
-                change_in_shares = shares_change(
-                    dt=dt,
-                    regions=valid_regions,
-                    shares_dt=data_dt['MEWS'],       # Shares at previous t
-                    costs=data_dt['METC'],           # Costs
-                    costs_sd=data_dt['MTCD'],        # Standard deviation costs
-                    subst=data['MEWA'] / T_Scal,     # Substitution turnover rates
-                    reg_constr=reg_constr,           # Constraint due to regulation
-                    num_regions=len(titles['RTI']),  # Number of regions
-                    num_techs=len(titles['T2TI']),   # Number of techs
-                    upper_limit=data_dt['MES1'],     # Any techs with an opper limit
-                    lower_limit=data_dt['MES2'],     # Any techs with a lower limit
-                    limits_active=True)              # Defaults to False
-                
-                endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
+            # The core FTT equations, taking into account old shares, costs and regulations
+            change_in_shares = shares_change(
+                dt=dt,
+                regions=valid_regions,
+                shares_dt=data_dt['MEWS'],       # Shares at previous t
+                costs=data_dt['METC'],           # Costs
+                costs_sd=data_dt['MTCD'],        # Standard deviation costs
+                subst=data['MEWA'] / T_Scal,     # Substitution turnover rates
+                reg_constr=reg_constr,           # Constraint due to regulation
+                num_regions=len(titles['RTI']),  # Number of regions
+                num_techs=len(titles['T2TI']),   # Number of techs
+                upper_limit=data_dt['MES1'],     # Any techs with an opper limit
+                lower_limit=data_dt['MES2'],     # Any techs with a lower limit
+                limits_active=True)              # Defaults to False
+            
+            endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
             
             
-            mews, mewl, mewg, mewk = policies_old(len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
-                                                  data['MWLO'], time_lag['MEWS'],
-                                                  endo_shares, MEWDt,  data_dt['MEWK'],
-                                                  reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
-            
+            mews, mewl, mewg, mewk = policies_old(
+                len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
+                data['MWLO'], time_lag['MEWS'],
+                endo_shares, MEWDt,  data_dt['MEWK'],
+                reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
             
             
             data['MEWS'] = mews
@@ -617,6 +573,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWG'] = mewg
             data['MEWK'] = mewk
                         
+            # Raise error if there are negative values 
+            # or regional market shares do not add up to one
+            check_market_shares(data['MEWS'], titles, 'FTT-P', year)
             
             # =================================================================
             # Residual load-duration curve

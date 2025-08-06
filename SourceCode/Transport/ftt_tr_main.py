@@ -32,7 +32,6 @@ Functions included:
 
 # Third party imports
 import numpy as np
-import time
 
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
@@ -41,7 +40,6 @@ from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
 
-from SourceCode.Transport.ftt_tr_shares import shares_transport
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
@@ -241,58 +239,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
             # Skip regions for which more recent data is available or with zero demand            
             regions = np.where((rfltt > 0) & (data['TDA1'][:, 0, 0] < year))[0]
-
-            # Speed comparison between new jitted shares and original shares_transport
-            if year in [2020, 2050] and t==no_it:  # Test every 10 years to avoid too much output
-                import time as timing_module
-                
-                # Test original shares_transport function
-                start_time = timing_module.time()
-                endo_shares_old, endo_capacity_old = shares_transport(data_dt, data, year, rfltt, reg_constr, titles, c3ti, dt)
-                time_old = timing_module.time() - start_time
-                                
-                
-                # Test jitted shares function
-                start_time = timing_module.time()
-                change_in_shares = shares_change(
-                    dt=dt,
-                    regions=regions,
-                    shares_dt=data_dt["TEWS"],
-                    costs=data_dt["TELC"],
-                    costs_sd=data_dt["TLCD"],
-                    subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
-                    reg_constr=reg_constr,
-                    num_regions=len(titles['RTI']),
-                    num_techs=len(titles['VTTI'])
-                )
-                endo_shares_jit = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
-                endo_shares_jit[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
-                endo_capacity = endo_shares_jit * rfltt[:, np.newaxis]
-                time_jit = timing_module.time() - start_time
-                
-                
-                # Calculate speedup and check accuracy
-                speedup_jit = time_old / time_jit if time_jit > 0 else float('inf')
-                accuracy_jit = np.allclose(endo_shares_old, endo_shares_jit, atol=1e-10)
-                
-                print(f"\nYear {year}: TRANSPORT SHARES - old={time_old*1000:.1f}ms, new={time_jit*1000:.1f}ms, speedup={speedup_jit:.1f}x, accurate={accuracy_jit}")
-                
-            else:
-                # The core FTT equations, taking into account old shares, costs and regulations
-                change_in_shares = shares_change(
-                    dt=dt,                          
-                    regions=regions,
-                    shares_dt=data_dt["TEWS"],      # Shares at previous t
-                    costs=data_dt["TELC"],          # Logarithm of costs
-                    costs_sd=data_dt["TLCD"],       # Standard deviation of log(costs)
-                    subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],  # Substitution turnover rate
-                    reg_constr=reg_constr,          # Constraint due to regulation
-                    num_regions=len(titles['RTI']), # Number of regions
-                    num_techs=len(titles['VTTI'])   # Number of techs
-                )
-                endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
-                endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
-                endo_capacity = endo_shares * rfltt[:, np.newaxis]
+            
+            # The core FTT equations, taking into account old shares, costs and regulations
+            change_in_shares = shares_change(
+                dt=dt,                          
+                regions=regions,
+                shares_dt=data_dt["TEWS"],      # Shares at previous t
+                costs=data_dt["TELC"],          # Logarithm of costs
+                costs_sd=data_dt["TLCD"],       # Standard deviation of log(costs)
+                subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],  # Substitution turnover rate
+                reg_constr=reg_constr,          # Constraint due to regulation
+                num_regions=len(titles['RTI']), # Number of regions
+                num_techs=len(titles['VTTI'])   # Number of techs
+            )
+            
+            endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+            endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
+            endo_capacity = endo_shares * rfltt[:, np.newaxis]
 
             
             # Implement exogenous sales and correct for stretching
@@ -330,8 +293,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
                     data['TEWS'][r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
             
-                
-
 
 
             # Raise error if there are negative values 
