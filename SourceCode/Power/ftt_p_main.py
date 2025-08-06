@@ -561,16 +561,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 change_in_shares = shares_change(
                     dt=dt,
                     regions=valid_regions,
-                    shares_dt=data_dt['MEWS'],
-                    costs=data_dt['METC'],
-                    costs_sd=data_dt['MTCD'],
-                    subst=data['MEWA'] / T_Scal,
-                    reg_constr=reg_constr,
-                    num_regions=len(titles['RTI']),
-                    num_techs=len(titles['T2TI']),
-                    upper_limit=data_dt['MES1'],
-                    lower_limit=data_dt['MES2'],
-                    limits_active=True)
+                    shares_dt=data_dt['MEWS'],       # Shares at previous t
+                    costs=data_dt['METC'],           # Costs
+                    costs_sd=data_dt['MTCD'],        # Standard deviation costs
+                    subst=data['MEWA'] / T_Scal,     # Timescale of substitution
+                    reg_constr=reg_constr,           # Constraint due to regulation
+                    num_regions=len(titles['RTI']),  # Number of regions
+                    num_techs=len(titles['T2TI']),   # Number of techs
+                    upper_limit=data_dt['MES1'],     # Any techs with an opper limit
+                    lower_limit=data_dt['MES2'],     # Any techs with a lower limit
+                    limits_active=True)              # Defaults to False
+                
                 endo_shares_jitted = data_dt['MEWS'][:, :, 0] + change_in_shares
                 time_jitted = timing_module.time() - start_time
                 
@@ -590,16 +591,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 change_in_shares = shares_change(
                     dt=dt,
                     regions=valid_regions,
-                    shares_dt=data_dt['MEWS'],
-                    costs=data_dt['METC'],
-                    costs_sd=data_dt['MTCD'],
-                    subst=data['MEWA'] / T_Scal,
-                    reg_constr=reg_constr,
-                    num_regions=len(titles['RTI']),
-                    num_techs=len(titles['T2TI']),
-                    upper_limit=data_dt['MES1'],
-                    lower_limit=data_dt['MES2'],
-                    limits_active=True)
+                    shares_dt=data_dt['MEWS'],       # Shares at previous t
+                    costs=data_dt['METC'],           # Costs
+                    costs_sd=data_dt['MTCD'],        # Standard deviation costs
+                    subst=data['MEWA'] / T_Scal,     # Substitution turnover rates
+                    reg_constr=reg_constr,           # Constraint due to regulation
+                    num_regions=len(titles['RTI']),  # Number of regions
+                    num_techs=len(titles['T2TI']),   # Number of techs
+                    upper_limit=data_dt['MES1'],     # Any techs with an opper limit
+                    lower_limit=data_dt['MES2'],     # Any techs with a lower limit
+                    limits_active=True)              # Defaults to False
+                
                 endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
             
             

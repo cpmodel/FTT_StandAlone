@@ -346,13 +346,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     change_in_shares = shares_change(
                         dt=dt,
                         regions=regions,
-                        shares_dt=data_dt["HEWS"], 
-                        costs=data_dt["HGC1"], 
-                        costs_sd=data_dt["HWCD"], 
-                        subst=data["HEWA"] * data["HETR"], 
-                        reg_constr=reg_constr,
-                        num_regions = len(titles['RTI']),
-                        num_techs = len(titles['HTTI']),
+                        shares_dt=data_dt["HEWS"],         # Shares at previous t
+                        costs=data_dt["HGC1"],             # Costs
+                        costs_sd=data_dt["HWCD"],          # Standard deviations costs
+                        subst=data["HEWA"] * data["HETR"], # Substitution turnover rates
+                        reg_constr=reg_constr,             # Constraint due to regulation
+                        num_regions = len(titles['RTI']),  # Number of regions
+                        num_techs = len(titles['HTTI']),   # Number of technologies
                     )
 
             # Calculate scrappage rate for all regions
@@ -458,16 +458,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     # Normal operation - just use the new vectorized premature shares
                     changes_in_shares_prem_repl = shares_premature(
                         dt=dt,
-                        shares_dt=data_dt["HEWS"], 
+                        shares_dt=data_dt["HEWS"],          # Shares at previous t
                         costs_marg=data_dt["HGC2"],         # Marginal costs (HGC2)
                         costs_marg_sd=data_dt["HGD2"],      # SD Marginal costs (HGD2)
                         costs_payb=data_dt["HGC3"],         # Payback costs (HGC3)
                         costs_payb_sd=data_dt["HGD3"],      # SD Payback costs (HGD3)
-                        subst=data["HEWA"] * SR_all[:, :, np.newaxis],
-                        reg_constr=reg_constr, 
+                        subst=data["HEWA"] * SR_all[:, :, np.newaxis],  # Substitution turnover rates
+                        reg_constr=reg_constr,              # Regulation constraint
                         regions=regions,
-                        num_regions = len(titles['RTI']),
-                        num_techs = len(titles['HTTI']),
+                        num_regions = len(titles['RTI']),   # Number of regions
+                        num_techs = len(titles['HTTI']),    # Number of technologies
                     )
 
             # Calculate endogenous market shares from changes

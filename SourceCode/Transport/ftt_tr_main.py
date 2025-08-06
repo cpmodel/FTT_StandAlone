@@ -280,15 +280,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             else:
                 # The core FTT equations, taking into account old shares, costs and regulations
                 change_in_shares = shares_change(
-                    dt=dt,
+                    dt=dt,                          
                     regions=regions,
-                    shares_dt=data_dt["TEWS"],
-                    costs=data_dt["TELC"],
-                    costs_sd=data_dt["TLCD"],
-                    subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],
-                    reg_constr=reg_constr,
-                    num_regions=len(titles['RTI']),
-                    num_techs=len(titles['VTTI'])
+                    shares_dt=data_dt["TEWS"],      # Shares at previous t
+                    costs=data_dt["TELC"],          # Logarithm of costs
+                    costs_sd=data_dt["TLCD"],       # Standard deviation of log(costs)
+                    subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],  # Substitution turnover rate
+                    reg_constr=reg_constr,          # Constraint due to regulation
+                    num_regions=len(titles['RTI']), # Number of regions
+                    num_techs=len(titles['VTTI'])   # Number of techs
                 )
                 endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
                 endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
