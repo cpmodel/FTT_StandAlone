@@ -276,7 +276,6 @@ def shares_change_premature(
                 Fji = 0.5 * (1 + np.tanh(CDF_APPROX * (costs_marg[r, tech_i, 0] - costs_payb[r, tech_j, 0]) / dFji))
     
                 # Original regulation adjustment for premature replacements
-                # TODO: replace these with the correct adjustments for preferences
                 F[tech_j, tech_i] = Fij * (1.0 - reg_constr[r, tech_i])
                 F[tech_i, tech_j] = Fji * (1.0 - reg_constr[r, tech_j])
                 
