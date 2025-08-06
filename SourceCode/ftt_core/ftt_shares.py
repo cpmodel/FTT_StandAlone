@@ -162,7 +162,7 @@ def _apply_regulation_adjustment(Fij, Fji, reg_i, reg_j):
     Fji : float  
         Base preference from technology j to i
     reg_i, reg_j : float
-        Regulation strength (0=no regulation, 1=fully regulated)
+        reg_constr for technology i, j (0=no regulation, 1=fully regulated)
         
     Returns
     -------
