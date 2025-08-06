@@ -33,18 +33,17 @@ Functions included:
         Calculate levelised cost of residential heating
 
 """
-# Standard library imports
-from math import sqrt
-
 # Third party imports
 import numpy as np
 
 # Local library imports
+from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
+from SourceCode.ftt_core.ftt_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
-from SourceCode.ftt_core.ftt_mandate import implement_mandate
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 
 # -----------------------------------------------------------------------------
@@ -220,20 +219,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             
             data["FU14A"] = time_lag["FU14A"]
             data["FU14B"] = time_lag["FU14B"]
-        
-        # Create the regulation variable
-        # Test that proved that the implimination of tanh across python and fortran is different
-        #for r in range (len(titles['RTI'])):
-            #for b in range (len(titles['HTTI'])):
-
-                #if data['HREG'][r, b, 0] > 0.0:
-                    #data['HREG'][r, b, 0] = -1.0
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
-        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
-        isReg[data['HREG'][:, :, 0] == 0.0] = 1.0
-        isReg[data['HREG'][:, :, 0] == -1.0] = 0.0
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr[data['HREG'][:, :, 0] == 0.0] = 1.0
+        reg_constr[data['HREG'][:, :, 0] == -1.0] = 0.0
     
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
@@ -242,146 +233,65 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         ############## Computing new shares ##################
 
-        #Start the computation of shares
+        # Start the computation of shares
         for t in range(1, no_it+1):
 
             # Interpolate to prevent staircase profile.
             rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * t * dt
             rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * (t-1) * dt
 
+            # Get regions with non-zero heat demand
+            regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
+                
+            # The core FTT equations, taking into account old shares, costs and regulationss
+            change_in_shares = shares_change(
+                dt=dt,
+                regions=regions,
+                shares_dt=data_dt["HEWS"],         # Shares at previous t
+                costs=data_dt["HGC1"],             # Costs
+                costs_sd=data_dt["HWCD"],          # Standard deviations costs
+                subst=data["HEWA"] * data["HETR"], # Substitution turnover rates
+                reg_constr=reg_constr,             # Constraint due to regulation
+                num_regions = len(titles['RTI']),  # Number of regions
+                num_techs = len(titles['HTTI']),   # Number of technologies
+            )
+
+            # Calculate scrappage rate for all regions
+            SR_all = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
+            for r in range(len(titles['RTI'])):
+                SR = divide(np.ones(len(titles['HTTI'])),
+                            data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :, 0]
+                SR_all[r, :] = np.where(SR<0.0, 0.0, SR)
+            
+            # Premature replacements, use scrappage rate time scales and amended costs
+            changes_in_shares_prem_repl = shares_change_premature(
+                dt=dt,
+                regions=regions,
+                shares_dt=data_dt["HEWS"],          # Shares at previous t
+                costs_marg=data_dt["HGC2"],         # Marginal costs (HGC2)
+                costs_marg_sd=data_dt["HGD2"],      # SD Marginal costs (HGD2)
+                costs_payb=data_dt["HGC3"],         # Payback costs (HGC3)
+                costs_payb_sd=data_dt["HGD3"],      # SD Payback costs (HGD3)
+                subst=data["HEWA"] * SR_all[:, :, np.newaxis],  # Substitution turnover rates
+                reg_constr=reg_constr,              # Regulation constraint
+                num_regions = len(titles['RTI']),   # Number of regions
+                num_techs = len(titles['HTTI']),    # Number of technologies
+            )
+
+            # Calculate endogenous market shares from both changes
+            endo_shares = data_dt['HEWS'][:, :, 0] + change_in_shares + changes_in_shares_prem_repl
+            
+            
+            #################### Regulatory policies #################
 
             for r in range(len(titles['RTI'])):
 
                 if rhudt[r] == 0.0:
                     continue
-
-            ############################ FTT ##################################
-#                        t3 = time.time()
-#                        print("Solving {}".format(titles["RTI"][r]))
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSik = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
-
-                # F contains the preferences
-                F = np.ones([len(titles['HTTI']), len(titles['HTTI'])]) * 0.5
-
-                # -----------------------------------------------------
-                # Step 1: Endogenous EOL replacements
-                # -----------------------------------------------------
-                for b1 in range(len(titles['HTTI'])):
-
-                    if  not (data_dt['HEWS'][r, b1, 0] > 0.0 and
-                             data_dt['HGC1'][r, b1, 0] != 0.0 and
-                             data_dt['HWCD'][r, b1, 0] != 0.0):
-                        continue
-
-                    S_i = data_dt['HEWS'][r, b1, 0]
-
-                    for b2 in range(b1):
-
-                        if  not (data_dt['HEWS'][r, b2, 0] > 0.0 and
-                                 data_dt['HGC1'][r, b2, 0] != 0.0 and
-                                 data_dt['HWCD'][r, b2, 0] != 0.0):
-                            continue
-
-                        S_k = data_dt['HEWS'][r, b2, 0]
-
-                        # Propagating width of variations in perceived costs
-                        dFik = 1.414 * sqrt((data_dt['HWCD'][r, b1, 0] * data_dt['HWCD'][r, b1, 0] 
-                                             + data_dt['HWCD'][r, b2, 0] * data_dt['HWCD'][r, b2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['HGC1'][r, b2, 0]
-                                                   - data_dt['HGC1'][r, b1, 0]) / dFik))
-
-                        # Preferences are then adjusted for regulations
-                        F[b1, b2] = Fik * (1.0 - isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2] \
-                                    * (1.0 - isReg[r, b1]) + 0.5 * (isReg[r, b1] * isReg[r, b2])
-                        F[b2, b1] = (1.0 - Fik) * (1.0 - isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1] \
-                                    * (1.0 - isReg[r, b2]) + 0.5 * (isReg[r, b2] * isReg[r, b1])
-
-                        # Runge-Kutta market share dynamiccs
-                        k_1 = S_i*S_k * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_2 = (S_i+dt*k_1/2)*(S_k-dt*k_1/2)* (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_3 = (S_i+dt*k_2/2)*(S_k-dt*k_2/2) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-                        k_4 = (S_i+dt*k_3)*(S_k-dt*k_3) * (data['HEWA'][0,b1, b2]*F[b1,b2]*data['HETR'][r,b2, 0]- data['HEWA'][0,b2, b1]*F[b2,b1]*data['HETR'][r,b1, 0])
-
-                        dSik[b1, b2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
-                        dSik[b2, b1] = -dSik[b1, b2]
-
-                # -----------------------------------------------------
-                # Step 2: Endogenous premature replacements
-                # -----------------------------------------------------
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSEik = np.zeros([len(titles['HTTI']), len(titles['HTTI'])])
-
-                # F contains the preferences
-                FE = np.ones([len(titles['HTTI']), len(titles['HTTI'])])*0.5
-
-                # Intermediate shares: add the EoL effects before continuing
-                # intermediate_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1)
-
-                # Scrappage rate
-                SR = divide(np.ones(len(titles['HTTI'])),
-                            data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :, 0]
-                SR = np.where(SR<0.0, 0.0, SR)
-
-                for b1 in range(len(titles['HTTI'])):
-
-                    if not (data_dt['HEWS'][r, b1, 0] > 0.0 and
-                            data_dt['HGC2'][r, b1, 0] != 0.0 and
-                            data_dt['HGD2'][r, b1, 0] != 0.0 and
-                            data_dt['HGC3'][r, b1, 0] != 0.0 and
-                            data_dt['HGD3'][r, b1, 0] != 0.0 and
-                            SR[b1] > 0.0):
-                        continue
-
-                    SE_i = data_dt['HEWS'][r, b1, 0]
-
-                    for b2 in range(b1):
-
-                        if not (data_dt['HEWS'][r, b2, 0] > 0.0 and
-                                data_dt['HGC2'][r, b2, 0] != 0.0 and
-                                data_dt['HGD2'][r, b2, 0] != 0.0 and
-                                data_dt['HGC3'][r, b2, 0] != 0.0 and
-                                data_dt['HGD3'][r, b2, 0] != 0.0 and
-                                SR[b2] > 0.0):
-                            continue
-
-                        SE_k = data_dt['HEWS'][r, b2, 0]
-
-                        # NOTE: Premature replacements are optional for
-                        # consumers. It is possible that NO premature
-                        # replacements take place
-
-                        # Propagating width of variations in perceived costs
-                        dFEik = 1.414 * sqrt((data_dt['HGD3'][r, b1, 0]*data_dt['HGD3'][r, b1, 0] + data_dt['HGD2'][r, b2, 0]*data_dt['HGD2'][r, b2, 0]))
-                        dFEki = 1.414 * sqrt((data_dt['HGD2'][r, b1, 0]*data_dt['HGD2'][r, b1, 0] + data_dt['HGD3'][r, b2, 0]*data_dt['HGD3'][r, b2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        FEik = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b2, 0]-data_dt['HGC3'][r, b1, 0])/dFEik))
-                        FEki = 0.5*(1+np.tanh(1.25*(data_dt['HGC2'][r, b1, 0]-data_dt['HGC3'][r, b2, 0])/dFEki))
-
-                        # Preferences are then adjusted for regulations
-                        FE[b1, b2] = FEik*(1.0-isReg[r, b1])
-                        FE[b2, b1] = FEki*(1.0-isReg[r, b2])
-
-                        # Runge-Kutta market share dynamiccs
-                        kE_1 = SE_i*SE_k * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_2 = (SE_i+dt*kE_1/2)*(SE_k-dt*kE_1/2)* (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_3 = (SE_i+dt*kE_2/2)*(SE_k-dt*kE_2/2) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-                        kE_4 = (SE_i+dt*kE_3)*(SE_k-dt*kE_3) * (data['HEWA'][0,b1, b2]*FE[b1,b2]*SR[b2]- data['HEWA'][0,b2, b1]*FE[b2,b1]*SR[b1])
-
-                        dSEik[b1, b2] = dt*(kE_1+2*kE_2+2*kE_3+kE_4)/6
-                        dSEik[b2, b1] = -dSEik[b1, b2]
-
-                #calculate temportary market shares and temporary capacity from endogenous results
-                endo_shares = data_dt['HEWS'][r, :, 0] + np.sum(dSik, axis=1) + np.sum(dSEik, axis=1)
                 
-                endo_capacity = endo_shares * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
+                endo_capacity = endo_shares[r] * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
 
-                endo_gen = endo_shares * rhudt[r, np.newaxis]
+                endo_gen = endo_shares[r] * rhudt[r, np.newaxis]
 
 
                 # -----------------------------------------------------
@@ -396,13 +306,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 dUkTK = np.zeros([len(titles['HTTI'])])
                 dUkREG = np.zeros([len(titles['HTTI'])])
 
-                # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation. Otherwise, the corrections won't line up with the market shares.
+                # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation.
+                # Otherwise, the corrections won't line up with the market shares.
 
-
-                # Convert exogenous shares to exogenous generation. Exogenous shares no longer need to add up to 1. Beware removals!
-                # for b in range (len(titles['HTTI'])):
-                #     if data['HWSA'][r, b, 0] < 0.0:
-                #         data['HWSA'][r, b, 0] = 0.0
                 
                 dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
                 # Check endogenous shares plus additions for a single time step does not exceed regulated shares
@@ -415,7 +321,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_gen - endo_shares * rhudlt[r,np.newaxis]) * isReg[r, :].reshape([len(titles['HTTI'])])
+                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * reg_constr[r, :].reshape([len(titles['HTTI'])])
                      
 
                 # Sum effect of exogenous sales additions (if any) with

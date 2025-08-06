@@ -30,18 +30,18 @@ Functions included:
         
 """
 
-# Standard library imports
-from math import sqrt
-
 # Third party imports
 import numpy as np
 
 # Local library imports
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_shares import shares_change
+
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
+
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
 
 
@@ -215,9 +215,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         # Create the regulation variable
         division = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
                           [:, :, 0]), data['TREG'][:, :, 0])  # 0 when dividing by 0
-        isReg = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
-        isReg[data['TREG'][:, :, 0] == 0.0] = 1.0
-        isReg[data['TREG'][:, :, 0] == -1.0] = 0.0
+        reg_constr = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
+        reg_constr[data['TREG'][:, :, 0] == 0.0] = 1.0
+        reg_constr[data['TREG'][:, :, 0] == -1.0] = 0.0
 
         # Factor used to create quarterly data from annual figures
         no_it = int(data['noit'][0, 0, 0])
@@ -237,117 +237,63 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             rfltt = time_lag['RFLT'][:, 0, 0] + \
                 (data['RFLT'][:, 0, 0] - time_lag['RFLT'][:, 0, 0]) * t * dt
 
-            for r in range(len(titles['RTI'])):
-                # Skip regions for which more recent data is available
-                if data['TDA1'][r, 0, 0] >= year:
-                    continue
+            # Skip regions for which more recent data is available or with zero demand            
+            regions = np.where((rfltt > 0) & (data['TDA1'][:, 0, 0] < year))[0]
+            
+            # The core FTT equations, taking into account old shares, costs and regulations
+            change_in_shares = shares_change(
+                dt=dt,                          
+                regions=regions,
+                shares_dt=data_dt["TEWS"],      # Shares at previous t
+                costs=data_dt["TELC"],          # Logarithm of costs
+                costs_sd=data_dt["TLCD"],       # Standard deviation of log(costs)
+                subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],  # Substitution turnover rate
+                reg_constr=reg_constr,          # Constraint due to regulation
+                num_regions=len(titles['RTI']), # Number of regions
+                num_techs=len(titles['VTTI'])   # Number of techs
+            )
+            
+            endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+            endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
+            endo_capacity = endo_shares * rfltt[:, np.newaxis]
 
-                if rfltt[r] == 0.0:
-                    continue
+            
+            # Implement exogenous sales and correct for stretching
+            for r in regions:
+                if r < len(titles['RTI']):  # Safety check
+                    dUkTK = np.zeros([len(titles['VTTI'])])
+                    dUkREG = np.zeros([len(titles['VTTI'])])
+                    TWSA_scalar = 1.0
+                    
+                    # Check that exogenous sales additions aren't too large
+                    # As a proxy it can't be greater than 80% of the fleet size
+                    # divided by 13 (the average lifetime of vehicles)
+                    if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
+                        TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
+                
+                    # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
+                    reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity[r])
+                                   > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
+                    
+                    # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
+                    dUkTK = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
+                    
+                    # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
+                    # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
+                    # if rflt (i.e. total demand) had not grown.
+                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfltt[r, np.newaxis]) * reg_constr[r, :].reshape([len(titles['VTTI'])])
+                    
+                    # Sum effect of exogenous sales additions (if any) with effect of regulations.
+                    dUk = dUkTK + dUkREG
+                    dUtot = np.sum(dUk)
+                    
+                    # Calculate changes to endogenous capacity, and use to find new market shares
+                    # Zero capacity will result in zero shares
+                    # All other capacities will be streched
 
-                ############################ FTT ##################################
-                # Initialise variables related to market share dynamics
-                # DSiK contains the change in shares
-                dSik = np.zeros([len(titles['VTTI']), len(titles['VTTI'])])
+                    data['TEWS'][r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
+            
 
-                # F contains the preferences
-                F = np.ones([len(titles['VTTI']), len(titles['VTTI'])])*0.5
-
-                # TODO: Check Specs dimensions
-                # if np.any(specs[sector][r, :] == 1):  # FTT Specification
-
-                for v1 in range(len(titles['VTTI'])):
-
-                    # Skip technologies with zero market share or zero costs
-                    if not (data_dt['TEWS'][r, v1, 0] > 0.0 and
-                            data_dt['TELC'][r, v1, 0] != 0.0 and
-                            data_dt['TLCD'][r, v1, 0] != 0.0):
-                        continue
-
-                    S_veh_i = data_dt['TEWS'][r, v1, 0]
-
-                    for v2 in range(v1):
-
-                        # Skip technologies with zero market share or zero costs
-                        if not (data_dt['TEWS'][r, v2, 0] > 0.0 and
-                                data_dt['TELC'][r, v2, 0] != 0.0 and
-                                data_dt['TLCD'][r, v2, 0] != 0.0):
-                            continue
-
-                        S_veh_k = data_dt['TEWS'][r, v2, 0]
-                        Aik = data['TEWA'][0, v1, v2] * \
-                            data['BTTC'][r, v1, c3ti['17 Turnover rate']]
-                        Aki = data['TEWA'][0, v2, v1] * \
-                            data['BTTC'][r, v2, c3ti['17 Turnover rate']]
-
-                        # Propagating width of variations in perceived costs
-                        dFik = 1.414 * sqrt((data_dt['TLCD'][r, v1, 0] * data_dt['TLCD'][r, v1, 0]
-                                             + data_dt['TLCD'][r, v2, 0] * data_dt['TLCD'][r, v2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        Fik = 0.5 * (1 + np.tanh(1.25 * (data_dt['TELC'][r, v2, 0]
-                                                         - data_dt['TELC'][r, v1, 0]) / dFik))
-                        # Preferences are then adjusted for regulations
-                        F[v1, v2] = (Fik * (1.0 - isReg[r, v1]) * (1.0 - isReg[r, v2]) + isReg[r, v2]
-                                     * (1.0 - isReg[r, v1]) + 0.5 * (isReg[r, v1] * isReg[r, v2]))
-                        F[v2, v1] = ((1.0 - Fik) * (1.0 - isReg[r, v2]) * (1.0 - isReg[r, v1]) + isReg[r, v1]
-                                     * (1.0-isReg[r, v2]) + 0.5 * (isReg[r, v2] * isReg[r, v1]))
-
-                        # Runge-Kutta market share dynamiccs
-                        k_1 = S_veh_i*S_veh_k * (Aik*F[v1, v2] - Aki*F[v2, v1])
-                        k_2 = (S_veh_i+dt*k_1/2)*(S_veh_k-dt*k_1/2) * \
-                            (Aik*F[v1, v2] - Aki*F[v2, v1])
-                        k_3 = (S_veh_i+dt*k_2/2)*(S_veh_k-dt*k_2/2) * \
-                            (Aik*F[v1, v2] - Aki*F[v2, v1])
-                        k_4 = (S_veh_i+dt*k_3)*(S_veh_k-dt*k_3) * \
-                            (Aik*F[v1, v2] - Aki*F[v2, v1])
-
-                        # Market share dynamics
-                        # dSik[v1, v2] = S_veh_i*S_veh_k* (Aik*F[v1,v2] - Aki*F[v2,v1])*dt
-                        dSik[v1, v2] = dt*(k_1+2*k_2+2*k_3+k_4)/6
-                        dSik[v2, v1] = -dSik[v1, v2]
-
-                # Calculate temporary market shares and temporary capacity from endogenous results
-                endo_shares = data_dt['TEWS'][r, :, 0] + np.sum(dSik, axis=1)
-                endo_capacity = endo_shares * rfltt[r, np.newaxis]
-
-                Utot = rfltt[r]
-                dUkTK = np.zeros([len(titles['VTTI'])])
-                dUkREG = np.zeros([len(titles['VTTI'])])
-                TWSA_scalar = 1.0
-
-                # Check that exogenous sales additions aren't too large
-                # As a proxy it can't be greater than 80% of the fleet size
-                # divided by 13 (the average lifetime of vehicles)
-                if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
-
-                    TWSA_scalar = data['TWSA'][r, :,
-                                               0].sum() / (0.8 * rfltt[r] / 13)
-                # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity)
-                               > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
-
-                # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
-                dUkTK = np.where(reg_vs_exog, 0.0,
-                                 data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
-
-                # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
-                # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
-                # if rflt (i.e. total demand) had not grown.
-
-                dUkREG = -(endo_capacity - endo_shares *
-                           rfllt[r, np.newaxis]) * isReg[r, :].reshape([len(titles['VTTI'])])
-
-                # Sum effect of exogenous sales additions (if any) with effect of regulations.
-                dUk = dUkTK + dUkREG
-                dUtot = np.sum(dUk)
-
-                # Calculate changes to endogenous capacity, and use to find new market shares
-                # Zero capacity will result in zero shares
-                # All other capacities will be streched
-
-                data['TEWS'][r, :, 0] = (
-                    endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
 
             # Raise error if there are negative values 
             # or regional market shares do not add up to one
@@ -508,3 +454,5 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data = survival_function(data, time_lag, histend, year, titles)
 
     return data
+
+
