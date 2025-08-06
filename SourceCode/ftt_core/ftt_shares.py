@@ -146,7 +146,7 @@ def shares_change_jitted(
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True, inline='always')
-def _apply_regulation_adjustment(Fij, Fji, reg_i, reg_j):
+def _apply_regulation_adjustment(Fij, Fji, reg_constr_i, reg_constr_j):
     """
     Apply regulation constraint effects to base preferences.
     
@@ -161,7 +161,7 @@ def _apply_regulation_adjustment(Fij, Fji, reg_i, reg_j):
         Base preference from technology i to j
     Fji : float  
         Base preference from technology j to i
-    reg_i, reg_j : float
+    reg_constr_i, reg_constr_j : float
         reg_constr for technology i, j (0=no regulation, 1=fully regulated)
         
     Returns
@@ -171,14 +171,14 @@ def _apply_regulation_adjustment(Fij, Fji, reg_i, reg_j):
     """
     
     # i→j preference with regulation adjustment
-    Fij_reg = (Fji * (1.0 - reg_j) * (1.0 - reg_i)    # Base preference term
-               + reg_i * (1.0 - reg_j)                # i blocked → favor j
-               + 0.5 * (reg_j * reg_i))               # Both blocked → neutral
+    Fij_reg = (Fji * (1.0 - reg_constr_j) * (1.0 - reg_constr_i)  # Base preference term
+               + reg_constr_i * (1.0 - reg_constr_j)              # i blocked → favor j
+               + 0.5 * (reg_constr_j * reg_constr_i))             # Both blocked → neutral
     
     # j→i preference with regulation adjustment
-    Fji_reg = (Fij * (1.0 - reg_i) * (1.0 - reg_j)    # Base preference term
-               + reg_j * (1.0 - reg_i)                # j blocked → favor i
-               + 0.5 * (reg_i * reg_j))               # Both blocked → neutral
+    Fji_reg = (Fij * (1.0 - reg_constr_i) * (1.0 - reg_constr_j)  # Base preference term
+               + reg_constr_j * (1.0 - reg_constr_i)              # j blocked → favor i
+               + 0.5 * (reg_constr_i * reg_constr_j))             # Both blocked → neutral
     
     return Fij_reg, Fji_reg
 
