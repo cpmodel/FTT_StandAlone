@@ -3,11 +3,9 @@
 =========================================
 ftt_p_main.py
 =========================================
-Power generation FTT module.
+Power generation FTT module, main file.
 
-
-This is the main file for the power module, FTT: Power. The power
-module models technological replacement of electricity generation technologies due
+The power module models technological replacement of electricity generation technologies due
 to simulated investor decision making. Investors compare the **levelised cost of
 electricity**, which leads to changes in the market shares of different technologies.
 
@@ -27,25 +25,24 @@ curves. **Cost-supply curves** are recalculated at the end of the routine.
 
 Local library imports:
 
-FTT: Core functions:
-    
-- `get_sales <get_sales_or_investment.htlm>`__
-    Generic investment function (new plus end-of-life replacement)
-    
-FTT: Power functions:
+    FTT: Core functions:
+    - `get_sales <get_sales_or_investment.htlm>
+        Generic investment function (new plus end-of-life replacement)
+    - `shares <ftt_shares.html>`__
+        Market shares simulation (core of the model)
+        
+    FTT: Power functions:
 
-- `rldc <ftt_p_rldc.html>`__
-    Residual load duration curves
-- `dspch <ftt_p_dspch.html>`__
-    Dispatch of capcity
-- `get_lcoe <ftt_p_lcoe.html>`__
-    Levelised cost calculation
-- `survival_function <ftt_p_surv.html>`__
-    Calculation of scrappage, sales, tracking of age, and average efficiency.
-- `shares <ftt_shares.html>`__
-    Market shares simulation (core of the model)
-- `cost_curves <ftt_p_costc.html>`__
-    Calculates increasing marginal costs of resources
+    - `rldc <ftt_p_rldc.html>`__
+        Residual load duration curves
+    - `dspch <ftt_p_dspch.html>`__
+        Dispatch of capcity
+    - `get_lcoe <ftt_p_lcoe.html>`__
+        Levelised cost calculation
+    - `survival_function <ftt_p_surv.html>`__
+        Calculate of scrappage, sales, tracking of age, and average efficiency.
+    - `cost_curves <ftt_p_costc.html>`__
+        Calculates increasing marginal costs of resources
 
 Support functions:
 
@@ -486,11 +483,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                 T_Scal=10.0)                     # Power time scaling (applied after RK4)
             
             endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
-            
+            mewl = data_dt['MEWL'].copy()
             
             mews, mewl, mewg, mewk = policies_old(
-                len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
-                data['MWLO'], time_lag['MEWS'],
+                len(titles['RTI']), mewl, len(titles['T2TI']),
                 endo_shares, MEWDt,  data_dt['MEWK'],
                 reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
             
@@ -674,7 +670,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-
+        data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
         if year == 2050:
             print(f"Total solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
