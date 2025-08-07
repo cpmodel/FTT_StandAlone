@@ -14,7 +14,7 @@ Functions included:
 
 # Third party imports
 import numpy as np
-from numba import njit
+from numba import njit, prange
 
 
 
