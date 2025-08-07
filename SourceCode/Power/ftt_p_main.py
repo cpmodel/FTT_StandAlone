@@ -3,11 +3,9 @@
 =========================================
 ftt_p_main.py
 =========================================
-Power generation FTT module.
+Power generation FTT module, main file.
 
-
-This is the main file for the power module, FTT: Power. The power
-module models technological replacement of electricity generation technologies due
+The power module models technological replacement of electricity generation technologies due
 to simulated investor decision making. Investors compare the **levelised cost of
 electricity**, which leads to changes in the market shares of different technologies.
 
@@ -30,6 +28,8 @@ Local library imports:
     FTT: Core functions:
     - `get_sales <get_sales_or_investment.htlm>
         Generic investment function (new plus end-of-life replacement)
+    - `shares <ftt_shares.html>`__
+        Market shares simulation (core of the model)
         
     FTT: Power functions:
 
@@ -40,9 +40,7 @@ Local library imports:
     - `get_lcoe <ftt_p_lcoe.html>`__
         Levelised cost calculation
     - `survival_function <ftt_p_surv.html>`__
-        Calculation of scrappage, sales, tracking of age, and average efficiency.
-    - `shares <ftt_p_shares.html>`__
-        Market shares simulation (core of the model)
+        Calculates scrappage, sales, tracking of age, and average efficiency.
     - `cost_curves <ftt_p_costc.html>`__
         Calculates increasing marginal costs of resources
 
@@ -559,11 +557,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 limits_active=True)              # Defaults to False
             
             endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
-            
+            mewl = data_dt['MEWL'].copy()
             
             mews, mewl, mewg, mewk = policies_old(
-                len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
-                data['MWLO'], time_lag['MEWS'],
+                len(titles['RTI']), mewl, len(titles['T2TI']),
                 endo_shares, MEWDt,  data_dt['MEWK'],
                 reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
             
@@ -766,6 +763,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # TODO: average over 3 years like FORTRAN? 
         # Investment (1.33 an exchange rate factor)
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
+        
+        if year == 2050:
+            print(f"Total capacity of solar power is {np.sum(data['MEWG'][:, 18])/1e6:.3f}")
         
     return data
 
