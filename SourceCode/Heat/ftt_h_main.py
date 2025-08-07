@@ -22,9 +22,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
-    - `estimation <econometrics_functions.html>`__
-        Predict future values according to the estimated coefficients.
+        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -77,12 +75,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
 
-    Notes
-    ---------
-    This function should be broken up into more elements in development.
     """
 
-     # Categories for the cost matrix (BHTC)
+    # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
 
     sector = 'residential'
@@ -92,7 +87,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data['PRSC14'] = np.copy(data['PRSCX'])
 
     # Calculate the LCOH for each heating technology
-    # Call the function
     carbon_costs = set_carbon_tax(data, c4ti)
     data = get_lcoh(data, titles, carbon_costs)
 
@@ -289,8 +283,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 if rhudt[r] == 0.0:
                     continue
                 
-                endo_capacity = endo_shares[r] * rhudt[r, np.newaxis]/data['BHTC'][r, :, c4ti["13 Capacity factor mean"]]/1000
-
                 endo_gen = endo_shares[r] * rhudt[r, np.newaxis]
 
 
@@ -301,7 +293,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = rhudt[r]
-                dSk = np.zeros([len(titles['HTTI'])])
                 dUk = np.zeros([len(titles['HTTI'])])
                 dUkTK = np.zeros([len(titles['HTTI'])])
                 dUkREG = np.zeros([len(titles['HTTI'])])
@@ -338,8 +329,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
 
 
-            # Raise error if there are negative values 
-            # or regional market shares do not add up to one
+            # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['HEWS'], titles, sector, year)
 
             ############## Update variables ##################
@@ -438,15 +428,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # Save efficiency for front end
             data["HEFF"][:, :, 0] = data["BHTC"][:, :, c4ti['9 Conversion efficiency']]
 
-            # =================================================================
-            # Update the time-loop variables
-            # =================================================================
-
             # Calculate levelised cost again
             carbon_costs = set_carbon_tax(data, c4ti)
             data = get_lcoh(data, titles, carbon_costs)
 
-            # Update time loop variables:
+            # =================================================================
+            # Update the time-loop variables
+            # =================================================================
+
             for var in data_dt.keys():
 
                 data_dt[var] = np.copy(data[var])

@@ -294,9 +294,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     data['TEWS'][r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
             
 
-
-            # Raise error if there are negative values 
-            # or regional market shares do not add up to one
+            # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['TEWS'], titles, sector, year)
                 
 
@@ -432,15 +430,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 [len(titles['RTI']), len(titles['VTTI']), 1])
             data["TEBC"][:, :, 0] = data["BTTC"][:,
                                                  :, c3ti['19 Battery cost ($/kWh)']]
-
+            
+            # Calculate levelised cost again
+            data = get_lcot(data, titles, year)
+            
             # =================================================================
             # Update the time-loop variables
             # =================================================================
 
-            # Calculate levelised cost again
-            data = get_lcot(data, titles, year)
-
-            # Update time loop variables:
             for var in data_dt.keys():
 
                 data_dt[var] = np.copy(data[var])
