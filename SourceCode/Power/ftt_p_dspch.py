@@ -25,7 +25,7 @@ from numba import njit
 # -----------------------------------------------------------------------------
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
-@njit(fastmath=True, cache=True)
+@njit(fastmath=True, cache=True, parallel=True)
 def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_techs, num_loadbands):
     """
     Calculates dispatch of capacity.
@@ -83,7 +83,7 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
     MES1 = np.zeros((num_regions, num_techs, 1))
     MES2 = np.zeros((num_regions, num_techs, 1))
 
-    for r in range(num_regions):
+    for r in prange(num_regions):
 
         p_tech = np.zeros((num_techs, num_loadbands))
         p_grid = np.zeros((num_techs, num_loadbands))
