@@ -21,11 +21,9 @@ import warnings
 # Third party imports
 import numpy as np
 import pandas as pd
-from numba import njit
 
 from SourceCode.support.debug_messages import input_functions_message
 
-#@njit(nopython=False)
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     """
     Load all model data for all variables and all years.
