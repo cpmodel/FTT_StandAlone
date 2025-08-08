@@ -75,14 +75,14 @@ def exogenous_capacity(
     
 
 def regulation_correction(
-        endo_capacity, endo_shares, cap_sum_demand, reg_constr):
+        endo_capacity, endo_shares, cap_sum_demand_dt, reg_constr):
     """
     Demand growth raises capacities while shares stay the same (stretching). 
     This extra capacity is not yet regulated. Correct for this underregulation.
 
     """
     # Note: now aligned with E3ME, but no where statement before
-    cap_growth_from_stretching = endo_capacity - endo_shares * cap_sum_demand
+    cap_growth_from_stretching = endo_capacity - endo_shares * cap_sum_demand_dt
     dUk_reg = np.where(cap_growth_from_stretching > 0,
                    -cap_growth_from_stretching * reg_constr,
                    0)
