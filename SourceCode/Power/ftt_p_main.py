@@ -47,7 +47,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
+        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -79,6 +79,7 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
+@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -185,9 +186,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Total electricity demand
         tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
 
-        earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-        lifetsc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-
         for r in range(len(titles['RTI'])):
 
             # Generation by tech x load band is share of total electricity demand
@@ -212,7 +210,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # To avoid division by 0 if 0 shares
             zero_lf = data['MEWL'][r,:,0]==0
             data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
-            
             
 
             # Capacities
@@ -253,11 +250,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MERC'][:, 4, 0] = 0.001
         data['MERC'][:, 7, 0] = 0.001
 
-        # Initialise load factors (last year's, or exogenous if first year)
-#        loadfac = data['MEWLX'][:, :, 0]
-#        if not loadfac.any():
-#            loadfac = data['MWLO'][:, :, 0]
-#        data['MEWL'][:, :, 0] = np.copy(loadfac)
 
         if year > 2013: 
             data['MEWL'][:, :, 0] = time_lag['MEWL'][:, :, 0].copy()
@@ -320,9 +312,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Total electricity demand
             tot_elec_dem = data['MEWDX'][:, 7, 0] * 1000/3.6
-
-            earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-            lifetsc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
             
             # 4--- Calculate average capacity factors according to load bands
             for r in range(len(titles['RTI'])):
@@ -410,12 +399,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
 
-            # Learning-by-doing effects on investment
-    #        for tech in range(len(titles['T2TI'])):
-    #            if data['MEWW'][0, tech, 0] > 0.1:
-    #                data['BCET'][:, tech, c2ti['3 Investment ($/kW)']] = time_lag['BCET'][:, tech, c2ti['3 Investment ($/kW)']] * \
-    #                                                                       (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0])
-
             # Investment in terms of power technologies:
             data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
 
@@ -462,9 +445,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     elif year > histend['MEWG']:
         # TODO: Implement survival function to get a more accurate depiction of
         # technologies being phased out and to be able to track the age of the fleet.
-        # This means that a new variable will need to be implemented which is
-        # basically PG_VFLT with a third dimension (techicle age in years- up to 23y)
-        # Reduced efficiences can then be tracked properly as well.
 
         # =====================================================================
         # Start of simulation
@@ -478,8 +458,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             if domain[var] == 'FTT-P':
 
                 data_dt[var] = np.copy(time_lag[var])
-
-        data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
 
         # Create the regulation variable
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
@@ -596,16 +574,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWL'] = mewl[:, :, None]
             data['MEWG'] = mewg[:, :, None]
             data['MEWK'] = mewk[:, :, None]
-                        
-            
+                               
             if t==no_it and year in [2025, 2050]:
                 diff = np.abs(data['MEWS'] - mews_old)
                 max_rel_diff = np.max(diff / (np.abs(mews_old) + 1e-10)) * 100
                 max_loc = np.unravel_index(np.argmax(diff), diff.shape)
                 print(f"Max relative difference power: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
             
-            # Raise error if there are negative values 
-            # or regional market shares do not add up to one
+
+            # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['MEWS'], titles, 'FTT-P', year)
             
             # =================================================================
@@ -657,8 +634,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 zero_lf = data['MEWL'][r,:,0] <= 0.0001
                 data['MEWL'][r, zero_lf, 0] = data["MWLO"][r, zero_lf, 0]
 
-                # Re-calculate capacities
-#                data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0])/8766
 
             # =============================================================
             #  Update variables wrt curtailment
@@ -778,11 +753,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
             
             
-            # =================================================================
-            # Update LCOE
-            # =================================================================
+            # Calculate levelised cost again
             data = get_lcoe(data, titles)
-
 
             # =================================================================
             # Update the time-loop variables data_dt

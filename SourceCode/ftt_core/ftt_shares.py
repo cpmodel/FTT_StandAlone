@@ -4,7 +4,7 @@ Created on Thu Jul 24 08:36:58 2025
 
 @author: Femke Nijsse
 
-Two versions of the shares equation are included in the file.
+Two versions of the shares equation are included
 1. The normal shares equation as described by Mercure (2012)
 2. The shares equation for premature replacements as described in Knobloch (2017)
 """
@@ -24,8 +24,10 @@ def shares_change(
     subst, reg_constr, num_regions, num_techs,
     upper_limit=None, lower_limit=None, limits_active=False
     ):
-    '''This is a wrapper function for the jitted shares function. We want
-    to always give the same types into the function for rapid compile'''
+    '''
+    Wrapper for the jitted shares function. Ensures consistent input types
+    to enable faster compilation.
+    '''
 
     if not limits_active:
         upper_limit = np.empty((num_regions, num_techs, 1))
@@ -50,8 +52,8 @@ def shares_change_jitted(
     ):
 
     """
-    Function to calculate change in market shares, based on previous
-    market shares, substitution rates and costs
+    Calculates change in market shares, based on previous market shares,
+    substitution rates and costs
      
     Parameters
     ----------
@@ -73,11 +75,11 @@ def shares_change_jitted(
     Returns
     -------
     ndarray
-        The change in shares, taking into account regulation and endogenous limits (optional)
+        Change in shares, taking into account regulation and endogenous limits (optional)
         
     Notes
     -----
-    This function is decorated with `@njit(fastmath=True)` for performance optimization.
+    Decorated with `@njit(fastmath=True)` for performance optimization.
     """
 
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
@@ -188,9 +190,10 @@ def _apply_regulation_adjustment(Fij, Fji, reg_constr_i, reg_constr_j):
 def _rk4_integration(
     S_i, S_j, delta_AFG, dt
     ):
-    """Helper function for RK4 calculation.
-    
-    We assume that within a timestep, the costs and the limits do not change"""
+    """
+    Helper function for RK4 calculation
+    We assume that within a timestep, the costs and the limits do not change.
+    """
     
     k_1 = S_i * S_j * delta_AFG
     k_2 = (S_i + dt * k_1/2) * (S_j - dt * k_1 / 2) * delta_AFG
@@ -212,8 +215,8 @@ def shares_change_premature(
     ):
     
     """
-    Function to calculate change in market shares due to premature replacements,
-    based on previous market shares, substitution rates and various costs
+    Calculates change in market shares due to premature replacements, based on
+    previous market shares, substitution rates and various costs
      
     Parameters
     ----------
@@ -240,7 +243,7 @@ def shares_change_premature(
         
     Notes
     -----
-    This function is decorated with `@njit(fastmath=True)` for performance optimization.
+    Decorated with `@njit(fastmath=True)` for performance optimization.
     """
     
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
