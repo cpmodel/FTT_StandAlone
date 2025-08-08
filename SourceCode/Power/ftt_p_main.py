@@ -80,7 +80,6 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -200,14 +199,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             nonzero_cap = np.sum(klb3, axis=1)>0
             data['MEWL'][r, nonzero_cap, 0] =  np.sum(glb3[nonzero_cap, :], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
                                                             
-
             # Generation by load band
-            data['MWG1'][r, :, 0] = glb3[:, 0]
-            data['MWG2'][r, :, 0] = glb3[:, 1]
-            data['MWG3'][r, :, 0] = glb3[:, 2]
-            data['MWG4'][r, :, 0] = glb3[:, 3]
-            data['MWG5'][r, :, 0] = glb3[:, 4]
-            data['MWG6'][r, :, 0] = glb3[:, 5]
+            data['Gen by lb'][r] = glb3[:]
             # To avoid division by 0 if 0 shares
             zero_lf = data['MEWL'][r,:,0]==0
             data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
@@ -328,14 +321,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 nonzero_cap = np.sum(klb3, axis=1)>0
                 data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
 
-
                 # Generation by load band
-                data['MWG1'][r, :, 0] = glb3[:, 0]
-                data['MWG2'][r, :, 0] = glb3[:, 1]
-                data['MWG3'][r, :, 0] = glb3[:, 2]
-                data['MWG4'][r, :, 0] = glb3[:, 3]
-                data['MWG5'][r, :, 0] = glb3[:, 4]
-                data['MWG6'][r, :, 0] = glb3[:, 5]
+                data['Gen by lb'][r] = glb3[:]
+                
                 # To avoid division by 0 if 0 shares
                 zero_lf = data['MEWL'][r, :, 0] == 0
                 data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
@@ -592,13 +580,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
                 nonzero_cap = np.sum(klb3, axis=1) > 0
                 data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
+                
                 # Generation by load band
-                data['MWG1'][r, :, 0] = glb3[:, 0]
-                data['MWG2'][r, :, 0] = glb3[:, 1]
-                data['MWG3'][r, :, 0] = glb3[:, 2]
-                data['MWG4'][r, :, 0] = glb3[:, 3]
-                data['MWG5'][r, :, 0] = glb3[:, 4]
-                data['MWG6'][r, :, 0] = glb3[:, 5]
+                data['Gen by lb'][r] = glb3[:]
                 # To avoid division by 0 or near 0, if very low shares
                 zero_lf = data['MEWL'][r,:,0] <= 0.0001
                 data['MEWL'][r, zero_lf, 0] = data["MWLO"][r, zero_lf, 0]
