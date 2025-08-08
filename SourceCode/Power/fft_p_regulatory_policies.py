@@ -20,8 +20,8 @@ def policies_old(rti, mewl, t2ti, endo_shares, mewdt, mewk_dt,
      
     for r in range(rti):
        
-        endo_gen = endo_shares[r] * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(endo_shares[r] * mewl[r, :, 0])
-        endo_capacity = endo_gen / mewl[r, :, 0] / 8766
+        endo_gen = endo_shares[r] * (mewdt[r]*1000/3.6) * mewl[r, :] / np.sum(endo_shares[r] * mewl[r, :])
+        endo_capacity = endo_gen / mewl[r] / 8766
 
         # Regulations have priority over exogenous capacity        
 
@@ -47,6 +47,7 @@ def policies_old(rti, mewl, t2ti, endo_shares, mewdt, mewk_dt,
         # Sum effect of exogenous sales additions (if any) with
         # effect of regulations
         dUk = dUkREG + dUkMK
+        
 
         dUtot = np.sum(dUk)
  
@@ -62,10 +63,14 @@ def policies_old(rti, mewl, t2ti, endo_shares, mewdt, mewk_dt,
             mews[r, :, 0] = (endo_capacity + dUk) / (np.sum(endo_capacity) + dUtot)
        
        
-        mewg[r, :, 0] = mews[r, :, 0] * (mewdt[r]*1000/3.6) * mewl[r, :, 0] / np.sum(mews[r, :, 0] * mewl[r, :, 0])
-        mewk[r, :, 0] = mewg[r, :, 0] / mewl[r, :, 0] / 8766
+        mewg[r, :, 0] = mews[r, :, 0] * (mewdt[r]*1000/3.6) * mewl[r] / np.sum(mews[r, :, 0] * mewl[r])
+        mewk[r, :, 0] = mewg[r, :, 0] / mewl[r] / 8766
+        
+        if r==0:
+            dUk0 = dUk
+            dUkMK0 = dUkMK
         
     
-    return mews, mewl, mewg, mewk
+    return mews, mewg, mewk, dUk0, dUkMK0
 
 
