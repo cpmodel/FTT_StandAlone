@@ -263,7 +263,7 @@ class ModelRun:
                                         self.domain)
                 
             if not any(True for x in modules_list if x in self.ftt_modules):
-                print("Incorrect selection of modules. Check settings.ini")
+                print("Incorrect selection of models. Check settings.ini")
 
             # Third, solve energy supply
             # Overwrite iter_lags to be used in the next iteration round

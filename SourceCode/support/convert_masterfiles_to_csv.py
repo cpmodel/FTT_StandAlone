@@ -120,13 +120,13 @@ def are_csvs_older_than_masterfiles(vars_to_convert, out_dir, models, \
                 time_modified = os.path.getmtime(out_fn_reg)
             else:
                 print(f"No existing {var} csv files found")
-                print(f"vars_to_convert: {vars_to_convert}")
                 continue
             
             time_modified =  datetime.datetime.fromtimestamp(time_modified)
             if time_modified > last_time_modified:
                 last_time_modified = time_modified
-        
+            
+        print(f"These variables will be extrated to csv: {vars_to_convert}")
         return last_time_modified
     
     def find_last_time_masterfile_modified(models, model, scen, dir_masterfiles):
