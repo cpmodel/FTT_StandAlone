@@ -22,10 +22,6 @@ Functions included:
         Calculates cost-supply curves for the power sector
 
 
-.. note::
-   For correspondance with E3ME:
-   NR is rti, NT2 is t2ti, NJ is jti, NER is erti, NM is mti, NC2 is c2ti
-
 '''
 # Third party imports
 import numpy as np
@@ -117,6 +113,7 @@ def interp(X, Y, X0, L):
 # -------------------------- marginal calculation ------------------------------
 # -----------------------------------------------------------------------------
 #@njit(fastmath=True)
+#@profile
 def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
                       num_regions, num_techs, num_resources):
     '''
@@ -246,6 +243,7 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
 # -----------------------------------------------------------------------------
 
 #@njit(fastmath=True) ## Doesn't work!
+#@profile
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
                 num_regions, num_techs, num_resources, year, dt):
     '''
@@ -286,11 +284,12 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
         # resource type not histogram
         else:
 
-            for j in range(num_regions):
-
+            for r in range(num_regions):
+                
+                # TODO: can this be computed last minute, so we don't have to compute it for turned of CSCs?
                 #QuantityAxis(K) = min(Q) + (K-1) * (max(Q)-min(Q))/(N data points -1) # We don't need this loop either I believe
-                CSC_Q[j, i, :] = BCSC[j, i, 1] \
-                            + lmo * (BCSC[j, i, 2] - BCSC[j, i, 1]) / (BCSC[j, i, 3] - 1)
+                CSC_Q[r, i, :] = BCSC[r, i, 1] \
+                            + lmo * (BCSC[r, i, 2] - BCSC[r, i, 1]) / (BCSC[r, i, 3] - 1)
 
 
     # Calculate non-renewable resource use
@@ -301,7 +300,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # RERY is set in FTTinvP for fossil fuels
 
     # Uranium
-    MEPD[:, 0, 0] = divide(MEWG[:, 0, 0], BCET[:, 0, 13]) * 3.6 / 1000
+    MEPD[:, 0, 0] = MEWG[:, 0, 0] / BCET[:, 0, 13] * 3.6 / 1000
     # Oil
     MEPD[:, 1, 0] = MEWD[:, 2, 0] + MEWD[:, 3, 0] + MEWD[:, 4, 0]
     # Coal
@@ -312,20 +311,20 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
-    MEPD[:, 4, 0] =  (divide(MEWG[:, 8, 0],  BCET[:, 8, 13])   \
-                    + divide(MEWG[:, 9, 0],  BCET[:, 9, 13])   \
-                    + divide(MEWG[:, 10, 0], BCET[:, 10, 13])  \
-                    + divide(MEWG[:, 11, 0], BCET[:, 11, 13])) \
+    MEPD[:, 4, 0] = ( MEWG[:, 8,  0] / BCET[:, 8,  13]
+                    + MEWG[:, 9,  0] / BCET[:, 9,  13]
+                    + MEWG[:, 10, 0] / BCET[:, 10, 13]
+                    + MEWG[:, 11, 0] / BCET[:, 11, 13] ) \
                     * 3.6/1000 # +  MEWD[11, :]   +   MEWD[10, :]
     RERY[:, 4, 0] = MEPD[:, 4, 0]       # In PJ
     # Biogas (From here onwards cost curves are in TWh)
     MEPD[:, 5, 0] = (MEWG[:, 12, 0] \
-                   + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
+                   + MEWG[:, 13, 0] * BCET[:, 13, 13] / BCET[:, 12, 13]) \
                     * 3.6/1000
     RERY[:, 5, 0] = MEPD[:, 5, 0]        # In PJ
     # Biogas + CCS
     MEPD[:, 6, 0] = (MEWG[:, 12, 0] \
-                   + MEWG[:, 13, 0] * divide(BCET[:, 13, 13], BCET[:, 12, 13])) \
+                   + MEWG[:, 13, 0] * BCET[:, 13, 13] / BCET[:, 12, 13]) \
                     * 3.6/1000
     RERY[:, 6, 0] = MEPD[:, 6, 0] # in PJ
     # Tidal
@@ -341,7 +340,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     MEPD[:, 10, 0] = MEWG[:, 17, 0] * 3.6/1000
     RERY[:, 10, 0] = MEPD[:, 10, 0] # in PJ
     # Solar (PV + CSP)
-    MEPD[:, 11, 0] = (divide(MEWG[:, 18, 0], BCET[:, 18, 13])  +  divide(MEWG[:, 19, 0], BCET[:, 19, 13])) * 3.6/1000
+    MEPD[:, 11, 0] = (MEWG[:, 18, 0] / BCET[:, 18, 13] +  MEWG[:, 19, 0] / BCET[:, 19, 13]) * 3.6/1000
     RERY[:, 11, 0] = MEPD[:, 11, 0] # in PJ
     # Geothermal
     MEPD[:, 12, 0] = MEWG[:, 20, 0] * 3.6/1000
