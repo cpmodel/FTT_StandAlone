@@ -39,6 +39,7 @@ from SourceCode.support.divide import divide
 # -------------------------- Interpolate ------------------------------
 # -----------------------------------------------------------------------------
 
+@njit(fastmath=True, cache=True)
 def interp(X, Y, X0, L):
     '''
 
@@ -116,7 +117,8 @@ def interp(X, Y, X0, L):
 # -------------------------- marginal calculation ------------------------------
 # -----------------------------------------------------------------------------
 #@njit(fastmath=True)
-def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt):
+def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
+                      num_regions, num_techs, num_resources):
     '''
     Marginal cost of production of non renewable resources.
 
@@ -158,8 +160,8 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
 
     '''
     L = 990
-    MRED = np.zeros([71, 14, 1])
-    MRES = np.zeros([71, 14, 1])
+    MRED = np.zeros([num_regions, num_resources, 1])
+    MRES = np.zeros([num_regions, num_resources, 1])
     P = np.zeros([4])
     #dQdt = np.zeros([990])
     #dFdthold = np.zeros([990])
@@ -201,7 +203,7 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
             # the regional production-to-reserve ratio MPTR,
             # the BCSC contains (sparse) regional matrix of reserves at cost level
             # and where_costs_below_price selects costs hist under the currrent cost guess P, with smoothing
-            dFdt = np.sum(MPTR[:, j, 0].reshape((71, 1)) \
+            dFdt = np.sum(MPTR[:, j, 0].reshape((num_regions, 1)) \
                          * BCSC[: , j, 4:] \
                          * costs_below_price.reshape((1, L)) * dC)
 
@@ -220,8 +222,8 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
         
         # Remove used resources from the regional histograms (uranium, oil, coal and gas only)
         # Have removed loop, loop was over regions
-        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j, 0].reshape((71, 1)) * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dt
-        RERY[:, j, 0] = np.sum((MPTR[:, j, 0].reshape((71, 1)) * BCSC[:, j, 4:] \
+        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j, 0].reshape((num_regions, 1)) * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dt
+        RERY[:, j, 0] = np.sum((MPTR[:, j, 0].reshape((num_regions, 1)) * BCSC[:, j, 4:] \
                                 * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * divide(HistC[j, :] - P[j], P[j])))) * dC)
 
         # Write back new marginal cost values (same value for all regions)
@@ -244,7 +246,8 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
 # -----------------------------------------------------------------------------
 
 #@njit(fastmath=True) ## Doesn't work!
-def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES, rti, t2ti, erti, year, dt):
+def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
+                num_regions, num_techs, num_resources, year, dt):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
@@ -252,9 +255,9 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     L = 990
     lmo = np.arange(L)          # This will have length 990, from 0 to 989
-    CSC_Q = np.zeros([71, 14, L])
-    HistC = np.zeros([14, L])
-    #HistQ = np.zeros([14, 990])
+    CSC_Q = np.zeros([num_regions, num_resources, L])
+    HistC = np.zeros([num_resources, L])
+    #HistQ = np.zeros([num_resources, 990])
     X = np.zeros([990])
     Y = np.zeros([990])
     Ind = 0
@@ -271,7 +274,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Parameters: (1) Type (2) Min (3) Max (4) Number of data points
     # Resource data type: (0) Capacity Factor reduction (1) Histogram, (2) Fuel cost, (3) Investment cost 
 
-    for i in range(len(erti)): # Resource classification
+    for i in range(num_resources): # Resource classification
         # if the data type contained in k=0 (k=1 in fortran) is a histogram (same for all regions)
         if BCSC[0, i, 0] == 1:
 
@@ -283,7 +286,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
         # resource type not histogram
         else:
 
-            for j in range(len(rti)):
+            for j in range(num_regions):
 
                 #QuantityAxis(K) = min(Q) + (K-1) * (max(Q)-min(Q))/(N data points -1) # We don't need this loop either I believe
                 CSC_Q[j, i, :] = BCSC[j, i, 1] \
@@ -326,7 +329,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     * 3.6/1000
     RERY[:, 6, 0] = MEPD[:, 6, 0] # in PJ
     # Tidal
-    MEPD[:, 7, 0] = MEWG[:, 14, 0] * 3.6/1000
+    MEPD[:, 7, 0] = MEWG[:, num_resources, 0] * 3.6/1000
     RERY[:, 7, 0] = MEPD[:, 7, 0] # in PJ
     # Hydro
     MEPD[:, 8, 0] = MEWG[:, 15, 0] * 3.6/1000
@@ -362,15 +365,15 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Calculate the marginal cost of production of non renewable resources
     if year >= 2017:
 
-        RERY, BCSC, HistC, MERC, MRED, MRES = \
-                marginal_function(
-                MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt
+        RERY, BCSC, HistC, MERC, MRED, MRES = marginal_function(
+                MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
+                num_regions, num_techs, num_resources,
                 )
 
 
     # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
-    for r in range(len(rti)):           # Loop over region
-        for j in range(len(t2ti)):      # Loop over technology 
+    for r in range(num_regions):           # Loop over region
+        for j in range(num_techs):      # Loop over technology 
             if(MEPD[r, tech_to_resource[j]] > 0.0):
 
                 # Non-renewable resources fuel costs (histograms)

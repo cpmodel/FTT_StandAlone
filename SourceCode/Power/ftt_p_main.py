@@ -80,6 +80,7 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
+#@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -114,6 +115,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
+    num_regions = len(titles['RTI'])
+    num_techs = len(titles['T2TI'])
+    num_resources = len(titles['ERTI'])
+    num_loadbands = len(titles['LBTI'])
 
 
     # Conditional vector concerning technology properties
@@ -149,7 +154,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
+                num_regions, num_techs, num_resources, year, 1.0
                 )
 
         data['BCET'] = bcet
@@ -167,7 +172,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data = rldc(data, time_lag, iter_lag, year, titles)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
-                                   len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
+                                   num_regions, num_techs, num_loadbands)
         data['MSLB'] = mslb
         data['MLLB'] = mllb
         data['MES1'] = mes1
@@ -277,11 +282,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             if year == 2013:
                 mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                         data['MEWL'], data['MWMC'], data['MMCD'],
-                                        len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
+                                        num_regions, num_techs, num_loadbands)
             else:
                 mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                         data['MEWL'], time_lag['MWMC'], time_lag['MMCD'],
-                                        len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
+                                        num_regions, num_techs, num_loadbands)
             data['MSLB'] = mslb
             data['MLLB'] = mllb
             data['MES1'] = mes1
@@ -374,9 +379,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # additions (MEWI) we can estimate total global spillover of similar techs
 
             mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
-            dw = np.zeros(len(titles["T2TI"]))
+            dw = np.zeros(num_techs)
             
-            for i in range(len(titles["T2TI"])):
+            for i in range(num_techs):
                 dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
@@ -403,7 +408,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
+                num_regions, num_techs, num_resources, year, 1.0
                 )
 
             data['BCET'] = bcet
@@ -523,8 +528,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 costs_sd=data_dt['MTCD'],        # Standard deviation costs
                 subst=data['MEWA'] / T_Scal,     # Substitution turnover rates
                 reg_constr=reg_constr,           # Constraint due to regulation
-                num_regions=len(titles['RTI']),  # Number of regions
-                num_techs=len(titles['T2TI']),   # Number of techs
+                num_regions=num_regions,         # Number of regions
+                num_techs=num_techs,             # Number of techs
                 upper_limit=data_dt['MES1'],     # Any techs with an opper limit
                 lower_limit=data_dt['MES2'],     # Any techs with a lower limit
                 limits_active=True)              # Defaults to False
@@ -567,7 +572,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                            data['MEWL'], data_dt['MWMC'], data_dt['MMCD'],
-                                           len(titles['RTI']), len(titles['T2TI']), len(titles['LBTI']))
+                                           num_regions, num_techs, num_loadbands)
             data['MSLB'] = mslb
             data['MLLB'] = mllb
             data['MES1'] = mes1
@@ -649,10 +654,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Using a technological spill-over matrix (PG_SPILL) together with capacity
             # additions (PG_CA) we can estimate total global spillover of similar techs
             mewi0 = np.sum(mewi_t[:, :, 0], axis=0)
-            dw = np.zeros(len(titles["T2TI"]))
+            dw = np.zeros(num_techs)
             
             
-            for i in range(len(titles["T2TI"])):
+            for i in range(num_techs):
                 dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
                 dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
@@ -697,7 +702,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt
+                num_regions, num_techs, num_resources, year, dt
                 )
 
             data['BCET'] = bcet
@@ -731,6 +736,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # TODO: average over 3 years like FORTRAN? 
         # Investment (1.33 an exchange rate factor)
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
+        
+        if year == 2050:
+            print(f"Total number of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f}")
         
     return data
 
