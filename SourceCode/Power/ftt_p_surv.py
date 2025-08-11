@@ -51,6 +51,8 @@ def survival_function(data, time_lag, histend, year, titles, c2ti):
         Curernt/active year of solution
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
+    c2ti: dictionary
+        The names of the elements of the cost matrix
 
     Returns
     ----------

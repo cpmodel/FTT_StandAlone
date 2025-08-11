@@ -80,7 +80,6 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -174,7 +173,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MES1'] = mes1
         data['MES2'] = mes2
         
-<<<<<<< Updated upstream
         # Total electricity demand
         tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
 
@@ -210,14 +208,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
             
-=======
-        # Calculate load factor (MEWL) and generation by load-band in place
-        calculate_load_factors_from_dispatch(data, titles)
         
         # Update capacities and market shares
         data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
         data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
->>>>>>> Stashed changes
+
             
         for r in range(len(titles['RTI'])):
             cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
