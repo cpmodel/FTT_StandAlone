@@ -121,17 +121,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # (same for all regions)
     Svar = data['BCET'][:, :, c2ti['18 Variable (0 or 1)']]
 
-
-    # TODO: This is a generic survival function
-    HalfLife = data['BCET'][:, :, c2ti['9 Lifetime (years)']]/2
-    dLifeT = HalfLife/10
-
-    for age in range(len(titles['TYTI'])):
-
-        age_matrix = np.ones_like(data['MSRV'][:, :, age]) * age
-
-        data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
-
     # Store gamma values in the cost matrix (in case it varies over time)
     data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
@@ -141,11 +130,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     data['EX13'] = np.copy(time_lag['EX13'] )
     data['PRSC15'] = np.copy(time_lag['PRSC15'] )
     data["REX13"] = np.copy(time_lag["REX13"])
+    
     # %% First initialise if necessary
 
     T_Scal = 10      # Time scaling factor used in the share dynamics
 
-    # Initialisation, which corresponds to lines 389 to 556 in fortran
+    # Initialisation
     if year == 2013:
         data['PRSC13'] = np.copy(data['PRSCX'])
         data['EX13'] = np.copy(data['EXX'])
@@ -184,6 +174,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MES1'] = mes1
         data['MES2'] = mes2
         
+<<<<<<< Updated upstream
         # Total electricity demand
         tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
 
@@ -219,7 +210,16 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update market shares
             data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / data['MEWK'][r, :, 0].sum()
             
+=======
+        # Calculate load factor (MEWL) and generation by load-band in place
+        calculate_load_factors_from_dispatch(data, titles)
+        
+        # Update capacities and market shares
+        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+        data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
+>>>>>>> Stashed changes
             
+        for r in range(len(titles['RTI'])):
             cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
             cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
             data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
@@ -228,8 +228,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
 
        
-        data['MEWL'][:, :, 0] = data['MWLO'][:, :, 0].copy()
-        data['MCFC'][:, :, 0] = data['MWLO'][:, :, 0].copy()
+        data['MEWL'] = data['MWLO'].copy()
+        data['MCFC'] = data['MWLO'].copy()
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
         data = get_lcoe(data, titles)
@@ -243,7 +243,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['PRSC15'] = np.copy(data['PRSCX'])
 
 
-        # Set starting values for MERC
+        # Set starting values for marginal costs of resources (MERC)
         data['MERC'][:, 0, 0] = 0.255
         data['MERC'][:, 1, 0] = 5.689
         data['MERC'][:, 2, 0] = 0.4246
@@ -253,21 +253,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
         if year > 2013: 
-            data['MEWL'][:, :, 0] = time_lag['MEWL'][:, :, 0].copy()
+            data['MEWL'] = time_lag['MEWL'].copy()
 
-        cond = np.logical_and(data['MEWL'][:, :, 0] < 0.01, data['MWLO'][:, :, 0] > 0.0)
-        data['MEWL'][:, :, 0] = np.where(cond,
-                                 data['MWLO'][:, :, 0],
-                                 data['MEWL'][:, :, 0])
-
+        data['MEWL'] = np.where((data['MEWL'] < 0.01) & (data['MWLO'] > 0.0),
+                                 data['MWLO'], data['MEWL'])
 
         # Initialise starting capacities
         if year <= 2012:
-            data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MWLO'][:, :, 0]) / 8766
+            data['MEWK'] = divide(data['MEWG'], data['MWLO']) / 8766
         else:
-            data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
+            data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
 
-        data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis])
+        data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
@@ -356,13 +353,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # Total additional electricity that needs to be generated
                 data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r, 0, 0] + data['MSSG'][r,0,0]
                 
-                data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
                 
-                data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
-                                                  where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
 
                 # C02 emissions for carbon costs (MtC02)
                 data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
+            
+            # Update capacities MEWK and market shares MEWS
+            data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+            data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
 
             # Compute early scrapping costs
             # TODO: check it makes sense. It does not seem to be used elsewhere

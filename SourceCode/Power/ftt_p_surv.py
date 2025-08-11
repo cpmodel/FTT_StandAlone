@@ -29,7 +29,7 @@ from numba import njit
 # -----------------------------------------------------------------------------
 # -------------------------- Survival calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def survival_function(data, time_lag, histend, year, titles):
+def survival_function(data, time_lag, histend, year, titles, c2ti):
 
     """
     In this function scrappage, sales, tracking of age, and average efficiency
@@ -65,6 +65,16 @@ def survival_function(data, time_lag, histend, year, titles):
     ---------
     This function is currently unused.
     """
+    
+    # TODO: This is a generic survival function
+    HalfLife = data['BCET'][:, :, c2ti['9 Lifetime (years)']]/2
+    dLifeT = HalfLife/10
+
+    for age in range(len(titles['TYTI'])):
+
+        age_matrix = np.ones_like(data['MSRV'][:, :, age]) * age
+
+        data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
 
     # Create a generic matrix of fleet-stock by age
     # Assume uniform distribution, but only do so when we still have historical
