@@ -117,7 +117,7 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
                     klb[1] = 0.0
                 else:
                     klb[1] = klb[1] - s_i[0]
-                    MSLB[r,0,1] = MSLB[r,0,1] + s_i[1]
+                    MSLB[r,0,1] = MSLB[r,0,1] + s_i[0]
                     s_i[0] = 0.0            
                 
 
