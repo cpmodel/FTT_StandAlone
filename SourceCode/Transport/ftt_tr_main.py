@@ -36,6 +36,7 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
+from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_sales, regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
@@ -256,9 +257,30 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
             endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
             endo_capacity = endo_shares * rfltt[:, np.newaxis]
-
             
-            # Implement exogenous sales and correct for stretching
+            # New implementation exogenous sales and regulation correction =====
+            
+            
+            # Calculate exogenous sales effects, capped at maximum sales
+            dUk_exog_sales = exogenous_sales(
+                data['TWSA'][regions, :, 0], rfltt[regions], endo_capacity[regions], data['TREG'][regions, :, 0], 
+                no_it, data['BTTC'][regions, :, c3ti['8 lifetime']]
+            )
+            
+            # Correction for regulation when demand is growing
+            dUk_reg = regulation_correction(
+                endo_capacity[regions], endo_shares[regions], rfltt[regions, None], reg_constr[regions])
+            
+            # Calculate total capacity in each region
+            new_capacity = endo_capacity[regions] + dUk_exog_sales + dUk_reg
+            total_capacity = np.sum(new_capacity, axis=1)
+            
+            # Compute new shares
+            data['TEWS'][regions, :, 0] = divide(new_capacity, total_capacity[:, None])
+            
+            
+            # # Old implementation exogenous sales and correction for stretching ====
+            tews_old = np.zeros((len(titles['RTI']), len(titles['VTTI']),1))
             for r in regions:
                 if r < len(titles['RTI']):  # Safety check
                     dUkTK = np.zeros([len(titles['VTTI'])])
@@ -291,8 +313,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                     # Zero capacity will result in zero shares
                     # All other capacities will be streched
 
-                    data['TEWS'][r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
+                    tews_old[r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
             
+            
+            if t==no_it and year in [2025, 2050]:
+                # Only compare regions with meaningful market shares
+                meaningful_regions = np.sum(np.abs(tews_old), axis=(1,2)) > 1e-6
+                diff = np.abs(data['TEWS'][meaningful_regions] - tews_old[meaningful_regions])
+                old_values = np.abs(tews_old[meaningful_regions])
+                max_rel_diff = np.max(diff / (old_values + 1e-10)) * 100
+                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
+                print(f"Max relative difference transport {year}: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
+
 
             # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['TEWS'], titles, sector, year)
@@ -449,6 +481,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
+        
+        if year==2050:
+            print(f"Total small electric cars is {data['TEWK'][:, 18].sum()}")
 
     return data
 

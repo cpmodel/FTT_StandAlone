@@ -3,11 +3,9 @@
 =========================================
 ftt_p_main.py
 =========================================
-Power generation FTT module.
+Power generation FTT module, main file.
 
-
-This is the main file for the power module, FTT: Power. The power
-module models technological replacement of electricity generation technologies due
+The power module models technological replacement of electricity generation technologies due
 to simulated investor decision making. Investors compare the **levelised cost of
 electricity**, which leads to changes in the market shares of different technologies.
 
@@ -30,6 +28,8 @@ Local library imports:
     FTT: Core functions:
     - `get_sales <get_sales_or_investment.htlm>
         Generic investment function (new plus end-of-life replacement)
+    - `shares <ftt_shares.html>`__
+        Market shares simulation (core of the model)
         
     FTT: Power functions:
 
@@ -40,9 +40,7 @@ Local library imports:
     - `get_lcoe <ftt_p_lcoe.html>`__
         Levelised cost calculation
     - `survival_function <ftt_p_surv.html>`__
-        Calculation of scrappage, sales, tracking of age, and average efficiency.
-    - `shares <ftt_shares.html>`__
-        Market shares simulation (core of the model)
+        Calculates scrappage, sales, tracking of age, and average efficiency.
     - `cost_curves <ftt_p_costc.html>`__
         Calculates increasing marginal costs of resources
 
@@ -62,6 +60,7 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.ftt_core.ftt_shares import shares_change
+from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_capacity, regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
@@ -525,25 +524,57 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 reg_constr=reg_constr,           # Constraint due to regulation
                 num_regions=len(titles['RTI']),  # Number of regions
                 num_techs=len(titles['T2TI']),   # Number of techs
-                upper_limit=data_dt['MES1'],     # Any techs with an opper limit
+                upper_limit=data_dt['MES1'],     # Any techs with an upper limit
                 lower_limit=data_dt['MES2'],     # Any techs with a lower limit
                 limits_active=True)              # Defaults to False
             
             endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
+            # Grid operators guess expected generation based on load factors last time step
+            mewl = data_dt['MEWL'][:, :, 0].copy()            
             
+            endo_gen = endo_shares * (MEWDt[:, None]*1000/3.6) * mewl / np.sum(endo_shares * mewl, axis=1)[:, None]
+            endo_capacity = endo_gen / mewl / 8766
             
-            mews, mewl, mewg, mewk = policies_old(
-                len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
-                data['MWLO'], time_lag['MEWS'],
-                endo_shares, MEWDt,  data_dt['MEWK'],
+            # Calculate correction for possible underregulation
+            dUk_reg = regulation_correction(
+                endo_capacity, endo_shares, np.sum(data_dt['MEWK'], axis=1), reg_constr)
+            
+            # Calculate changes to capacity from exogenous capacity
+            dUk_exog_cap = exogenous_capacity(
+                data['MWKA'][:, :, 0], endo_capacity, dUk_reg, data['MEWR'][:, :, 0], t, no_it)
+            
+            dUk = dUk_reg + dUk_exog_cap
+            
+            # New market shares
+            total_capacity = np.sum(endo_capacity + dUk, axis=1)
+            mews = divide(endo_capacity + dUk, total_capacity[:, None])
+           
+            # New generation and capacity
+            mewg = mews * (MEWDt[:, None]*1000/3.6) * mewl / np.sum(endo_shares * mewl, axis=1)[:, None]
+            mewk = mewg / mewl / 8766
+            
+            # =================================================================
+            # Old code to do regulatory policies
+            mews_old, mewg_old, mewk_old, dUk_reg_old, dUk_exog_cap_old = policies_old(
+                len(titles['RTI']), mewl, len(titles['T2TI']),
+                endo_shares, MEWDt, data_dt['MEWK'],
                 reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
             
+          
+            # ===============================================================
             
-            data['MEWS'] = mews
-            data['MEWL'] = mewl
-            data['MEWG'] = mewg
-            data['MEWK'] = mewk
-                        
+            data['MEWS'] = mews[:, :, None]
+            data['MEWL'] = mewl[:, :, None]
+            data['MEWG'] = mewg[:, :, None]
+            data['MEWK'] = mewk[:, :, None]
+                               
+            if t==no_it and year in [2025, 2050]:
+                diff = np.abs(data['MEWS'] - mews_old)
+                max_rel_diff = np.max(diff / (np.abs(mews_old) + 1e-10)) * 100
+                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
+                print(f"Max relative difference power: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
+            
+
             # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['MEWS'], titles, 'FTT-P', year)
             
@@ -732,5 +763,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Investment (1.33 an exchange rate factor)
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
         
+        if year == 2050:
+            print(f"Total capacity of solar power is {np.sum(data['MEWG'][:, 18])/1e6:.3f}")
+        
     return data
+
+
+    
 
