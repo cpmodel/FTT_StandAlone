@@ -24,6 +24,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.sector_coupling.transport_batteries_to_power import share_transport_batteries, update_costs_from_transport_batteries, vehicle_to_grid
 
 #%% FEQS
 def feqs(a):
@@ -669,6 +670,10 @@ def rldc(data, time_lag, data_dt, year, titles):
     check_mssm = pd.DataFrame(data['MSSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
 
     # %%
+    data = vehicle_to_grid(data, time_lag, year, titles)
+    storage_ratio = share_transport_batteries(data, titles)
+    data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
+    
 
     # Store the storage capacities in 2020
     if year == 2020:

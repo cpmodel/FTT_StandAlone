@@ -42,6 +42,8 @@ import SourceCode.support.titles_functions as titles_f
 import SourceCode.support.dimensions_functions as dims_f
 from SourceCode.support.cross_section import cross_section as cs
 from SourceCode.initialise_csv_files import initialise_csv_files
+from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
+from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
 
 
 class ModelRun:
@@ -139,7 +141,7 @@ class ModelRun:
         self.titles = titles_f.load_titles()
 
         # Load variable dimensions
-        self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
+        self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Set up csv files if they do not exist yet
         initialise_csv_files(self.ftt_modules, self.scenarios)
@@ -219,16 +221,16 @@ class ModelRun:
         # Iteration loop here
         for itereration in range(max_iter):
 
-            if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-Fr" in self.ftt_modules:
                 variables = ftt_fr.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+            if "FTT-P" in self.ftt_modules:
+                variables = ftt_p.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-H" in self.ftt_modules:
@@ -263,7 +265,18 @@ class ModelRun:
                                         self.domain)
                 
             if not any(True for x in modules_list if x in self.ftt_modules):
-                print("Incorrect selection of models. Check settings.ini")
+                print("Incorrect selection of modules. Check settings.ini")
+            
+            # Apply electricity feedbacks after all sectors have solved
+            if "FTT-P" in self.ftt_modules:
+                if tl[y] > 2022:
+                    # Update electricity prices from power sector to other sectors
+                    variables = electricity_price_feedback(variables, time_lags)
+                    # Update electricity demand from all sectors to power
+                    if scenario != "S0":
+                        variables = electricity_demand_feedback(variables, 
+                                            self.output["S0"], y, self.titles,
+                                            self.unit)
 
             # Third, solve energy supply
             # Overwrite iter_lags to be used in the next iteration round

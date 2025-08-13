@@ -42,6 +42,7 @@ import numpy as np
 # Local library imports
 from SourceCode.Freight.ftt_fr_lcof import get_lcof
 from SourceCode.support.divide import divide
+from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 # Main function
 
@@ -373,6 +374,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 #                 + np.sum(data['ZEWB'][0, :, :]*data['ZEWY'][:, :, 0], axis = 1)*dt
                 
             # Reopen region loop 
+            # Battery learning from cross-sectoral coupling
+            if year > 2020:  # Start cross-sectoral learning after 2020
+                data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+            
             # Learning-by-doing effects on investment
             for tech in range(len(titles['FTTI'])):
 

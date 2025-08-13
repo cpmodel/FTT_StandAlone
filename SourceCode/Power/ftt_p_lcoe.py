@@ -153,6 +153,12 @@ def get_lcoe(data, titles):
     npv_expenses_mu_co2 = npv_expenses_mu_bare + ct / denominator
     npv_expenses_mu_policy = npv_expenses_mu_co2 + (fft + st) / denominator
     npv_expenses_av_all_policy = (it_av + ft + ct + omt + stor_cost + fft + st + ct) / denominator
+    
+    # Additional expenses for MEWP
+    npv_expenses_no_policy = (it_av + ft + omt + stor_cost) / denominator  
+    npv_expenses_all_but_co2 = npv_expenses_no_policy + (st) / denominator
+    npv_expenses_all = npv_expenses_no_policy + (st + ct) / denominator
+    npv_expenses_only_co2 = npv_expenses_no_policy + ct / denominator
 
     # 2 – Utility
     npv_utility = np.where(lt_mask, 1, 0) / denominator
@@ -169,6 +175,11 @@ def get_lcoe(data, titles):
     lcoeco2 = np.sum(npv_expenses_mu_co2, axis=2) / utility_sum
     lcoe_av = np.sum(npv_expenses_av_all_policy, axis=2) / utility_sum
     dlcoe = np.sum(npv_std, axis=2) / utility_sum
+    
+    # Additional LCOE calculations for MEWP
+    lcoe_all_but_co2 = np.sum(npv_expenses_all_but_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]  
+    lcoe_all = np.sum(npv_expenses_all, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+    lcoe_only_co2 = np.sum(npv_expenses_only_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]
 
     # LCOE augmented with gamma values
     lcoe_mu_gamma = lcoe_mu_all_policies + data['MGAM'][:, :, 0]
@@ -176,7 +187,9 @@ def get_lcoe(data, titles):
     # Pass to variables that are stored outside.
     data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes
     data['MECW'][:, :, 0] = lcoeco2         # The real bare LCOE with taxes
-    data['MECC'][:, :, 0] = lcoe_av         # The average LCOE costs including policies
+    data['MECC'][:, :, 0] = lcoe_all_but_co2  # LCOE with policy, without CO2 costs
+    data["MECC only CO2"][:, :, 0] = lcoe_only_co2  # Bare LCOE without policy, average CF, CO2 costs
+    data["MECC incl CO2"][:, :, 0] = lcoe_all  # LCOE without gamma with all the rest
     data['METC'][:, :, 0] = lcoe_mu_gamma   # As seen by consumer (generalised cost)
     data['MTCD'][:, :, 0] = dlcoe           # Variation on the LCOE distribution
 

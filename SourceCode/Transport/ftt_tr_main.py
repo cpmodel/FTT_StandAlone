@@ -43,6 +43,7 @@ from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
+from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 
 # %% Fleet size - under development
@@ -373,6 +374,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
                 data['BTTC'] = np.copy(data_dt['BTTC'])
 
                 # Battery learning
+                if year > 2020:  # Start cross-sectoral learning after 2020
+                    data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+                
                 for veh in range(len(titles['VTTI'])):
                     if 17 < veh < 24:
                         # Battery cost as a result of learning
