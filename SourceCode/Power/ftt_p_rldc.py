@@ -19,7 +19,6 @@ Functions included:
 """
 
 # Third party imports
-import pandas as pd
 import numpy as np
 
 # Local library imports
@@ -33,6 +32,7 @@ def feqs(a):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
+#@profile
 def rldc(data, time_lag, data_dt, year, titles):
     """
     Calculate RLDCs.
@@ -372,7 +372,7 @@ def rldc(data, time_lag, data_dt, year, titles):
         data['MKLB'][r, :5, 0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
         data['MKLB'][r, 5, 0] = np.sum(Svar * data['MEWS'][r,:,0])
         
-        if not np.isclose(data['MKLB'][r, :, 0].sum(), 1.0, atol=10e-6):  # MKLB should sum to ~1
+        if abs(data['MKLB'][r, :, 0].sum() - 1.0) > 1e-5:       # MKLB should sum to ~1
             print(f"Warning: Sum of MKLB for region {r} is not approximately 1. Current sum: {data['MKLB'][r, :, 0].sum()}")
             if np.isnan(data['MKLB'][r, :, 0].sum()):
                 nan_indices = np.where(np.isnan(data['MKLB'][r, :, 0]))[0]
@@ -596,8 +596,8 @@ def rldc(data, time_lag, data_dt, year, titles):
             # Typically, 100 MW, 70 GWh/cycle. Assume 2 cycles, so 100 MW capacity for every 140 GWh discharched
             total_output_wind_l = mlsc_wind*1400                  
             total_output_solar_l = mlsc_solar*1400
-            total_input_wind_l = total_output_wind_l/data['MLSE'][r, 0, 0]
-            total_input_solar_l = total_output_solar_l/data['MLSE'][r, 0, 0]
+            #total_input_wind_l = total_output_wind_l/data['MLSE'][r, 0, 0]
+            #total_input_solar_l = total_output_solar_l/data['MLSE'][r, 0, 0]
             
             if np.rint(data['MSAL'][r, 0, 0]) in [3]:
                 marg_cost_sol_ls = total_output_solar_l * data['MLCC'][r,0,0] / np.sum(data['MEWG'][r, :, 0] + vre_ggr_sol[r])  - data['MLSP'][r, 18, 0]
@@ -623,12 +623,12 @@ def rldc(data, time_lag, data_dt, year, titles):
             output_sol = rldc_prod_solar[1] * 0.262 * np.sum(data['MEWG'][r, :, 0])
             output_sol = output_sol + max(cap_needed_solar - cap_notvre, 0.0) * (1.0 - seasonality_index[r]) / 0.175e-3 * 0.262    # Add extra output from peak load sufficiency
             #output_sol = output_sol + total_output_solar_l # add short-term storage from capacity needs
-            input_sol = output_sol / data['MSSE'][r, 0, 0]  
+            #input_sol = output_sol / data['MSSE'][r, 0, 0]  
 
             output_wind = rldc_prod_wind[1] * 0.262 * np.sum(data['MEWG'][r, :, 0])
             output_wind = output_wind + max(cap_needed_wind - cap_notvre, 0.0) * (1.0 - seasonality_index[r]) / 0.175e-3 * 0.262   # Add extra output from peak load sufficiency
             # output_wind = output_wind + total_output_wind_l # add short-term storage from capacity  needs
-            input_wind = output_wind / data['MSSE'][r, 0, 0]            
+            #input_wind = output_wind / data['MSSE'][r, 0, 0]            
             
             if np.rint(data['MSAL'][r, 0, 0]) in [3]:
                 marg_cost_sol_ss = output_sol * data['MSCC'][r,0,0] / np.sum(data['MEWG'][r, :, 0] + vre_ggr_sol[r])  - data['MSSP'][r, 18, 0]
@@ -656,17 +656,6 @@ def rldc(data, time_lag, data_dt, year, titles):
     data["MLSM"] = data["MLSM"] * 1.34
     data["MSSR"] = data["MSSR"] * 1.34
     
-    check_mewg = pd.DataFrame(data['MEWG'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mewl = pd.DataFrame(data['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mewl_lag = pd.DataFrame(time_lag['MEWL'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mews = pd.DataFrame(data['MEWS'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mewd = pd.DataFrame(data['MEWD'][:, :, 0], index=titles['RTI'], columns=titles["JTI"])
-    check_mlsp = pd.DataFrame(data['MLSP'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mssp = pd.DataFrame(data['MSSP'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mssr = pd.Series(data["MSSR"][:, 0, 0], index=titles["RTI"])
-    check_mlsr = pd.Series(data["MLSR"][:, 0, 0], index=titles["RTI"])
-    check_mlsm = pd.DataFrame(data['MLSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
-    check_mssm = pd.DataFrame(data['MSSM'][:, :, 0], index=titles['RTI'], columns=titles["T2TI"])
 
     # %%
 
