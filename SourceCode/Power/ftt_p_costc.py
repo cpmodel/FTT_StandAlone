@@ -23,13 +23,15 @@ Functions included:
 '''
 # Third party imports
 import numpy as np
-from numba import njit
+#from numba import njit
 
 
 # %% marginal cost of production of non renewable resources
 # -----------------------------------------------------------------------------
-# -------------------------- marginal calculation ------------------------------
+# ----------------------- fuel costs non-renewables ---------------------------
 # -----------------------------------------------------------------------------
+
+
 #@njit(fastmath=True, cache=True)
 def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
                       num_regions, num_resources):
@@ -74,7 +76,7 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
     Takes about 16s to compile, so probably not worth it unless running
     significant a lot of different scenarios. 
     
-    Best strategy for further speed-ups is using scipy.fsolve
+    Scipy.fsolve might be a better strategy for speed ups.. 
 
     '''
     
@@ -111,7 +113,7 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
             # Sum total supply dFdt from all extraction cost ranges below marginal cost P 
             # 1 (or close to 1) when P(rice) > HistC, 0 otherwise (tc in FORTRAN)
             costs_below_price = \
-                0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) / P[j] )
+                0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) /  P[j] )
             
             # The supply dFdt is determined from:
             # the regional production-to-reserve ratio MPTR,
@@ -132,18 +134,20 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
             count = count + 1
         
         # Remove used resources from the regional histograms (uranium, oil, coal and gas only)
-        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j] * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j] ) / P[j]))) * dt
+        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j] * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) /  P[j]))) * dt
         RERY[:, j, 0] = np.sum((MPTR[:, j] * BCSC[:, j, 4:]
-                                * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) / P[j]))) * dC)
+                                * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) /  P[j]))) * dC)
 
         # Write back new marginal cost values (same value for all regions)
         MERC[:, j, 0] = P[j]
         
         # Sum resources. 
-        # TODO in new PR: fix the sum to start from 4!
+        # TODO in additional PR: fix the sum to start from 4!
         HistCSUM = np.sum(HistC, axis=1)
-        MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1)
-        MRES[:, j, 0] = MRES[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1) * (0.5 - 0.5 * np.tanh(1.25 * 2 * (HistCSUM[j] - P[j]) / P[j]))
+        MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (
+                    BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1)
+        MRES[:, j, 0] = MRES[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (
+                    BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1) * (0.5 - 0.5 * np.tanh(1.25 * 2 * (HistCSUM[j] - P[j]) / P[j]))
 
 
 
@@ -245,19 +249,22 @@ def update_capacity_factors_original(
             # We use an inverse here
             Y0s[ri] = np.interp(X0s[ri], X[ri], Y[ri])
             MERC[regions[ri], resource_idx[ri], 0] = 1.0/(Y0s[ri] + 0.000001)
-            BCET[regions[ri], techs[ri], 10] = 1.0/(Y0s[ri] + 0.000001)    
+            BCET[regions[ri], techs[ri], 10] = 1.0/(Y0s[ri] + 0.000001)
+            
+            if techs[ri] == 19:
+                # CSP is twice as efficient as solar power typically
+                BCET[regions[ri], techs[ri], 10] *= 2
             
         if Inds[ri] >= 1 and X0s[ri] > 0 and MEWG[regions[ri], techs[ri], 0] > 0.01:
             Inds[ri] = np.searchsorted(X[ri], X0s[ri]) # Find the closest appropriate index
             avg_cf[ri] = np.trapz(1.0 / (Y[ri, 1:Inds[ri]+1] + 1e-6), dx=1) / Inds[ri] # Integrate using trapz
+            MEWL[regions[ri], techs[ri], 0] = avg_cf[ri]
             
-        
-    MEWL[regions, techs, 0] = avg_cf
+            if techs[ri] == 19:
+                # CSP is twice as efficient as solar power typically
+                MEWL[regions[ri], techs[ri], 0] *= 2
     
-    # CSP is twice as efficient as solar power typically
-    BCET[:, 19, 10] = BCET[:, 18, 10] * 2.0
-    MEWL[:, 19, 0] = MEWL[:, 18, 0] * 2.0
-         
+
     
     return BCET, MEWL, MERC
 
@@ -281,16 +288,12 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, L, tech_to_resource, i
     
     return MERC, BCET
     
-@profile  
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
                 num_regions, num_techs, num_resources, year, dt):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
     '''
-
-    # Calculate non-renewable resource use
-    # Non renewable resource use (treated global <=> identical for all regions)
 
     # Sum electricity generation for all regions, transform into PJ (resource histograms in PJ)
     # MEWD is the non-power demand for resources
@@ -362,7 +365,6 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     lmo = np.arange(L)          # This will have length 990, from 0 to 989
     HistC = np.zeros([num_resources, L])
 
-
     # Resources classification:
     # Correspondence vector between techs and resources
     tech_to_resource = [0, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 13, 3, 3]
@@ -370,11 +372,11 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # BCSC is natural resource data with dimensions num_resources x num_techs x length of cost axis L
 
     # Unpack histograms
-    # First 4 values in each BCSC(I, J, :) vectors are:
+    # First 4 values in each BCSC[r, j, :] vectors are:
     # Parameters: (1) Type (2) Min (3) Max (4) Number of data points
-    # Resource data type: (0) Capacity Factor reduction (1) Histogram, (2) Fuel cost, (3) Investment cost 
+    # Resource type: (0) Capacity Factor reduction (1) Histogram fuel cost (2) Fuel cost, (3) Investment cost 
 
-    for i in range(num_resources): # Resource classification
+    for i in range(num_resources): 
         # if the data type contained in k=0 is a histogram (same for all regions)
         if BCSC[0, i, 0] == 1:
 
@@ -386,13 +388,15 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
         return BCET, BCSC, MEWL, MEPD, MERC, RERY, MRED, MRES
 
     # Calculate the marginal cost of production of non-renewable resources
+    
+    # Non renewable resource use (treated global <=> identical for all regions)
     if year >= 2017:
 
         RERY, BCSC, MERC, MRED, MRES = marginal_costs_nonrenewables(
                 MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
-                num_regions, num_resources,
+                num_regions, num_resources
                 )
-        
+       
     # Select the Update fuel costs (type 1), capacity factors (type 0) or investment costs (type 3)
     
     resource_in_use_mask = (MEPD[:, tech_to_resource, 0] > 0.0)
@@ -403,21 +407,19 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Type 1: Fossil fuel and nuclear cost curves (increased fossil fuel costs)
     BCET = update_fuel_costs(
         BCET, MERC, MRCL, tech_to_resource, fuel_type_mask)
+
     
     # Type 2: Variable renewables cost curves (reduced capacity factors)
     # The x-axis written out for the old capacity factor cost-supply curves
-    # techs = np.where(BCSC[0, range(num_resources), 0] == 0)[0]
-    # CSC_Q = np.zeros([num_regions, num_resources, L])
-    # CSC_Q[:, techs, :] = (BCSC[:, techs, 1, None]
-    #                       + lmo * (BCSC[:, techs, 2, None] - BCSC[:, techs, 1, None]) / (BCSC[:, techs, 3, None] - 1))
-    
-    # BCET, MEWL, MERC = update_capacity_factors_original(
-    #     BCET, MEWG, BCSC, CSC_Q, MEPD, MEWL, MERC, L, tech_to_resource, loadfactor_type_mask)
-    
-    # New variable renewables cost curves (reduced capacity factors)
-    BCET, MEWL, MERC = update_capacity_factors(
-        BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask
-        )
+    techs = np.where(BCSC[0, range(num_resources), 0] == 0)[0]
+    CSC_Q = np.zeros([num_regions, num_resources, L])
+    CSC_Q[:, techs, :] = (BCSC[:, techs, 1, None]
+                          + lmo * (BCSC[:, techs, 2, None] - BCSC[:, techs, 1, None]) / (BCSC[:, techs, 3, None] - 1))
+        
+    # # Type 2: New variable renewables cost curves (reduced capacity factors)
+    # BCET, MEWL, MERC = update_capacity_factors(
+    #     BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask
+    #     )
     
     # Type 3: Investment cost type of cost-supply curve
     # If you turn this one on again, make sure CSC_Q are defined for these techs too
@@ -425,11 +427,60 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     #     BCET, BCSC, CSC_Q, MEPD, MERC, L, tech_to_resource, investment_type_mask
     #     )
     
-                
-    # Add REN resources left in MRED, MRES
     
-    # Total technical potential r>4 (j>4 in python)
+    # Type 2: Original variable renewables cost curves (reduced capacity factors)
+    CFvar = np.zeros([990])
+   
+    # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
+    for r in range(num_regions):           # Loop over region
+        for j in range(num_techs):      # Loop over technology 
+            if(MEPD[r, tech_to_resource[j]] > 0.0):
+
+               
+                # For variable renewables (e.g. wind, solar, wave)
+                # the overall (average) capacity factor decreases as new units have lower and lower CFs
+                if(BCET[r, j, 11] == 0):
+    
+                    X = CSC_Q[r, tech_to_resource[j], :]
+                    Y = BCSC[r, tech_to_resource[j], 4:]
+    
+                    # Note: the curve is in the form of an inverse capacity factor in BCSC
+                    X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
+                    if X0 > 0.0:
+                        Y0 = np.interp(X0, X, Y)
+                        ind = np.searchsorted(X, X0)  # Find corresponding in
+                    MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
+                    BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
+                    
+                    # TODO: uncomment in next PR
+                    # CSP is more efficient than PV by a factor 2
+                    # if j == 19 :
+                    #     BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
+    
+                    if(MEWG[r, j, 0] > 0.01 and ind >= 1 and X0 > 0):
+    
+                        # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
+                        CFvar[1:ind + 1] = 1.0 / (Y[1:ind + 1] + 0.000001) / (ind)
+                        CFvar2 = sum(CFvar[1:ind + 1])
+                        if CFvar2 > 0:
+    
+                            MEWL[r, j, 0] = CFvar2
+                        # TODO: uncomment in next PR
+                        # CSP is more efficient than PV by a factor 2
+                        # if j == 19 :
+                        #     MEWL[r, j, 0] = CFvar2 * 2.0
+                    
+                    # TODO: remove in next PR
+                    # Fix: CSP is more efficient than PV by a factor 2
+                    if j == 19 :
+                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
+                        MEWL[r, j, 0] = CFvar2 * 2
+    
+# %%    
+    # Add REN (resource >4) resources in MRED, and remaining resources in MRES    
+
     MRED[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6
+
     # Remaining technical potential
     MRES[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6 - MEPD[:, 4:, 0]
 
