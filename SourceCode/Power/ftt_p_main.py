@@ -80,7 +80,6 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.

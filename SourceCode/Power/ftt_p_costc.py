@@ -30,7 +30,6 @@ import numpy as np
 # ----------------------- fuel costs non-renewables ---------------------------
 # -----------------------------------------------------------------------------
 
-@profile
 def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
                       num_regions, num_resources):
     '''
@@ -106,6 +105,7 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
         dFdt = 0
         count = 0
         const = 1.25 * 2 * sig[j] 
+        
         while abs((dFdt - demand_non_renewables[j]) / demand_non_renewables[j]) > 0.01  and count < 20:
             
             # Sum total supply dFdt from all extraction cost ranges below marginal cost P 
@@ -237,7 +237,7 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
     
     return MERC, BCET
 
-@profile
+
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
                 num_regions, num_techs, num_resources, year, dt):
     '''
