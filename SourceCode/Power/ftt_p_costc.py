@@ -440,7 +440,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                 # For variable renewables (e.g. wind, solar, wave)
                 # the overall (average) capacity factor decreases as new units have lower and lower CFs
                 if(BCET[r, j, 11] == 0):
-    
+
                     X = CSC_Q[r, tech_to_resource[j], :]
                     Y = BCSC[r, tech_to_resource[j], 4:]
     
@@ -477,7 +477,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                         MEWL[r, j, 0] = CFvar2 * 2
     
 # %%    
-    # Add REN (resource >4) resources in MRED, and remaining resources in MRES    
+    # Add REN resources (resource # >4) in MRED, and remaining resources in MRES    
 
     MRED[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6
 
