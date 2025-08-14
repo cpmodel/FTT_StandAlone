@@ -80,7 +80,7 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-#@profile
+@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -738,7 +738,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
         
         if year == 2050:
-            print(f"Total number of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f}")
+            print(f"Total amount of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
     return data
 
