@@ -396,7 +396,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
                     if X0 > 0.0:
                         Y0 = np.interp(X0, X, Y)
-                        ind = np.searchsorted(X, X0)  # Find corresponding in
+                        ind = np.searchsorted(X, X0)  # Find corresponding index
                     MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
                     BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
                     
