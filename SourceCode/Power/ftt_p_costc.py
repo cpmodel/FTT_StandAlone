@@ -276,7 +276,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     * 3.6e-3
     RERY[:, 6, 0] = MEPD[:, 6, 0] # in PJ
     # Tidal
-    MEPD[:, 7, 0] = MEWG[:, num_resources, 0] * 3.6e-3
+    MEPD[:, 7, 0] = MEWG[:, 14, 0] * 3.6e-3
     RERY[:, 7, 0] = MEPD[:, 7, 0] # in PJ
     # Hydro
     MEPD[:, 8, 0] = MEWG[:, 15, 0] * 3.6e-3
