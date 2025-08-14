@@ -71,7 +71,7 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
     Notes
     -------------
     Takes about 16s to compile, so probably not worth it unless running
-    significant a lot of different scenarios. 
+    a lot of scenarios. 
     
     Scipy.fsolve might be a better strategy for speed ups.. 
 
@@ -422,7 +422,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     # Fix: CSP is more efficient than PV by a factor 2
                     if j == 19 :
                         BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
-                        MEWL[r, j, 0] = CFvar2 * 2
+                        
     
 # %%    
     # Add REN resources (resource # >4) in MRED, and remaining resources in MRES    
