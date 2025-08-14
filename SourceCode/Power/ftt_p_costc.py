@@ -23,7 +23,6 @@ Functions included:
 '''
 # Third party imports
 import numpy as np
-#from numba import njit
 
 
 # %% marginal cost of production of non renewable resources
@@ -31,9 +30,7 @@ import numpy as np
 # ----------------------- fuel costs non-renewables ---------------------------
 # -----------------------------------------------------------------------------
 
-
-#@njit(fastmath=True, cache=True)
-def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
+def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
                       num_regions, num_resources):
     '''
     Marginal cost of production of non-renewable resources.
@@ -80,7 +77,6 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
 
     '''
     
-    
     MRED = np.zeros((num_regions, num_resources, 1))
     MRES = np.zeros((num_regions, num_resources, 1))
     P = np.zeros((4))
@@ -96,8 +92,8 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
 
     # First 4 elements are the non-renewable resources
 
-    P[:4] = MRCL[0, :4, 0]     # All marginal costs of non-renewable resources are identical (global), use Belgium
-    MEPD_sum = np.sum(MEPD[:, :, 0], axis=0)  # Sum over regions
+    P[:4] = MRCL[0, :4, 0]     # Marginal costs of non-renewable resources are identical globally, use Belgium
+    MEPD_sum = np.sum(MEPD[:, :, 0], axis=0)   # Sum over regions
     demand_non_renewables = MEPD_sum[:4]       # Global demand for non-renewable resources
 
     # We search for the value of P that enables enough total production to supply demand
@@ -141,7 +137,7 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
         # Write back new marginal cost values (same value for all regions)
         MERC[:, j, 0] = P[j]
         
-        # Sum resources. 
+        # How much non-renewable resources are left in the cost curves
         # TODO in additional PR: fix the sum to start from 4!
         HistCSUM = np.sum(HistC, axis=1)
         MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (
@@ -150,8 +146,6 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED
                     BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1) * (0.5 - 0.5 * np.tanh(1.25 * 2 * (HistCSUM[j] - P[j]) / P[j]))
 
 
-
-    # Here we calculate how much non-renewable resources we have left in the cost curves
     return RERY, BCSC, MERC, MRED, MRES
 
 
@@ -221,52 +215,6 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
     
     return BCET, MEWL, MERC
 
-
-
-def update_capacity_factors_original(
-        BCET, MEWG, BCSC, CSC_Q, MEPD, MEWL, MERC, L, tech_to_resource, loadfactor_type_mask):
-    """Old capacity factor method. Overly strict reduction in capacity factors.
-    
-    For variable renewables (e.g. wind, solar, wave), the overall 
-    (average) capacity factor decreases as new units have lower and lower CFs
-    """
-    
-    # Select applicable techs and resources
-    regions, techs = np.where(loadfactor_type_mask)
-    resource_idx = np.array([tech_to_resource[j] for j in techs])
-    
-    X = CSC_Q[regions, resource_idx, :]
-    Y = BCSC[regions, resource_idx, 4:]
-    
-    # How much generation in each region/tech combo in right units
-    X0s = MEPD[regions, resource_idx, 0] / 3.6  # PJ -> TWh
-    
-    Y0s = np.zeros_like(X0s)
-    Inds = np.zeros_like(X0s)
-    avg_cf = np.zeros_like(X0s)
-    for ri, r in enumerate(regions):
-        if X0s[ri] > 0:
-            # We use an inverse here
-            Y0s[ri] = np.interp(X0s[ri], X[ri], Y[ri])
-            MERC[regions[ri], resource_idx[ri], 0] = 1.0/(Y0s[ri] + 0.000001)
-            BCET[regions[ri], techs[ri], 10] = 1.0/(Y0s[ri] + 0.000001)
-            
-            if techs[ri] == 19:
-                # CSP is twice as efficient as solar power typically
-                BCET[regions[ri], techs[ri], 10] *= 2
-            
-        if Inds[ri] >= 1 and X0s[ri] > 0 and MEWG[regions[ri], techs[ri], 0] > 0.01:
-            Inds[ri] = np.searchsorted(X[ri], X0s[ri]) # Find the closest appropriate index
-            avg_cf[ri] = np.trapz(1.0 / (Y[ri, 1:Inds[ri]+1] + 1e-6), dx=1) / Inds[ri] # Integrate using trapz
-            MEWL[regions[ri], techs[ri], 0] = avg_cf[ri]
-            
-            if techs[ri] == 19:
-                # CSP is twice as efficient as solar power typically
-                MEWL[regions[ri], techs[ri], 0] *= 2
-    
-
-    
-    return BCET, MEWL, MERC
 
 def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, L, tech_to_resource, investment_type_mask):
     '''Increasing investment term type of limit, for technologies such as
@@ -393,7 +341,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     if year >= 2017:
 
         RERY, BCSC, MERC, MRED, MRES = marginal_costs_nonrenewables(
-                MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt,
+                MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
                 num_regions, num_resources
                 )
        
@@ -470,7 +418,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                         # if j == 19 :
                         #     MEWL[r, j, 0] = CFvar2 * 2.0
                     
-                    # TODO: remove in next PR
+                    # TODO: remove in next PR (Y0 from random tech if X0 == 0)
                     # Fix: CSP is more efficient than PV by a factor 2
                     if j == 19 :
                         BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
@@ -478,7 +426,6 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     
 # %%    
     # Add REN resources (resource # >4) in MRED, and remaining resources in MRES    
-
     MRED[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6
 
     # Remaining technical potential
