@@ -216,7 +216,7 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
     return BCET, MEWL, MERC
 
 
-def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, L, tech_to_resource, investment_type_mask):
+def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, investment_type_mask):
     '''Increasing investment term type of limit, for technologies such as
     hydropower and geothermal. Unrealistically strict, so turned off'''
     
@@ -349,8 +349,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     
     resource_in_use_mask = (MEPD[:, tech_to_resource, 0] > 0.0)
     fuel_type_mask = (BCET[:, :, 11] == 1) & resource_in_use_mask  # Type 1: Fuel type resource
-    loadfactor_type_mask = (BCET[:, :, 11] == 0) & resource_in_use_mask
-    investment_type_mask = (BCET[:, :, 11] == 3) & resource_in_use_mask
+    # loadfactor_type_mask = (BCET[:, :, 11] == 0) & resource_in_use_mask
+    # investment_type_mask = (BCET[:, :, 11] == 3) & resource_in_use_mask
     
     # Type 1: Fossil fuel and nuclear cost curves (increased fossil fuel costs)
     BCET = update_fuel_costs(
@@ -372,7 +372,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Type 3: Investment cost type of cost-supply curve
     # If you turn this one on again, make sure CSC_Q are defined for these techs too
     # MERC, BCET = update_investment_cost(
-    #     BCET, BCSC, CSC_Q, MEPD, MERC, L, tech_to_resource, investment_type_mask
+    #     BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, investment_type_mask
     #     )
     
     
