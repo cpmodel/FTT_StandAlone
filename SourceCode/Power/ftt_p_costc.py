@@ -104,12 +104,14 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
         dC = HistC[j, 1] - HistC[j, 0]
         dFdt = 0
         count = 0
+        const = 1.25 * 2 * sig[j] 
+        
         while abs((dFdt - demand_non_renewables[j]) / demand_non_renewables[j]) > 0.01  and count < 20:
             
             # Sum total supply dFdt from all extraction cost ranges below marginal cost P 
             # 1 (or close to 1) when P(rice) > HistC, 0 otherwise (tc in FORTRAN)
             costs_below_price = \
-                0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) /  P[j] )
+                0.5 - 0.5 * np.tanh(const * (HistC[j, :] - P[j]) /  P[j] )
             
             # The supply dFdt is determined from:
             # the regional production-to-reserve ratio MPTR,
@@ -130,19 +132,18 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
             count = count + 1
         
         # Remove used resources from the regional histograms (uranium, oil, coal and gas only)
-        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j] * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) /  P[j]))) * dt
+        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j] * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(const * (HistC[j, :] - P[j]) /  P[j]))) * dt
         RERY[:, j, 0] = np.sum((MPTR[:, j] * BCSC[:, j, 4:]
-                                * (0.5 - 0.5 * np.tanh(1.25 * 2 * sig[j] * (HistC[j, :] - P[j]) /  P[j]))) * dC)
+                                * (0.5 - 0.5 * np.tanh(const * (HistC[j, :] - P[j]) /  P[j]))) * dC)
 
         # Write back new marginal cost values (same value for all regions)
         MERC[:, j, 0] = P[j]
         
         # How much non-renewable resources are left in the cost curves
-        # TODO in additional PR: fix the sum to start from 4!
         HistCSUM = np.sum(HistC, axis=1)
-        MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (
+        MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 4:], axis=1) * (
                     BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1)
-        MRES[:, j, 0] = MRES[:, j, 0] + np.sum(BCSC[:, j, 3:], axis=1) * (
+        MRES[:, j, 0] = MRES[:, j, 0] + np.sum(BCSC[:, j, 4:], axis=1) * (
                     BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1) * (0.5 - 0.5 * np.tanh(1.25 * 2 * (HistCSUM[j] - P[j]) / P[j]))
 
 
@@ -235,7 +236,8 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
     BCET[regions, techs, 2] = Y0s
     
     return MERC, BCET
-    
+
+
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
                 num_regions, num_techs, num_resources, year, dt):
     '''
@@ -400,10 +402,10 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
                     BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
                     
-                    # TODO: uncomment in next PR
+                    
                     # CSP is more efficient than PV by a factor 2
-                    # if j == 19 :
-                    #     BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
+                    if j == 19 :
+                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
     
                     if(MEWG[r, j, 0] > 0.01 and ind >= 1 and X0 > 0):
     
@@ -413,15 +415,12 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                         if CFvar2 > 0:
     
                             MEWL[r, j, 0] = CFvar2
-                        # TODO: uncomment in next PR
+                     
                         # CSP is more efficient than PV by a factor 2
-                        # if j == 19 :
-                        #     MEWL[r, j, 0] = CFvar2 * 2.0
+                        if j == 19 :
+                            MEWL[r, j, 0] = CFvar2 * 2.0
                     
-                    # TODO: remove in next PR (Y0 from random tech if X0 == 0)
-                    # Fix: CSP is more efficient than PV by a factor 2
-                    if j == 19 :
-                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
+
                         
     
 # %%    
