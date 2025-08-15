@@ -15,12 +15,7 @@ MWKA,FTT:Power exogenous capacity levels (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010
 MWIY,FTT:Power investment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWICX,Exogenous FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWIC,FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWG6,Generation load band 6,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWG5,Generation load band 5,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWG4,Generation load band 4,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWG3,Generation load band 3,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MWG2,Generation load band 2,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-MWG1,Generation load band 1,GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+Gen by lb,Generation by technology and load band,GWh,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-,,Y
 MWFCX,Exogenous FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWFC,FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MWDT,Matrix of tech top load band NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-,,Y
