@@ -55,7 +55,7 @@ def set_carbon_tax(data, c2ti, year):
 # -----------------------------------------------------------------------------
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
-  
+#@profile
 def get_lcoe(data, titles):
     """
     Calculate levelized costs.
@@ -79,6 +79,12 @@ def get_lcoe(data, titles):
         Variable names are keys and the values are 3D NumPy arrays.
         The values inside the container are updated and returned to the main
         routine.
+        
+    Notes
+    -------------------
+    Strategies to speed this up:
+        * Start by grouping cost categories into capex, capex_policy, opex, opex_policy
+        * Use geometric series to vastly reduce the number of calculations (as the sum 1/(1_r)**t has a set solution)
     """
 
     # Categories for the cost matrix (BCET)
@@ -114,22 +120,12 @@ def get_lcoe(data, titles):
         conversion to generation where appropriate'''
         cost = np.multiply(base_cost[..., None], conversion_factor)
         return np.multiply(cost, mask)
-
-    it_mu = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_mu, bt_mask)
-    it_av = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_av, bt_mask)
-    dit_mu = get_cost_component(bcet[:, :, c2ti['4 std ($/MWh)']], conv_mu, bt_mask)
-    st = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']] * data['MEWT'][:, :, 0], conv_mu, bt_mask)
-    ft = get_cost_component(bcet[:, :, c2ti['5 Fuel ($/MWh)']], 1, lt_mask)
-    dft = get_cost_component(bcet[:, :, c2ti['6 std ($/MWh)']], 1, lt_mask)
-    fft = get_cost_component(bcet[:, :, c2ti['5 Fuel ($/MWh)']] * data['MTFT'][:, :, 0], 1, lt_mask)
-    omt = get_cost_component(bcet[:, :, c2ti['7 O&M ($/MWh)']], 1, lt_mask)
-    domt = get_cost_component(bcet[:, :, c2ti['8 std ($/MWh)']], 1, lt_mask)
-    ct = get_cost_component(bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']], 1, lt_mask)
     
     # Who pays for storage, and total storage costs
     msal_rounded = np.rint(data['MSAL'][:, 0, 0])
     storage_sum = (data['MSSP'] + data['MLSP']) / 1000
     marg_storage_sum = (data['MSSM'] + data['MLSM']) / 1000
+    
     
     # Storage cost
     stor_mask = (msal_rounded >= 2)
@@ -143,23 +139,69 @@ def get_lcoe(data, titles):
     marg_stor_cost = get_cost_component(marg_stor_cost[:, :, 0], 1, lt_mask)
     
     
+    
+    capex_mu = (np.multiply(bcet[:, :, c2ti['3 Investment ($/kW)'], None], conv_mu)
+            + np.multiply(bcet[:, :, c2ti['3 Investment ($/kW)'], None] * data['MEWT'], conv_mu)
+            )
+    
+    capex_av = (np.multiply(bcet[:, :, c2ti['3 Investment ($/kW)'], None], conv_av)
+            + np.multiply(bcet[:, :, c2ti['3 Investment ($/kW)'], None] * data['MEWT'], conv_mu)
+            )
+    
+    capex_sd = (np.multiply(bcet[:, :, c2ti['4 std ($/MWh)']], conv_mu))
+    
+    
+    opex = ( bcet[:, :, c2ti['5 Fuel ($/MWh)']]
+            + bcet[:, :, c2ti['5 Fuel ($/MWh)']] * data['MTFT'][:, :, 0]
+            + bcet[:, :, c2ti['7 O&M ($/MWh)']]
+            + bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']]
+            + stor_cost
+            + marg_stor_cost)
+    
+    opex_sd = ( bcet[:, :, c2ti['6 std ($/MWh)']]
+                + bcet[:, :, c2ti['8 std ($/MWh)']]
+                + dstor_cost)
+    
+
+
+    it_mu = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_mu, bt_mask)
+    it_av = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_av, bt_mask)
+    dit_mu = get_cost_component(bcet[:, :, c2ti['4 std ($/MWh)']], conv_mu, bt_mask)
+    st = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']] * data['MEWT'][:, :, 0], conv_mu, bt_mask)
+    ft = get_cost_component(bcet[:, :, c2ti['5 Fuel ($/MWh)']], 1, lt_mask)
+    dft = get_cost_component(bcet[:, :, c2ti['6 std ($/MWh)']], 1, lt_mask)
+    fft = get_cost_component(bcet[:, :, c2ti['5 Fuel ($/MWh)']] * data['MTFT'][:, :, 0], 1, lt_mask)
+    omt = get_cost_component(bcet[:, :, c2ti['7 O&M ($/MWh)']], 1, lt_mask)
+    domt = get_cost_component(bcet[:, :, c2ti['8 std ($/MWh)']], 1, lt_mask)
+    ct = get_cost_component(bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']], 1, lt_mask)
+    
+    capex_mu_t = np.multilpy(capex_mu, bt_mask)
+    dcapex_mu_t = np.multiply(capex_sd, bt_mask)
+    capex_av_t = np.multiply(capex_av, bt_mask)
+    opex_t = np.multiply(opex, lt_mask)
+    dopex_t = np.multiply(opex_sd, lt_mask)
+    
+    
+    
+    
+    
     # Net present value calculations
     # Discount rate
     dr = bcet[:, :, c2ti['17 Discount Rate (%)'], None]
-    denominator = (1 + dr) ** full_lt_mat
+    discount_factor = 1 / (1 + dr) ** full_lt_mat
 
     # 1 – Expenses
-    npv_expenses_mu_bare = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator
-    npv_expenses_mu_co2 = npv_expenses_mu_bare + ct / denominator
-    npv_expenses_mu_policy = npv_expenses_mu_co2 + (fft + st) / denominator
-    npv_expenses_av_all_policy = (it_av + ft + ct + omt + stor_cost + fft + st + ct) / denominator
+    npv_expenses_mu_bare = (it_mu + ft + omt + stor_cost + marg_stor_cost) * discount_factor
+    npv_expenses_mu_co2 = npv_expenses_mu_bare + ct * discount_factor
+    npv_expenses_mu_policy = npv_expenses_mu_co2 + (fft + st) * discount_factor
+    npv_expenses_av_all_policy = (it_av + ft + ct + omt + stor_cost + fft + st + ct) * discount_factor
 
     # 2 – Utility
-    npv_utility = np.where(lt_mask, 1, 0) / denominator
+    npv_utility = np.where(lt_mask, 1, 0) * discount_factor
 
     # 3 – Standard deviation (propagation of error)
-    npv_std = np.sqrt(dit_mu ** 2 + dft ** 2 + domt ** 2 + dstor_cost**2) / denominator
-    
+    npv_std = np.sqrt(dit_mu ** 2 + dft ** 2 + domt ** 2 + dstor_cost**2) * discount_factor
+
     utility_sum = np.sum(npv_utility, axis=2)
     
     
