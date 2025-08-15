@@ -247,7 +247,7 @@ def calculate_load_factors_from_dispatch(data, titles):
     Updates data['MEWL'] and data['Gen by lb'] in place.
     """
     
-    # Total electricity demand
+    # Total electricity demand, convert from PJ to GWh
     tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
     
     # Generation by tech x load band = share * height * total demand
@@ -259,7 +259,7 @@ def calculate_load_factors_from_dispatch(data, titles):
                      out=np.zeros_like(glb3), 
                      where=data['MLLB'] != 0)
     
-    # Calculate load factors: total generation / total capacity
+    # Calculate load factors MEWL: total generation / total capacity
     total_capacity = np.sum(klb3, axis=2)
     total_generation = np.sum(glb3, axis=2)
     
