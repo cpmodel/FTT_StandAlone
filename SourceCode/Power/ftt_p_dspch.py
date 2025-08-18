@@ -251,8 +251,9 @@ def calculate_load_factors_from_dispatch(data, titles):
     tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
     
     # Generation by tech x load band = share * height * total demand
-    glb3 = (data['MSLB'] * data['MLLB'] * 
-            tot_elec_dem[:, np.newaxis, np.newaxis])
+    share_x_height = data['MSLB'] * data['MLLB']
+    normalise_factor = np.sum(share_x_height, axis=(1, 2))[:, np.newaxis, np.newaxis]
+    glb3 = (share_x_height * tot_elec_dem[:, np.newaxis, np.newaxis]) / normalise_factor
     
     # Capacity by tech x load band = generation / height
     klb3 = np.divide(glb3, data['MLLB'], 
