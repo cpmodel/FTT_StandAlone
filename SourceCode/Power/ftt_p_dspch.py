@@ -270,7 +270,7 @@ def calculate_load_factors_from_dispatch(data, titles):
     )
     
     # Store generation by load band (region x tech x lb)
-    data['Gen by lb'] = glb3
+    data['Gen_by_lb'] = glb3
     
     # Use default load factors for very low values
     very_low_lf = data['MEWL'][:, :, 0] <= 0.0001
