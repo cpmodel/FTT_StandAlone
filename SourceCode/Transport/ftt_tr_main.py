@@ -39,6 +39,7 @@ from SourceCode.ftt_core.ftt_shares import shares_change
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
+from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
 
 from SourceCode.Transport.ftt_tr_lcot import get_lcot
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
@@ -58,7 +59,8 @@ from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, specs):
+#@profile
+def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -78,8 +80,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         Final year of histrorical data by variable
     year: int
         Curernt/active year of solution
-    specs: dictionary of NumPy arrays
-        Function specifications for each region and module
+    domain: dictionary of lists
+        Pairs variables to domains
 
     Returns
     ----------
@@ -207,8 +209,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
-        for var in time_lag.keys():
-
+        vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-Tr')
+        for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
 
 
@@ -437,11 +439,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             # =================================================================
             # Update the time-loop variables
             # =================================================================
-
-            for var in data_dt.keys():
-
+            
+            # Copy transport variables that have changed in data_dt
+            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-Tr')
+            for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
-
+            
+            
         # Investment in terms of car purchases
         data['TWIY'][:, :, 0] = (data['TEWI'][:, :, 0] 
                                  * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33
@@ -449,6 +453,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
+
+        
+        if year==2050:
+            print(f"Total small electric cars is {data['TEWK'][:, 18].sum()/1000:.2f} million cars")
+
 
     return data
 
