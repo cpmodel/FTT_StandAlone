@@ -225,3 +225,46 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
             MES2[r, i, 0] = min(np.max(temp[i, :]), MEWS[r, i, 0])
 
     return MSLB, MLLB, MES1, MES2
+
+
+def calculate_load_factors_from_dispatch(data, titles):
+    """
+    Calculate technology load factors from dispatch results across load bands.
+    
+    Updates data['MEWL'] and data['Gen by lb'] in place.
+    """
+    
+    # Total electricity demand, convert from PJ to GWh
+    tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
+    
+    # Generation by tech x load band = share * height * total demand
+    share_x_height = data['MSLB'] * data['MLLB']
+    normalise_factor = np.sum(share_x_height, axis=(1, 2))[:, np.newaxis, np.newaxis]
+    glb3 = (share_x_height * tot_elec_dem[:, np.newaxis, np.newaxis]) / normalise_factor
+    
+    # Capacity by tech x load band = generation / height
+    klb3 = np.divide(glb3, data['MLLB'], 
+                     out=np.zeros_like(glb3), 
+                     where=data['MLLB'] != 0)
+    
+    # Calculate load factors MEWL: total generation / total capacity
+    total_capacity = np.sum(klb3, axis=2)
+    total_generation = np.sum(glb3, axis=2)
+    
+    data['MEWL'][:, :, 0] = np.divide(
+        total_generation, total_capacity,
+        out=np.zeros_like(total_generation),
+        where=total_capacity > 0
+    )
+    
+    # Store generation by load band (region x tech x lb)
+    data['Gen_by_lb'] = glb3
+    
+    # Use default load factors for very low values
+    very_low_lf = data['MEWL'][:, :, 0] <= 0.0001
+    data['MEWL'][:, :, 0] = np.where(
+        very_low_lf,
+        data['MWLO'][:, :, 0],
+        data['MEWL'][:, :, 0]
+    )
+    

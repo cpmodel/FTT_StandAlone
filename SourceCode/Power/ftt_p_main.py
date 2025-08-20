@@ -68,7 +68,7 @@ from SourceCode.support.check_market_shares import check_market_shares
 
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
-from SourceCode.Power.ftt_p_dspch import dspch
+from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
 from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_surv import survival_function
@@ -177,34 +177,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MES1'] = mes1
         data['MES2'] = mes2
         
-        # Total electricity demand
-        tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
-
-        for r in range(len(titles['RTI'])):
-
-            # Generation by tech x load band is share of total electricity demand
-            glb3 = data['MSLB'][r,:,:] * data['MLLB'][r,:,:] * tot_elec_dem[r]
-            # Capacity by tech x load band
-            klb3 = glb3 / data['MLLB'][r,:,:]
-            
-            # Load factors
-            data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
-
-            nonzero_cap = np.sum(klb3, axis=1)>0
-            data['MEWL'][r, nonzero_cap, 0] =  np.sum(glb3[nonzero_cap, :], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
-                                                            
-
-            # Generation by load band
-            data['MWG1'][r, :, 0] = glb3[:, 0]
-            data['MWG2'][r, :, 0] = glb3[:, 1]
-            data['MWG3'][r, :, 0] = glb3[:, 2]
-            data['MWG4'][r, :, 0] = glb3[:, 3]
-            data['MWG5'][r, :, 0] = glb3[:, 4]
-            data['MWG6'][r, :, 0] = glb3[:, 5]
-            # To avoid division by 0 if 0 shares
-            zero_lf = data['MEWL'][r,:,0]==0
-            data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
-            
+        # Calculate load factor (MEWL) and generation by load-band in place
+        calculate_load_factors_from_dispatch(data, titles)
+        
+        for r in range(len(titles['RTI'])):    
 
             # Capacities
             data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
@@ -307,34 +283,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MSSM'][:, :, 0] = 0.0
                 data['MLSM'][:, :, 0] = 0.0
 
-            # Total electricity demand
-            tot_elec_dem = data['MEWDX'][:, 7, 0] * 1000/3.6
-            
-            # 4--- Calculate average capacity factors according to load bands
+            # Calculate load factor (MEWL) and generation by load-band in place
+            calculate_load_factors_from_dispatch(data, titles)
+
             for r in range(len(titles['RTI'])):
 
-                # Generation by tech x load band is share of total electricity demand
-                glb3 = data['MSLB'][r,:,:] * data['MLLB'][r,:,:] * tot_elec_dem[r]
-                # Capacity by tech x load band
-                klb3 = glb3/data['MLLB'][r, :, :]
-                # Load factors
-
-                data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
-
-                nonzero_cap = np.sum(klb3, axis=1)>0
-                data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
-
-
-                # Generation by load band
-                data['MWG1'][r, :, 0] = glb3[:, 0]
-                data['MWG2'][r, :, 0] = glb3[:, 1]
-                data['MWG3'][r, :, 0] = glb3[:, 2]
-                data['MWG4'][r, :, 0] = glb3[:, 3]
-                data['MWG5'][r, :, 0] = glb3[:, 4]
-                data['MWG6'][r, :, 0] = glb3[:, 5]
-                # To avoid division by 0 if 0 shares
-                zero_lf = data['MEWL'][r, :, 0] == 0
-                data['MEWL'][r, zero_lf, 0] = data['MWLO'][r, zero_lf, 0]
                 
                 # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
                 # Gross Curtailed electricity
@@ -576,37 +529,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MLLB'] = mllb
             data['MES1'] = mes1
             data['MES2'] = mes2
-
-            # Total electricity demand
-            tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
-
-            for r in range(len(titles['RTI'])):
-                # Generation by tech x load band is share of total electricity demand
-                glb3 = data['MSLB'][r,:,:]*data['MLLB'][r,:,:]*tot_elec_dem[r]
-                # Capacity by tech x load band
-                klb3 = glb3/data['MLLB'][r,:,:]
-                # Load factors
-                data['MEWL'][r, :, 0] = np.zeros(len(titles['T2TI']))
-                nonzero_cap = np.sum(klb3, axis=1) > 0
-                data['MEWL'][r, nonzero_cap, 0] = np.sum(glb3[nonzero_cap,:], axis=1) / np.sum(klb3[nonzero_cap,:], axis=1)
-                # Generation by load band
-                data['MWG1'][r, :, 0] = glb3[:, 0]
-                data['MWG2'][r, :, 0] = glb3[:, 1]
-                data['MWG3'][r, :, 0] = glb3[:, 2]
-                data['MWG4'][r, :, 0] = glb3[:, 3]
-                data['MWG5'][r, :, 0] = glb3[:, 4]
-                data['MWG6'][r, :, 0] = glb3[:, 5]
-                # To avoid division by 0 or near 0, if very low shares
-                zero_lf = data['MEWL'][r,:,0] <= 0.0001
-                data['MEWL'][r, zero_lf, 0] = data["MWLO"][r, zero_lf, 0]
-
-
+            
+            # Calculate load factor (MEWL) and generation by load-band in place
+            calculate_load_factors_from_dispatch(data, titles)
+            
+            
             # =============================================================
             #  Update variables wrt curtailment
             # =============================================================
 
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
+            
             data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
 
             # Net curtailed generation
@@ -740,4 +674,3 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             print(f"Total amount of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
     return data
-
