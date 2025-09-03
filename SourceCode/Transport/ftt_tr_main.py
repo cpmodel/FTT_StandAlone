@@ -59,7 +59,6 @@ from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-#@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
