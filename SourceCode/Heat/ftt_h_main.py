@@ -214,8 +214,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
             
-            data["FU14A"] = time_lag["FU14A"]
-            data["FU14B"] = time_lag["FU14B"]
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
