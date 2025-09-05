@@ -365,10 +365,8 @@ def gamma_auto(model):
         T0 = [0.004] * len(modules_to_assess)
  
         # Iterative loop for gamma convergence
-        #for iter in tqdm(range(5)): 
         for it in range(max_it):
-            
-            
+                        
             # First save the lagged vars, and find new gamma values to try
             for module in modules_to_assess:
                 
@@ -424,7 +422,7 @@ def gamma_auto(model):
             
             # # Initial roc_change values
             # for module in modules_to_assess:
-            print(f"Gamma values for condensed gas in Denkmark are: {automation_vars['FTT-H']['gamma'][1, 3, 0]:.4f}")
+            print(f"Gamma values for condensed gas in Denmark are: {automation_vars['FTT-H']['gamma'][1, 3, 0]:.4f}")
             print(f"roc_change and scores for diesel in Denmark are {automation_vars['FTT-H']['roc_change'][1,3]:.3f} and {automation_vars['FTT-H']['score'][1,3]:.4f}")
                 
             if np.all(convergence):
@@ -437,9 +435,9 @@ def gamma_auto(model):
 #%%
 model = model_class.ModelRun()
 
-# Only assess models if they exist and are turned on
-modules_to_assess = set(model.titles['Models_short']) & set(model.ftt_modules)
-modules_to_assess = ['FTT-Tr', 'FTT-P', 'FTT-H']
+# We're computing gamma values for models turned on in settings.ini
+modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
+
 
 # %% Run combined function
 
@@ -486,6 +484,7 @@ run_vars = select_best_gamma_values(run_vars, modules_to_assess)
 # %% Saving almost to the right format (I'm naming the gamma row the same for each model.. )
 import csv
 
+# How many empty placeholders are in the masterfiles?
 n_placeholders = {"FTT-P": 11, "FTT-Tr": 4, "FTT-Fr": 0, "FTT-H": 7}
 for module in modules_to_assess:
     data = run_vars[module]['best gamma'].T
