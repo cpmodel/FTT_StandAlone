@@ -211,10 +211,9 @@ def adjust_gamma_values_simulated_annealing(automation_vars, model, module, Nyea
     sum_gamma = gamma.sum(axis=1)
     country_averages = np.divide(sum_gamma, non_zero_total, out=np.zeros_like(sum_gamma),
                                  where=non_zero_total !=0)[:, np.newaxis] *  np.ones_like(gamma)
-    gamma = np.where(roc_change !=0, gamma - 0.05 * country_averages, 0)
-    gamma = gamma[:, :, np.newaxis]
     
-    automation_vars[module]['gamma'] = np.copy(gamma)
+    gamma = np.where(roc_change !=0, gamma - 0.05 * country_averages, 0)  
+    automation_vars[module]['gamma'] = gamma[:, :, np.newaxis]
 
     return automation_vars
 
@@ -241,7 +240,8 @@ def get_score_and_lagged_score(automation_vars, module):
 
 
 def get_scores(automation_vars, module):
-    '''Compute score, based on regulation which still need tweaking'''
+    '''Compute score, based on regulation. The score is calculated as
+    score = |rate of change difference| - λ_reg * γ ** 2'''
     
     roc_change = automation_vars[module]['roc_change']
     gamma = automation_vars[module]['gamma'][:, :, 0]
@@ -257,7 +257,7 @@ def get_scores(automation_vars, module):
 def accept_or_reject_gamma_changes(automation_vars, model, module, Nyears, it, T0):
     
     '''
-    Adjust the gamma values based on a regulated simulated annealing. 
+    Adjust the gamma values based on regulated simulated annealing. 
     
     That is: penalise gamma values away from 0, accept some random changes
     to avoid getting in local minima as well'
@@ -280,14 +280,13 @@ def accept_or_reject_gamma_changes(automation_vars, model, module, Nyears, it, T
 
     # Go back to old gamma/score values when values not accepted
     gamma[~acceptance_mask] = gamma_lag[~acceptance_mask]
-    gamma = gamma[:, :, np.newaxis] # reshape format for whole period
-    automation_vars[module]['gamma'] = np.copy(gamma)
+    automation_vars[module]['gamma'] = gamma[:, :, np.newaxis]
     
     return automation_vars 
 
 def set_initial_temperature(automation_vars, model, module):
-    """ Set the initial temperature based on the typical change in score between
-    the first two iterations
+    """ Set the initial temperature T0 based on the typical change in score
+    between the first two iterations
     """
     
     roc_change_lag, roc_change, gamma_vars, gamma, gamma_lag = (
