@@ -122,7 +122,7 @@ def are_csvs_older_than_masterfiles(vars_to_convert, out_dir, models, \
                 print(f"No existing {var} csv files found")
                 continue
             
-            time_modified =  datetime.datetime.fromtimestamp(time_modified)
+            time_modified = datetime.datetime.fromtimestamp(time_modified)
             if time_modified > last_time_modified:
                 last_time_modified = time_modified
             
@@ -193,7 +193,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     the user may not want to lose their calibrated gamma values 
     """
     
-    costvar_to_gam_dict = {"BCET": "MGAM", "BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
@@ -266,9 +266,9 @@ def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     gamma values are defined for each year.
     """
 
-    costvar_to_gam_dict = {"BCET": "MGAM", "BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
-    gamma_index = {"BCET": 21, "BTTC": 14, "BHTC": 13, "ZCET": 14}
-    gamma_row_titles = {"BCET": "T2TI", "BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    gamma_index = {"BTTC": 14, "BHTC": 13, "ZCET": 14}
+    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
     gamma_var = costvar_to_gam_dict[var]
     gamma_1D = data[gamma_index[var]]
     col_names = timeline_dict[gamma_var]
@@ -478,9 +478,6 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
                 if ndims == 3:
                     
                     var_dict[model][var]['Data'][scen] = {}
-                    
-                    if var == "MGAM" and gamma_options["Overwrite user input"] == "skip":
-                        continue
                     
                     for i, reg in enumerate(regs):          
                         ri = row_start + i*(rdim + sep)
