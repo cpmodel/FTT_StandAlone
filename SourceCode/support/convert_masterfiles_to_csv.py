@@ -166,7 +166,7 @@ def get_remaining_variables(vars_to_convert, out_dir, model, \
         for var in vars_to_convert:
 
             # Check if the user wants to overwrite gamma values
-            if var_dict[model][var]["Conversion?"] == "GAMMA" or var=="MGAM":
+            if var_dict[model][var]["Conversion?"] == "GAMMA":
                 gamma_options["Overwrite user input"] = \
                     gamma_input_on_overwrite(out_dir, var, gamma_options)
         
@@ -193,7 +193,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     the user may not want to lose their calibrated gamma values 
     """
     
-    costvar_to_gam_dict = {"MGAM": "MGAM", "BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    costvar_to_gam_dict = {"BCET": "MGAM", "BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
@@ -261,14 +261,14 @@ def write_to_csv(data, row_title, col_title, var, out_dir, reg=None):
 
 def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     """
-    In Tr, H and Fr, gamma values are not saved separately, but instead
+    In P, Tr, H and Fr, gamma values are not saved separately, but instead
     part of the cost variable. Here, those values are extracted to ensure the
     gamma values are defined for each year.
     """
 
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
-    gamma_index = {"BTTC": 14, "BHTC": 13, "ZCET": 14}
-    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
+    costvar_to_gam_dict = {"BCET": "MGAM", "BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    gamma_index = {"BCET": 21, "BTTC": 14, "BHTC": 13, "ZCET": 14}
+    gamma_row_titles = {"BCET": "T2TI", "BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
     gamma_var = costvar_to_gam_dict[var]
     gamma_1D = data[gamma_index[var]]
     col_names = timeline_dict[gamma_var]
