@@ -20,6 +20,7 @@ os.chdir(repo_root)
 
 from SourceCode import model_class
 
+
 # %%
 
 def set_timeline(model, modules_to_assess):
@@ -203,7 +204,6 @@ def adjust_gamma_values_simulated_annealing(automation_vars, model, module, Nyea
     
     # Set gamma to zero if the roc is zero (usually as shares are zero)
     gamma = np.where(roc_change == 0, 0, gamma)
-      
     gamma = np.clip(gamma, -1, 1)  # Ensure gamma values between -1 and 1
     
     # Tweak values towards zero, so we don't have highly negative or positive averages
@@ -212,7 +212,6 @@ def adjust_gamma_values_simulated_annealing(automation_vars, model, module, Nyea
     country_averages = np.divide(sum_gamma, non_zero_total, out=np.zeros_like(sum_gamma),
                                  where=non_zero_total !=0)[:, np.newaxis] *  np.ones_like(gamma)
     gamma = np.where(roc_change !=0, gamma - 0.05 * country_averages, 0)
-    
     gamma = gamma[:, :, np.newaxis]
     
     automation_vars[module]['gamma'] = np.copy(gamma)
@@ -435,13 +434,14 @@ def gamma_auto(model):
 #%%
 model = model_class.ModelRun()
 
-# We're computing gamma values for models turned on in settings.ini
+# Compute gamma values for models turned on in settings.ini
 modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
 
 
 # %% Run combined function
 
-# Let's try 3 runs (5 is better), and max of 100 its. Takes about 1h minutes with 3
+# Let's try 3 runs (5 is better), and max of 100 its. Takes about 1h with 3.
+# Consider reducing no_it for more rapid estimates
 total_runs = 3
 max_it = 100
 lambda_reg = 0.2  # Regularisation strength
@@ -503,6 +503,6 @@ for module in modules_to_assess:
         for region in range(data.shape[1]):
             writer.writerow(["Gamma"])       # Write string row separately
             writer.writerows(rounded_data[:, region, np.newaxis])  # Write numerical data
-   
+ 
 
 
