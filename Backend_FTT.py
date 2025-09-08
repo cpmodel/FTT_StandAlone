@@ -129,22 +129,22 @@ def run_model():
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
 
     # Defines the number of items to run to track progress (scenarios x year to run)
-    yield("data: items;{};\n".format(len(scenarios) * (int(endyear) - model.timeline[0] + 1)))
+    yield(f"data: items;{len(scenarios) * (int(endyear) - model.timeline[0] + 1)};\n")
 
     scenarios_log = {}
     total_elapsed_time = 0
     for scenario in scenarios:
 
-        start_time = time.time()
+        scenario_start_time = time.time()
         yield("event: processing\n")
         yield(f"data: ;message:Processing {scenario};\n\n")
 
         try:
             #Solve the model for each year
             for year_index, year in enumerate(model.timeline):
-                year_start_time = time.time()  # Time this specific year
-                
-                model.variables, model.lags = model.solve_year(year,year_index,scenario)
+                year_start_time = time.time()
+
+                model.variables, model.lags = model.solve_year(year, year_index, scenario)
 
                 # Populate output container
                 for var in model.variables:
@@ -152,10 +152,10 @@ def run_model():
                         model.output[scenario][var][:, :, :, year_index] = model.variables[var]
                     else:
                         model.output[scenario][var][:, :, :, 0] = model.variables[var]
-
-                year_elapsed_time = time.time() - year_start_time  # Time for this year only
+                
+                
                 yield("event: processing\n")
-                yield("data: progress;{};{};{} \n\n".format(year, "", year_elapsed_time))
+                yield(f"data: progress;{year};;{time.time() - year_start_time} \n\n")
 
                 message = 'done'
         except (KeyError, FileNotFoundError) as e:
@@ -164,7 +164,7 @@ def run_model():
             print(e)
 
         yield("event: processing\n")
-        yield("data: message:Finished {};{}; \n\n".format(scenario,message))
+        yield(f"data: message:Finished {scenario};{message}; \n\n")
 
         # Update scenario log
         scenarios_log[scenario] = {}
@@ -177,7 +177,7 @@ def run_model():
         print(scenarios_log)
 
         # Calculate total elapsed time for this scenario and add to overall total
-        scenario_elapsed_time = time.time() - start_time
+        scenario_elapsed_time = time.time() - scenario_start_time
         total_elapsed_time += scenario_elapsed_time
 
     run_entries_cache = {}
@@ -198,7 +198,7 @@ def run_model():
     if(error):
         yield("event: processing\n")
         yield("data: message;message:Encountered errors while processing scenarios; \n")
-        yield("data: message;message:{}; \n\n".format(message))
+        yield(f"data: message;message:{message}; \n\n")
         yield("event: status_change\n")
         yield("data: finished_w_errors\n\n")
     else:
@@ -1271,7 +1271,7 @@ def run_model():
     config.read('settings.ini')
     with open('settings.ini', 'w') as configfile:
         config.write(configfile)
-    print (entries_to_run)
+    print(entries_to_run)
     scenarios =  entries_to_run
 
     model.timeline = np.arange(model.simulation_start, model.model_end+1)
@@ -1280,14 +1280,11 @@ def run_model():
     print(model.timeline)
 
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
-    yield("data: items;{};\n".format(len(entries_to_run) * (model.timeline[-1] - model.timeline[0])))
+    yield(f"data: items;{len(entries_to_run) * (model.timeline[-1] - model.timeline[0])};\n")
     print(model.timeline[0])
     scenarios_log = {}
     for scenario in scenarios:
 
-
-        start_time = time.time()
-        # time.sleep(1)
         yield("event: processing\n")
         yield(f"data: ;message:Processing {scenario};\n\n")
 
@@ -1296,7 +1293,7 @@ def run_model():
             for year_index, year in enumerate(model.timeline):
                 year_start_time = time.time()  # Time this specific year
                 
-                model.variables, model.lags = model.solve_year(year,year_index,scenario)
+                model.variables, model.lags = model.solve_year(year, year_index, scenario)
 
                 # Populate output container
                 for var in model.variables:
@@ -1316,12 +1313,12 @@ def run_model():
             print(e)
 
         yield("event: processing\n")
-        yield("data: message:Finished {};{}; \n\n".format(scenario,message))
+        yield("data: message:Finished {scenario};{message}; \n\n")
 
         # Update scenario log
         scenarios_log[scenario] = {}
         scenarios_log[scenario]['run'] = datetime.datetime.timestamp(datetime.datetime.now())
-        scenarios_log[scenario]['description'] = "Test Scenario, provided by Cambridge Econometrics"
+        scenarios_log[scenario]['description'] = f"Scenario {scenario}"
         scenarios_log[scenario]['years'] = [str(x) for x in model.timeline]
         print(scenarios_log)
 
@@ -1334,7 +1331,7 @@ def run_model():
     if(error):
         yield("event: processing\n")
         yield("data: message;message:Encountered errors while processing scenarios; \n")
-        yield("data: message;message:{}; \n\n".format(message))
+        yield("data: message;message:{message}; \n\n")
         yield("event: status_change\n")
         yield("data: finished_w_errors\n\n")
     else:
