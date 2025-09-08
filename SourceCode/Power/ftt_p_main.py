@@ -79,7 +79,6 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-@profile
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -537,10 +536,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
             # Grid operators guess expected generation based on load factors last time step
-            mewl = data_dt['MEWL'][:, :, 0].copy()            
+            mewl_dt = data_dt['MEWL'][:, :, 0]           
             
-            endo_gen = endo_shares * (MEWDt[:, None]*1000/3.6) * mewl / np.sum(endo_shares * mewl, axis=1)[:, None]
-            endo_capacity = endo_gen / mewl / 8766
+            endo_gen = endo_shares * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
+            endo_capacity = endo_gen / mewl_dt / 8766
             
             # Calculate correction for possible underregulation
             dUk_reg = regulation_correction(
@@ -557,13 +556,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             mews = divide(endo_capacity + dUk, total_capacity[:, None])
            
             # New generation and capacity
-            mewg = mews * (MEWDt[:, None]*1000/3.6) * mewl / np.sum(endo_shares * mewl, axis=1)[:, None]
-            mewk = mewg / mewl / 8766
+            mewg = mews * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
+            mewk = mewg / mewl_dt / 8766
             
             # =================================================================
             # Old code to do regulatory policies
             mews_old, mewg_old, mewk_old, dUk_reg_old, dUk_exog_cap_old = policies_old(
-                len(titles['RTI']), mewl, len(titles['T2TI']),
+                len(titles['RTI']), mewl_dt, len(titles['T2TI']),
                 endo_shares, MEWDt, data_dt['MEWK'],
                 reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
             
@@ -571,7 +570,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # ===============================================================
             
             data['MEWS'] = mews[:, :, None]
-            data['MEWL'] = mewl[:, :, None]
+            data['MEWL'] = mewl_dt[:, :, None]
             data['MEWG'] = mewg[:, :, None]
             data['MEWK'] = mewk[:, :, None]
                                
