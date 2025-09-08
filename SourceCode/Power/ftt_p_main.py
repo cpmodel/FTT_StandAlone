@@ -307,8 +307,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 
                 
 
-                # C02 emissions for carbon costs (MtC02)
-                data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
+            # C02 emissions for carbon costs (MtC02)
+            data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
+
             
             # Update capacities MEWK and market shares MEWS
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
