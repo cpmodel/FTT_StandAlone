@@ -117,7 +117,7 @@ var_grouping_summary = var_grouping_summary.loc[:,["Group","Variable","label"]]
 var_grouping_detailed = var_grouping_detailed.loc[:,["Group","Variable","label"]]
 grouping_dict = {}
 
-#grouping_dict = pd.read_excel("../utilities/titles/Grouping.xlsx",sheet_name=None)
+
 grouping_dict["Variables"] = var_grouping
 grouping_dict["Variables_Summary"] = var_grouping_summary
 grouping_dict["Variables_Detailed"] = var_grouping_detailed

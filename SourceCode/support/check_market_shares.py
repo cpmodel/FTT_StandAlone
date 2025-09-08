@@ -8,8 +8,9 @@ Created on Fri Jun 27 08:46:30 2025
 import numpy as np
 
 def check_market_shares(shares, titles, sector, year):
-    '''Checks if the region sum of market shares is one and whether there
-    are regions and technologies with negative shares.
+    '''
+    Checks if the region sum of market shares is one and whether there are
+    regions and technologies with negative shares.
     
     Raises ValueErrors if there are problems'''
     
