@@ -537,32 +537,32 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
             
-            data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
+            data['MCGA'][:, 0, 0] = data['MCRT'][:, 0, 0] * np.sum(Svar * data['MEWG'][:, :, 0], axis=1)
 
             # Net curtailed generation
             # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
             # On average 45% of curtailed electricity can be reused for long-term storage:
             # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-            data['MCNA'][:, 0, 0] = np.maximum(data['MCGA'][:, 0, 0] - 0.45*2*data['MLSG'][:,0,0], 0.55*data['MCGA'][:,0,0])
+            data['MCNA'] = np.maximum(data['MCGA'] - 0.45 * 2 * data['MLSG'], 0.55 * data['MCGA'])
             # Impact of net curtailment on load factors for VRE technologies
-            # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-            data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:, :, 0],
-                                                               data['MCGA'][:, :, 0])
+            # Scale down the curtailment rate by taking into account the curtailment used for long-term storage
+            data['MCTN'] = data['MCTG'] * divide(data['MCNA'], data['MCGA'])
             
             
             # Total additional electricity that needs to be generated
-            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]
+            data['MADG'] = data['MCGA'] - data['MCNA'] + data['MSSG']
             
             # Update generation
-            denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
-            data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
-                                           denominator) 
+            denominator = np.sum(data['MEWS'] * data['MEWL'], axis=1)
+            updated_e_sup = e_demand + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
 
-            # Update capacities
+            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup[:, None, None], 
+                                           denominator[:, :, None]) 
+
+            # Update capacities and emissions
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-            # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
+            
             
             # Update investment (up to timestep t, and in timestep t)
             data["MEWI"], mewi_t = get_sales(
