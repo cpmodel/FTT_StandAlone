@@ -460,10 +460,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             e_demand = MEWDt * 1000/3.6
 
             
-            # For checking
-            if t == no_it:
-                data["MEWD"] = np.copy(data['MEWDX'])
-            
             # Find valid regions (where demand > 0)
             valid_regions = np.where(MEWDt > 0.0)[0]
             
@@ -568,15 +564,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
-            # Update investment. Note that sum(mewi_t) not exactly mewi
-            _, mewi_t = get_sales(
+            # Update investment (up to timestep t, and in timestep t)
+            data["MEWI"], mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWI"],
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
             
-            data["MEWI"] = get_sales_yearly(
-                data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-
             # TODO: review, compute cost of early scrapping
             mesc_vec, melf_vec = early_scrapping_costs(data, data_dt, c2ti)
             # =============================================================
