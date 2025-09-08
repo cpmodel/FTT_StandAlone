@@ -554,9 +554,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Update generation
             denominator = np.sum(data['MEWS'] * data['MEWL'], axis=1)
-            updated_e_sup = e_demand + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
+            updated_e_sup = e_demand[:, None, None] + data['MADG'] - data_dt['MADG']
 
-            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup[:, None, None], 
+            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup, 
                                            denominator[:, :, None]) 
 
             # Update capacities and emissions
