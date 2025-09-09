@@ -317,7 +317,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Resources classification:
     # Correspondence vector between techs and resources
-    tech_to_resource = [0, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 13, 3, 3]
+    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 4, 4]
 
     # BCSC is natural resource data with dimensions num_resources x num_techs x length of cost axis L
 
