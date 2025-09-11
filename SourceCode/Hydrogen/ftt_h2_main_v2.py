@@ -338,8 +338,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             
             # Expected capacity expansion for the green market
             green_capacity_forecast = data_dt['WGKF'][:, 0, 0] + (data['WGKF'][:, 0, 0] - 
-                                                                  data_dt['WGKF'][:, 0, 0]+
-                                                                  np.sum(data['HYMT'][:, :, 0] * data['HYGR'][:, :, 0],axis=1)) * t/no_it
+                                                                  data_dt['WGKF'][:, 0, 0]) * t/no_it
             # green_capacity_forecast += np.sum(data['HYMT'][:, :, 0] * np.isclose(data['HYGR'][:, :, 0], 1.0) * t/no_it, axis=1)
             
             # Green demand step
@@ -405,17 +404,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 
             # Expected capacity expension for the grey market
             grey_capacity_forecast = data_dt['WBKF'][:, 0, 0] + (data['WBKF'][:, 0, 0] -
-                                                                 data_dt['WBKF'][:, 0, 0]+
-                                                                 np.sum(data['HYMT'][:, :, 0] * (1.0-data['HYGR'][:, :, 0]), axis=1) +
-                                                                 data['WBMT'][:, :, 0].sum(axis=1)) * t/no_it
+                                                                 data_dt['WBKF'][:, 0, 0]) * t/no_it
             
             # grey_capacity_forecast += np.sum(data['HYMT'][:, :, 0] * np.isclose(data['HYGR'][:, :, 0], 0.0) * t/no_it, axis=1)
 
             # Grey demand step
-            grey_demand_step = data_dt['HYDT'][:, 0, 0] + ((data['HYDT'][:, 0, 0] - 
-                                                           data_dt['HYDT'][:, 0, 0]) -  
-                                                           (data['WGFL'][:, 0, 0] - 
-                                                            data_dt['WGFL'][:, 0, 0])) * t/no_it
+            grey_demand_step = data_dt['HYDT'][:, 0, 0] + (data['HYDT'][:, 0, 0] - 
+                                                           data_dt['HYDT'][:, 0, 0]) * t/no_it
             grey_demand_step -= green_demand_step
             grey_demand_step[grey_demand_step<0.0] = 0.0
             
@@ -538,7 +533,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 x = 1
             
             # Capacity additions
-            cap_diff = (data['HYWK'][:, :, 0] - data_dt['HYWK'][:, :, 0])/dt
+            cap_diff = (data['HYWK'][:, :, 0] - data_dt['HYWK'][:, :, 0])
             cap_drpctn = divide(data_dt['HYWK'][:, :, 0], time_lag['BCHY'][:, :, c7ti['Lifetime']])
             data['HYWI'][:, :, 0] = np.where(cap_diff > 0.0,
                                              cap_diff + cap_drpctn,
