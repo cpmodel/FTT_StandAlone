@@ -40,8 +40,6 @@ ce = conversion efficiency
 # Third party imports
 import numpy as np
 
-# Local library imports
-from SourceCode.support.divide import divide
 
 # %% LOCH
 # --------------------------------------------------------------------------

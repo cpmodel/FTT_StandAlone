@@ -21,7 +21,7 @@ Local library imports:
     Support functions:
 
     - `divide <divide.html>`__
-        Bespoke element-wise divide which replaces divide-by-zeros with zeros
+        Element-wise divide which replaces divide-by-zeros with zeros
     - `estimation <econometrics_functions.html>`__
         Predict future values according to the estimated coefficients.
 
@@ -32,11 +32,6 @@ Functions included:
         Calculate levelised cost of hydrogen
 
 """
-# Standard library imports
-from math import sqrt
-import copy
-import warnings
-
 # Third party imports
 import numpy as np
 import pandas as pd
@@ -96,12 +91,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     jti = {category: index for index, category in enumerate(titles['JTI'])}
     hyti = {category: index for index, category in enumerate(titles['HYTI'])}
 
-    fuelvars = ['FR_1', 'FR_2', 'FR_3', 'FR_4', 'FR_5', 'FR_6',
-                'FR_7', 'FR_8', 'FR_9', 'FR_10', 'FR_11', 'FR_12']
 
     sector = 'hydrogen'
     #sector_index = titles['Sectors_short'].index(sector)
-    # print("FTT: Hydrogen under construction")
     
     # Adjustment to frequencies
     lifetime_adjust = data['BCHY'][:, :, c7ti['Lifetime']]*0
@@ -146,7 +138,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     # Calculate emission factors
     data = calc_emis_rate(data, titles, year)
     # Overwrite for now
-    data['HYEF'][:, :, 0] = copy.deepcopy(data['BCHY'][:,:, c7ti['Emission factor']])
+    data['HYEF'][:, :, 0] = np.copy(data['BCHY'][:,:, c7ti['Emission factor']])
 
 
     # %% Historical accounting
@@ -162,7 +154,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                          data['HYWK'][:, :, 0])
         
         
-        data['WBWK'] = copy.deepcopy(data['HYWK'])
+        data['WBWK'] = np.copy(data['HYWK'])
         # Adjust capacity factors
         data['HYCF'][:, :, 0] = divide(data['HYG1'][:, :, 0], data['HYWK'][:, :, 0])
 
@@ -224,7 +216,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
 
             if domain[var] == 'FTT-H2':
 
-                data_dt[var] = copy.deepcopy(time_lag[var])
+                data_dt[var] = np.copy(time_lag[var])
 
         data_dt['HYIY'] = np.zeros([len(titles['RTI']), len(titles['HYTI']), 1])
         data_dt['HYIT'] = np.zeros([len(titles['RTI']), len(titles['HYTI']), 1])
@@ -303,14 +295,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
              
         else:
             
-            data['WGFL'][:, 0, 0] = copy.deepcopy(time_lag['WGFL'][:, 0, 0])
+            data['WGFL'][:, 0, 0] = time_lag['WGFL'][:, 0, 0]
             
         # Add floor green H2 demand levels to the green market
         data['WGRM'][:, 0, 0] += data['WGFL'][:, 0, 0]
         
         # Also add WRGM and WGFL to data_dt
-        data_dt['WGRM'][:, 0, 0] = copy.deepcopy(data['WGRM'][:, 0, 0])
-        data_dt['WGFL'][:, 0, 0] = copy.deepcopy(data['WGFL'][:, 0, 0])
+        data_dt['WGRM'][:, 0, 0] = data['WGRM'][:, 0, 0]
+        data_dt['WGFL'][:, 0, 0] = data['WGFL'][:, 0, 0]
         
         # Correction to capacity forecast of the green market
         # If demand grows more quickly than capacity, then we need to inflate
@@ -434,7 +426,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 # # Get indices where S_check is negative
                 # idx = np.where(S_check<0.0)[0][0]
                 # diff = S_check[idx]
-                # dSij_grey_check = copy.deepcopy(dSij_grey)
+                # dSij_grey_check = np.copy(dSij_grey)
                 # dSij_grey_check[idx, :] = S_check[idx]
                 
                 
@@ -549,7 +541,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             dw = np.dot(hywi0, data['HYWB'][0, :, :])
             
             # for i in range(len(titles["HYTI"])):
-            #     dw_temp = copy.deepcopy(hywi0)
+            #     dw_temp = np.copy(hywi0)
             #     dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
             #     dw[i] = np.dot(dw_temp, data['HYWB'][0, i, :])
 
@@ -565,7 +557,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             idx_to_copy = [i for i, comp in enumerate(titles['C7TI']) if comp not in not_comps]
             
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCHY'][:, :, idx_to_copy] = copy.deepcopy(time_lag['BCHY'][:, :, idx_to_copy])            
+            data['BCHY'][:, :, idx_to_copy] = np.copy(time_lag['BCHY'][:, :, idx_to_copy])            
  
             # Learning-by-doing effects on investment
             for tech in range(len(titles['HYTI'])):
