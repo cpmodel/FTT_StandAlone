@@ -14,6 +14,7 @@ ModelRun class: main class for operation of model.
 # Standard library imports
 import configparser
 import copy
+import time
 
 # Third party imports
 import numpy as np
@@ -27,7 +28,6 @@ import SourceCode.Heat.ftt_h_main as ftt_h
 #import SourceCode.Steel.ftt_s_main as ftt_s
 #import SourceCode.Agri.ftt_agri_main as ftt_agri
 import SourceCode.Freight.ftt_fr_main as ftt_fr
-#import SourceCode.Flex.ftt_flex_main as ftt_flex
 #import SourceCode.Hydrogen.ftt_h2_main as ftt_h2
 import SourceCode.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
 import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
@@ -183,6 +183,9 @@ class ModelRun:
             # Call solve_year method for each year of the simulation period
 #                for year_index, year in enumerate(self.timeline):
                 for y, year in enumerate(self.timeline):
+                    if y == 0:
+                        start_time = time.time()
+                    
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
 
@@ -197,9 +200,10 @@ class ModelRun:
                             self.output[scen][var][:, :, :, y] = self.variables[var]
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
-
+            
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
+            print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
 
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """

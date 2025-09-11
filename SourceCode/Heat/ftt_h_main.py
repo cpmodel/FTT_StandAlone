@@ -39,15 +39,17 @@ from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_prematur
 from SourceCode.ftt_core.ftt_mandate import implement_mandate
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
+from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
+
 from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, specs):
+def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -66,9 +68,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
-        Curernt/active year of solution
-    specs: dictionary of NumPy arrays
-        Function specifications for each region and module
+        Current year
+    domain: dictionary of lists
+        Pairs variables to domains
 
     Returns
     ----------
@@ -208,11 +210,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
-        for var in time_lag.keys():
+        vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-H')
+        for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
             
-            data["FU14A"] = time_lag["FU14A"]
-            data["FU14B"] = time_lag["FU14B"]
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
@@ -432,12 +433,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, specs):
             carbon_costs = set_carbon_tax(data, c4ti)
             data = get_lcoh(data, titles, carbon_costs)
 
-            # =================================================================
-            # Update the time-loop variables
-            # =================================================================
 
-            for var in data_dt.keys():
-
+            # Store heat variables that have changed in data_dt
+            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-H')
+            for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
         

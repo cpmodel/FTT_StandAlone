@@ -65,6 +65,7 @@ from SourceCode.ftt_core.ftt_shares import shares_change
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
+from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
 
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
@@ -100,7 +101,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Final year of historical data by variable
     year: int
         Current/active year of solution
-    Domain: dictionary of lists
+    domain: dictionary of lists
         Pairs variables to domains
 
     Returns
@@ -405,11 +406,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
-        for var in time_lag.keys():
-
-            if domain[var] == 'FTT-P':
-
-                data_dt[var] = np.copy(time_lag[var])
+        vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-P')
+        for var in vars_to_copy:
+            data_dt[var] = np.copy(time_lag[var])
 
         # Create the regulation variable
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
@@ -652,12 +651,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Update the time-loop variables data_dt
             # =================================================================
-
-            for var in data_dt.keys():
-
-                if domain[var] == 'FTT-P':
-
-                    data_dt[var] = np.copy(data[var])
+            
+            # Store power variables that have changed in data_dt
+            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-P')
+            for var in vars_to_copy:
+                data_dt[var] = np.copy(data[var])
+                
         
         # TODO: average over 3 years like FORTRAN? 
         # Investment (1.33 an exchange rate factor)
