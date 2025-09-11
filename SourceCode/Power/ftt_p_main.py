@@ -77,6 +77,8 @@ from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_
 from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 
 
+from SourceCode.Power.ftt_shares_core import shares_change
+
 
 
 
@@ -86,6 +88,7 @@ from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 # -----------------------------------------------------------------------------
 def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     """
+    
     Main solution function for the module.
 
     Add an extended description in the future.
@@ -120,7 +123,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     sector = 'power'
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
-
+    t2ti = {category: index for index, category in enumerate(titles['T2TI'])}
+    num_regions = len(titles['RTI'])
 
     # Conditional vector concerning technology properties
     # (same for all regions)
@@ -510,7 +514,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # =====================================================================
         # Start of simulation
         # =====================================================================
-
+        
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
@@ -519,8 +523,49 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             if domain[var] == 'FTT-P':
 
                 data_dt[var] = np.copy(time_lag[var])
-
-        data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
+                
+        # START WRITING HERE !!!!!!!!!!!!!!!!!!!!!!!!!! #
+        """ Create a function that calculates the marketshare between rooftop solar and utilities from data_dt (t-1)
+        # Run the rooftop solar model first
+        # Make a new share files looking at the transport model (simpler) -> main file of the transport model, line 251 (initialise... market share dynamics)
+        # Actually copied from freight the shares file and renamed it to ftt_p_shares_rftsolar
+        # in the shares function I will need to create new variables
+        # copy MEWA and use a similar format to calculate with dumb data starting with one -> we will need the classifications for MEWA
+        # Initially put this in harcode to make it simpler
+        # that is because initially turnover rate will be calculated using dummy data
+        # set all values of isreg to zero
+        # utot is basically the household demand variable I created
+        # For the markershares, I need a new variable with the household demand -> Make a new tab (variable) -> a bit like variable RBFM in the input file of transport model
+        # Import the new demand data and run the model to check whether there are any problems
+        # I will need a new variable which is the split between the rooftop solar and utilities
+        
+        
+        # Create a variable that represents the total price of utilities, which is a weighted average of the LCOE with the shares of each technology
+        # This variable above is MEWP (Pay attention it is in USD/GJ) -> ftt_p_mewp.py
+        # METC ($/MWh) is the LCOE for every technology -> I will need to use it for rooftop solar (It does not have the gamma values)
+        # Assume (metc_dt) a width of the distribution of 30% -> Because you will need a std for the price of utilities. Just hardcode price x 0.3
+        # Updating the gamma values will be the final step so don't worry about it now. There are scripts that can help."""
+        
+        # THE INFORMATION ON MEWDH HAS BEEN IMPORTED CORRECTLY
+        #print(data['MEWDH']) 
+        # UNIT IS thousand toe SO NEEDS CONVERSION -> GWh
+        # MAYBE I WILL NEED TO ALSO CONVERT IT TO PJ BECAUSE THAT IS THE UNIT OF MEWD (If I ever need to compare both)
+        
+        # ELECTRICITY PRICE INFORMATION SENT BY CORMAC HAS BEEN IMPORTED CORRECTY
+        # This information will be in the marketshares calculation when compared to prices of rooftop solar panels
+        # Add it to the main input file
+        
+        #Standard deviation = add 30% 
+        
+        # USE THIS PART HERE
+        # REMEMBER TO SET num_techs = 2
+        # PASS THE SUBSTITUTION MATRIX AS 1 IN ALL [[]] - the matrix should be a 2 x 2 matrix
+        # LOOK AT THE INPUT IN THE DEBUG MODE TO CHECK THE NUMBER OF DIMENSIONS - Maybe a third empty dimension is required
+        #  reg_constr -> PASS AN ARRAY OF ZEROS
+        # DONT NEED TO PASS ANY INFORMATION ON UPPER AND LOWER LIMITS -> THE DEFAULT IS FALSE
+        
+        # CARLOS -> creates an array with every region
+        valid_regions = np.arange(num_regions)
 
         # Create the regulation variable
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
@@ -557,6 +602,41 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Start the computation of shares
         for t in range(1, no_it + 1):
+            
+            # ------------------------ MY ALTERATIONS ---------------------------------
+
+            # Calculates the initial shares to add to variable data_dt -> shares_dt
+            data_dt['household_shares'] = np.zeros((num_regions, 2, 1))
+            data_dt['household_shares'][:, 0] = data_dt['MEWG'][:, t2ti['23 Rooftop Solar']] / (data_dt['MEWDH'][:, :, 0]*(11.63/1000))
+            data_dt['household_shares'][:, 1] = 1 - data_dt['household_shares'][:, 0]
+            
+            # To pass the information for costs (calculate de LCOE)
+            data_dt['costs_household'] = np.zeros((num_regions, 2, 1))
+            data_dt['costs_household'][:, 0] = data_dt['METC'][:, t2ti['23 Rooftop Solar']]
+            
+            # convert from euro/toe to usd/MWh
+            data_dt['costs_household'][:, 1] = data_dt['PRICH'][:, :, 0]*(11.63/1000)/ data['EXX'][33, 0, 0]
+            
+            # Std deviation for costs households
+            data_dt['costs_household_std'] = np.zeros((num_regions, 2, 1))
+            data_dt['costs_household_std'][:, 0] = data_dt['MTCD'][:, t2ti['23 Rooftop Solar']]
+            data_dt['costs_household_std'][:, 1] = 0.3*data_dt['costs_household'][:, 1]
+            
+            # initial substitution matrix -> defined as 1 
+            subst_households = np.ones((2, 2, 1))
+            
+            change_in_shares = shares_change(
+                     dt=dt,
+                     regions=valid_regions,
+                     shares_dt=data_dt['household_shares'],       # Shares at previous t
+                     costs=data_dt['costs_household'],           # Costs
+                     costs_sd=data_dt['costs_household_std'],        # Standard deviation costs
+                     subst=subst_households,     # Substitution turnover rates
+                     reg_constr=np.zeros((num_regions, 2, 1)),           # Constraint due to regulation
+                     num_regions=num_regions,         # Number of regions
+                     num_techs=2)             
+            
+            data['household_shares'] = data_dt['household_shares' ] + change_in_shares
 
             # Electricity demand is exogenous at the moment
             # TODO: Replace, using price elasticities and feedback from other

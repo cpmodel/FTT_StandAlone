@@ -12,4 +12,43 @@
 
 3) Tried to run the model by using the "FTT_Stand_Alone_Launcher" and then the "manager.bat" selecting scenario S0 and FFT-P 
 
-4) Had an error. Had to add number 11 (corresponding to Solar PV) in line 270 of the script ftt_p_costc.py
+4) Had an error. Had to add number 11 (corresponding to Solar PV) in line 270 of the script ftt_p_costc.py. It is hardcoded
+
+5) Had to run manager of the frontend because dimensions have changed. It has to be done every time a new technology is added. Just run update_manager_metadata located in "\FTT_StandAlone\manager_new" 
+
+6) Now the model is running and we can see results for the new rooftop solar technology added.
+
+24/07/2025
+
+1) Altered the main file of FTT_P with what needs to be done (algorithm) starting from line 523
+
+2) Created a new tab/variable (MEWDH) in the input file "FTT-P-22x71_2024_S0" with the household demands based on the RBFM tab from the FTT transport input file. Important to note that I had to exclude years from 2001 to 2010 and then from to 2050 to 2100 because there is no data.
+
+3) Added the new variable in the VariableListing.csv at "\FTT_StandAlone\Utilities\titles" again copying the base information from the variable RBFM
+
+
+07/08/2025
+
+1) Continued to write what needs to be done in the main file from FTT_P starting from line 523
+
+2) Copied the shares file from freight and renamed it to ftt_p_shares_rftsolar
+
+3) Copied the shares file from ftt_core (GitHub: https://github.com/cpmodel/FTT_StandAlone/tree/main/SourceCode/ftt_core) and renamed it to ftt_shares_core.py
+
+20/08/2025
+
+1) Fixed the problem of incorporating the information of household demand into the model. It was necessary to add the new variable "MEWDH" in the file FTT_variables.xlsx at \Inputs\_MasterFiles. It needed to be added in the tab related to "FTT_P" and the tab "Time_Horizons". In "Time Horizons" the information is "tl_" + first year of the series (when it starts).
+
+2) The household demand information was until 2050. When running the model, there was an error of dimensions because it needed information for more years. In the case, until 2100. As it is done to the variable RBFM in FTT_T, the data of the last year was reproduced for every other year until 2100, the end of the simulation horizon.
+
+3) It is now necessary to add the information concerning electricity prices, also sent by Cormac, in the same one that household demand was added. This information will be the competing prices of electricity when comparing to rooftop solar prices during the calculation of market shares.
+
+4) Some comments were added in the file "ftt_shares_core.py". In theory, there is no need for coding a new function to calculate the market shares, just call the "shares_change" function from the main file. Information on the data that needed to be passed onto "ftt_shares_core.py" in the variables were also written in the file.
+
+03/09/2025
+
+1) Added the information of "Price of electricity use (incl taxes)" (PRICH) in both the "VariableListing.csv" and "FTT_variables.xlsx"
+
+2) Fixed tuple error because the variables were treated as tuples not numpy arrays, so initialised the variables as numpy arrays.
+
+3) VERIFICAR SE OS VALORES PRA ROOFTOP SOLAR PV EM MEWG COM RELAÇÃO À AUSTRÁLIA. COMPARAR COM O VALOR DE SOLAR PV (está certo o valor de rooftop solar ser maior que o de solar PV)
