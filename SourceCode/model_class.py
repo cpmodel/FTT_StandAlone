@@ -183,8 +183,8 @@ class ModelRun:
             # Call solve_year method for each year of the simulation period
 #                for year_index, year in enumerate(self.timeline):
                 for y, year in enumerate(self.timeline):
-                    if year == 2011:
-                        time_2011 = time.time()
+                    if y == 0:
+                        start_time = time.time()
                     
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
