@@ -153,8 +153,7 @@ def shares_change_jitted(
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
-# COMMENTED THIS LINE TO BE ABLE TO DEBUG MY CODE AND CHECK ERRORS, UNCOMMENT WHEN DONE.
-# @njit(fastmath=True, inline='always')
+@njit(fastmath=True, inline='always')
 def _apply_regulation_adjustment(Fij, Fji, reg_constr_i, reg_constr_j):
     """
     Apply regulation constraint effects to base preferences.

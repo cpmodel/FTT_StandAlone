@@ -63,6 +63,9 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+from SourceCode.ftt_core.ftt_shares import shares_change
+
+
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_dspch import dspch
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
@@ -77,7 +80,6 @@ from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_
 from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 
 
-from SourceCode.Power.ftt_shares_core import shares_change
 
 
 
@@ -628,15 +630,15 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             change_in_shares = shares_change(
                      dt=dt,
                      regions=valid_regions,
-                     shares_dt=data_dt['household_shares'],       # Shares at previous t
-                     costs=data_dt['costs_household'],           # Costs
-                     costs_sd=data_dt['costs_household_std'],        # Standard deviation costs
-                     subst=subst_households,     # Substitution turnover rates
-                     reg_constr=np.zeros((num_regions, 2, 1)),           # Constraint due to regulation
-                     num_regions=num_regions,         # Number of regions
+                     shares_dt=data_dt['household_shares'],        # Shares at previous t
+                     costs=data_dt['costs_household'],             # Costs
+                     costs_sd=data_dt['costs_household_std'],      # Standard deviation costs
+                     subst=subst_households,                       # Substitution turnover rates
+                     reg_constr=np.zeros((num_regions, 2)),     # Constraint due to regulation
+                     num_regions=num_regions,                      # Number of regions
                      num_techs=2)             
             
-            data['household_shares'] = data_dt['household_shares' ] + change_in_shares
+            data['household_shares'][:, :, 0] = data_dt['household_shares' ][:, :, 0] + change_in_shares
 
             # Electricity demand is exogenous at the moment
             # TODO: Replace, using price elasticities and feedback from other
