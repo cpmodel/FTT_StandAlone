@@ -171,7 +171,7 @@ def get_lcoe(data, titles):
     dlcoe = np.sum(npv_std, axis=2) / utility_sum
 
     # LCOE augmented with gamma values
-    lcoe_mu_gamma = lcoe_mu_all_policies + data['MGAM'][:, :, 0]
+    lcoe_mu_gamma = lcoe_mu_all_policies + bcet[:, :, c2ti['22 Gamma']]
 
     # Pass to variables that are stored outside.
     data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes

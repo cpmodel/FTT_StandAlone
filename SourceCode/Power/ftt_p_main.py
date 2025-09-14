@@ -125,9 +125,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # (same for all regions)
     Svar = data['BCET'][:, :, c2ti['18 Variable (0 or 1)']]
 
-    # Store gamma values in the cost matrix (in case it varies over time)
-    data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
-
     # Copy over PRSC/EX values
 
     data['PRSC13'] = np.copy(time_lag['PRSC13'] )
@@ -169,7 +166,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data = get_lcoe(data, titles)
 
 
-        data = rldc(data, time_lag, iter_lag, year, titles)
+        data = rldc(data, time_lag, iter_lag, year, titles, histend)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    num_regions, num_techs, num_loadbands)
@@ -251,7 +248,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year >= 2013:
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, time_lag, iter_lag, year, titles)
+            data = rldc(data, time_lag, iter_lag, year, titles, histend)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -345,9 +342,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
-
-            # Store gamma values in the cost matrix (in case it varies over time)
-            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
@@ -504,7 +498,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
-            data = rldc(data, time_lag, data_dt, year, titles)
+            data = rldc(data, time_lag, data_dt, year, titles, histend)
             
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
@@ -595,8 +589,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Copy over the technology cost categories. We update the investment and capacity factors below
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
 
-            # Store gamma values in the cost matrix (in case it varies over time)
-            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
