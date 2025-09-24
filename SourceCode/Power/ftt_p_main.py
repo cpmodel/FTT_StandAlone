@@ -648,7 +648,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
-            MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            MEWDt = time_lag['MEWDX'][:, 7, 0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
             
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
@@ -660,22 +660,34 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             data["MWKA"] = set_linear_coal_phase_out(data["coal phaseout"],
                                                      data["MWKA"], time_lag["MWKA"], time_lag["MEWK"], year)
+            
+            data_dt['MEWS'][:, :-1] /= data_dt['MEWS'][:, -1].sum()
+            time_lag['MEWS'][:, :-1] /= time_lag['MEWS'][:, -1].sum()
+
             # =================================================================
             # Shares equation
             # =================================================================
             mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt,
-                                            data_dt['MEWS'], data_dt['METC'],
-                                            data_dt['MTCD'], data['MWKA'],
-                                            data_dt['MES1'], data_dt['MES2'],
-                                            data['MEWA'], isReg, data_dt['MEWK'],
-                                            time_lag['MEWK'], data['MEWR'],
-                                            data_dt['MEWL'], time_lag['MEWS'],
-                                            data['MWLO'],
-                                            len(titles['RTI']), len(titles['T2TI']),  no_it, year)
-            data['MEWS'] = mews
-            data['MEWL'] = mewl
-            data['MEWG'] = mewg
-            data['MEWK'] = mewk
+                                            data_dt['MEWS'][:, :-1], data_dt['METC'][:, :-1],
+                                            data_dt['MTCD'][:, :-1], data['MWKA'][:, :-1],
+                                            data_dt['MES1'][:, :-1], data_dt['MES2'][:, :-1],
+                                            data['MEWA'][:-1, :-1], isReg[:, :-1], data_dt['MEWK'][:, :-1],
+                                            time_lag['MEWK'][:, :-1], data['MEWR'][:, :-1],
+                                            data_dt['MEWL'][:, :-1], time_lag['MEWS'][:, :-1],
+                                            data['MWLO'][:, :-1],
+                                            len(titles['RTI']), len(titles['T2TI']) - 1,  no_it, year)
+            data['MEWS'][:, :-1] = mews
+            data['MEWL'][:, :-1] = mewl
+            data['MEWG'][:, :-1] = mewg
+            data['MEWK'][:, :-1] = mewk
+            
+            data['MEWS'][:, -1] = data['household_shares'][:, 0, 0]
+            data['MEWL'][:, -1] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['Decision load factor']]
+            # Opposite of above: there we went from generation to shares,
+            # here we go from shares to generation with household demand
+            data['MEWG'][:, -1] = data['household_shares'][:, 0, 0] * (data_dt['MEWDH'][:, :, 0]*(11.63/1000))
+            # Capacity = MEWK
+            data['MEWK'][:, -1] = data['MEWG'][:, -1] / data['MEWL'][:, -1] / 8766
             
 
             
