@@ -79,7 +79,7 @@ from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
 from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 
-
+from SourceCode.Power.io_debug_export import export_io_summary
 
 
 
@@ -931,6 +931,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                   f"solar&wind is {np.sum(data['MEWG'][:, 16:19, 0])/10**6:.1f} M GWh")
 
          
-
+        export_io_summary(data_dt, t2ti, tech_key="23 Rooftop Solar", outfile="io_check.txt")
 
     return data
