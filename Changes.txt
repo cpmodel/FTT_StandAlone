@@ -45,10 +45,14 @@
 
 4) Some comments were added in the file "ftt_shares_core.py". In theory, there is no need for coding a new function to calculate the market shares, just call the "shares_change" function from the main file. Information on the data that needed to be passed onto "ftt_shares_core.py" in the variables were also written in the file.
 
-03/09/2025
+03/09/2025 until 12/09/2025
 
 1) Added the information of "Price of electricity use (incl taxes)" (PRICH) in both the "VariableListing.csv" and "FTT_variables.xlsx"
 
-2) Fixed tuple error because the variables were treated as tuples not numpy arrays, so initialised the variables as numpy arrays.
+2) Finished initial implementation of the shares. Now the code calculates the initial shares for rooftop solar and utility electricity and calls the function to calculate next shares.
+
+3) Fixed errors and bugs. There were some errors referring to variable handling and now the code is working. But, the results are weird. Shares for rooftop solar are only bigger than zero in 2023 and 2024. "MEWG" history information goes until 2022, so 2 years later.
+
+4) "MEWG" - Values for generation in GWh are bigger in Australia for rooftop solar from 1992 to 2018. From 2019 onwards, utility solar is bigger than rooftop solar.
 
 3) VERIFICAR SE OS VALORES PRA ROOFTOP SOLAR PV EM MEWG COM RELAÇÃO À AUSTRÁLIA. COMPARAR COM O VALOR DE SOLAR PV (está certo o valor de rooftop solar ser maior que o de solar PV)
