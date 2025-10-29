@@ -48,6 +48,7 @@ from SourceCode.Hydrogen.ftt_h2_energy_costs import calc_ener_cost
 from SourceCode.Hydrogen.h2_demand import calc_h2_demand
 from SourceCode.Hydrogen.ftt_h2_green_cost_factors import calc_green_cost_factors
 from SourceCode.Hydrogen.energy_and_emissions import calc_emis_rate, calc_ener_cons
+from SourceCode.NH3_trade.levelised_cost_haber_bosch import get_lchb
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -139,10 +140,55 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     data = calc_emis_rate(data, titles, year)
     # Overwrite for now
     data['HYEF'][:, :, 0] = np.copy(data['BCHY'][:,:, c7ti['Emission factor']])
+    
+    # H2 content in NH3 by mass
+    h2_mass_content = 0.179
 
 
     # %% Historical accounting
     if year <= histend['HYG1']:
+        
+        # Note FTT:H2's last historical data point in 2022
+        # NH3 trade is 2023
+        # We assume that the supply map for 2023 is a close enough approximation
+        # for 2022.
+        data['NH3DEM'][:, 0, 0] = data['NH3SM2023'][:, :, 0].sum(axis=1)
+        data['NH3PROD'][:, 0, 0] = data['NH3SM2023'][:, :, 0].sum(axis=0)
+        data['NH3IMP'][:, 0, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles('RTI'))))).sum(axis=1)
+        data['NH3EXP'][:, 0, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles('RTI'))))).sum(axis=0)
+        
+        # Store supply map in time-based variable
+        data['NH3SMLVL'][:, :, 0] = data['NH3SM2023'][:, :, 0].copy()
+        
+        # Convert NH3 production to H2 demand (which is always sourced locally)
+        data['HYDT'][:, 0, 0] = data['NH3DEM'][:, 0, 0] * h2_mass_content
+        data['HYPD'][:, 0, 0] = data['HYDT'][:, 0, 0].copy()
+        # Hydrogen production is provided in absolute levels and also includes
+        # H2 production for non-NH3 purposes
+        for r in range(len(titles['RTI'])):
+            if data['HYG1'][r, :, 0].sum() > 0.0:
+                
+                # Capacity shares
+                data['HYWS'][r, :, 0] = ((data['HYG1'][r, :, 0] * data['HYCF'][r, :, 0])  
+                                         / (data['HYG1'][r, :, 0] * data['HYCF'][r, :, 0]).sum()
+                                         )
+                
+                # Production shares
+                prod_shares = ((data['HYG1'][r, :, 0])  
+                               / (data['HYG1'][r, :, 0]).sum()
+                               )
+                
+                # Overwrite production estimates
+                data['HYG1'][r, :, 0] = prod_shares * data['HYPD'][:, 0, 0]
+                
+                # Re-estimate capacities
+                data['HYWK'][r, :, 0] = divide(data['HYG1'][r, :, 0],
+                                               data['HYCF'][r, :, 0]
+                                               )
+                
+                # Get supply map in shares
+                if data['NH3SMLVL'][r, :, 0].sum() > 0.0:
+                    data['NH3SMSHAR'][r, :, 0] = data['NH3SMLVL'][r, :, 0] / data['NH3SMLVL'][r, :, 0].sum()
         
         # Quick and dirty correction to historical capacities and util rates of
         # Green H2 technologies
@@ -153,61 +199,40 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                          data['HYWK'][:, :, 0],
                                          data['HYWK'][:, :, 0])
         
-        
+        # All capacity is "Bad" capacity
         data['WBWK'] = np.copy(data['HYWK'])
         # Adjust capacity factors
         data['HYCF'][:, :, 0] = divide(data['HYG1'][:, :, 0], data['HYWK'][:, :, 0])
-
-        # data['HYWK'] = divide(data['HYG1'], data['BCHY'][:, :, c7ti['Capacity factor'], np.newaxis])
-        data['HYWS'] = data['HYWK'] / data['HYWK'].sum(axis=1)[:, :, None]
-        data['HYWS'][np.isnan(data['HYWS'])] = 0.0
-        data['HYPD'][:, 0, 0] = data['HYG1'][:, :, 0].sum(axis=1)
         
         # LCOH calclation
         data = get_lcoh2(data, titles)
         
-        # Total capacity
-        data['WBKF'][:, 0, 0] = data['HYWK'][:, :, 0].sum(axis=1)
+        for r in range(len(titles['RTI'])):
+            # Average producer prices for green and grey
+            data['WPPR'][r, 0, 0] = ((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0])
+                                    / data['HYG1'][r, :, 0].sum()
+                                    )
+            data['WPPR'][r, 0, 0] = ((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0] * data['HYGR'][0, :, 0])
+                                    / (data['HYG1'][r, :, 0]* data['HYGR'][0, :, 0]).sum()
+                                    )  
         
-        # System-wide capacity factor
-        data['WBCF'][:, 0, 0] = divide(data['HYG1'][:, :, 0].sum(axis=1),
-                                       np.sum(data['HYWK'][:, :, 0] * 
-                                              data['BCHY'][:, :, c7ti['Maximum capacity factor']], axis=1)
-                                       )
+        # Calculate NH3 LC - grey
+        data = get_lchb(data, h2_mass_content, titles)
         
-        # Calculate the average lifetime across all technologies in each region
-        # This determines the rate of decline when new capacity seems underutilised
-        average_lifetime = data['BCHY'][:, :, c7ti['Lifetime']] * divide(data['HYWK'][:, :, 0],
-                                                                         data['HYWK'][:, :, :].sum(axis=1))
-        average_lifetime = average_lifetime.sum(axis=1)
-        
-        # Running average over 5 years
-        if year == 2022:
-            
-            # Estimate capacity growth.
-            data['WBCG'][:,0,0] = calc_capacity_growthrate(data['WBCF'][:, 0, 0], average_lifetime)
-            data['WBCG'][np.isinf(data['WBCG'])] = 1.0
-            data['WBCG'][np.isnan(data['WBCG'])] = 1.0
-            
-            data['WBCG'][:,0,0] = 0.2 * data['WBCG'][:,0,0] + 0.8 * time_lag['WBCG'][:,0,0]
-        else:
-            data['WBCG'][:,0,0] = divide(data['HYWK'][:, :, 0].sum(axis=1), 
-                                         time_lag['HYWK'][:, :, 0].sum(axis=1))-1.0
-            
         # Calculate energy use
         data = calc_ener_cons(data, titles, year)
             
-        
 
     # %% Simulation period
     else:
 
         # Total hydrogen demand        
-        dem_lag = (time_lag['HYD1'][:, 0, 0] +
-                                 time_lag['HYD2'][:, 0, 0] +
-                                 time_lag['HYD3'][:, 0, 0] +
-                                 time_lag['HYD4'][:, 0, 0] +
-                                 time_lag['HYD5'][:, 0, 0] )
+        dem_lag = (time_lag['HYDT'][:, 0, 0])
+        
+        # CALL Function to solve NH3 trade
+        
+        
+        # NH3 
 
         data_dt = {}
 
