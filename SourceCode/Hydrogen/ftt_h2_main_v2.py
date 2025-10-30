@@ -48,7 +48,8 @@ from SourceCode.Hydrogen.ftt_h2_energy_costs import calc_ener_cost
 from SourceCode.Hydrogen.h2_demand import calc_h2_demand
 from SourceCode.Hydrogen.ftt_h2_green_cost_factors import calc_green_cost_factors
 from SourceCode.Hydrogen.energy_and_emissions import calc_emis_rate, calc_ener_cons
-from SourceCode.NH3_trade.levelised_cost_haber_bosch import get_lchb
+from SourceCode.NH3_trade.nh3_cost_functions import get_lchb, get_cbam, get_delivery_cost
+from SourceCode.NH3_trade.nh3_trade_dynamics import calculate_nh3_trade
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
@@ -143,6 +144,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     
     # H2 content in NH3 by mass
     h2_mass_content = 0.179
+    
+    # Substitution rate
+    # For now we simply assume a value of 2.5
+    sub_rate = 2.5
 
 
     # %% Historical accounting
@@ -219,24 +224,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         # Calculate NH3 LC - grey
         data = get_lchb(data, h2_mass_content, titles)
         
+        # Calculate CBAM
+        data = get_cbam(data, h2_mass_content, titles)
+        
+        # Calculate delivery costs
+        data = get_delivery_cost(data, data, titles)
+        
         # Calculate energy use
         data = calc_ener_cons(data, titles, year)
             
 
     # %% Simulation period
     else:
-
-        # Total hydrogen demand        
-        dem_lag = (time_lag['HYDT'][:, 0, 0])
-        
-        # CALL Function to solve NH3 trade
         
         
-        # NH3 
-
-        data_dt = {}
+        # Apply demand index to get future demand
+        data['NH3DEM'][:, 0, 0] = time_lag['NH3DEM'][:, 0, 0] * data['NH3DEMIDX'][:, 0, 0]
 
         # First, fill the time loop variables with the their lagged equivalents
+        data_dt = {}
         for var in time_lag.keys():
 
             if domain[var] == 'FTT-H2':
@@ -250,94 +256,48 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
         
-        # Get hydrogen demand
-        data = calc_h2_demand(data)
+        # %% Start of differential loop
+        
+        for t in range(1, no_it+1):
+            
+            # split by market
+            for m_idx in range(titles['TFTI']):
+            
+                # Get demand step
+                demand_step = (data['NH3DEM'][:, 0,m_idx] - time_lag['NH3DEM'][:, 0,m_idx]) * t/no_it
+                data_dt['NH3DEM'][:, 0,m_idx] = time_lag['NH3DEM'][:, 0,m_idx] + demand_step
+                
+                # Call NH3 trade function
+                data = calculate_nh3_trade(data, time_lag, demand_step, data_dt, year, sub_rate, m_idx, titles, dt)
+        
+                # Production of NH3 translates to production of H2, i.e. no trade is assumed
+                
+                for r in range(len(titles['RTI'])):
+                    
+                    # Green hydrogen market
+                    if m_idx == 0:
+                        
+                        dSij_green = substitution_in_shares(data_dt['WGWS'], data_dt['WGWS'], data['HYWA'], 
+                                                      data_dt['HYLC'], data_dt['HYLD'], 
+                                                      r, dt, titles)
+                        
+                        
+                        #calculate temporary market shares and temporary capacity from endogenous results
+                        data['WGWS'][r, :, 0] = data_dt['WGWS'][r, :, 0] + np.sum(dSij_green, axis=1)
+                        data['WGWK'][r, :, 0] = data['WGWS'][r, :, 0] * green_capacity_forecast[r, np.newaxis]
+                        
+                        # Add medium-term capacity additions and rescale shares
+                        if data['WGWK'][r, :, 0].sum() > 0.0:
+                            data['WGWK'][r, :, 0] += data['HYMT'][r, :, 0] * data['HYGR'][0, :, 0] * t/no_it
+                            data['WGWS'][r, :, 0] = data['WGWK'][r, :, 0] / data['WGWK'][r, :, 0].sum() 
+                        
+                    # Grey hydrogen market    
+                    else:
+                        dSij_grey = substitution_in_shares(data_dt['WBWS'], data_dt['HYWS'], data['HYWA'], 
+                                                           data_dt['HYLC'], data_dt['HYLD'], 
+                                                           r, dt, titles)                    
         
 
-        
-        # %% Initialise capacities for both markets
-        
-        # TODO: Reorganise this code
-        
-        # Project hydrogen production
-        # Default market
-        data['WBKF'][:, 0, 0] = time_lag['WBWK'][:, :, 0].sum(axis=1) * (1 + time_lag['WBCG'][:, 0, 0])
-        
-
-        # Split technologies to their respective market
-        if year == 2023 and data['WGRM'].sum() > 0.0 and  data['HYGR'].sum() > 0.0:
-            
-            # Allocate permissible technologies to the green market
-            data_dt['WGWK'][:, :, 0] = time_lag['HYWK'][:, :, 0] * data['HYGR'][:, :, 0]
-            data_dt['WGWS'] = data_dt['WGWK'] / data_dt['WGWK'].sum(axis=1)[:, :, None]
-            data_dt['WGWS'][np.isnan(data_dt['WGWS'])] = 0.0
-            # Remove green techs from the default market
-            data_dt['WBWK'][:, :, 0] = time_lag['HYWK'][:, :, 0] * (1.0 - data['HYGR'][:, :, 0])
-            data_dt['WBWS'] = data_dt['WBWK'] / data_dt['WBWK'].sum(axis=1)[:, :, None]
-            data_dt['WBWS'][np.isnan(data_dt['WBWS'])] = 0.0
-            
-            # We need a green market forecasted capacity
-            data['WGKF'][:, 0, 0] = data_dt['WGWK'][:, :, 0].sum(axis=1)*1.25
-            # Fill historical estimate
-            data_dt['WGKF'][:, 0, 0] = data_dt['WGWK'][:, :, 0].sum(axis=1)
-            
-            # Remove initialised green capacities from the grey/bad market
-            # data_dt['WBWK'][:, :, 0] -= data_dt['WGWK'][:, :, 0]
-            
-        elif year > 2023 and data['WGRM'].sum() > 0.0 and  data['HYGR'].sum() > 0.0:
-                
-            # Project hydrogen production
-            # Green market
-            data['WGKF'][:, 0, 0] = time_lag['WGWK'][:, :, 0].sum(axis=1) * (1 + time_lag['WGCG'][:, 0, 0])
-            
-        # Estimate the green capacity that is in the system
-        # Calculate for all years
-        green_cap = (data_dt['WGWK'] + data_dt['HYMT']) * data['HYGR']
-        green_cap_prod_pot = green_cap[:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']]
-        
-        
-        # Compare green technologies to green hydrogen demand
-        # Typically the values will be higher than the green H2 demand at 
-        # the start. Therefore, we set a floor demand level, which will remain
-        # constant over time. We only do this for the period where the medium-
-        # term capacity additions come into play          
-        if year <= 2028:
-            
-
-            # Check if global green demand is less than 70% of green capacity
-            if data['WGRM'].sum() < 0.7*green_cap_prod_pot.sum():
-                
-                green_h2_addition = 0.7*green_cap_prod_pot.sum() - data['WGRM'].sum()
-                
-                # Share out green demand where green capacity will arise
-                green_cap_share = green_cap_prod_pot.sum(axis=1) / green_cap_prod_pot.sum()
-                data['WGFL'][:, 0, 0] = green_h2_addition * green_cap_share
-            
-            # Adjust green market capacity forecast
-            if year > 2023:
-                
-                data['WGKF'][:, 0, 0] = time_lag['WGKF'][:, 0, 0] * (1 + time_lag['WGCG'][:, 0, 0]) + np.sum(data_dt['HYMT'] * data['HYGR'], axis=1)[:, 0]
-             
-        else:
-            
-            data['WGFL'][:, 0, 0] = time_lag['WGFL'][:, 0, 0]
-            
-        # Add floor green H2 demand levels to the green market
-        data['WGRM'][:, 0, 0] += data['WGFL'][:, 0, 0]
-        
-        # Also add WRGM and WGFL to data_dt
-        data_dt['WGRM'][:, 0, 0] = data['WGRM'][:, 0, 0]
-        data_dt['WGFL'][:, 0, 0] = data['WGFL'][:, 0, 0]
-        
-        # Correction to capacity forecast of the green market
-        # If demand grows more quickly than capacity, then we need to inflate
-        # capacity needs. We also need to flag that rates are greater than what
-        # seems reasonable
-        if year > 2023:
-            if green_cap_prod_pot.sum() < data_dt['WGRM'].sum():
-            
-                scalar = data_dt['WGRM'].sum() / green_cap_prod_pot.sum()
-                data['WGKF'] *= scalar
             
             
             
