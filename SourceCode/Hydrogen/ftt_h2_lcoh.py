@@ -93,6 +93,7 @@ def get_lcoh(data, titles):
 
         # Discount rate
         dr = data['BCHY'][r,:, c7ti['Discount rate'], np.newaxis]
+        # dr = np.ones((len(titles['HYTI']), 1)) * data['DISCOUNTRATES'][r,0,0]
 
         # Initialse the levelised cost components
         # Average investment cost
@@ -170,7 +171,7 @@ def get_lcoh(data, titles):
 
         # 2-Utility
         npv_utility = energy_prod/denominator
-        npv_utility[npv_utility==1] = 0
+        # npv_utility[npv_utility==1] = 0
 
         # 3-Standard deviation (propagation of error)
         npv_std = 1.414 * np.sqrt(dit**2 + dft**2 + dopex_fix**2 + dopex_var**2)/denominator
@@ -178,14 +179,14 @@ def get_lcoh(data, titles):
         # 1-levelised cost variants in $/pkm
         # 1.1-Bare LCOH
         lcoh = np.sum(npv_expenses1, axis=1)/np.sum(npv_utility, axis=1)
-        lcoh[np.isnan(lcoh)] == 0.0
+        lcoh[np.isnan(lcoh)] = 0.0
         # 1.2-LCOH for CSC
         lcoh_csc = np.sum(npv_expenses2, axis=1)/np.sum(npv_utility, axis=1)
-        lcoh_csc[np.isnan(lcoh_csc)] == 0.0
+        lcoh_csc[np.isnan(lcoh_csc)] = 0.0
 
         # Standard deviation of LCOH
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
-        dlcoh[np.isnan(dlcoh)] == 0.0
+        dlcoh[np.isnan(dlcoh)] = 0.0
 
         # Pass to variables that are stored outside.
         data['HYLC'][r, :, 0] = lcoh            # The real bare LCOH without taxes

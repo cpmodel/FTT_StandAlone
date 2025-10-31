@@ -6,6 +6,7 @@
 
 # Third party imports
 import numpy as np
+from SourceCode.support.divide import divide
 
 
 # %% LOCNH3
@@ -23,12 +24,12 @@ def get_lchb(data, h2_input, titles):
     for r in range(len(titles['RTI'])):
         
         # Loop over market (grey or green)
-        for m in range(len(titles('TFTI'))):
+        for m in range(len(titles['TFTI'])):
         
             # CAPEX from IEA. Assume 2024 USD
             capex = 770 / (data['PRSC'][r, 0, 0] * data['EX'][r, 0, 0]) / 1.18
             opex = 0.03 * capex
-            discount_rate = 0.08
+            discount_rate = data['DISCOUNTRATES'][r, 0, 0]
             
             npv_in = 0.0
             dnpv_in = 0.0
@@ -101,16 +102,16 @@ def get_cbam(data, h2_input, titles):
     cbam_penalty_rate[cbam_penalty_rate<0.0] = 0.0
     
     # Get emission intensity as a split by 
-    emission_intensity_green = (np.sum(data['WGWG'][:, :, 0]  * data['HYEF'][:, :, 0] * h2_input, axis=1)
-                                / np.sum(data['WGWG'][:, :, 0]* h2_input, axis=1))
-    emission_intensity_grey = (np.sum(data['WBWG'][:, :, 0]  * data['HYEF'][:, :, 0] * h2_input, axis=1)
-                                / np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1))
+    emission_intensity_green = divide(np.sum(data['WGWG'][:, :, 0]  * data['HYEF'][:, :, 0] * h2_input, axis=1)
+                                      , np.sum(data['WGWG'][:, :, 0]* h2_input, axis=1))
+    emission_intensity_grey = divide(np.sum(data['WBWG'][:, :, 0]  * data['HYEF'][:, :, 0] * h2_input, axis=1)
+                                     , np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1))
     # Grey market emission intensity matrix
     # Get differences between importers and exporters
     emis_intensity_grey_at_importer = np.zeros((len(titles['RTI']), len(titles['RTI'])))
-    emis_intensity_grey_at_importer += emission_intensity_green[None, :]
+    emis_intensity_grey_at_importer += emission_intensity_grey[None, :]
     emis_intensity_grey_at_exporter = np.zeros((len(titles['RTI']), len(titles['RTI'])))
-    emis_intensity_grey_at_exporter += emission_intensity_green[:, None]    
+    emis_intensity_grey_at_exporter += emission_intensity_grey[:, None]    
     # Get the difference
     emis_intensity_grey_diff = emis_intensity_grey_at_importer - emis_intensity_grey_at_exporter
     # Remove negative numbers

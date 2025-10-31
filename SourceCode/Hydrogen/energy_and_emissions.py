@@ -106,7 +106,7 @@ def calc_emis_rate(data, titles, year):
                                      * 1e6)  # ktCO2/kg H2 to kg CO2 / kg H2
         
     # Apply CO2 capture rates to CCS techs
-    data['HYEF'][:, [1,3], 0] *= 0.7
+    data['HYEF'][:, [1,3], 0] *= 0.05
         
         
 

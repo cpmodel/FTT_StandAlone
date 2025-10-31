@@ -92,6 +92,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     c7ti = {category: index for index, category in enumerate(titles['C7TI'])}
     jti = {category: index for index, category in enumerate(titles['JTI'])}
     hyti = {category: index for index, category in enumerate(titles['HYTI'])}
+    
+    green_idx = 0
+    grey_idx = 1
 
 
     sector = 'hydrogen'
@@ -125,11 +128,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                             titles['HYTI'], titles['RTI'])
     
     # Sum demand
-    data['HYDT'][:, 0, 0] = (data['HYD1'][:, 0, 0] +
-                             data['HYD2'][:, 0, 0] +
-                             data['HYD3'][:, 0, 0] +
-                             data['HYD4'][:, 0, 0] +
-                             data['HYD5'][:, 0, 0] )
+    # data['HYDT'][:, 0, 0] = (data['HYD1'][:, 0, 0] +
+    #                          data['HYD2'][:, 0, 0] +
+    #                          data['HYD3'][:, 0, 0] +
+    #                          data['HYD4'][:, 0, 0] +
+    #                          data['HYD5'][:, 0, 0] )
     
     # Energy price to technological energy cost mapping
     data = calc_ener_cost(data, titles, year)
@@ -147,7 +150,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     
     # Substitution rate
     # For now we simply assume a value of 2.5
-    sub_rate = 2.5
+    sub_rate = 0.1
 
 
     # %% Historical accounting
@@ -157,16 +160,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         # NH3 trade is 2023
         # We assume that the supply map for 2023 is a close enough approximation
         # for 2022.
-        data['NH3DEM'][:, 0, 0] = data['NH3SM2023'][:, :, 0].sum(axis=1)
-        data['NH3PROD'][:, 0, 0] = data['NH3SM2023'][:, :, 0].sum(axis=0)
-        data['NH3IMP'][:, 0, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles('RTI'))))).sum(axis=1)
-        data['NH3EXP'][:, 0, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles('RTI'))))).sum(axis=0)
+        
+        data['NH3DEM'][:, grey_idx, 0] = data['NH3SM2023'][:, :, 0].sum(axis=0)
+        data['NH3PROD'][:, grey_idx, 0] = data['NH3SM2023'][:, :, 0].sum(axis=1)
+        data['NH3IMP'][:, grey_idx, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=0)
+        data['NH3EXP'][:, grey_idx, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=1)
         
         # Store supply map in time-based variable
-        data['NH3SMLVL'][:, :, 0] = data['NH3SM2023'][:, :, 0].copy()
+        data['NH3SMLVL'][:, :, grey_idx] = data['NH3SM2023'][:, :, 0].copy()
         
         # Convert NH3 production to H2 demand (which is always sourced locally)
-        data['HYDT'][:, 0, 0] = data['NH3DEM'][:, 0, 0] * h2_mass_content
+        data['HYDT'][:, 0, 0] = data['NH3DEM'][:, grey_idx, 0] * h2_mass_content
         data['HYPD'][:, 0, 0] = data['HYDT'][:, 0, 0].copy()
         # Hydrogen production is provided in absolute levels and also includes
         # H2 production for non-NH3 purposes
@@ -184,7 +188,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                )
                 
                 # Overwrite production estimates
-                data['HYG1'][r, :, 0] = prod_shares * data['HYPD'][:, 0, 0]
+                data['HYG1'][r, :, 0] = prod_shares * data['HYPD'][r, 0, 0]
                 
                 # Re-estimate capacities
                 data['HYWK'][r, :, 0] = divide(data['HYG1'][r, :, 0],
@@ -192,8 +196,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                                )
                 
                 # Get supply map in shares
-                if data['NH3SMLVL'][r, :, 0].sum() > 0.0:
-                    data['NH3SMSHAR'][r, :, 0] = data['NH3SMLVL'][r, :, 0] / data['NH3SMLVL'][r, :, 0].sum()
+                if data['NH3SMLVL'][r, :, grey_idx].sum() > 0.0:
+                    data['NH3SMSHAR'][r, :, grey_idx] = data['NH3SMLVL'][r, :, grey_idx] / data['NH3SMLVL'][r, :, grey_idx].sum()
+                    
+                # Copy supply map in shares for the grey market and apply to the
+                # green market
+                data['NH3SMSHAR'][r, :, green_idx] = data['NH3SMSHAR'][r, :, grey_idx].copy()
         
         # Quick and dirty correction to historical capacities and util rates of
         # Green H2 technologies
@@ -212,16 +220,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         # LCOH calclation
         data = get_lcoh2(data, titles)
         
+        # global price
+        glob_h2_price = divide((data['HYCC'][:, :, 0] * data['HYG1'][:, :, 0]).sum()
+                                               , data['HYG1'][:, :, 0].sum()
+                                               )
+        
         for r in range(len(titles['RTI'])):
             # Average producer prices for green and grey
-            data['WPPR'][r, 0, 0] = ((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0])
-                                    / data['HYG1'][r, :, 0].sum()
-                                    )
-            data['WPPR'][r, 0, 0] = ((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0] * data['HYGR'][0, :, 0])
-                                    / (data['HYG1'][r, :, 0]* data['HYGR'][0, :, 0]).sum()
-                                    )  
+            data['WPPR'][r, grey_idx, 0] = divide((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0]).sum()
+                                                   , data['HYG1'][r, :, 0].sum()
+                                                   )
+            if np.isclose(data['WPPR'][r, green_idx, 0], 0.0):
+                data['WPPR'][r, green_idx, 0] = glob_h2_price
+            
+            data['WPPR'][r, green_idx, 0] = divide((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0] * data['HYGR'][0, :, 0]).sum()
+                                                  , (data['HYG1'][r, :, 0]* data['HYGR'][0, :, 0]).sum()
+                                                  ) 
+            
+            if np.isclose(data['WPPR'][r, grey_idx, 0], 0.0):
+                data['WPPR'][r, grey_idx, 0] = glob_h2_price + 5.0
         
-        # Calculate NH3 LC - grey
+        # Calculate NH3 LC
         data = get_lchb(data, h2_mass_content, titles)
         
         # Calculate CBAM
@@ -238,9 +257,71 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     else:
         
         
-        # Apply demand index to get future demand
-        data['NH3DEM'][:, 0, 0] = time_lag['NH3DEM'][:, 0, 0] * data['NH3DEMIDX'][:, 0, 0]
-
+        # Apply demand index to get future demand (grey market)
+        data['NH3DEM'][:, grey_idx, 0] = time_lag['NH3DEM'][:, grey_idx, 0] * data['NH3DEMIDX'][:, 0, 0]
+        # Check for medium-term inputs and if green techs, then set demand for
+        # green market
+        data['NH3DEM'][:, green_idx, 0] = np.sum(data['HYGR'][:, :, 0] 
+                                         * data['HYMT'][:, :, 0] 
+                                         * data['BCHY'][:, :, c7ti['Maximum capacity factor']]
+                                         ,axis=1)
+        
+        # Remove demand in Taiwan
+        data['NH3DEM'][48, green_idx, 0] = 0.0
+        data['NH3DEM'][48, grey_idx, 0] = 0.0
+        
+        
+        if year < 2029:
+            # Set green ammonia demand to a floor level
+            mask = data['NH3DEM'][:, green_idx, 0] < time_lag['NH3DEM'][:, green_idx, 0]
+            data['NH3DEM'][:, green_idx, 0] = np.where(mask,
+                                                      time_lag['NH3DEM'][:, green_idx, 0],
+                                                      data['NH3DEM'][:, green_idx, 0])
+            
+            # data['NH3DEM'][:, green_idx, 0][mask] = time_lag['NH3DEM'][:, green_idx1, 0]
+            
+            # floor demand
+            data['WGFL'][:, 0, 0] = data['NH3DEM'][:, green_idx, 0].copy()
+            
+            # Apply mandates
+            mandated_demand = data['NH3DEM'][:, grey_idx, 0] * data['WDM1'][:, 0, 0]
+            
+            mask = data['NH3DEM'][:, green_idx, 0] < mandated_demand
+            data['NH3DEM'][:, green_idx, 0] = np.where(mask,
+                                                      mandated_demand,
+                                                      data['NH3DEM'][:, green_idx, 0])
+            
+            
+            # Remove green demand from grey demand
+            data['NH3DEM'][:, grey_idx, 0] -= data['NH3DEM'][:, green_idx, 0]
+            
+            # Prevent negative values
+            data['NH3DEM'][:, grey_idx, 0][data['NH3DEM'][:, grey_idx, 0]<0.0] = 0.0
+            
+        else:
+            
+            # Set green demand to floor level first
+            data['WGFL'][:, 0, 0] = time_lag['WGFL'][:, 0, 0].copy()
+            data['NH3DEM'][:, green_idx, 0] = data['WGFL'][:, 0, 0].copy()
+            
+            # Apply mandates
+            mandated_demand = data['NH3DEM'][:, grey_idx, 0] * data['WDM1'][:, 0, 0]
+            data['NH3DEM'][:, green_idx, 0][data['NH3DEM'][:, green_idx, 0] < mandated_demand] = mandated_demand
+            
+            # Remove green demand from grey demand
+            data['NH3DEM'][:, grey_idx, 0] -= data['NH3DEM'][:, green_idx, 0]
+            
+            # Prevent negative values
+            data['NH3DEM'][:, grey_idx, 0][data['NH3DEM'][:, grey_idx, 0]<0.0] = 0.0
+            
+        # Check if the supply map for the green market needs to be filled
+        if time_lag['NH3SMLVL'][:, :, green_idx].sum() == 0:
+            
+            data['NH3SMLVL'][:, :, green_idx] = time_lag['NH3SMSHAR'][:, :, green_idx] * data['NH3DEM'][:, None, green_idx, 0]
+            
+            
+        
+        
         # First, fill the time loop variables with the their lagged equivalents
         data_dt = {}
         for var in time_lag.keys():
@@ -261,21 +342,36 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         for t in range(1, no_it+1):
             
             # split by market
-            for m_idx in range(titles['TFTI']):
+            for m_idx in range(len(titles['TFTI'])):
+                
+                if t ==1: print("Calculating trade for the {} market".format(titles['TFTI'][m_idx]))
             
                 # Get demand step
-                demand_step = (data['NH3DEM'][:, 0,m_idx] - time_lag['NH3DEM'][:, 0,m_idx]) * t/no_it
-                data_dt['NH3DEM'][:, 0,m_idx] = time_lag['NH3DEM'][:, 0,m_idx] + demand_step
+                demand_step = (data['NH3DEM'][:, m_idx, 0] - time_lag['NH3DEM'][:, m_idx, 0]) * t/no_it
+                data_dt['NH3DEM'][:, m_idx, 0] = time_lag['NH3DEM'][:, m_idx, 0] + demand_step
                 
+                # Check the supply map
+                if demand_step.sum() > 0.0 and np.isclose(data_dt['NH3SMLVL'][:, :, m_idx].sum(), 0.0):
+                    
+                    # Use the proxy supply map in shares
+                    data_dt['NH3SMLVL'][:, :, m_idx] = data_dt['NH3SMSHAR'][:, :, m_idx] * data_dt['NH3DEM'][:, None, m_idx, 0]
+                    
+                    
+                #---------------------------------------------------------- 
                 # Call NH3 trade function
-                data = calculate_nh3_trade(data, time_lag, demand_step, data_dt, year, sub_rate, m_idx, titles, dt)
-        
+                data = calculate_nh3_trade(data, time_lag, demand_step, data_dt, year, sub_rate, m_idx, titles, t, no_it, dt)
+                
                 # Production of NH3 translates to production of H2, i.e. no trade is assumed
+                data['H2DEMAND'][:, m_idx, 0] = data['NH3PROD'][:, m_idx, 0] * h2_mass_content
                 
                 for r in range(len(titles['RTI'])):
                     
+                    if np.isclose(data['H2DEMAND'][r, m_idx, 0], 0.0):
+                        continue
+                    
+                    #---------------------------------------------------------- 
                     # Green hydrogen market
-                    if m_idx == 0:
+                    if m_idx == green_idx:
                         
                         dSij_green = substitution_in_shares(data_dt['WGWS'], data_dt['WGWS'], data['HYWA'], 
                                                       data_dt['HYLC'], data_dt['HYLD'], 
@@ -283,213 +379,58 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                         
                         
                         #calculate temporary market shares and temporary capacity from endogenous results
-                        data['WGWS'][r, :, 0] = data_dt['WGWS'][r, :, 0] + np.sum(dSij_green, axis=1)
-                        data['WGWK'][r, :, 0] = data['WGWS'][r, :, 0] * green_capacity_forecast[r, np.newaxis]
+                        endo_shares = data_dt['WGWS'][r, :, 0] + np.sum(dSij_green, axis=1)
+                        endo_cap = divide(endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
+                                          endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']])
                         
-                        # Add medium-term capacity additions and rescale shares
-                        if data['WGWK'][r, :, 0].sum() > 0.0:
-                            data['WGWK'][r, :, 0] += data['HYMT'][r, :, 0] * data['HYGR'][0, :, 0] * t/no_it
-                            data['WGWS'][r, :, 0] = data['WGWK'][r, :, 0] / data['WGWK'][r, :, 0].sum() 
+                        # Add in medium-term capacity
+                        cap_add = data['HYMT'][r, :, 0]/no_it * data['HYGR'][0, :, 0]
+                        tot_cap_add = cap_add.sum()
                         
+                        if (endo_cap.sum() + tot_cap_add > 0.0):
+                            
+                            data['WGWS'][r, :, 0] = (endo_cap + cap_add)/(np.sum(endo_cap)+tot_cap_add)
+                            
+                        # Get capacity
+                        data['WGWK'][r, :, 0] = divide(data_dt['WGWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
+                                                       data_dt['WGWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']])
+                        
+                        # Get production
+                        data['WGWG'][r, :, 0] = data_dt['WGWK'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']]
+                                                     
+                    #----------------------------------------------------------    
                     # Grey hydrogen market    
                     else:
                         dSij_grey = substitution_in_shares(data_dt['WBWS'], data_dt['HYWS'], data['HYWA'], 
                                                            data_dt['HYLC'], data_dt['HYLD'], 
                                                            r, dt, titles)                    
         
-
-            
-            
-            
-        
-        # %% Decision-making core -  split by market - Green market first
-            
-
-        # =====================================================================
-        # Start of the quarterly time-loop
-        # =====================================================================
-        
-
-        #Start the computation of shares
-        for t in range(1, no_it+1):
-            
-            # Expected capacity expansion for the green market
-            green_capacity_forecast = data_dt['WGKF'][:, 0, 0] + (data['WGKF'][:, 0, 0] - 
-                                                                  data_dt['WGKF'][:, 0, 0]) * t/no_it
-            # green_capacity_forecast += np.sum(data['HYMT'][:, :, 0] * np.isclose(data['HYGR'][:, :, 0], 1.0) * t/no_it, axis=1)
-            
-            # Green demand step
-            green_demand_step = data_dt['WGRM'][:, 0, 0] + (data['WGRM'][:, 0, 0] - 
-                                                                  data_dt['WGRM'][:, 0, 0]) * t/no_it
-            
-            # Decision-making core for the green market
-            for r in range(len(titles['RTI'])):
-
-                if np.isclose(green_capacity_forecast[r], 0.0):
-                    continue
-                
-                dSij_green = substitution_in_shares(data_dt['WGWS'], data_dt['WGWS'], data['HYWA'], 
-                                              data_dt['HYLC'], data_dt['HYLD'], 
-                                              r, dt, titles)
-                
-                #calculate temporary market shares and temporary capacity from endogenous results
-                data['WGWS'][r, :, 0] = data_dt['WGWS'][r, :, 0] + np.sum(dSij_green, axis=1)
-                data['WGWK'][r, :, 0] = data['WGWS'][r, :, 0] * green_capacity_forecast[r, np.newaxis]
-                
-                # Add medium-term capacity additions and rescale shares
-                if data['WGWK'][r, :, 0].sum() > 0.0:
-                    data['WGWK'][r, :, 0] += data['HYMT'][r, :, 0] * data['HYGR'][0, :, 0] * t/no_it
-                    data['WGWS'][r, :, 0] = data['WGWK'][r, :, 0] / data['WGWK'][r, :, 0].sum()   
-                    
-            # Check where production will occur based on CSC and assumptions
-            # Apply fixed domestic utilisation for domestic demand assumptions
-            prod_pot = np.sum(data['WGWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']], axis=1)
-            dem_pot = green_demand_step * data['WMUT'][:, 0, 0]
-            fixed_production_green_potential = np.minimum(prod_pot, dem_pot)
-            
-            fixed_production_green = fixed_production_green_potential[:, None] * data['WGWS'][:, :, 0]
-            unmet_demand_green = green_demand_step - fixed_production_green.sum(axis=1)
-            
-            # Unallocated capacity
-            unalloc_cap_green = data['WGWK'][:, :, 0] - fixed_production_green
-                    
-            # Call CSC function
-            (endo_production_green, 
-             data['WCPR'][:,0,0], 
-             green_cap_factor,
-             data['WEPR'][:,0,0],
-             data['WIPR'][:,0,0]) = calc_csc(data_dt['HYCC'], data_dt['HYLD'], 
-                                            unmet_demand_green[:, None, None], 
-                                            unalloc_cap_green[:, :, None], 
-                                            data['BCHY'][:, :, c7ti['Maximum capacity factor']],
-                                            data['HYTC'], 
-                                            titles,
-                                            'green',
-                                            year) 
-
-            # Combine fixed and endogenous production estimates
-            data['WGWG'][:, :, 0] = endo_production_green + fixed_production_green 
-            
-            # Domestic price formation
-            fixed_value = np.sum(fixed_production_green * data['HYLC'][:, :, 0], axis=1)
-            fixed_price = divide(fixed_value, fixed_production_green.sum(axis=1))
-            domestic_share = divide(data['WGWG'][:, :, 0].sum(axis=1), green_demand_step)
-            domestic_share = np.minimum(domestic_share, 1.0)
-            data['WCPR'][:,0,0] = domestic_share * fixed_price + (1-domestic_share)*data['WIPR'][:,0,0]
-                
-            # %% Decision-making core -  split by market - Grey/default market second
-                
-            # Expected capacity expension for the grey market
-            grey_capacity_forecast = data_dt['WBKF'][:, 0, 0] + (data['WBKF'][:, 0, 0] -
-                                                                 data_dt['WBKF'][:, 0, 0]) * t/no_it
-            
-            # grey_capacity_forecast += np.sum(data['HYMT'][:, :, 0] * np.isclose(data['HYGR'][:, :, 0], 0.0) * t/no_it, axis=1)
-
-            # Grey demand step
-            grey_demand_step = data_dt['HYDT'][:, 0, 0] + (data['HYDT'][:, 0, 0] - 
-                                                           data_dt['HYDT'][:, 0, 0]) * t/no_it
-            grey_demand_step -= green_demand_step
-            grey_demand_step[grey_demand_step<0.0] = 0.0
-            
-            for r in range(len(titles['RTI'])):
-
-                if np.isclose(grey_capacity_forecast[r], 0.0):
-                    continue
-
-                # dSij_grey2 = substitution_in_shares(data_dt['WBWS'], data['HYWA'], 
-                #                                    data_dt['HYLC'], data_dt['HYLD'], 
-                #                                    r, dt, titles)
-                
-                dSij_grey = substitution_in_shares(data_dt['WBWS'], data_dt['HYWS'], data['HYWA'], 
-                                                   data_dt['HYLC'], data_dt['HYLD'], 
-                                                   r, dt, titles)
-                
-                # check shares because we're using market-wide shares that
-                # include green market shares for diffusion dynamic purposes
-                # dSi_check = np.sum(dSij_grey, axis=1)
-                # S_check = data_dt['WBWS'][r, :, 0] + dSi_check
-                # # Get indices where S_check is negative
-                # idx = np.where(S_check<0.0)[0][0]
-                # diff = S_check[idx]
-                # dSij_grey_check = np.copy(dSij_grey)
-                # dSij_grey_check[idx, :] = S_check[idx]
-                
-                
-                # check = data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey2, axis=1)
-
-                #calculate temporary market shares and temporary capacity from endogenous results
-                # data['WBWS'][r, :, 0] = np.where(data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1) < 0.0,
-                #                                  0.0,
-                #                                  data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1))                
-                data['WBWS'][r, :, 0] = data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1)
-                data['WBWS'][r, :, 0][data['WBWS'][r, :, 0] < 0.0] = 0.0
-                data['WBWS'][r, :, 0] = data['WBWS'][r, :, 0] / data['WBWS'][r, :, 0].sum()
-                data['WBWK'][r, :, 0] = data['WBWS'][r, :, 0] * grey_capacity_forecast[r, np.newaxis]
-                
-                # Add medium-term capacity additions and rescale shares
-                if data['WBWK'][r, :, 0].sum() > 0.0:
-                    data['WBWK'][r, :, 0] += data['HYMT'][r, :, 0] * np.isclose(data['HYGR'][0, :, 0], 0.0) *t/no_it
-                    data['WBWK'][r, :, 0] += data['WBMT'][r, :, 0]  *t/no_it
-                    
-                    # Add spill-over capacity from the green market - as it can
-                    # still compete for the default market
-                    # data['WBWK'][r, :, 0] += cap_from_green_to_grey[r, :]
-                    
-                    # Rescale market shares (it retains endogenous info as the rest 
-                    # is added on top of capacities)
-                    data['WBWS'][r, :, 0] = data['WBWK'][r, :, 0] / data['WBWK'][r, :, 0].sum()
-                    
-                    # Adjust forecasted capacity level
-                    # data['WBKF'][:, 0, 0]  += np.sum(data['HYMT'][r, :, 0] * np.isclose(data['HYGR'][0, :, 0], 0.0))
-                    # data_dt['WBKF'][:, 0, 0]  += np.sum(data['HYMT'][r, :, 0] * np.isclose(data['HYGR'][0, :, 0], 0.0)) * t/no_it
-                    
-            # Check where production will occur based on CSC and assumptions
-            # Apply fixed domestic utilisation for domestic demand assumptions
-            prod_pot = np.sum(data['WBWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']], axis=1)
-            dem_pot = (grey_demand_step)  * data['WMUT'][:, 0, 0]
-            fixed_production_grey_potential = np.minimum(prod_pot, dem_pot)
-            fixed_production_grey = fixed_production_grey_potential[:, None] * data['WBWS'][:, :, 0]
-            unmet_demand_grey = grey_demand_step - fixed_production_grey.sum(axis=1)
-            
-            # Unallocated capacity
-            unalloc_cap_grey = data['WBWK'][:, :, 0] - fixed_production_grey
-                    
-            # Call CSC function
-            (endo_production_grey, 
-             data['WCPR'][:,1,0], 
-             grey_cap_factor,
-             data['WEPR'][:,1,0],
-             data['WIPR'][:,1,0]) = calc_csc(data_dt['HYCC'], data_dt['HYLD'], 
-                                            unmet_demand_grey[:, None, None], 
-                                            unalloc_cap_grey[:, :, None], 
-                                            data['BCHY'][:, :, c7ti['Maximum capacity factor']],
-                                            data['HYTC'], 
-                                            titles,
-                                            'grey',
-                                            year) 
-            
-            # Combine fixed and endogenous production estimates
-            data['WBWG'][:, :, 0] = endo_production_grey + fixed_production_grey
-            
-            # Domestic price formation
-            fixed_value = np.sum(fixed_production_grey * data['HYLC'][:, :, 0], axis=1)
-            fixed_price = divide(fixed_value, fixed_production_grey.sum(axis=1))
-            domestic_share = divide(data['WBWG'][:, :, 0].sum(axis=1), grey_demand_step)
-            domestic_share = np.minimum(domestic_share, 1.0)
-            data['WCPR'][:,1,0] = domestic_share * fixed_price + (1-domestic_share)*data['WIPR'][:,1,0]
-            
-            
-            # %% Accounting section
-            
-            # Combine data from the grey and green markets
-            # Production by tech and region
+                        #calculate temporary market shares and temporary capacity from endogenous results
+                        endo_shares = data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1)
+                        endo_cap = divide(endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
+                                          endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']])
+                        
+                        # Add in medium-term capacity
+                        cap_add = data['HYMT'][r, :, 0]/no_it * (1.0-data['HYGR'][0, :, 0])
+                        tot_cap_add = cap_add.sum()
+                        
+                        if (endo_cap.sum() + tot_cap_add > 0.0):
+                            
+                            data['WBWS'][r, :, 0] = (endo_cap + cap_add)/(np.sum(endo_cap)+tot_cap_add)
+                            
+                        # Get capacity
+                        data['WBWK'][r, :, 0] = divide(data_dt['WBWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
+                                                       data_dt['WBWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']])
+                        
+                        # Get production
+                        data['WBWG'][r, :, 0] = data_dt['WBWK'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']]
+                        
+            # H2 production by tech and region
             data['HYG1'][:, :, 0] = data['WGWG'][:, :, 0] + data['WBWG'][:, :, 0]
             # Capacity by tech and region
             data['HYWK'][:, :, 0] = data['WGWK'][:, :, 0] + data['WBWK'][:, :, 0]
             # Market shares across both segments
             data['HYWS'][:, :, 0] = divide(data['HYWK'][:, :, 0], data['HYWK'][:, :, None, 0].sum(axis=1))
-            # Capacity factors
-            data['HYCF'][:, :, 0] = divide(data['HYG1'][:, :, 0], data['HYWK'][:, :, 0]) 
             
             if (np.any(np.isnan(data['HYG1'][:, :, 0])) or
                 np.any(np.isnan(data['HYWK'][:, :, 0])) or
@@ -505,9 +446,26 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 x=1
                 raise ValueError("Error: The results contain negative values.")
                 
-            if (np.any(data['HYCF'][:,:,0] > data['BCHY'][:, :, c7ti['Maximum capacity factor']])):
+            # global price
+            glob_h2_price = divide((data['HYCC'][:, :, 0] * data['HYG1'][:, :, 0]).sum()
+                                                   , data['HYG1'][:, :, 0].sum()
+                                                   )
+            
+            for r in range(len(titles['RTI'])):
+                # Average producer prices for green and grey
+                data['WPPR'][r, grey_idx, 0] = divide((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0]).sum()
+                                                       , data['HYG1'][r, :, 0].sum()
+                                                       )
+                if np.isclose(data['WPPR'][r, green_idx, 0], 0.0):
+                    data['WPPR'][r, green_idx, 0] = glob_h2_price 
                 
-                x = 1
+                data['WPPR'][r, green_idx, 0] = divide((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0] * data['HYGR'][0, :, 0]).sum()
+                                                      , (data['HYG1'][r, :, 0]* data['HYGR'][0, :, 0]).sum()
+                                                      ) 
+                
+                if np.isclose(data['WPPR'][r, grey_idx, 0], 0.0):
+                    data['WPPR'][r, grey_idx, 0] = glob_h2_price+ 5.0
+
             
             # Capacity additions
             cap_diff = (data['HYWK'][:, :, 0] - data_dt['HYWK'][:, :, 0])
@@ -571,143 +529,31 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                     (data['BCHY'][:, :, c7ti['Storage CAPEX, mean, €/kgH2 cap']] + 
                                      data['BCHY'][:, :, c7ti['Onsite electricity CAPEX, mean, €/kg H2 cap']])
                                      ) + data['HYIY'][:, :, 0]
-        
-        # %% New capacity expansion forecast - grey market
-        # System-wide capacity factor
-        # Normalised to the maximum capacity factor
-        data['WBCF'][:, 0, 0] = divide(data['WBWG'][:, :, 0].sum(axis=1),
-                                       np.sum(data['WBWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']], axis=1)
-                                       )
-        
-        
-        
-        # Initiase dataframe for checking
-        df_check_grey_growth = pd.DataFrame(0.0, index=titles['RTI'], columns=['CFSys', 'Dem_CAGR_est','Cap_CAGR_est', 'Cap_CAGR_corr'])
-        df_check_grey_growth.CFSys = data['WBCF'][:, 0, 0]
-        
-        # Calculate the average lifetime across all technologies in each region
-        # This determines the rate of decline when new capacity seems underutilised
-        average_lifetime_grey = data['BCHY'][:, :, c7ti['Lifetime']] * divide(data['WBWK'][:, :, 0],
-                                                                         data['WBWK'][:, :, :].sum(axis=1))
-        average_lifetime_grey = average_lifetime_grey.sum(axis=1)
-        average_lifetime_grey[np.isclose(average_lifetime_grey, 0.0)] = 30.0
-        
-        # Estimate capacity growth.
-        data['WBCG'][:,0,0] = calc_capacity_growthrate(data['WBCF'][:, 0, 0], average_lifetime_grey)
-        data['WBCG'][np.isinf(data['WBCG'])] = 0.0
-        data['WBCG'][np.isnan(data['WBCG'])] = 0.0
-        data['WBCG'][:,0,0] = 0.2 * data['WBCG'][:,0,0] + 0.8 * time_lag['WBCG'][:,0,0]
-        
-        # Apply correction to growth rates
-        grey_demand_glo = data['HYDT'].sum() - data['WGRM'].sum()
-        grey_demand_glo_lag = time_lag['HYDT'].sum() - time_lag['WGRM'].sum()
-        # Next year's growth rate is probably similar to last years (we add 1% on top)
-        grey_growth = grey_demand_glo / grey_demand_glo_lag-1
-        df_check_grey_growth.Dem_CAGR_est = divide((data['HYDT'][:,0,0] - data['WGRM'][:,0,0]),
-                                                   (time_lag['HYDT'][:,0,0] - time_lag['WGRM'][:,0,0]))-1
-        # Check what the capacity forecast would be if calculated growth rates
-        # are used
-        grey_est_cap_growth = (np.sum(data['WBWK'].sum(axis=1)[:,None,:]* (1+data['WBCG'])) / grey_capacity_forecast.sum())-1
-        df_check_grey_growth.Cap_CAGR_est = data['WBCG'][:,0,0]
-        # Scale growth rates accordingly
-        scalar = grey_growth/grey_est_cap_growth
-        
-        total_util = divide(data['WBWG'][:, :, 0].sum(),
-                            np.sum(data['WBWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']])
-                            )
-        
-        diff = grey_growth*total_util - grey_est_cap_growth
-        
-        # Rescale
-        data['WBCG'] += diff
-        df_check_grey_growth.Cap_CAGR_corr = data['WBCG'][:, 0,0]
-
+            
+            
+            # Calculate energy use
+            data = calc_ener_cons(data, titles, year)     
+            
+            # Total emissions
+            data['HYWE'] = data['HYEF'] * data['HYG1'] * 1e6 * 1e-9
+                        
+            # Call LCOH2 function
+            data = get_lcoh2(data, titles)
+            
+            # Calculate NH3 LC
+            data = get_lchb(data, h2_mass_content, titles)
+            
+            # Calculate CBAM
+            data = get_cbam(data, h2_mass_content, titles)
+            
+            # Calculate delivery costs
+            data = get_delivery_cost(data, data, titles)
     
-        # %% New capacity expansion forecast - green market
-        # System-wide capacity factor
-        # Normalised to the maximum capacity factor
-        data['WGCF'][:, 0, 0] = divide(data['WGWG'][:, :, 0].sum(axis=1),
-                                       np.sum(data['WGWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']], axis=1)
-                                       )
-        
-        # Calculate the average lifetime across all technologies in each region
-        # This determines the rate of decline when new capacity seems underutilised
-        average_lifetime_green = data['BCHY'][:, :, c7ti['Lifetime']] * divide(data['WGWK'][:, :, 0],
-                                                                         data['WGWK'][:, :, :].sum(axis=1))
-        average_lifetime_green = average_lifetime_green.sum(axis=1)
-        average_lifetime_green[np.isclose(average_lifetime_green, 0.0)] = 20.0
-        
-        # To avoid green capacity to disappear too quickly set decline rates to
-        # be low
-        if year < 2035:
- 
-            average_lifetime_green *= (199 * ((2034-year)/11) +1)
-            
-            
-        # Initiase dataframe for checking
-        df_check_green_growth = pd.DataFrame(0.0, index=titles['RTI'], columns=['CFSys', 'Dem_CAGR_est','Cap_CAGR_est', 'Cap_CAGR_corr'])
-        df_check_green_growth.CFSys = data['WGCF'][:, 0, 0]
-        
-        # Estimate capacity growth.
-        data['WGCG'][:,0,0] = calc_capacity_growthrate(data['WGCF'][:, 0, 0], average_lifetime_green)
-        data['WGCG'][np.isinf(data['WGCG'])] = 0.0
-        data['WGCG'][np.isnan(data['WGCG'])] = 0.0
-        data['WGCG'][:,0,0] = 0.5 * data['WGCG'][:,0,0] + 0.5 * time_lag['WGCG'][:,0,0]
-        
-        # Apply correction to growth rates
-        green_demand_glo = data['WGRM'].sum()
-        green_demand_glo_lag = time_lag['WGRM'].sum()
-        # Next year's growth rate is probably similar to last years (we add 1% on top)
-        if np.isclose(green_demand_glo_lag, 0.0):
-            green_growth = divide(green_demand_glo, green_demand_glo_lag)-1 + 0.01
-        else:
-            green_growth = 0.01
-        df_check_green_growth.Dem_CAGR_est = divide(green_demand_glo, green_demand_glo_lag)-1
-
-        # Check what the capacity forecast would be if calculated growth rates
-        # are used
-        green_est_cap_growth = (np.sum(data['WGWK'].sum(axis=1)[:,None,:] * (1+data['WGCG'])) / green_capacity_forecast.sum())-1
-        df_check_green_growth.Cap_CAGR_est = data['WGCG'][:,0,0]
-        # Scale growth rates accordingly
-        scalar = green_growth/green_est_cap_growth
-        
-        total_util = divide(data['WGWG'][:, :, 0].sum(),
-                            np.sum(data['WGWK'][:, :, 0] * data['BCHY'][:, :, c7ti['Maximum capacity factor']])
-                            )
-        # Average max capacity factor
-        cap_weight = divide(data['WGWK'][:, -3:, 0], data['WGWK'][:, -3:, 0].sum())
-        average_max_capfactor = np.sum(cap_weight * data['BCHY'][:, -3:, c7ti['Maximum capacity factor']])
-        average_actual_capfactor = np.sum(cap_weight * data['HYCF'][:, -3:, 0])
-        
-        cap_weight_reg = divide(data['WGWK'][:, -3:, 0], data['WGWK'][:, -3:, 0].sum(axis=1)[:, None])
-        average_max_capfactor_reg = np.sum(cap_weight_reg * data['BCHY'][:, -3:, c7ti['Maximum capacity factor']], axis=1)
-        average_actual_capfactor_reg = np.sum(cap_weight_reg * data['HYCF'][:, -3:, 0], axis=1)
-        aaa = average_actual_capfactor_reg>average_max_capfactor_reg
-        
-        diff = green_growth - grey_est_cap_growth
-        
-        # Rescale
-        if year > 2023: 
-            data['WGCG'] += diff
-        df_check_green_growth.Cap_CAGR_corr = data['WGCG'][:, 0,0]
-        # %%
-        # Calculate energy use
-        data = calc_ener_cons(data, titles, year)     
-        
-        # Total emissions
-        data['HYWE'] = data['HYEF'] * data['HYG1'] * 1e6 * 1e-9
-                    
-        # Call LCOH2 function
-        data = get_lcoh2(data, titles)
-
-        # Update lags
-        for var in data_dt.keys():
-
-            if domain[var] == 'FTT-H2':
-
-                data_dt[var] = np.copy(data[var])            
-        
-
-
+            # Update lags
+            for var in data_dt.keys():
+    
+                if domain[var] == 'FTT-H2':
+    
+                    data_dt[var] = np.copy(data[var]) 
 
     return data
