@@ -22,7 +22,7 @@ from SourceCode.support.divide import divide
 def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m_idx, titles, t, noit, dt):
 
     # Interpolate demand
-    demand_step = data['NH3DEM'][:, m_idx, 0] + (data['NH3DEM'][:, m_idx, 0]-time_lags['NH3DEM'][:, m_idx, 0]) * t/noit
+    demand_step = time_lags['NH3DEM'][:, m_idx, 0] + (data['NH3DEM'][:, m_idx, 0]-time_lags['NH3DEM'][:, m_idx, 0]) * t/noit
     delta_demand_step = (data['NH3DEM'][:, m_idx, 0]-time_lags['NH3DEM'][:, m_idx, 0]) * t/noit
         
     # Loop over importing regions
