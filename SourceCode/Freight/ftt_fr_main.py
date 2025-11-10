@@ -137,6 +137,19 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Find fuel use
             data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
                                     data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41868000
+            
+            # Create a mask array for MDTs and HDTs
+            specific_vehicles = [2,3,7,8,12,13,17,18,22,23,27,28,32,33,37,38,42,43] 
+            mask = np.zeros(data['ZEVV'].shape[1], dtype=bool)
+            mask[specific_vehicles] = True
+
+            # Calculate fuel use only for specific vehicles by masking the arrays
+            masked_zevv = data['ZEVV'][r, mask, 0]
+            masked_energy_use = data['BZTC'][r, mask, c6ti['9 Energy use (MJ/vkm)']]
+            
+            data['ZJNT'][r, :, 0] = (np.matmul(np.transpose(zjet)[:, mask], 
+                                    masked_zevv * masked_energy_use)) / 41868000
+
         
         carbon_costs = set_carbon_tax(data, c6ti)
         data = get_lcof(data, titles, carbon_costs, year)
@@ -270,6 +283,26 @@ def solve(data, time_lag, titles, histend, year, domain):
                 # Fuel use by fuel type - Convert TJ (BZTC * ZEVV) to ktoe, so divide by 41.868
                 data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
                                     data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41868000
+                
+                # # calculate fuel use just from medium and heavy trucks
+                # big_trucks = [2,3,7,8,12,13,17,18,22,23,27,28,32,33,37,38,42,43]
+                # for veh in range(len(titles['FTTI'])):
+                #     if veh in big_trucks:
+                #         data['ZJNT'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
+                #                     data['BZTC'][r, veh, c6ti['9 Energy use (MJ/vkm)']])) / 41868000
+                        
+                # Create a mask array for MDTs and HDTs
+                specific_vehicles = [2,3,7,8,12,13,17,18,22,23,27,28,32,33,37,38,42,43]  
+                mask = np.zeros(data['ZEVV'].shape[1], dtype=bool)
+                mask[specific_vehicles] = True
+
+                # Calculate fuel use only for specific vehicles by masking the arrays
+                masked_zevv = data['ZEVV'][r, mask, 0]
+                masked_energy_use = data['BZTC'][r, mask, c6ti['9 Energy use (MJ/vkm)']]
+                
+                data['ZJNT'][r, :, 0] = (np.matmul(np.transpose(zjet)[:, mask], 
+                                        masked_zevv * masked_energy_use)) / 41868000
+
             
 
             
