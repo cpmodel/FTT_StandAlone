@@ -504,3 +504,4 @@ NH3EMISSIONFACTOR,NH3 emission factor by market split,tCO2/tNH3,RTI,TFTI,NA,TIME
 H2DEMAND,H2 demand (produced domestically),kt H2,RTI,TFTI,NA,TIME,FTT-H2,,,2023,,,Y,
 NH3CBAM,NH3 CBAM effect for the green market,Euro per tNH3,RTI,RTI,TFTI,TIME,FTT-H2,,,2023,,,Y,
 NH3DEMT,Total NH3 demand by region,kt NH3,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,
+NH3CBAMSWITCH,Switch to let the model know whether CBAM is enabled.,-,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,

@@ -27,7 +27,7 @@ def get_lchb(data, h2_input, titles):
         for m in range(len(titles['TFTI'])):
         
             # CAPEX from IEA. Assume 2024 USD
-            capex = 770 / (data['PRSC'][r, 0, 0] * data['EX'][r, 0, 0]) / 1.18
+            capex = 770 / (data['PRSC'][33, 0, 0] * data['EX'][33, 0, 0]) / 1.18
             opex = 0.03 * capex
             discount_rate = data['DISCOUNTRATES'][r, 0, 0]
             
@@ -131,8 +131,8 @@ def get_cbam(data, h2_input, titles):
     # Now apply carbon price to emission intensities
     # CBAM is only applied if the carbon price is higher in the importing region,
     # and if the emission intensity is also higher.
-    data['NH3CBAM'][:, :, 1] = cbam_penalty_rate * emis_intensity_grey_diff
-    data['NH3CBAM'][:, :, 0] = cbam_penalty_rate * emis_intensity_green_at_exporter
+    data['NH3CBAM'][:, :, 1] = cbam_penalty_rate * emis_intensity_grey_diff * data['NH3CBAMSWITCH'][None, :, 0, 0]
+    data['NH3CBAM'][:, :, 0] = cbam_penalty_rate * emis_intensity_green_at_exporter * data['NH3CBAMSWITCH'][None, :, 0, 0]
     
     return data
     
@@ -145,16 +145,26 @@ def get_delivery_cost(data, time_lag, titles):
     
     # Stack production costs (=levelised cost) across matrix
     
+    # Adjust transportation costs by accounting for electricity consumption at
+    # the export and import terminals
+    # Import terminals consume 0.003 kWh/tNH3 and export terminals consume 
+    # 0.001 kWh/tNH3
+    electricity_price = data['PFRE'][:, 5, 0]/(data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
+    transport_costs = (data['NH3TCC'][:, :, 0] 
+                       + 0.003*electricity_price[None, :] 
+                       + 0.001*electricity_price[:, None] )
+    
+    
     # Green market delivery costs
     data['NH3DELIVCOST'][:, :, 0] = ((time_lag['NH3LC'][:, 0, 0, None] 
                                           * (1.0 + data['NH3TRF'][:, :, 0]))
-                                     + data['NH3TCC'][:, :, 0] 
+                                     + transport_costs 
                                      + data['NH3CBAM'][:, :, 0]
                                      )
     # Grey market delivery costs
     data['NH3DELIVCOST'][:, :, 1] = ((time_lag['NH3LC'][:, 1, 0, None] 
                                           * (1.0 + data['NH3TRF'][:, :, 0]))
-                                     + data['NH3TCC'][:, :, 0] 
+                                     + transport_costs 
                                      + data['NH3CBAM'][:, :, 1]
                                      )
     

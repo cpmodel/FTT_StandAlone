@@ -139,7 +139,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     data = calc_green_cost_factors(data, titles, year)
     
     # Get max CF 
-    h2_mcf = data['BCHY'][:, :, c7ti['Maximum capacity factor']].copy()
+    h2_mcf = data['BCHY'][:, :, c7ti['Maximum capacity factor']] * 0.85
     
     # Calculate emission factors
     data = calc_emis_rate(data, titles, year)
@@ -152,6 +152,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     # Substitution rate
     # For now we simply assume a value of 2.5
     sub_rate = 0.1
+    
+    # Scale down HYMT
+    data['HYMT'] *= 0.2
 
 
     # %% Historical accounting
@@ -258,7 +261,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         
         
         # Apply demand index to get future demand (grey market)
-        data['NH3DEMT'][:, 0, 0] = time_lag['NH3DEM'][:, grey_idx, 0] * data['NH3DEMIDX'][:, 0, 0]
+        data['NH3DEMT'][:, 0, 0] = time_lag['NH3DEMT'][:, 0, 0] * data['NH3DEMIDX'][:, 0, 0]
 
         # Remove demand in Taiwan
         data['NH3DEMT'][48, :, 0] = 0.0
@@ -278,14 +281,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             # Check where demand for NH3 is zero
             # HYMT does not account for regions without demand and incur demand
             # where there is none
-            mask = np.logical_and(np.isclose(data['NH3DEMT'][:, 0, 0], 0.0),
+            mask = np.logical_and(~np.isclose(data['NH3DEMT'][:, 0, 0], 0.0),
                                   data['NH3DEM'][:, green_idx, 0] > 0.0)
             data['NH3DEM'][:, green_idx, 0] = np.where(mask,
                                                        data['NH3DEM'][:, green_idx, 0],
                                                        0.0) 
             
             # Set green ammonia demand to a floor level
-            mask = data['NH3DEM'][:, green_idx, 0] < time_lag['NH3DEM'][:, green_idx, 0]
+            mask = data['NH3DEM'][:, green_idx, 0] < time_lag['WGFL'][:, 0, 0]
             data['NH3DEM'][:, green_idx, 0] = np.where(mask,
                                                       time_lag['NH3DEM'][:, green_idx, 0],
                                                       data['NH3DEM'][:, green_idx, 0])
@@ -294,7 +297,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             data['WGFL'][:, 0, 0] = data['NH3DEM'][:, green_idx, 0].copy()
             
             # Apply mandates
-            mandated_demand = data['NH3DEM'][:, grey_idx, 0] * data['WDM1'][:, 0, 0]
+            mandated_demand = data['NH3DEMT'][:, 0, 0] * data['WDM1'][:, 0, 0]
             
             mask = data['NH3DEM'][:, green_idx, 0] < mandated_demand
             data['NH3DEM'][:, green_idx, 0] = np.where(mask,
@@ -328,7 +331,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                         data['WGWS'][r, :, 0] = numer/denom
                         
                         # Fill capacities
-                        data['WGWK'][r, :, 0] = data['NH3DEM'][r, green_idx, 0] * (data['WGWS'][r, :, 0] * h2_mcf[r, :]) / (data['WGWS'][r, :, 0] * h2_mcf[r, :]).sum()
+                        data['WGWK'][r, :, 0] = (data['NH3DEM'][r, green_idx, 0]
+                                                 * (data['WGWS'][r, :, 0] * h2_mcf[r, :]) 
+                                                     / (data['WGWS'][r, :, 0] * h2_mcf[r, :]).sum())
             
         else:
             
@@ -337,7 +342,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             data['NH3DEM'][:, green_idx, 0] = data['WGFL'][:, 0, 0].copy()
 
             # Apply mandates
-            mandated_demand = data['NH3DEM'][:, grey_idx, 0] * data['WDM1'][:, 0, 0]
+            mandated_demand = data['NH3DEMT'][:, 0, 0] * data['WDM1'][:, 0, 0]
             
             mask = data['NH3DEM'][:, green_idx, 0] < mandated_demand
             data['NH3DEM'][:, green_idx, 0] = np.where(mask,
@@ -359,32 +364,44 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             
         #----------------------------------------------------------------------
         # Check if the supply map for the green market needs to be filled
-        if np.isclose(time_lag['NH3SMLVL'][:, :, green_idx].sum(), 0.0):
+        for r in range(len(titles['RTI'])): 
             
-            # Take a copy of the grey market
-            data['NH3SMSHAR'][:, :, green_idx] = time_lag['NH3SMSHAR'][:, :, grey_idx].copy()
-            
-            if np.any(time_lag['WGWS'][:, :, 0] > 0.0):
-                # Check where green production occurs (depends on HYMT in initial years)
-                for r in range(len(titles['RTI'])):
-                                
-                    if np.isclose(time_lag['WGWS'][r, :, 0].sum(), 0.0):  
-                        
-                        # If there is no production, we set the import contribution
-                        # for these exporters to zero
-                        data['NH3SMSHAR'][r, :, green_idx] = 0.0
-                        
-                # Rescale NH3 supply map in shares
-                for r in range(len(titles['RTI'])):
-                                
-                    if (data['NH3SMSHAR'][:, r, green_idx].sum() < 1.0 
-                        and data['NH3DEM'][r, green_idx, 0] > 0.0): 
+            # check if there is green demand
+            if data['NH3DEM'][r, green_idx, 0] > 0.0:
                 
-                        data['NH3SMSHAR'][:, r, green_idx] = data['NH3SMSHAR'][:, r, green_idx] / data['NH3SMSHAR'][:, r, green_idx].sum()
+                # Check if there is some trade data for the green market, but 
+                # only if there is data for the grey market as proxy
+                if (np.isclose(time_lag['NH3SMLVL'][:, r, green_idx].sum(), 0.0)
+                    and time_lag['NH3SMLVL'][:, r, grey_idx].sum() >0.0):
+                    
+                    # Take a copy of the grey market
+                    # We pass it into the time lag as it gets transformed into a
+                    # data_dt dict later
+                    time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['NH3SMSHAR'][:, r, grey_idx].copy()
+                
+                # If neither the grey nor green market have data, then we need
+                # to initialise with different assumptions
+                elif (np.isclose(time_lag['NH3SMLVL'][:, r, green_idx].sum(), 0.0)
+                    and np.isclose(time_lag['NH3SMLVL'][:, r, grey_idx].sum(), 0.0)
+                         and time_lag['WGWS'].sum() > 0.0):
                         
-                    # Supply map in levels (also set lag)
-                    data['NH3SMLVL'][:, r, green_idx] = data['NH3SMSHAR'][:, r, green_idx] * data['NH3DEM'][r, green_idx, 0]
-        
+                    time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['WGWS'][:, :, 0].sum(axis=1) / time_lag['WGWS'][:, :, 0].sum()
+                        
+                # if there is nothing to base it on, then we we take an
+                # unweighted average
+                else:
+                    
+                    # Base the supply on green demand shares
+                    green_dem_shares = data['NH3DEM'][:, green_idx, 0] / data['NH3DEM'][:, green_idx, 0].sum()
+                      
+                    time_lag['NH3SMSHAR'][:, r, green_idx] = green_dem_shares.copy()
+                    
+                # Rescale the supply map in shares
+                time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['NH3SMSHAR'][:, r, green_idx] / time_lag['NH3SMSHAR'][:, r, green_idx].sum()
+                                
+                # Supply map in levels (also set lag)
+                time_lag['NH3SMLVL'][:, r, green_idx] = time_lag['NH3SMSHAR'][:, r, green_idx] * time_lag['NH3DEM'][r, green_idx, 0]
+
         # First, fill the time loop variables with the their lagged equivalents
         data_dt = {}
         for var in time_lag.keys():
@@ -410,14 +427,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 if t ==1: print("Calculating trade for the {} market".format(titles['TFTI'][m_idx]))
             
                 # Get demand step
-                demand_step = (data['NH3DEM'][:, m_idx, 0] - time_lag['NH3DEM'][:, m_idx, 0]) * t/no_it
+                demand_step = (data['NH3DEM'][:, m_idx, 0] - time_lag['NH3DEM'][:, m_idx, 0]) * 1/no_it
                 data_dt['NH3DEM'][:, m_idx, 0] = time_lag['NH3DEM'][:, m_idx, 0] + demand_step
                 
-                # Check the supply map
-                if demand_step.sum() > 0.0 and not np.isclose(data_dt['NH3SMLVL'][:, :, m_idx].sum(), demand_step.sum()):
+                # # Check the supply map
+                # if data_dt['NH3DEM'][:, m_idx, 0].sum() > 0.0 and np.isclose(data_dt['NH3SMLVL'][:, :, m_idx].sum(), 0.0):
                     
-                    # Use the proxy supply map in shares
-                    data_dt['NH3SMLVL'][:, :, m_idx] = data_dt['NH3SMSHAR'][:, :, m_idx] * data_dt['NH3DEM'][None, :, m_idx, 0]
+                #     # Use the proxy supply map in shares
+                #     data_dt['NH3SMLVL'][:, :, m_idx] = data_dt['NH3SMSHAR'][:, :, m_idx] * data_dt['NH3DEM'][None, :, m_idx, 0]
                     
                 # Add input shares based on global production numbers if there is new demand that didn't exist previously
                 
@@ -441,14 +458,24 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 for r in range(len(titles['RTI'])):
                     
                     if np.isclose(data['H2DEMAND'][r, m_idx, 0], 0.0):
+                        
+                        # Copy over shares
+                        if m_idx == green_idx:
+                            
+                            data['WGWS'][r, :, 0] = time_lag['WGWS'][r, :, 0].copy()
+                            
+                        if m_idx == grey_idx:
+                            
+                            data['WBWS'][r, :, 0] = time_lag['WBWS'][r, :, 0].copy()
+                            
                         continue
                     
                     #---------------------------------------------------------- 
                     # Green hydrogen market
                     if m_idx == green_idx:
                         
-                        if np.isclose(data_dt['WGWS'].sum(), 0.0):
-                            data_dt['WGWS'][:, :, 0] = data_dt['HYGR'][:, :, 0] / data_dt['HYGR'].sum()
+                        if np.isclose(data_dt['WGWS'][r, :, 0].sum(), 0.0):
+                            data_dt['WGWS'][r, :, 0] = data_dt['HYGR'][0, :, 0] / data_dt['HYGR'].sum()
                         
                         dSij_green = substitution_in_shares(data_dt['WGWS'], data_dt['WGWS'], data['HYWA'], 
                                                       data_dt['HYLC'], data_dt['HYLD'], 
@@ -457,8 +484,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                         
                         #calculate temporary market shares and temporary capacity from endogenous results
                         endo_shares = data_dt['WGWS'][r, :, 0] + np.sum(dSij_green, axis=1)
-                        endo_cap = divide(endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
-                                          endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']])
+                        avg_cf = np.sum(endo_shares * h2_mcf[r, :])
+                        endo_cap = endo_shares * data['H2DEMAND'][r, m_idx, 0] / avg_cf
                         
                         # Add in medium-term capacity
                         cap_add = data['HYMT'][r, :, 0]/no_it * data['HYGR'][0, :, 0]
@@ -475,12 +502,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                             data['WGWS'][r, :, 0] = (endo_cap + cap_add)/(np.sum(endo_cap)+tot_cap_add)
                             
                         # Get capacity
-                        data['WGWK'][r, :, 0] = divide(data_dt['WGWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
-                                                       data_dt['WGWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']])
+                        avg_cf = np.sum(data['WGWS'][r, :, 0] * h2_mcf[r, :])
+                        data['WGWK'][r, :, 0] = data_dt['WGWS'][r, :, 0] * data['H2DEMAND'][r, m_idx, 0] / avg_cf
                         
                         # Get production
-                        data['WGWG'][r, :, 0] = data_dt['WGWK'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']]
-                                                     
+                        data['WGWG'][r, :, 0] = data_dt['WGWK'][r, :, 0] * h2_mcf[r, :]
+                         
+
+                        if (np.any(np.isnan(data['WGWG'][r, :, 0])) or
+                            np.any(np.isnan(data['WGWK'][r, :, 0]))
+                            ):
+                            x=1
+                            raise ValueError("Error: The results contain NaN values. Green market: {}".format(titles['RTI'][r]))
+                            
+                        if (np.any(data['WGWG'][r, :, 0]< 0.0) or
+                            np.any(data['WGWK'][r, :, 0]<0.0) 
+                            ):
+                            x=1
+                            raise ValueError("Error: The results contain negative values. Green market: {}".format(titles['RTI'][r]))
+                                                        
                     #----------------------------------------------------------    
                     # Grey hydrogen market    
                     else:
@@ -490,8 +530,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         
                         #calculate temporary market shares and temporary capacity from endogenous results
                         endo_shares = data_dt['WBWS'][r, :, 0] + np.sum(dSij_grey, axis=1)
-                        endo_cap = divide(endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
-                                          endo_shares * data_dt['BCHY'][r, :, c7ti['Maximum capacity factor']])
+                        avg_cf = np.sum(endo_shares * h2_mcf[r, :])
+                        endo_cap = endo_shares * data['H2DEMAND'][r, m_idx, 0] / avg_cf
                         
                         # Add in medium-term capacity
                         cap_add = data['HYMT'][r, :, 0]/no_it * (1.0-data['HYGR'][0, :, 0])
@@ -508,11 +548,24 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                             data['WBWS'][r, :, 0] = (endo_cap + cap_add)/(np.sum(endo_cap)+tot_cap_add)
                             
                         # Get capacity
-                        data['WBWK'][r, :, 0] = divide(data_dt['WBWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']] * data['H2DEMAND'][r, m_idx, 0],
-                                                       data_dt['WBWS'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']])
-                        
+                        avg_cf = np.sum(data['WBWS'][r, :, 0] * h2_mcf[r, :])
+                        data['WBWK'][r, :, 0] = data_dt['WBWS'][r, :, 0] * data['H2DEMAND'][r, m_idx, 0] / avg_cf
+ 
                         # Get production
-                        data['WBWG'][r, :, 0] = data_dt['WBWK'][r, :, 0] * data['BCHY'][r, :, c7ti['Maximum capacity factor']]
+                        data['WBWG'][r, :, 0] = data_dt['WBWK'][r, :, 0] * h2_mcf[r, :]
+
+                        if (np.any(np.isnan(data['WBWG'][r, :, 0])) or
+                            np.any(np.isnan(data['WBWK'][r, :, 0]))
+                            ):
+                            x=1
+                            raise ValueError("Error: The results contain NaN values. Default market: {} ".format(titles['RTI'][r]))
+                            
+                        if (np.any(data['WBWG'][r, :, 0]< 0.0) or
+                            np.any(data['WBWK'][r, :, 0]<0.0) 
+                            ):
+                            x=1
+                            raise ValueError("Error: The results contain negative values. Default market: {}".format(titles['RTI'][r]))
+                                 
                         
             # H2 production by tech and region
             data['HYG1'][:, :, 0] = data['WGWG'][:, :, 0] + data['WBWG'][:, :, 0]
@@ -521,20 +574,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             # Market shares across both segments
             data['HYWS'][:, :, 0] = divide(data['HYWK'][:, :, 0], data['HYWK'][:, :, None, 0].sum(axis=1))
             
-            if (np.any(np.isnan(data['HYG1'][:, :, 0])) or
-                np.any(np.isnan(data['HYWK'][:, :, 0])) or
-                np.any(np.isnan(data['HYCF'][:, :, 0]))
-                ):
-                x=1
-                raise ValueError("Error: The results contain NaN values.")
-                
-            if (np.any(data['HYG1'][:, :, 0]< 0.0) or
-                np.any(data['HYWK'][:, :, 0]<0.0) or
-                np.any(data['HYCF'][:, :, 0]<0.0)
-                ):
-                x=1
-                raise ValueError("Error: The results contain negative values.")
-                
+
             # global price
             glob_h2_price = divide((data['HYCC'][:, :, 0] * data['HYG1'][:, :, 0]).sum()
                                                    , data['HYG1'][:, :, 0].sum()

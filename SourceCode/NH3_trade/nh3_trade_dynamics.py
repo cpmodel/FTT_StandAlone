@@ -23,7 +23,7 @@ def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m
 
     # Interpolate demand
     demand_step = time_lags['NH3DEM'][:, m_idx, 0] + (data['NH3DEM'][:, m_idx, 0]-time_lags['NH3DEM'][:, m_idx, 0]) * t/noit
-    delta_demand_step = (data['NH3DEM'][:, m_idx, 0]-time_lags['NH3DEM'][:, m_idx, 0]) * t/noit
+    delta_demand_step = (data['NH3DEM'][:, m_idx, 0]-time_lags['NH3DEM'][:, m_idx, 0]) * 1/noit
         
     # Loop over importing regions
     for r_imp in range(len(titles['RTI'])):
@@ -71,7 +71,7 @@ def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m
                 d_trade_competition[r_exp2, r_exp1] = delta_d21
                 
         # Estimate change in supply flows due to market growth
-        d_market_growth = delta_demand_step[r_imp] * data_dt['NH3SMSHAR'][:, r_imp, m_idx]
+        d_market_growth = delta_demand_step[r_imp] * (data_dt['NH3SMSHAR'][:, r_imp, m_idx])
         
         # Total change in bilateral flows
         d_total = d_market_growth + d_trade_competition.sum(axis=0)
@@ -80,19 +80,22 @@ def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m
         # Sum across all elements of the d_trade_competition matrix should equal zero
         if not np.isclose(d_trade_competition.sum().sum(), 0.0):
             
-            print("Competition matrix does not sum up to 0 in {}. Please check!".format(titles['RTI'][r_imp]))
+            raise ValueError("Competition matrix does not sum up to 0 in {}. Please check!".format(titles['RTI'][r_imp]))
             
         # The total growth should equal to demand growth
         if not np.isclose(d_market_growth.sum(), delta_demand_step[r_imp]):
             
-            print("Total growth does not equal to demand growth in {}. Please check!\n\tMarket Growth: {}, Demand: {}".format(titles['RTI'][r_imp], d_market_growth.sum(), demand_step.sum()))
+            raise ValueError("Total growth does not equal to demand growth in {}. Please check!\n\tMarket Growth: {}, Demand: {}".format(titles['RTI'][r_imp], d_market_growth.sum(), demand_step.sum()))
             
         # New supply map
-        data['NH3SMLVL'][:, r_imp, m_idx] = data_dt['NH3SMLVL'][:, r_imp, m_idx] + d_total
-        
+        if delta_demand_step[r_imp] > 0.0:
+            data['NH3SMLVL'][:, r_imp, m_idx] = data_dt['NH3SMLVL'][:, r_imp, m_idx] + d_total
+        else:
+            data['NH3SMLVL'][:, r_imp, m_idx] = data_dt['NH3SMLVL'][:, r_imp, m_idx] * ((data_dt['NH3SMLVL'][:, r_imp, m_idx].sum() +d_market_growth.sum())/ data_dt['NH3SMLVL'][:, r_imp, m_idx].sum())
+            
         if np.any(data['NH3SMLVL'][:, r_imp, m_idx] < 0.0):
             
-            print("Negative values found in {}".format(titles['RTI'][r_imp]))
+            raise ValueError("Negative values found in {}".format(titles['RTI'][r_imp]))
             
         # Estimate supply map in shares
         if data['NH3SMLVL'][:, r_imp, m_idx].sum() > 0.0:
