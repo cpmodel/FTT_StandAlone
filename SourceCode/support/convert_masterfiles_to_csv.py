@@ -555,7 +555,7 @@ if __name__ == '__main__':
     #           'FTT-IH-OIS': [[0], 'FTT-IH-OIS-13x70_2022'],
     # }
     
-    models = {'FTT-H2': [[0], 'FTT-H2-12x71_2024']}
+    models = {'FTT-H2': [[0,2], 'FTT-H2-12x71_2024']}
 
     var_dict = convert_masterfiles_to_csv(
         models, ask_user_input=True, overwrite_existing_csvs=True)

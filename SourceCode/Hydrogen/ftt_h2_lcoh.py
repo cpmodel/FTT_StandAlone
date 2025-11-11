@@ -116,6 +116,8 @@ def get_lcoh(data, titles):
 
         # Upfront subsidy/tax at purchase time
         st = np.zeros_like(it)
+        st[:, :, np.newaxis] = it[:, :, np.newaxis] * data['HYWT'][r, :, :, None]
+
 
         # Average fuel costs
         ft = np.zeros([len(titles['HYTI']), int(max_lt)])
