@@ -482,12 +482,11 @@ HYWE,Total CO2 emissions,Mt CO2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power re
 WCUR,"Curtailment rate, used to suppress electricity prices",%,RTI,NA,NA,TIME,FTT-H2,,,2010,From FTT:Power results (Dan_ba),Y,Y,
 WBMT,Capacity additions to the default market (to initialise capacities),kton H2,RTI,HYTI,NA,TIME,FTT-H2,,,2001,From FTT:Power results (Dan_ba),Y,Y,
 HYMC,Maximum capacity factor,%,RTI,HYTI,NA,TIME,FTT-H2,,,2001,-,Y,Y,
-NH3SM2023,NH3 bilateral supply map in tNH3,tNH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
-NH3SMLVL,NH3 bilateral transportation costs,Euro per tNH3,RTI,RTI,TFTI,TIME,FTT-H2,,,2023,Based on NH3 ships; does not include energy costs,,Y,
+NH3SM2023,NH3 historical supply map in 2023,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SMLVL,NH3 supply map in levels,kt NH3,RTI,RTI,TFTI,TIME,FTT-H2,,,2023,Based on NH3 ships; does not include energy costs,,Y,
 NH3SMSHAR,NH3 delivery costs,Euro per tNH3,RTI,RTI,TFTI,TIME,FTT-H2,,,2023,,,Y,
 NH3TCC,NH3 bilateral transportation costs,Euro per tNH3,RTI,RTI,NA,NA,FTT-H2,,,2023,,,Y,Input
-NH3CBAMGREY,NH3 CBAM effect for the grey market,Euro per tNH3,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
-NH3CBAMGREEN,NH3 CBAM effect for the green market,Euro per tNH3,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
+NH3TCCEC,NH3 bilateral transportation costs includes energy costs,Euro per tNH3,RTI,RTI,NA,NA,FTT-H2,,,2023,,,Y,Input
 NH3LC,NH3 levelised cost of Haber-Bosch process,Euro per tNH3,RTI,TFTI,NA,TIME,FTT-H2,,,2023,,,Y,
 NH3LCSD,"NH3 levelised cost of Haber-Bosch process, standard deviation",Euro per tNH3,RTI,TFTI,NA,TIME,FTT-H2,,,2023,,,Y,
 NH3DEMIDX,NH3 demand index,2023=100%,RTI,NA,NA,TIME,FTT-H2,2001,,2001,,,Y,Input
@@ -506,3 +505,15 @@ NH3CBAM,NH3 CBAM effect for the green market,Euro per tNH3,RTI,RTI,TFTI,TIME,FTT
 NH3DEMT,Total NH3 demand by region,kt NH3,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,
 NH3CBAMSWITCH,Switch to let the model know whether CBAM is enabled.,-,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,
 HYWT,Subsidy rate on H2 techs,%,RTI,HYTI,NA,TIME,FTT-H2,2001,,2001,-,Y,Y,
+NH3SM2022,NH3 historical supply map in 2022,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2021,NH3 historical supply map in 2021,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2020,NH3 historical supply map in 2020,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2019,NH3 historical supply map in 2019,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2018,NH3 historical supply map in 2018,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2017,NH3 historical supply map in 2017,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2016,NH3 historical supply map in 2016,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2015,NH3 historical supply map in 2015,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2014,NH3 historical supply map in 2014,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2013,NH3 historical supply map in 2013,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+NH3SM2012,NH3 historical supply map in 2012,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
+BATCOSTIDX,Battery CAPEX cost index (2023=100),index,NA,NA,NA,TIME,FTT-H2,,,2023,Proxy data,,Y,Input

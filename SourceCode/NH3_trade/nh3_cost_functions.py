@@ -108,30 +108,19 @@ def get_cbam(data, h2_input, titles):
                                      , np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1))
     # Grey market emission intensity matrix
     # Get differences between importers and exporters
-    emis_intensity_grey_at_importer = np.zeros((len(titles['RTI']), len(titles['RTI'])))
-    emis_intensity_grey_at_importer += emission_intensity_grey[None, :]
     emis_intensity_grey_at_exporter = np.zeros((len(titles['RTI']), len(titles['RTI'])))
     emis_intensity_grey_at_exporter += emission_intensity_grey[:, None]    
-    # Get the difference
-    emis_intensity_grey_diff = emis_intensity_grey_at_importer - emis_intensity_grey_at_exporter
-    # Remove negative numbers
-    emis_intensity_grey_diff[emis_intensity_grey_diff<0.0] = 0.0    
     
     # Green market emission intensity matrix
     # Get differences between importers and exporters
-    emis_intensity_green_at_importer = np.zeros((len(titles['RTI']), len(titles['RTI'])))
-    emis_intensity_green_at_importer += emission_intensity_green[None, :]
     emis_intensity_green_at_exporter = np.zeros((len(titles['RTI']), len(titles['RTI'])))
     emis_intensity_green_at_exporter += emission_intensity_green[:, None]    
-    # Get the difference
-    emis_intensity_green_diff = emis_intensity_green_at_importer - emis_intensity_green_at_exporter
-    # Remove negative numbers
-    emis_intensity_green_diff[emis_intensity_green_diff<0.0] = 0.0    
+
     
     # Now apply carbon price to emission intensities
     # CBAM is only applied if the carbon price is higher in the importing region,
     # and if the emission intensity is also higher.
-    data['NH3CBAM'][:, :, 1] = cbam_penalty_rate * emis_intensity_grey_diff * data['NH3CBAMSWITCH'][None, :, 0, 0]
+    data['NH3CBAM'][:, :, 1] = cbam_penalty_rate * emis_intensity_grey_at_exporter * data['NH3CBAMSWITCH'][None, :, 0, 0]
     data['NH3CBAM'][:, :, 0] = cbam_penalty_rate * emis_intensity_green_at_exporter * data['NH3CBAMSWITCH'][None, :, 0, 0]
     
     return data

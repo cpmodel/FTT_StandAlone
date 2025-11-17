@@ -164,15 +164,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         # NH3 trade is 2023
         # We assume that the supply map for 2023 is a close enough approximation
         # for 2022.
-        
-        data['NH3DEMT'][:, 0, 0] = data['NH3SM2023'][:, :, 0].sum(axis=0)
+            
+        try:
+            data['NH3SMLVL'][:, :, grey_idx] = np.copy(data['NH3SM{}'.format(year)][:, :, 0])
+        except KeyError:
+            data['NH3SMLVL'][:, :, grey_idx] = np.copy(data['NH3SM2012'][:, :, 0])
+            
+            
+        data['NH3DEMT'][:, 0, 0] = data['NH3SMLVL'][:, :, 0].sum(axis=0)    
         data['NH3DEM'][:, grey_idx, 0] = data['NH3DEMT'][:, 0, 0].copy()
-        data['NH3PROD'][:, grey_idx, 0] = data['NH3SM2023'][:, :, 0].sum(axis=1)
-        data['NH3IMP'][:, grey_idx, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=0)
-        data['NH3EXP'][:, grey_idx, 0] = (data['NH3SM2023'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=1)
-        
-        # Store supply map in time-based variable
-        data['NH3SMLVL'][:, :, grey_idx] = data['NH3SM2023'][:, :, 0].copy()
+        data['NH3PROD'][:, grey_idx, 0] = data['NH3SMLVL'][:, :, 0].sum(axis=1)
+        data['NH3IMP'][:, grey_idx, 0] = (data['NH3SMLVL'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=0)
+        data['NH3EXP'][:, grey_idx, 0] = (data['NH3SMLVL'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=1)
         
         # Convert NH3 production to H2 demand (which is always sourced locally)
         data['HYDT'][:, 0, 0] = data['NH3PROD'][:, grey_idx, 0] * h2_mass_content
@@ -225,23 +228,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
         
         # global price
         glob_h2_price = divide((data['HYCC'][:, :, 0] * data['HYG1'][:, :, 0]).sum()
-                                               , data['HYG1'][:, :, 0].sum()
-                                               )
+                               , data['HYG1'][:, :, 0].sum()
+                               )
         
         for r in range(len(titles['RTI'])):
             # Average producer prices for green and grey
             data['WPPR'][r, grey_idx, 0] = divide((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0]).sum()
                                                    , data['HYG1'][r, :, 0].sum()
                                                    )
-            if np.isclose(data['WPPR'][r, green_idx, 0], 0.0):
-                data['WPPR'][r, green_idx, 0] = glob_h2_price
+            if np.isclose(data['WPPR'][r, grey_idx, 0], 0.0):
+                data['WPPR'][r, grey_idx, 0] = glob_h2_price
             
             data['WPPR'][r, green_idx, 0] = divide((data['HYCC'][r, :, 0] * data['HYG1'][r, :, 0] * data['HYGR'][0, :, 0]).sum()
                                                   , (data['HYG1'][r, :, 0]* data['HYGR'][0, :, 0]).sum()
                                                   ) 
             
-            if np.isclose(data['WPPR'][r, grey_idx, 0], 0.0):
-                data['WPPR'][r, grey_idx, 0] = glob_h2_price + 5.0
+            if np.isclose(data['WPPR'][r, green_idx, 0], 0.0):
+                data['WPPR'][r, green_idx, 0] = glob_h2_price + 5.0
         
         # Calculate NH3 LC
         data = get_lchb(data, h2_mass_content, titles)
@@ -622,7 +625,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             
             
             # Cost components to not copy over
-            not_comps = ['Onsite electricity CAPEX, mean, €/kg H2 cap', 
+            not_comps = ['Storage CAPEX, mean, €/kgH2 cap',
+                         'Onsite electricity CAPEX, mean, €/kg H2 cap', 
                          'Onsite electricity CAPEX, % of mean',
                          'Additional OPEX, mean, €/kg H2 prod.', 
                          'Additional OPEX, std, % of mean']

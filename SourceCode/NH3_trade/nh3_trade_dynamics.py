@@ -100,6 +100,29 @@ def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m
         # Estimate supply map in shares
         if data['NH3SMLVL'][:, r_imp, m_idx].sum() > 0.0:
             data['NH3SMSHAR'][:, r_imp, m_idx] = data['NH3SMLVL'][:, r_imp, m_idx] /  data['NH3SMLVL'][:, r_imp, m_idx].sum()
+            
+        # Nudge the system so that previously non-existing trade relations can
+        # now appear
+        if (np.any(np.isclose(data['NH3SMSHAR'][:, r_imp, m_idx], 0.0))
+            and np.sum(data['NH3SMSHAR'][:, r_imp, m_idx]) > 0.0):
+            
+            # How many countries will need to be nudged?
+            no_of_countries = np.sum(np.isclose(data['NH3SMSHAR'][:, r_imp, m_idx], 0.0))
+            # choose a nudge factor
+            # base value is divided by the number of iterations and by the number
+            # of countries that need to be nudged.
+            nudge_factor = 1e-3 / float(noit) / float(no_of_countries)
+            # Replace zero with nudge factor
+            data['NH3SMSHAR'][:, r_imp, m_idx] = np.where(np.isclose(data['NH3SMSHAR'][:, r_imp, m_idx], 0.0),
+                                                          nudge_factor,
+                                                          data['NH3SMSHAR'][:, r_imp, m_idx])
+            
+            # Rescale the supply map in shares so that it adds to 1
+            data['NH3SMSHAR'][:, r_imp, m_idx] = data['NH3SMSHAR'][:, r_imp, m_idx] / np.sum(data['NH3SMSHAR'][:, r_imp, m_idx])
+            
+            # Re-estimate the supply map in levels which now includes the nudge
+            data['NH3SMLVL'][:, r_imp, m_idx] = data['NH3SMSHAR'][:, r_imp, m_idx] * demand_step[r_imp]
+                        
         
     # %% End of r_imp loop
     

@@ -39,6 +39,7 @@ def calc_green_cost_factors(data, titles, year):
     elec_capex = c7ti['Onsite electricity CAPEX, mean, €/kg H2 cap']
     elec_opex = c7ti['Additional OPEX, mean, €/kg H2 prod.']
     elec_loadfac = c7ti['Maximum capacity factor']
+    stor_cost = c7ti['Storage CAPEX, mean, €/kgH2 cap']
     
     
     # First, make sure shares of dedicated VRE technologies add up to 1
@@ -71,6 +72,7 @@ def calc_green_cost_factors(data, titles, year):
     data['BCHY'][:, green, elec_capex] = data['BCHY'][:, grid, elec_use] * vre_capex_factor[:, None] 
     data['BCHY'][:, green, elec_opex] = data['BCHY'][:, grid, elec_use] * vre_opex_factor[:, None] 
     data['BCHY'][:, green, elec_loadfac] = vre_load_factor[:, None] 
+    data['BCHY'][:, green, stor_cost] *= data['BATCOSTIDX'][0,0,0]
 
     if year > 2023:
         x=1
