@@ -127,6 +127,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
     t2ti = {category: index for index, category in enumerate(titles['T2TI'])}
     num_regions = len(titles['RTI'])
+    num_techs = len(titles['T2TI'])
 
     # Conditional vector concerning technology properties
     # (same for all regions)
@@ -607,9 +608,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # ------------------------ MY ALTERATIONS ---------------------------------
 
-            # Calculates the initial shares to add to variable data_dt -> shares_dt
+            # Calculates the initial shares to add to variable data_dt -> shares_dt (1ktoe = 11.63 GWh)
             data_dt['household_shares'] = np.zeros((num_regions, 2, 1))
-            data_dt['household_shares'][:, 0] = data_dt['MEWG'][:, t2ti['23 Rooftop Solar']] / (data_dt['MEWDH'][:, :, 0]*(11.63/1000))
+            data_dt['household_shares'][:, 0] = data_dt['MEWG'][:, t2ti['23 Rooftop Solar']] / (data_dt['MEWDH'][:, :, 0]*11.63)
             data_dt['household_shares'][:, 1] = 1 - data_dt['household_shares'][:, 0]
             
             # To pass the information for costs (calculate de LCOE)
@@ -638,7 +639,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                      num_regions=num_regions,                      # Number of regions
                      num_techs=2)             
             
-            data['household_shares'][:, :, 0] = data_dt['household_shares' ][:, :, 0] + change_in_shares
+            # data['household_shares'][:, :, 0] = data_dt['household_shares'][:, :, 0] + change_in_shares
+            # JUST FOR THE SAKE OF TESTING
+            data['household_shares'][36, 0] = data_dt['household_shares'][36, 0] + 0.01
+            data['household_shares'][36, 1] = data_dt['household_shares'][36, 1] - 0.01
+                                                                
+            # Wrong - MEWS is market shares capacity - total value has to sum 1
+            # data['MEWS'][:, -1] = data['household_shares'][:, 0]
+            
+            # Get the power load factor for rooftop solar
+            data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
+               
+            # Recalculating the generation with the new share information in GWh - 1 toe = 11.63 MWh -> 1 ktoe = 11.63 GWh
+            # Opposite of above: there we went from generation to shares,
+            # here we go from shares to generation with household demand
+            data['MEWG'][:, -1] = data['household_shares'][:, 0] * (data_dt['MEWDH'][:, 0]*11.63)
+               
+            # Recalculating the capacity with the new generation calculated
+            # Capacity = MEWK, 8766 = number of hours
+            data['MEWK'][:, -1] = data['MEWG'][:, -1] / data['MEWL'][:, -1] / 8766                                                     
 
             # Electricity demand is exogenous at the moment
             # TODO: Replace, using price elasticities and feedback from other
@@ -661,35 +680,38 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["MWKA"] = set_linear_coal_phase_out(data["coal phaseout"],
                                                      data["MWKA"], time_lag["MWKA"], time_lag["MEWK"], year)
             
-            data_dt['MEWS'][:, :-1] /= data_dt['MEWS'][:, -1].sum()
-            time_lag['MEWS'][:, :-1] /= time_lag['MEWS'][:, -1].sum()
+            
+            # Redifining MEWS to MEWS utilities (num regions, num techs, empty dimension necessary for the code)
+            # Remember MEWS is market shares capacity
+            # data_dt['MEWS_utilities'] = np.zeros((num_regions, num_techs-1, 1))
+            # data_dt['MEWS_utilities'] = data_dt['MEWS'][:, :-1] / data_dt['MEWS'][:, -1].sum()
+            # time_lag['MEWS_utilities'] = time_lag['MEWS'][:, :-1] / time_lag['MEWS'][:, -1].sum()
+            data_dt['MEWS_utilities'] = data_dt['MEWK'][:, :-1] / data_dt['MEWK'][:, :-1].sum(axis=1, keepdims=True) 
+            time_lag['MEWS_utilities'] = time_lag['MEWK'][:, :-1] / time_lag['MEWK'][:, :-1].sum(axis=1, keepdims=True)
 
             # =================================================================
             # Shares equation
             # =================================================================
             mews, mewl, mewg, mewk = shares(dt, t, T_Scal, MEWDt,
-                                            data_dt['MEWS'][:, :-1], data_dt['METC'][:, :-1],
+                                            data_dt['MEWS_utilities'], data_dt['METC'][:, :-1],
                                             data_dt['MTCD'][:, :-1], data['MWKA'][:, :-1],
                                             data_dt['MES1'][:, :-1], data_dt['MES2'][:, :-1],
-                                            data['MEWA'][:-1, :-1], isReg[:, :-1], data_dt['MEWK'][:, :-1],
+                                            data['MEWA'][:, :-1, :-1], isReg[:, :-1], data_dt['MEWK'][:, :-1],
                                             time_lag['MEWK'][:, :-1], data['MEWR'][:, :-1],
-                                            data_dt['MEWL'][:, :-1], time_lag['MEWS'][:, :-1],
+                                            data_dt['MEWL'][:, :-1], time_lag['MEWS_utilities'],
                                             data['MWLO'][:, :-1],
                                             len(titles['RTI']), len(titles['T2TI']) - 1,  no_it, year)
-            data['MEWS'][:, :-1] = mews
+            m = mews
             data['MEWL'][:, :-1] = mewl
             data['MEWG'][:, :-1] = mewg
             data['MEWK'][:, :-1] = mewk
-            
-            data['MEWS'][:, -1] = data['household_shares'][:, 0, 0]
-            data['MEWL'][:, -1] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['Decision load factor']]
-            # Opposite of above: there we went from generation to shares,
-            # here we go from shares to generation with household demand
-            data['MEWG'][:, -1] = data['household_shares'][:, 0, 0] * (data_dt['MEWDH'][:, :, 0]*(11.63/1000))
-            # Capacity = MEWK
-            data['MEWK'][:, -1] = data['MEWG'][:, -1] / data['MEWL'][:, -1] / 8766
-            
 
+            # Updated market shares for technologies together with rooftop solar
+            # data['MEWS'][:, -1] = data['MEWK'][:, -1] / data['MEWK'][:, -1].sum()
+            # data['MEWS'] = data['MEWK'] / data['MEWK'].sum()
+            data['MEWS'] = data['MEWK'] / data['MEWK'].sum(axis=1, keepdims=True)  
+            
+            # VERIFY FROM HERE
             
             if np.any(np.isnan(data['MEWS'])):
                 print(f"NaNs found in MEWS in {year}")

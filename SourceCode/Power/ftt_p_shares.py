@@ -31,7 +31,7 @@ def shares(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
                mewl_dt, mews_lag, mwlo, rti, t2ti, no_it)
     
     # Then check the results
-    check_shares_output(mews, mewl, mewg, mewk)
+    check_shares_output(mews, mewl, mewg, mewk, no_it, year)
     
     return  mews, mewl, mewg, mewk 
 
@@ -258,11 +258,23 @@ def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
 
     return mews, mewl, mewg, mewk
 
-def check_shares_output(mews, mewl, mewg, mewk):
+def check_shares_output(mews, mewl, mewg, mewk, no_it, year):
     
     # Check for NaN values in 'mewk'
     if np.isnan(mewk).any():
         nan_indices_mewk = np.where(np.isnan(mewk))
+        if np.any(np.isnan(mewk)):
+            print("\n  NaN detected in 'mewk'")
+            print(f"\n NaNs found at iteration {no_it}")
+            print(f"\n NaNs found at year {year}")
+            nan_indices = np.where(np.isnan(mewk))
+            countries = nan_indices[0]
+            techs = nan_indices[1]
+            print(f"  Countries (iterations): {np.unique(countries)}")
+            print(f"  Technologies: {np.unique(techs)}")
+            print(f"  Total NaNs: {len(countries)}")
+            print(f"  Example: country={countries[0]}, tech={techs[0]}")
+            breakpoint()  # drop into debugger interactively
         raise ValueError(f"NaN values detected in 'mewk' at indices: "
                          f"country: {nan_indices_mewk[0]}, technology: {nan_indices_mewk[1]}. Please check shares.")
     
