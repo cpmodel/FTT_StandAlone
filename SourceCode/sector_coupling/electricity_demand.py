@@ -12,7 +12,7 @@ import pandas as pd
 
 
 
-def electricity_demand_feedback(data, data_baseline, year, titles, units):
+def electricity_demand_feedback(data, data_baseline, y, titles, units):
     """
         Calculate change in electricity demand from baseline S0 scenario from other models
     """
@@ -36,7 +36,7 @@ def electricity_demand_feedback(data, data_baseline, year, titles, units):
         conversion_factor = unit_conversion.loc[unit, demand_unit]
         
         # Compute change from baseline
-        base_demand = data_baseline[demand_var][:, elec_index, 0, year]
+        base_demand = data_baseline[demand_var][:, elec_index, 0, y]
         new_demand = data[demand_var][:, elec_index, 0]
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
