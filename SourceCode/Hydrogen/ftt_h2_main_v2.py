@@ -150,8 +150,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     h2_mass_content = 0.179
     
     # Substitution rate
-    # For now we simply assume a value of 2.5
-    sub_rate = 0.1
+    sub_rate = data['TRADESUBRATE'][0,0,0]
     
     # Scale down HYMT
     data['HYMT'] *= 0.2
@@ -613,7 +612,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             bi = np.zeros((len(titles['RTI']),len(titles['HYTI'])))
             hywi0 = np.sum(data['HYWI'][:, :, 0], axis=0)
             dw = np.zeros(len(titles["HYTI"]))
-            dw = np.dot(hywi0, data['HYWB'][0, :, :])
+            dw = np.dot(hywi0, data['HYWB'][0, :, :])+ data['DWEXOG'][0, :, 0]
             
             # for i in range(len(titles["HYTI"])):
             #     dw_temp = np.copy(hywi0)
@@ -621,7 +620,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             #     dw[i] = np.dot(dw_temp, data['HYWB'][0, i, :])
 
             # Cumulative capacity incl. learning spill-over effects
-            data["HYWW"][0, :, 0] = time_lag['HYWW'][0, :, 0] + dw # add exogenous 
+            data["HYWW"][0, :, 0] = time_lag['HYWW'][0, :, 0] + dw
             
             
             # Cost components to not copy over

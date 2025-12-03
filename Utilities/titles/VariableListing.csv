@@ -517,3 +517,5 @@ NH3SM2014,NH3 historical supply map in 2014,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,P
 NH3SM2013,NH3 historical supply map in 2013,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
 NH3SM2012,NH3 historical supply map in 2012,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,Proxy data,,Y,Input
 BATCOSTIDX,Battery CAPEX cost index (2023=100),index,NA,NA,NA,TIME,FTT-H2,,,2023,Proxy data,,Y,Input
+TRADESUBRATE,NH3 trade substitution rate,rate,NA,NA,NA,NA,FTT-H2,,,2000,Assumption,,Y,
+DWEXOG,Exogenous additions of hydrogen technology capacities for non-NH3 purposes,kt H2,NA,HYTI,NA,TIME,FTT-H2,,,2022,,,Y,Input
