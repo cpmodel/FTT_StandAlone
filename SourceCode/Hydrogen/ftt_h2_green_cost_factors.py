@@ -10,7 +10,7 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 
-def calc_green_cost_factors(data, titles, year):
+def calc_green_cost_factors(data, time_lags, titles, year):
     """
     This function estimates the combined energy and feedstock costs for each
     technology.
@@ -72,8 +72,8 @@ def calc_green_cost_factors(data, titles, year):
     data['BCHY'][:, green, elec_capex] = data['BCHY'][:, grid, elec_use] * vre_capex_factor[:, None] 
     data['BCHY'][:, green, elec_opex] = data['BCHY'][:, grid, elec_use] * vre_opex_factor[:, None] 
     # data['BCHY'][:, green, elec_loadfac] = vre_load_factor[:, None] 
-    data['BCHY'][:, green, elec_loadfac] = 1.0
-    data['BCHY'][:, green, stor_cost] *= data['BATCOSTIDX'][0,0,0]
+    data['BCHY'][:, green, elec_loadfac] = 0.8
+    data['BCHY'][:, green, stor_cost] = time_lags['BCHY'][:, green, stor_cost] * (1.0+data['BATCOSTIDX'][0,0,0])
 
     if year > 2023:
         x=1

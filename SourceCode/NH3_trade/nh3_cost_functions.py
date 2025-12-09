@@ -62,7 +62,7 @@ def get_lchb(data, h2_input, titles):
                     ft = 2.2 / 41.868 * data['PFRE'][r, 5] / (data['PRSC'][r, 0, 0] * data['EX'][r, 0, 0])
                     dft = 0.1 * ft
                     
-                    h2_cost = h2_input * data['WPPR'][r, m, 0]
+                    h2_cost = h2_input * data['WPPR'][r, m, 0] * 1e3
                     dh2_cost = 0.01*h2_cost
                     
                     omt = opex
@@ -139,6 +139,7 @@ def get_delivery_cost(data, time_lag, titles):
     # Import terminals consume 0.003 kWh/tNH3 and export terminals consume 
     # 0.001 kWh/tNH3
     electricity_price = data['PFRE'][:, 5, 0]/(data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
+    # TODO: convert local variable into model variable
     transport_costs = (data['NH3TCC'][:, :, 0] 
                        + 0.003*electricity_price[None, :] 
                        + 0.001*electricity_price[:, None] )

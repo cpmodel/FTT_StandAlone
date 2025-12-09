@@ -74,7 +74,7 @@ def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m
         d_market_growth = delta_demand_step[r_imp] * (data_dt['NH3SMSHAR'][:, r_imp, m_idx])
         
         # Total change in bilateral flows
-        d_total = d_market_growth + d_trade_competition.sum(axis=0)
+        d_total = d_market_growth + d_trade_competition.sum(axis=1)
         
         # Checks
         # Sum across all elements of the d_trade_competition matrix should equal zero

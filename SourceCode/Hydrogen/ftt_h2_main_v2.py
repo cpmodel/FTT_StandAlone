@@ -136,7 +136,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     data = calc_ener_cost(data, titles, year)
     
     # Calculate cost factors for green electrolysis
-    data = calc_green_cost_factors(data, titles, year)
+    data = calc_green_cost_factors(data, time_lag, titles, year)
     
     # Get max CF 
     h2_mcf = data['BCHY'][:, :, c7ti['Maximum capacity factor']] * 0.85
@@ -154,6 +154,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     
     # Scale down HYMT
     data['HYMT'] *= 0.2
+    data['HYMT'][13, :, 0] *= 0.3
 
 
     # %% Historical accounting
@@ -170,11 +171,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             data['NH3SMLVL'][:, :, grey_idx] = np.copy(data['NH3SM2012'][:, :, 0])
             
             
-        data['NH3DEMT'][:, 0, 0] = data['NH3SMLVL'][:, :, 0].sum(axis=0)    
+        data['NH3DEMT'][:, 0, 0] = data['NH3SMLVL'][:, :, grey_idx].sum(axis=0)    
         data['NH3DEM'][:, grey_idx, 0] = data['NH3DEMT'][:, 0, 0].copy()
-        data['NH3PROD'][:, grey_idx, 0] = data['NH3SMLVL'][:, :, 0].sum(axis=1)
-        data['NH3IMP'][:, grey_idx, 0] = (data['NH3SMLVL'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=0)
-        data['NH3EXP'][:, grey_idx, 0] = (data['NH3SMLVL'][:, :, 0] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=1)
+        data['NH3PROD'][:, grey_idx, 0] = data['NH3SMLVL'][:, :, grey_idx].sum(axis=1)
+        data['NH3IMP'][:, grey_idx, 0] = (data['NH3SMLVL'][:, :, grey_idx] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=0)
+        data['NH3EXP'][:, grey_idx, 0] = (data['NH3SMLVL'][:, :, grey_idx] * (1.0-np.eye(len(titles['RTI'])))).sum(axis=1)
         
         # Convert NH3 production to H2 demand (which is always sourced locally)
         data['HYDT'][:, 0, 0] = data['NH3PROD'][:, grey_idx, 0] * h2_mass_content
@@ -644,10 +645,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                         (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])
                     # Fixed OPEX
                     data['BCHY'][:, tech, c7ti['Fixed OPEX, mean, €/kg H2 cap/y']] = data_dt['BCHY'][:, tech, c7ti['Fixed OPEX, mean, €/kg H2 cap/y']] * \
-                        (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])
+                        (1.0 + 0.5*data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])
                     # Variable OPEX
                     data['BCHY'][:, tech, c7ti['Variable OPEX, mean, €/kg H2 prod']] = data_dt['BCHY'][:, tech, c7ti['Variable OPEX, mean, €/kg H2 prod']] * \
-                        (1.0 + data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])                        
+                        (1.0 + 0.5*data['BCHY'][:, tech, c7ti['Learning rate']] * dw[tech]/data['HYWW'][0, tech, 0])                        
             
             # Store the investment component
             data['HYIC'][:, :, 0] = data['BCHY'][:, :, c7ti['CAPEX, mean, €/kg H2 cap']]
