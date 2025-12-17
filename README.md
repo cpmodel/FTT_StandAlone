@@ -21,13 +21,13 @@ This repository contains the public standalone version of FTT, written in Python
 1. Open your terminal at a location where you want to install ftt. Type the following in your terminal to download the package from GitHub:
 
    ```bash
-   .../some/path/without/spaces % git clone https://github.com/cpmodel/FTT_StandAlone.git
+   git clone https://github.com/cpmodel/FTT_StandAlone.git
    ```
 2. The python package requirements are curated in the `envs/environment.yaml` file.
    The environment can be installed using:
 
    ```bash
-   ...conda env create -f environment.yml
+   conda env create -f environment.yml
    ```
 
 1. Run the install_ce_conda_3.9_external_users.cmd script in _Python_installation to install the prerequisite packages. On top of Anaconda's standard packages, bottle and paste are required. You can install these two packages with pip. Paste is being deprecated. If you cannot install paste, you can remove calls to paste in the Backend_FTT.py.
