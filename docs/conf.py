@@ -6,7 +6,7 @@ import subprocess
 
 # -- Path setup --------------------------------------------------------------
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 source_dir = os.path.join(project_root, 'SourceCode')
 
 sys.path.insert(0, project_root)
@@ -31,7 +31,7 @@ exclude_patterns = []
 
 # -- Automatic API doc generation --------------------------------------------
 
-api_dir = os.path.join(os.path.dirname(__file__), 'api')
+api_dir = os.path.join(os.path.dirname(__file__), 'source', 'api')
 os.makedirs(api_dir, exist_ok=True)
 
 # Generate .rst files for all subfolders in SourceCode
