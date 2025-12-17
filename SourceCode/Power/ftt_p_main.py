@@ -626,7 +626,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data_dt['costs_household_std'][:, 1] = 0.3*data_dt['costs_household'][:, 1]
             
             # initial substitution matrix -> defined as 1 
-            subst_households = np.ones((2, 2, 1))
+            subst_households = np.ones((71, 2, 2))
             
             change_in_shares = shares_change(
                      dt=dt,
@@ -639,10 +639,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                      num_regions=num_regions,                      # Number of regions
                      num_techs=2)             
             
-            # data['household_shares'][:, :, 0] = data_dt['household_shares'][:, :, 0] + change_in_shares
+            data['household_shares'][:, :, 0] = data_dt['household_shares'][:, :, 0] + change_in_shares
             # JUST FOR THE SAKE OF TESTING
-            data['household_shares'][36, 0] = data_dt['household_shares'][36, 0] + 0.01
-            data['household_shares'][36, 1] = data_dt['household_shares'][36, 1] - 0.01
+            # data['household_shares'][36, 0] = data_dt['household_shares'][36, 0] + 0.01
+            # data['household_shares'][36, 1] = data_dt['household_shares'][36, 1] - 0.01
                                                                 
             # Wrong - MEWS is market shares capacity - total value has to sum 1
             # data['MEWS'][:, -1] = data['household_shares'][:, 0]

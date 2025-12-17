@@ -40,7 +40,7 @@ def shares_change(
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
-@njit(fastmath=True, cache=True)
+# @njit(fastmath=True, cache=True)
 def shares_change_jitted(
     dt, regions,
     shares_dt,
