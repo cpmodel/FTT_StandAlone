@@ -9,9 +9,9 @@ Welcome to the FTT documentation!
    :maxdepth: 4
    :caption: Contents:
 
-   welcome
-   runningftt
-   howto
+   source/welcome
+   source/runningftt
+   source/howto
    api/modules
 
 
