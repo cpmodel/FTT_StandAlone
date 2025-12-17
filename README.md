@@ -30,7 +30,7 @@ This repository contains the public standalone version of FTT, written in Python
    conda env create -f environment.yml
    ```
 
-1. Run the install_ce_conda_3.9_external_users.cmd script in _Python_installation to install the prerequisite packages. On top of Anaconda's standard packages, bottle and paste are required. You can install these two packages with pip. Paste is being deprecated. If you cannot install paste, you can remove calls to paste in the Backend_FTT.py.
+Alternatively, you can download ftt by clicking the green code button in the top right, and selecting Open with Github Desktop if you have this installed. You can import the environment in Anaconda Navigator.
 
 ## Running the model
 1. You can run the front-end of the model in your browser by double clicking FTT_Stand_Alone_Launcher.cmd. Select the models to run and scenarios and explore the output.
