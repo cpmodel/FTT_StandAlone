@@ -1,8 +1,8 @@
-Welcome to FTT Stand Alone
+Welcome to FTT
 ==========================
 
-**FTT Stand Alone** is a dynamic model of Future Technology Transformations which 
-simulates investor decision making. It has several modules representing different sectors. 
+**FTT** is a dynamic model of Future Technology Transformations which simulates investor 
+decision making. It has several modules representing different sectors. 
 This novel framework for the dynamic selection and diffusion of innovations was 
 initially developed by J.-F. Mercure for the power sector `(Mercure, J.F., 2012) <https://www.sciencedirect.com/science/article/abs/pii/S0301421512005356>`_ , 
 but now covers multiple sectors and industries:
@@ -31,7 +31,3 @@ factor in determining the speed of transition.
 
 Due to learning-by-doing and increasing returns to adoption, FTT results in path-dependent technology 
 scenarios that arise from specific sectoral policies.
-
-.. note::
-
-   This project is under active development.

@@ -1,10 +1,10 @@
-Running FTT Stand Alone
+Running FTT
 ==========================
 
-Running FTT Stand Alone from the command line
+Running FTT from the command line
 #############################################
 
-**FTT Stand Alone** can be run from the command line or terminal by calling the run file, run_file.py,
+**FTT** can be run from the command line or terminal by calling the run file, run_file.py,
 which is located in the main project folder **FTT_Stand_Alone**. In order for the model to run correctly, 
 the correct initialisation settings must be input into settings.ini, which is also in the main project 
 folder:
@@ -15,12 +15,12 @@ folder:
     :alt: settings.ini
 
 
-The different modules in FTT Stand Alone can be enabled in settings.ini, and it is possible to enable 
+The different modules in FTT can be enabled in settings.ini, and it is possible to enable 
 multiple different modules at the same time by using commas to separate, e.g. 
   
   enable_modules = FTT-IH-CHI, FTT-Fr
 
-S0 is FTT Stand Alone's baseline scenario, which incorporates all current policies and projections 
+S0 is FTT's baseline scenario, which incorporates current policies and projections 
 into the model's simulation. Scenarios which differ from the baseline due to changes in policy inputs 
 can be run alongside the baseline. Two additional scenarios for FTT: Power already exist, S1 and S2.
 
@@ -47,7 +47,7 @@ in the command window.
 Running the model this way will allow it to easily be tested, with errors or warnings appearing in the command window. 
 However, the results of the model cannot be viewed when running this way.
 
-Running FTT Stand Alone from the front end
+Running FTT from the front end
 ##########################################
 
 The model's front end environment can be launched by clicking on FTT_Stand_Alone_Launcher.cmd, or running
@@ -98,8 +98,6 @@ The **CLASSIFICATIONS** tab can be used to check variable names, descriptions, u
     :align: center
     :alt: frontend
 
-The **GAMMA** tab contains a calibration tool for model developers, and should be avoided when simply running the model. 
+The **GAMMA** tab contains a calibration tool for model developers, and should be avoided when simply running the model. It will be replaced by an automation tool in due course.
 
-.. note::
 
-   This project is under active development.

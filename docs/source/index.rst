@@ -1,9 +1,8 @@
-.. FTT Stand Alone documentation master file, created by
-   sphinx-quickstart on Tue Sep 13 12:03:37 2022.
+.. FTT documentation master file, 
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to FTT Stand Alone's documentation!
+Welcome to the FTT documentation!
 ===========================================
 
 .. toctree::
@@ -12,8 +11,8 @@ Welcome to FTT Stand Alone's documentation!
 
    welcome
    runningftt
-   modules
-
+   howto
+   api/modules
 
 
 Indices and tables
