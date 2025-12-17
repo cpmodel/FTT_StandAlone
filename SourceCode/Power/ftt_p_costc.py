@@ -398,18 +398,17 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     if j == 19 :
                         BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
     
-                    if(MEWG[r, j, 0] > 0.01 and ind >= 1 and X0 > 0):
+                    if(MEWG[r, j, 0] > 0.01 and X0 > 0):
     
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
-                        CFvar[1:ind + 1] = 1.0 / (Y[1:ind + 1] + 0.000001) / (ind)
-                        CFvar2 = sum(CFvar[1:ind + 1])
-                        if CFvar2 > 0:
-    
-                            MEWL[r, j, 0] = CFvar2
+                        CFvar = np.sum(1.0 / (Y[:ind + 1] + 1e-6) / (ind + 1))
+                        
+                        if CFvar > 0:
+                            MEWL[r, j, 0] = CFvar
                      
                         # CSP is more efficient than PV by a factor 2
                         if j == 19 :
-                            MEWL[r, j, 0] = CFvar2 * 2.0
+                            MEWL[r, j, 0] = CFvar * 2.0
                     
 
                         
