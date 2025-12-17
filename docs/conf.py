@@ -3,7 +3,6 @@
 import os
 import sys
 import subprocess
-import sphinx_rtd_theme
 
 # -- Path setup --------------------------------------------------------------
 
@@ -59,7 +58,6 @@ with open(modules_rst_path, 'w') as f:
 
 
 html_theme = "sphinx_book_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Optional: add GitHub link in the top-right
 html_context = {
