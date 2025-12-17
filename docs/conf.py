@@ -3,6 +3,7 @@
 import os
 import sys
 import subprocess
+import sphinx_rtd_theme
 
 # -- Path setup --------------------------------------------------------------
 
@@ -15,8 +16,8 @@ sys.path.insert(0, source_dir)
 # -- Project information -----------------------------------------------------
 
 project = 'Future Technology Transformation (FTT)'
-copyright = '2022, Rosie Hayward'
-author = 'Rosie Hayward'
+copyright = '2025, FTT Development Team'
+author = 'Femke Nijsse and Rosie Hayward'
 release = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
@@ -55,3 +56,16 @@ with open(modules_rst_path, 'w') as f:
             name = os.path.splitext(rst_file)[0]
             f.write(f"   {name}\n")
 
+
+
+html_theme = "sphinx_rtd_theme"
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# Optional: add GitHub link in the top-right
+html_context = {
+    "display_github": True,
+    "github_user": "cpmodel",      # your GitHub username/org
+    "github_repo": "FTT_StandAlone",  # repo name
+    "github_version": "main",      # branch
+    "conf_py_path": "/docs/",      # path in repo to docs folder
+}
