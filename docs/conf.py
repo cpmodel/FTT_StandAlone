@@ -70,4 +70,4 @@ html_context = {
     "conf_py_path": "/docs/",      # path in repo to docs folder
 }
 
-html_logo = "https://github.com/pypsa-meets-earth/pypsa-meets-earth.github.io/raw/main/assets/img/logo.png"
+html_logo = "https://github.com/cpmodel/FTT_StandAlone/blob/main/frontend/model-Icon-FTT-600px_with_text_PV.png"
