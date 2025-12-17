@@ -58,7 +58,7 @@ with open(modules_rst_path, 'w') as f:
 
 
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Optional: add GitHub link in the top-right
@@ -70,4 +70,4 @@ html_context = {
     "conf_py_path": "/docs/",      # path in repo to docs folder
 }
 
-html_logo = "https://github.com/cpmodel/FTT_StandAlone/blob/main/frontend/model-Icon-FTT-600px_with_text_PV.png"
+html_logo = "source/model-Icon-FTT-600px_with_text_PV.png"

@@ -12,7 +12,7 @@ Welcome to the FTT documentation!
    source/welcome
    source/runningftt
    source/howto
-   api/modules
+   source/api/modules
 
 
 Indices and tables
