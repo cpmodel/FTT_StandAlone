@@ -31,7 +31,7 @@ exclude_patterns = []
 
 # -- Automatic API doc generation --------------------------------------------
 
-api_dir = os.path.join(os.path.dirname(__file__), 'api')
+api_dir = os.path.join(os.path.dirname(__file__), 'source', 'api')
 os.makedirs(api_dir, exist_ok=True)
 
 # Generate .rst files for all subfolders in SourceCode
