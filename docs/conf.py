@@ -69,3 +69,5 @@ html_context = {
     "github_version": "main",      # branch
     "conf_py_path": "/docs/",      # path in repo to docs folder
 }
+
+html_logo = "https://github.com/pypsa-meets-earth/pypsa-meets-earth.github.io/raw/main/assets/img/logo.png"
