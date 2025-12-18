@@ -3,6 +3,7 @@
 import os
 import sys
 import subprocess
+import datetime
 
 # -- Path setup --------------------------------------------------------------
 
@@ -15,8 +16,8 @@ sys.path.insert(0, source_dir)
 # -- Project information -----------------------------------------------------
 
 project = 'Future Technology Transformation (FTT)'
-copyright = '2025, FTT Development Team'
-author = 'Femke Nijsse and Rosie Hayward'
+author = 'Rosie Hayward and the FTT development team'
+copyright = f"{datetime.datetime.today().year}, {author}"
 release = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
@@ -55,9 +56,10 @@ with open(modules_rst_path, 'w') as f:
             name = os.path.splitext(rst_file)[0]
             f.write(f"   {name}\n")
 
-
-
 html_theme = "sphinx_book_theme"
+html_theme_options = {
+    'display_version': False,
+}
 
 # Optional: add GitHub link in the top-right
 html_context = {
@@ -68,4 +70,4 @@ html_context = {
     "conf_py_path": "/docs/",      # path in repo to docs folder
 }
 
-html_logo = "source/model-Icon-FTT-600px_with_text_PV.png"
+html_logo = "https://github.com/cpmodel/FTT_StandAlone/raw/read-the-docs/frontend/model-Icon-FTT-600px_with_text_PV.png"
