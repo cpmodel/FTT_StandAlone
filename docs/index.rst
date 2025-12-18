@@ -34,10 +34,10 @@ factor in determining the speed of transition.
 Due to learning-by-doing and increasing returns to adoption, FTT results in path-dependent technology 
 scenarios that arise from specific sectoral policies.
 
-.. figure:: renewables_S_curve.webp
+.. figure:: source/renewables_S_curve.webp
     :width: 600px
     :align: center
-    :alt: frontend
+    :alt: Uptake of renewables and solar in different world regions
 
     Example of S-curve technology adoption for renewables in FTT:Power `(Nijsse, 2023) <https://pypsa-earth.readthedocs.io/en/latest/index.html>`_   
 
@@ -51,7 +51,7 @@ Documentation
 
    source/runningftt
    source/howto
-   source/api/modules
+   api_reference
 
 
 Indices and tables

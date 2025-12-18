@@ -24,8 +24,11 @@ release = '1.0.0'
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
 ]
+
+autosummary_generate = True  # automatically generate .rst files
 
 templates_path = ['_templates']
 exclude_patterns = []
