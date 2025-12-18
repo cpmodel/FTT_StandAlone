@@ -73,4 +73,4 @@ html_context = {
     "conf_py_path": "/docs/",      # path in repo to docs folder
 }
 
-html_logo = "https://github.com/cpmodel/FTT_StandAlone/raw/read-the-docs/frontend/model-Icon-FTT-600px_with_text_PV.png"
+html_logo = "https://github.com/cpmodel/FTT_StandAlone/raw/main/frontend/model-Icon-FTT-600px_with_text_PV.png"
