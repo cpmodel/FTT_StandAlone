@@ -122,7 +122,7 @@ def are_csvs_older_than_masterfiles(vars_to_convert, out_dir, models, \
                 print(f"No existing {var} csv files found")
                 continue
             
-            time_modified =  datetime.datetime.fromtimestamp(time_modified)
+            time_modified = datetime.datetime.fromtimestamp(time_modified)
             if time_modified > last_time_modified:
                 last_time_modified = time_modified
             
@@ -166,7 +166,7 @@ def get_remaining_variables(vars_to_convert, out_dir, model, \
         for var in vars_to_convert:
 
             # Check if the user wants to overwrite gamma values
-            if var_dict[model][var]["Conversion?"] == "GAMMA" or var=="MGAM":
+            if var_dict[model][var]["Conversion?"] == "GAMMA":
                 gamma_options["Overwrite user input"] = \
                     gamma_input_on_overwrite(out_dir, var, gamma_options)
         
@@ -193,7 +193,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     the user may not want to lose their calibrated gamma values 
     """
     
-    costvar_to_gam_dict = {"MGAM": "MGAM", "BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
@@ -261,7 +261,7 @@ def write_to_csv(data, row_title, col_title, var, out_dir, reg=None):
 
 def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     """
-    In Tr, H and Fr, gamma values are not saved separately, but instead
+    In P, Tr, H and Fr, gamma values are not saved separately, but instead
     part of the cost variable. Here, those values are extracted to ensure the
     gamma values are defined for each year.
     """
@@ -478,9 +478,6 @@ def convert_masterfiles_to_csv(models, ask_user_input=False, overwrite_existing_
                 if ndims == 3:
                     
                     var_dict[model][var]['Data'][scen] = {}
-                    
-                    if var == "MGAM" and gamma_options["Overwrite user input"] == "skip":
-                        continue
                     
                     for i, reg in enumerate(regs):          
                         ri = row_start + i*(rdim + sep)
