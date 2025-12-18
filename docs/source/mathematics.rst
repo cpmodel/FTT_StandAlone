@@ -8,6 +8,10 @@ This document describes the mathematical structure of the **Future Technology Tr
 model family used in energy–economy–environment modelling. The focus is on the core diffusion
 equations and their derivation. 
 
+FTT formalises technology transitions as an evolutionary competition process under bounded
+rationality and increasing returns. Its mathematical structure is designed to study transition
+dynamics, lock-in, and policy-driven tipping behaviour rather than optimal equilibrium outcomes.
+
 
 Technology Shares
 -----------------
@@ -94,9 +98,6 @@ function reflecting cost heterogeneity across agents.
 The matrix :math:`F` therefore controls *which direction* substitution occurs, based on relative
 costs and preferences.
 
-This separation allows FTT to distinguish clearly between **economic preference effects** (cost-driven)
-and **physical or institutional inertia** (time-scale-driven), a key feature of the model.
-
 
 Dynamic Properties
 ------------------
@@ -115,9 +116,9 @@ Technology costs decline endogenously with cumulative deployment. For technology
 
 .. math::
 
-   C_i(t) = C_i(0) \left( \frac{W_i(t)}{W_i(0)} \right)^{-\b_i},
+   C_i(t) = C_i(0) \left( \frac{W_i(t)}{W_i(0)} \right)^{-b_i},
 
-where :math:`W_i` is cumulative installed capacity and :math:`\b_i` is a technology-specific learning exponent, based on literature values.
+where :math:`W_i` is cumulative installed capacity and :math:`b_i` is a technology-specific learning exponent, based on literature values.
 
 Learning feeds back into the choice probabilities :math:`P_{i>j}`, creating increasing returns and
 reinforcing early adoption advantages.
@@ -128,11 +129,12 @@ Constraints
 
 FTT includes physical and institutional constraints such as:
 
-- limits on resource availability,
-- infrastructure constraints,
+- limits on resource availability (e.g. scrap for steel),
+- infrastructure constraints (e.g. grid capacity for power),
+- technology constraints (e.g. restrictions on heating water with air-to-air heat pumps)
 
-Mathematically, these enter as bounds on :math:`S_i` or as modifiers of the substitution parameters
-:math:`A_{ij}`.
+Mathematically, these enter as bounds on :math:`S_i` or as modifiers of the substitution and preference matrices
+:math:`A_{ij}` or :math:`F_{ij}`.
 
 
 Model Coupling
@@ -142,9 +144,4 @@ FTT technology modules are coupled to macro-econometric models. Energy demand af
 into the macroeconomic system.
 
 
-Interpretation
---------------
 
-FTT formalises technology transitions as an evolutionary competition process under bounded
-rationality and increasing returns. Its mathematical structure is designed to study transition
-dynamics, lock-in, and policy-driven tipping behaviour rather than optimal equilibrium outcomes.
