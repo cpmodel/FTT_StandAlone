@@ -29,6 +29,7 @@ import numpy as np
 # -----------------------------------------------------------------------------
 # --------------------------- LCOT function -----------------------------------
 # -----------------------------------------------------------------------------
+@profile
 def get_lcot(data, titles, year):
     """
     Calculate levelized costs.
@@ -76,6 +77,21 @@ def get_lcot(data, titles, year):
     conv_full = 1 / ns / ff / cf / 1000
     conv_pkm = 1 / ns / ff
     
+    
+    # upfront = (bttc[:, :, c3ti['1 Prices cars (USD/veh)']] * conv_full)
+    
+    # upfront_pol = 
+    #            * (1 + data["Base registration rate"][:, :, 0])
+    #            + (data['TTVT'][:, :, 0] 
+    #            + data['RTCO'][:, 0] * bttc[:, :, c3ti['14 CO2Emissions']] )
+    #            * conv_full[:, :, 0] )
+    
+    # upfront_sd = bttc[:, :, c3ti['2 Std of price']] * conv_full
+    
+    # variable = (bttc[:, :, c3ti['3 fuel cost (USD/km)']] * conv_pkm
+    #             + bttc[:, :, c3ti['5 O&M costs (USD/km)']] * 
+    
+    
     def get_cost_elem(base_cost, conversion_factor, mask):
         '''Mask costs during build or life time, and apply
         conversion to generation where appropriate'''
@@ -103,6 +119,11 @@ def get_lcot(data, titles, year):
     # Discount rate
     dr = bttc[:, :, c3ti['7 Discount rate'], np.newaxis]
     denominator = (1+dr)**full_lt_mat
+    
+    # A faster way to implement this is with cumprod, but less readable. Do we want that?
+    # Need to check if this is faster
+    # disc_factors = 1 / (1 + dr[..., 0])
+    # denominator = np.cumprod(np.repeat(disc_factors[:, :, None], max_lt, axis=2), axis=2)
     
     # 1 – Expenses
     # 1.1 – Without policy costs
