@@ -27,29 +27,30 @@ curves. **Cost-supply curves** are recalculated at the end of the routine.
 
 Local library imports:
 
-    FTT: Core functions:
-    - `get_sales <get_sales_or_investment.htlm>
-        Generic investment function (new plus end-of-life replacement)
-        
-    FTT: Power functions:
+FTT: Core functions:
+    
+- `get_sales <get_sales_or_investment.htlm>`__
+    Generic investment function (new plus end-of-life replacement)
+    
+FTT: Power functions:
 
-    - `rldc <ftt_p_rldc.html>`__
-        Residual load duration curves
-    - `dspch <ftt_p_dspch.html>`__
-        Dispatch of capcity
-    - `get_lcoe <ftt_p_lcoe.html>`__
-        Levelised cost calculation
-    - `survival_function <ftt_p_surv.html>`__
-        Calculation of scrappage, sales, tracking of age, and average efficiency.
-    - `shares <ftt_shares.html>`__
-        Market shares simulation (core of the model)
-    - `cost_curves <ftt_p_costc.html>`__
-        Calculates increasing marginal costs of resources
+- `rldc <ftt_p_rldc.html>`__
+    Residual load duration curves
+- `dspch <ftt_p_dspch.html>`__
+    Dispatch of capcity
+- `get_lcoe <ftt_p_lcoe.html>`__
+    Levelised cost calculation
+- `survival_function <ftt_p_surv.html>`__
+    Calculation of scrappage, sales, tracking of age, and average efficiency.
+- `shares <ftt_shares.html>`__
+    Market shares simulation (core of the model)
+- `cost_curves <ftt_p_costc.html>`__
+    Calculates increasing marginal costs of resources
 
-    Support functions:
+Support functions:
 
-    - `divide <divide.html>`__
-        Element-wise divide which replaces divide-by-zeros with zeros
+- `divide <divide.html>`__
+    Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
