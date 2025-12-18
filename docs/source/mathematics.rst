@@ -81,6 +81,7 @@ The matrix :math:`A_{ij}` governs the *rate at which substitutions are possible*
 
 The matrix :math:`A` therefore controls *how fast* technologies can replace one another, independently
 of their relative attractiveness. :math:`A` is defined as :math:`A_{ij} = \frac{K}{\tau_i t_j}`, where
+
 - :math:`K` is a normalisation constant setting the overall time scale of diffusion, 
 - :math:`\tau_i` is the lifetime of technology :math:`i`,
 - :math:`t_j` is the build time of technology :math:`j`.
