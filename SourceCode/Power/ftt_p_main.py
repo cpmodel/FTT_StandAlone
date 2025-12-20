@@ -128,7 +128,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
 
     # Store gamma values in the cost matrix (in case it varies over time)
-    data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
+    data['BCET'][:, :, c2ti['22 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
    
 
@@ -764,7 +764,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][:, :, 1:17] = time_lag['BCET'][:, :, 1:17].copy()
 
             # Store gamma values in the cost matrix (in case it varies over time)
-            data['BCET'][:, :, c2ti['21 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
+            data['BCET'][:, :, c2ti['22 Gamma ($/MWh)']] = data['MGAM'][:, :, 0]
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
