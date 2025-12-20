@@ -366,7 +366,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
         country = cost_matrix.loc[i, 'Unnamed: 1']
         country_df = cost_matrix.iloc[i:i + tech_number + 1, :].reset_index(drop=True)
 
-        # Discount rate adjustment bounds, hardocded like this for readability
+        # Discount rate adjustment bounds, hardcoded like this for readability
         max_addition = 0.03
         max_subtraction = -0.03
         # Apply scenario level
@@ -433,45 +433,45 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                         mewa_country.iloc[j, tech] = 0
                     # ccgt
                     elif tech == 7:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
                     # onshore
                     elif tech == 17:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_wind']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # offshore
                     elif tech == 18:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_wind']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # solar pv
                     elif tech == 19:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     # csp
                     elif tech == 20:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     else:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_coal'] / country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
             # update gas row
             if j == 6:
                 # loop through columns
                 for tech in range(1, 23):
                     # coal
                     if tech == 3:
-                        mewa_country.iloc[j, tech] =  100 / scen_level['lead_ccgt'] / country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] =  100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
                     # ccgt
                     elif tech == 7:
                         mewa_country.iloc[j, tech] = 0
                     # onshore
                     elif tech == 17:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_wind']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # offshore
                     elif tech == 18:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_wind']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # solar pv
                     elif tech == 19:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     # csp
                     elif tech == 20:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     else:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_ccgt'] / country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
             # Update onshore row
             if j == 16:
                 # loop through columns
@@ -481,33 +481,33 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                         mewa_country.iloc[j, tech] = 0
                     # offshore
                     elif tech == 18:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] / scen_level['lifetime_wind']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_onshore'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # solar pv
                     elif tech == 19:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_onshore'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     # csp
                     elif tech == 20:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_onshore'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     else:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_onshore'] /  country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_onshore'] + scen_level['lead_commission']) /  country_df.iloc[tech-1, 9]
             # Update offshore row
             if j == 17:
                 # loop through columns
                 for tech in range(1, 23):
                     # onshore
                     if tech == 17:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] / scen_level['lifetime_wind']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_offshore'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # offshore
                     elif tech == 18:
                         mewa_country.iloc[j, tech] = 0
                     # solar pv
                     elif tech == 19:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_offshore'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     # csp
                     elif tech == 20:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_offshore'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     else:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_offshore'] /  country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_offshore'] + scen_level['lead_commission']) /  country_df.iloc[tech-1, 9]
 
             # Update solar pv row
             if j == 18:
@@ -515,18 +515,18 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                 for tech in range(1, 23):
                     # onshore
                     if tech == 17:
-                       mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] / scen_level['lifetime_wind']
+                       mewa_country.iloc[j, tech] = 100 / (scen_level['lead_solar'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # offshore
                     elif tech == 18:
-                       mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] / scen_level['lifetime_wind']
+                       mewa_country.iloc[j, tech] = 100 / (scen_level['lead_solar'] + scen_level['lead_commission']) / scen_level['lifetime_wind']
                     # solar pv
                     elif tech == 19:
                         mewa_country.iloc[j, tech] = 0
                     # csp
                     elif tech == 20:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] / scen_level['lifetime_solar']
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_solar'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     else:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] /  country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / (scen_level['lead_solar'] + scen_level['lead_commission']) /  country_df.iloc[tech-1, 9]
 
 
                 # Update csp row
@@ -546,7 +546,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                     elif tech == 20:
                         mewa_country.iloc[j, tech] = 100 / csp_lead / scen_level['lifetime_solar']
                     else:
-                        mewa_country.iloc[j, tech] = 100 / scen_level['lead_solar'] /  country_df.iloc[tech-1, 9]
+                        mewa_country.iloc[j, tech] = 100 / csp_lead /  country_df.iloc[tech-1, 9]
 
 
             # Update other rows
