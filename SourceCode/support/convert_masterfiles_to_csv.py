@@ -538,8 +538,8 @@ if __name__ == '__main__':
     # Scenario 1 = 2-degree scenario (default)
     # Scenario 2 = 1.5-degree scenario (default)
 
-    models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023'],
-              'FTT-P': [[0], 'FTT-P-24x71_2022']}
+    models = {#'FTT-Tr': [[0], 'FTT-Tr_31x71_2023'],
+              'FTT-P': [[0], 'FTT-P-22x71_2024']}
             #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
             #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
