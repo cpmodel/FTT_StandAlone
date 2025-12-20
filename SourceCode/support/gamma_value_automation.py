@@ -1,0 +1,507 @@
+"""
+Femke Nijsse, Rosie Hayward and Ian Burton. Created 2021, finished March 2025
+
+A simulated annealing algorithm for finding the gamma values used in FTT simulations.
+
+This algorithm should find the values of gamma such that the diffusion of shares
+is constant across the boundary between the historical and simulated period.
+
+"""
+
+# %%
+# Third party imports
+import numpy as np
+import os
+from pathlib import Path
+
+# Go two levels up: Support → SourceCode → repo root
+repo_root = Path(__file__).resolve().parents[2]
+os.chdir(repo_root)
+
+from SourceCode import model_class
+
+
+# %%
+
+def set_timeline(model, modules_to_assess):
+    "Run the models in parallel, so that the final year of the timeline is the max of histend"
+    
+    # Make sure the timeline in the settings file at least covers this range!
+    histend_vars = dict(zip(model.titles['Models_short'], model.titles['histend_var']))
+    
+    max_end = np.max([model.histend[histend_vars[module]] for module in modules_to_assess]) + 5
+    
+    return np.arange(2010, max_end)
+
+def automation_init(model):
+    '''Initialise automation variables and run the model for the first time'''
+    
+    scenario = 'S0'
+
+    # Identifying the variables needed for automation
+    share_vars = dict(zip(model.titles['Models_short'], model.titles['shares_var']))
+    cost_vars = dict(zip(model.titles['Models_short'], model.titles['Cost_var']))
+    gamma_inds = dict(zip(model.titles['Models_short'], model.titles['Gamma_ind']))
+    techs_vars = dict(zip(model.titles['Models_short'], model.titles['tech_var']))
+
+    # Initialising container for automation variables
+    automation_vars = {}
+    
+    # Establisting timeline for automation algorithm
+    # Note: for power, we must start in 2010, otherwise things go wrong, in this model version. Why?
+    model.timeline = set_timeline(model, modules_to_assess)
+    
+    # Set up various empty values 
+    for module in modules_to_assess:
+        print(f"Initialising for model {module}")
+        
+        N_regions = len(model.titles['RTI_short'])
+        N_techs = len(model.titles[techs_vars[module]])
+      
+        # Automation variable list for this module
+        automation_vars[module] = {}
+            
+        automation_vars[module][share_vars[module]] = (
+                        np.zeros_like(model.input[scenario][share_vars[module]][:, :, :, :len(model.timeline)]) )
+        
+        automation_vars[module]['gamma'] = np.zeros((N_regions, N_techs, 1))
+        automation_vars[module]['gamma'+'_LAG'] = np.zeros_like(automation_vars[module]['gamma'])
+
+        # Create container for rate of change (roc) vars
+        automation_vars[module]['roc_gradient'] = np.zeros((N_regions, N_techs))
+        automation_vars[module]['roc_change'] = np.zeros((N_regions, N_techs))
+        automation_vars[module]['roc_change' + '_LAG'] = np.zeros((N_regions, N_techs))
+
+        automation_vars[module]['hist_share_avg'] = np.zeros((N_regions, N_techs))
+        automation_vars[module]['score'] =  np.zeros((N_regions, N_techs))
+        automation_vars[module]['score_LAG'] =  np.zeros((N_regions, N_techs))
+
+
+    # Looping through years in automation timeline
+    for year_index, year in enumerate(model.timeline):
+        
+        # Solving the model for each year
+        model.variables, model.lags = model.solve_year(year, year_index, scenario)
+        
+        # Save initial values of interest
+        for module in modules_to_assess:
+            
+            # # Resetting gamma values to zero (smarter to start from existing gamma values?)
+            # model.input[scenario]['gamma'][:, :, 0, :] = np.zeros_like(
+            #     model.input[scenario]['gamma'][:, :, 0, :])
+            
+            # Resetting gamma values to zero (smarter to start from existing gamma values?)
+            model.input[scenario][cost_vars[module]][:, :, gamma_inds[module], :] = np.zeros_like(
+                model.input[scenario][cost_vars[module]][:, :, gamma_inds[module], :])
+            
+            # Read in the historical and simulated shares
+            var = share_vars[module]
+            automation_vars[module][var][:, :, :, year_index] =  model.variables[var]
+        
+            # Compute the rate of change from the shares variable
+            automation_vars[module]["rate of change"] = compute_roc(automation_vars, share_vars, module)
+            automation_vars[module]["roc_change"] = roc_change(automation_vars, model, module)
+            automation_vars[module]["score"] = get_scores(automation_vars, module)
+
+    return automation_vars
+# %%
+def run_model(automation_vars, model):
+    '''Run the model with new gamma values'''
+    scenario = 'S0'
+
+    # Identifying the model vars needed
+    share_vars = dict(zip(model.titles['Models_short'], model.titles['shares_var']))
+    cost_vars = dict(zip(model.titles['Models_short'], model.titles['Cost_var']))
+    gamma_inds = dict(zip(model.titles['Models_short'], model.titles['Gamma_ind']))
+  
+    model.timeline = set_timeline(model, modules_to_assess)
+    
+    # Looping through all FTT modules to update gamma values
+    for module in modules_to_assess:
+            
+        model.input[scenario][cost_vars[module]][:, :, gamma_inds[module], :] = (
+            automation_vars[module]['gamma'][:, :, :])
+
+    # Looping through years in timeline
+    for year_index, year in enumerate(model.timeline):
+    
+        # Solving the model for each year
+        model.variables, model.lags = model.solve_year(year, year_index, scenario)
+        
+        for module in modules_to_assess:
+            
+            # Save share vars for each module
+            automation_vars[module][share_vars[module]][:, :, :, year_index] = (
+                 model.variables[share_vars[module]] )
+            # Define the ROC variable for each module
+            automation_vars[module]["rate of change"] = compute_roc(automation_vars, share_vars, module)
+            automation_vars[module]["roc_change"] = roc_change(automation_vars, model, module)
+            automation_vars[module]["score"] = get_scores(automation_vars, module)
+            
+    return automation_vars
+
+
+def compute_roc(automation_vars, share_vars, module):
+    '''Compute the first differences (rate of change)'''
+    roc =   (automation_vars[module][share_vars[module]][:, :, :, 1:]
+           - automation_vars[module][share_vars[module]][:, :, :, :-1])
+    
+    return roc
+
+
+
+# %%
+def roc_change(automation_vars, model, module):
+    '''
+    Calculate the relative average historical rate of change (roc) and the simulated roc for each module
+    Then, calculate the difference between them
+    difference = (average_roc / average_share_sim) - (average_hist_roc / average_share_hist)
+    
+    Compared to a ratio of rate_of_change, this should be more stable for periods of low historical change.
+    
+    '''
+    timeline = model.timeline
+    
+    # Identifying the vars needed
+    share_vars = dict(zip(model.titles['Models_short'], model.titles['shares_var']))
+    histend_vars = dict(zip(model.titles['Models_short'], model.titles['histend_var']))
+        
+    mid = np.where(timeline == model.histend[histend_vars[module]])[0][0] + 1
+    start, end, end1 = mid-4, mid+4, mid+4
+    if end == 0: end1=None
+    
+    avg_share_hist = automation_vars[module][share_vars[module]][:, :, 0, start:mid].sum(axis=-1) / 4
+    avg_share_sim  = automation_vars[module][share_vars[module]][:, :, 0, mid:end1  ].sum(axis=-1) / 4
+    avg_growth_hist = automation_vars[module]["rate of change"][:, :, 0, start-1:mid-1].sum(axis=-1) / 4
+    avg_growth_sim  = automation_vars[module]["rate of change"][:, :, 0, mid-1:end-1  ].sum(axis=-1) / 4  
+    
+    rel_change_hist = np.divide(avg_growth_hist, avg_share_hist, where=avg_share_hist != 0, out=np.zeros_like(avg_share_hist))
+    rel_change_sim = np.divide(avg_growth_sim, avg_share_sim, where=avg_share_sim != 0, out=np.zeros_like(avg_share_sim))
+    
+    roc_change = np.where( (rel_change_hist == 0) | (rel_change_sim == 0), 0, rel_change_sim - rel_change_hist)
+       
+    return roc_change 
+
+
+
+def adjust_gamma_values_simulated_annealing(automation_vars, model, module, Nyears, it):
+    """Randomly choose delta gamma for each model version, using a standard deviation with 
+    an adjustable standard deviation."""
+       
+    # Get model vars needed, this needs doing for every iter so not great
+    gamma = automation_vars[module]['gamma'][:, :, 0]
+    
+    roc_change = automation_vars[module]["roc_change"]
+    
+    # Step size is a function of the number of iterations
+    step_size = 0.2 * 0.98 ** it
+    
+    # Generate a candidate step
+    delta_gamma = np.random.normal(0, step_size, size=gamma.shape)
+
+    # Propose a new gamma solution
+    gamma = gamma + delta_gamma
+    
+    # Set gamma to zero if the roc is zero (usually as shares are zero)
+    gamma = np.where(roc_change == 0, 0, gamma)
+    gamma = np.clip(gamma, -1, 1)  # Ensure gamma values between -1 and 1
+    
+    # Tweak values towards zero, so we don't have highly negative or positive averages
+    non_zero_total = (roc_change != 0).sum(axis=1)
+    sum_gamma = gamma.sum(axis=1)
+    country_averages = np.divide(sum_gamma, non_zero_total, out=np.zeros_like(sum_gamma),
+                                 where=non_zero_total !=0)[:, np.newaxis] *  np.ones_like(gamma)
+    
+    gamma = np.where(roc_change !=0, gamma - 0.05 * country_averages, 0)  
+    automation_vars[module]['gamma'] = gamma[:, :, np.newaxis]
+
+    return automation_vars
+
+
+def get_gamma_and_roc_change(automation_vars, model, module):
+    
+    roc_change_lag = automation_vars[module]["roc_change_LAG"]
+    roc_change = automation_vars[module]["roc_change"]
+    
+    gamma_vars = dict(zip(model.titles['Models_short'], model.titles['Gamma_Value']))
+    gamma = automation_vars[module]['gamma'][:, :, 0]
+    gamma_lag = automation_vars[module]['gamma'+'_LAG'][:, :, 0]
+    
+    return roc_change_lag, roc_change, gamma_vars, gamma, gamma_lag
+
+def get_score_and_lagged_score(automation_vars, module):
+    '''Get score and score lag to compare'''
+    
+    # Compute the regularised score for current and new solutions
+    score = automation_vars[module]['score']
+    score_lag = automation_vars[module]['score_LAG']
+    
+    return score, score_lag
+
+
+def get_scores(automation_vars, module):
+    '''Compute score, based on regulation. The score is calculated as
+    score = |rate of change difference| - λ_reg * γ ** 2'''
+    
+    roc_change = automation_vars[module]['roc_change']
+    gamma = automation_vars[module]['gamma'][:, :, 0]
+    # Compute the regularised score for current and new solutions
+    
+    score = - np.abs(roc_change) - lambda_reg * gamma**2
+    
+    # Ensure that extreme values don't have an overly strong effect
+    score = np.tanh(score)
+    
+    return score
+
+def accept_or_reject_gamma_changes(automation_vars, model, module, Nyears, it, T0):
+    
+    '''
+    Adjust the gamma values based on regulated simulated annealing. 
+    
+    That is: penalise gamma values away from 0, accept some random changes
+    to avoid getting in local minima as well'
+    '''
+    
+    # Hyperparameter
+    cooling_rate = 0.96
+    
+    # Cool down the temperature
+    T = T0 * cooling_rate**it
+    
+    gamma = automation_vars[module]['gamma'][:,:,0]
+    gamma_lag = automation_vars[module]['gamma_LAG'][:,:,0]
+    score, score_lag = get_score_and_lagged_score(automation_vars, module)
+
+    # Element-wise acceptance condition
+    acceptance_mask = (score > score_lag) | (
+        np.log(np.random.rand(*score.shape)) < (score - score_lag) / T
+    )
+
+    # Go back to old gamma/score values when values not accepted
+    gamma[~acceptance_mask] = gamma_lag[~acceptance_mask]
+    automation_vars[module]['gamma'] = gamma[:, :, np.newaxis]
+    
+    return automation_vars 
+
+def set_initial_temperature(automation_vars, model, module):
+    """ Set the initial temperature T0 based on the typical change in score
+    between the first two iterations
+    """
+    
+    roc_change_lag, roc_change, gamma_vars, gamma, gamma_lag = (
+        get_gamma_and_roc_change(automation_vars, model, module))
+    
+    score, score_lag = get_score_and_lagged_score(automation_vars, module)
+    
+    # Rule of thumb is to divide by 5. Ignoring non-zero values
+    non_zero_mask = (score != 0) & (score_lag != 0)
+    T0 = np.mean(np.abs(score[non_zero_mask] - score_lag[non_zero_mask])) / 5
+    
+    if T0 == 0 or np.isnan(T0):
+        raise ValueError(f'T0 is {T0}. Is the module {module} included in the settings.ini file?')
+    
+    return T0 
+
+def check_convergence(gamma, gamma_lag, module, it, max_it, already_converged):
+    '''Return true if gamma values no longer changing much, or if max_it is reached'''
+    mask = (gamma != 0) & (gamma_lag != 0)
+    converged = already_converged
+    gamma_change = np.average(np.absolute(gamma[mask] - gamma_lag[mask]))
+    
+    if gamma_change < 0.015 and not already_converged:
+        print(f"Convergence {module} reached at iter {it}, little change in gamma values last iteration")
+        converged = True
+        
+    elif it >= max_it - 1:
+        print(f"Maximum iterations reached at it {it}. Gammas {module} still changing by {gamma_change:.4f} on average")
+        converged = True
+    
+    return converged
+ 
+def get_median_score(vars, module):
+    nonzero = vars[module]['score']!=0
+    median_score = np.median(vars[module]['score'][nonzero])
+    return median_score
+
+# %%
+def gamma_auto(model):
+    '''Run the iterative script. First call automation_init and then
+    run the simulated annealing script over all the models. 
+    '''
+    
+    Nyears = len(model.timeline)
+
+    # Initialising automation vars
+    automation_vars = automation_init(model)
+    run_vars = {}
+    
+    for module in modules_to_assess:
+        run_vars[module] = {}
+        
+        N_regions = len(model.titles['RTI_short'])
+        N_techs = automation_vars[module]['gamma'].shape[1]
+        
+        run_vars[module]['gamma'] = np.zeros((total_runs, N_regions, N_techs))
+        run_vars[module]['score'] = np.zeros((total_runs, N_regions, N_techs))
+    
+    for run in range(total_runs):
+        
+ 
+        if run > 0:
+            # Initialising automation vars
+            automation_vars = automation_init(model) 
+        
+        # Initial roc_change values
+        for module in modules_to_assess:
+            automation_vars[module]['roc_change'] = roc_change(automation_vars, model, module)
+        
+        # Break when all models have reached convergence
+        convergence = [False] * len(modules_to_assess)
+        
+        # Computer after first iteration.
+        T0 = [0.004] * len(modules_to_assess)
+ 
+        # Iterative loop for gamma convergence
+        for it in range(max_it):
+                        
+            # First save the lagged vars, and find new gamma values to try
+            for module in modules_to_assess:
+                
+                if it%25 == 0: # Print median score every 25 iterations
+                    print(f"Median score {module} at {it}: {get_median_score(automation_vars, module):.3f}")    
+                
+                # Save previous gamma and roc values
+                automation_vars[module]['gamma'+'_LAG'][:, :, 0] = (
+                            automation_vars[module]['gamma'][:, :, 0])
+                
+                automation_vars[module]["roc_change" + '_LAG'][:, :] = (
+                            automation_vars[module]["roc_change"][:, :] )
+                
+                automation_vars[module]["score" + '_LAG'][:, :] = (
+                            automation_vars[module]["score"][:, :] )
+                
+                # Update gamma values semi-randomly
+                automation_vars = adjust_gamma_values_simulated_annealing(
+                                            automation_vars, model, module, Nyears, it)
+                
+
+            # Second: running the model, updating vars of interest
+            automation_vars = run_model(automation_vars, model)
+            
+            
+            
+            # Third, save vars, accept and reject new gammas, and check convergence
+            for n_module, module in enumerate(modules_to_assess):
+                
+                # Compute new rate of change and accept/reject gamma values
+                automation_vars[module]['roc_change'] = roc_change(automation_vars, model, module)
+                automation_vars = accept_or_reject_gamma_changes(automation_vars,
+                                                                      model, module, Nyears, it, T0[n_module])
+                
+                if it == 0:
+                    # Update initial temperature, based on differences in initial scores
+                    T0[n_module] = set_initial_temperature(automation_vars, model, module)
+                    print(f'Temperature for {module} is {T0[n_module]:.5f}')
+                
+                # Check for convergence each iteration and module loop
+                gamma = automation_vars[module]['gamma'][:, :, 0]
+                gamma_lag = automation_vars[module]['gamma' + '_LAG'][:, :, 0]
+                
+                convergence[n_module] = check_convergence(gamma, gamma_lag, module, it, max_it, convergence[n_module])
+                
+                if convergence[n_module]:
+                    run_vars[module]['gamma'][run] = gamma
+                    run_vars[module]['score'][run] = automation_vars[module]['score']
+            
+            # Fourth: re-run model with accepted gamma values, updating vars of interest
+            automation_vars = run_model(automation_vars, model)
+            
+            
+            # # Initial roc_change values
+            # for module in modules_to_assess:
+            print(f"Gamma values for condensed gas in Denmark are: {automation_vars['FTT-H']['gamma'][1, 3, 0]:.4f}")
+            print(f"roc_change and scores for diesel in Denmark are {automation_vars['FTT-H']['roc_change'][1,3]:.3f} and {automation_vars['FTT-H']['score'][1,3]:.4f}")
+                
+            if np.all(convergence):
+                for module in modules_to_assess:
+                    print(f"Median score {module} at {it}: {get_median_score(automation_vars, module):.3f}")
+                break
+            
+
+    return automation_vars, run_vars
+#%%
+model = model_class.ModelRun()
+
+# Compute gamma values for models turned on in settings.ini
+modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
+
+
+# %% Run combined function
+
+# Let's try 3 runs (5 is better), and max of 100 its. Takes about 1h with 3.
+# Consider reducing no_it for more rapid estimates
+total_runs = 3
+max_it = 100
+lambda_reg = 0.2  # Regularisation strength
+
+automation_vars, run_vars = gamma_auto(model)
+
+def select_best_gamma_values(run_vars, modules_to_assess):
+    '''For each country and module, select the run with the best average score'''
+    
+    for module in modules_to_assess:
+        avg_score = np.average(run_vars[module]['score'], axis=2)
+        best_runs = np.argmax(avg_score, axis=0)
+        run_vars[module]['best gamma'] = np.array([run_vars[module]['gamma'][best_runs[r], r, :]
+                                                   for r in range(len(best_runs))])
+        
+        run_vars[module]['best score'] = np.array([run_vars[module]['score'][best_runs[r], r, :]
+                                                   for r in range(len(best_runs))])
+        
+    return run_vars
+
+run_vars = select_best_gamma_values(run_vars, modules_to_assess)
+
+# print("The Belgium gamma values for transport are now:")
+# for run in range(total_runs):
+#     print(run_vars['FTT-Tr']['gamma'][run, 0, :-4])
+    #print(f"Final best score transport: {np.max(get_median_score(run_vars, 'FTT-Tr')):.3f}")
+# print(f"Final best score power: {np.max(get_median_score(run_vars, 'FTT-P')):.3f}")
+
+# for run in range(total_runs):
+#     gamma_tr = run_vars['FTT-Tr']['gamma'][run]
+#     nonzero = run_vars['FTT-Tr']['score'][run]!=0
+#     median_score_tr = np.median(run_vars['FTT-Tr']['score'][run][nonzero])
+#     print(f"Share of gamma values in run {run} over 0.5: {np.sum(np.abs(gamma_tr) > 0.5)/np.sum(gamma_tr > -1) * 100:.1f}%")
+#     print(f'Median score transport is: {median_score_tr}')
+    
+# nonzero = run_vars['FTT-Tr']['best score']!=0
+# median_score_tr = np.median(run_vars['FTT-Tr']['best score'][nonzero])
+# print(f'Median score transport is: {median_score_tr}')
+
+# %% Saving almost to the right format (I'm naming the gamma row the same for each model.. )
+import csv
+
+# How many empty placeholders are in the masterfiles?
+n_placeholders = {"FTT-P": 11, "FTT-Tr": 4, "FTT-Fr": 0, "FTT-H": 7}
+for module in modules_to_assess:
+    data = run_vars[module]['best gamma'].T
+    zeros = np.zeros((n_placeholders[module], data.shape[1]))
+    expanded_data = np.vstack([data, zeros])
+    rounded_data = np.round(expanded_data, 2)
+    
+    # Save to CSV with mixed types
+    with open(f"{module}_gamma.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        
+        # Write four empty lines for easier copy-paste
+        for _ in range(4):
+            writer.writerow([])
+        
+        for region in range(data.shape[1]):
+            writer.writerow(["Gamma"])       # Write string row separately
+            writer.writerows(rounded_data[:, region, np.newaxis])  # Write numerical data
+ 
+
+
