@@ -249,6 +249,8 @@ def get_lcoe(data, titles, year):
         lcoe_mu_only_co2        = np.sum(npv_expenses_mu_only_co2, axis=1) / utility_tot 
         lcoe_mu_all_policies    = np.sum(npv_expenses_mu_all_policies, axis=1) / utility_tot - data['MEFI'][r, :, 0]
         lcoe_mu_gamma           = lcoe_mu_all_policies + data['MGAM'][r, :, 0]
+        lcoe_mu_gamma_vf        = lcoe_mu_all_policies * (1 + data['MGAM'][r, :, 0]) / bcet[:, c2ti['22 Value factor']]
+
 
         # 4b levelised cost – average units 
         lcoe_all_but_co2        = np.sum(npv_expenses_all_but_co2, axis=1) / utility_tot - data['MEFI'][r, :, 0]   
@@ -261,7 +263,7 @@ def get_lcoe(data, titles, year):
         data['MEWC'][r, :, 0] = lcoe_mu_no_policy       # The real bare LCOE without taxes
         data['MECW'][r, :, 0] = lcoe_mu_only_co2        # Bare LCOE with CO2 costs
         data["MECC"][r, :, 0] = lcoe_all_but_co2        # LCOE with policy, without CO2 costs
-        data['METC'][r, :, 0] = lcoe_mu_gamma           # As seen by consumer (generalised cost)
+        data['METC'][r, :, 0] = lcoe_mu_gamma_vf        # As seen by consumer (generalised cost)
         data['MTCD'][r, :, 0] = dlcoe                   # Standard deviation LCOE 
         data["MECC only CO2"][r, :, 0] = lcoe_only_co2      # Bare LCOE without policy, average CF, CO2 costs
         data["MECC incl CO2"][r, :, 0] = lcoe_all           # LCOE without gamma with all the rest
