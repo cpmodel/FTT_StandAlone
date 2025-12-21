@@ -13,10 +13,16 @@ is constant across the boundary between the historical and simulated period.
 import numpy as np
 import os
 from pathlib import Path
+import sys
+
+# Set root directory
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root_dir)
+os.chdir(root_dir)
 
 # Go two levels up: Support → SourceCode → repo root
-repo_root = Path(__file__).resolve().parents[2]
-os.chdir(repo_root)
+# repo_root = Path(__file__).resolve().parents[2]
+# os.chdir(repo_root)
 
 from SourceCode import model_class
 
@@ -420,8 +426,8 @@ def gamma_auto(model):
             
             # # Initial roc_change values
             # for module in modules_to_assess:
-            print(f"Gamma values for condensed gas in Denmark are: {automation_vars['FTT-H']['gamma'][1, 3, 0]:.4f}")
-            print(f"roc_change and scores for diesel in Denmark are {automation_vars['FTT-H']['roc_change'][1,3]:.3f} and {automation_vars['FTT-H']['score'][1,3]:.4f}")
+            #print(f"Gamma values for condensed gas in Denmark are: {automation_vars['FTT-H']['gamma'][1, 3, 0]:.4f}")
+            #print(f"roc_change and scores for diesel in Denmark are {automation_vars['FTT-H']['roc_change'][1,3]:.3f} and {automation_vars['FTT-H']['score'][1,3]:.4f}")
                 
             if np.all(convergence):
                 for module in modules_to_assess:
@@ -484,7 +490,7 @@ run_vars = select_best_gamma_values(run_vars, modules_to_assess)
 import csv
 
 # How many empty placeholders are in the masterfiles?
-n_placeholders = {"FTT-P": 11, "FTT-Tr": 4, "FTT-Fr": 0, "FTT-H": 7}
+n_placeholders = {"FTT-P": 11, "FTT-Tr": 4, "FTT-Fr": 0}#, "FTT-H": 7}
 for module in modules_to_assess:
     data = run_vars[module]['best gamma'].T
     zeros = np.zeros((n_placeholders[module], data.shape[1]))
