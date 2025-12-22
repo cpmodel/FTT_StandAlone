@@ -23,7 +23,7 @@ This repository contains the public standalone version of FTT, written in Python
    ```bash
    git clone https://github.com/cpmodel/FTT_StandAlone.git
    ```
-2. The python package requirements are curated in the `envs/environment.yaml` file.
+2. The python package requirements are curated in the `environment.yml` file.
    The environment can be installed using:
 
    ```bash
