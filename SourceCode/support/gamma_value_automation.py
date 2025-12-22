@@ -200,7 +200,7 @@ def adjust_gamma_values_simulated_annealing(automation_vars, model, module, Nyea
     roc_change = automation_vars[module]["roc_change"]
     
     # Step size is a function of the number of iterations
-    step_size = 0.2 * 0.98 ** it
+    step_size = 0.2 * 0.95 ** it
     
     # Generate a candidate step
     delta_gamma = np.random.normal(0, step_size, size=gamma.shape)
@@ -440,16 +440,17 @@ def gamma_auto(model):
 model = model_class.ModelRun()
 
 # Compute gamma values for models turned on in settings.ini
-modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
+#modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
+modules_to_assess = ['FTT-P']  # For testing, only power
 
 
 # %% Run combined function
 
 # Let's try 3 runs (5 is better), and max of 100 its. Takes about 1h with 3.
 # Consider reducing no_it for more rapid estimates
-total_runs = 3
-max_it = 100
-lambda_reg = 0.2  # Regularisation strength
+total_runs = 5
+max_it = 150
+lambda_reg = 0.001  # Regularisation strength
 
 automation_vars, run_vars = gamma_auto(model)
 
