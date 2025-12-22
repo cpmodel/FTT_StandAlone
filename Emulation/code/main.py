@@ -38,7 +38,9 @@ def main():
     cost_matrix = config['cost_matrix_var']
     cost_matrix_structure = config['cost_matrix_structure']
     updates_config = config['updates_config']
-    
+    scens_run = config['scens_run']
+  
+
     run_compare_scenarios = config.get('run_compare_scenarios', True)
     run_ambition_vary = config.get('run_ambition_vary', True)
     run_run_simulations = config.get('run_run_simulations', True)
@@ -57,7 +59,7 @@ def main():
                                                     comparison_path, scenarios, region_groups, 
                                                     params, general_vars, output_dir,
                                                     cost_matrix, cost_matrix_structure, 
-                                                    updates_config, titles, carbon_price_path)
+                                                    updates_config, titles, carbon_price_path, scens_run)
         print("Processed Ambition Variation Data")
 
     # Run simulations with data varied between boundary scenarios

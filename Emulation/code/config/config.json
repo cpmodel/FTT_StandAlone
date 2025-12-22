@@ -78,6 +78,7 @@
     "data_length": 34,
     "tech_number": 22
   },
+  "scens_run": [0, 1],
   "run_compare_scenarios": false,
   "run_ambition_vary": true,
   "run_run_simulations": false,

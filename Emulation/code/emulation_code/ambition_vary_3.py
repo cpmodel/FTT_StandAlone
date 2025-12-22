@@ -697,7 +697,7 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
 
 def process_ambition_variation(base_master_path, scen_levels_path, comparison_path, scenarios, 
                                region_groups, params, general_vars, output_dir, cost_matrix_var, 
-                               cost_matrix_structure, updates_config, titles, carbon_price_path):
+                               cost_matrix_structure, updates_config, titles, carbon_price_path, scens_run):
     """
     Process ambition variation by loading and comparing data, updating inputs, and saving the results.
     
@@ -726,7 +726,7 @@ def process_ambition_variation(base_master_path, scen_levels_path, comparison_pa
     scen_levels = scen_levels_extend(scen_levels, region_groups)
 
 
-    for i in tqdm(range(0, len(scen_levels['scenario'])), desc="Processing Scenarios", unit="scenario"): # len(scen_levels['scenario'])
+    for i in tqdm(range(scens_run[0], scens_run[1]), desc="Processing Scenarios", unit="scenario"): # len(scen_levels['scenario'])
         
 
         #updated_input_data = defaultdict(lambda: defaultdict(dict))
