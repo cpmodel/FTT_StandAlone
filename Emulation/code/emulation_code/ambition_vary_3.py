@@ -46,7 +46,7 @@ def load_input_data(base_master_path, sheet_names):
         input_data[sheet_name] = pd.read_excel(base_master_path, 
                                                sheet_name=sheet_name, 
                                                skiprows=3, 
-                                               usecols=lambda column: column not in range(0, 1) and column not in range(22, 26))
+                                               usecols=lambda column: column not in range(0, 1) and column not in range(24, 26))
     return input_data
 
 def load_cost_matrix(base_master_path, cost_matrix_var, cost_matrix_structure):

@@ -1,3 +1,9 @@
+""" 
+Script for converting gamma_automation output csv into easier format for copying into masterfile.
+This script reads a CSV file 'FTT-P_gamma.csv', duplicates the first column into the next 100 columns then 
+adds the years up to 2100.
+
+"""
 
 import pandas as pd
 import numpy as np
