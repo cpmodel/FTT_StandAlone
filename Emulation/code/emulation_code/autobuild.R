@@ -1,4 +1,8 @@
 
+source('imported_code/UQ/Gasp.R') ### Created by James Salter
+setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code')
+
+
 library(R.matlab)
 library(ggplot2)
 library(reshape2)
@@ -15,10 +19,6 @@ library(patchwork)
 library(tidyr)
 library(lhs)
 library(stargazer)
-
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ')
-source('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ/code/Gasp.R')
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ')
 
 
 #################################

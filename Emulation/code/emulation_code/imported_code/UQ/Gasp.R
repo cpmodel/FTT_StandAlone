@@ -1,9 +1,9 @@
-source('code/rotation_functions.R')
-source('code/FastHM.R')
+source('imported_code/UQ/rotation_functions.R')
+source('imported_code/UQ/FastHM.R')
 
 # From ExeterUQ https://github.com/BayesExeter/ExeterUQ - edit path to read this
 twd <- getwd()
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/ExeterUQ')
+setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/emulation_code/imported_code')
 source('BuildEmulator/BuildEmulator.R')
 setwd(twd)
 
