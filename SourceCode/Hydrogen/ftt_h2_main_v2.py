@@ -145,6 +145,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     data = calc_emis_rate(data, titles, year)
     # Overwrite for now
     data['HYEF'][:, :, 0] = np.copy(data['BCHY'][:,:, c7ti['Emission factor']])
+    # Indirect emissions for hydrogen production
+    # [kWh/kg H2] * [gCO2/kWh] * [kgCO2/gCO2]  = kgCO2/kgH2
+    data['HYEFINDIRECT'][:, :, 0] = data['BCHY'][:,:, c7ti['Electricity demand, mean, kWh/kg H2']] * data['GRIDEMISFACTOR'][:, :, 0] * 1e-3
+    # Indirect emissions for ammonia production
+    # [GJ/tNH3] * [kgNH3/tNH3] * [kWh/GJ] * [gCO2/kWh] * [kgCO2/gCO2] = kgCO2/tNH3
+    data['NH3EFINDIRECT'][:, 0, 0] = 2.2 * 1e-3 * 277.78 * data['GRIDEMISFACTOR'][:, 0, 0] * 1e-3
+    
     
     # H2 content in NH3 by mass
     h2_mass_content = 0.179
@@ -263,11 +270,33 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     else:
         
         
+        # We need to remove lagged demand inputs otherwise the index will also
+        # increase the indirect NH3 demand vectors
+        additional_demand_lag = (time_lag['NH3DEMMARTIME'][:, 0, 0] +
+                                 time_lag['NH3DEMELEC'][:, 0, 0] +
+                                 time_lag['NH3DEMCARRIER'][:, 0, 0])   
+        # Remove where NH3DEMT was zero
+        additional_demand_lag = np.where(time_lag['NH3DEMT'][:, 0, 0] > 0.0,
+                                         additional_demand_lag,
+                                         0.0)
+        
         # Apply demand index to get future demand (grey market)
-        data['NH3DEMT'][:, 0, 0] = time_lag['NH3DEMT'][:, 0, 0] * data['NH3DEMIDX'][:, 0, 0]
-
+        data['NH3DEMT'][:, 0, 0] = ((time_lag['NH3DEMT'][:, 0, 0] - additional_demand_lag)
+                                    * data['NH3DEMIDX'][:, 0, 0]
+                                    )
         # Remove demand in Taiwan
         data['NH3DEMT'][48, :, 0] = 0.0
+        
+        # Add indirect NH3 demand
+        additional_demand = (data['NH3DEMMARTIME'][:, 0, 0] +
+                             data['NH3DEMELEC'][:, 0, 0] +
+                             data['NH3DEMCARRIER'][:, 0, 0])
+        # Remove demand where NH3DEMT is zero
+        additional_demand = np.where(data['NH3DEMT'][:, 0, 0] > 0.0,
+                                         additional_demand,
+                                         0.0)  
+        
+        data['NH3DEMT'][:, 0, 0] += additional_demand
         
         
         if year < 2029:

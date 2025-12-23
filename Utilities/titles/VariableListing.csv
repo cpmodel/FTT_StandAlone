@@ -519,3 +519,19 @@ NH3SM2012,NH3 historical supply map in 2012,kt NH3,RTI,RTI,NA,NA,FTT-H2,,,2023,P
 BATCOSTIDX,Battery CAPEX cost index (2023=100),index,NA,NA,NA,TIME,FTT-H2,,,2001,Proxy data,,Y,Input
 TRADESUBRATE,NH3 trade substitution rate,rate,NA,NA,NA,NA,FTT-H2,,,2000,Assumption,,Y,
 DWEXOG,Exogenous additions of hydrogen technology capacities for non-NH3 purposes,kt H2,NA,HYTI,NA,TIME,FTT-H2,,,2022,,,Y,Input
+NH3TCCout,NH3 bilateral transportation costs to print out,Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
+NH3BILACOST,"NH3 Total bilateral trade costs (CBAM, tariffs, and transportcosts w/o production costs)",Euro per tNH3 traded,RTI,RTI,TFTI,TIME,FTT-H2,,,2023,,,Y,
+NH3DEMMARTIME,Exogenous NH3 demand for shipping,kt NH3,RTI,NA,NA,TIME,FTT-H2,,,2023,Exogenous assumption,,Y,Input
+NH3DEMELEC,Exogenous NH3 demand for the power sector,kt NH3,RTI,NA,NA,TIME,FTT-H2,,,2023,Exogenous assumption,,Y,Input
+NH3DEMCARRIER,Exogenous NH3 demand for NH3 as an intermediate carrier,kt NH3,RTI,NA,NA,TIME,FTT-H2,,,2023,Exogenous assumption,,Y,Input
+NH3TRANSPORTFUELCONSUMPTION,Heavy fuel oil consumption per unit of NH3 transported between country pairs,toe HFO / tNH3,RTI,RTI,NA,NA,FTT-H2,,,2023,,,Y,
+NH3SHIPPINGCOST,"Non-fuel costs of shipping (CAPEX, OPEX, and boil-off)",Euro per tNH3 traded,RTI,RTI,NA,NA,FTT-H2,,,2023,,,Y,Input
+NH3TRANSPORTFUELCOST,Heavy fuel oil cost per unit of NH3 transported between country pairs,Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
+NH3TRANSPORTEMISSIONFACTOR,Emissions due to NH3 transport between country pairs,tCO2/tNH3,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
+GRIDEMISFACTOR,Grid emissions factors (from FTT:Power),gCO2/kWh,RTI,NA,NA,TIME,FTT-H2,,,2010,Exogenous input,,y,Input
+VRELOADFACTOR,VRE load factor of off-grid electrolysis option,%,RTI,NA,NA,TIME,FTT-H2,,,2023,,,y,
+NH3SHIPPINGCOSTout,"Non-fuel costs of shipping (CAPEX, OPEX, and boil-off)",Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,Input
+HYEFINDIRECT,Indirect emission factor for hydrogen production,kg CO2 / kg H2,RTI,HYTI,NA,TIME,FTT-H3,,,2023,,,y,
+NH3EFINDIRECT,Indirect emission factor for ammonia production,kg CO2 / kg H2,RTI,NA,NA,TIME,FTT-H4,,,2023,,,y,
+NH3TRANSPORTEMISSIONCOST,Emission cost penalty to NH3 transport between country pairs,Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
+ETSEFFECTONTRANSPORT,Switch to let the model know whether CBAM is enabled.,-,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,

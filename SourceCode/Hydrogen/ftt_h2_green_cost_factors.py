@@ -63,16 +63,23 @@ def calc_green_cost_factors(data, time_lags, titles, year):
     vre_opex_factor *= 1e-3 
     
     # Load factor as a weighted average
-    vre_load_factor = (data['WSSH'][:, 0, 0]*data['WSLF'][:, 0, 0]+
-                       data['WOSH'][:, 0, 0]*data['WOLF'][:, 0, 0]+
-                       data['WWSH'][:, 0, 0]*data['WWLF'][:, 0, 0])
+    data['VRELOADFACTOR'][:, 0, 0] = (data['WSSH'][:, 0, 0]*data['WSLF'][:, 0, 0]+
+                                      data['WOSH'][:, 0, 0]*data['WOLF'][:, 0, 0]+
+                                      data['WWSH'][:, 0, 0]*data['WWLF'][:, 0, 0])
     
     # How much VRE CAPEX we need depends on the electricity use factor
     # Take electricity use factor from grid-based electrolysis
-    data['BCHY'][:, green, elec_capex] = data['BCHY'][:, grid, elec_use] * vre_capex_factor[:, None] 
-    data['BCHY'][:, green, elec_opex] = data['BCHY'][:, grid, elec_use] * vre_opex_factor[:, None] 
+    data['BCHY'][:, green, elec_capex] = data['BCHY'][:, grid, elec_use] * vre_capex_factor[:, None] / data['VRELOADFACTOR'][:, :, 0]
+    data['BCHY'][:, green, elec_opex] = data['BCHY'][:, grid, elec_use] * vre_opex_factor[:, None] / data['VRELOADFACTOR'][:, :, 0]
     # data['BCHY'][:, green, elec_loadfac] = vre_load_factor[:, None] 
-    data['BCHY'][:, green, elec_loadfac] = 0.8
+    data['BCHY'][:, green, elec_loadfac] = 0.85
+    
+    # Battery costs
+    # Add a capacity factor impact here. For off-grid electrolysis, we assumed
+    # battery costs at 40% capacity factor
+    # Increase battery costs for regions that operate at less than 40%
+    # Decrease battery costs for regions that operate at more than 40%
+    # batt_factor = (vre_opex_factor/0.4)*0.1+1    
     data['BCHY'][:, green, stor_cost] = time_lags['BCHY'][:, green, stor_cost] * (1.0+data['BATCOSTIDX'][0,0,0])
 
     if year > 2023:

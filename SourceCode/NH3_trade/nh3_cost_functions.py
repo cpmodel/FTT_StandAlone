@@ -102,10 +102,10 @@ def get_cbam(data, h2_input, titles):
     cbam_penalty_rate[cbam_penalty_rate<0.0] = 0.0
     
     # Get emission intensity as a split by 
-    emission_intensity_green = divide(np.sum(data['WGWG'][:, :, 0]  * data['HYEF'][:, :, 0] * h2_input, axis=1)
-                                      , np.sum(data['WGWG'][:, :, 0]* h2_input, axis=1))
-    emission_intensity_grey = divide(np.sum(data['WBWG'][:, :, 0]  * data['HYEF'][:, :, 0] * h2_input, axis=1)
-                                     , np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1))
+    emission_intensity_green = divide(np.sum(data['WGWG'][:, :, 0]  *(data['HYEF'][:, :, 0] + data['HYEFINDIRECT'][:, :, 0]) * h2_input, axis=1)
+                                      , np.sum(data['WGWG'][:, :, 0]* h2_input, axis=1)) + data['NH3EFINDIRECT'][:, 0, 0]
+    emission_intensity_grey = divide(np.sum(data['WBWG'][:, :, 0]  * (data['HYEF'][:, :, 0] + data['HYEFINDIRECT'][:, :, 0]) * h2_input, axis=1)
+                                     , np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1)) + data['NH3EFINDIRECT'][:, 0, 0]
     # Grey market emission intensity matrix
     # Get differences between importers and exporters
     emis_intensity_grey_at_exporter = np.zeros((len(titles['RTI']), len(titles['RTI'])))
@@ -132,30 +132,91 @@ def get_cbam(data, h2_input, titles):
 # --------------------------------------------------------------------------
 def get_delivery_cost(data, time_lag, titles):
     
-    # Stack production costs (=levelised cost) across matrix
+    # Convert energy prices to the correct units
+    # Electricity price in Euro/kWh 
+    electricity_price = data['PFRE'][:, 5, 0]/(data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])/11630
+    # Heavy oil price in Euro/toe
+    heavy_oil_price = data['PFRO'][:, 5, 0]/(data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
     
     # Adjust transportation costs by accounting for electricity consumption at
     # the export and import terminals
     # Import terminals consume 0.003 kWh/tNH3 and export terminals consume 
     # 0.001 kWh/tNH3
-    electricity_price = data['PFRE'][:, 5, 0]/(data['PRSC'][:, 0, 0]/data['EX'][:, 0, 0])
-    # TODO: convert local variable into model variable
-    transport_costs = (data['NH3TCC'][:, :, 0] 
-                       + 0.003*electricity_price[None, :] 
-                       + 0.001*electricity_price[:, None] )
     
+    # Caluculate heavy fuel oil costs
+    # The fuel consumption estimates are per tanker
+    # We need to know what the fuel consumption is per tNH3 traded
+    # 1 tanker can hold around 54049 tNH3
+    data['NH3TRANSPORTFUELCOST'][:, :, 0] = (data['NH3TRANSPORTFUELCONSUMPTION'][:, :, 0] 
+                                             / 54049
+                                             * heavy_oil_price[:, None]
+                                             )
     
+    # ============= Transport emission factors ================================
+    data['NH3TRANSPORTEMISSIONFACTOR'][:, :, 0] = (data['NH3TRANSPORTFUELCONSUMPTION'][:, :, 0] # tHFO/tNH3
+                                                   * 3.114  # kg CO2/ kg HFO = tCO2/tHFO
+                                                   )
+    
+    # =============== Transport emission costs ================================
+    
+    # Apply carbon price to transport emission intensity
+    data['NH3TRANSPORTEMISSIONCOST'][:, :, 0] = (data['NH3TRANSPORTEMISSIONFACTOR'][:, :, 0] 
+                                                 * data['HYPR'][None, :, 0, 0]
+                                                 * data['ETSEFFECTONTRANSPORT'][:, :, 0]
+                                                 )
+    # Remove carbon penalties for intra-EU trade
+    data['NH3TRANSPORTEMISSIONCOST'][:31, :31, 0] = 0.0
+    
+    # Total transportation costs are a function of:
+        # 1. NH3 production costs
+        # 2. Electricity costs at the export terminal
+        # 3. Electricity costs at the import terminal
+        # 4. Heavy fuel oil costs due to shipping
+        # 5. Non-energy related shipping costs
+        # 6. Transport emissions costs
+        
+    data['NH3TCCout'][:, :, 0]  = (data['NH3TCC'][:, :, 0]                      # Ship costs and terminal costs
+                                   + 0.003*0.179*electricity_price[None, :]     # Export terminal electricity costs
+                                   + 0.001*0.179*electricity_price[:, None]     # Import terminal electricity costs
+                                   + data['NH3TRANSPORTFUELCOST'][:, :, 0]      # Heavy fuel oil costs 
+                                   + data['NH3SHIPPINGCOST'][:, :, 0]           # Shipping costs
+                                   + data['NH3TRANSPORTEMISSIONCOST'][:, :, 0]
+                                   )
+    
+    # Store shipping costs (excl fuel) in a interrogatable variables
+    data['NH3SHIPPINGCOSTout'][:, :, 0] = np.copy(data['NH3SHIPPINGCOST'][:, :, 0])
+    
+    # ============= Green market Bilateral trade costs ========================
     # Green market delivery costs
     data['NH3DELIVCOST'][:, :, 0] = ((time_lag['NH3LC'][:, 0, 0, None] 
                                           * (1.0 + data['NH3TRF'][:, :, 0]))
-                                     + transport_costs 
+                                     + data['NH3TCCout'][:, :, 0] 
                                      + data['NH3CBAM'][:, :, 0]
                                      )
+    # Just the bilateral trade costs w/o production
+    data['NH3BILACOST'][:, :, 0] = ((time_lag['NH3LC'][:, 0, 0, None] 
+                                          * (data['NH3TRF'][:, :, 0]))
+                                     + data['NH3TCCout'][:, :, 0] 
+                                     + data['NH3CBAM'][:, :, 0]
+                                     )    
+    
+    # ============= Grey market Bilateral trade costs ========================
     # Grey market delivery costs
     data['NH3DELIVCOST'][:, :, 1] = ((time_lag['NH3LC'][:, 1, 0, None] 
                                           * (1.0 + data['NH3TRF'][:, :, 0]))
-                                     + transport_costs 
+                                     + data['NH3TCCout'][:, :, 0]
                                      + data['NH3CBAM'][:, :, 1]
                                      )
+    
+    # Just the bilateral trade costs w/o production
+    data['NH3BILACOST'][:, :, 1] = ((time_lag['NH3LC'][:, 1, 0, None] 
+                                          * (data['NH3TRF'][:, :, 0]))
+                                     + data['NH3TCCout'][:, :, 0] 
+                                     + data['NH3CBAM'][:, :, 1]
+                                     )  
+    
+
+    
+    
     
     return data
