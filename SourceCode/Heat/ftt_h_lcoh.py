@@ -41,6 +41,11 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.ftt_core.ftt_get_levelised_costs import get_levelised_costs
+
+import time # TODO: delete after testing
+
+
 
 
 def set_carbon_tax(data, c4ti):
@@ -80,6 +85,9 @@ def get_lcoh(data, titles, carbon_costs):
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
+    
+    start = time.perf_counter()
+
     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     
@@ -88,6 +96,117 @@ def get_lcoh(data, titles, carbon_costs):
     
     # Heating device lifetimes and build time
     lt = bhtc[:, :, c4ti['5 Lifetime']]
+    # Pay-back thresholds
+    pb = data['BHTC'][:, :, c4ti['16 Payback time, mean']]
+    dpb = data['BHTC'][:, :, c4ti['17 Payback time, SD']]
+    
+    
+    # New implementation
+    # Capacity factor
+    cf = data['BHTC'][:, :, c4ti['13 Capacity factor mean']]
+    dcf = data['BHTC'][:, :, c4ti['14 Capacity factor SD']]
+    cf[cf < 0.0001] = 0.0001
+    conv_cf = 1 / (cf * 1000)
+    
+    # Conversion efficiency
+    ce = data['BHTC'][:, : , c4ti['9 Conversion efficiency']]
+    ce[ce < 0.0001] = 0.0001
+    conv_ce = 1 / ce
+    
+    # Upfront costs, policies and standard deviations
+    upfront = bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * conv_cf
+    upfront_pol = upfront * data['HTVS'][:, :, 0]
+    upfront_sd = bhtc[:, :, c4ti['2 Inv Cost SD']] * conv_cf
+    
+    # Annual costs, policies and standard deviations
+    fuel_costs = bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0] * conv_ce
+    annual = (bhtc[:, :, c4ti['3 O&M mean (EUR/kW)']] * conv_cf
+              + fuel_costs
+              )
+    annual_pol = (carbon_costs 
+                  + data['HTRT'][:, :, 0]   # Subsidy or tax on fuel
+                  - data['HEFI'][:, :, 0])  # Feed-in tariffs
+    annual_sd = np.sqrt((bhtc[:, :, c4ti['4 O&M SD']] * conv_cf)**2
+                        + (bhtc[:, :, c4ti['11 Fuel cost SD']] * fuel_costs)**2)
+    
+    # For simplicity, we have converted the capital cost and annual cost by the
+    # service provided already
+    lcoh, lcoh_pol, lcoh_sd = get_levelised_costs(
+            upfront=upfront,
+            upfront_policies=upfront_pol,
+            upfront_sd=upfront_sd,
+            annual=annual,
+            annual_policies=annual_pol,
+            annual_sd = annual_sd,
+            service_delivered=1,
+            service_sd=dcf/cf,
+            lifetimes=lt,
+            r = data['BHTC'][:, :, c4ti['8 Discount rate']])
+   
+    payback_pol = annual + annual_pol + (upfront + upfront_pol) / pb
+    payback_sd = np.sqrt(annual_sd**2 
+                   + divide(upfront_sd**2, pb**2)
+                   + divide(upfront**2, pb**4)*dpb**2)
+    
+    
+    # LCOH augmented with non-pecuniary costs
+    gamma = data['BHTC'][:, :, c4ti['12 Gamma value']]
+    lcoh_pol_gam = lcoh_pol * (1 + gamma)
+    annual_pol_gam = (annual + annual_pol) * (1 + gamma)
+    payback_pol_gam = payback_pol * (1 + gamma)
+    
+    
+    # Pass to variables that are stored outside.
+    data['HEWC'][:, :, 0] = lcoh              # The real LCOH without taxes
+    data['HETC'][:, :, 0] = lcoh_pol          # The real LCOH with taxes
+    data['HGC1'][:, :, 0] = lcoh_pol_gam      # As seen by consumer (generalised cost)
+    data['HWCD'][:, :, 0] = lcoh_sd           # Variation on the LCOH distribution
+    data['HGC2'][:, :, 0] = annual_pol_gam    # Total marginal costs
+    data['HGD2'][:, :, 0] = annual_sd         # SD of Total marginal costs
+    data['HGC3'][:, :, 0] = payback_pol_gam   # Total payback costs
+    data['HGD3'][:, :, 0] = payback_sd        # SD of Total payback costs
+    
+    
+    # TODO: delete testing
+
+    elapsed = time.perf_counter() - start
+    start2 = time.perf_counter()
+
+    lcoh_old, tlcoh, tlcohg, dlcoh, tmc, dtmc, tpb, dtpb = get_lcoh_original(data, titles, carbon_costs)
+    
+    elapsed2 = time.perf_counter() - start2
+    
+    print(f"Runtime: {elapsed2 / elapsed:.2f} as fast")
+
+    print(f'Difference between new and old:')
+    print(f'{np.average(((lcoh - lcoh_old)/lcoh_old)**2)}')
+    print(f'{np.average(((lcoh_pol - tlcoh)/tlcoh)**2)}')
+    print(f'{np.nanmean(((lcoh_pol_gam - tlcohg)/tlcohg)**2)}')
+    print(f'{np.average(((lcoh_sd - dlcoh)/dlcoh)**2)}')
+    print(f'{np.average(((annual_pol_gam - tmc)/tmc)**2)}')
+    print(f'{np.average(((annual_sd - dtmc)/dtmc)**2)}')
+    print(f'{np.average(((payback_pol_gam - tpb)/tpb)**2)}')
+    print(f'{np.average(((payback_sd - dtpb)/dtpb)**2)}')
+
+    
+
+    
+    
+    
+    
+    return data
+
+
+def get_lcoh_original(data, titles, carbon_costs):
+
+    # Old implementation
+    c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
+    
+    bhtc = data['BHTC']
+
+    # Heating device lifetimes and build time
+    lt = bhtc[:, :, c4ti['5 Lifetime']]
+    
     max_lt = int(np.max(lt))
     full_lt_mat = np.arange(max_lt)
     lt_mask = full_lt_mat <= (lt[..., None] - 1)
@@ -98,7 +217,7 @@ def get_lcoh(data, titles, carbon_costs):
     dcf = data['BHTC'][:, :, c4ti['14 Capacity factor SD'], np.newaxis]
     cf[cf < 0.0001] = 0.0001
     conv_cf = 1 / (cf * 1000)
-
+    
     # Conversion efficiency
     ce = data['BHTC'][:, : , c4ti['9 Conversion efficiency'], np.newaxis]
     ce[ce < 0.0001] = 0.0001
@@ -147,7 +266,8 @@ def get_lcoh(data, titles, carbon_costs):
     # 2 – Standard deviation (propagation of error)
     variance_terms = dit**2 + dft**2 + domt**2
     summed_variance = np.sum(variance_terms / denominator**2, axis=2)
-    variance_plus_dcf = summed_variance + (np.sum(npv_expenses_all, axis=2)/cf[:, :, 0]*dcf[:, :, 0])**2
+    # variance_plus_dcf = summed_variance + (np.sum(npv_expenses_all, axis=2)/cf[:, :, 0]*dcf[:, :, 0])**2
+    variance_plus_dcf = summed_variance + np.sum(((npv_expenses_all / cf) * dcf)**2, axis=2)
     
     # 3 – Utility
     npv_utility = np.where(lt_mask, 1, 0) / denominator
@@ -171,7 +291,7 @@ def get_lcoh(data, titles, carbon_costs):
     # Marginal costs of existing units
     tmc = ft[:, :, 0] + omt[:, :, 0] + fft[:, :, 0] - fit[:, :, 0]
     dtmc = np.sqrt(dft[:, :, 0]**2 + domt[:, :, 0]**2)
-
+    
     # Total pay-back costs of potential alternatives
     tpb = tmc + (it[:, :, 0] + st[:, :, 0]) / pb
     dtpb = np.sqrt(dft[:, :, 0]**2 + domt[:, :,  0]**2
@@ -191,5 +311,6 @@ def get_lcoh(data, titles, carbon_costs):
     data['HGD2'][:, :, 0] = dtmc       # SD of Total marginal costs
     data['HGC3'][:, :, 0] = tpb        # Total payback costs
     data['HGD3'][:, :, 0] = dtpb       # SD of Total payback costs
+    
+    return lcoh, tlcoh, tlcohg, dlcoh, tmc, dtmc, tpb, dtpb
 
-    return data
