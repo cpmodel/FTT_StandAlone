@@ -70,7 +70,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     
     
     # -------------------------
-    # Approximate variance (first-order), roughtly 5% error
+    # Approximate variance (first-order), roughly 5% error
     # -------------------------
     # Compute LCO standard deviation accounting for uncertainty in upfront cost, 
     # annual cost, and service.
