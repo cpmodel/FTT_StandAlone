@@ -43,15 +43,20 @@ def scenario_list(file_path):
 #%%
 
 
-def process_scenarios(all_scenarios, batch_size=50, config_path='settings.ini', script_path='run_file.py'):
+def process_scenarios(scens_run, batch_size=50, config_path='settings.ini', script_path='run_file.py'):
     error_scenarios = []
 
     config = configparser.ConfigParser()
     
     # Process scenarios in batches
-    for i in range(0, len(all_scenarios), batch_size):
-        batch = ["S0"] + all_scenarios[i:i + batch_size]
-        
+    for i in range(scens_run[0], scens_run[1], batch_size):
+        if (i + batch_size) < scens_run[1]:
+            batch = ["S0"] + [f"S3_{j}" for j in range(i, i + batch_size)]
+        else:  
+            batch = ["S0"] + [f"S3_{j}" for j in range(i, scens_run[1])]
+
+
+
         try:
             # Load and update the settings file with the current batch of scenarios
             config.read(config_path)
@@ -92,12 +97,10 @@ def process_scenarios(all_scenarios, batch_size=50, config_path='settings.ini', 
         print("All scenarios processed successfully.")
 #%%
 
-def main():
-    # Define all the scenarios you want to run except baseline
+def main(scens_run):
 
-    all_scenarios = [f"S3_{i}" for i in range(1, 501)]  
     # Process the scenarios with a batch size of 50
-    process_scenarios(all_scenarios)
+    process_scenarios(scens_run)
 
 
 

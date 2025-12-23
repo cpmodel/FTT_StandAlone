@@ -78,10 +78,10 @@
     "data_length": 34,
     "tech_number": 22
   },
-  "scens_run": [0, 1],
+  "scens_run": [0, 2],
   "run_compare_scenarios": false,
-  "run_ambition_vary": true,
-  "run_run_simulations": false,
+  "run_ambition_vary": false,
+  "run_run_simulations": true,
   "run_output_manipulation": false,
   "region_groups": {
     "RGN": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", "NL", "AT", "PT", "FI", "SW", "UK", "CZ", 

@@ -64,7 +64,7 @@ def main():
 
     # Run simulations with data varied between boundary scenarios
     if run_run_simulations:
-        run_simulations()
+        run_simulations(scens_run)
         print("Simulations completed")
 
     # Manipulate the output data into csv files for emulation
