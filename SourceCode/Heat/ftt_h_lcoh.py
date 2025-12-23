@@ -139,7 +139,7 @@ def get_lcoh(data, titles, carbon_costs):
             annual_policies=annual_pol,
             annual_sd = annual_sd,
             service_delivered=1,
-            service_sd=0.0,
+            service_sd=dcf/cf,
             lifetimes=lt,
             r = data['BHTC'][:, :, c4ti['8 Discount rate']])
    
