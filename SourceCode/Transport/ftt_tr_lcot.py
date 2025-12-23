@@ -23,22 +23,124 @@ ns = number of seats
         
 """
 import numpy as np
+from SourceCode.ftt_core.ftt_get_levelised_costs import get_levelised_costs
 
+import time
 
 # %% lcot
 # -----------------------------------------------------------------------------
 # --------------------------- LCOT function -----------------------------------
 # -----------------------------------------------------------------------------
-@profile
 def get_lcot(data, titles, year):
     """
     Calculate levelized costs.
 
-    The function calculates the levelised cost of transport in 2012$/p-km per
+    The function calculates the levelised cost of transport in $/p-km per
     vehicle type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
+    
+    start = time.perf_counter()
+    
+    # Categories for the cost matrix (BTTC)
+    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
+    bttc = data['BTTC']
 
+    # Taxable categories for fuel tax, CNG, EVs and H2 exempt
+    taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI']), 1])
+    taxable_fuels[:, 12:15] = 0   # CNG
+    taxable_fuels[:, 18:21] = 0   # EVs
+    taxable_fuels[:, 24:27] = 0   # Hydrogen
+    
+    # Taxable categories for carbon tax: only EVs and H2 exempt
+    tf_carbon = np.ones([len(titles['VTTI']), 1])
+    tf_carbon[18:21] = 0   # EVs
+    tf_carbon[24:27] = 0   # Hydrogen
+    
+    # Vehicle and usage parameters
+    lt = bttc[:, :, c3ti['8 lifetime']]
+    cf = bttc[:, :, c3ti['12 Cap_F (Mpkm/kseats-y)']]
+    ff = bttc[:, :, c3ti['11 occupancy rate p/sea']]
+    ns = bttc[:, :, c3ti['15 Seats/Veh']]
+    en = bttc[:, :, c3ti['9 energy use (MJ/km)']]
+    
+    conv_full = 1 / ns / ff / cf / 1000
+    conv_pkm = 1 / ns / ff
+    
+    # Upfront cost (base, policy, standard deviation)
+    upfront = (bttc[:, :, c3ti['1 Prices cars (USD/veh)']] * conv_full)
+    upfront_pol = (
+               (upfront * (1 + data["Base registration rate"][:, :, 0])      # Tax as share upfront
+               + data['TTVT'][:, :, 0]                                     # Purchase tax
+               + data['RTCO'][:, 0] * bttc[:, :, c3ti['14 CO2Emissions']] ) # CO2-dependent tax
+               * conv_full )
+    upfront_sd = bttc[:, :, c3ti['2 Std of price']] * conv_full
+    
+    # Annual variable cost (base, policy, standard deviation)
+    annual = ( bttc[:, :, c3ti['3 fuel cost (USD/km)']]             # Fuel cost
+              + bttc[:, :, c3ti['5 O&M costs (USD/km)']]) * conv_pkm        
+    # RTFT must be converted from $/litre to $/MJ (assuming 35 MJ/l)
+    annual_pol = (data['RTFT'][:, :, 0] / 35 * en / ns / ff * taxable_fuels[:, :, 0]   # Fuel tax
+                + data['TTRT'][:, :, 0] * conv_full)                                   # Yearly road tax
+    annual_sd = np.sqrt((bttc[:, :, c3ti['6 std O&M']])**2
+                 + (bttc[:, :, c3ti['4 std fuel cost']])**2) * conv_pkm
+    
+    # For simplicity, we have converted the capital cost and annual cost by the
+    # service provided already
+    lcot, lcot_pol, lcot_sd = get_levelised_costs(
+            upfront=upfront,
+            upfront_policies=upfront_pol,
+            upfront_sd=upfront_sd,
+            annual=annual,
+            annual_policies=annual_pol,
+            annual_sd = annual_sd,
+            service_delivered=1,
+            service_sd=0.0,
+            lifetimes=lt,
+            r = bttc[:, :, c3ti['7 Discount rate']])
+    
+    # Generalised cost and lognormal transformation
+    gamma = bttc[:, :, c3ti['13 Gamma']]
+    lcot_pol_gam = lcot_pol * (1 + gamma)
+    log_lcot_pol = np.log(lcot_pol**2 / np.sqrt(lcot_sd**2 + lcot_pol**2)) + gamma
+    log_lcot_pol_sd = np.sqrt(np.log(1.0 + lcot_sd**2 / lcot_pol**2))
+    
+    # Store outputs
+    data['TEWC'][:, :, 0] = lcot             # The real bare LCOT without taxes
+    data['TETC'][:, :, 0] = lcot_pol         # The real bare LCOT with taxes
+    data['TEGC'][:, :, 0] = lcot_pol_gam     # As seen by consumer (generalised cost)
+    data['TELC'][:, :, 0] = log_lcot_pol     # In lognormal space
+    data['TECD'][:, :, 0] = lcot_sd          # Variation on the LCOT distribution
+    data['TLCD'][:, :, 0] = log_lcot_pol_sd  # Log variation on the LCOT distribution
+    
+    
+    # TODO: delete testing
+
+    
+    elapsed = time.perf_counter() - start
+    start2 = time.perf_counter()
+
+    lcot_old, tlcot, tlcotg, logtlcot, dlcot, dlogtlcot = get_lcot_original(data, titles, year)
+    
+    elapsed2 = time.perf_counter() - start2
+    
+    print(f"Runtime: {elapsed2 / elapsed:.2f} as fast")
+
+    print(f'Difference between new and old:')
+    print(f'{np.average(((lcot - lcot_old)/lcot_old)**2)}')
+    print(f'{np.average(((lcot_pol - tlcot)/tlcot)**2)}')
+    print(f'{np.nanmean(((lcot_pol_gam - tlcotg)/tlcotg)**2)}')
+    print(f'{np.average(((log_lcot_pol - logtlcot)/logtlcot)**2)}')
+    print(f'{np.average(((lcot_sd - dlcot)/dlcot)**2)}')
+    print(f'{np.average(((log_lcot_pol_sd - dlogtlcot)/dlogtlcot)**2)}')
+
+    
+    return data
+
+def get_lcot_original(data, titles, year):
+    
+    # Old implementation
+    
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
@@ -54,9 +156,11 @@ def get_lcot(data, titles, year):
     tf_carbon[24:27] = 0   # Hydrogen
     
     bttc = data['BTTC']
-    
+     
     # Lifetimes and build years
     lt = bttc[:, :, c3ti['8 lifetime']]
+    
+    # Masks for lcoe calculations
     max_lt = int(np.max(lt))
     full_lt_mat = np.arange(max_lt)
     lt_mask = full_lt_mat <= (lt[..., None] - 1)        # Life time mask
@@ -76,21 +180,6 @@ def get_lcot(data, titles, year):
     
     conv_full = 1 / ns / ff / cf / 1000
     conv_pkm = 1 / ns / ff
-    
-    
-    # upfront = (bttc[:, :, c3ti['1 Prices cars (USD/veh)']] * conv_full)
-    
-    # upfront_pol = 
-    #            * (1 + data["Base registration rate"][:, :, 0])
-    #            + (data['TTVT'][:, :, 0] 
-    #            + data['RTCO'][:, 0] * bttc[:, :, c3ti['14 CO2Emissions']] )
-    #            * conv_full[:, :, 0] )
-    
-    # upfront_sd = bttc[:, :, c3ti['2 Std of price']] * conv_full
-    
-    # variable = (bttc[:, :, c3ti['3 fuel cost (USD/km)']] * conv_pkm
-    #             + bttc[:, :, c3ti['5 O&M costs (USD/km)']] * 
-    
     
     def get_cost_elem(base_cost, conversion_factor, mask):
         '''Mask costs during build or life time, and apply
@@ -120,11 +209,6 @@ def get_lcot(data, titles, year):
     dr = bttc[:, :, c3ti['7 Discount rate'], np.newaxis]
     denominator = (1+dr)**full_lt_mat
     
-    # A faster way to implement this is with cumprod, but less readable. Do we want that?
-    # Need to check if this is faster
-    # disc_factors = 1 / (1 + dr[..., 0])
-    # denominator = np.cumprod(np.repeat(disc_factors[:, :, None], max_lt, axis=2), axis=2)
-    
     # 1 – Expenses
     # 1.1 – Without policy costs
     npv_expenses_bare = (it + ft + omt) / denominator
@@ -142,7 +226,9 @@ def get_lcot(data, titles, year):
     variance_terms = dit**2 + dft**2 + domt**2
     summed_variance = np.sum(variance_terms/(denominator**2), axis=2)
     # Assume a 10% variation in load factors
-    variance_plus_dcf = summed_variance + (np.sum(npv_expenses_policy, axis=2) * 0.1)**2
+    # variance_plus_dcf = summed_variance + (np.sum(npv_expenses_policy, axis=2) * 0.1)**2
+    variance_plus_dcf = summed_variance + (np.sum((npv_expenses_policy * 0.1)**2, axis=2) )
+
     dlcot = np.sqrt(variance_plus_dcf) / utility_sum
 
     # 4 – Levelised cost variants in $/pkm
@@ -157,13 +243,6 @@ def get_lcot(data, titles, year):
     logtlcot = ( np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot)) 
                 + bttc[:, :, c3ti['13 Gamma']])
     dlogtlcot = np.sqrt(np.log(1.0 + dlcot * dlcot / (tlcot * tlcot)))
-    
-    # 6 - Pass to variables that are stored outside.
-    data['TEWC'][:, :, 0] = lcot           # The real bare LCOT without taxes
-    data['TETC'][:, :, 0] = tlcot          # The real bare LCOT with taxes
-    data['TEGC'][:, :, 0] = tlcotg         # As seen by consumer (generalised cost)
-    data['TELC'][:, :, 0] = logtlcot       # In lognormal space
-    data['TECD'][:, :, 0] = dlcot          # Variation on the LCOT distribution
-    data['TLCD'][:, :, 0] = dlogtlcot      # Log variation on the LCOT distribution
 
-    return data
+
+    return lcot, tlcot, tlcotg, logtlcot, dlcot, dlogtlcot
