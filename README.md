@@ -17,7 +17,23 @@ The FTT family of models are based on [evolutionary economics](https://en.wikipe
 This repository contains the public standalone version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
 
 ## Installation
-1. Run the install_ce_conda_3.9_external_users.cmd script in _Python_installation to install the prerequisite packages. On top of Anaconda's standard packages, bottle and paste are required. You can install these two packages with pip. Paste is being deprecated. If you cannot install paste, you can remove calls to paste in the Backend_FTT.py.
+
+Before you start, make sure that git is installed on your system, for instance by [installing GitHub Desktop](https://docs.github.com/en/desktop/installing-and-authenticating-to-github-desktop/installing-github-desktop)
+
+1. Open your terminal at a location where you want to install ftt. Type the following in your terminal to download the package from GitHub:
+
+   ```bash
+   git clone https://github.com/cpmodel/FTT_StandAlone.git
+   ```
+2. The python package requirements are curated in the `environment.yml` file.
+   Change directory to the repo, and then install the environment using:
+
+   ```bash
+   conda env create -f environment.yml
+   ```
+3. On Windows, you can start the frontend with FTT_Stand_Alone_Launcher.cmd. If Python is not yet added to your path, [ensure you add this first](https://realpython.com/add-python-to-path/).
+
+Alternatively, you can download ftt by clicking the green `Code` button in the top right, and selecting `Open with Github Desktop` if you have this installed. You can import the environment in Anaconda Navigator.
 
 ## Running the model
 1. You can run the front-end of the model in your browser by double clicking FTT_Stand_Alone_Launcher.cmd. Select the models to run and scenarios and explore the output.
