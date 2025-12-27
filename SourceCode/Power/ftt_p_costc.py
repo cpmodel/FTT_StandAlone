@@ -248,7 +248,7 @@ def marginal_function(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, MRED, MRES, dt)
 # -----------------------------------------------------------------------------
 
 #@njit(fastmath=True) ## Doesn't work!
-def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES, rti, t2ti, erti, year, dt):
+def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES, rti, t2ti, erti, year, dt, MWLO):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
@@ -411,7 +411,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     
                     k = 5
                     share_TP_used = X0 / (BCSC[r, tech_to_resource[j], 2] + 0.000001)
-                    starting_CF = 1 / BCSC[r, tech_to_resource[j], 4]
+                    # starting_CF = 1 / BCSC[r, tech_to_resource[j], 4]
+                    starting_CF = MWLO[r, j, 0]
                     try:
                         BCET[r, j, 10] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
                         # Integrate to find the average capacity factor

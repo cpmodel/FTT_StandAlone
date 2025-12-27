@@ -171,7 +171,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MWLO']
                 )
 
         data['BCET'] = bcet
@@ -475,7 +475,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0, data['MWLO']
                 )
 
             data['BCET'] = bcet
@@ -640,9 +640,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                      num_techs=2)             
             
             data['household_shares'][:, :, 0] = data_dt['household_shares'][:, :, 0] + change_in_shares
-            # JUST FOR THE SAKE OF TESTING
-            # data['household_shares'][36, 0] = data_dt['household_shares'][36, 0] + 0.01
-            # data['household_shares'][36, 1] = data_dt['household_shares'][36, 1] - 0.01
                                                                 
             # Wrong - MEWS is market shares capacity - total value has to sum 1
             # data['MEWS'][:, -1] = data['household_shares'][:, 0]
@@ -923,7 +920,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt
+                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt, data['MWLO']
                 )
 
             data['BCET'] = bcet
