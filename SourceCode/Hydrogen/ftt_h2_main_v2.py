@@ -118,7 +118,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     
     # Estimate substitution frequencies
     data['HYWA'] = sub_freq(data['BCHY'][:, :, c7ti['Lifetime']],
-                            data['BCHY'][:, :, c7ti['Buildtime']],
+                            data['BCHY'][:, :, c7ti['Buildtime']]+1,
                             lifetime_adjust,
                             buildtime_adjust,
                             np.ones(len(titles['RTI']))*50,
@@ -149,8 +149,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
     # [kWh/kg H2] * [gCO2/kWh] * [kgCO2/gCO2]  = kgCO2/kgH2
     data['HYEFINDIRECT'][:, :, 0] = data['BCHY'][:,:, c7ti['Electricity demand, mean, kWh/kg H2']] * data['GRIDEMISFACTOR'][:, :, 0] * 1e-3
     # Indirect emissions for ammonia production
-    # [GJ/tNH3] * [kgNH3/tNH3] * [kWh/GJ] * [gCO2/kWh] * [kgCO2/gCO2] = kgCO2/tNH3
-    data['NH3EFINDIRECT'][:, 0, 0] = 2.2 * 1e-3 * 277.78 * data['GRIDEMISFACTOR'][:, 0, 0] * 1e-3
+    # [GJ/tNH3] * [kWh/GJ] * [gCO2/kWh] * [tCO2/gCO2] = tCO2/tNH3 (= kgCO2/kgNH3)
+    data['NH3EFINDIRECT'][:, 0, 0] = 2.2 * 277.78 * data['GRIDEMISFACTOR'][:, 0, 0] * 1e-6
     
     
     # H2 content in NH3 by mass

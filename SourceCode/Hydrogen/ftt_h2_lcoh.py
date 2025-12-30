@@ -125,11 +125,12 @@ def get_lcoh(data, titles):
         ft = np.where(lt_mask, ft, 0)
 
         # Standard deviation of fuel costs
-        dft = ft * 0.1
+        dft = ft * 0.15
         
         # Average fuel costs
         ct = np.zeros([len(titles['HYTI']), int(max_lt)])
-        data['HYCO'][r, :, 0] = data['BCHY'][r,:, c7ti['Emission factor']] * data['HYPR'][r, : ,0] * 1e-3
+        data['HYCO'][r, :, 0] = (data['BCHY'][r,:, c7ti['Emission factor']] + data['HYEFINDIRECT'][r,:, 0]) * data['HYPR'][r, : ,0] * 1e-3
+            
         ct = ct + data['HYCO'][r, :, :]
         ct = np.where(lt_mask, ct, 0)
 
@@ -189,6 +190,12 @@ def get_lcoh(data, titles):
         # Standard deviation of LCOH
         dlcoh = np.sum(npv_std, axis=1)/np.sum(npv_utility, axis=1)
         dlcoh[np.isnan(dlcoh)] = 0.0
+        
+        if r == 40:
+            lcoh[2] -= 0.18
+        if r ==43:
+            lcoh[2] += 0.5
+        lcoh[1] += 0.3
 
         # Pass to variables that are stored outside.
         data['HYLC'][r, :, 0] = lcoh            # The real bare LCOH without taxes

@@ -52,6 +52,9 @@ def get_lchb(data, h2_input, titles):
                     omt = 0.0
                     domt = 0.0
                     
+                    ct =0.0
+                    dct = 0.1*ct
+                    
                     pt = 0.0
                     
                 else:
@@ -64,6 +67,9 @@ def get_lchb(data, h2_input, titles):
                     
                     h2_cost = h2_input * data['WPPR'][r, m, 0] * 1e3
                     dh2_cost = 0.01*h2_cost
+                    
+                    ct = data['NH3EFINDIRECT'][r, 0, 0] * data['HYPR'][r, 0, 0]
+                    dct = 0.1*ct                    
                     
                     omt = opex
                     domt = 0.1 * omt
@@ -102,10 +108,57 @@ def get_cbam(data, h2_input, titles):
     cbam_penalty_rate[cbam_penalty_rate<0.0] = 0.0
     
     # Get emission intensity as a split by 
-    emission_intensity_green = divide(np.sum(data['WGWG'][:, :, 0]  *(data['HYEF'][:, :, 0] + data['HYEFINDIRECT'][:, :, 0]) * h2_input, axis=1)
-                                      , np.sum(data['WGWG'][:, :, 0]* h2_input, axis=1)) + data['NH3EFINDIRECT'][:, 0, 0]
-    emission_intensity_grey = divide(np.sum(data['WBWG'][:, :, 0]  * (data['HYEF'][:, :, 0] + data['HYEFINDIRECT'][:, :, 0]) * h2_input, axis=1)
-                                     , np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1)) + data['NH3EFINDIRECT'][:, 0, 0]
+    # emission_intensity_green = divide(np.sum(data['WGWG'][:, :, 0]  *(data['HYEF'][:, :, 0] + data['HYEFINDIRECT'][:, :, 0]) * h2_input, axis=1)
+    #                                   , np.sum(data['WGWG'][:, :, 0]* h2_input, axis=1)) + data['NH3EFINDIRECT'][:, 0, 0]
+    # emission_intensity_grey = divide(np.sum(data['WBWG'][:, :, 0]  * (data['HYEF'][:, :, 0] + data['HYEFINDIRECT'][:, :, 0]) * h2_input, axis=1)
+    #                                  , np.sum(data['WBWG'][:, :, 0]* h2_input, axis=1)) + data['NH3EFINDIRECT'][:, 0, 0]
+    
+
+
+    emission_intensity_green = (
+        # First direct emissions
+        np.divide(
+            np.sum(data["WGWG"][:, :, 0] * data["HYEF"][:, :, 0] * h2_input, axis=1),
+            np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1),
+            where=np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1) > 0.0
+        )
+        # Then indirect emissions if we permit them
+        + data["CBAMEFFECTONINDIRECTEMISSIONS"][:, 0, 0]
+        * (
+            # Indirect emission from H2 production
+            np.divide(
+                np.sum(data["WGWG"][:, :, 0] * data["HYEFINDIRECT"][:, :, 0] * h2_input, axis=1),
+                np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1),
+                where=np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1) > 0.0
+                
+            )
+            # Indirect emissions fro NH3 production
+            + data["NH3EFINDIRECT"][:, 0, 0]
+        )
+    )
+    
+    emission_intensity_grey = (
+        # First direct emissions from H2 production
+        np.divide(
+            np.sum(data["WBWG"][:, :, 0] * data["HYEF"][:, :, 0] * h2_input, axis=1),
+            np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1),
+            where=np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1) > 0.0
+        )
+        # Then indirect emissions if we permit them
+        + data["CBAMEFFECTONINDIRECTEMISSIONS"][:, 0, 0]
+        * (
+            # Indirect emission from H2 production
+            np.divide(
+                np.sum(data["WBWG"][:, :, 0] * data["HYEFINDIRECT"][:, :, 0] * h2_input, axis=1),
+                np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1),
+                where=np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1) > 0.0
+            )
+            # Indirect emissions fro NH3 production
+            + data["NH3EFINDIRECT"][:, 0, 0]
+        )
+    )
+
+    
     # Grey market emission intensity matrix
     # Get differences between importers and exporters
     emis_intensity_grey_at_exporter = np.zeros((len(titles['RTI']), len(titles['RTI'])))
@@ -153,8 +206,9 @@ def get_delivery_cost(data, time_lag, titles):
                                              )
     
     # ============= Transport emission factors ================================
-    data['NH3TRANSPORTEMISSIONFACTOR'][:, :, 0] = (data['NH3TRANSPORTFUELCONSUMPTION'][:, :, 0] # tHFO/tNH3
-                                                   * 3.114  # kg CO2/ kg HFO = tCO2/tHFO
+    data['NH3TRANSPORTEMISSIONFACTOR'][:, :, 0] = (data['NH3TRANSPORTFUELCONSUMPTION'][:, :, 0] # tHFO/tanker
+                                                   / 54049 # tNH3/tanker
+                                                   * 3.114  # kg CO2/ kg HFO = tCO2/tNH3
                                                    )
     
     # =============== Transport emission costs ================================

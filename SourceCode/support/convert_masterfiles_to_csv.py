@@ -541,12 +541,12 @@ if __name__ == '__main__':
     # Scenario 1 = 2-degree scenario (default)
     # Scenario 2 = 1.5-degree scenario (default)
 
-    models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023'],
-              'FTT-P': [[0], 'FTT-P-24x71_2022'],
-              'CLEAFS': [[0], 'CLEAFS-2x71_2024'],
-              'FTT-H2': [[0], 'FTT-H2-12x71_2024']}
-            #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
-            #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
+    # models = {'FTT-Tr': [[0], 'FTT-Tr_31x71_2023'],
+    #           'FTT-P': [[0], 'FTT-P-24x71_2022'],
+    #           'CLEAFS': [[0], 'CLEAFS-2x71_2024'],
+    #           'FTT-H2': [[0], 'FTT-H2-12x71_2024']}
+    #         #  'FTT-H': [[0], 'FTT-H-13x70_2021'],
+    #         #  'FTT-S': [[0], 'FTT-S-26x70_2021']}
 
     # models = {'FTT-IH-CHI': [[0], 'FTT-IH-CHI-13x70_2022'],
     #           'FTT-IH-FBT': [[0], 'FTT-IH-FBT-13x70_2022'],

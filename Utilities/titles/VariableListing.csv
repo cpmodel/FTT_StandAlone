@@ -531,7 +531,8 @@ NH3TRANSPORTEMISSIONFACTOR,Emissions due to NH3 transport between country pairs,
 GRIDEMISFACTOR,Grid emissions factors (from FTT:Power),gCO2/kWh,RTI,NA,NA,TIME,FTT-H2,,,2010,Exogenous input,,Y,Input
 VRELOADFACTOR,VRE load factor of off-grid electrolysis option,%,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,
 NH3SHIPPINGCOSTout,"Non-fuel costs of shipping (CAPEX, OPEX, and boil-off)",Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,Input
-HYEFINDIRECT,Indirect emission factor for hydrogen production,kg CO2 / kg H2,RTI,HYTI,NA,TIME,FTT-H3,,,2023,,,Y,
-NH3EFINDIRECT,Indirect emission factor for ammonia production,kg CO2 / kg H2,RTI,NA,NA,TIME,FTT-H4,,,2023,,,Y,
+HYEFINDIRECT,Indirect emission factor for hydrogen production,kg CO2 / kg H2,RTI,HYTI,NA,TIME,FTT-H2,,,2023,,,Y,
+NH3EFINDIRECT,Indirect emission factor for ammonia production,kg CO2 / kg NH3,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,
 NH3TRANSPORTEMISSIONCOST,Emission cost penalty to NH3 transport between country pairs,Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
-ETSEFFECTONTRANSPORT,Switch to let the model know whether CBAM is enabled.,rate,RTI,NA,NA,TIME,FTT-H2,,,2023,,,Y,
+ETSEFFECTONTRANSPORT,Switch to let the model know whether CBAM is enabled.,rate,RTI,NA,NA,TIME,FTT-H2,,,2001,,,Y,
+CBAMEFFECTONINDIRECTEMISSIONS,Switch to let the model know whether CBAM is enabled.,rate,RTI,NA,NA,TIME,FTT-H2,,,2001,,,Y,
