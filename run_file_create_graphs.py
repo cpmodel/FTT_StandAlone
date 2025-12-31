@@ -468,24 +468,24 @@ for scen_name, scen in scen_main_map.items():
             volumes = output_all[scen]['NH3SMLVL'][:, :, 0, y]
             prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)
             var_conv[scen][var]['Mandated'][year] = pd.DataFrame(prices_agg,
-                                                              index=region_mapping.keys(),
-                                                              columns=region_mapping.keys())
+                                                              index=region_mapping_wo_glo.keys(),
+                                                              columns=region_mapping_wo_glo.keys())
             
             # Default market
             prices = bila_cost_default_conv[:, :, y]
             volumes = output_all[scen]['NH3SMLVL'][:, :, 1, y]
             prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)            
             var_conv[scen][var]['Default'][year] = pd.DataFrame(prices_agg,
-                                                              index=region_mapping.keys(),
-                                                              columns=region_mapping.keys())
+                                                              index=region_mapping_wo_glo.keys(),
+                                                              columns=region_mapping_wo_glo.keys())
            
             # Total market
             prices = bila_cost_total_conv[:, :, y]
             volumes = output_all[scen]['NH3SMLVL'][:, :, :, y].sum(axis=2)
             prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)
             var_conv[scen][var]['Total'][year] = pd.DataFrame(prices_agg,
-                                                              index=region_mapping.keys(),
-                                                              columns=region_mapping.keys())
+                                                              index=region_mapping_wo_glo.keys(),
+                                                              columns=region_mapping_wo_glo.keys())
         
         
         # if var != 'NH3TCCout':
@@ -622,6 +622,7 @@ for scen_name, scen in scen_main_map.items():
             
             # Fil NaNs with unweighted averages
             cost_volumes_reg_tech = cost_volumes_reg_tech.fillna(unweighted_average)
+            cost_volumes_reg_tech[np.isclose(cost_volumes_reg_tech, 0.0)] = unweighted_average
             
             var_conv[scen][var][reg_agg] = copy.deepcopy(cost_volumes_reg_tech)
             
@@ -1199,7 +1200,7 @@ fig, axes = plt.subplots(nrows=len(reg_aggs_wo_glo),
                          ncols=len(scen_main_map.keys()),
                          figsize=figsize,
                          sharex=True,
-                         sharey=True)
+                         sharey='row')
 
 for scen_no, scen in enumerate(scen_main_map.keys()):
     
@@ -1219,7 +1220,7 @@ for scen_no, scen in enumerate(scen_main_map.keys()):
                                   color=tech_col_map[tech],
                                   label=tech)
             
-        axes[r, scen_no].set_ylim(0, 20)
+        # axes[r, scen_no].set_ylim(0, 20)
         axes[r, scen_no].set_xlim(2023, 2050)
         
 # Legend
