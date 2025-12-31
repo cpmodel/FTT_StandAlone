@@ -536,3 +536,4 @@ NH3EFINDIRECT,Indirect emission factor for ammonia production,kg CO2 / kg NH3,RT
 NH3TRANSPORTEMISSIONCOST,Emission cost penalty to NH3 transport between country pairs,Euro per tNH3 traded,RTI,RTI,NA,TIME,FTT-H2,,,2023,,,Y,
 ETSEFFECTONTRANSPORT,Switch to let the model know whether CBAM is enabled.,rate,RTI,NA,NA,TIME,FTT-H2,,,2001,,,Y,
 CBAMEFFECTONINDIRECTEMISSIONS,Switch to let the model know whether CBAM is enabled.,rate,RTI,NA,NA,TIME,FTT-H2,,,2001,,,Y,
+NH3LCexclH2,NH3 levelised cost of Haber-Bosch process w/o H2 costs,Euro per tNH3,RTI,TFTI,NA,TIME,FTT-H2,,,2023,,,Y,

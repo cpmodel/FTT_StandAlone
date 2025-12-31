@@ -26,6 +26,8 @@ from SourceCode.model_class import ModelRun
 import numpy as np
 import pandas as pd
 import copy
+import pickle
+from pathlib import Path
 
 # Instantiate the run
 model = ModelRun()
@@ -54,7 +56,12 @@ model.run()
 # Output of the model
 output_all = model.output
 
-#
+# %%
+
+with open(Path('.') / 'Output' / 'Results.pickle', 'rb') as f:
+    output_all = pickle.load(f)
+# output_all2 = pickle.load("Output\Results.pickle")
+
 
 # %% Graph init
 import matplotlib.pyplot as plt
@@ -73,6 +80,10 @@ pylab.rcParams.update(params)
 SAVE_GRAPHS = False
 FORMAT = 'svg' # png, jpeg
 VERSION = 1
+
+# %% Function copied from Co-pilot:
+    
+    
 
 
 # %% Setup converters and colour maps
@@ -110,7 +121,7 @@ region_mapping = {'Global' :                    list(region_titles),
 countries_included = [reg for regagg, reglist in region_mapping.items() for reg in reglist if regagg != 'Global']
 missing_countries_idx = [region_titles.index(reg) for reg in region_titles if reg not in countries_included]
 region_mapping['RoW'] = [region_titles[idx] for idx in missing_countries_idx]
-# region_mapping['Global'] = list(region_titles)
+region_mapping_wo_glo = {reg_agg: reg for reg_agg, reg in region_mapping.items() if reg_agg != 'Global'}
 
 
 region_col_map = {'Global' :                    'lime',
@@ -121,7 +132,7 @@ region_col_map = {'Global' :                    'lime',
                   'Russia':                     'darkgreen',
                   'Indonesia':                  'purple',
                   'Saudi Arabia':               'saddlebrown',
-                  'MENA':                       'sienna',
+                  'MENA':                       'salmon',
                   # 'Brazil':                     'teal',
                   'LATAM':                      'cadetblue',
                   'EU + UK':                    'crimson',
@@ -195,6 +206,90 @@ scen_pes_map = {'Baseline (pessimistic sensitivity)':                'S8',
 # HYLC
 
 # NH3LC
+
+# %% Functions to assist the calculation of price averages based on volumes
+
+# --- Your aggregate -> original dict ---
+agg_to_orig = region_mapping_wo_glo
+
+# --- Your original axis order (exporters/importers) ---
+original_order = region_titles
+
+# --- Helpers to build mappings and membership matrix ---
+def make_region_mapping(agg_to_orig: dict, original_order: list):
+    """
+    Convert {aggregate: [orig codes]} and a fixed original ordering into:
+      - map_labels: length-N array of aggregate labels aligned to original_order
+      - map_ids:    length-N integer codes 0..G-1 aligned to original_order
+      - groups:     array of aggregate labels in the order used for map_ids
+    Raises if any original code is missing or double-assigned.
+    """
+    # Invert dict
+    orig_to_agg = {}
+    for agg, codes in agg_to_orig.items():
+        for c in codes:
+            if c in orig_to_agg and orig_to_agg[c] != agg:
+                raise ValueError(f"Code {c} mapped to two aggregates: {orig_to_agg[c]} and {agg}")
+            orig_to_agg[c] = agg
+
+    # Build label map in the provided order; check coverage
+    map_labels = []
+    missing = []
+    for code in original_order:
+        agg = orig_to_agg.get(code)
+        if agg is None:
+            missing.append(code)
+            map_labels.append(None)
+        else:
+            map_labels.append(agg)
+    if missing:
+        raise ValueError(f"Missing codes in agg_to_orig: {missing}")
+
+    map_labels = np.array(map_labels, dtype=object)
+    groups, inv = np.unique(map_labels, return_inverse=True)  # sorted label order
+    map_ids = inv.astype(int)
+    return map_labels, map_ids, groups
+
+def membership_matrix_from_ids(map_ids: np.ndarray):
+    """Create one-hot membership matrix G (N x G) from integer codes 0..G-1."""
+    n_orig = map_ids.shape[0]
+    n_groups = int(map_ids.max()) + 1
+    G = np.zeros((n_orig, n_groups), dtype=float)
+    G[np.arange(n_orig), map_ids] = 1.0
+    return G
+
+# --- Build exporter/importer mappings (same order on both axes) ---
+map_exp_labels, map_exp_ids, groups_exp = make_region_mapping(agg_to_orig, list(original_order))
+map_imp_labels, map_imp_ids, groups_imp = map_exp_labels, map_exp_ids, groups_exp  # same order on both axes
+
+Gexp = membership_matrix_from_ids(map_exp_ids)  # shape (71, 12)
+Gimp = membership_matrix_from_ids(map_imp_ids)  # shape (71, 12)
+
+# --- Example aggregation for a single market/year slice ---
+# prices: (71, 71, n_markets, n_years)
+# volumes: (71, 71, n_markets, n_years)
+def aggregate_block_unit_values(P2: np.ndarray, Q2: np.ndarray):
+    """
+    Given 2D price and volume matrices (71x71), return:
+    - P_agg: (12x12) unit-value prices  = sum(P*Q)/sum(Q) per block
+    - V_agg: (12x12) summed values      = sum(P*Q) per block
+    - Q_agg: (12x12) summed quantities  = sum(Q) per block
+    Missing prices are dropped from both numerator and denominator.
+    """
+    P2 = P2.astype(float)
+    Q2 = np.nan_to_num(Q2.astype(float), nan=0.0, posinf=0.0, neginf=0.0)
+    # Drop observations with missing/invalid prices from weights
+    mask = np.isfinite(P2)
+    Q_eff = np.where(mask, Q2, 0.0)
+    V = np.where(mask, P2 * Q_eff, 0.0)
+
+    V_agg = Gexp.T @ V @ Gimp
+    Q_agg = Gexp.T @ Q_eff @ Gimp
+
+    P_agg = np.full_like(V_agg, np.nan)
+    np.divide(V_agg, Q_agg, out=P_agg, where=Q_agg > 0)
+    return P_agg, V_agg, Q_agg
+
 
 # %% Convert variables
 
@@ -281,23 +376,28 @@ for scen_name, scen in scen_main_map.items():
             else:
 
                 var_conv[scen][var][reg_agg] = pd.DataFrame(tech_conv.values @ (output_all[scen][var][indices, :, 0, :]
-                                                                                * (prsc_2024[indices, None, None]/ex_2024[indices, None, None]) 
+                                                                                * 1.2 
                                                                                 * 1.18).sum(axis=0),
                                                             index=tech_mapping.keys(),
                                                             columns=tl)
             
-    for var in ['NH3LC', 'WPPR']:
+    for var in ['NH3LC',  'WPPR', 'NH3LCexclH2']:
         
         var_conv[scen][var] = {}
         
         # Mandated
-        price_mandated = output_all[scen][var][:, 0, 0, :] * (prsc_2024[:, None]/ex_2024[:, None]) * 1.18
+        price_mandated = output_all[scen][var][:, 0, 0, :] * 1.2 * 1.18
         
         # Default
-        price_default = output_all[scen][var][:, 1, 0, :] * (prsc_2024[:, None]/ex_2024[:, None]) * 1.18
+        price_default = output_all[scen][var][:, 1, 0, :] * 1.2 * 1.18
         
         # Total
-        mandated_share = h2_prod_green/h2_prod_total
+        mandated_share = np.divide(h2_prod_green,
+                                   h2_prod_total,
+                                   where=h2_prod_total > 0.0,
+                                  )
+        
+        # h2_prod_green/h2_prod_total
         mandated_share[np.isnan(mandated_share)] = 0.0
         price_average = mandated_share * price_mandated + (1-mandated_share) * price_default
         
@@ -335,72 +435,154 @@ for scen_name, scen in scen_main_map.items():
         var_conv[scen][var]['Mandated'] = {}
         var_conv[scen][var]['Total'] = {}
         
-        if var != 'NH3TCCout':
-            bila_cost_mandated_conv = output_all[scen][var][:, :, 0, :] * (prsc_2024[:, None, None]/ex_2024[:, None, None]) * 1.18
-            bila_cost_default_conv = output_all[scen][var][:, :, 1, :] * (prsc_2024[:, None, None]/ex_2024[:, None, None]) * 1.18
         
-            # Cost * volume
-            cost_volume_mandated = bila_cost_mandated_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
-            cost_volume_default = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]
-            cost_volume_total = cost_volume_mandated * cost_volume_default
+        # Convert prices to 2024 USD
+        if var != 'NH3TCCout':
+            
+            # Individual markets
+            bila_cost_mandated_conv = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
+            bila_cost_default_conv = output_all[scen][var][:, :, 1, :] *  1.2 * 1.18
+            
+            # Combined
+            numer = (bila_cost_mandated_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
+                     + bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :])
+            denom = output_all[scen]['NH3SMLVL'][:, :, :, :].sum(axis=2)
+            bila_cost_total_conv = np.divide(numer, denom, where=denom>0.0)
+            
+            # bila_cost_total_conv = np.divide((bila_cost_mandated_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
+            #                                   + bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]),
+            #                                  output_all[scen]['NH3SMLVL'][:, :, :, :].sum(axis=2),
+            #                                  where=output_all[scen]['NH3SMLVL'][:, :, :, :].sum(axis=2))
+                
         
         else:
-            bila_cost_default_conv = output_all[scen][var][:, :, 0, :] * (prsc_2024[:, None, None]/ex_2024[:, None, None]) * 1.18
             
-            # Cost * volume
-            cost_volume_mandated = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
-            cost_volume_default = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]
-            cost_volume_total = cost_volume_mandated * cost_volume_default
+            bila_cost_mandated_conv = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
+            bila_cost_default_conv = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
+            bila_cost_total_conv = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
             
         for y, year in enumerate(tl):
             
-            var_conv[scen][var]['Default'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
-            var_conv[scen][var]['Mandated'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
-            var_conv[scen][var]['Total'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
+            # Mandated market
+            prices = bila_cost_mandated_conv[:, :, y]
+            volumes = output_all[scen]['NH3SMLVL'][:, :, 0, y]
+            prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)
+            var_conv[scen][var]['Mandated'][year] = pd.DataFrame(prices_agg,
+                                                              index=region_mapping.keys(),
+                                                              columns=region_mapping.keys())
             
-            for reg_agg_exp in reg_aggs_wo_glo:
+            # Default market
+            prices = bila_cost_default_conv[:, :, y]
+            volumes = output_all[scen]['NH3SMLVL'][:, :, 1, y]
+            prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)            
+            var_conv[scen][var]['Default'][year] = pd.DataFrame(prices_agg,
+                                                              index=region_mapping.keys(),
+                                                              columns=region_mapping.keys())
+           
+            # Total market
+            prices = bila_cost_total_conv[:, :, y]
+            volumes = output_all[scen]['NH3SMLVL'][:, :, :, y].sum(axis=2)
+            prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)
+            var_conv[scen][var]['Total'][year] = pd.DataFrame(prices_agg,
+                                                              index=region_mapping.keys(),
+                                                              columns=region_mapping.keys())
+        
+        
+        # if var != 'NH3TCCout':
+        #     for m in range(output_all[scen][var].shape[2]):
                 
-                mask = reg_conv.loc[reg_agg_exp, :].values    
                 
-                # Aggregate exporters in line with new region classification
-                export_conv_mandated = np.sum(cost_volume_mandated[:, :, y] * mask[:, None], axis=0)
-                export_conv_default = np.sum(cost_volume_default[:, :, y] * mask[:, None], axis=0)
-                export_conv_total = np.sum(cost_volume_total[:, :, y] * mask[:, None], axis=0)
-                
-                for reg_agg_imp in reg_aggs_wo_glo:
-                    
-                    mask = reg_conv.loc[reg_agg_imp, :].values 
-                    
-                    if var_conv[scen]['NH3SMLVL']['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
-                        var_conv[scen][var]['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] = (
-                            np.sum(export_conv_mandated * mask, axis=0)
-                            / var_conv[scen]['NH3SMLVL']['Mandated'][year].loc[reg_agg_exp, reg_agg_imp])
-                    else:
-                        var_conv[scen][var]['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
-                    
-                    if var_conv[scen]['NH3SMLVL']['Default'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
-                        var_conv[scen][var]['Default'][year].loc[reg_agg_exp, reg_agg_imp] = (
-                            np.sum(export_conv_default * mask, axis=0)
-                            / var_conv[scen]['NH3SMLVL']['Default'][year].loc[reg_agg_exp, reg_agg_imp])
-                    else:
-                        var_conv[scen][var]['Default'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
-                        
-                    if var_conv[scen]['NH3SMLVL']['Total'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
-                        var_conv[scen][var]['Total'][year].loc[reg_agg_exp, reg_agg_imp] = (
-                            np.sum(export_conv_default * mask, axis=0)
-                            / var_conv[scen]['NH3SMLVL']['Total'][year].loc[reg_agg_exp, reg_agg_imp])
-                    else:
-                        var_conv[scen][var]['Total'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
-                    
-                    
-                    if reg_agg_exp == reg_agg_imp:
-                        
-                        x = 1
             
-            # Remove NaNs
-            var_conv[scen][var]['Mandated'][year] = var_conv[scen][var]['Mandated'][year].fillna(0.0)
-            var_conv[scen][var]['Default'][year] = var_conv[scen][var]['Default'][year].fillna(0.0)
-            var_conv[scen][var]['Total'][year] = var_conv[scen][var]['Total'][year].fillna(0.0)
+            
+            
+            
+        
+        # P2 = prices[:, :, m, t]
+        # Q2 = volumes[:, :, m, t]
+        # P_agg_12x12, V_agg_12x12, Q_agg_12x12 = aggregate_block_unit_values(P2, Q2)
+
+        
+        
+        
+        
+        
+        # if var != 'NH3TCCout':
+        #     bila_cost_mandated_conv = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
+        #     bila_cost_default_conv = output_all[scen][var][:, :, 1, :] *  1.2 * 1.18
+        
+        #     # Cost * volume
+        #     cost_volume_mandated = bila_cost_mandated_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
+        #     cost_volume_default = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]
+        #     cost_volume_total = cost_volume_mandated + cost_volume_default
+        
+        # else:
+        #     bila_cost_default_conv = output_all[scen][var][:, :, 0, :] * (prsc_2024[:, None, None]/ex_2024[:, None, None]) * 1.18
+            
+        #     # Cost * volume
+        #     cost_volume_mandated = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
+        #     cost_volume_default = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]
+        #     cost_volume_total = cost_volume_mandated + cost_volume_default
+            
+        # for y, year in enumerate(tl):
+            
+        #     var_conv[scen][var]['Default'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
+        #     var_conv[scen][var]['Mandated'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
+        #     var_conv[scen][var]['Total'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
+            
+        #     for reg_agg_exp in reg_aggs_wo_glo:
+                
+        #         mask = reg_conv.loc[reg_agg_exp, :].values    
+                
+        #         # Aggregate exporters in line with new region classification
+        #         export_conv_mandated = np.sum(cost_volume_mandated[:, :, y] * mask[:, None], axis=0)
+        #         export_conv_default = np.sum(cost_volume_default[:, :, y] * mask[:, None], axis=0)
+        #         export_conv_total = np.sum(cost_volume_total[:, :, y] * mask[:, None], axis=0)
+                
+        #         for reg_agg_imp in reg_aggs_wo_glo:
+                    
+        #             mask = reg_conv.loc[reg_agg_imp, :].values 
+                    
+        #             # Mandated market
+        #             if var_conv[scen]['NH3SMLVL']['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
+        #                 var_conv[scen][var]['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] = (
+        #                     np.sum(export_conv_mandated * mask, axis=0)
+        #                     / var_conv[scen]['NH3SMLVL']['Mandated'][year].loc[reg_agg_exp, reg_agg_imp])
+                        
+        #             else:
+                        
+        #                 var_conv[scen][var]['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
+                    
+        #             # Default market
+        #             if var_conv[scen]['NH3SMLVL']['Default'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
+                        
+        #                 var_conv[scen][var]['Default'][year].loc[reg_agg_exp, reg_agg_imp] = (
+        #                     np.sum(export_conv_default * mask, axis=0)
+        #                     / var_conv[scen]['NH3SMLVL']['Default'][year].loc[reg_agg_exp, reg_agg_imp])
+                        
+        #             else:
+                        
+        #                 var_conv[scen][var]['Default'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
+                        
+        #             # Total market
+        #             if var_conv[scen]['NH3SMLVL']['Total'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
+                        
+        #                 var_conv[scen][var]['Total'][year].loc[reg_agg_exp, reg_agg_imp] = (
+        #                     np.sum(export_conv_default * mask, axis=0)
+        #                     / var_conv[scen]['NH3SMLVL']['Total'][year].loc[reg_agg_exp, reg_agg_imp])
+                        
+        #             else:
+                        
+        #                 var_conv[scen][var]['Total'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
+                    
+                    
+        #             if reg_agg_exp == reg_agg_imp:
+                        
+        #                 x = 1
+            
+        #     # Remove NaNs
+        #     var_conv[scen][var]['Mandated'][year] = var_conv[scen][var]['Mandated'][year].fillna(0.0)
+        #     var_conv[scen][var]['Default'][year] = var_conv[scen][var]['Default'][year].fillna(0.0)
+        #     var_conv[scen][var]['Total'][year] = var_conv[scen][var]['Total'][year].fillna(0.0)
             
     
     for var in ['HYLC']:
@@ -408,7 +590,7 @@ for scen_name, scen in scen_main_map.items():
         var_conv[scen][var] = {}
         
         # Convert to 2024 USD
-        var_conv_curr = output_all[scen][var][:, :, 0, :] * (prsc_2024[:, None, None]/ex_2024[:, None, None]) * 1.18
+        var_conv_curr = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
         
         # Cost * volume
         cost_volumes = var_conv_curr * output_all[scen]['HYG1'][:, :, 0, :]
@@ -953,13 +1135,17 @@ for r, reg in enumerate(reg_aggs_wo_glo):
         
         # Organise data
         plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_main_map.keys())
+        check_data = pd.DataFrame(0.0, index=deliv_cost_comps+['Delivery Cost'], columns=scen_main_map.keys())
         
         for scen, scen_short in scen_main_map.items():
             
-            plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["WPPR"]['Total'][2050].loc[reg] * 0.179 *1000
-            plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - plot_data.loc['Hydrogen production', scen]
+            plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
+            plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
             plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
             plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
+            
+            check_data.loc[deliv_cost_comps, :] = copy.deepcopy(plot_data)
+            check_data.loc['Delivery Cost', :] = var_conv[scen_short]["NH3DELIVCOST"]['Total'][2050].loc[reg, reg_target]
             
             bottom = np.zeros(len(plot_data.columns))
             for var, colour in colour_map.items():
@@ -1051,6 +1237,8 @@ fig.legend(handles=h1,
 
 fig.subplots_adjust(hspace=0.15, wspace=0.0, right=0.97, bottom=0.13, left=0.1, top=0.95)
 
+plt.show()
+plt.savefig(fp) 
 
 # %% Graph 6 - Investment
 
@@ -1120,7 +1308,7 @@ for scen_no, scen in enumerate(scen_main_map.keys()):
     centre_circle = plt.Circle((0, 0), 0.70, fc='white')
     axes[scen_no, 0].add_artist(centre_circle)
     axes[scen_no, 0].text(
-        -0.2, 0, "{}\nbillion".format(hb_inv_by_reg.sum().round(0)),
+        -0.3, 0, "{}\nbillion".format(hb_inv_by_reg.sum().round(0)),
         va='center', fontsize=10, fontweight="bold", color='black')                             
     
     # H2 investment by region
@@ -1140,7 +1328,7 @@ for scen_no, scen in enumerate(scen_main_map.keys()):
     centre_circle = plt.Circle((0, 0), 0.70, fc='white')
     axes[scen_no, 1].add_artist(centre_circle)        
     axes[scen_no, 1].text(
-        -0.2, 0, "{}\nbillion".format(h2_inv_by_reg.sum().round(0)),
+        -0.3, 0, "{}\nbillion".format(h2_inv_by_reg.sum().round(0)),
         va='center', fontsize=10, fontweight="bold", color='black')        
     
     
@@ -1160,7 +1348,7 @@ for scen_no, scen in enumerate(scen_main_map.keys()):
     centre_circle = plt.Circle((0, 0), 0.70, fc='white')
     axes[scen_no, 2].add_artist(centre_circle)
     axes[scen_no, 2].text(
-        -0.2, 0, "{}\nbillion".format(h2_inv_by_tech.sum().round(0)),
+        -0.3, 0, "{}\nbillion".format(h2_inv_by_tech.sum().round(0)),
         va='center', fontsize=10, fontweight="bold", color='black')
     
 # Legend

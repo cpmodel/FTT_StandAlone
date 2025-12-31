@@ -32,6 +32,7 @@ def get_lchb(data, h2_input, titles):
             discount_rate = data['DISCOUNTRATES'][r, 0, 0]
             
             npv_in = 0.0
+            npv_in_exclH2 = 0.0
             dnpv_in = 0.0
             npv_out = 0.0
         
@@ -66,7 +67,7 @@ def get_lchb(data, h2_input, titles):
                     dft = 0.1 * ft
                     
                     h2_cost = h2_input * data['WPPR'][r, m, 0] * 1e3
-                    dh2_cost = 0.01*h2_cost
+                    dh2_cost = 0.05*h2_cost
                     
                     ct = data['NH3EFINDIRECT'][r, 0, 0] * data['HYPR'][r, 0, 0]
                     dct = 0.1*ct                    
@@ -76,11 +77,13 @@ def get_lchb(data, h2_input, titles):
                     
                     pt = 1.0
                     
-                npv_in += (ic + omt + h2_cost + ft) / (1 + discount_rate) ** t
+                npv_in += (ic + omt + ct + h2_cost + ft) / (1 + discount_rate) ** t
+                npv_in_exclH2 += (ic + omt + ct + ft) / (1 + discount_rate) ** t
                 dnpv_in += 1.414 * np.sqrt(dic**2 + domt**2 + dh2_cost**2 + dft**2) / (1 + discount_rate)**t
                 npv_out += (pt) / (1 + discount_rate) ** t
                 
             data['NH3LC'][r, m, 0] = npv_in/npv_out
+            data['NH3LCexclH2'][r, m, 0] = npv_in_exclH2/npv_out
             data['NH3LCSD'][r, m, 0] = dnpv_in/npv_out
 
 
