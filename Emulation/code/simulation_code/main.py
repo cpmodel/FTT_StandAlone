@@ -4,21 +4,21 @@ import pandas as pd
 import sys
 
 # Set root directory
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append(root_dir)
 os.chdir(root_dir)
 
-from emulation_code.utils import load_config
-from emulation_code.compare_scenarios_2 import compare_scenarios, export_compare
-from emulation_code.ambition_vary_3 import process_ambition_variation
-from emulation_code.run_emulation_5 import main as run_simulations
-from emulation_code.output_manipulation_6 import main as output_mainuplation
+from Emulation.code.simulation_code.utils import load_config
+from Emulation.code.simulation_code.compare_scenarios_2 import compare_scenarios, export_compare
+from Emulation.code.simulation_code.ambition_vary_3 import process_ambition_variation
+from Emulation.code.simulation_code.run_emulation_5 import main as run_simulations
+from Emulation.code.simulation_code.output_manipulation_6 import main as output_mainuplation
 
 from SourceCode.support.titles_functions import load_titles
 titles = load_titles()
 
 def main():
-    config_path = os.path.join(os.path.dirname(__file__), 'config', 'config.json')
+    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'config.json')
     config = load_config(config_path)
     
     # Load variables from config

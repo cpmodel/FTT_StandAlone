@@ -4,10 +4,10 @@ packages <- c('GenSA', 'far', 'fields', 'lhs', 'maps', 'mco', 'mvtnorm',
               'loo', 'bayesplot','MASS')
 sapply(packages, require, character.only = TRUE, quietly = TRUE)
 
-source("BuildEmulator/AutoLMcode.R")
-source("BuildEmulator/CustomPredict.R")
-source("BuildEmulator/JamesNewDevelopment.R")
-source("BuildEmulator/DannyDevelopment.R")
+source("C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/BuildEmulator/AutoLMcode.R")
+source("C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/BuildEmulator/CustomPredict.R")
+source("C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/BuildEmulator/JamesNewDevelopment.R")
+source("C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/BuildEmulator/DannyDevelopment.R")
 
 # # Stan files for GP Emulator in Stan
 # tfile_loc = paste(twd, "/BuildEmulator/FitGP.stan", sep = "")

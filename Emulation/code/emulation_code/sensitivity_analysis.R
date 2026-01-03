@@ -3,16 +3,16 @@
 
 library(ggplot2)
 library(dplyr)
-library(sensitivity)
+library(emtools)
 
 
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ')
-source('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ/code/Gasp.R')
 
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/jules_ppe_gmd-v0.2.0/MetOffice-jules_ppe_gmd-2e6b24a/docs')
-source("JULES-ES-1p0-common-packages.R")
-source('JULES-ES-1p0-common-functions.R')
-source('JULES-ES-1p0-common-data.R')
+## Retrieve functions taken from other repositories
+## Functons and scripts copied from ExeterUQ https://github.com/BayesExeter/ExeterUQ &
+## https://github.com/JSalter90/UQ & https://github.com/MetOffice/jules_ppe_gmd
+setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code')
+source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/UQ/Gasp.R') ### Created by James Salter
+
 
 
 ########################################
@@ -186,7 +186,7 @@ rds_files_all
 #  COULD WE DO THIS WITH JUST 2030 & 40??
 
 # SA on GBL emissions & capacites
-global_param_files <- rds_files_all[c(c(1:3), c(26:31))]
+global_param_files <- rds_files_all[c(c(1:3), c(25:30))]
 #global_param_files <- rds_files_all[c(1:3)]
 
 # 2) Read them into a named list
@@ -234,7 +234,7 @@ oaatSensvarSummaryPlot(global_sens_mat, threshold = 0.01)
 
 #### 2030 
 
-IN_polcompare_files <- rds_files_all[c(c(4:6), c(10:18), c(20:22))]
+IN_polcompare_files <- rds_files_all[c(c(4:6), c(10:21))]
 
 # 2) Read them into a named list
 IN_polcompare_list <- setNames(

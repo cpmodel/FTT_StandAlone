@@ -24,7 +24,7 @@ import pickle
 
 # Local library imports
 from SourceCode.model_class import ModelRun
-from Emulation.code.emulation_code.em_output_save_4 import save_core
+from Emulation.code.simulation_code.em_output_save_4 import save_core
 
 # Instantiate the run
 model = ModelRun()

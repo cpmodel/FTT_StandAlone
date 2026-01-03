@@ -1,10 +1,10 @@
-source('imported_code/UQ/rotation_functions.R')
-source('imported_code/UQ/FastHM.R')
+# From UQ https://github.com/JSalter90/UQ
+source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/UQ/rotation_functions.R')
+source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/UQ/FastHM.R')
 
 # From ExeterUQ https://github.com/BayesExeter/ExeterUQ - edit path to read this
 twd <- getwd()
-setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/emulation_code/imported_code')
-source('BuildEmulator/BuildEmulator.R')
+source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/BuildEmulator/BuildEmulator.R')
 setwd(twd)
 
 library(RobustGaSP)

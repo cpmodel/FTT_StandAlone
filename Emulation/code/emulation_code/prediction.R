@@ -3,12 +3,13 @@
 library(ggplot2)
 library(tidyr)
 
-########## Prediction using emulators
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ')
-source('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ/code/Gasp.R')
-setwd('C:/Users/ib400/OneDrive - University of Exeter/Desktop/PhD/GitHub/UQ')
 
-
+## Retrieve functions taken from other repositories
+## Functons and scripts copied from ExeterUQ https://github.com/BayesExeter/ExeterUQ &
+## https://github.com/JSalter90/UQ
+#setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code')
+source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/UQ/Gasp.R') ### Created by James Salter
+setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code')
 
 
 #DataBasis_dict <- readRDS(paste0("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/designs/DataBasis_dict.rds"))
@@ -20,9 +21,6 @@ input_df_rescaled <- read.csv("C:/Users/ib400/Github/FTT_StandAlone/Emulation/da
 rescale_column <- function(column, range) {
   (column - range$min) / (range$max - range$min)
 }
-# Function for rescaling
-
-
 
 
 
@@ -33,7 +31,7 @@ rescale_column <- function(column, range) {
 #############################
 
 # Extract policy variables 
-pol_params <- names(input_df[2:16])
+pol_params <- names(input_df_rescaled[2:16])
 
 # Create a base row with all 0s
 base_row <- as.data.frame(matrix(0, nrow = 1, ncol = length(pol_params)))
@@ -166,7 +164,7 @@ for (i in 1:nrow(pol_df)) {
 # Save file
 saveRDS(input_dfs, file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_IN_polcomp_grid.RData")
 
-# Reload file
+# Reload file if needed
 #input_dfs <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_IN_polcomp_grid.RData")
 
 # combine into df

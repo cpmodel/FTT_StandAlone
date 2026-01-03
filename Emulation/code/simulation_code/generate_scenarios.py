@@ -1,7 +1,7 @@
 import os
 import sys
-from emulation_code.utils import load_config
-from emulation_code.scenario_generator_1 import scen_generator
+from simulation_code.utils import load_config
+from simulation_code.scenario_generator_1 import scen_generator
 
 # Set root directory
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
