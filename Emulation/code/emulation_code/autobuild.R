@@ -51,7 +51,7 @@ full_output <- bind_rows(dfs)
 
 ########  EDIT VARS ##############################################
 
-full_output <- full_output[full_output$variable %in% c('MEWS'),] #'MEWP', 'MEWW', 'MEWE', 'MEWK'
+full_output <- full_output[full_output$variable %in% c('MEWP', 'MEWW', 'MEWE', 'MEWK','MEWS'),] #'MEWP', 'MEWW', 'MEWE', 'MEWK'
 
 ##################################################################
 
@@ -172,8 +172,8 @@ build_and_save_emulator <- function(output_data, key, seed = seed_it) {
 
 
 # Define general variables for output of interest
-vars <- c('MEWS')
-regions <- c('IN', 'GBL')
+vars <- c('MEWP',  'MEWE', 'MEWK','MEWS') #'MEWW',
+regions <- c('IN')
 years <- c(2030, 2040, 2050)
 
 # techs and subgroups
