@@ -203,7 +203,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
 
     if gamma_options["Overwrite user input"] is None:
         if csv_exists(out_fn) and var_gamma.endswith('GAM'):
-            file_string = out_fn.split('Inputs', 1)[-1].replace("BE")
+            file_string = out_fn.split('Inputs', 1)[-1].replace("BE", "XX")
             proceed = input(f"CSV files {file_string} already exist. Do you want to overwrite them? (y/n) ")
             if proceed.lower() != 'y':
                 print("Skipping...")
