@@ -13,7 +13,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
                         lifetimes, r
                         ):
     """
-    Calculate levelised costs per unit with and without policy,
+    Calculate levelised costs per service delivered (e.g. Eur/kWh) with and without policy,
     and their standard deviation
     
     See https://www.wikiwand.com/en/articles/Annuity_(finance_theory)
@@ -100,7 +100,7 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
                                    service_delivered, service_sd,
                                    lifetimes, leadtimes, r):
     """
-    Levelised cost with leadtimes-time adjustment.
+    Levelised cost (e.g. $/MWh) with leadtimes-time adjustment.
     
     Parameters
     ----------
