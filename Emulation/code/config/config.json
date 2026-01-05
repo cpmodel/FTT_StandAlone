@@ -18,9 +18,12 @@
     "lead_offshore": [2, 4],
     "lead_onshore": [1, 2],
     "lead_solar": [0.51, 1.5],
-    "lead_ccgt": [1, 2],
-    "lead_coal": [1, 3],
     "lead_commission": [0, 1],
+    "lead_ccgt": [0, 2],
+    "lead_coal": [1, 2],
+    "cf_onshore": [-1.2, -0.6],
+    "cf_offshore": [-1.2, -0.6],
+    "cf_solar": [-2.4, -1.3],
     "discr": [0, 1],
     "elec_demand": [0, 1],
     "ccgt_price": [0, 1],
@@ -31,33 +34,36 @@
     "Solar PV": {
       "learning_solar": 16,
       "lifetime_solar": 9,
-      "lead_solar": 10
+      "lead_solar": 10,
+      "cf_col": 24
     },
     "Onshore": {
       "learning_wind": 16,
       "lifetime_wind": 9,
-      "lead_onshore": 10
+      "lead_onshore": 10,
+      "cf_col": 24
     },
     "Offshore": {
       "learning_wind": 16,
       "lifetime_wind": 9,
-      "lead_offshore": 10
+      "lead_offshore": 10,
+      "cf_col": 24
     },
     "CCGT": {
       "ccgt_price": 5,
-      "std_col": 6,
-      "lead_ccgt": 10
+      "lead_ccgt": 10,
+      "std_col": 6
     },
     "Coal": {
       "coal_price": 5,
-      "std_col": 6,
-      "lead_coal": 10
+      "lead_coal": 10,
+      "std_col": 6
     },
     "Discount Rate": {
       "discr": 17
     }
   },
-  "Nscens": 500,
+  "Nscens": 7,
   "scen_code": "S3",
   "scenarios": {"base": "S0", "ambitious": "S3"},
   "round_decimals": 3,
@@ -78,11 +84,11 @@
     "data_length": 34,
     "tech_number": 22
   },
-  "scens_run": [0, 501],
+  "scens_run": [0, 2],
   "run_compare_scenarios": false,
-  "run_ambition_vary": false,
-  "run_run_simulations": true,
-  "run_output_manipulation": true,
+  "run_ambition_vary": true,
+  "run_run_simulations": false,
+  "run_output_manipulation": false,
   "region_groups": {
     "RGN": ["BE", "DK", "DE", "EL", "ES", "FR", "IE", "IT", "LX", "NL", "AT", "PT", "FI", "SW", "UK", "CZ", 
     "EN", "CY", "LV", "LT", "HU", "MT", "PL", "SI", "SK", "BG", "RO", "HR", "NO", "CH", "IS",

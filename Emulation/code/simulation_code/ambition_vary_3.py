@@ -46,7 +46,7 @@ def load_input_data(base_master_path, sheet_names):
         input_data[sheet_name] = pd.read_excel(base_master_path, 
                                                sheet_name=sheet_name, 
                                                skiprows=3, 
-                                               usecols=lambda column: column not in range(0, 1) and column not in range(24, 26))
+                                               usecols=lambda column: column not in range(0, 1) and column not in range(25, 26))
     return input_data
 
 def load_cost_matrix(base_master_path, cost_matrix_var, cost_matrix_structure):
@@ -280,8 +280,6 @@ def pol_vary_special(updated_input_data, scen_level, carbon_price_path): # TODO 
     # Store single sheet
     updated_input_data[new_scen_code][sheet_name] = base_cp_df
         
-
-
 def update_cost_matrix(cost_matrix, technology, updates, scen_level):
     """
     Update the cost matrix for a specific tech or fuel
@@ -313,7 +311,7 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
         cost_matrix.loc[tech_update, price_col] = fuel_price_new
         
         # Update lead times # not generalised
-        cost_matrix.loc[tech_update, 10] = scen_level[f"lead_{technology.lower()}"]
+        cost_matrix.loc[tech_update, lead_col] = scen_level[f"lead_{technology.lower()}"]
 
 
     else:
@@ -326,11 +324,15 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
                 
                 # Update lead times
                 cost_matrix.loc[tech_update, col] = scen_level[f"lead_{technology.lower()}"] 
+            # Update cannibalisation factors    
+            elif param == 'cf_col':
+                if technology.lower() == 'solar pv':
+                    technology = 'solar'  # Handle specific case for solar PV
+                cost_matrix.loc[tech_update, col] = scen_level[f"cf_{technology.lower()}"]
+
             else:
                 cost_matrix.loc[tech_update, col] = scen_level[param]
-
-
-
+            
 
 def inputs_vary_general(updated_input_data, scen_level, updates_config, region_groups, cost_matrix_structure):
     '''
@@ -339,11 +341,11 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
     Returns:
 
     '''
-    # Extract the scenario code
+    # Extract the scenario code and initialize storage
     scen_code = scen_level['scenario']
     sheet_name = 'BCET' 
     updated_input_data[scen_code][sheet_name] = {}
-    # Create dictionary for mewa
+    # Initialize dictionary for substitution matrix
     sheet_name_2 = 'MEWA'
     updated_input_data[scen_code][sheet_name_2] = {}
     
@@ -351,6 +353,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
     cost_matrix = load_cost_matrix("Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx", ['BCET'], cost_matrix_structure) # GENERALISE
     tech_number = cost_matrix_structure['tech_number']
         
+    
 
     # Apply updates for technologies and fuels
     for technology, updates in updates_config.items():
@@ -472,6 +475,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                         mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / scen_level['lifetime_solar']
                     else:
                         mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
+                        # 
             # Update onshore row
             if j == 16:
                 # loop through columns
@@ -693,7 +697,7 @@ def save_updated_data(updated_input_data, output_dir, general_vars):
                     output_path = os.path.join(new_output_dir, f"{sheet_name}_{country}.csv")
                     df.to_csv(output_path, index=False)
 
-
+## M
 
 def process_ambition_variation(base_master_path, scen_levels_path, comparison_path, scenarios, 
                                region_groups, params, general_vars, output_dir, cost_matrix_var, 
