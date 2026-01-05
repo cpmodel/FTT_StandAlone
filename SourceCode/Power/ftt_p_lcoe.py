@@ -243,6 +243,23 @@ def get_lcoe(data, titles, year):
         variance_terms = dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2
         summed_variance = np.sum(variance_terms/(denominator**2), axis=1)
         dlcoe = np.sqrt(summed_variance)/utility_tot
+
+        # Cannibalisation adjustment
+        if year > 2023:
+
+            # Rows corresponding to renewable technologies
+            renew_rows = slice(16, 19)  
+            
+            # Determine change in market shares since last time step
+            shares_renew = data['MEWS'][r, renew_rows, 0]
+
+            # Adjust value factor based on cannibalisation factor and change in shares
+            cann_adjustment = shares_renew * bcet[renew_rows, c2ti['24 Cannibalisation factor']]
+            vf_adjustment = bcet[renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment)
+            bcet[renew_rows, c2ti['23 Value factor']] = vf_adjustment
+
+
+
         
         # 4a – levelised cost – marginal units 
         lcoe_mu_no_policy       = np.sum(npv_expenses_mu_no_policy, axis=1) / utility_tot        
