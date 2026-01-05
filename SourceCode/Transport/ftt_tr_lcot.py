@@ -69,11 +69,10 @@ def get_lcot(data, titles, year):
     
     # Upfront cost (base, policy, standard deviation)
     upfront = (bttc[:, :, c3ti['1 Prices cars (USD/veh)']] * conv_full)
-    upfront_pol = (
-               (upfront * (1 + data["Base registration rate"][:, :, 0])      # Tax as share upfront
-               + data['TTVT'][:, :, 0]                                     # Purchase tax
-               + data['RTCO'][:, 0] * bttc[:, :, c3ti['14 CO2Emissions']] ) # CO2-dependent tax
-               * conv_full )
+    upfront_pol = ( upfront * data["Base registration rate"][:, :, 0]          # Tax as share upfront
+               + conv_full * (data['TTVT'][:, :, 0]                            # Purchase tax
+                 + data['RTCO'][:, 0] * bttc[:, :, c3ti['14 CO2Emissions']] )  # CO2-dependent tax
+                )
     upfront_sd = bttc[:, :, c3ti['2 Std of price']] * conv_full
     
     # Annual variable cost (base, policy, standard deviation)
@@ -95,7 +94,7 @@ def get_lcot(data, titles, year):
             annual_policies=annual_pol,
             annual_sd = annual_sd,
             service_delivered=1,
-            service_sd=0.0,
+            service_sd=0.1,
             lifetimes=lt,
             r = bttc[:, :, c3ti['7 Discount rate']])
     
@@ -124,15 +123,16 @@ def get_lcot(data, titles, year):
     
     elapsed2 = time.perf_counter() - start2
     
-    print(f"Runtime: {elapsed2 / elapsed:.2f} as fast")
-
-    print(f'Difference between new and old:')
-    print(f'{np.average(((lcot - lcot_old)/lcot_old)**2)}')
-    print(f'{np.average(((lcot_pol - tlcot)/tlcot)**2)}')
-    print(f'{np.nanmean(((lcot_pol_gam - tlcotg)/tlcotg)**2)}')
-    print(f'{np.average(((log_lcot_pol - logtlcot)/logtlcot)**2)}')
-    print(f'{np.average(((lcot_sd - dlcot)/dlcot)**2)}')
-    print(f'{np.average(((log_lcot_pol_sd - dlogtlcot)/dlogtlcot)**2)}')
+    if year == 2050:
+        print(f"Runtime: {elapsed2 / elapsed:.2f} as fast")
+    
+        print(f'Difference between new and old:')
+        print(f'{np.average(((lcot - lcot_old)/lcot_old)**2)}')
+        print(f'{np.average(((lcot_pol - tlcot)/tlcot)**2)}')
+        print(f'{np.nanmean(((lcot_pol_gam - tlcotg)/tlcotg)**2)}')
+        print(f'{np.average(((log_lcot_pol - logtlcot)/logtlcot)**2)}')
+        print(f'{np.average(((lcot_sd - dlcot)/dlcot)**2)}')
+        print(f'{np.average(((log_lcot_pol_sd - dlogtlcot)/dlogtlcot)**2)}')
 
     
     return data
