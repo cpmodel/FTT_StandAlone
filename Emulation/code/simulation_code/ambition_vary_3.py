@@ -452,7 +452,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                     else:
                         mewa_country.iloc[j, tech] = 100 / (scen_level['lead_coal'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
             # update gas row
-            if j == 6:
+            elif j == 6:
                 # loop through columns
                 for tech in range(1, 23):
                     # coal
@@ -477,7 +477,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                         mewa_country.iloc[j, tech] = 100 / (scen_level['lead_ccgt'] + scen_level['lead_commission']) / country_df.iloc[tech-1, 9]
                         # 
             # Update onshore row
-            if j == 16:
+            elif j == 16:
                 # loop through columns
                 for tech in range(1, 23):
                     # onshore
@@ -495,7 +495,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                     else:
                         mewa_country.iloc[j, tech] = 100 / (scen_level['lead_onshore'] + scen_level['lead_commission']) /  country_df.iloc[tech-1, 9]
             # Update offshore row
-            if j == 17:
+            elif j == 17:
                 # loop through columns
                 for tech in range(1, 23):
                     # onshore
@@ -514,7 +514,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
                         mewa_country.iloc[j, tech] = 100 / (scen_level['lead_offshore'] + scen_level['lead_commission']) /  country_df.iloc[tech-1, 9]
 
             # Update solar pv row
-            if j == 18:
+            elif j == 18:
                 # loop through columns
                 for tech in range(1, 23):
                     # onshore
@@ -534,7 +534,7 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
 
 
                 # Update csp row
-            if j == 19:
+            elif j == 19:
                 # loop through columns
                 for tech in range(1, 23):
                     # onshore
@@ -556,13 +556,17 @@ def inputs_vary_general(updated_input_data, scen_level, updates_config, region_g
             # Update other rows
             else:
                 for tech in range(1, 23):
-                    if tech == 17:
+                    if tech == 3:
+                        mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / country_df.iloc[tech-1, 9]
+                    elif tech == 7:
+                        mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / country_df.iloc[tech-1, 9]
+                    elif tech == 17:
                         mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_wind']  
-                    if tech == 18:
+                    elif tech == 18:
                         mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_wind'] 
-                    if tech == 19:
+                    elif tech == 19:
                         mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_solar']
-                    if tech == 20:
+                    elif tech == 20:
                         mewa_country.iloc[j, tech] = 100 / country_df.iloc[j, 10] / scen_level['lifetime_solar']
 
         # Save to dictionary
