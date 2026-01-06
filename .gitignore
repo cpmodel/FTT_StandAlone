@@ -11,3 +11,4 @@ SourceCode/.DS_Store
 Output/Results_*
 Emulation/data/emulators/*.rds
 Emulation/data/predictions/*.rds
+Inputs/S3*/
