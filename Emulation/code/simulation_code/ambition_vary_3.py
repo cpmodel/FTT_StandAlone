@@ -328,6 +328,8 @@ def update_cost_matrix(cost_matrix, technology, updates, scen_level):
             elif param == 'cf_col':
                 if technology.lower() == 'solar pv':
                     technology = 'solar'  # Handle specific case for solar PV
+                elif technology.lower() in ['onshore', 'offshore']:
+                    technology = 'wind'  # Handle specific case for wind
                 cost_matrix.loc[tech_update, col] = scen_level[f"cf_{technology.lower()}"]
 
             else:
