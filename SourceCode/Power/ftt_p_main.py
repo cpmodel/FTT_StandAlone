@@ -164,7 +164,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MRED'] = mred
         data['MRES'] = mres
         
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, year)
 
 
         data = rldc(data, time_lag, iter_lag, year, titles, histend)
@@ -206,7 +206,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['MCFC'] = data['MWLO'].copy()
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
         
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, year)
 
 
 
@@ -242,7 +242,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
-            time_lag = get_lcoe(data, titles)
+            time_lag = get_lcoe(data, titles, year)
 
 
         # Call RLDC function for capacity and load factor by LB, and storage costs
@@ -376,7 +376,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, year)
 
 
             # Historical differences between demand and supply.
@@ -639,7 +639,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             
             # Calculate levelised cost again
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, year)
 
             # =================================================================
             # Update the time-loop variables data_dt
