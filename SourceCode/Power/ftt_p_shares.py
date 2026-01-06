@@ -226,7 +226,7 @@ def shares_calc(dt, t, T_Scal, mewdt, mews_dt, metc_dt, mtcd_dt,
         dUk = dUkREG + dUkMK
 
         # Set large hydro to MWKA always - this could result in negative shares
-        dUk[12] = (mwka[r, 12, 0] - (endo_capacity[12] + dUkREG[12])) * (t / no_it)
+        dUk[12] = (mwka[r, 12, 0] - endo_capacity[12]) * (t / no_it)
 
         dUtot = np.sum(dUk)
  
