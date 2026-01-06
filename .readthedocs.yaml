@@ -1,0 +1,14 @@
+version: 2
+
+sphinx:
+  configuration: docs/conf.py
+
+# Set the OS, Python version and other tools you might need
+build:
+  os: ubuntu-lts-latest
+  tools:
+    python: "latest"
+
+python:
+  install:
+    - requirements: docs/requirements.txt

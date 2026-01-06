@@ -27,29 +27,30 @@ curves. **Cost-supply curves** are recalculated at the end of the routine.
 
 Local library imports:
 
-    FTT: Core functions:
-    - `get_sales <get_sales_or_investment.htlm>
-        Generic investment function (new plus end-of-life replacement)
-        
-    FTT: Power functions:
+FTT: Core functions:
+    
+- `get_sales <get_sales_or_investment.htlm>`__
+    Generic investment function (new plus end-of-life replacement)
+    
+FTT: Power functions:
 
-    - `rldc <ftt_p_rldc.html>`__
-        Residual load duration curves
-    - `dspch <ftt_p_dspch.html>`__
-        Dispatch of capcity
-    - `get_lcoe <ftt_p_lcoe.html>`__
-        Levelised cost calculation
-    - `survival_function <ftt_p_surv.html>`__
-        Calculation of scrappage, sales, tracking of age, and average efficiency.
-    - `shares <ftt_shares.html>`__
-        Market shares simulation (core of the model)
-    - `cost_curves <ftt_p_costc.html>`__
-        Calculates increasing marginal costs of resources
+- `rldc <ftt_p_rldc.html>`__
+    Residual load duration curves
+- `dspch <ftt_p_dspch.html>`__
+    Dispatch of capcity
+- `get_lcoe <ftt_p_lcoe.html>`__
+    Levelised cost calculation
+- `survival_function <ftt_p_surv.html>`__
+    Calculation of scrappage, sales, tracking of age, and average efficiency.
+- `shares <ftt_shares.html>`__
+    Market shares simulation (core of the model)
+- `cost_curves <ftt_p_costc.html>`__
+    Calculates increasing marginal costs of resources
 
-    Support functions:
+Support functions:
 
-    - `divide <divide.html>`__
-        Element-wise divide which replaces divide-by-zeros with zeros
+- `divide <divide.html>`__
+    Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -65,6 +66,7 @@ from SourceCode.ftt_core.ftt_shares import shares_change
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
+from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
 
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
@@ -100,7 +102,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Final year of historical data by variable
     year: int
         Current/active year of solution
-    Domain: dictionary of lists
+    domain: dictionary of lists
         Pairs variables to domains
 
     Returns
@@ -304,8 +306,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 
                 
 
-                # C02 emissions for carbon costs (MtC02)
-                data['MEWE'][r, :, 0] = data['MEWG'][r, :, 0] * data['BCET'][r, :, c2ti['15 Emissions (tCO2/GWh)']]/1e6
+            # C02 emissions for carbon costs (MtC02)
+            data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
+
             
             # Update capacities MEWK and market shares MEWS
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
@@ -398,11 +401,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
-        for var in time_lag.keys():
-
-            if domain[var] == 'FTT-P':
-
-                data_dt[var] = np.copy(time_lag[var])
+        vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-P')
+        for var in vars_to_copy:
+            data_dt[var] = np.copy(time_lag[var])
 
         # Create the regulation variable
         division = np.zeros_like(data_dt['MEWR'][:, :, 0])
@@ -453,10 +454,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
 
-            
-            # For checking
-            if t == no_it:
-                data["MEWD"] = np.copy(data['MEWDX'])
             
             # Find valid regions (where demand > 0)
             valid_regions = np.where(MEWDt > 0.0)[0]
@@ -535,42 +532,38 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
             
-            data['MCGA'][:,0,0] = data['MCRT'][:,0,0] * np.sum(Svar * data['MEWG'][:,:,0], axis=1)
+            data['MCGA'][:, 0, 0] = data['MCRT'][:, 0, 0] * np.sum(Svar * data['MEWG'][:, :, 0], axis=1)
 
             # Net curtailed generation
             # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
             # On average 45% of curtailed electricity can be reused for long-term storage:
             # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-            data['MCNA'][:, 0, 0] = np.maximum(data['MCGA'][:, 0, 0] - 0.45*2*data['MLSG'][:,0,0], 0.55*data['MCGA'][:,0,0])
+            data['MCNA'] = np.maximum(data['MCGA'] - 0.45 * 2 * data['MLSG'], 0.55 * data['MCGA'])
             # Impact of net curtailment on load factors for VRE technologies
-            # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-            data['MCTN'][:,:,0] = data['MCTG'][:,:,0] * divide(data['MCNA'][:, :, 0],
-                                                               data['MCGA'][:, :, 0])
+            # Scale down the curtailment rate by taking into account the curtailment used for long-term storage
+            data['MCTN'] = data['MCTG'] * divide(data['MCNA'], data['MCGA'])
             
             
             # Total additional electricity that needs to be generated
-            data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]
+            data['MADG'] = data['MCGA'] - data['MCNA'] + data['MSSG']
             
             # Update generation
-            denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
-            data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
-                                           denominator) 
+            denominator = np.sum(data['MEWS'] * data['MEWL'], axis=1)
+            updated_e_sup = e_demand[:, None, None] + data['MADG'] - data_dt['MADG']
 
-            # Update capacities
+            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup, 
+                                           denominator[:, :, None]) 
+
+            # Update capacities and emissions
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-            # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
-            # Update investment. Note that sum(mewi_t) not exactly mewi
-            _, mewi_t = get_sales(
+            
+            # Update investment (up to timestep t, and in timestep t)
+            data["MEWI"], mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWI"],
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
             
-            data["MEWI"] = get_sales_yearly(
-                data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-
             # TODO: review, compute cost of early scrapping
             mesc_vec, melf_vec = early_scrapping_costs(data, data_dt, c2ti)
             # =============================================================
@@ -651,12 +644,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             # Update the time-loop variables data_dt
             # =================================================================
-
-            for var in data_dt.keys():
-
-                if domain[var] == 'FTT-P':
-
-                    data_dt[var] = np.copy(data[var])
+            
+            # Store power variables that have changed in data_dt
+            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-P')
+            for var in vars_to_copy:
+                data_dt[var] = np.copy(data[var])
+                
         
         # TODO: average over 3 years like FORTRAN? 
         # Investment (1.33 an exchange rate factor)

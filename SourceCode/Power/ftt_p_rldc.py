@@ -544,7 +544,7 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
             data['MSSP'][r,18,0] = data['MSSR'][r,0,0] 
         # All technologies pay the pay amount for the other options
         else:
-            data['MSSP'][r,:,0] = data['MLSR'][r,0,0]       
+            data['MSSP'][r,:,0] = data['MSSR'][r,0,0]       
 
         #-------------------------------------------------------------
         #-------------- Marginal costs (where applicable) ------------

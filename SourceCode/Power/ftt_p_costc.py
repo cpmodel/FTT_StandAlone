@@ -261,27 +261,20 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
-    MEPD[:, 4, 0] = ( MEWG[:, 8,  0] / BCET[:, 8,  13]
-                    + MEWG[:, 9,  0] / BCET[:, 9,  13]
-                    + MEWG[:, 10, 0] / BCET[:, 10, 13]
+    MEPD[:, 4, 0] = (MEWG[:, 10, 0] / BCET[:, 10, 13]
                     + MEWG[:, 11, 0] / BCET[:, 11, 13] ) \
                     * 3.6e-3 # +  MEWD[11, :]   +   MEWD[10, :]
     RERY[:, 4, 0] = MEPD[:, 4, 0]       # In PJ
-    # Biogas (From here onwards cost curves are in TWh)
-    MEPD[:, 5, 0] = (MEWG[:, 12, 0] \
-                   + MEWG[:, 13, 0] * BCET[:, 13, 13] / BCET[:, 12, 13]) \
-                    * 3.6e-3
+    # Biogas (which comes mostly from waste) (From here onwards cost curves are in TWh)
+    MEPD[:, 5, 0] = (MEWG[:, 4, 0] / BCET[:, 4, 13] 
+                     + MEWG[:, 5, 0] / BCET[:, 5, 13] ) * 3.6e-3
     RERY[:, 5, 0] = MEPD[:, 5, 0]        # In PJ
-    # Biogas + CCS
-    MEPD[:, 6, 0] = (MEWG[:, 12, 0] \
-                   + MEWG[:, 13, 0] * BCET[:, 13, 13] / BCET[:, 12, 13]) \
-                    * 3.6e-3
-    RERY[:, 6, 0] = MEPD[:, 6, 0] # in PJ
+
     # Tidal
-    MEPD[:, 7, 0] = MEWG[:, 14, 0] * 3.6e-3
+    MEPD[:, 7, 0] = MEWG[:, 15, 0] * 3.6e-3
     RERY[:, 7, 0] = MEPD[:, 7, 0] # in PJ
     # Hydro
-    MEPD[:, 8, 0] = MEWG[:, 15, 0] * 3.6e-3
+    MEPD[:, 8, 0] = (MEWG[:, 12, 0] + MEWG[:, 13, 0]) * 3.6e-3
     RERY[:, 8, 0] = MEPD[:, 8, 0] # in PJ
     # Onshore
     MEPD[:, 9, 0] = MEWG[:, 16, 0] * 3.6e-3
@@ -293,11 +286,9 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     MEPD[:, 11, 0] = (MEWG[:, 18, 0] / BCET[:, 18, 13] +  MEWG[:, 19, 0] / BCET[:, 19, 13]) * 3.6e-3
     RERY[:, 11, 0] = MEPD[:, 11, 0] # in PJ
     # Geothermal
-    MEPD[:, 12, 0] = MEWG[:, 20, 0] * 3.6e-3
+    MEPD[:, 12, 0] = MEWG[:, 14, 0] * 3.6e-3
     RERY[:, 12, 0] = MEPD[:, 12, 0] # in PJ
-    # Wave
-    MEPD[:, 13, 0] = MEWG[:, 21, 0] * 3.6e-3
-    RERY[:, 13, 0] = MEPD[:, 13, 0] # in PJ
+
 
     # All regions have the same information
     MERC[:, 0, 0] = MRCL[:, 0, 0]
@@ -317,7 +308,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Resources classification:
     # Correspondence vector between techs and resources
-    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 4, 4]
+    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 6, 6]
 
     # BCSC is natural resource data with dimensions num_resources x num_techs x length of cost axis L
 
@@ -407,18 +398,17 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
                     if j == 19 :
                         BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
     
-                    if(MEWG[r, j, 0] > 0.01 and ind >= 1 and X0 > 0):
+                    if(MEWG[r, j, 0] > 0.01 and X0 > 0):
     
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
-                        CFvar[1:ind + 1] = 1.0 / (Y[1:ind + 1] + 0.000001) / (ind)
-                        CFvar2 = sum(CFvar[1:ind + 1])
-                        if CFvar2 > 0:
-    
-                            MEWL[r, j, 0] = CFvar2
+                        CFvar = np.sum(1.0 / (Y[:ind + 1] + 1e-6) / (ind + 1))
+                        
+                        if CFvar > 0:
+                            MEWL[r, j, 0] = CFvar
                      
                         # CSP is more efficient than PV by a factor 2
                         if j == 19 :
-                            MEWL[r, j, 0] = CFvar2 * 2.0
+                            MEWL[r, j, 0] = CFvar * 2.0
                     
 
                         

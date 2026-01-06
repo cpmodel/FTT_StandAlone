@@ -23,26 +23,28 @@ Local library imports:
 # Local library imports
 from SourceCode.model_class import ModelRun
 
-# Instantiate the run
-model = ModelRun()
+if __name__ == "__main__":
+        
+    # Instantiate the run
+    model = ModelRun()
 
-# Fetch ModelRun attributes, for examination
-# Titles of the model
-titles = model.titles
-# Dimensions of model variables
-dims = model.dims
-# Model inputs
-inputs = model.input
-# Metadata for inputs of the model
-histend = model.histend
-# Domains to which variables belong
-domain = model.domain
-tl = model.timeline
-scens = model.scenarios
+    # Fetch ModelRun attributes, for examination
+    # Titles of the model
+    titles = model.titles
+    # Dimensions of model variables
+    dims = model.dims
+    # Model inputs
+    inputs = model.input
+    # Metadata for inputs of the model
+    histend = model.histend
+    # Domains to which variables belong
+    domain = model.domain
+    tl = model.timeline
+    scens = model.scenarios
 
-# Call the 'run' method of the ModelRun class to solve the model
-model.run()
+    # Call the 'run' method of the ModelRun class to solve the model
+    model.run()
 
-# Fetch ModelRun attributes, for examination
-# Output of the model
-output_all = model.output
+    # Fetch ModelRun attributes, for examination
+    # Output of the model
+    output_all = model.output
