@@ -1,3 +1,0 @@
-scenario,US_phase_pol,US_price_pol,US_cp_pol,CN_phase_pol,CN_price_pol,CN_cp_pol,IN_phase_pol,IN_price_pol,IN_cp_pol,RGS_phase_pol,RGS_price_pol,RGS_cp_pol,RGN_phase_pol,RGN_price_pol,RGN_cp_pol,learning_solar,learning_wind,lifetime_solar,lifetime_wind,lead_offshore,lead_onshore,lead_solar,lead_ccgt,lead_coal,lead_commission,discr,elec_demand,ccgt_price,coal_price,tech_potential
-S4_round_check_hi,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,30,26,3,2,2.49,2,2,2,0.5,0.5,0.5,0.5,0.5
-S4_round_check_lw,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.319,-0.194,30,26,3,2,1.51,2,2,2,0.5,0.5,0.5,0.5,0.5
