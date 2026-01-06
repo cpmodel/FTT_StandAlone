@@ -10,7 +10,7 @@ def shared_layout():
     ui.dark_mode().bind_value(state, 'dark_mode')
     
     current_path = ui.context.client.page.path
-    with ui.header().classes('bg-slate-800 items-center justify-between'):
+    with ui.header().classes('bg-slate-800 items-center justify-between p-2'):
         with ui.row().classes('items-center'):
             ui.image('GUI/images/ftt_icon_white.png').classes('w-18 h-12 ml-4')
             # Use a column to stack the Title and Subtitle
@@ -32,10 +32,10 @@ def shared_layout():
                 on_click=lambda p=path: ui.navigate.to(p)).props(f'flat color={color}') \
                     .bind_enabled_from(state, 'is_running', backward=lambda r: not r)
     
-    with ui.footer(fixed=False).classes('bg-slate-800 p-4 items-center justify-between'):
-        ui.label('Copyright © 2026 Climate Policy Assessment Community of Models').classes('text-gray-400 text-xs')
+    with ui.footer(fixed=False).classes('bg-slate-800 p-2 items-center justify-between'):
+        ui.label('Copyright © 2026 Climate Policy Assessment Community of Models').classes('text-gray-400 text-xs ml-4')
 
-        with ui.row().classes('ml-4'):
+        with ui.row().classes('mr-4'):
             for label, url in[
                 ('Documentation', 'https://ftt-standalone.readthedocs.io/en/latest/'),
                 ('Exeter Climate Policy', 'https://exeterclimatepolicy.com/'),
@@ -45,4 +45,4 @@ def shared_layout():
                 ui.link(label, url, new_tab=True).classes('text-gray-400 text-xs')
                 # format with seperator but ignore on last url entry (should find more elegant solution)
                 if label != 'GitHub':
-                    ui.label(' | ').classes('text-gray-400 text-xs')
+                    ui.label('|').classes('text-gray-400 text-xs')
