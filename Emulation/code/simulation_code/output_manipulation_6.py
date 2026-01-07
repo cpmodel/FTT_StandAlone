@@ -5,6 +5,8 @@ import numpy as np
 import sys
 from tqdm import tqdm
 
+## Need to incorporate number of scens from config file 
+
 # Set root directory
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append(root_dir)

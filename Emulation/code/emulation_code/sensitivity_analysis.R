@@ -168,7 +168,7 @@ oaatSensvarSummaryPlot <- function(oat_sens_mat,
 # Just for pol values - take any inputs df
 
 ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # EA, CN & US levels
-ref_techeco <- setNames(rep(0.5, 15), colnames(inputs[16:30]))
+ref_techeco <- setNames(rep(0.5, 17), colnames(inputs[16:32]))
 ref <- c(ref_pol, ref_techeco)
 
 # 1) List all your .rds files
@@ -213,12 +213,13 @@ colnames(global_sens_mat) <- c("US phaseouts", "US subsidies", "US carbon prices
                                "learning rate: solar", "learning rate: wind",
                                "lifetime: solar", "lifetime: wind", 
                                "lead time: offshore", "lead time: onshore", "lead time: solar",
-                               "lead time: ccgt", "lead time: coal", "grid connection time",
+                               "grid connection time", "lead time: ccgt", "lead time: coal", 
+                               "cannibalisation: wind", "cannibalisation: solar",
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
 
 write.csv(global_sens_mat, 
-          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/gbl_sa_lead_fix.csv",
+          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/gbl_sa.csv",
           row.names = F)
 
 # 5) (Optional) Plot them all at once
@@ -265,7 +266,8 @@ colnames(IN_polcompare_mat) <- c("US phaseouts", "US subsidies", "US carbon pric
                                "learning rate: solar", "learning rate: wind",
                                "lifetime: solar", "lifetime: wind", 
                                "lead time: offshore", "lead time: onshore", "lead time: solar",
-                               "lead time: ccgt", "lead time: coal", "grid connection time",
+                               "grid connection time", "lead time: ccgt", "lead time: coal", 
+                               "cannibalisation: wind", "cannibalisation: solar",
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
 

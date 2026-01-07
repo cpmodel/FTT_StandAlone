@@ -38,7 +38,7 @@ base_row <- as.data.frame(matrix(0, nrow = 1, ncol = length(pol_params)))
 names(base_row) <- pol_params
 
 amb_row <- base_row
-amb_row[, c("CN_phase_pol", "CN_price_pol", "CN_cp_pol", 
+amb_row[, c( #"CN_phase_pol", "CN_price_pol", "CN_cp_pol", 
             "US_price_pol")] <- 0.5
 
 
@@ -69,7 +69,8 @@ sampling_method <- "lhs"  # Options: "lhs", "normal", or "set"
 input_dfs <- list()
 
 # Define which columns should use LHS
-lhs_cols <- c("elec_demand", "lead_commission", "lead_solar", "lead_onshore", "discr")
+lhs_cols <- c("elec_demand", "lead_commission", "lead_solar", 
+              "lead_onshore", "discr", "cf_wind", "cf_solar")
 
 for (i in 1:nrow(pol_df)) {
   

@@ -65,65 +65,72 @@ dfs <- NULL
 
 #############################
 
+# This can all be done from config file now e.g. cfg <- jsonlite::fromJSON("config.json")
+ranges <- list(
+  learning_solar = list(min = -0.405, max = -0.233),
+  learning_wind = list(min = -0.276, max = -0.112),
+  lifetime_solar = list(min = 25, max = 35),
+  lifetime_wind = list(min = 25, max = 35),
+  lead_solar = list(min = 0.51, max = 1.5),
+  lead_offshore = list(min = 2, max = 4),
+  lead_onshore = list(min = 1, max = 2),
+  lead_ccgt = list(min = 1, max = 2),
+  lead_coal = list(min = 2, max = 3),
+  lead_commission = list(min = 0, max = 1),
+   cf_wind = list(min = -1.3, max = -0.2),
+  cf_solar = list(min = -4.3, max = -0.6)
+)
 
 
-# ranges <- list(
-#   learning_solar = list(min = -0.405, max = -0.233),
-#   learning_wind = list(min = -0.276, max = -0.112),
-#   lifetime_solar = list(min = 25, max = 35),
-#   lifetime_wind = list(min = 25, max = 35),
-#   lead_solar = list(min = 0.51, max = 1.5),
-#   lead_offshore = list(min = 2, max = 4),
-#   lead_onshore = list(min = 1, max = 2),
-#   lead_ccgt = list(min = 1, max = 2),
-#   lead_coal = list(min = 2, max = 3),
-#   lead_commission = list(min = 0, max = 1)
-# )
-# 
-# 
-# # List of columns to be rescaled
-# columns_to_rescale <- c('learning_solar',
-#                         'learning_wind',
-#                         'lifetime_solar',
-#                         'lifetime_wind',
-#                         'lead_solar',
-#                         'lead_offshore',
-#                         'lead_onshore',
-#                         'lead_ccgt',
-#                         'lead_coal',
-#                         'lead_commission')
-# 
-# # Copy input_df for rescaling
-# input_df_rescaled <- input_df
-# 
-# # Function for rescaling
-# rescale_column <- function(column, range) {
-#   (column - range$min) / (range$max - range$min)
-# }
-# 
-# # Rescale specified columns and overwrite the original columns
-# for (col in columns_to_rescale) {
-#   input_df_rescaled[[col]] <- rescale_column(input_df_rescaled[[col]], ranges[[col]])
-# }
-# 
-# # Function to invert the values in a column
-# invert_values <- function(values) {
-#   return(1 - values)
-# }
-# 
-# # Apply the inversion to a specific column in the dataframe
-# input_df_rescaled$learning_solar <- invert_values(input_df_rescaled$learning_solar)
-# input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$learning_wind)
-# 
-# # check for values out of range
-# numeric_cols <- sapply(input_df_rescaled, is.numeric)
-# # Create a logical vector identifying rows with any numeric value outside 0-1
-# rows_outside <- apply(input_df_rescaled[, numeric_cols], 1, function(row) any(row < 0 | row > 1, na.rm = TRUE))
-# input_df_rescaled[rows_outside, ] ## should be 0
-# 
-# # save checked table
-# write.csv(input_df_rescaled, paste0(file_path, 'data/scenarios/S3_scen_levels_rescaled.csv'), row.names = FALSE)
-# 
+# List of columns to be rescaled
+columns_to_rescale <- c('learning_solar',
+                        'learning_wind',
+                        'lifetime_solar',
+                        'lifetime_wind',
+                        'lead_solar',
+                        'lead_offshore',
+                        'lead_onshore',
+                        'lead_ccgt',
+                        'lead_coal',
+                        'lead_commission',
+                        'cf_wind', 
+                        'cf_solar')
+
+# Copy input_df for rescaling
+input_df_rescaled <- input_df
+
+# Function for rescaling
+rescale_column <- function(column, range) {
+  (column - range$min) / (range$max - range$min)
+}
+
+# Rescale specified columns and overwrite the original columns
+for (col in columns_to_rescale) {
+  input_df_rescaled[[col]] <- rescale_column(input_df_rescaled[[col]], ranges[[col]])
+}
+
+# Function to invert the values in a column
+invert_values <- function(values) {
+  return(1 - values)
+}
+
+# Apply the inversion to a specific column in the dataframe
+input_df_rescaled$learning_solar <- invert_values(input_df_rescaled$learning_solar)
+input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$learning_wind)
+# Invert values for CR so it is more intuitive
+#input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$cf_wind)
+#input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$cf_wind)
+
+
+# check for values out of range
+numeric_cols <- sapply(input_df_rescaled, is.numeric)
+# Create a logical vector identifying rows with any numeric value outside 0-1
+rows_outside <- apply(input_df_rescaled[, numeric_cols], 1, function(row) any(row < 0 | row > 1, na.rm = TRUE))
+input_df_rescaled[rows_outside, ] ## should be 0
+
+# save checked table
+write.csv(input_df_rescaled, paste0(file_path, 'data/scenarios/S3_scen_levels_rescaled.csv'), row.names = FALSE)
+
 
 
 
@@ -172,9 +179,9 @@ build_and_save_emulator <- function(output_data, key, seed = seed_it) {
 
 
 # Define general variables for output of interest
-vars <- c('MEWP',  'MEWE', 'MEWK','MEWS') #'MEWW',
-regions <- c('IN')
-years <- c(2030, 2040, 2050)
+vars <- c( 'MEWS' ) #'MEWW', 'MEWE', 'MEWK',
+regions <- c( 'IN') #'GBL',
+years <- c(2040, 2050)
 
 # techs and subgroups
 techs = list(
@@ -263,11 +270,10 @@ for (var in vars) {
       } 
     } else if (var == 'MEWS'){
         for (region in regions){
-          for (tech in nonff_techs){ # renew_techs
             if (region == 'GBL'){
               next
             } else {
-                key <- paste0(var,"_", "nonff_", region, "_", end_year) #'renew_'
+                key <- paste0(var,"_", "renew_", region, "_", end_year) #'renew_'
                 # Filter output
                 output_data <- subset(full_output, year == end_year &
                                         variable == var &
@@ -279,7 +285,6 @@ for (var in vars) {
                 
                 # Saved based on key
                 build_and_save_emulator(output_data, key)
-        }
       }
     }
   } else if (var == 'MEWP'){
