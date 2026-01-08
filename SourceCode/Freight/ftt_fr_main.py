@@ -4,26 +4,19 @@
 ftt_fr_main.py
 ============================================================
 Freight transport FTT module.
-#############################
 
 This is the main file for FTT: Freight, which models technological
 diffusion of freight vehicle types due to simulated consumer decision making.
-Consumers compare the **levelised cost of freight**, which leads to changes in the
-market shares of different technologies.
+Consumers compare the **levelised cost of freight**, which leads to changes 
+in the market shares of different technologies.
 
 The outputs of this module include market shares, fuel use, and emissions.
 
 Local library imports:
 
     FTT: Freight functions:
-
     - `get_lcof <ftt_fr_lcof.html>`__
         Levelised cost calculation
-
-    Support functions:
-
-    - `divide <divide.html>`__
-        Element-wise divide which replaces divide-by-zeros with zeros
 
 Functions included:
     - solve
@@ -33,42 +26,46 @@ Functions included:
 
 """
 
-from math import sqrt
-import warnings
 
 # Third party imports
 import numpy as np
 
 # Local library imports
-from SourceCode.Freight.ftt_fr_lcof import get_lcof
+from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
+
+from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
 from SourceCode.support.divide import divide
+from SourceCode.Freight.ftt_fr_mandate import implement_seeding, implement_mandate
+from SourceCode.Freight.ftt_fr_kickstarter import implement_kickstarter
+from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
-# Main function
+from SourceCode.sector_coupling.battery_lbd import battery_costs
 
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+# %% main function
+# -----------------------------------------------------------------------------
+# ----------------------------- Main ------------------------------------------
+# -----------------------------------------------------------------------------
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
-    This function simulates investor decision making in the freight sector.
-    Levelised costs (from the lcof function) are taken and market shares
-    for each vehicle type are simulated to ensure demand is met.
 
+    This function simulates investor decision making in the freight sector.
+    Levelised costs (from the get_lcof function) are taken and market shares
+    for each vehicle type are simulated to ensure demand is met.
 
     Parameters
     -----------
     data: dictionary of NumPy arrays
-        Model variables for the given year of solution
+        Model variables for given year of solution
     time_lag: type
-        Model variables in previous year
-    iter_lag: type
-        Description
+        Model variables from the previous year
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
         Curernt/active year of solution
-    Domain: dictionary of lists
-        Pairs variables to domains
 
     Returns
     ----------
@@ -77,271 +74,202 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     """
 
-    # Factor used to create intermediate data from annual figures
-    no_it = int(data['noit'][0, 0, 0])
-    dt = 1 / float(no_it)
-
+    # Categories for the cost matrix
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
 
     sector = 'freight'
+
+    # Factor used to create intermediate data from annual figures
+    no_it = int(data['noit'][0, 0, 0])
+    dt = 1 / no_it
+
     # Creating variables
+    # Technology to fuel user conversion matrix
+    zjet = np.copy(data['ZJET'][0, :, :])
+    # Initialise the emission correction factor
+    emis_corr = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
+    n_veh_classes = len(titles['FSTI'])
+    
+    def sum_over_classes(var):
+        output = np.stack([
+                    np.sum(var[:, veh_class::n_veh_classes, :], axis=1)
+                    for veh_class in range(n_veh_classes)],
+                    axis=1)
+        return output
 
-    zjet = data['ZJET'][0, :, :]
-    emis_corr = np.ones([len(titles['RTI']), len(titles['FTTI'])])
+    # Initialise up to the last year of historical data
+    if year <= histend["RFLZ"]:
+        
+        summed_zews = sum_over_classes(data['ZEWS'])
+        for r in range(len(titles['RTI'])):
+            # Correction to market shares for each vehicle class
+            # Sometimes historical market shares do not add up to 1.0
+            for veh_class in range(n_veh_classes):
+                if (~np.isclose(summed_zews[r, veh_class, 0], 1.0, atol=1e-9)
+                    and summed_zews[r, veh_class, 0] > 0.0):
+                        data['ZEWS'][r, :, 0] = np.divide(data['ZEWS'][r, veh_class::n_veh_classes, 0],
+                                                    summed_zews[r, veh_class, 0])
+            
+        
+        # Calculate number of vehicles per technology. First reshape rflz into right format
+        rflz_reshaped = np.tile(data['RFLZ'], (1, data['ZEWS'].shape[1] // data['RFLZ'].shape[1], 1))
+        data['ZEWK'] = data['ZEWS'] * rflz_reshaped
+        
+        # Find total service area in Mvkm, first by tech, then by vehicle class
+        data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 1e6
+        data['ZESG'] = sum_over_classes(data['ZEVV'])
+        
+        # Calculate demand in million ton vehicle-km OR million passenger vehicle km, per vehicle class
+        data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis]
+        data['RVKZ'] = sum_over_classes(data['ZEST'])
+        
+        # Emissions 
+        data['ZEWE'] = (data['ZEVV']
+                        * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)'], np.newaxis]
+                        * (1 - data['ZBFM']) / (1e6) )
+        
+        for r in range(len(titles['RTI'])):
+        
+            for veh in range(len(titles['FTTI'])):
+                for fuel in range(len(titles['JTI'])):
+                    if titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][0, veh, fuel] == 1:
+                        # No biofuel blending mandate in the historical period
+                        zjet[veh, fuel] = 0
+                        
+            # Find fuel use
+            data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
+                                    data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
+        
+        carbon_costs = set_carbon_tax(data, c6ti)
+        data = get_lcof(data, titles, carbon_costs, year)
 
-    if year <= histend["RVKZ"]:
-
-        # U (ZEWG) is number of vehicles by technology
-        data['ZEWG'][:, :, 0] = data['ZEWS'][:, :, 0] * data['RFLZ'][:, np.newaxis, 0, 0]
-
-        if year == histend["RVKZ"]:
+        
+        if year == histend["RFLZ"]:
             # Calculate levelised cost
-            data = get_lcof(data, titles)
-
-#
-#
-#        #I (ZEWY) is new sales, positive changes in U
-#        data['ZEWY'][r, :, 0] = ((data['ZEWG'][r, :, 0] - data['ZEWG'][r, :, 0])/dt)*((data['ZEWG'][r, :, 0] - data['ZEWG'][r, :, 0])>0)
-
-
-#
-##        for veh in range(len(titles['FTTI'])):
-##            for fuel in range(len(titles['JTI'])):
-##                if titles['JTI'][fuel] == '5 Middle distillates' and data['ZJET'][0, veh, fuel]  == 1:  # Middle distillates
-##
-##                            # Mix with biofuels if there's a biofuel mandate
-##                    zjet[veh, fuel] = zjet[veh, fuel] * (1.0 - data['ZBFM'][r, 0, 0])
-##
-##                            # Emission correction factor
-##                    emis_corr[r, veh] = 1.0 - data['ZBFM'][r, 0, 0]
-##
-##                elif titles['JTI'][fuel] == '11 Biofuels'  and data['ZJET'][0, veh, fuel] == 1:
-##
-##                    zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r, 0, 0]
-#
-#        data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0]*\
-#                                        data['ZCET'][r, :, c6ti['9 energy use (MJ/vkm)']]))/0.041868
-#
-#        #Emissions, E is ZEWE
-#        data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1**6)
-#
-#
-#        #Set cumulative capacities variable
-#        data['ZEWW'][0, :, 0] = data['ZCET'][0, :, c6ti['11 Cumulative seats']]
+            
+            carbon_costs = set_carbon_tax(data, c6ti)
+            data = get_lcof(data, titles, carbon_costs, year)
+            
+            data["BZTC initial"] = np.copy(data["BZTC"])
 
 
     "Model Dynamics"
 
     # Endogenous calculation starts here
-    if year > histend['RVKZ']:
+    if year > histend['RFLZ']:
 
         data_dt = {}
+        data_dt['ZWIY'] = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
 
+        
         for var in time_lag.keys():
-
-            if var.startswith(("R", "Z")):
-
+            if var.startswith(("R", "Z", "B")):
                 data_dt[var] = np.copy(time_lag[var])
-
+                
 
         # Find if there is a regulation and if it is exceeded
-
-        division = divide((data_dt['RVKZ'][:, :, 0] - data['ZREG'][:, :, 0]), data_dt['ZREG'][:, :, 0]) # 0 when dividing by 0
-        isReg = 0.5 + 0.5*np.tanh(1.5 + 10*division)
+        division = divide((time_lag['ZEWK'][:, :, 0] - data['ZREG'][:, :, 0]),
+                           data['ZREG'][:, :, 0]) # 0 when dividing by 0
+        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
         isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
         isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
-
+        
         for t in range(1, no_it + 1):
         # Interpolations to avoid staircase profile
 
-            RTCO = time_lag['RZCO'][:, :, :] + (data['RZCO'][:, :, :] - time_lag['RZCO'][:, :, :]) * t * dt
-            FuT = time_lag['RTFZ0'][:, :, :] + (data['RTFZ0'][:, :, :] - time_lag['RTFZ0'][:, :, :]) * t * dt
-            #TJET = time_lag['ZJET'][:, :, :] + (data['ZJET'][:, :, :] - time_lag['ZJET'][:, :, :]) * t * dt
-            D = time_lag['RVKZ'][:, :, :] + (data['RVKZ'][:, :, :] - time_lag['RVKZ'][:, :, :]) * t * dt
-            Utot = time_lag['RFLZ'][:, :, :] + (data['RFLZ'][:, :, :] - time_lag['RFLZ'][:, :, :]) * t * dt
-            BFM = time_lag['ZBFM'][:, :, :] + (data['ZBFM'][:, :, :] - time_lag['ZBFM'][:, :, :]) * t * dt
+            D = time_lag['RVKZ'] + (data['RVKZ'] - time_lag['RVKZ']) * t * dt
+            Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
+            Utot = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
+           
+            # What shares would be mostly endogenous (some effect of regulations)
+            endo_shares, endo_capacity = shares(
+                dt, t, no_it, data_dt['ZEWS'], data_dt['ZEGC'], data_dt['ZTTD'], data['ZEWA'],
+                data['BZTC'][:, :, c6ti['14 Turnover rate (1/y)']], isReg,
+                D, Utot, titles)
+            
+            # Shares after exogenous sales and regulations taken into account
+            data['ZEWS'] = implement_shares_policies(
+                endo_capacity, endo_shares, 
+                titles, data['ZWSA'], data['ZREG'], isReg,
+                sum_over_classes, n_veh_classes, Utot, no_it)
+                        
+            # Validate that there are no negative shares, and they add up to 3 or 4 or 5
+            validate_shares(data['ZEWS'], sector, year, titles)
+                    
+            # Copy over costs that don't change
+            data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
+            
+            # This is number of trucks by technology
+            data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
+           
+            # Investment (sales) = new capacity created
+            # zewi_t is new additions at current timestep/iteration
+            data["ZEWI"], zewi_t = get_sales(
+                    cap=data["ZEWK"],
+                    cap_dt=data_dt["ZEWK"], 
+                    cap_lag=time_lag["ZEWK"],
+                    sales_or_investment_in=data["ZEWI"],
+                    timescales=data['BZTC'][:, :, c6ti['8 Lifetime (y)']],
+                    dt=dt,
+                 
+                    )
+            
+            data['ZEWI'], zewi_t, data['ZEWK'] = implement_seeding(
+                            data['ZEWK'], 1, data['ZEWI'], zewi_t,
+                            n_veh_classes, year)
 
+            # Mutually exclusive policies: only ONE of mandate, kickstarter,
+            # or emissions regulation can be active at a time
+            mandate_active = not np.all(data["EV truck mandate"][:, 0, 0] == 0)
+            kickstarter_active = not np.all(data["EV truck kickstarter"][:, 0, 0] == 0)
+            emissions_reg_active = "emissions regulation" in data and not np.all(data["emissions regulation"][:, 0, 0] == 0)
+
+            if mandate_active:
+                data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
+                                data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t,
+                                n_veh_classes, year)
+            elif kickstarter_active:
+                data['ZEWI'], zewi_t, data['ZEWK'] = implement_kickstarter(
+                                data['ZEWK'], data["EV truck kickstarter"], data['ZEWI'], zewi_t,
+                                n_veh_classes, year)
+            elif emissions_reg_active:
+                data['ZEWI'], zewi_t, data['ZEWK'] = implement_emissions_regulation(
+                                data['ZEWK'], data["emissions regulation"], data['ZEWI'], zewi_t,
+                                n_veh_classes, year,
+                                data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']])
+
+            # Recalculate zews per class
+            for r in range(len(titles['RTI'])):
+                for veh_class in range(n_veh_classes):
+                    denominator = np.sum(data['ZEWK'][r, veh_class::n_veh_classes])
+                    if denominator > 0:
+                        data['ZEWS'][r, veh_class::n_veh_classes, 0] = ( 
+                                data['ZEWK'][r, veh_class::n_veh_classes, 0]
+                                / denominator )
+                
+            
+            
+            # Find total service area and demand, first by tech, then by vehicle class     
+            data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 1e6
+            data['ZEST'] = data['ZEVV'] * data['BZTC'][:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis]
+            data['ZESG'] = sum_over_classes(data['ZEVV'])
+            data['RVKZ'] = sum_over_classes(data['ZEST'])
+                                    
+            # Emissions
+            data['ZEWE'] = ( data['ZEVV']
+                            * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)'], None]
+                            * (1 - data['ZBFM']) / 1e6 )
+            
+            
+            # Reopen country loop
             for r in range(len(titles['RTI'])):
 
-                if D[r] == 0.0:
+                if np.sum(D[r]) == 0.0:
                     continue
-
-                # DSiK contains the change in shares
-                dSik = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
-
-                # F contains the preferences
-                F = np.ones([len(titles['FTTI']), len(titles['FTTI'])]) * 0.5
-
-                k_1 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
-                k_2 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
-                k_3 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
-                k_4 = np.zeros([len(titles['FTTI']), len(titles['FTTI'])])
-
-                # -----------------------------------------------------
-                # Step 1: Endogenous EOL replacements
-                # -----------------------------------------------------
-                for b1 in range(len(titles['FTTI'])):
-
-                    if  not (data_dt['ZEWS'][r, b1, 0] > 0.0 and
-                             data_dt['ZTLL'][r, b1, 0] != 0.0 and
-                             data_dt['ZTDD'][r, b1, 0] != .0):
-                        continue
-
-                    S_i = data_dt['ZEWS'][r, b1, 0]
-
-                    for b2 in range(b1):
-
-                        if  not (data_dt['ZEWS'][r, b2, 0] > 0.0 and
-                                 data_dt['ZTLL'][r, b2, 0] != 0.0 and
-                                 data_dt['ZTDD'][r, b2, 0] != 0.0):
-                            continue
-
-
-                        S_k = data_dt['ZEWS'][r, b2, 0]
-
-                        Aik = data['ZEWA'][0, b1, b2] * data['ZCET'][r, b1, c6ti['16 Turnover rate']]
-                        Aki = data['ZEWA'][0, b2, b1] * data['ZCET'][r, b2, c6ti['16 Turnover rate']]
-
-                        # Propagating width of variations in perceived costs
-                        dFik = sqrt(2) * sqrt((data_dt['ZTDD'][r, b1, 0]*data_dt['ZTDD'][r, b1, 0] + data_dt['ZTDD'][r, b2, 0]*data_dt['ZTDD'][r, b2, 0]))
-
-                        # Consumer preference incl. uncertainty
-                        Fik = 0.5*(1 + np.tanh(1.25*(data_dt['ZTLL'][r, b2, 0]-data_dt['ZTLL'][r, b1, 0])/dFik))
-                        Fki = 1-Fik
-
-                        # Preferences are then adjusted for regulations
-                        F[b1, b2] = Fik*(1.0-isReg[r, b1]) * (1.0 - isReg[r, b2]) + isReg[r, b2]*(1.0-isReg[r, b1]) + 0.5*(isReg[r, b1]*isReg[r, b2])
-                        F[b2, b1] = (1.0-Fik)*(1.0-isReg[r, b2]) * (1.0 - isReg[r, b1]) + isReg[r, b1]*(1.0-isReg[r, b2]) + 0.5*(isReg[r, b2]*isReg[r, b1])
-
-
-                        # Runge-Kutta market share dynamiccs
-                        k_1[b1, b2] = S_i*S_k * (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_2[b1, b2] = (S_i + dt*k_1[b1, b2]/2)*(S_k-dt*k_1[b1, b2]/2)* (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_3[b1, b2] = (S_i + dt*k_2[b1, b2]/2)*(S_k-dt*k_2[b1, b2]/2) * (Aik*F[b1, b2] - Aki*F[b2, b1])
-                        k_4[b1, b2] = (S_i + dt*k_3[b1, b2])*(S_k-dt*k_3[b1, b2]) * (Aik*F[b1, b2] - Aki*F[b2, b1])
-
-                        # This method currently applies RK4 to the shares, but all other components of the equation are calculated for the overall time step
-                        # We must assume the the LCOE does not change significantly in a time step dt, so we can focus on the shares.
-
-                        dSik[b1, b2] = dt*(k_1[b1, b2] + 2*k_2[b1, b2] + 2*k_3[b1, b2] + k_4[b1, b2])/6 #*data['ZCEZ'][r, 0, 0]
-                        dSik[b2, b1] = -dSik[b1, b2]
-
-                        # Market share dynamics
-#                        dSik[b1, b2] = S_i*S_k* (Aik*F[b1, b2] - Aki*F[b2, b1])*dt#*data['ZCEZ'][r, 0, 0]
-#                        dSik[b2, b1] = -dSik[b1, b2]
-
-                # Add in exogenous sales figures. These are blended with
-                # endogenous result! Note that it's different from the
-                # ExogSales specification!
-                Utot_d = D[r, 0, 0]
-                dSk = np.zeros([len(titles['FTTI'])])
-                dUk = np.zeros([len(titles['FTTI'])])
-                dUkTK = np.zeros([len(titles['FTTI'])])
-                dUkREG = np.zeros([len(titles['FTTI'])])
-
-                # Check that exogenous capacity is smaller than rgulated capacity
-                # Regulations have priority over exogenous capacity
-                reg_vs_exog = ((data['ZWSA'][r, :, 0] + data_dt['ZEWG'][r, :, 0]) > data['ZREG'][r, :, 0]) \
-                             & (data['ZREG'][r, :, 0] >= 0.0)
-                data['ZWSA'][r, :, 0] = np.where(reg_vs_exog, 0.0, data['ZWSA'][r, :, 0])
-                ZWSA_scalar = 1.0
-
-                # Check that exogenous sales additions aren't too large
-                # As a proxy it can't be greater than 80% of the fleet size
-                # divided by 13 (the average lifetime of vehicles)
-                if (data['ZWSA'][r, :, 0].sum() > 0.8 * D[r] / 13):
-                    ZWSA_scalar = data['ZWSA'][r, :, 0].sum() / (0.8 * D[r] / 13)
-
-                ZWSA_gt_null = data['ZWSA'][r, :, 0] >= 0.0
-                if t == no_it-1:
-                    dUkTK = np.where(ZWSA_gt_null, data['ZWSA'][r, :, 0] / ZWSA_scalar, 0.0)
-                else:
-                    dUkTK = 0
                 
-                # Correct for regulations
-                # Share of UED * change in UED * isReg i.e. change in UED split into technologies times isReg
-                if time_lag['RFLZ'][r, 0, 0] > 0.0 and Utot_d > 0.0 and (Utot_d - time_lag['RFLZ'][r, 0, 0]) > 0.0:
-
-                    dUkREG = -data_dt['ZEWG'][r, :, 0] * ( (D[r] - time_lag['RFLZ'][r, 0, 0]) /
-                                 time_lag['RFLZ'][r, 0, 0]) * isReg[r, :].reshape([len(titles['FTTI'])])
-                
-                # Sum effect of exogenous sales additions (if any) with
-                # effect of regulations
-                dUk = dUkTK + dUkREG
-                dUtot = np.sum(dUk)
-                
-                # Convert to market shares and make sure sum is zero
-                # dSk = dUk/Utot_d - Uk dUtot/Utot^2  (Chain derivative)
-                dSk = np.divide(dUk, Utot_d) \
-                      - time_lag['ZEWG'][r, :, 0] / np.sum(time_lag['ZEWG'][r, :, 0]) * np.divide(dUtot, Utot_d)
-
-                try:
-                    data['ZEWS'][r, :, 0] = data_dt['ZEWS'][r, :, 0] + np.sum(dSik, axis=1) + dSk
-                except ValueError as e:
-                    print(f'shape dUK is {np.shape(dUk)}')
-                    print( 'shape of ')
-                    print(f"shape data['ZEWS'][r, :, 0]: {np.shape(data['ZEWS'][r, :, 0])}")
-                    print(f"shape data_dt['ZEWS'][r, :, 0]: {np.shape(data_dt['ZEWS'][r, :, 0])}")
-                    print(f"shape np.sum(dSik, axis=1): {np.shape(np.sum(dSik, axis=1))}")
-                    print(f'shape dSk {np.shape(dSk)}')
-                    print(e)
-
-
-                if ~np.isclose(np.sum(data['ZEWS'][r, :, 0]), 1.0, atol = 1e-5):
-                    msg = (f"Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}"
-                    "Sum of market shares do not add to 1.0 (instead: {np.sum(data['ZEWS'][r, :, 0])})")
-                    warnings.warn(msg)
-
-                if np.any(data['ZEWS'][r, :, 0] < 0.0):
-                    msg = (f"Sector: {sector} - Region: {titles['RTI'][r]} - Year: {year}"
-                    "Negative market shares detected! Critical error!")
-                    warnings.warn(msg)
-                    
-                # Copy over costs that don't change
-                data['ZCET'][:, :, 1:20] = data_dt['ZCET'][:, :, 1:20]
-
-                # G1 is Total service
-                #G1[r, :, 0] = D[r]/data['ZLOD'][r, 0, 0]
-
-                data['ZESG'][r, :, 0] = D[r, 0, 0]/data['ZLOD'][r, 0, 0]
-
-                # Sd is share difference between small and large trucks
-                data['ZESD'][r, 0, 0] = data['ZEWS'][r, 0, 0] + data['ZEWS'][r, 2, 0] + data['ZEWS'][r, 4, 0] + \
-                data['ZEWS'][r, 6, 0] + data['ZEWS'][r, 8, 0] + data['ZEWS'][r, 10, 0] + data['ZEWS'][r, 12, 0] + \
-                data['ZEWS'][r, 14, 0] + data['ZEWS'][r, 16, 0] + data['ZEWS'][r, 18, 0]
-
-                data['ZESD'][r, 1, 0] = 1 - data['ZESD'][r, 0, 0]
-
-
-                for x in range(0, 20, 2):
-                    data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0]/data['ZESD'][r, 0, 0]
-                    data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0]*data['ZESA'][r, x, 0]/(1-1/(data['ZSLR'][r, 0, 0] + 1))
-                    data['ZEST'][r, x, 0] = data['ZEVV'][r, x, 0]*data['ZLOD'][r, 1, 0]
-                for x in range(1, 21, 2):
-                    data['ZESA'][r, x, 0] = data['ZEWS'][r, x, 0]/data['ZESD'][r, 1, 0]
-                    data['ZEVV'][r, x, 0] = data['ZESG'][r, x, 0]*data['ZESA'][r, x, 0]/(1/(data['ZSLR'][r, 0, 0] + 1))
-                    data['ZEST'][r, x, 0] = data['ZEVV'][r, x, 0]*data['ZLOD'][r, 1, 0]
-
-                # T is total service generated by small trucks in MTkm
-
-                # This is number of trucks by technology
-                # data['ZEWG'][r, :, 0] = data['ZEWS'][r, :, 0]*data['RFLZ'][r, 0, 0]
-                data['ZEWG'][r, :, 0] = data['ZEWS'][r, :, 0] * Utot[r, 0, 0]
-                # Investment (sales) = new capacity created
-
-                veh_diff = data['ZEWG'][r, :, 0] - data_dt['ZEWG'][r, :, 0]
-                veh_dprctn = data_dt['ZEWG'][r, :, 0] / data['ZCET'][r, :, c6ti['8 service lifetime (y)']]
-                data['ZEWY'][r, :, 0] = np.where(veh_diff > 0.0, 
-                                               veh_diff/dt + veh_dprctn, 
-                                               veh_dprctn)
-
-
-                # Emissions
-                data['ZEWE'][r, :, 0] = data['ZEVV'][r, :, 0]*data['ZCET'][r, :, c6ti['14 CO2Emissions (gCO2/km)']]*(1-data['ZBFM'][r, 0, 0])/(1E6)
-
-
-                zjet = data['ZJET'][0, :, :].copy()
+                                        
+                zjet = np.copy(data['ZJET'][0, :, :])
                 for veh in range(len(titles['FTTI'])):
                     for fuel in range(len(titles['JTI'])):
                         #  Middle distillates
@@ -353,50 +281,104 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             # Emission correction factor
                             emis_corr[r, veh] = 1.0 - data['ZBFM'][r, 0, 0]
 
-                        elif titles['JTI'][fuel] == '11 Biofuels'  and data['ZJET'][0, veh, fuel] == 1:
+                        elif titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][0, veh, fuel] == 1:
 
                             zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r, 0, 0]
 
-                # Fuel use by fuel type - Convert TJ (ZCET * ZEVV) to ktoe, so divide by 41.868
+                # Fuel use by fuel type - Convert TJ (BZTC * ZEVV) to ktoe, so divide by 41.868
                 data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
-                                    data['ZCET'][r, :, c6ti['9 energy use (MJ/vkm)']])) / 41.868
+                                    data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
+            
 
-
+            
             # Cumulative investment, not in region loop as it is global
-            bi = np.zeros((len(titles['RTI']), len(titles['FTTI'])))
-            for r in range(len(titles['RTI'])):
-                bi[r, :] = np.matmul(data['ZEWB'][0, :, :], data['ZEWY'][r, :, 0])
-            dw = np.sum(bi, axis = 0)*dt
+            bi = np.matmul(zewi_t[:, :, 0], data['ZEWB'][0, :, :])
+            dw = np.sum(bi, axis=0)
+            
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
-
-#                data['ZCET'][:, :, c6ti['11 Cumulative seats']] = data_dt['ZCET'][:, :, c6ti['11 Cumulative seats']]
-#                 + np.sum(data['ZEWB'][0, :, :]*data['ZEWY'][:, :, 0], axis = 1)*dt
+            
+            
+                    
+            ## The amended learning-by-doing based on global battery learning
+            
+            quarterly_additions_freight = zewi_t[:, :, 0] * data["BZTC"][:, :, c6ti['16 Battery capacity (kWh)']]
+            quarterly_additions_freight = (quarterly_additions_freight) / 1e6  # Convert kWh to GWh.
+            summed_quarterly_capacity_freight = np.sum(quarterly_additions_freight)  # Summing across sectors
+            
+            data["Battery cap additions"][2, t-1, 0] = summed_quarterly_capacity_freight
+            
                 
-            # Reopen region loop 
-            # Learning-by-doing effects on investment
-            for tech in range(len(titles['FTTI'])):
+            # Copy over the technology cost categories that do not change 
+            data["BZTC initial"] = np.copy(data_dt['BZTC initial'])
+            
+            # Battery learning
+            data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+            
+            # Save battery cost
+            nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
+            nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
+            
+            if year > histend["BZTC"]:
+            
+                # Learning-by-doing effects on investment
+                for tech in range(len(titles['FTTI'])):
+    
+                    if data['ZEWW'][0, tech, 0] > 0.1:
+                        
+                        # Wright's law approximation for discrete time
+                        learning_factor = (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
+                                             * dw[tech] / data['ZEWW'][0, tech, 0])
+                        
+                        # For PHEV, BEV, and FCEVs, add the battery costs to the non-battery costs
+                        if tech in range(25, 35) or tech in range(40, 45):
+                            
+                            nonbat_cost_dt[:, tech, 0] = (
+                                    data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
+                                    - data_dt['Battery price'][:, 0, 0]  
+                                    * data_dt["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']]
+                                    )
+                            
+                            nonbat_cost[:, tech, 0] = nonbat_cost_dt[:, tech, 0] * learning_factor
+                                                    
 
-                if data['ZEWW'][0, tech, 0] > 0.1:
+                            data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] = (
+                                    nonbat_cost[:, tech, 0] 
+                                    + (data['Battery price'][:, 0, 0]
+                                    * data["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']])
+                                    )
+                            
+                        
+                        # For non-EVs, add only the non-battery costs
+                        else:
+                            data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] = (
+                                    data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
+                                                    * learning_factor )
+                            
+                        # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
+                        # Doesn't make too much sense for non-EVs, but does make sense for EVs
+                        data['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] =  (
+                                data_dt['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] 
+                                * learning_factor )
+                        
+                        # Learning-by-doing for the standard deviations, scaling with above
+                        data['BZTC'][:, tech, c6ti['2 Std of purchase cost']] = (
+                            data_dt['BZTC'][:, tech, c6ti['2 Std of purchase cost']] * learning_factor )
+                        data['BZTC'][:, tech, c6ti['6 std O&M']] = (
+                            data_dt['BZTC'][:, tech, c6ti['6 std O&M']] * learning_factor )
+                        
+                        
 
-                    data['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] =  \
-                            data_dt['ZCET'][:, tech, c6ti['1 Price of vehicles (USD/vehicle)']] * \
-                            (1.0 + data['ZLER'][tech] * dw[tech]/data['ZEWW'][0, tech, 0])
-
+            # Calculate total investment by technology in terms of truck purchases
+            data['ZWIY'] = data['ZEWI'] * data["BZTC"][:, :, c6ti['1 Purchase cost (USD/veh)'], None]
 
             # Calculate levelised cost again
-            data = get_lcof(data, titles)
+            carbon_costs = set_carbon_tax(data, c6ti)
+            data = get_lcof(data, titles, carbon_costs, year)
 
 
-            # Update time loop variables:
             for var in time_lag.keys():
-
-                if var.startswith(("R", "Z")):
-
+                if var.startswith(("R", "Z", "B")):
                     data_dt[var] = np.copy(data[var])
-
-        
-        # Calculate total investment by technology in terms of truck purchases
-        data['ZWIY'][:, :, 0] = data['ZEWY'][:, :, 0] * data['ZCET'][:, :, c6ti['1 Price of vehicles (USD/vehicle)']] * 1.263
 
 
     return data

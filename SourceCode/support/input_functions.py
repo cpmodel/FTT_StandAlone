@@ -221,12 +221,17 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                                 raise(e)
 
                         # If there is no third dimension
-                        elif dims_length[2] == 1:
+                        # Exception: SectorCouplingAssumps has dims (NA, SCA, NA, NA) - no TIME
+                        # It should fall through to the dims_length[3] == 1 handler below
+                        elif dims_length[2] == 1 and var != 'SectorCouplingAssumps':
                             try:
                                 data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
                                 raise(e)
+                            except KeyError:
+                                # Skip files where year columns don't match (non-TIME dimension variables)
+                                pass
 
                         # If there is no time dimension (fourth dimension)
                         elif dims_length[3] == 1:
@@ -235,6 +240,43 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             except (IndexError, ValueError) as e:
                                 input_functions_message(scen, var, dims, read)
                                 raise(e)
+
+    # Apply variable aliases for compatibility between branches
+    data = _apply_variable_aliases(data)
+
+    return data
+
+
+def _apply_variable_aliases(data):
+    """
+    Create aliases for variables that have different names across branches.
+
+    This allows code using either naming convention to work:
+    - Cascading branch uses BZTC for freight cost matrix
+    - Main branch uses ZCET for freight cost matrix
+
+    The alias points to the same numpy array (no memory duplication).
+
+    NOTE: Aliasing disabled after Phase 4 migration - code now uses BZTC consistently.
+    Kept for reference in case rollback is needed.
+    """
+    # Define alias pairs: (alias_name, original_name)
+    # If original exists but alias doesn't, create the alias
+    #
+    # DISABLED: Code now standardized on BZTC naming (Phase 4 complete)
+    # alias_pairs = [
+    #     ('ZCET', 'BZTC'),      # Main name -> Cascading name
+    #     ('BZTC', 'ZCET'),      # Cascading name -> Main name
+    #     ('ZCET initial', 'BZTC initial'),
+    #     ('BZTC initial', 'ZCET initial'),
+    # ]
+    #
+    # for scen in data:
+    #     for alias_name, original_name in alias_pairs:
+    #         if original_name in data[scen] and alias_name not in data[scen]:
+    #             # Create alias (same array reference, no copy)
+    #             data[scen][alias_name] = data[scen][original_name]
+
     return data
 
 

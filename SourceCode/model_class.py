@@ -34,6 +34,8 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
+from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
+from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
 
 
 # Support modules
@@ -139,7 +141,7 @@ class ModelRun:
         self.titles = titles_f.load_titles()
 
         # Load variable dimensions
-        self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
+        self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Set up csv files if they do not exist yet
         initialise_csv_files(self.ftt_modules, self.scenarios)
@@ -223,16 +225,13 @@ class ModelRun:
         # Iteration loop here
         for itereration in range(max_iter):
 
-            if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+            # 1. Run demand sectors FIRST
             if "FTT-Tr" in self.ftt_modules:
                 variables = ftt_tr.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-Fr" in self.ftt_modules:
-                variables = ftt_fr.solve(variables, time_lags, iter_lags,
+                variables = ftt_fr.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-H" in self.ftt_modules:
@@ -245,31 +244,48 @@ class ModelRun:
                 variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-FBT" in self.ftt_modules:
                 variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-MTM" in self.ftt_modules:
                 variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-NMM" in self.ftt_modules:
                 variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
             if "FTT-IH-OIS" in self.ftt_modules:
                 variables = ftt_indhe_ois.solve(variables, time_lags, iter_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
+
+            # 2. Electricity demand feedback (aggregates demand from all sectors)
+            if scenario != "S0":
+                if tl[y] > 2022:
+                    variables = electricity_demand_feedback(variables,
+                                        self.output["S0"], y, self.titles,
+                                        self.unit)
+
+            # 3. Run Power sector LAST
+            if "FTT-P" in self.ftt_modules:
+                variables = ftt_p.solve(variables, time_lags, iter_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            # 4. Electricity price feedback (updates costs for next timestep)
+            if "FTT-P" in self.ftt_modules:
+                if tl[y] > 2022:
+                    variables = electricity_price_feedback(variables, time_lags)
+
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of models. Check settings.ini")
 
-            # Third, solve energy supply
             # Overwrite iter_lags to be used in the next iteration round
             iter_lags = copy.deepcopy(variables)
 #        # Print any diagnstics

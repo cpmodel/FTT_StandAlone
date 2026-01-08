@@ -22,6 +22,8 @@ Local library imports:
 
 # Local library imports
 from SourceCode.model_class import ModelRun
+import pickle
+from pathlib import Path
 
 if __name__ == "__main__":
         
@@ -48,3 +50,9 @@ if __name__ == "__main__":
     # Fetch ModelRun attributes, for examination
     # Output of the model
     output_all = model.output
+
+    # Save output to pickle file
+    (Path('.') / 'Output').mkdir(parents=True, exist_ok=True)
+    with open(Path('.') / 'Output' / 'Results.pickle', 'wb') as f:
+        pickle.dump(output_all, f)
+    print(f"\nResults saved to Output/Results.pickle")

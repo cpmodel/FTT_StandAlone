@@ -36,8 +36,11 @@ import numpy as np
 
 # Local library imports
 from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
-from SourceCode.ftt_core.ftt_mandate import implement_mandate
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+
+# Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
+GREEN_INDICES_HP = [9, 10, 11]
 
 from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
 from SourceCode.support.divide import divide
@@ -153,12 +156,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Investment (= capacity additions) by technology (in GW/y)
         if year > 2014:
-            data["HEWI"][:, :, 0] = ((data["HEWK"][:, :, 0] - time_lag["HEWK"][:, :, 0])
-                                        + time_lag["HEWK"][:, :, 0] * data["HETR"][:, :, 0])
-            # Prevent HEWI from going negative
-            data['HEWI'][:, :, 0] = np.where(data['HEWI'][:, :, 0] < 0.0,
-                                                0.0,
-                                                data['HEWI'][:, :, 0])
+            data["HEWI"] = get_sales_yearly(data["HEWK"], time_lag["HEWK"],
+                              data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']],
+                              year)
             
             bi = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
             for r in range(len(titles['RTI'])):
@@ -213,7 +213,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-H')
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
-            
+
+        # Initialize HWIY accumulator for this year (will accumulate within timesteps)
+        data_dt['HWIY'] = np.zeros([len(titles['RTI']), len(titles['HTTI']), 1])
+
+        # Preserve baseline fuel demand from previous timestep (for output tracking)
+        data["FU14A"] = time_lag["FU14A"]
+        data["FU14B"] = time_lag["FU14B"]
 
         division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
@@ -347,11 +353,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                   data["HEWI"], data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
                   dt
                   )
-            
-            # Change capacity and sales after mandate
+
+            # Seed heat pumps in regions with low adoption (2025-2030)
+            data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP)
+
+            # Change capacity and sales after mandate (only runs if hp mandate != 0)
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
-                data['HEWK'], data["HMAN"], data['HEWI'], hewi_t,
-                data["BHTC"][:, :, c4ti["21 Techs under mandate"]])
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["hp mandate"])
             
             # Calculate HEWG, HEWS and HEWF after mandates  
             
@@ -368,21 +377,21 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
             
             
-            # TODO: HEWP = HFPR not HFFC
-            #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
-
-            data['HEWP'][:, 0, 0] = data['HFFC'][:, 4, 0]
-            data['HEWP'][:, 1, 0] = data['HFFC'][:, 4, 0]
-            data['HEWP'][:, 2, 0] = data['HFFC'][:, 6, 0]
-            data['HEWP'][:, 3, 0] = data['HFFC'][:, 6, 0]
-            data['HEWP'][:, 4, 0] = data['HFFC'][:, 10, 0]
-            data['HEWP'][:, 5, 0] = data['HFFC'][:, 10, 0]
-            data['HEWP'][:, 6, 0] = data['HFFC'][:, 0, 0]
-            data['HEWP'][:, 7, 0] = data['HFFC'][:, 8, 0]
-            data['HEWP'][:, 8, 0] = data['HFFC'][:, 7, 0]
-            data['HEWP'][:, 9, 0] = data['HFFC'][:, 7, 0]
-            data['HEWP'][:, 10, 0] = data['HFFC'][:, 7, 0]
-            data['HEWP'][:, 11, 0] = data['HFFC'][:, 7, 0]
+            # Map fuel prices to heating technologies
+            # HFFC indices: 0=hard coal, 4=heavy fuel oil, 6=other gas, 7=natural gas,
+            #               8=electricity, 10=combustible waste/biomass
+            data['HEWP'][:, 0, 0] = data['HFFC'][:, 4, 0]   # Oil boiler -> heavy fuel oil
+            data['HEWP'][:, 1, 0] = data['HFFC'][:, 4, 0]   # Oil condensing -> heavy fuel oil
+            data['HEWP'][:, 2, 0] = data['HFFC'][:, 6, 0]   # Gas boiler -> other gas
+            data['HEWP'][:, 3, 0] = data['HFFC'][:, 6, 0]   # Gas condensing -> other gas
+            data['HEWP'][:, 4, 0] = data['HFFC'][:, 10, 0]  # Wood stove -> biomass
+            data['HEWP'][:, 5, 0] = data['HFFC'][:, 10, 0]  # Wood boiler -> biomass
+            data['HEWP'][:, 6, 0] = data['HFFC'][:, 0, 0]   # Coal -> hard coal
+            data['HEWP'][:, 7, 0] = data['HFFC'][:, 8, 0]   # District heat -> electricity (proxy)
+            data['HEWP'][:, 8, 0] = data['HFFC'][:, 8, 0]   # Electric heating -> electricity
+            data['HEWP'][:, 9, 0] = data['HFFC'][:, 8, 0]   # Heat pump ground -> electricity
+            data['HEWP'][:, 10, 0] = data['HFFC'][:, 8, 0]  # Heat pump air-water -> electricity
+            data['HEWP'][:, 11, 0] = data['HFFC'][:, 8, 0]  # Heat pump air-air -> electricity
 
             # Final energy demand for heating purposes
             data['HJHF'][:, :, 0] = np.matmul(data['HEWF'][:, :, 0], data['HJET'][0, :, :])
@@ -417,13 +426,17 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']] 
                             * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b, 0]))
                     data['BHTC'][:, b, c4ti['9 Conversion efficiency']] = (
-                            data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']] 
+                            data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']]
                             * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
 
 
-            # Total investment in new capacity in a year (m 2014 euros):
+            # Total investment in new capacity (cumulative within year, m 2014 euros):
             # HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-            
+            # BHTC are the investment costs (2014Euro/kW)
+            data['HWIY'][:, :, 0] = (data_dt['HWIY'][:, :, 0]
+                                     + data['HEWI'][:, :, 0] * dt * data['BHTC'][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
+                                     / data['PRSC14'][:, 0, 0, np.newaxis])
+
             # Save investment cost for front end
             data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
             # Save efficiency for front end
@@ -439,11 +452,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
-        
-        # Total investment costs
-        data['HWIY'][:,:,0] = (data['HEWI'][:,:,0] * data['BHTC'][:,:, c4ti['1 Inv cost mean (EUR/kW)']]
-                               / data['PRSC14'][:, 0, 0, np.newaxis] )
-        
+            # Update HWIY in data_dt for next iteration accumulation
+            data_dt['HWIY'] = np.copy(data['HWIY'])
+
         if year == 2050 and t == no_it:
             print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12, 0])/10**6:.3f} M GWh")
             
