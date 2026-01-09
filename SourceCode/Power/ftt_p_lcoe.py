@@ -136,7 +136,11 @@ def get_lcoe(data, titles):
     stor_cost = np.where(stor_mask, storage_sum, 0)
     stor_cost = get_cost_component(stor_cost[:, :, 0], 1, lt_mask)
     dstor_cost = 0.2 * stor_cost  # Assume standard deviation of 20%
-    
+
+    # Battery-only storage cost (short-term only, for MECW battery only variant)
+    battery_cost = np.where(stor_mask, data['MSSP'] / 1000, 0)
+    battery_cost = get_cost_component(battery_cost[:, :, 0], 1, lt_mask)
+
     # Marginal storage cost
     marg_mask = (msal_rounded >= 3)
     marg_stor_cost = np.where(marg_mask, marg_storage_sum, 0)
@@ -148,41 +152,80 @@ def get_lcoe(data, titles):
     dr = bcet[:, :, c2ti['17 Discount Rate (%)'], None]
     denominator = (1 + dr) ** full_lt_mat
 
-    # 1 – Expenses
-    npv_expenses_mu_bare = (it_mu + ft + omt + stor_cost + marg_stor_cost) / denominator
+    # 1a – Expenses – marginal units (for investor decisions)
+    # Note: marg_stor_cost is NOT in bare LCOE (matches cascading branch)
+    npv_expenses_mu_bare = (it_mu + ft + omt + stor_cost) / denominator
     npv_expenses_mu_co2 = npv_expenses_mu_bare + ct / denominator
-    npv_expenses_mu_policy = npv_expenses_mu_co2 + (fft + st) / denominator
-    npv_expenses_av_all_policy = (it_av + ft + ct + omt + stor_cost + fft + st + ct) / denominator
+    # Marginal storage cost added only in policy variant (with subsidies)
+    npv_expenses_mu_policy = npv_expenses_mu_co2 + (fft + st + marg_stor_cost) / denominator
+    # Battery-only variant (short-term storage only)
+    npv_expenses_mu_battery_only = (it_mu + ft + omt + battery_cost) / denominator
+
+    # 1b – Expenses – average units (for electricity pricing)
+    npv_expenses_av_no_policy = (it_av + ft + omt + stor_cost) / denominator
+    npv_expenses_av_only_co2 = npv_expenses_av_no_policy + ct / denominator
+    npv_expenses_av_all = npv_expenses_av_no_policy + (st + ct) / denominator
+    npv_expenses_av_all_but_co2 = npv_expenses_av_no_policy + st / denominator  # Policies without CO2
+    npv_expenses_av_all_policy = (it_av + ft + ct + omt + stor_cost + fft + st) / denominator
+
+    # 1c - Operation costs (for MLCO output)
+    npv_operation = (ft + omt + stor_cost + marg_stor_cost) / denominator
 
     # 2 – Utility
     npv_utility = np.where(lt_mask, 1, 0) / denominator
 
-    # 3 – Standard deviation (propagation of error)
-    npv_std = np.sqrt(dit_mu ** 2 + dft ** 2 + domt ** 2 + dstor_cost**2) / denominator
-    
+    # 3 – Standard deviation (propagation of error, matches cascading)
+    # Include carbon cost std (dct) and 15% discount factor adjustment
+    dct = get_cost_component(bcet[:, :, c2ti['2 std ($/MWh)']], 1, lt_mask)
+    variance_terms = dit_mu**2 + dft**2 + domt**2 + dct**2 + dstor_cost**2
+    summed_variance = np.sum(variance_terms / (denominator**2), axis=2)
+    # Add 15% of total expenses as additional variance (discount rate uncertainty)
+    variance_plus_dcf = summed_variance + (np.sum(npv_expenses_av_all, axis=2) * 0.15)**2
+
     utility_sum = np.sum(npv_utility, axis=2)
     
     
     # 1-levelised cost variants in $/MWh
+    # Marginal unit costs (for investor decisions)
     lcoe_bare = np.sum(npv_expenses_mu_bare, axis=2) / utility_sum
     lcoe_mu_all_policies = np.sum(npv_expenses_mu_policy, axis=2) / utility_sum - data['MEFI'][:, :, 0]
     lcoeco2 = np.sum(npv_expenses_mu_co2, axis=2) / utility_sum
-    lcoe_av = np.sum(npv_expenses_av_all_policy, axis=2) / utility_sum
-    dlcoe = np.sum(npv_std, axis=2) / utility_sum
+    lcoe_battery_only = np.sum(npv_expenses_mu_battery_only, axis=2) / utility_sum
+    dlcoe = np.sqrt(variance_plus_dcf) / utility_sum  # Updated std calculation
+    lcoo = np.sum(npv_operation, axis=2) / utility_sum  # Levelised cost of operation
 
-    # LCOE augmented with gamma values
-    lcoe_mu_gamma = lcoe_mu_all_policies + bcet[:, :, c2ti['22 Gamma']]
+    # Average unit costs (for electricity pricing via MEWP)
+    lcoe_av = np.sum(npv_expenses_av_all_policy, axis=2) / utility_sum
+    lcoe_only_co2 = np.sum(npv_expenses_av_only_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+    lcoe_incl_co2 = np.sum(npv_expenses_av_all, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+    lcoe_all_but_co2 = np.sum(npv_expenses_av_all_but_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+
+    # LCOE augmented with gamma values AND value factor (matches cascading branch)
+    # Formula: METC = lcoe_mu_all_policies * (1 + Gamma) / ValueFactor
+    # This properly accounts for VRE intermittency (value factor < 1 for solar/wind)
+    gamma = bcet[:, :, c2ti['22 Gamma']]
+    value_factor = bcet[:, :, c2ti['23 Value factor']]
+    # Guard against division by zero (value_factor should never be 0, but be safe)
+    value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
+    lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factor
 
     # Pass to variables that are stored outside.
     data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes
-    data['MECW'][:, :, 0] = lcoeco2         # The real bare LCOE with taxes
-    data['MECC'][:, :, 0] = lcoe_av         # The average LCOE costs including policies
-    data['METC'][:, :, 0] = lcoe_mu_gamma   # As seen by consumer (generalised cost)
+    data['MECW'][:, :, 0] = lcoeco2         # The real bare LCOE with CO2 costs
+    data['MECC'][:, :, 0] = lcoe_all_but_co2  # LCOE with policy, without CO2 (matches cascading)
+    data['METC'][:, :, 0] = lcoe_mu_gamma   # As seen by consumer (generalised cost with value factor)
     data['MTCD'][:, :, 0] = dlcoe           # Variation on the LCOE distribution
+    data['MECW battery only'][:, :, 0] = lcoe_battery_only  # LCOE with only short-term storage
+
+    # Additional LCOE variants for MEWP electricity pricing
+    data['MECC only CO2'][:, :, 0] = lcoe_only_co2   # Bare LCOE + CO2 costs only (for old capacity pricing)
+    data['MECC incl CO2'][:, :, 0] = lcoe_incl_co2   # LCOE with subsidies + CO2 (for new capacity pricing)
+    data['MLCO'][:, :, 0] = lcoo                     # Levelised cost of operation
 
     data['MWIC'][:, :, 0] = bcet[:, :, 2]
     data['MWFC'][:, :, 0] = bcet[:, :, 4]
     data['MCOC'][:, :, 0] = bcet[:, :, 0]
+    data['MCFC'][:, :, 0] = bcet[:, :, c2ti['11 Decision Load Factor']]  # Marginal capacity factor
 
     mwmc_condition = np.rint(data['MSAL'][:, 0, 0]) > 1
     data['MWMC'][:, :, 0] = np.where(mwmc_condition[:, None], 

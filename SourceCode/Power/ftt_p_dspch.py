@@ -25,7 +25,7 @@ from numba import njit, prange
 # -----------------------------------------------------------------------------
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
-@njit(fastmath=True, cache=True, parallel=True)
+@njit(cache=True, parallel=True)  # Removed fastmath=True to prevent inf/nan from unsafe float ops
 def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_techs, num_loadbands):
     """
     Calculates dispatch of capacity.
@@ -230,40 +230,48 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
 def calculate_load_factors_from_dispatch(data, titles):
     """
     Calculate technology load factors from dispatch results across load bands.
-    
-    Updates data['MEWL'] and data['Gen by lb'] in place.
+
+    Updates data['MEWL'] and data['Gen_by_lb'] in place.
     """
-    
+
     # Total electricity demand, convert from PJ to GWh
     tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
-    
+
     # Generation by tech x load band = share * height * total demand
     share_x_height = data['MSLB'] * data['MLLB']
-    normalise_factor = np.sum(share_x_height, axis=(1, 2))[:, np.newaxis, np.newaxis]
-    glb3 = (share_x_height * tot_elec_dem[:, np.newaxis, np.newaxis]) / normalise_factor
-    
+    glb3 = share_x_height * tot_elec_dem[:, np.newaxis, np.newaxis]
+
     # Capacity by tech x load band = generation / height
-    klb3 = np.divide(glb3, data['MLLB'], 
-                     out=np.zeros_like(glb3), 
+    klb3 = np.divide(glb3, data['MLLB'],
+                     out=np.zeros_like(glb3),
                      where=data['MLLB'] != 0)
-    
+
     # Calculate load factors MEWL: total generation / total capacity
     total_capacity = np.sum(klb3, axis=2)
     total_generation = np.sum(glb3, axis=2)
-    
+
     data['MEWL'][:, :, 0] = np.divide(
         total_generation, total_capacity,
         out=np.zeros_like(total_generation),
         where=total_capacity > 0
     )
-    
+
     # Store generation by load band (region x tech x lb)
     data['Gen_by_lb'] = glb3
-    
-    # Use default load factors for very low values
-    very_low_lf = data['MEWL'][:, :, 0] <= 0.0001
+
+    # Assign generation by load band to output variables MWG1-MWG6
+    data['MWG1'][:, :, 0] = glb3[:, :, 0]
+    data['MWG2'][:, :, 0] = glb3[:, :, 1]
+    data['MWG3'][:, :, 0] = glb3[:, :, 2]
+    data['MWG4'][:, :, 0] = glb3[:, :, 3]
+    data['MWG5'][:, :, 0] = glb3[:, :, 4]
+    data['MWG6'][:, :, 0] = glb3[:, :, 5]
+
+    # Use default load factors for near-zero values (matching Cascading's simulation period behavior)
+    # Cascading line 664: uses <= 0.0001 threshold in simulation period
+    zero_lf = data['MEWL'][:, :, 0] <= 0.0001
     data['MEWL'][:, :, 0] = np.where(
-        very_low_lf,
+        zero_lf,
         data['MWLO'][:, :, 0],
         data['MEWL'][:, :, 0]
     )

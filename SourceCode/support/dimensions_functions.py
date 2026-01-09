@@ -34,12 +34,15 @@ def load_dims():
     histend = {}
     forstart = {}
     domain = {}
-    
+    unit = {}
+
+    # Each row is one variable
     for index, row in dims_data.iterrows():
         dims_dict[row.iloc[0]] = row.iloc[3:7].tolist() if len(row) > 7 else []
         domain[row.iloc[0]] = row.iloc[7] if len(row) > 7 else None
         histend[row.iloc[0]] = int(row.iloc[9]) if row.iloc[9] not in ['-', ''] else ['']
         forstart[row.iloc[0]] = row.iloc[10] if len(row) > 10 else None
-    
+        unit[row.iloc[0]] = row.iloc[2] if len(row) > 2 else None
+
     # Return titles dictionary
-    return dims_dict, histend, domain, forstart
+    return dims_dict, histend, domain, forstart, unit

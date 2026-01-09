@@ -25,11 +25,44 @@ ns = number of seats
 import numpy as np
 
 
+def set_carbon_tax(data, c3ti, year):
+    '''
+    Convert the carbon price in REPP from euro / tC to 2022$/pkm
+    Apply the carbon price to transport sector technologies based on their emission factors
+
+    Returns:
+        Carbon costs per country and technology (2D)
+    '''
+
+    # Number of seats
+    ns = data['BTTC'][:, :, c3ti['15 Seats/Veh']]
+
+    # Occupancy rates
+    ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
+
+
+    carbon_costs = (data["REPP2X"][:, :, 0]                                   # Carbon price in euro / tC
+                    * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
+                    / ns / ff                                               # Conversion from per km to per pkm
+                    / 3.666 / 10**6                                         # Conversion from C to CO2 and grams to tonnes.
+                    )
+
+
+    if np.isnan(carbon_costs).any():
+        print(f"Carbon price is nan in year {year}")
+        print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
+        print(f"Emissions intensity {data['BTTC'][:, :, c3ti['14 CO2Emissions']]}")
+
+        raise ValueError
+
+    return carbon_costs
+
+
 # %% lcot
 # -----------------------------------------------------------------------------
 # --------------------------- LCOT function -----------------------------------
 # -----------------------------------------------------------------------------
-def get_lcot(data, titles, year):
+def get_lcot(data, titles, carbon_costs, year):
     """
     Calculate levelized costs.
 
@@ -92,9 +125,9 @@ def get_lcot(data, titles, year):
                             ), 1, bt_mask)
     ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
+    ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
     # Fuel tax costs
-    # RTFT must be converted from $/litre to $/MJ (assuming 35 MJ/l)
-    fft = get_cost_elem(data['RTFT'][:, :, 0] / 35, en / ns / ff * taxable_fuels, lt_mask )
+    fft = get_cost_elem(data['RTFT'][:, :, 0], en / ns / ff * taxable_fuels, lt_mask)
     omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], 1 / ns / ff, lt_mask)
     domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], 1 / ns / ff, lt_mask)
     # Yearly road tax cost
@@ -108,7 +141,7 @@ def get_lcot(data, titles, year):
     # 1.1 – Without policy costs
     npv_expenses_bare = (it + ft + omt) / denominator
     # 1.2 – With policy costs
-    npv_expenses_policy = (it + vtt + ft + fft + omt + rtt) / denominator
+    npv_expenses_policy = (it + ct + vtt + ft + fft + omt + rtt) / denominator
    
     # 2 – Utility
     npv_utility = 1 / denominator

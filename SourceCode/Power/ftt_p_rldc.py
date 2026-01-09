@@ -23,6 +23,8 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.sector_coupling.transport_batteries_to_power import share_transport_batteries, update_costs_from_transport_batteries, vehicle_to_grid
+from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 #%% FEQS
 def feqs(a):
@@ -32,7 +34,7 @@ def feqs(a):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def rldc(data, time_lag, data_dt, year, titles, histend):
+def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     """
     Calculate RLDCs.
 
@@ -48,6 +50,8 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
     time_lag: dictionary
         time_lag is the same, but with data for last year.
         Variable names are keys and the values are 3D NumPy arrays.
+    t: int
+        Current iteration timestep within the year.
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
 
@@ -202,22 +206,23 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
                              [0.191,-0.806,-0.434,-0.023,-0.491,-0.174,-0.291, 0.005]])
     
     # Electricity demand (!= same as supply!)
-    e_dem = data['MEWDX'][:, 7, 0] /3.6*1000
+    e_dem = MEWDt / 3.6 * 1000
     
     # Apply learning-by-doing on storage techs
     learning_exp_ss = -0.2945 # = -(0.421 + 0.168)/2: average for flow and li-ion batteries, and mid-length storage may be included here.
     learning_exp_ls = -0.129  # Both from Way paper (https://www.inet.ox.ac.uk/files/energy_transition_paper-INET-working-paper.pdf), latter less reliable due to data constraints
         
 
-    # Wind and solar shares for all regions
-    Sw = np.zeros(len(titles['RTI']))
-    Ss = np.zeros(len(titles['RTI']))
-    Sw = np.divide(np.sum(data['MEWG'][:, [16, 17], 0], axis=1),
+    # Gross (pre-curtailment) wind and solar shares for all regions
+    Sw = np.divide(np.sum(data['MEWG'][:, [16, 17], 0] / (1 - data_dt['MCTN'][:, [16, 17], 0]), axis=1) ,
                    e_dem[:],
-                   where=~np.isclose(e_dem[:], 0.0))
-    Ss = np.divide(data['MEWG'][:, 18, 0],
+                   where=e_dem != 0)
+    Ss = np.divide(data['MEWG'][:, 18, 0] / (1 - data_dt["MCTN"][:, 18, 0]),
                    e_dem[:],
-                   where=~np.isclose(e_dem[:], 0.0))
+                   where=e_dem != 0)
+
+    Sw = np.minimum(1.3, Sw)   # Only calibrated until roughly 120%, odd behaviour above
+    Ss = np.minimum(1.3, Ss)   # Only calibrated until roughly 120%, odd behaviour above
 
     # Format matrix including Sw and Ss powers and cross terms
     # template: [1 Sw Ss Sw^2 Sw*Ss Ss^2 Sw^3 Sw^2*Ss Sw*Ss^2 Ss^3]
@@ -280,10 +285,13 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
     Svar = data['MWDD'][0, :, 5]
     Snotvar = 1 - data['MWDD'][0, :, 5]
 
+    # Sector coupling: update battery costs based on cumulative capacity
+    data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+
     for r in range(len(titles['RTI'])):
-        if Sw[r] + Ss[r] == 0:
-            print(f"No wind or solar in region {r}")
-            continue
+        # if Sw[r] + Ss[r] == 0:
+        #     print(f"No wind or solar in region {r}")
+        #     continue
 
         # SHORT-TERM STORAGE
         # Multidimensional polynomial from Ueckerdt et al. (2017)
@@ -305,8 +313,9 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
        
         # Estimate general curtailment rate and the splits for wind and solar
         data['MCRT'][r, 0, 0] = rldc_prod[0]
-        curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r] + Ss[r]/ratio[r])
-        curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r])/ (Sw[r]*ratio[r] + Ss[r])
+        if Sw[r] != 0 and Ss[r] != 0:
+            curt_w[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r] + Ss[r]/ratio[r])
+            curt_s[r] = data['MCRT'][r, 0, 0] * (Sw[r] + Ss[r]) / (Sw[r]*ratio[r] + Ss[r])
         
         # Upper limit of values
         if data['MCRT'][r, 0, 0] > 0.75: data['MCRT'][r, 0, 0] = 0.75
@@ -501,13 +510,17 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
         
         
         # Storage cost are overwritten here:
-        if year >= histend["MSSC_histend"]: 
+        if year >= 2022:
 
-            data['MSSC_histend'] = time_lag['MSSC_histend'].copy()
-            data['MLSC_histend'] = time_lag['MLSC_histend'].copy()        
+            #data['MSSC_histend'] = time_lag['MSSC_histend'].copy()
+            data['MLSC_histend'] = time_lag['MLSC_histend'].copy()
 
-            data['MSCC'][:,0,0] = 0.18 * 1e6 * (data_dt['MSSC'][:,0,0].sum() / data['MSSC_histend']) ** learning_exp_ss
-            data['MLCC'][:,0,0] = 0.32 * 1e6 * (data_dt['MLSC'][:,0,0].sum() / data['MLSC_histend']) ** learning_exp_ls
+            # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
+            # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
+
+            # Apply learning rate to levelised cost of storage (MSCC and MLCC)
+            data['MSCC'][:,0,0] = data['Battery price'][:, 0, 0] / 1000 * 1.25 * 1e6  # Times 1.25 based on BNEF LCOS calculations vs battery pack price
+            data['MLCC'][:,0,0] = 0.32 * 1e6 * ( data_dt['MLSC'][:, 0, 0].sum() / data['MLSC_histend'] ) ** learning_exp_ls
         
         
         # in reality the capacity/energy discharged ratio changes due to demand-supply mismatches.
@@ -544,7 +557,7 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
             data['MSSP'][r,18,0] = data['MSSR'][r,0,0] 
         # All technologies pay the pay amount for the other options
         else:
-            data['MSSP'][r,:,0] = data['MSSR'][r,0,0]       
+            data['MSSP'][r,:,0] = data['MLSR'][r,0,0]       
 
         #-------------------------------------------------------------
         #-------------- Marginal costs (where applicable) ------------
@@ -562,10 +575,10 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
             # The GWh refer to the annual electricity supplied by wind/solar
             # EURO 2015 / additional GWh
             
-            # Total VRE generation
-            vre = np.sum(Svar * data['MEWG'][r, :, 0])
+            # Total VRE generation (with floor to prevent division by zero)
+            vre = max(0.00001, np.sum(Svar * data['MEWG'][r, :, 0]))
             # CSP also taken into account for long-term storage needs
-            vre_long = vre + data['MEWG'][r, 19, 0]
+            vre_long = max(0.00001, vre + data['MEWG'][r, 19, 0])
             
             # Wind (note we're using a different rldc outcome!)
             Hp_wind = rldc_prod_wind[7]
@@ -633,11 +646,14 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
             data['MSSM'][r,18,0] = marg_cost_sol_ss 
             
 
-    # %%
+    # Sector coupling: V2G and second-hand battery integration
+    data = vehicle_to_grid(data, time_lag, year, titles)
+    storage_ratio = share_transport_batteries(data, titles)
+    data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
 
     # Store the storage capacities in last historical year
     if year <= histend["MSSC_histend"]:
         data['MSSC_histend'] = np.sum(data['MSSC']).copy()
-        data['MLSC_histend']  = np.sum(data['MLSC']).copy()           
+        data['MLSC_histend']  = np.sum(data['MLSC']).copy()
 
     return data
