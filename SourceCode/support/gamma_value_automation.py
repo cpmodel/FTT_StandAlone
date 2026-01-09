@@ -448,8 +448,8 @@ modules_to_assess = ['FTT-P']  # For testing, only power
 
 # Let's try 3 runs (5 is better), and max of 100 its. Takes about 1h with 3.
 # Consider reducing no_it for more rapid estimates
-total_runs = 5
-max_it = 150
+total_runs = 6
+max_it = 200
 lambda_reg = 0.001  # Regularisation strength
 
 automation_vars, run_vars = gamma_auto(model)
