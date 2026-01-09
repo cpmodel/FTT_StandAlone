@@ -15,14 +15,11 @@
     "learning_wind": [-0.276, -0.112],
     "lifetime_solar": [25, 35],
     "lifetime_wind": [25, 35],
-    "lead_offshore": [3, 5],
     "lead_onshore": [2, 3],
     "lead_solar": [1, 3],
     "lead_commission": [0, 1],
-    "lead_ccgt": [1, 2],
-    "lead_coal": [2, 3],
-    "cf_wind": [-1.3, -0.2],
-    "cf_solar": [-4.3, -0.6],
+    "cr_wind": [-1.108, -0.622],
+    "cr_solar": [-3.377, -1.392],
     "discr": [0, 1],
     "elec_demand": [0, 1],
     "ccgt_price": [0, 1],
@@ -34,28 +31,20 @@
       "learning_solar": 16,
       "lifetime_solar": 9,
       "lead_solar": 10,
-      "cf_col": 24
+      "cr_col": 24
     },
     "Onshore": {
       "learning_wind": 16,
       "lifetime_wind": 9,
       "lead_onshore": 10,
-      "cf_col": 24
-    },
-    "Offshore": {
-      "learning_wind": 16,
-      "lifetime_wind": 9,
-      "lead_offshore": 10,
-      "cf_col": 24
+      "cr_col": 24
     },
     "CCGT": {
       "ccgt_price": 5,
-      "lead_ccgt": 10,
       "std_col": 6
     },
     "Coal": {
       "coal_price": 5,
-      "lead_coal": 10,
       "std_col": 6
     },
     "Discount Rate": {
@@ -83,7 +72,7 @@
     "data_length": 34,
     "tech_number": 22
   },
-  "scens_run": [500, 501],
+  "scens_run": [199, 500],
   "run_compare_scenarios": false,
   "run_ambition_vary": false,
   "run_run_simulations": true,
