@@ -71,14 +71,11 @@ ranges <- list(
   learning_wind = list(min = -0.276, max = -0.112),
   lifetime_solar = list(min = 25, max = 35),
   lifetime_wind = list(min = 25, max = 35),
-  lead_solar = list(min = 0.51, max = 1.5),
-  lead_offshore = list(min = 2, max = 4),
-  lead_onshore = list(min = 1, max = 2),
-  lead_ccgt = list(min = 1, max = 2),
-  lead_coal = list(min = 2, max = 3),
+  lead_solar = list(min = 1, max = 3),
+  lead_onshore = list(min = 2, max = 3),
   lead_commission = list(min = 0, max = 1),
-   cf_wind = list(min = -1.3, max = -0.2),
-  cf_solar = list(min = -4.3, max = -0.6)
+   cr_wind = list(min = -1.108, max = -0.622),
+  cr_solar = list(min = -3.377, max = -1.392)
 )
 
 
@@ -88,13 +85,10 @@ columns_to_rescale <- c('learning_solar',
                         'lifetime_solar',
                         'lifetime_wind',
                         'lead_solar',
-                        'lead_offshore',
                         'lead_onshore',
-                        'lead_ccgt',
-                        'lead_coal',
                         'lead_commission',
-                        'cf_wind', 
-                        'cf_solar')
+                        'cr_wind', 
+                        'cr_solar')
 
 # Copy input_df for rescaling
 input_df_rescaled <- input_df
@@ -118,8 +112,8 @@ invert_values <- function(values) {
 input_df_rescaled$learning_solar <- invert_values(input_df_rescaled$learning_solar)
 input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$learning_wind)
 # Invert values for CR so it is more intuitive
-#input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$cf_wind)
-#input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$cf_wind)
+input_df_rescaled$cr_wind <- invert_values(input_df_rescaled$cr_wind)
+input_df_rescaled$cr_solar <- invert_values(input_df_rescaled$cr_solar)
 
 
 # check for values out of range
@@ -179,9 +173,9 @@ build_and_save_emulator <- function(output_data, key, seed = seed_it) {
 
 
 # Define general variables for output of interest
-vars <- c( 'MEWS' ) #'MEWW', 'MEWE', 'MEWK',
-regions <- c( 'IN') #'GBL',
-years <- c(2040, 2050)
+vars <- c('MEWW', 'MEWE', 'MEWK', 'MEWP','MEWS') #'MEWW', 'MEWE', 'MEWK',
+regions <- c('GBL', 'IN') #',
+years <- c(2030, 2040, 2050)
 
 # techs and subgroups
 techs = list(
