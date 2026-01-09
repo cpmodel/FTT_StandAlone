@@ -70,7 +70,7 @@ input_dfs <- list()
 
 # Define which columns should use LHS
 lhs_cols <- c("elec_demand", "lead_commission", "lead_solar", 
-              "lead_onshore", "discr", "cf_wind", "cf_solar")
+              "lead_onshore", "discr", "cr_wind", "cr_solar")
 
 for (i in 1:nrow(pol_df)) {
   

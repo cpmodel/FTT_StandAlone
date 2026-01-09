@@ -168,7 +168,7 @@ oaatSensvarSummaryPlot <- function(oat_sens_mat,
 # Just for pol values - take any inputs df
 
 ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # EA, CN & US levels
-ref_techeco <- setNames(rep(0.5, 17), colnames(inputs[16:32]))
+ref_techeco <- setNames(rep(0.5, 14), colnames(inputs[16:29]))
 ref <- c(ref_pol, ref_techeco)
 
 # 1) List all your .rds files
@@ -212,8 +212,8 @@ colnames(global_sens_mat) <- c("US phaseouts", "US subsidies", "US carbon prices
                                "RGN phaseouts", "RGN subsidies", "RGN carbon prices",
                                "learning rate: solar", "learning rate: wind",
                                "lifetime: solar", "lifetime: wind", 
-                               "lead time: offshore", "lead time: onshore", "lead time: solar",
-                               "grid connection time", "lead time: ccgt", "lead time: coal", 
+                               "lead time: onshore", "lead time: solar",
+                               "grid connection time", 
                                "cannibalisation: wind", "cannibalisation: solar",
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
@@ -265,8 +265,8 @@ colnames(IN_polcompare_mat) <- c("US phaseouts", "US subsidies", "US carbon pric
                                "RGN phaseouts", "RGN subsidies", "RGN carbon prices",
                                "learning rate: solar", "learning rate: wind",
                                "lifetime: solar", "lifetime: wind", 
-                               "lead time: offshore", "lead time: onshore", "lead time: solar",
-                               "grid connection time", "lead time: ccgt", "lead time: coal", 
+                               "lead time: onshore", "lead time: solar",
+                               "grid connection time", 
                                "cannibalisation: wind", "cannibalisation: solar",
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
