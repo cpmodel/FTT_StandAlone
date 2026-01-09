@@ -9,12 +9,8 @@ library(vroom)
 
 # Upload file or object
 df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/IN_polcomp_lead_grid_2.csv")
-df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_emissions_amb.csv")
+#df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_emissions_amb.csv")
 
-plot_data <- read.csv(file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/IN_polcomp_lead_grid.csv")
-plot_data <- read.csv(file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_emissions_amb.csv")
-
-plot_data <- final_results_df
 
 # adding in factor variables
 df <- df %>% 
@@ -357,7 +353,7 @@ ggplot(
                                
                                "Total Capacity" = "Total Capacity")) +
   
-  scale_x_continuous(limits = c(0, 1000)) +
+  scale_x_continuous(limits = c(0, 750)) +
   
   labs(
     x = "Capacity (GW)", 
