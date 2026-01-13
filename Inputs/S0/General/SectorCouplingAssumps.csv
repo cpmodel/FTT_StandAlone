@@ -7,7 +7,7 @@ GW to GWh,4.3
 V2G available fraction,0.24
 V2G participation rate,0.4
 Battery learning exponent,-0.412
-Dummy,
+V2G interaction,0
 Dummy,
 Dummy,
 Dummy,

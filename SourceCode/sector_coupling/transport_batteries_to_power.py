@@ -37,6 +37,10 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     """
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     
+    # Skip if V2G interaction is turned off
+    if not sector_coupling_assumps["V2G interaction"]:
+        return data
+
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
@@ -86,6 +90,10 @@ def share_transport_batteries(data, titles):
 
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
 
+    # Skip if V2G interaction is turned off
+    if not sector_coupling_assumps["V2G interaction"]:
+        return 0
+
     # Convert GW to GWh (estimate)
     capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
 
@@ -132,6 +140,10 @@ def vehicle_to_grid(data, time_lag, year, titles):
     participation = sector_coupling_assumps["V2G participation rate"]
     availability = sector_coupling_assumps["V2G available fraction"]
     
+    # Skip if V2G interaction is turned off
+    if not sector_coupling_assumps["V2G interaction"]:
+        return data
+
     # Assume linearly increasing share cars are suitable
     if year < 2025:
         tech_readiness = 0
