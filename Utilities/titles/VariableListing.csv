@@ -62,7 +62,6 @@ MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MGAM,FTT:Power Gamma values ($2013/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -141,7 +140,6 @@ HGC2,"FTT-Heat Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RT
 HGD2,"FTT-Heat SD Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGC3,"FTT-Heat Payback cost w policies, Gamma, for endogenous scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGD3,"FTT-Heat SD Payback cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGAM,FTT-Heat Gamma values,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HEWS,FTT-Heat Market Shares,,RTI,HTTI,NA,TIME,FTT-H,,2014,2014,,Y,Y
 HJEF,FTT-Heat Residential fuel use,ktoe,RTI,JTI,NA,TIME,FTT-H,,,2014,,,
 HWIC,FTT-H Technology investment costs,Eur/kW,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,Y
