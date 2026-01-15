@@ -62,7 +62,6 @@ MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MGAM,FTT:Power Gamma values ($2013/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
@@ -141,7 +140,6 @@ HGC2,"FTT-Heat Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RT
 HGD2,"FTT-Heat SD Marginal cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGC3,"FTT-Heat Payback cost w policies, Gamma, for endogenous scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HGD3,"FTT-Heat SD Payback cost w policies, Gamma, for endo scrapping",Eur/kWhUD,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
-HGAM,FTT-Heat Gamma values,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,
 HEWS,FTT-Heat Market Shares,,RTI,HTTI,NA,TIME,FTT-H,,2014,2014,,Y,Y
 HJEF,FTT-Heat Residential fuel use,ktoe,RTI,JTI,NA,TIME,FTT-H,,,2014,,,
 HWIC,FTT-H Technology investment costs,Eur/kW,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,Y
@@ -293,7 +291,7 @@ IRG5,FTT-IH-OIS regulations (based on capacity),GW,RTI,ITTI,NA,TIME,FTT-IH-OIS2,
 ISB5,FTT-IH-OIS subsidies (percentage of investment cost),%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 IXS5,FTT-IH-OIS exogenous share changes,%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 RVKZ,FTT-Fr Demand,Million Tkm,RTI,FSTI,NA,TIME,FTT-Fr,,2018,1995,,,Y
-RFLZ,FTT-Fr Number in Fleet,veh,RTI,FSTI,NA,TIME,FTT-Fr,,2022,2001,,,Y
+RFLZ,FTT-Fr Number in Fleet,veh,RTI,FSTI,NA,TIME,FTT-Fr,,2023,2001,,,Y
 ZEWS,FTT-Fr Market Shares,%,RTI,FTTI,NA,TIME,FTT-Fr,,2023,2001,,Y,Y
 ZREG,FTT-Fr regulations,,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
 ZWSA,FTT-Fr Exogenous market share,%,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
@@ -307,7 +305,6 @@ ZEWA,FTT-Fr Substitution matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,,
 ZEWB,FTT-Fr Spillover matrix,,NA,FTTI,FTTI,NA,FTT-Fr,,,,,,
 ZESF,FTT-Fr Survival function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZLOD,FTT-Fr Load Factors,t/v,RTI,LODZ,NA,NA,FTT-Fr,,,,,,
-ZSLR,FTT-Fr Small large ratio,ratio,RTI,NA,NA,NA,FTT-Fr,,,,,,
 ZJTT,FTT-Fr Tech Change Function,,RTI,NA,NA,TIME,FTT-Fr,,2019,1990,,,
 ZJET,FTT-Fr Technology to fuel user conversion matrix,,NA,FTTI,JTI,NA,FTT-Fr,,,,,,
 ZCEZ,FTT-Fr T-Scaling,,RTI,NA,NA,TIME,FTT-Fr,,,2019,,,
