@@ -701,8 +701,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
-            # Update MWIY in data_dt for next iteration accumulation
-            data_dt['MWIY'] = np.copy(data['MWIY'])
 
         if year == 2050:
             print(f"Total amount of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
