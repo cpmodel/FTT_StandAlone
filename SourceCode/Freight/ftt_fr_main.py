@@ -368,9 +368,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                         
                         
 
-            # Calculate total investment by technology in terms of truck purchases
-            data['ZWIY'] = data['ZEWI'] * data["BZTC"][:, :, c6ti['1 Purchase cost (USD/veh)'], None]
-
             # Calculate levelised cost again
             carbon_costs = set_carbon_tax(data, c6ti)
             data = get_lcof(data, titles, carbon_costs, year)
@@ -379,6 +376,9 @@ def solve(data, time_lag, titles, histend, year, domain):
             for var in time_lag.keys():
                 if var.startswith(("R", "Z", "B")):
                     data_dt[var] = np.copy(data[var])
+        
+        # Calculate total investment by technology in terms of truck purchases
+        data['ZWIY'] = data['ZEWI'] * data["BZTC"][:, :, c6ti['1 Purchase cost (USD/veh)'], None]
 
 
     return data

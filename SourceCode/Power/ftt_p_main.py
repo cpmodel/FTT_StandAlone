@@ -132,14 +132,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # (same for all regions)
     Svar = data['BCET'][:, :, c2ti['18 Variable (0 or 1)']]
 
-    # Initialize MSRV (Power survival function) - sigmoid survival curve based on technology lifetime
-    HalfLife = data['BCET'][:, :, c2ti['9 Lifetime (years)']]/2
-    dLifeT = HalfLife/10
-
-    for age in range(len(titles['TYTI'])):
-        age_matrix = np.ones_like(data['MSRV'][:, :, age]) * age
-        data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
-
     # Copy over PRSC/EX values
 
     data['PRSC13'] = np.copy(time_lag['PRSC13'] )
@@ -148,8 +140,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     data["REX13"] = np.copy(time_lag["REX13"])
     
     # %% First initialise if necessary
-
-    T_Scal = 10      # Time scaling factor used in the share dynamics
 
     # Initialisation
     if year == 2013:
@@ -166,7 +156,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
+                num_regions, num_techs, num_resources, year, 1.0
                 )
 
         data['BCET'] = bcet
@@ -390,7 +380,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, 1.0
+                num_regions, num_techs, num_resources, year, 1.0
                 )
 
             data['BCET'] = bcet
@@ -608,14 +598,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
             
-            # Update investment. Note that sum(mewi_t) not exactly mewi
-            _, mewi_t = get_sales(
+            # Update investment (MEWI: up to timestep t, mewi_t is in timestep t)
+            data["MEWI"], mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWI"],
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
 
-            data["MEWI"] = get_sales_yearly(
-                data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
             
             # TODO: review, compute cost of early scrapping
             mesc_vec, melf_vec = early_scrapping_costs(data, data_dt, c2ti)
@@ -683,7 +670,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                titles['RTI'], titles['T2TI'], titles['ERTI'], year, dt
+                num_regions, num_techs, num_resources, year, dt
                 )
 
             data['BCET'] = bcet
@@ -714,8 +701,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
-            # Update MWIY in data_dt for next iteration accumulation
-            data_dt['MWIY'] = np.copy(data['MWIY'])
 
         if year == 2050:
             print(f"Total amount of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")

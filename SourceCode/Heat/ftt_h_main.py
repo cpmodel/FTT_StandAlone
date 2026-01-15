@@ -214,8 +214,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
 
-        # Initialize HWIY accumulator for this year (will accumulate within timesteps)
-        data_dt['HWIY'] = np.zeros([len(titles['RTI']), len(titles['HTTI']), 1])
 
         # Preserve baseline fuel demand from previous timestep (for output tracking)
         data["FU14A"] = time_lag["FU14A"]
@@ -430,13 +428,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                             * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
 
 
-            # Total investment in new capacity (cumulative within year, m 2014 euros):
-            # HEWI is the continuous time amount of new capacity built per unit time dI/dt (GW/y)
-            # BHTC are the investment costs (2014Euro/kW)
-            data['HWIY'][:, :, 0] = (data_dt['HWIY'][:, :, 0]
-                                     + data['HEWI'][:, :, 0] * dt * data['BHTC'][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
-                                     / data['PRSC14'][:, 0, 0, np.newaxis])
-
             # Save investment cost for front end
             data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
             # Save efficiency for front end
@@ -452,8 +443,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
-            # Update HWIY in data_dt for next iteration accumulation
-            data_dt['HWIY'] = np.copy(data['HWIY'])
+        # Total investment in new capacity
+        data['HWIY'][:,:,0] = (data['HEWI'][:,:,0] * data['BHTC'][:,:, c4ti['1 Inv cost mean (EUR/kW)']]
+                           / data['PRSC14'][:, 0, 0, np.newaxis] )
 
         if year == 2050 and t == no_it:
             print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12, 0])/10**6:.3f} M GWh")
