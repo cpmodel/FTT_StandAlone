@@ -7,7 +7,7 @@ This repository contains a family of Future Technology Transformation (FTT) mode
 * FTT:Heat (Knobloch et al, 2017) data up to 2020
 * FTT:Industrial heat
 * FTT:Transport (Mercure et al, 2018) - data up to 2022
-* FTT:Freight (*under review*) - data up to 2023
+* FTT:Freight - data up to 2023
 * FTT:Hydrogen (*under review*)
 
 ## Theoretical background
