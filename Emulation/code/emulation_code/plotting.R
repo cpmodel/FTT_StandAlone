@@ -46,6 +46,16 @@ df <- df %>%
       #levels = c("Phaseouts - None", "Phaseouts - Mid", "Phaseouts - High"),
       levels = c("Phaseouts - High" , "Phaseouts - Mid", "Phaseouts - None")
     ),
+    `Policy Combination` = factor (
+      case_when(
+      IN_phase_pol == 0 & IN_cp_pol == 0 & IN_price_pol == 0 ~ 'Baseline',
+      IN_phase_pol == 0 & IN_cp_pol == 1 & IN_price_pol == 1 ~ 'Sub-CP',
+      IN_phase_pol == 1 & IN_cp_pol == 1 & IN_price_pol == 0 ~ 'CP-Phaseout',
+      IN_phase_pol == 1 & IN_cp_pol == 0 & IN_price_pol == 1 ~ 'Sub-Phaseout',
+      IN_phase_pol == 1 & IN_cp_pol == 1 & IN_price_pol == 1 ~ 'CP-Sub-Phaseout'
+      ),
+      levels = c('Baseline', 'Sub-CP', 'CP-Phaseout', 'Sub-Phaseout', 'CP-Sub-Phaseout'),
+  ),
     CN_phase = factor(
       case_when(
         CN_phase_pol == 0 ~ "Baseline",
@@ -123,6 +133,13 @@ df <- df %>%
        #levels = c("Fast rollout", "Slow rollout")
        levels = c("Slow lead times", "Fast lead times")
    ),
+  cr_total = factor(
+    case_when(
+      cr_wind < 0.5 & cr_solar < 0.5 ~ "Low Cannibalisation",
+      cr_solar >= 0.5 & cr_wind >= 0.5 ~ "High Cannibalisation"
+    ),
+    levels = c("Low Cannibalisation", "High Cannibalisation")
+  ),
    grid = factor(
      case_when(
        lead_commission < 0.5  ~ "Short commission",
@@ -532,26 +549,26 @@ df %>%
 ######################################################
 
 # ### Capacity - solar & onshore 2030
-# threshold <- 393
-# summ_1 <- df %>% 
-#   filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>%
-#   group_by(year, id, sample_id) %>% 
-#   mutate(total_value = sum(prediction, na.rm = TRUE)) %>%
-#   ungroup() %>%
-#   group_by(`Policy Combination`, discount_rate, lead_total, demand) %>%
-#   summarise(
-#     total_obs = n()/2, # divide by 2 to correct for double count
-#     breach_threshold = sum(total_value > threshold, na.rm = TRUE)/2,
-#     target = "Capacity",
-#     `Proportion achieving target` = round((breach_threshold / total_obs), 2),
-#     mean = mean(total_value)) %>%
-#   drop_na()
+threshold <- 393
+summ_1 <- df %>%
+  filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>%
+  group_by(year, id, sample_id) %>%
+  mutate(total_value = sum(prediction, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(`Policy Combination`, lead_total, cr_total, demand, coal_p) %>%
+  summarise(
+    total_obs = n()/2, # divide by 2 to correct for double count
+    breach_threshold = sum(total_value > threshold, na.rm = TRUE)/2,
+    target = "Capacity",
+    `Proportion achieving target` = round((breach_threshold / total_obs), 2),
+    mean = mean(total_value)) %>%
+  drop_na()
 
 #### elec price
 threshold <- 68
 summ_2 <- df %>% 
   filter(emulator %in% c("MEWP_elec_price_IN_2030")) %>%
-  group_by(`Policy Combination`, discount_rate,lead_total, demand) %>%
+  group_by(`Policy Combination`, lead_total, cr_total, demand, coal_p) %>%
   summarise(
     total_obs = n(),
     breach_threshold = sum(prediction < threshold, na.rm = TRUE),
@@ -565,7 +582,7 @@ summ_2 <- df %>%
 threshold <- 1000
 summ_3 <- df %>% 
   filter(emulator %in% c("MEWE_IN_2030")) %>%
-  group_by(`Policy Combination`, discount_rate, lead_total, demand) %>%
+  group_by(`Policy Combination`, lead_total, cr_total, demand, coal_p) %>%
   summarise(
     total_obs = n(),
     breach_threshold = sum(prediction < threshold, na.rm = TRUE),
@@ -579,7 +596,7 @@ summ_3 <- df %>%
 threshold <- 0.55
 summ_4 <- df %>% 
   filter(emulator %in% c("MEWS_renew_IN_2030")) %>%
-  group_by(`Policy Combination`, discount_rate, lead_total, demand) %>%
+  group_by(`Policy Combination`, lead_total, cr_total, demand, coal_p) %>%
   summarise(
     total_obs = n(),
     breach_threshold = sum(prediction > threshold, na.rm = TRUE),
@@ -592,7 +609,7 @@ summ_4 <- df %>%
 summ <- rbind(summ_2, summ_3, summ_4)
 # create column for ordering
 summ <- summ %>% #filter(`Policy Combination` != 'No policy') %>%
-  group_by(`Policy Combination`, discount_rate, lead_total, demand) %>%
+  group_by(`Policy Combination`, lead_total, cr_total, demand, coal_p) %>%
   mutate(combined_prop = round(sum(`Proportion achieving target`), 2))
 
 
@@ -603,10 +620,10 @@ plot_df <- summ %>% #filter(`Policy Combination` != 'No policy') %>%
   bind_rows(summ) %>%
   mutate(
     # nicer labels
-    `Policy Combination` = factor(`Policy Combination`,
-                                  levels = c("No policy", "Subsidy & CP", "CP & Phaseout", 
-                                             "Subsidy, CP & Phaseout", "Subsidy & Phaseout"),
-                                  labels = c("Baseline",  "Sub-CP",  "CP-Phase", "Sub-CP-Phase", "Sub-Phase")),
+    # `Policy Combination` = factor(`Policy Combination`,
+    #                               levels = c("Baseline", "Sub-CP", "CP-Phaseout", 
+    #                                          "CP-Phaseout", "Subsidy & Phaseout"),
+    #                               labels = c("Baseline",  "Sub-CP",  "CP-Phase", "CP-Sub-Phase", "Sub-Phase")),
     target = factor(target,
                     levels = c("Electricity Price", "Emissions", "Shares"), #"Capacity",
                     labels = c("Electricity Price","Emissions", "Shares")) #"Capacity",
@@ -627,7 +644,7 @@ ggplot(plot_df,
        )) +
   geom_col(position = position_dodge(0.7), width = 0.7) +
   facet_grid(
-    lead_total ~ discount_rate + demand,
+    cr_total + coal_p ~ lead_total + demand,
     labeller = label_value,
     scales = "free_x"        # free_x so each facet has its own ordering
   ) +
@@ -681,7 +698,7 @@ ggplot(plot_df,
 
 
 
-#### End of main plots
+#### End of main India plots
 
 
 
