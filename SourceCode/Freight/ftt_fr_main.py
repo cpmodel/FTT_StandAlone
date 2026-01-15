@@ -40,7 +40,7 @@ from SourceCode.Freight.ftt_fr_kickstarter import implement_kickstarter
 from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
-from SourceCode.sector_coupling.battery_lbd import battery_costs
+from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -151,6 +151,9 @@ def solve(data, time_lag, titles, histend, year, domain):
             data = get_lcof(data, titles, carbon_costs, year)
             
             data["BZTC initial"] = np.copy(data["BZTC"])
+            
+            # # Battery starting capacity
+            data["Cumulative total batcap"] = get_start_cap(data, titles)
 
 
     "Model Dynamics"
@@ -159,8 +162,6 @@ def solve(data, time_lag, titles, histend, year, domain):
     if year > histend['RFLZ']:
 
         data_dt = {}
-        data_dt['ZWIY'] = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
-
         
         for var in time_lag.keys():
             if var.startswith(("R", "Z", "B")):
@@ -182,13 +183,13 @@ def solve(data, time_lag, titles, histend, year, domain):
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
             Utot = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
            
-            # What shares would be mostly endogenous (some effect of regulations)
+            # What shares would be mostly endogenous + effects regulation
             endo_shares, endo_capacity = shares(
                 dt, t, no_it, data_dt['ZEWS'], data_dt['ZEGC'], data_dt['ZTTD'], data['ZEWA'],
                 data['BZTC'][:, :, c6ti['14 Turnover rate (1/y)']], isReg,
                 D, Utot, titles)
             
-            # Shares after exogenous sales and regulations taken into account
+            # Shares after exogenous sales and regulation correction taken into account
             data['ZEWS'] = implement_shares_policies(
                 endo_capacity, endo_shares, 
                 titles, data['ZWSA'], data['ZREG'], isReg,
