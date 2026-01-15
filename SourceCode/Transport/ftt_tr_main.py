@@ -222,8 +222,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
 
-        # Initialize TWIY accumulator for this year (will accumulate within timesteps)
-        data_dt['TWIY'] = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
 
         # Create the regulation variable
         division = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
@@ -453,10 +451,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                                * dw[veh] / data['TEWW'][0, veh, 0])
                         )
 
-            # Investment in terms of car purchases (cumulative within year):
-            data['TWIY'][:, :, 0] = (data_dt['TWIY'][:, :, 0]
-                                     + data['TEWI'][:, :, 0] * dt
-                                     * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33)
+            
 
             # Calculate levelised cost again
             carbon_costs = set_carbon_tax(data, c3ti, year)
@@ -470,9 +465,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-Tr')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
-
-            # Update TWIY in data_dt for next iteration accumulation
-            data_dt['TWIY'] = np.copy(data['TWIY'])
+            
+        # Investment in terms of car purchases (cumulative within year):
+        data['TWIY'][:, :, 0] = (data['TEWI'][:, :, 0]
+                                 * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33)
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
