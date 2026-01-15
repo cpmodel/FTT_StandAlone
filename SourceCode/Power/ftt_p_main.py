@@ -598,14 +598,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
             
-            # Update investment. Note that sum(mewi_t) not exactly mewi
-            _, mewi_t = get_sales(
+            # Update investment (MEWI: up to timestep t, mewi_t is in timestep t)
+            data["MEWI"], mewi_t = get_sales(
                 data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWI"],
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
 
-            data["MEWI"] = get_sales_yearly(
-                data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
             
             # TODO: review, compute cost of early scrapping
             mesc_vec, melf_vec = early_scrapping_costs(data, data_dt, c2ti)
