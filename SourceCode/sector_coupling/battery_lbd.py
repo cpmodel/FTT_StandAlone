@@ -62,6 +62,13 @@ def battery_costs(data, data_dt, time_lag, year, t, titles, histend):
     
     if year > histend['Battery price']:
         # Update battery capacities
+        if data["Cumulative total batcap"] == 0:
+            raise ValueError(
+               f"Cumulative total battery capacity not set in {year}. "
+               "Ensure that battery_costs is run at least once during histend['Battery price']."
+               "Updating battery costs may resolve this issue too"
+               )
+                
         sector_coupling_assumps = get_sector_coupling_dict(data, titles)
         battery_learning_exp = sector_coupling_assumps["Battery learning exponent"]
         battery_additions, _ = update_cumulative_cap(data, time_lag, year, t, histend)
