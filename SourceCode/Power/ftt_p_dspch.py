@@ -259,14 +259,6 @@ def calculate_load_factors_from_dispatch(data, titles):
     # Store generation by load band (region x tech x lb)
     data['Gen_by_lb'] = glb3
 
-    # Assign generation by load band to output variables MWG1-MWG6
-    data['MWG1'][:, :, 0] = glb3[:, :, 0]
-    data['MWG2'][:, :, 0] = glb3[:, :, 1]
-    data['MWG3'][:, :, 0] = glb3[:, :, 2]
-    data['MWG4'][:, :, 0] = glb3[:, :, 3]
-    data['MWG5'][:, :, 0] = glb3[:, :, 4]
-    data['MWG6'][:, :, 0] = glb3[:, :, 5]
-
     # Use default load factors for near-zero values (matching Cascading's simulation period behavior)
     # Cascading line 664: uses <= 0.0001 threshold in simulation period
     zero_lf = data['MEWL'][:, :, 0] <= 0.0001
