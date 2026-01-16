@@ -205,7 +205,7 @@ def get_lcof(data, titles, carbon_costs, year):
     npv_expenses_bare = npv_expenses_bare / denominator
     
     # Calculate LCOF with policy, and find standard deviation
-    npv_expenses_policy = (It + ct + ItVT + Ft + fft + OMt + RT) / Lfactor
+    npv_expenses_policy = (It + ct + RZCOt + ItVT + Ft + fft + OMt + RT) / Lfactor
     npv_expenses_policy = npv_expenses_policy / denominator
     
     # 3 – Utility
