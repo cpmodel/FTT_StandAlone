@@ -11,7 +11,6 @@ import os
 # Third party imports
 import pandas as pd
 import numpy as np
-import copy
 
 from SourceCode.support.divide import divide
 
