@@ -66,7 +66,7 @@ def implement_kickstarter(cap, EV_truck_kickstarter, cum_sales_in, sales_in,
         (cum_sales_after, sales_after, cap_after)
     """
     # Check if kickstarter is active for any region
-    if np.all(EV_truck_kickstarter[:, 0, 0] == 0):
+    if np.all(EV_truck_kickstarter == 0):
         return cum_sales_in, sales_in, cap
 
     # Get target share for this year
@@ -108,6 +108,6 @@ def implement_kickstarter(cap, EV_truck_kickstarter, cum_sales_in, sales_in,
         )
 
         # Update cumulative sales for this class
-        cum_sales_after[:, veh_class::n_veh_classes, 0] += sales_difference[:, :, 0]
+        cum_sales_after[:, veh_class::n_veh_classes] += sales_difference
 
     return cum_sales_after, sales_after, cap

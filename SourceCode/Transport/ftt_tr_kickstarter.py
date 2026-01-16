@@ -65,7 +65,7 @@ def implement_kickstarter(cap, EV_kickstarter, cum_sales_in, sales_in, year):
         (cum_sales_after, sales_after, cap_after)
     """
     # Check if kickstarter is active for any region
-    if np.all(EV_kickstarter[:, 0, 0] == 0):
+    if np.all(EV_kickstarter == 0):
         return cum_sales_in, sales_in, cap
 
     # Get target share for this year
@@ -90,9 +90,9 @@ def implement_kickstarter(cap, EV_kickstarter, cum_sales_in, sales_in, year):
     # Update capacity
     sales_difference = sales_after - sales_in
     cap_after = cap + sales_difference
-    cap_after[:, :, 0] = np.maximum(cap_after[:, :, 0], 0)
+    cap_after = np.maximum(cap_after, 0)
 
     # Update cumulative sales
-    cum_sales_after[:, :, 0] += sales_difference[:, :, 0]
+    cum_sales_after += sales_difference
 
     return cum_sales_after, sales_after, cap_after
