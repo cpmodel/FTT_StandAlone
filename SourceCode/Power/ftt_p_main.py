@@ -73,7 +73,7 @@ from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
 from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
+from SourceCode.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 # from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
 from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_costc import cost_curves

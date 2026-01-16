@@ -17,6 +17,7 @@ Functions included:
 @author: Femke Nijsse
 Created: Mon Nov 6 2023
 """
+
 import numpy as np
 from SourceCode.support.divide import divide
 
@@ -158,15 +159,6 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
     # Set pricing mode to 1 (weighted LCOE) for all regions
     data["MPRI"][:] = 1
 
-    # Load band weights for merit order pricing (if MPRI == 2)
-    n_loadbands = 6
-    non_vre_lb_weight = [0] * 5
-    non_vre_lb_weight[4] = 80.0 / 8766.0
-    non_vre_lb_weight[3] = (700.0 - 80.0) / 8766.0
-    non_vre_lb_weight[2] = (2200.0 - 700.0) / 8766.0
-    non_vre_lb_weight[1] = (4400.0 - 2200.0) / 8766.0
-    non_vre_lb_weight[0] = (8766.0 - 4400.0) / 8766.0
-
     # Set fuel prices for specific fuels
     data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]   # Hard coal
     data["MEWP"][:, 1, 0] = data["MERC"][:, 2, 0]   # Soft coal
@@ -225,30 +217,32 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
 
         # MPRI == 2: Merit order approach (not used by default)
         elif data["MPRI"][r] == 2:
-            # Generation in each load band
-            glb_dict = {
-                0: data["MWG1"][r, :, 0],
-                1: data["MWG2"][r, :, 0],
-                2: data["MWG3"][r, :, 0],
-                3: data["MWG4"][r, :, 0],
-                4: data["MWG5"][r, :, 0],
-                5: data["MWG6"][r, :, 0]
-            }
+                        
+            # Load band weights
+            n_loadbands = 6
+            non_vre_lb_weight = [0] * 5
+            non_vre_lb_weight[4] = 80.0 / 8766.0
+            non_vre_lb_weight[3] = (700.0 - 80.0) / 8766.0
+            non_vre_lb_weight[2] = (2200.0 - 700.0) / 8766.0
+            non_vre_lb_weight[1] = (4400.0 - 2200.0) / 8766.0
+            non_vre_lb_weight[0] = (8766.0 - 4400.0) / 8766.0
+            
+            gen_by_lb = data['Gen_by_lb'][r]
 
             # Loop over load bands
             for LB in range(n_loadbands):
                 mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])
 
                 # Only select technologies with non-zero generation
-                where_condition = glb_dict[LB] > 0.0
+                where_condition = gen_by_lb[:, LB] > 0.0
                 mc_tech_by_lb[where_condition] = (
                     data["MWMC"][r, :, 0][where_condition]
                     - data["BCET"][r, :, 0][where_condition]
                 )
 
                 # Weighted average marginal cost
-                if np.sum(glb_dict[LB]) > 0.0:
-                    data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * glb_dict[LB]) / np.sum(glb_dict[LB])
+                if np.sum(gen_by_lb[:, LB]) > 0.0:
+                    data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * gen_by_lb[:, LB]) / np.sum(gen_by_lb[:, LB])
                 else:
                     data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
 
@@ -266,7 +260,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
             if share_VRE > 0.40:
                 vre_weight = (1.0 / 0.6) * share_VRE - 2.0 / 3.0
 
-            if np.sum(np.array([glb_dict[LB] for LB in range(n_loadbands-1)])) > 0.0:
+            if np.sum(np.array([gen_by_lb[:, LB] for LB in range(n_loadbands - 1)])) > 0.0:
                 non_vre_price = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
 
             data["MEWP"][r, 7, 0] = vre_weight * data["MLBP"][r, 5, 0] + (1.0 - vre_weight) * non_vre_price
