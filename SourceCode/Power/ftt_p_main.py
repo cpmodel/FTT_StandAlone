@@ -183,10 +183,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Calculate load factor (MEWL) and generation by load-band in place
         calculate_load_factors_from_dispatch(data, titles)
 
+        # Capacities
+        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+        
         for r in range(len(titles['RTI'])):
-
-            # Capacities
-            data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
 
             # Update market shares (safe divide to avoid inf when capacity sum is zero)
             cap_sum_r = data['MEWK'][r, :, 0].sum()
