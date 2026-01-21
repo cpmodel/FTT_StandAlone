@@ -21,7 +21,7 @@ def get_sector_coupling_dict(data, titles):
     return sector_coupling_assumps
 
     
-def second_hand_batteries(data, time_lag, iter_lag, year, titles):
+def second_hand_batteries(data, time_lag, year, titles):
     """
     This function estimates the size of the second-hand battery market
     based on scrappage of electric vehicles from FTT:Tr. We use batteries

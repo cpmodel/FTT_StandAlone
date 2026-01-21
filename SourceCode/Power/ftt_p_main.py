@@ -532,7 +532,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Second-hand batteries. Only run at first timestep
             # =================================================================
             if t == 1:
-                data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
+                data = second_hand_batteries(data, time_lag, year, titles)
 
             # =================================================================
             # Residual load-duration curve
