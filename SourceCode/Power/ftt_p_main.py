@@ -688,7 +688,6 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Calculate levelised cost again
             data = get_lcoe(data, titles)
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
             # =================================================================
             # Update the time-loop variables data_dt
@@ -698,9 +697,11 @@ def solve(data, time_lag, titles, histend, year, domain):
             vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-P')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
+        
+        data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
 
         if year == 2050:
-            print(f"Total amount of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
+            print(f"Total solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
     return data
