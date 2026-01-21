@@ -80,7 +80,7 @@ from SourceCode.Power.ftt_p_costc import cost_curves
 from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
-from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
+from SourceCode.sector_coupling.battery_lbd import power_battery_additions_dt
 
 
 
@@ -638,7 +638,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
 
             # Track Power sector battery capacity additions for sector coupling
-            data["Battery cap additions"][0, t-1, 0] = quarterly_bat_add_power(no_it, data, data_dt, titles)
+            data["Battery cap additions"][0, t-1, 0] = power_battery_additions_dt(no_it, data, data_dt, titles)
 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):
