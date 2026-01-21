@@ -265,7 +265,7 @@ class ModelRun:
 
             # 2. Electricity demand feedback (aggregates demand from all sectors)
             if scenario != "S0":
-                if tl[y] > 2022:
+                if tl[y] > self.histend['MEWG']:
                     variables = electricity_demand_feedback(variables,
                                         self.output["S0"], y, self.titles,
                                         self.unit)
@@ -278,7 +278,7 @@ class ModelRun:
 
             # 4. Electricity price feedback (updates costs for next timestep)
             if "FTT-P" in self.ftt_modules:
-                if tl[y] > 2022:
+                if tl[y] > self.histend['MEWG']:
                     variables = electricity_price_feedback(variables, time_lags)
 
             if not any(True for x in modules_list if x in self.ftt_modules):
