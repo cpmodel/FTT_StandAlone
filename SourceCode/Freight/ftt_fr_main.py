@@ -313,7 +313,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data["BZTC initial"] = np.copy(data_dt['BZTC initial'])
             
             # Battery learning
-            data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+            data = battery_costs(data, time_lag, year, t, titles, histend)
             
             # Save battery cost
             nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
