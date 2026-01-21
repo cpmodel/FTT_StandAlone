@@ -211,9 +211,6 @@ class ModelRun:
 
         # Run update
         variables, time_lags = self.update(year, y, scenario)
-        
-        # # Save the enabled_modules in the data variable to make visible in the main code
-        # variables['enabled_modules'] = self.ftt_modules
 
         # Define whole period
         tl = self.timeline
@@ -288,8 +285,6 @@ class ModelRun:
                 print("Incorrect selection of models. Check settings.ini")
 
            
-#        # Print any diagnostics
-#
         return variables, time_lags
 
     def update(self, year, y, scenario):
