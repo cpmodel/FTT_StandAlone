@@ -3,6 +3,11 @@
 Created on Tue Jul 23 12:41:20 2024
 
 @author: Femke Nijsse
+
+Find the capacity addtions of batteries by sector, including conversions to ensure
+the units are the same.
+
+Compute the cost relative cost reductions via learning-by-doing (lbd, Wright's law')
 """
 
 import numpy as np
@@ -71,7 +76,7 @@ def battery_costs(data, time_lag, year, t, titles, histend):
                 
         sector_coupling_assumps = get_sector_coupling_dict(data, titles)
         battery_learning_exp = sector_coupling_assumps["Battery learning exponent"]
-        battery_additions, _ = update_cumulative_cap(data, time_lag, year, t, histend)
+        battery_additions, _ = update_cumulative_cap(data, time_lag, year, t)
         
         # Approximate Wright's law
         data['Battery price'] = (time_lag["Battery price"]
@@ -85,7 +90,7 @@ def update_cumulative_cap(data, time_lag, year, t):
     This function is called from battery_costs below"""
         
     
-    battery_additions = guess_battery_additions(data, time_lag, year, t)
+    battery_additions = guess_battery_additions(data, time_lag, t)
     # Add battery capacity additions across models and across timesteps
     data["Cumulative total batcap"] = time_lag["Cumulative total batcap"] + battery_additions
         
@@ -121,6 +126,7 @@ def guess_battery_additions(data, time_lag, t):
     
     if complete:
         total_cap_additions = np.sum(data["Battery cap additions"][:, :t+1, 0])
+    
     else:
         cap_additions_latest = data["Battery cap additions"][:, t, 0]
         # Calculate the total of non-zero elements

@@ -66,7 +66,7 @@ GREEN_INDICES_EV = [18, 19, 20]
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -78,8 +78,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Model variables for the given year of solution
     time_lag: type
         Model variables in previous year
-    iter_lag: type
-        Description
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
@@ -112,10 +110,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     # Store fuel prices and convert to $2013/toe
     # It's actually in current$/toe
     # TODO: Temporary deflator values
-    data['TE3P'][:, jti["5 Middle distillates"], 0] = iter_lag['PFRM'][:, sector_index, 0] / 1.33
-    data['TE3P'][:, jti["7 Natural gas"], 0] = iter_lag['PFRG'][:, sector_index, 0] / 1.33
-    data['TE3P'][:, jti["8 Electricity"], 0] = iter_lag['PFRE'][:, sector_index, 0] / 1.33
-    data['TE3P'][:, jti["11 Biofuels"], 0] = iter_lag['PFRB'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["5 Middle distillates"], 0] = time_lag['PFRM'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["7 Natural gas"], 0] = time_lag['PFRG'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["8 Electricity"], 0] = time_lag['PFRE'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["11 Biofuels"], 0] = time_lag['PFRB'][:, sector_index, 0] / 1.33
 #    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
 
     # Use data-driven timing based on TDA2 (last year of cost data)
@@ -409,7 +407,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["BTCI"] = np.copy(data_dt['BTCI'])
 
             # Global battery learning via sector coupling
-            data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+            data = battery_costs(data, time_lag, year, t, titles, histend)
 
             # Initialise variable for indirect EV/PHEV costs
             id_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])

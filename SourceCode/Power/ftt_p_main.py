@@ -88,7 +88,7 @@ from SourceCode.sector_coupling.battery_lbd import power_battery_additions_dt
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -100,8 +100,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Model variables for the current year
     time_lag: type
         Model variables in previous year
-    iter_lag: type
-        Description
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
@@ -171,7 +169,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data = get_lcoe(data, titles)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, 1, titles, histend)
+        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    num_regions, num_techs, num_loadbands)
@@ -265,7 +263,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year >= 2013:
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, 1, titles, histend)
+            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC

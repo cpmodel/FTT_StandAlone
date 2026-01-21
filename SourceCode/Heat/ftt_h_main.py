@@ -52,7 +52,7 @@ from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -64,8 +64,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Model variables for the given year of solution
     time_lag: type
         Model variables in previous year
-    iter_lag: type
-        Description
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers

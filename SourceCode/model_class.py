@@ -13,7 +13,6 @@ ModelRun class: main class for operation of model.
 
 # Standard library imports
 import configparser
-import copy
 import time
 
 # Third party imports
@@ -132,8 +131,8 @@ class ModelRun:
         self.simulation_start = int(config.get('settings', 'simulation_start'))
         self.simulation_end = int(config.get('settings', 'simulation_end'))
         self.current = self.model_start
-        self.years = np.arange(self.model_start, self.model_end+1)
-        self.timeline = np.arange(self.simulation_start, self.simulation_end+1)
+        self.years = np.arange(self.model_start, self.model_end + 1)
+        self.timeline = np.arange(self.simulation_start, self.simulation_end + 1)
         self.ftt_modules = config.get('settings', 'enable_modules')
         self.scenarios = config.get('settings', 'scenarios')
 
@@ -168,15 +167,15 @@ class ModelRun:
         """ Solve model for each year of the simulation period """
 
         # Define output container
-        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) \
+        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) 
                               for var in self.input[scen]} for scen in self.input}
-        # self.output = copy.deepcopy(self.input)
 
         # Clear any previous instances of the progress bar
         try:
             tqdm._instances.clear()
         except AttributeError:
             pass
+        
         for scen in self.input:
 
             # Create progress bar:
@@ -210,11 +209,11 @@ class ModelRun:
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """
 
-        # Need to add a convergence check here in the future
-
         # Run update
         variables, time_lags = self.update(year, y, scenario)
-        iter_lags = copy.deepcopy(time_lags)
+        
+        # # Save the enabled_modules in the data variable to make visible in the main code
+        # variables['enabled_modules'] = self.ftt_modules
 
         # Define whole period
         tl = self.timeline
@@ -222,12 +221,13 @@ class ModelRun:
         # define modules list in for possible setting.ini selection
         modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
                     "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
+        
         # Iteration loop here
         for itereration in range(max_iter):
 
             # 1. Run demand sectors FIRST
             if "FTT-Tr" in self.ftt_modules:
-                variables = ftt_tr.solve(variables, time_lags, iter_lags,
+                variables = ftt_tr.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-Fr" in self.ftt_modules:
@@ -235,33 +235,34 @@ class ModelRun:
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-H" in self.ftt_modules:
-                variables = ftt_h.solve(variables, time_lags, iter_lags,
+                variables = ftt_h.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-S" in self.ftt_modules:
                 print("Module needs to be created")
+                
             if "FTT-IH-CHI" in self.ftt_modules:
-                variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
+                variables = ftt_indhe_chi.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
             if "FTT-IH-FBT" in self.ftt_modules:
-                variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
+                variables = ftt_indhe_fbt.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
             if "FTT-IH-MTM" in self.ftt_modules:
-                variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
+                variables = ftt_indhe_mtm.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
             if "FTT-IH-NMM" in self.ftt_modules:
-                variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
+                variables = ftt_indhe_nmm.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
             if "FTT-IH-OIS" in self.ftt_modules:
-                variables = ftt_indhe_ois.solve(variables, time_lags, iter_lags,
+                variables = ftt_indhe_ois.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
@@ -274,7 +275,7 @@ class ModelRun:
 
             # 3. Run Power sector LAST
             if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags, iter_lags,
+                variables = ftt_p.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
 
@@ -286,9 +287,8 @@ class ModelRun:
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of models. Check settings.ini")
 
-            # Overwrite iter_lags to be used in the next iteration round
-            iter_lags = copy.deepcopy(variables)
-#        # Print any diagnstics
+           
+#        # Print any diagnostics
 #
         return variables, time_lags
 
