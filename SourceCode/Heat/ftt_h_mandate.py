@@ -60,7 +60,7 @@ def implement_seeding(cap, seeding, cum_sales_in, sales_in, year):
 
     green_share = np.sum(sales_in[:, GREEN_INDICES]) / total_sales
 
-    # Seeding is 15% of global green share, ramping up from 2025-2030
+    # Seeding is 15% of global green sales share, ramping up from 2025-2030
     mandate_share = get_mandate_share(year, MANDATE_START_YEAR, mandate_end_year) * 0.15 * green_share
 
     if mandate_share > 0:

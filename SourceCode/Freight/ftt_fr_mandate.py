@@ -6,8 +6,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 from SourceCode.ftt_core.ftt_mandate import get_new_sales_under_mandate, get_mandate_share
 
-
-green_indices = range(30, 35)  # Indices for green technologies
+green_indices_class = [6]
 MANDATE_START_YEAR = 2025
 N_YEARS = 16
 
@@ -29,7 +28,6 @@ def implement_seeding(cap, seeding, cum_sales_in, sales_in, n_veh_classes, year)
     for veh_class in range(n_veh_classes):
         
         sales_in_class = sales_in[:, veh_class::n_veh_classes, :]
-        green_indices_class = [6]
         
         # Apply mandate adjustments with global shares and strict enforcement
         # Seed set to zero if the class is empty
@@ -70,6 +68,7 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
     sales_after_mandate = np.copy(sales_in)
     mandate_end_year = MANDATE_START_YEAR + N_YEARS
     
+    # Step 1: get end year for the mandate
     if EV_truck_mandate[0, 0, 0] in range(2010, 2040) and year > EV_truck_mandate[0, 0, 0]:
         # For the sequencing, I'm changing the end year
         mandate_end_year = EV_truck_mandate[0, 0, 0]
@@ -79,7 +78,7 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
         mandate_end_year = EV_truck_mandate[0, 0, 0]
         
         
-    # Step 4: Apply mandate adjustments with global shares and strict enforcement
+    # Step 2: Apply mandate adjustments with global shares and strict enforcement
     mandate_share = get_mandate_share(year, MANDATE_START_YEAR, mandate_end_year)
     
     # If the mandate is turned off that specific year, also return inputs
@@ -88,12 +87,12 @@ def implement_mandate(cap, EV_truck_mandate, cum_sales_in, sales_in, n_veh_class
     
     # Select countries for which the mandate is turned on
     regions = np.where(EV_truck_mandate != 0)[0]
-
+    
+    # Are mandates switched off?
     if EV_truck_mandate[0, 0, 0] not in [-1, 0] and np.sum(mandate_share) > 0:
         
         for veh_class in range(n_veh_classes):
             sales_in_class = sales_in[:, veh_class::n_veh_classes, :]
-            green_indices_class = [6]
             
             # Recompute sales, after implementation of mandate
             sales_after_mandate_class = get_new_sales_under_mandate(sales_in_class, mandate_share,
