@@ -31,14 +31,15 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
-
-from SourceCode.Freight.ftt_fr_shares import shares, implement_shares_policies, validate_shares
+from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
+from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.support.divide import divide
+
+from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
+from SourceCode.Freight.ftt_fr_shares import implement_shares_policies, validate_shares
 from SourceCode.Freight.ftt_fr_mandate import implement_seeding, implement_mandate
 from SourceCode.Freight.ftt_fr_kickstarter import implement_kickstarter
 from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
 
@@ -78,7 +79,10 @@ def solve(data, time_lag, titles, histend, year, domain):
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
 
     sector = 'freight'
-
+    num_regions = len(titles['RTI'])
+    num_techs = len(titles['FTTI'])       # Number of technologies
+    n_veh_classes = len(titles['FSTI'])   # Number of classes
+    
     # Factor used to create intermediate data from annual figures
     no_it = int(data['noit'][0, 0, 0])
     dt = 1 / no_it
@@ -87,8 +91,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     # Technology to fuel user conversion matrix
     zjet = np.copy(data['ZJET'][0, :, :])
     # Initialise the emission correction factor
-    emis_corr = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
-    n_veh_classes = len(titles['FSTI'])
+    emis_corr = np.zeros([num_regions, num_techs])
     
     def sum_over_classes(var):
         output = np.stack([
@@ -101,7 +104,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     if year <= histend["RFLZ"]:
         
         summed_zews = sum_over_classes(data['ZEWS'])
-        for r in range(len(titles['RTI'])):
+        for r in range(num_regions):
             # Correction to market shares for each vehicle class
             # Sometimes historical market shares do not add up to 1.0
             for veh_class in range(n_veh_classes):
@@ -128,7 +131,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                         * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)'], np.newaxis]
                         * (1 - data['ZBFM']) / (1e6) )
         
-        for r in range(len(titles['RTI'])):
+        for r in range(num_regions):
         
             for veh in range(len(titles['FTTI'])):
                 for fuel in range(len(titles['JTI'])):
@@ -171,9 +174,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         # Find if there is a regulation and if it is exceeded
         division = divide((time_lag['ZEWK'][:, :, 0] - data['ZREG'][:, :, 0]),
                            data['ZREG'][:, :, 0]) # 0 when dividing by 0
-        isReg = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
-        isReg[data['ZREG'][:, :, 0] == 0.0] = 1.0
-        isReg[data['ZREG'][:, :, 0] == -1.0] = 0.0
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr[data['ZREG'][:, :, 0] == 0.0] = 1.0
+        reg_constr[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
         
         for t in range(1, no_it + 1):
@@ -183,16 +186,27 @@ def solve(data, time_lag, titles, histend, year, domain):
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
             Utot = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
            
-            # What shares would be mostly endogenous + effects regulation
-            endo_shares, endo_capacity = shares(
-                dt, t, no_it, data_dt['ZEWS'], data_dt['ZEGC'], data_dt['ZTTD'], data['ZEWA'],
-                data['BZTC'][:, :, c6ti['14 Turnover rate (1/y)']], isReg,
-                D, Utot, titles)
+            # The core FTT equations, taking into account old shares, costs and regulations
+            change_in_shares = shares_change(
+                dt=dt,                          
+                regions=np.arange(num_regions),
+                shares_dt=data_dt["ZEWS"],      # Shares at previous t
+                costs=data_dt['ZEGC'],          # Costs
+                costs_sd=data_dt['ZTTD'],       # Standard deviation of costs
+                subst=data['ZEWA'] * data['BZTC'][:, :, c6ti['14 Turnover rate (1/y)'], None],  # Substitution turnover rate
+                reg_constr=reg_constr,          # Constraint due to regulation
+                num_regions=num_regions,        # Number of regions
+                num_techs=num_techs             # Number of techs
+            )
+            
+            # Calculate endogenous market shares from both changes
+            endo_shares = data_dt['ZEWS'][:, :, 0] + change_in_shares
+            endo_capacity = endo_shares * Utot
             
             # Shares after exogenous sales and regulation correction taken into account
             data['ZEWS'] = implement_shares_policies(
                 endo_capacity, endo_shares, 
-                titles, data['ZWSA'], data['ZREG'], isReg,
+                titles, data['ZWSA'], data['ZREG'], reg_constr,
                 sum_over_classes, n_veh_classes, Utot, no_it)
                         
             # Validate that there are no negative shares, and they add up to 3 or 4 or 5
@@ -241,7 +255,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                                 data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']])
 
             # Recalculate zews per class
-            for r in range(len(titles['RTI'])):
+            for r in range(num_regions):
                 for veh_class in range(n_veh_classes):
                     denominator = np.sum(data['ZEWK'][r, veh_class::n_veh_classes])
                     if denominator > 0:
@@ -264,7 +278,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             
             # Reopen country loop
-            for r in range(len(titles['RTI'])):
+            for r in range(num_regions):
 
                 if np.sum(D[r]) == 0.0:
                     continue
@@ -316,8 +330,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             data = battery_costs(data, time_lag, year, t, titles, histend)
             
             # Save battery cost
-            nonbat_cost = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
-            nonbat_cost_dt = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
+            nonbat_cost = np.zeros([num_regions,num_techs, 1])
+            nonbat_cost_dt = np.zeros([num_regions,num_techs, 1])
             
             if year > histend["BZTC"]:
             
