@@ -36,7 +36,7 @@ from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.support.divide import divide
 
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
-from SourceCode.Freight.ftt_fr_shares import implement_shares_policies, validate_shares
+from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies, validate_shares
 from SourceCode.Freight.ftt_fr_mandate import implement_seeding, implement_mandate
 from SourceCode.Freight.ftt_fr_kickstarter import implement_kickstarter
 from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
