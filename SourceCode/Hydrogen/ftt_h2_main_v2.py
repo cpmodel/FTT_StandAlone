@@ -359,8 +359,11 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                     
                     if denom > 0.0:
                         
+                        # Weight of new additions to previous capacity
+                        weight_new = denom / (denom + time_lag['WGWK'][r, :, 0].sum())
+                        
                         # Fill shares
-                        data['WGWS'][r, :, 0] = numer/denom
+                        data['WGWS'][r, :, 0] = (1 - weight_new) * time_lag['WGWS'][r, :, 0] + weight_new * (numer/denom)
                         
                         # Fill capacities
                         data['WGWK'][r, :, 0] = (data['NH3DEM'][r, green_idx, 0]
@@ -396,6 +399,25 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
             
         #----------------------------------------------------------------------
         # Check if the supply map for the green market needs to be filled
+        
+        # First, determine penalties based on the cumulative projects under FID
+        # The share relative to the global total will scale the initial sourcing
+        # of green hydrogen. This is to prevent a full allocation based on 
+        # optimal delivery costs and accounts for first mover benefits
+        hymt_shares = np.asarray([0.00, 0.01, 0.00, 0.01, 0.00, 0.02, 0.00, 0.00,
+                                0.00, 0.00, 0.00, 0.01, 0.00, 0.00, 0.00, 0.00, 
+                                0.00, 0.00, 0.00, 0.00, 0.00 ,0.00, 0.02, 0.00, 
+                                0.00, 0.00, 0.00, 0.20, 0.00, 0.05, 0.02, 0.00,
+                                0.00, 0.00, 0.00, 0.33, 0.00, 0.00, 0.01, 0.01,
+                                0.00, 0.00, 0.00, 0.00, 0.00, 0.01, 0.03, 0.00, 
+                                0.02, 0.00, 0.13, 0.00, 0.00, 0.00, 0.00, 0.02, 
+                                0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                0.00, 0.00, 0.00, 0.05, 0.00, 0.00, 0.00])
+        penalties = np.copy(hymt_shares)
+        # Set minimum value to 0.01
+        penalties[penalties<0.01] = 0.01
+
+        
         for r in range(len(titles['RTI'])): 
             
             # check if there is green demand
@@ -410,23 +432,38 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                     # We pass it into the time lag as it gets transformed into a
                     # data_dt dict later
                     time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['NH3SMSHAR'][:, r, grey_idx].copy()
-                
-                # If neither the grey nor green market have data, then we need
-                # to initialise with different assumptions
-                elif (np.isclose(time_lag['NH3SMLVL'][:, r, green_idx].sum(), 0.0)
-                    and np.isclose(time_lag['NH3SMLVL'][:, r, grey_idx].sum(), 0.0)
-                         and time_lag['WGWS'].sum() > 0.0):
-                        
-                    time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['WGWS'][:, :, 0].sum(axis=1) / time_lag['WGWS'][:, :, 0].sum()
-                        
-                # if there is nothing to base it on, then we we take an
-                # unweighted average
-                else:
                     
-                    # Base the supply on green demand shares
-                    green_dem_shares = data['NH3DEM'][:, green_idx, 0] / data['NH3DEM'][:, green_idx, 0].sum()
-                      
-                    time_lag['NH3SMSHAR'][:, r, green_idx] = green_dem_shares.copy()
+                    # 
+                    mandated_demand = data['NH3DEMT'][r, 0, 0] * data['WDM1'][r, 0, 0]
+                    
+                    data['WGFL'][:, 0, 0]
+                    
+                    # Get green production capacities
+                    green_production = data['WGWK'][:, :, green_idx].sum(axis=1)
+                    
+                    # Get weighted average
+                    if green_production.sum() > 0.0:
+                        production_weight = green_production/green_production.sum()
+                        avg_deliv_cost = np.sum(time_lag['NH3DELIVCOST'][:, r, green_idx] * production_weight)
+                        sigma = np.sqrt(np.sum(production_weight**2 * time_lag['NH3LCSD'][:, 0, 0]**2))
+                        
+                    # If no production data available, then take the unweighted average
+                    else:
+                        avg_deliv_cost = np.mean(time_lag['NH3DELIVCOST'][:, r, green_idx])              
+                        sigma = np.sqrt(np.sum(time_lag['NH3LCSD'][:, 0, 0]**2))                        
+                    
+                    if np.isclose(sigma, 0.0): sigma = 0.2 * avg_deliv_cost
+                    # Determine exponent of logistic funtion
+                    exponent = -(time_lag['NH3DELIVCOST'][:, r, green_idx] - avg_deliv_cost)/sigma
+                    exponent[exponent < -10] = -10
+                    exponent[exponent > 10] = 10
+                    # Get values of logistic function and rescale
+                    fn = np.exp(exponent)
+                    fn = (penalties * fn)/np.sum(penalties * fn)
+                    
+                    # Assume that at least 30% gets allocated domestically (initially)
+                    time_lag['NH3SMSHAR'][:, r, green_idx] = (1-0.3) * fn
+                    time_lag['NH3SMSHAR'][r, r, green_idx] += 0.3
                     
                 # Rescale the supply map in shares
                 time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['NH3SMSHAR'][:, r, green_idx] / time_lag['NH3SMSHAR'][:, r, green_idx].sum()
@@ -462,24 +499,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                 demand_step = (data['NH3DEM'][:, m_idx, 0] - time_lag['NH3DEM'][:, m_idx, 0]) * 1/no_it
                 data_dt['NH3DEM'][:, m_idx, 0] = time_lag['NH3DEM'][:, m_idx, 0] + demand_step
                 
-                # # Check the supply map
-                # if data_dt['NH3DEM'][:, m_idx, 0].sum() > 0.0 and np.isclose(data_dt['NH3SMLVL'][:, :, m_idx].sum(), 0.0):
-                    
-                #     # Use the proxy supply map in shares
-                #     data_dt['NH3SMLVL'][:, :, m_idx] = data_dt['NH3SMSHAR'][:, :, m_idx] * data_dt['NH3DEM'][None, :, m_idx, 0]
-                    
-                # Add input shares based on global production numbers if there is new demand that didn't exist previously
-                
-                    
-                # # CHeck alignment in the green market
-                # if not np.isclose(data_dt['NH3SMLVL'][:, :, green_idx].sum(), data_dt['NH3DEM'][:, green_idx, 0].sum()):
-                #     x=1
-                #     raise ValueError("Error: Supply map for the green market does not align with demand")            
-                
-                # # Check alignment in the grey market
-                # if not np.isclose(data_dt['NH3SMLVL'][:, :, grey_idx].sum(), data_dt['NH3DEM'][:, grey_idx, 0].sum()):
-                #     x=1
-                #     raise ValueError("Error: Supply map for the grey market does not align with demand")            
                 #---------------------------------------------------------- 
                 # Call NH3 trade function
                 data = calculate_nh3_trade(data, time_lag, demand_step, data_dt, year, sub_rate, m_idx, titles, t, no_it, dt)

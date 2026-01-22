@@ -54,13 +54,13 @@ model.run()
 
 # Fetch ModelRun attributes, for examination
 # Output of the model
-output_all = model.output
+# output_all = model.output
 
 # %%
 
 with open(Path('.') / 'Output' / 'Results.pickle', 'rb') as f:
     output_all = pickle.load(f)
-# output_all2 = pickle.load("Output\Results.pickle")
+# # output_all2 = pickle.load("Output\Results.pickle")
 
 
 # %% Graph init
@@ -80,10 +80,6 @@ pylab.rcParams.update(params)
 SAVE_GRAPHS = False
 FORMAT = 'svg' # png, jpeg
 VERSION = 1
-
-# %% Function copied from Co-pilot:
-    
-    
 
 
 # %% Setup converters and colour maps
@@ -216,79 +212,111 @@ agg_to_orig = region_mapping_wo_glo
 original_order = region_titles
 
 # --- Helpers to build mappings and membership matrix ---
-def make_region_mapping(agg_to_orig: dict, original_order: list):
+
+def make_region_mapping_ordered(agg_to_orig: dict, original_order: list):
     """
-    Convert {aggregate: [orig codes]} and a fixed original ordering into:
-      - map_labels: length-N array of aggregate labels aligned to original_order
-      - map_ids:    length-N integer codes 0..G-1 aligned to original_order
-      - groups:     array of aggregate labels in the order used for map_ids
-    Raises if any original code is missing or double-assigned.
+    Build label and integer id mappings aligned to original_order, preserving the
+    *insertion order* of agg_to_orig keys for group IDs.
+    Returns:
+        map_labels: length-N array of aggregate names aligned to original_order
+        map_ids:    length-N int array (0..G-1) aligned to original_order
+        agg_order:  list of aggregate names in the preserved order
     """
-    # Invert dict
+    # Invert mapping: orig -> aggregate
     orig_to_agg = {}
     for agg, codes in agg_to_orig.items():
         for c in codes:
             if c in orig_to_agg and orig_to_agg[c] != agg:
-                raise ValueError(f"Code {c} mapped to two aggregates: {orig_to_agg[c]} and {agg}")
+                raise ValueError(f"Code {c} assigned to two aggregates: {orig_to_agg[c]} and {agg}")
             orig_to_agg[c] = agg
 
-    # Build label map in the provided order; check coverage
-    map_labels = []
-    missing = []
-    for code in original_order:
-        agg = orig_to_agg.get(code)
-        if agg is None:
-            missing.append(code)
-            map_labels.append(None)
-        else:
-            map_labels.append(agg)
+    # Ensure all original codes are covered
+    missing = [c for c in original_order if c not in orig_to_agg]
     if missing:
         raise ValueError(f"Missing codes in agg_to_orig: {missing}")
 
-    map_labels = np.array(map_labels, dtype=object)
-    groups, inv = np.unique(map_labels, return_inverse=True)  # sorted label order
-    map_ids = inv.astype(int)
-    return map_labels, map_ids, groups
+    # Preserve dictionary order for aggregates
+    agg_order = list(agg_to_orig.keys())
+    agg_index = {agg: i for i, agg in enumerate(agg_order)}
 
-def membership_matrix_from_ids(map_ids: np.ndarray):
+    # Map each original code (by order) to aggregate label and id
+    map_labels = np.array([orig_to_agg[c] for c in original_order], dtype=object)
+    map_ids = np.array([agg_index[a] for a in map_labels], dtype=int)
+
+    return map_labels, map_ids, agg_order
+
+
+
+def membership_matrix_from_ids(map_ids: np.ndarray, n_groups: int = None):
     """Create one-hot membership matrix G (N x G) from integer codes 0..G-1."""
-    n_orig = map_ids.shape[0]
-    n_groups = int(map_ids.max()) + 1
-    G = np.zeros((n_orig, n_groups), dtype=float)
-    G[np.arange(n_orig), map_ids] = 1.0
-    return G
+    n = map_ids.shape[0]
+    G = int(map_ids.max()) + 1 if n_groups is None else n_groups
+    M = np.zeros((n, G), dtype=float)
+    M[np.arange(n), map_ids] = 1.0
+    return M
+
 
 # --- Build exporter/importer mappings (same order on both axes) ---
-map_exp_labels, map_exp_ids, groups_exp = make_region_mapping(agg_to_orig, list(original_order))
-map_imp_labels, map_imp_ids, groups_imp = map_exp_labels, map_exp_ids, groups_exp  # same order on both axes
+map_exp_labels, map_exp_ids, agg_order = make_region_mapping_ordered(agg_to_orig, list(original_order))
+map_imp_labels, map_imp_ids = map_exp_labels, map_exp_ids  # same axis order
 
-Gexp = membership_matrix_from_ids(map_exp_ids)  # shape (71, 12)
-Gimp = membership_matrix_from_ids(map_imp_ids)  # shape (71, 12)
+Gexp = membership_matrix_from_ids(map_exp_ids,  n_groups=len(agg_order))  # shape (71, 12)
+Gimp = membership_matrix_from_ids(map_imp_ids,  n_groups=len(agg_order))  # shape (71, 12)
 
-# --- Example aggregation for a single market/year slice ---
-# prices: (71, 71, n_markets, n_years)
-# volumes: (71, 71, n_markets, n_years)
-def aggregate_block_unit_values(P2: np.ndarray, Q2: np.ndarray):
+
+# -------------------------------------------------------
+# Core aggregator for a single market-year 2D slice (71x71)
+# -------------------------------------------------------
+def aggregate_slice_to_df(
+    P2: np.ndarray,  # prices
+    Q2: np.ndarray,  # quantities (weights)
+    *,
+    drop_missing_prices_from_weights: bool = True,
+    exclude_same_country: bool = False,
+    exclude_within_aggregate: bool = False,
+    return_value_qty: bool = False
+):
     """
-    Given 2D price and volume matrices (71x71), return:
-    - P_agg: (12x12) unit-value prices  = sum(P*Q)/sum(Q) per block
-    - V_agg: (12x12) summed values      = sum(P*Q) per block
-    - Q_agg: (12x12) summed quantities  = sum(Q) per block
-    Missing prices are dropped from both numerator and denominator.
+    Aggregate a (71x71) slice to a (12x12) labeled DataFrame of unit-value prices.
+    Options:
+      - drop_missing_prices_from_weights: drop cells with NaN/inf prices from weights (recommended)
+      - exclude_same_country: zero out i==j flows before aggregation
+      - exclude_within_aggregate: zero out flows where exporter and importer belong to same aggregate
+      - return_value_qty: also return DataFrames of summed values and quantities
     """
-    P2 = P2.astype(float)
-    Q2 = np.nan_to_num(Q2.astype(float), nan=0.0, posinf=0.0, neginf=0.0)
-    # Drop observations with missing/invalid prices from weights
-    mask = np.isfinite(P2)
-    Q_eff = np.where(mask, Q2, 0.0)
-    V = np.where(mask, P2 * Q_eff, 0.0)
+    P = np.array(P2, dtype=float, copy=True)
+    Q = np.array(Q2, dtype=float, copy=True)
+    Q = np.nan_to_num(Q, nan=0.0, posinf=0.0, neginf=0.0)
 
-    V_agg = Gexp.T @ V @ Gimp
+    if exclude_same_country:
+        np.fill_diagonal(Q, 0.0)
+
+    if exclude_within_aggregate:
+        same_block = map_exp_ids[:, None] == map_imp_ids[None, :]
+        Q[same_block] = 0.0
+
+    # Effective weights: drop cells with missing/invalid prices if requested
+    price_ok = np.isfinite(P)
+    Q_eff = np.where(price_ok, Q, 0.0) if drop_missing_prices_from_weights else Q
+    V = np.where(price_ok, P * Q_eff, 0.0)
+
+    # Block sums via membership matrices
+    V_agg = Gexp.T @ V @ Gimp  # (12, 12)
     Q_agg = Gexp.T @ Q_eff @ Gimp
+    P_agg = np.divide(V_agg, Q_agg, out=np.full_like(V_agg, np.nan), where=Q_agg > 0)
 
-    P_agg = np.full_like(V_agg, np.nan)
-    np.divide(V_agg, Q_agg, out=P_agg, where=Q_agg > 0)
-    return P_agg, V_agg, Q_agg
+    # Labeled DataFrames in your preserved order
+    idx = pd.Index(agg_order, name="Exporter (agg)")
+    col = pd.Index(agg_order, name="Importer (agg)")
+
+    P_df = pd.DataFrame(P_agg, index=idx, columns=col)
+    if not return_value_qty:
+        return P_df
+
+    V_df = pd.DataFrame(V_agg, index=idx, columns=col)
+    Q_df = pd.DataFrame(Q_agg, index=idx, columns=col)
+    return P_df, V_df, Q_df
+
 
 
 # %% Convert variables
@@ -466,26 +494,23 @@ for scen_name, scen in scen_main_map.items():
             # Mandated market
             prices = bila_cost_mandated_conv[:, :, y]
             volumes = output_all[scen]['NH3SMLVL'][:, :, 0, y]
-            prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)
-            var_conv[scen][var]['Mandated'][year] = pd.DataFrame(prices_agg,
-                                                              index=region_mapping_wo_glo.keys(),
-                                                              columns=region_mapping_wo_glo.keys())
+            prices_agg, values_agg, quantities_agg = aggregate_slice_to_df(prices, volumes, return_value_qty=True)
+            # P_agg_df, V_agg_df, Q_agg_df = aggregate_slice_to_df(P2, Q2, return_value_qty=True)
+            var_conv[scen][var]['Mandated'][year] = prices_agg.copy()
             
             # Default market
             prices = bila_cost_default_conv[:, :, y]
             volumes = output_all[scen]['NH3SMLVL'][:, :, 1, y]
-            prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)            
-            var_conv[scen][var]['Default'][year] = pd.DataFrame(prices_agg,
-                                                              index=region_mapping_wo_glo.keys(),
-                                                              columns=region_mapping_wo_glo.keys())
+            prices_agg, values_agg, quantities_agg = aggregate_slice_to_df(prices, volumes, return_value_qty=True)
+            # P_agg_df, V_agg_df, Q_agg_df = aggregate_slice_to_df(P2, Q2, return_value_qty=True)         
+            var_conv[scen][var]['Default'][year] = prices_agg.copy()
            
             # Total market
             prices = bila_cost_total_conv[:, :, y]
             volumes = output_all[scen]['NH3SMLVL'][:, :, :, y].sum(axis=2)
-            prices_agg, values_agg, quantities_agg = aggregate_block_unit_values(prices, volumes)
-            var_conv[scen][var]['Total'][year] = pd.DataFrame(prices_agg,
-                                                              index=region_mapping_wo_glo.keys(),
-                                                              columns=region_mapping_wo_glo.keys())
+            prices_agg, values_agg, quantities_agg = aggregate_slice_to_df(prices, volumes, return_value_qty=True)
+            # P_agg_df, V_agg_df, Q_agg_df = aggregate_slice_to_df(P2, Q2, return_value_qty=True)
+            var_conv[scen][var]['Total'][year] = prices_agg.copy()
         
         
         # if var != 'NH3TCCout':
@@ -723,137 +748,157 @@ fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, 
 
     
 plt.show()
-# plt.savefig(fp)
+plt.savefig(fp)
     
     
 
 # %% Graph 2 - Demand by scenario and region (group) 2023 and 2050
 
-# file path
-fp = os.path.join('Graphs', 'fig2_demand_comp_v{}.{}'.format(VERSION, FORMAT))
+assumptions = ['Default', 'Optimistic', 'Pessimistic']
 
-# Figure params
-figsize = (7.5, 20)
-# # Create subplot    
-fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
-                         ncols=2,
-                         figsize=figsize,
-                         sharex=True,
-                         sharey=True)
-
-axes_flat = axes.flatten()
-# axes_flat[-1].set_visible(False)
-
-col_names = ['2023']
-col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
-col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
-
-row_names = ['Production', 'Imports', 'Exports']
-
-small_gap = 1
-large_gap = small_gap * 1.5
-bar_width = small_gap*0.8
-x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
-x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
-
-colour_map = dict(zip(row_names, ['teal', 'burlywood', 'tomato']))
-
-for r, reg in enumerate(reg_aggs_wo_glo):
+for assump in assumptions:
     
-    # Bar chart data
-    plot_data = pd.DataFrame(0.0, index=row_names, columns=col_names)
-    plot_data.loc['Production', '2023'] = var_conv['S0']['NH3PROD']['Total'].loc[reg, 2023]
-    plot_data.loc['Exports', '2023'] = -var_conv['S0']['NH3EXP']['Total'].loc[reg, 2023]
-    plot_data.loc['Imports', '2023'] = var_conv['S0']['NH3IMP']['Total'].loc[reg, 2023]
+    if assump == 'Default':
+        
+        scen_map = scen_main_map
+        scen_ref = 'S0'
+        
+    elif assump == 'Optimistic':
+        
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
     
-    plot_demand = pd.Series(0.0, index=col_names)
-    plot_demand.loc['2023'] = var_conv['S0']['NH3DEM']['Total'].loc[reg, 2023]
+    elif assump == 'Pessimistic':
+        
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
     
-    for scen, scen_short in scen_main_map.items(): 
         
-        plot_data.loc['Production', '{} 2035'.format(scen)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2035]
-        plot_data.loc['Exports', '{} 2035'.format(scen)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2035]
-        plot_data.loc['Imports', '{} 2035'.format(scen)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2035]
-        
-        plot_data.loc['Production', '{} 2050'.format(scen)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2050]
-        plot_data.loc['Exports', '{} 2050'.format(scen)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2050]
-        plot_data.loc['Imports', '{} 2050'.format(scen)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2050]
-        
-        plot_demand.loc['{} 2035'.format(scen)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2035]
-        plot_demand.loc['{} 2050'.format(scen)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2050]
-        
-       
-    # Convert data to Mt NH3
-    plot_data *= 0.001
-    plot_demand *= 0.001
+    # file path
+    fp = os.path.join('Graphs', 'fig2_demand_comp_v{}_{}.{}'.format(VERSION, assump, FORMAT))
     
-    bottom = np.zeros(len(plot_data.columns))
-    for var, colour in colour_map.items():
+    # Figure params
+    figsize = (7.5, 20)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
+                             ncols=2,
+                             figsize=figsize,
+                             sharex=True,
+                             sharey=True)
+    
+    axes_flat = axes.flatten()
+    # axes_flat[-1].set_visible(False)
+    
+    col_names = ['2023']
+    col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
+    col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
+    
+    row_names = ['Production', 'Imports', 'Exports']
+    
+    small_gap = 1
+    large_gap = small_gap * 1.5
+    bar_width = small_gap*0.8
+    x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
+    x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
+    
+    colour_map = dict(zip(row_names, ['teal', 'burlywood', 'tomato']))
+    
+    for r, reg in enumerate(reg_aggs_wo_glo):
         
-        if var != 'Exports':
+        # Bar chart data
+        plot_data = pd.DataFrame(0.0, index=row_names, columns=col_names)
+        plot_data.loc['Production', '2023'] = var_conv[scen_ref]['NH3PROD']['Total'].loc[reg, 2023]
+        plot_data.loc['Exports', '2023'] = -var_conv[scen_ref]['NH3EXP']['Total'].loc[reg, 2023]
+        plot_data.loc['Imports', '2023'] = var_conv[scen_ref]['NH3IMP']['Total'].loc[reg, 2023]
         
-            axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
-                        color=colour, label=var, edgecolor='white', linewidth=0.2)
+        plot_demand = pd.Series(0.0, index=col_names)
+        plot_demand.loc['2023'] = var_conv[scen_ref]['NH3DEM']['Total'].loc[reg, 2023]
+        
+        for scen, scen_short in scen_map.items(): 
             
-            bottom += plot_data.loc[var, :].values
+            plot_data.loc['Production', '{} 2035'.format(scen)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2035]
+            plot_data.loc['Exports', '{} 2035'.format(scen)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2035]
+            plot_data.loc['Imports', '{} 2035'.format(scen)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2035]
             
-        else:
+            plot_data.loc['Production', '{} 2050'.format(scen)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2050]
+            plot_data.loc['Exports', '{} 2050'.format(scen)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2050]
+            plot_data.loc['Imports', '{} 2050'.format(scen)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2050]
             
-            axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=np.zeros(len(plot_data.columns)),
-                        color=colour, label=var, edgecolor='white', linewidth=0.2)   
+            plot_demand.loc['{} 2035'.format(scen)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2035]
+            plot_demand.loc['{} 2050'.format(scen)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2050]
             
-    # Add demand
-    axes_flat[r].scatter(x_positions, plot_demand.values, color='black', label='Demand')
+           
+        # Convert data to Mt NH3
+        plot_data *= 0.001
+        plot_demand *= 0.001
+        
+        bottom = np.zeros(len(plot_data.columns))
+        for var, colour in colour_map.items():
             
-    # axes_flat[r].scatter(x_positions, scatter_y, s=60, color='#2F4B7C', zorder=3, label='Scatter metric')
-
-    # X-axis setup
-    axes_flat[r].set_xticks(x_positions)
-    axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
-    axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+            if var != 'Exports':
+            
+                axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                            color=colour, label=var, edgecolor='white', linewidth=0.2)
+                
+                bottom += plot_data.loc[var, :].values
+                
+            else:
+                
+                axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=np.zeros(len(plot_data.columns)),
+                            color=colour, label=var, edgecolor='white', linewidth=0.2)   
+                
+        # Add demand
+        axes_flat[r].scatter(x_positions, plot_demand.values, color='black', label='Demand')
+                
+        # axes_flat[r].scatter(x_positions, scatter_y, s=60, color='#2F4B7C', zorder=3, label='Scatter metric')
     
-
-    # Labels
-    axes_flat[r].set_title(reg)
-    axes_flat[r].set_ylabel('Mt NH$_3$')
-    # axes_flat[r].label_outer()
+        # X-axis setup
+        axes_flat[r].set_xticks(x_positions)
+        axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
+        axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+        
     
-
-    # axes_flat[r].yaxis.set_minor_locator(mticker.FixedLocator([0]))
-    # axes_flat[r].grid(which='minor', axis='y', linestyle='--', linewidth=1.2, color='#666666', alpha=0.8, zorder=1)
-
-
-    # axes_flat[r].grid(which='major', axis='y', color='#DDDDDD', linewidth=0.8, linestyle='-')
-    axes_flat[r].axhline(0, color='#666666', linewidth=1.2, linestyle='--', alpha=0.9, zorder=1)
-
+        # Labels
+        axes_flat[r].set_title(reg)
+        axes_flat[r].set_ylabel('Mt NH$_3$')
+        # axes_flat[r].label_outer()
+        
     
-    # Optional: visual separators for the large gaps
-    for i in [0, 4]:
-        separator_x = x_positions[i] + large_gap/2
-        axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
+        # axes_flat[r].yaxis.set_minor_locator(mticker.FixedLocator([0]))
+        # axes_flat[r].grid(which='minor', axis='y', linestyle='--', linewidth=1.2, color='#666666', alpha=0.8, zorder=1)
     
-
-# Legend
-h1, l1 = axes_flat[0].get_legend_handles_labels()
-h1_adj = h1[1:] + [h1[0]]
-l1_adj = l1[1:] + [l1[0]]
-
-fig.legend(handles=h1_adj,
-           labels=l1_adj, 
-           loc='lower center',
-           bbox_to_anchor=(0.5, 0.08),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=4,
-           title="NH$_3$ flow",
-           fontsize=8)
-
-fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
-
-
     
-plt.show()
-plt.savefig(fp)
+        # axes_flat[r].grid(which='major', axis='y', color='#DDDDDD', linewidth=0.8, linestyle='-')
+        axes_flat[r].axhline(0, color='#666666', linewidth=1.2, linestyle='--', alpha=0.9, zorder=1)
+    
+        
+        # Optional: visual separators for the large gaps
+        for i in [0, 4]:
+            separator_x = x_positions[i] + large_gap/2
+            axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
+        
+    
+    # Legend
+    h1, l1 = axes_flat[0].get_legend_handles_labels()
+    h1_adj = h1[1:] + [h1[0]]
+    l1_adj = l1[1:] + [l1[0]]
+    
+    fig.legend(handles=h1_adj,
+               labels=l1_adj, 
+               loc='lower center',
+               bbox_to_anchor=(0.5, 0.08),
+               frameon=False,
+               borderaxespad=0.,
+               ncol=4,
+               title="NH$_3$ flow",
+               fontsize=8)
+    
+    fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
+    
+    
+        
+    plt.show()
+    plt.savefig(fp)
 
 # %% Graph 3 - Sankey Diagrams of trade flows 2023, 2035, 2050 each scenario
 
