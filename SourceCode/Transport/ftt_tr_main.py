@@ -100,12 +100,12 @@ def solve(data, time_lag, titles, histend, year, domain):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     jti = {category: index for index, category in enumerate(titles['JTI'])}
 
-    fuelvars = ['FR_1', 'FR_2', 'FR_3', 'FR_4', 'FR_5', 'FR_6',
-                'FR_7', 'FR_8', 'FR_9', 'FR_10', 'FR_11', 'FR_12']
-
     sector = "tr_road_pass"
     sector_index = 0
     sector_index = 15  #titles['FUTI'].index('16 Road Transport')
+    
+    num_regions = len(titles['RTI'])
+    num_techs = len(titles['VTTI'])
 
     # Store fuel prices and convert to $2013/toe
     # It's actually in current$/toe
@@ -118,8 +118,8 @@ def solve(data, time_lag, titles, histend, year, domain):
 
     # Use data-driven timing based on TDA2 (last year of cost data)
     if year == np.min(data["TDA2"][:, 0, 0]):
-        start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
-        for veh in range(len(titles['VTTI'])):
+        start_i_cost = np.zeros([num_regions, num_techs, 1])
+        for veh in range(num_techs):
             if 17 < veh < 24:
                 # Starting EV/PHEV cost (without battery)
                 # Uses global Battery price instead of per-vehicle battery cost
@@ -137,7 +137,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Define starting battery capacity, this does not change
         data["TWWB"] = np.copy(data["TEWW"])
-        for veh in range(len(titles['VTTI'])):
+        for veh in range(num_techs):
             if (veh < 18) or (veh > 23):
                 # Set starting cumulative battery capacities to 0 for ICE vehicles
                 data["TWWB"][0, veh, 0] = 0
@@ -148,7 +148,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['TEVC'] = np.copy(time_lag['TEVC'])  # The cost without batteries
         data['TWWB'] = np.copy(time_lag['TWWB'])
 
-    for r in range(len(titles['RTI'])):
+    for r in range(num_regions):
         # %% Initialise
         # Up to the last year of historical market share data
         if year <= data["TDA1"][r, 0, 0]:
@@ -177,7 +177,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         if year == data["TDA1"][r, 0, 0]: 
             # Define starting battery capacity
             start_bat_cap = np.copy(data["TEWW"])
-            for veh in range(len(titles['VTTI'])):
+            for veh in range(num_techs):
                 if (veh < 18) or (veh > 23):
                     # Set starting cumulative battery capacities to 0 for ICE vehicles
                     start_bat_cap[0,veh,0] = 0
@@ -258,20 +258,20 @@ def solve(data, time_lag, titles, histend, year, domain):
                 costs_sd=data_dt["TLCD"],       # Standard deviation of log(costs)
                 subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],  # Substitution turnover rate
                 reg_constr=reg_constr,          # Constraint due to regulation
-                num_regions=len(titles['RTI']), # Number of regions
-                num_techs=len(titles['VTTI'])   # Number of techs
+                num_regions=num_regions, # Number of regions
+                num_techs=num_techs   # Number of techs
             )
             
-            endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+            endo_shares = np.zeros((num_regions, num_techs))
             endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
             endo_capacity = endo_shares * rfltt[:, np.newaxis]
 
             
             # Implement exogenous sales and correct for stretching
             for r in regions:
-                if r < len(titles['RTI']):  # Safety check
-                    dUkTK = np.zeros([len(titles['VTTI'])])
-                    dUkREG = np.zeros([len(titles['VTTI'])])
+                if r < num_regions:  # Safety check
+                    dUkTK = np.zeros([num_techs])
+                    dUkREG = np.zeros([num_techs])
                     TWSA_scalar = 1.0
                     
                     # Check that exogenous sales additions aren't too large
@@ -290,7 +290,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                     # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
                     # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
                     # if rflt (i.e. total demand) had not grown.
-                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfllt[r, np.newaxis]) * reg_constr[r, :].reshape([len(titles['VTTI'])])
+                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfllt[r, np.newaxis]) * reg_constr[r, :].reshape([num_techs])
                     
                     # Sum effect of exogenous sales additions (if any) with effect of regulations.
                     dUk = dUkTK + dUkREG
@@ -389,8 +389,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             data["Battery cap additions"][1, t-1, 0] = np.sum(new_bat) / 1000  # In GWh
 
             # Cumulative investment for learning cost reductions
-            bi = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
-            for r in range(len(titles['RTI'])):
+            bi = np.zeros((num_regions, num_techs))
+            for r in range(num_regions):
                 # Investment spillover
                 bi[r, :] = np.matmul(data['TEWB'][0, :, :], tewi_t[r, :, 0])
 
@@ -410,7 +410,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data = battery_costs(data, time_lag, year, t, titles, histend)
 
             # Initialise variable for indirect EV/PHEV costs
-            id_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+            id_cost = np.zeros([num_regions, num_techs, 1])
 
             # Copy prices during historical period
             rs_to_copy = year <= data["TDA2"][:, 0, 0]
@@ -418,7 +418,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['BTTC'][rs_to_copy] = time_lag['BTTC'][rs_to_copy]
 
             # Learning-by-doing effects on investment
-            for veh in range(len(titles['VTTI'])):
+            for veh in range(num_techs):
                 if data['TEWW'][0, veh, 0] > 0.1:
                     # Calculate new costs (separate treatments for ICE vehicles and EVs/PHEVs)
                     if 17 < veh < 24:
