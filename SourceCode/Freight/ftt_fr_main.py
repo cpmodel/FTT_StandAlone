@@ -66,7 +66,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
-        Curernt/active year of solution
+        Current year
 
     Returns
     ----------
@@ -81,7 +81,9 @@ def solve(data, time_lag, titles, histend, year, domain):
     sector = 'freight'
     num_regions = len(titles['RTI'])
     num_techs = len(titles['FTTI'])       # Number of technologies
+    num_fuels = len(titles['JTI'])
     n_veh_classes = len(titles['FSTI'])   # Number of classes
+    
     
     # Factor used to create intermediate data from annual figures
     no_it = int(data['noit'][0, 0, 0])
@@ -89,7 +91,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
     # Creating variables
     # Technology to fuel user conversion matrix
-    zjet = np.copy(data['ZJET'][0, :, :])
+    zjet = data['ZJET'][0, :, :]
     # Initialise the emission correction factor
     emis_corr = np.zeros([num_regions, num_techs])
     
@@ -133,9 +135,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         for r in range(num_regions):
         
-            for veh in range(len(titles['FTTI'])):
-                for fuel in range(len(titles['JTI'])):
-                    if titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][0, veh, fuel] == 1:
+            for veh in range(num_techs):
+                for fuel in range(num_fuels):
+                    if titles['JTI'][fuel] == '11 Biofuels' and zjet[veh, fuel] == 1:
                         # No biofuel blending mandate in the historical period
                         zjet[veh, fuel] = 0
                         
@@ -149,10 +151,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         if year == histend["RFLZ"]:
             # Calculate levelised cost
-            
-            carbon_costs = set_carbon_tax(data, c6ti)
-            data = get_lcof(data, titles, carbon_costs, year)
-            
+                        
             data["BZTC initial"] = np.copy(data["BZTC"])
             
             # # Battery starting capacity
@@ -173,15 +172,15 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Find if there is a regulation and if it is exceeded
         division = divide((time_lag['ZEWK'][:, :, 0] - data['ZREG'][:, :, 0]),
-                           data['ZREG'][:, :, 0]) # 0 when dividing by 0
+                           data['ZREG'][:, :, 0])       # 0 when dividing by 0
         reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
         reg_constr[data['ZREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['ZREG'][:, :, 0] == -1.0] = 0.0
 
         
         for t in range(1, no_it + 1):
-        # Interpolations to avoid staircase profile
-
+            
+            # Interpolations to avoid staircase profile
             D = time_lag['RVKZ'] + (data['RVKZ'] - time_lag['RVKZ']) * t * dt
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
             Utot = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
@@ -199,7 +198,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 num_techs=num_techs             # Number of techs
             )
             
-            # Calculate endogenous market shares from both changes
+            # Calculate endogenous market shares
             endo_shares = data_dt['ZEWS'][:, :, 0] + change_in_shares
             endo_capacity = endo_shares * Utot
             
@@ -215,7 +214,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Copy over costs that don't change
             data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
             
-            # This is number of trucks by technology
+            # Number of trucks by technology
             data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
            
             # Investment (sales) = new capacity created
@@ -282,11 +281,9 @@ def solve(data, time_lag, titles, histend, year, domain):
 
                 if np.sum(D[r]) == 0.0:
                     continue
-                
-                                        
-                zjet = np.copy(data['ZJET'][0, :, :])
-                for veh in range(len(titles['FTTI'])):
-                    for fuel in range(len(titles['JTI'])):
+                                                        
+                for veh in range(num_techs):
+                    for fuel in range(num_fuels):
                         #  Middle distillates
                         if titles['JTI'][fuel] == '5 Middle distillates' and data['ZJET'][0, veh, fuel]  == 1:  
 
@@ -313,15 +310,13 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
             
             
-                    
-            ## The amended learning-by-doing based on global battery learning
+            # Learning-by-doing based on global battery learning
             
-            quarterly_additions_freight = zewi_t[:, :, 0] * data["BZTC"][:, :, c6ti['16 Battery capacity (kWh)']]
-            quarterly_additions_freight = (quarterly_additions_freight) / 1e6  # Convert kWh to GWh.
-            summed_quarterly_capacity_freight = np.sum(quarterly_additions_freight)  # Summing across sectors
+            added_battery_cap = zewi_t[:, :, 0] * data["BZTC"][:, :, c6ti['16 Battery capacity (kWh)']]
+            added_battery_cap = added_battery_cap / 1e6  # Convert kWh to GWh.
+            summed_added_battery_cap = np.sum(added_battery_cap)  # Summing across sectors
             
-            data["Battery cap additions"][2, t-1, 0] = summed_quarterly_capacity_freight
-            
+            data["Battery cap additions"][2, t - 1, 0] = summed_added_battery_cap
                 
             # Copy over the technology cost categories that do not change 
             data["BZTC initial"] = np.copy(data_dt['BZTC initial'])
@@ -336,7 +331,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             if year > histend["BZTC"]:
             
                 # Learning-by-doing effects on investment
-                for tech in range(len(titles['FTTI'])):
+                for tech in range(num_techs):
     
                     if data['ZEWW'][0, tech, 0] > 0.1:
                         
@@ -381,13 +376,12 @@ def solve(data, time_lag, titles, histend, year, domain):
                         data['BZTC'][:, tech, c6ti['6 std O&M']] = (
                             data_dt['BZTC'][:, tech, c6ti['6 std O&M']] * learning_factor )
                         
-                        
 
-            # Calculate levelised cost again
+            # Calculate levelised cost
             carbon_costs = set_carbon_tax(data, c6ti)
             data = get_lcof(data, titles, carbon_costs, year)
 
-
+            # Set up data_dt for next timestep
             for var in time_lag.keys():
                 if var.startswith(("R", "Z", "B")):
                     data_dt[var] = np.copy(data[var])

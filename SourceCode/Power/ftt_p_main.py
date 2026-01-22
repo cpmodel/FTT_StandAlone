@@ -74,8 +74,8 @@ from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_disp
 from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
-# from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
-from SourceCode.Power.ftt_p_surv import survival_function
+#from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
+#from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_costc import cost_curves
 from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
@@ -105,7 +105,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     histend: dict of integers
         Final year of historical data by variable
     year: int
-        Current/active year of solution
+        Current year
     domain: dictionary of lists
         Pairs variables to domains
 

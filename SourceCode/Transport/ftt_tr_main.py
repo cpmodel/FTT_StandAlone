@@ -36,6 +36,7 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
+from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 from SourceCode.support.divide import divide
@@ -45,7 +46,6 @@ from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domai
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
-from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
 from SourceCode.Transport.ftt_tr_kickstarter import implement_kickstarter
 from SourceCode.Transport.ftt_tr_emissions_regulation import implement_emissions_regulation
 
@@ -83,7 +83,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
-        Curernt/active year of solution
+        Current year
     domain: dictionary of lists
         Pairs variables to domains
 
