@@ -49,7 +49,7 @@ from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars
 from SourceCode.Transport.ftt_tr_kickstarter import implement_kickstarter
 from SourceCode.Transport.ftt_tr_emissions_regulation import implement_emissions_regulation
 
-# Green technology indices for Transport (EVs and PHEVs)
+# Green technology indices for Transport (EVs)
 GREEN_INDICES_EV = [18, 19, 20]
 
 
@@ -361,10 +361,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                     data['BTTC'][:, :, c3ti['14 CO2Emissions']]
                 )
 
-            # Recalculate TEWS/TEWG after seeding
-            for r in regions:
-                if np.sum(data['TEWK'][r, :, 0]) > 0:
-                    data['TEWS'][r, :, 0] = data['TEWK'][r, :, 0] / np.sum(data['TEWK'][r, :, 0])
+            # Recalculate TEWS/TEWG after seeding. Do not touch regions with pseudoshares (>51)
+            total_capacity = data['TEWK'].sum(axis=1, keepdims=True)
+            mask = total_capacity[:, 0, 0] > 0
+            data['TEWS'][mask] = data['TEWK'][mask] / total_capacity[mask]
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # Fuel use and emissions

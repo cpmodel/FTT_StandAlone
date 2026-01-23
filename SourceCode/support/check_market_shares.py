@@ -14,7 +14,7 @@ def check_market_shares(shares, titles, sector, year):
     
     Raises ValueErrors if there are problems'''
     
-    # TODO: explore why FTT:Tr doesn't quite add up to 1 (1e-5 does not work)
+    # FTT:Tr does not quite add up to 1 for regions > 51, which seem to have pseudoshares. So a 1e-5 threshold doesn't work
     total_shares = shares[:, :, 0].sum(axis=1)
     invalid = np.abs(total_shares - 1.0) > 1e-4
     if np.any(invalid):

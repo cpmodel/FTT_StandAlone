@@ -184,23 +184,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         # Capacities
         data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
         
-        for r in range(len(titles['RTI'])):
-
-            # Update market shares (safe divide to avoid inf when capacity sum is zero)
-            cap_sum_r = data['MEWK'][r, :, 0].sum()
-            if cap_sum_r > 0.0:
-                data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / cap_sum_r
-            else:
-                data["MEWS"][r, :, 0] = 0.0
-
-
-        # Update capacities and market shares
-        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-        # Safe divide to avoid inf when capacity sum is zero
-        cap_sum = data['MEWK'].sum(axis=1, keepdims=True)
-        data['MEWS'] = np.divide(data['MEWK'], cap_sum,
-                                 out=np.zeros_like(data['MEWK']),
-                                 where=cap_sum > 0.0)
+        # Update market shares (safe divide to avoid inf when capacity sum is zero)
+        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
+        
 
 
         for r in range(len(titles['RTI'])):
@@ -248,11 +234,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         else:
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
 
-        # Safe divide to avoid inf when capacity sum is zero
-        cap_sum = data['MEWK'].sum(axis=1, keepdims=True)
-        data['MEWS'] = np.divide(data['MEWK'], cap_sum,
-                                 out=np.zeros_like(data['MEWK']),
-                                 where=cap_sum > 0.0)
+        # Update market shares (safe divide to avoid inf when capacity sum is zero)
+        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
@@ -327,10 +310,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Update capacities MEWK and market shares MEWS
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
             # Safe divide to avoid inf when capacity sum is zero
-            cap_sum = data['MEWK'].sum(axis=1, keepdims=True)
-            data['MEWS'] = np.divide(data['MEWK'], cap_sum,
-                                     out=np.zeros_like(data['MEWK']),
-                                     where=cap_sum > 0.0)
+            data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
 
             # Compute early scrapping costs
             # TODO: check it makes sense. It does not seem to be used elsewhere
