@@ -14,9 +14,18 @@ def check_market_shares(shares, titles, sector, year):
     
     Raises ValueErrors if there are problems'''
     
-    # FTT:Tr does not quite add up to 1 for regions > 51, which seem to have pseudoshares. So a 1e-5 threshold doesn't work
+    # Sum market shares for each region. 
     total_shares = shares[:, :, 0].sum(axis=1)
-    invalid = np.abs(total_shares - 1.0) > 1e-4
+    
+    # Using a lax threshold (1e-4) because FTT:Tr pseudoshares in empty regions may not sum exactly to 1.
+    if sector != 'freight':
+        invalid = np.abs(total_shares - 1.0) > 1e-4
+    else: # Freight: total per region depends on number of vehicle classes (3, 4, or 5)
+        allowed = np.array([3.0, 4.0, 5.0])
+        # Invalid if not close to any allowed total
+        invalid = (np.abs(total_shares[:, None] - allowed) > 1e-4).all(axis=1)
+    
+    # Raise error listing regions with invalid totals
     if np.any(invalid):
         regions = [titles['RTI'][r] for r in np.where(invalid)[0]]
         shares = [f"{total_shares[r]:.4f}" for r in np.where(invalid)[0]]
@@ -26,7 +35,7 @@ def check_market_shares(shares, titles, sector, year):
             + ", ".join(messages)
         )
     
-    # Check for negative market shares
+    # Check for negative shares and raise error if found
     negatives = (shares[:, :, 0] < 0.0).any(axis=1)
     if np.any(negatives):
         regions = [titles['RTI'][r] for r in np.where(negatives)[0]]

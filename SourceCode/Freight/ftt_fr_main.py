@@ -33,7 +33,10 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
+
 from SourceCode.support.divide import divide
+from SourceCode.support.check_market_shares import check_market_shares
+
 
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies, validate_shares
@@ -210,8 +213,9 @@ def solve(data, time_lag, titles, histend, year, domain):
                 titles, data['ZWSA'], data['ZREG'], reg_constr,
                 sum_over_classes, n_veh_classes, Utot, no_it)
                         
-            # Validate that there are no negative shares, and they add up to 3 or 4 or 5
-            validate_shares(data['ZEWS'], sector, year, titles)
+            
+            check_market_shares(data['ZEWS'], titles, sector, year)
+
                     
             # Copy over costs that don't change
             data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
