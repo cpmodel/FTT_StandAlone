@@ -673,8 +673,6 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Update the time-loop variables data_dt
             # =================================================================
             
-            # Store power variables that have changed in data_dt
-            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-P')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
         

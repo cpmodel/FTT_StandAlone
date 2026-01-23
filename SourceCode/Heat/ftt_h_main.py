@@ -439,7 +439,6 @@ def solve(data, time_lag, titles, histend, year, domain):
 
 
             # Store heat variables that have changed in data_dt
-            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-H')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
