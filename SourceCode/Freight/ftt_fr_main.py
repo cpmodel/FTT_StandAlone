@@ -96,10 +96,12 @@ def solve(data, time_lag, titles, histend, year, domain):
     emis_corr = np.zeros([num_regions, num_techs])
     
     def sum_over_classes(var):
-        output = np.stack([
-                    np.sum(var[:, veh_class::n_veh_classes, :], axis=1)
-                    for veh_class in range(n_veh_classes)],
-                    axis=1)
+        
+        output = np.empty((var.shape[0], n_veh_classes))
+        for veh_class in range(n_veh_classes):
+            output[:, veh_class] = var[:, veh_class::n_veh_classes, 0].sum(axis=1)
+        output = output[:, :, None]
+       
         return output
 
     # Initialise up to the last year of historical data
@@ -230,8 +232,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                     )
             
             data['ZEWI'], zewi_t, data['ZEWK'] = implement_seeding(
-                            data['ZEWK'], 1, data['ZEWI'], zewi_t,
-                            n_veh_classes, year)
+                            data['ZEWK'], data['ZEWI'], zewi_t,
+                            n_veh_classes, histend, year)
 
             # Mutually exclusive policies: only ONE of mandate, kickstarter,
             # or emissions regulation can be active at a time

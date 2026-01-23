@@ -11,14 +11,14 @@ MANDATE_START_YEAR = 2025
 N_YEARS = 16
 
 
-def implement_seeding(cap, seeding, cum_sales_in, sales_in, n_veh_classes, year):    
-    '''Implement mandate: linearly increasing sales. First recalculate sales, then 
-    recalculate capacity''' 
+def implement_seeding(cap, cum_sales_in, sales_in, n_veh_classes, histend, year):    
+    '''Implement seeding. In the first five year of the simulation, countries with 
+    very low or no green technology get a seed of the technology based on global sales.'''
     
-    mandate_end_year = 2030
+    mandate_end_year = histend['ZEWS'] + 6
 
-    # If there are no mandates, immediately return inputs
-    if seeding == 0 or year not in range(2025, mandate_end_year + 1):
+    # Return immediately outside seeding window
+    if year not in range(histend['ZEWS'] + 1, mandate_end_year + 1):
         return cum_sales_in, sales_in, cap
     
     cum_sales_after_mandate = np.copy(cum_sales_in)
