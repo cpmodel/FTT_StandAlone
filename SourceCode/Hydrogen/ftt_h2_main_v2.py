@@ -415,7 +415,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                                 0.00, 0.00, 0.00, 0.05, 0.00, 0.00, 0.00])
         penalties = np.copy(hymt_shares)
         # Set minimum value to 0.01
-        penalties[penalties<0.01] = 0.01
+        penalties[penalties<0.05] = 0.05
 
         
         for r in range(len(titles['RTI'])): 

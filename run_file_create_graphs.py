@@ -50,7 +50,7 @@ scens = model.scenarios
 scen_dict = dict(zip(model.scenarios, ['REF', 'CP', 'MD', 'CP+MD']))
 # %%
 # Call the 'run' method of the ModelRun class to solve the model
-model.run()
+# model.run()
 
 # Fetch ModelRun attributes, for examination
 # Output of the model
@@ -172,20 +172,24 @@ tech_col_map = {'Grey':                         'darkgray',
                 }
 
 # Scenarios
+assumptions = ['Default', 'Optimistic', 'Pessimistic']
+
 scen_main_map = {'Baseline':                'S0',
                  'Carbon price':            'S1',
                  'EU CBAM':                 'S2',
                  'Mandate':                 'S3'}
 
 scen_opt_map = {'Baseline (optimistic sensitivity)':                'S4',
-                'Global carbon price (optimistic sensitivity)':     'S5',
+                'Carbon price (optimistic sensitivity)':     'S5',
                 'EU CBAM (optimistic sensitivity)':                 'S6',
-                'Global mandate (optimistic sensitivity)':          'S7'}
+                'Mandate (optimistic sensitivity)':          'S7'}
 
 scen_pes_map = {'Baseline (pessimistic sensitivity)':                'S8',
-                'Global carbon price (pessimistic sensitivity)':     'S9',
+                'Carbon price (pessimistic sensitivity)':     'S9',
                 'EU CBAM (pessimistic sensitivity)':                 'S10',
-                'Global mandate (pessimistic sensitivity)':          'S11'}
+                'Mandate (pessimistic sensitivity)':          'S11'}
+
+scen_all_map = scen_main_map | scen_opt_map | scen_pes_map
 
 # # %% Convert variables to new classifications
 
@@ -323,7 +327,7 @@ def aggregate_slice_to_df(
 
 var_conv = {}
 
-for scen_name, scen in scen_main_map.items():
+for scen_name, scen in scen_all_map.items():
     
     msg = "Converting variables for the {} scenario".format(scen_name)
     
@@ -511,103 +515,6 @@ for scen_name, scen in scen_main_map.items():
             prices_agg, values_agg, quantities_agg = aggregate_slice_to_df(prices, volumes, return_value_qty=True)
             # P_agg_df, V_agg_df, Q_agg_df = aggregate_slice_to_df(P2, Q2, return_value_qty=True)
             var_conv[scen][var]['Total'][year] = prices_agg.copy()
-        
-        
-        # if var != 'NH3TCCout':
-        #     for m in range(output_all[scen][var].shape[2]):
-                
-                
-            
-            
-            
-            
-        
-        # P2 = prices[:, :, m, t]
-        # Q2 = volumes[:, :, m, t]
-        # P_agg_12x12, V_agg_12x12, Q_agg_12x12 = aggregate_block_unit_values(P2, Q2)
-
-        
-        
-        
-        
-        
-        # if var != 'NH3TCCout':
-        #     bila_cost_mandated_conv = output_all[scen][var][:, :, 0, :] * 1.2 * 1.18
-        #     bila_cost_default_conv = output_all[scen][var][:, :, 1, :] *  1.2 * 1.18
-        
-        #     # Cost * volume
-        #     cost_volume_mandated = bila_cost_mandated_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
-        #     cost_volume_default = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]
-        #     cost_volume_total = cost_volume_mandated + cost_volume_default
-        
-        # else:
-        #     bila_cost_default_conv = output_all[scen][var][:, :, 0, :] * (prsc_2024[:, None, None]/ex_2024[:, None, None]) * 1.18
-            
-        #     # Cost * volume
-        #     cost_volume_mandated = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 0, :]
-        #     cost_volume_default = bila_cost_default_conv * output_all[scen]['NH3SMLVL'][:, :, 1, :]
-        #     cost_volume_total = cost_volume_mandated + cost_volume_default
-            
-        # for y, year in enumerate(tl):
-            
-        #     var_conv[scen][var]['Default'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
-        #     var_conv[scen][var]['Mandated'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
-        #     var_conv[scen][var]['Total'][year] = pd.DataFrame(0.0, index=reg_aggs_wo_glo, columns=reg_aggs_wo_glo)
-            
-        #     for reg_agg_exp in reg_aggs_wo_glo:
-                
-        #         mask = reg_conv.loc[reg_agg_exp, :].values    
-                
-        #         # Aggregate exporters in line with new region classification
-        #         export_conv_mandated = np.sum(cost_volume_mandated[:, :, y] * mask[:, None], axis=0)
-        #         export_conv_default = np.sum(cost_volume_default[:, :, y] * mask[:, None], axis=0)
-        #         export_conv_total = np.sum(cost_volume_total[:, :, y] * mask[:, None], axis=0)
-                
-        #         for reg_agg_imp in reg_aggs_wo_glo:
-                    
-        #             mask = reg_conv.loc[reg_agg_imp, :].values 
-                    
-        #             # Mandated market
-        #             if var_conv[scen]['NH3SMLVL']['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
-        #                 var_conv[scen][var]['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] = (
-        #                     np.sum(export_conv_mandated * mask, axis=0)
-        #                     / var_conv[scen]['NH3SMLVL']['Mandated'][year].loc[reg_agg_exp, reg_agg_imp])
-                        
-        #             else:
-                        
-        #                 var_conv[scen][var]['Mandated'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
-                    
-        #             # Default market
-        #             if var_conv[scen]['NH3SMLVL']['Default'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
-                        
-        #                 var_conv[scen][var]['Default'][year].loc[reg_agg_exp, reg_agg_imp] = (
-        #                     np.sum(export_conv_default * mask, axis=0)
-        #                     / var_conv[scen]['NH3SMLVL']['Default'][year].loc[reg_agg_exp, reg_agg_imp])
-                        
-        #             else:
-                        
-        #                 var_conv[scen][var]['Default'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
-                        
-        #             # Total market
-        #             if var_conv[scen]['NH3SMLVL']['Total'][year].loc[reg_agg_exp, reg_agg_imp] > 0.0:
-                        
-        #                 var_conv[scen][var]['Total'][year].loc[reg_agg_exp, reg_agg_imp] = (
-        #                     np.sum(export_conv_default * mask, axis=0)
-        #                     / var_conv[scen]['NH3SMLVL']['Total'][year].loc[reg_agg_exp, reg_agg_imp])
-                        
-        #             else:
-                        
-        #                 var_conv[scen][var]['Total'][year].loc[reg_agg_exp, reg_agg_imp] = 0.0
-                    
-                    
-        #             if reg_agg_exp == reg_agg_imp:
-                        
-        #                 x = 1
-            
-        #     # Remove NaNs
-        #     var_conv[scen][var]['Mandated'][year] = var_conv[scen][var]['Mandated'][year].fillna(0.0)
-        #     var_conv[scen][var]['Default'][year] = var_conv[scen][var]['Default'][year].fillna(0.0)
-        #     var_conv[scen][var]['Total'][year] = var_conv[scen][var]['Total'][year].fillna(0.0)
             
     
     for var in ['HYLC']:
@@ -656,105 +563,186 @@ for scen_name, scen in scen_main_map.items():
             # var_conv[scen][var][reg_agg] = var_conv[scen][var][reg_agg].where(
             #     (var_conv[scen]['HYG1'][reg_agg] * 0.179) > 0.0,
             #     other=var_conv[scen][var][reg_agg] / (var_conv[scen]['HYG1'][reg_agg] * 0.179))
+            
+    for var in ['HYEF', 'HYEFINDIRECT']:
         
+        var_conv[scen][var] = {}
         
+        # Default market
+        tot_reg_emis = np.sum(output_all[scen][var][:, :, 0, :] * output_all[scen]["WBWG"][:, :, 0, :], axis=1)
+        var_conv[scen][var]['Default'] = pd.DataFrame(reg_conv.values[1:, :] @ tot_reg_emis,
+                                                      index=reg_aggs_wo_glo,
+                                                      columns=tl)
         
+        # Mandated market
+        tot_reg_emis = np.sum(output_all[scen][var][:, :, 0, :] * output_all[scen]["WGWG"][:, :, 0, :], axis=1)
+        var_conv[scen][var]['Mandated'] = pd.DataFrame(reg_conv.values[1:, :] @ tot_reg_emis,
+                                                      index=reg_aggs_wo_glo,
+                                                      columns=tl)
+        
+        # Total market
+        var_conv[scen][var]['Total'] = var_conv[scen][var]['Default'] + var_conv[scen][var]['Mandated']   
+        
+    for var in ['NH3EFINDIRECT']:
+        
+        var_conv[scen][var] = {}
+        
+        # Default market
+        tot_reg_emis = output_all[scen][var][:, 0, 0, :] * output_all[scen]['NH3PROD'][:, 1, 0, :]
+        var_conv[scen][var]['Default'] = pd.DataFrame(reg_conv.values[1:, :] @ tot_reg_emis,
+                                                      index=reg_aggs_wo_glo,
+                                                      columns=tl)
+        
+        # Mandated market
+        tot_reg_emis = output_all[scen][var][:, 0, 0, :] * output_all[scen]['NH3PROD'][:, 0, 0, :]
+        var_conv[scen][var]['Mandated'] = pd.DataFrame(reg_conv.values[1:, :] @ tot_reg_emis,
+                                                      index=reg_aggs_wo_glo,
+                                                      columns=tl)
+        
+        # Total market
+        var_conv[scen][var]['Total'] = var_conv[scen][var]['Default'] + var_conv[scen][var]['Mandated']  
+
+    for var in ['NH3TRANSPORTEMISSIONFACTOR']:
+        
+        var_conv[scen][var] = {}
+        
+        var_conv[scen][var]['Default'] = {}
+        var_conv[scen][var]['Mandated'] = {}
+        var_conv[scen][var]['Total'] = {}
+        
+        for y, year in enumerate(tl):
+        
+            # Default market
+            tot_bila_emis = output_all[scen][var][:, :, 0, :] * output_all[scen]['NH3SMLVL'][:, :, 1, :]
+            double_conv = reg_conv.values[1:, :] @ tot_bila_emis[:, :, y] @ reg_conv.T.values[:, 1:]
+            var_conv[scen][var]['Default'][year] = pd.DataFrame(double_conv, 
+                                                                index=reg_aggs_wo_glo,
+                                                                columns=reg_aggs_wo_glo)        
+        
+            # Mandated market
+            tot_bila_emis = output_all[scen][var][:, :, 0, :] * output_all[scen]['NH3SMLVL'][:, :, 0, :]
+            double_conv = reg_conv.values[1:, :] @ tot_bila_emis[:, :, y] @ reg_conv.T.values[:, 1:]
+            var_conv[scen][var]['Mandated'][year] = pd.DataFrame(double_conv, 
+                                                                index=reg_aggs_wo_glo,
+                                                                columns=reg_aggs_wo_glo) 
+            
+            # Total market
+            var_conv[scen][var]['Total'][year]  = var_conv[scen][var]['Default'][year]  + var_conv[scen][var]['Mandated'][year]  
                     
 
 # %% Graph 1 - Production by scenario and region (group) 2023 and 2050
 
-# file path
-fp = os.path.join('Graphs', 'fig1_production_v{}.{}'.format(VERSION, FORMAT))
-
-# Figure params
-figsize = (7.5, 20)
-# # Create subplot    
-fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
-                         ncols=2,
-                         figsize=figsize,
-                         sharex=True,
-                         sharey=True)
-
-axes_flat = axes.flatten()
-# axes_flat[-1].set_visible(False)
-
-col_names = ['2023']
-col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
-col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
-
-small_gap = 1
-large_gap = small_gap * 1.5
-bar_width = small_gap*0.8
-x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
-x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
-
-
-for r, reg in enumerate(reg_aggs_wo_glo):
+for assump in assumptions:
     
-    plot_data = pd.DataFrame(0.0, index=list(tech_mapping.keys()), columns=col_names)
-    plot_data.loc[:, '2023'] = var_conv['S0']['HYG1'][reg].loc[:, 2023]
-    
-    for scen, scen_short in scen_main_map.items(): 
+    if assump == 'Default':
         
-        plot_data.loc[:, '{} 2035'.format(scen)] = var_conv[scen_short]['HYG1'][reg].loc[:, 2035]
-        plot_data.loc[:, '{} 2050'.format(scen)] = var_conv[scen_short]['HYG1'][reg].loc[:, 2050]
+        scen_map = scen_main_map
+        scen_ref = 'S0'
         
-    # Convert data to Mt NH3
-    plot_data *= 0.001
-    
-    bottom = np.zeros(len(plot_data.columns))
-    for tech, colour in tech_col_map.items():
+    elif assump == 'Optimistic':
         
-        axes_flat[r].bar(x_positions, plot_data.loc[tech, :].values, width=bar_width, bottom=bottom,
-                    color=colour, label=tech, edgecolor='white', linewidth=0.2)
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
+    
+    elif assump == 'Pessimistic':
         
-        bottom += plot_data.loc[tech, :].values
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
         
-
-    # X-axis setup
-    axes_flat[r].set_xticks(x_positions)
-    axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
-    axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+    # file path
+    fp = os.path.join('Graphs', 'fig1_production_v{}.{}'.format(VERSION, FORMAT))
     
-
-    # Labels
-    axes_flat[r].set_title(reg)
-    axes_flat[r].set_ylabel('Mt NH$_3$')
-    # axes_flat[r].label_outer()
+    # Figure params
+    figsize = (7.5, 20)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
+                             ncols=2,
+                             figsize=figsize,
+                             sharex=True,
+                             sharey=True)
     
-
-    # Optional: visual separators for the large gaps
-    for i in [0, 4]:
-        separator_x = x_positions[i] + large_gap/2
-        axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
-
+    axes_flat = axes.flatten()
+    # axes_flat[-1].set_visible(False)
     
-
-# Legend
-h1, l1 = axes_flat[0].get_legend_handles_labels()
-
-fig.legend(handles=h1,
-           labels=l1, 
-           loc='lower center',
-           bbox_to_anchor=(0.5, 0.05),
-           frameon=False,
-           borderaxespad=0.,
-           ncol=3,
-           title="Technologies",
-           fontsize=8)
-
-fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
-
-
+    col_names = ['2023']
+    col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
+    col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
     
-plt.show()
-plt.savefig(fp)
+    small_gap = 1
+    large_gap = small_gap * 1.5
+    bar_width = small_gap*0.8
+    x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
+    x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
+    
+    
+    for r, reg in enumerate(reg_aggs_wo_glo):
+        
+        plot_data = pd.DataFrame(0.0, index=list(tech_mapping.keys()), columns=col_names)
+        plot_data.loc[:, '2023'] = var_conv['S0']['HYG1'][reg].loc[:, 2023]
+        
+        for scen, scen_short in scen_map.items(): 
+            
+            scen_out = scen.split(' (')[0]
+            
+            plot_data.loc[:, '{} 2035'.format(scen_out)] = var_conv[scen_short]['HYG1'][reg].loc[:, 2035]
+            plot_data.loc[:, '{} 2050'.format(scen_out)] = var_conv[scen_short]['HYG1'][reg].loc[:, 2050]
+            
+        # Convert data to Mt NH3
+        plot_data *= 0.001
+        
+        bottom = np.zeros(len(plot_data.columns))
+        for tech, colour in tech_col_map.items():
+            
+            axes_flat[r].bar(x_positions, plot_data.loc[tech, :].values, width=bar_width, bottom=bottom,
+                        color=colour, label=tech, edgecolor='white', linewidth=0.2)
+            
+            bottom += plot_data.loc[tech, :].values
+            
+    
+        # X-axis setup
+        axes_flat[r].set_xticks(x_positions)
+        axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
+        axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+        
+    
+        # Labels
+        axes_flat[r].set_title(reg)
+        axes_flat[r].set_ylabel('Mt NH$_3$')
+        # axes_flat[r].label_outer()
+        
+    
+        # Optional: visual separators for the large gaps
+        for i in [0, 4]:
+            separator_x = x_positions[i] + large_gap/2
+            axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
+    
+        
+    
+    # Legend
+    h1, l1 = axes_flat[0].get_legend_handles_labels()
+    
+    fig.legend(handles=h1,
+               labels=l1, 
+               loc='lower center',
+               bbox_to_anchor=(0.5, 0.05),
+               frameon=False,
+               borderaxespad=0.,
+               ncol=3,
+               title="Technologies",
+               fontsize=8)
+    
+    fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
+    
+    
+        
+    plt.show()
+    plt.savefig(fp)
     
     
 
 # %% Graph 2 - Demand by scenario and region (group) 2023 and 2050
 
-assumptions = ['Default', 'Optimistic', 'Pessimistic']
+
 
 for assump in assumptions:
     
@@ -790,8 +778,8 @@ for assump in assumptions:
     # axes_flat[-1].set_visible(False)
     
     col_names = ['2023']
-    col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
-    col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
+    col_names += ['{} 2035'.format(scen.split(' (')[0]) for scen in scen_map.keys()]
+    col_names += ['{} 2050'.format(scen.split(' (')[0]) for scen in scen_map.keys()]
     
     row_names = ['Production', 'Imports', 'Exports']
     
@@ -816,16 +804,18 @@ for assump in assumptions:
         
         for scen, scen_short in scen_map.items(): 
             
-            plot_data.loc['Production', '{} 2035'.format(scen)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2035]
-            plot_data.loc['Exports', '{} 2035'.format(scen)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2035]
-            plot_data.loc['Imports', '{} 2035'.format(scen)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2035]
+            scen_out = scen.split(' (')[0]
             
-            plot_data.loc['Production', '{} 2050'.format(scen)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2050]
-            plot_data.loc['Exports', '{} 2050'.format(scen)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2050]
-            plot_data.loc['Imports', '{} 2050'.format(scen)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2050]
+            plot_data.loc['Production', '{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2035]
+            plot_data.loc['Exports', '{} 2035'.format(scen_out)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2035]
+            plot_data.loc['Imports', '{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2035]
             
-            plot_demand.loc['{} 2035'.format(scen)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2035]
-            plot_demand.loc['{} 2050'.format(scen)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2050]
+            plot_data.loc['Production', '{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2050]
+            plot_data.loc['Exports', '{} 2050'.format(scen_out)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2050]
+            plot_data.loc['Imports', '{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2050]
+            
+            plot_demand.loc['{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2035]
+            plot_demand.loc['{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2050]
             
            
         # Convert data to Mt NH3
@@ -906,535 +896,650 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import kaleido
 
-# file path
-fp = os.path.join('Graphs', 'fig3_sankey_diagram_of_flows_v{}.{}'.format(VERSION, FORMAT))
-
-
-# ----------------------------
-# Configuration
-# ----------------------------
-num_countries = len(reg_aggs_wo_glo)
-years = [2030, 2040, 2050]
-scenarios = scen_main_map.keys()
-
-# Node labels (left: origins, right: targets)
-labels = reg_aggs_wo_glo + reg_aggs_wo_glo  
-
-# Colors: origins (blue), targets (orange)
-country_colours = [colour for reg, colour in region_col_map.items() if reg != 'Global']
-node_colors = country_colours + country_colours
-
-
-
-
-# Fixed horizontal positions: left for origins, right for targets
-x_orig = [0.01] * num_countries
-x_targ = [0.99] * num_countries
-
-
-
-
-# ----------------------------
-# Helper: convert matrix to Sankey link arrays
-# ----------------------------
-def matrix_to_links(M):
-    source, target, value = [], [], []
-    for i in range(M.shape[0]):
-        for j in range(M.shape[0]):
-            v = M[i][j]
-            if v and v > 0:
-                source.append(i)              # origins indexed 0..13
-                target.append(M.shape[0] + j)          # targets indexed 14..27
-                value.append(v)
-    return source, target, value
-
-
-
-# ----------------------------
-# Create subplots (3 rows x 4 cols)
-# ----------------------------
-subplot_titles = [f"{y} | {s}" for y in years for s in scenarios]
-fig = make_subplots(rows=len(years), cols=len(scenarios),
-                    specs=[[{"type": "domain"} for _ in scenarios] for _ in years],
-                    subplot_titles=subplot_titles,
-                    horizontal_spacing=0.05,  # default ~0.2; smaller = closer
-                    vertical_spacing=0.03     # default ~0.3; smaller = closer
-
-                    )
-
-
-# Add Sankey traces per panel
-for r, year in enumerate(years, start=1):
-    for c, scenario in enumerate(scenarios, start=1):
+for assump in assumptions:
+    
+    if assump == 'Default':
         
-        scen_short = scen_main_map[scenario]
-        supply_map = np.copy(var_conv[scen_short]['NH3SMLVL']['Total'][year])
+        scen_map = scen_main_map
+        scen_ref = 'S0'
         
-        production_shares = (var_conv[scen_short]['NH3SMLVL']['Total'][year].sum(axis=1) / 
+    elif assump == 'Optimistic':
+        
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
+    
+    elif assump == 'Pessimistic':
+        
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
+
+    # file path
+    fp = os.path.join('Graphs', 'fig3_sankey_diagram_of_flows_v{}_{}.{}'.format(VERSION, assump, FORMAT))
+    
+    
+    # ----------------------------
+    # Configuration
+    # ----------------------------
+    num_countries = len(reg_aggs_wo_glo)
+    years = [2030, 2040, 2050]
+    scenarios = scen_map.keys()
+    
+    # Node labels (left: origins, right: targets)
+    labels = reg_aggs_wo_glo + reg_aggs_wo_glo  
+    
+    # Colors: origins (blue), targets (orange)
+    country_colours = [colour for reg, colour in region_col_map.items() if reg != 'Global']
+    node_colors = country_colours + country_colours
+    
+    
+    
+    
+    # Fixed horizontal positions: left for origins, right for targets
+    x_orig = [0.01] * num_countries
+    x_targ = [0.99] * num_countries
+    
+    
+    
+    
+    # ----------------------------
+    # Helper: convert matrix to Sankey link arrays
+    # ----------------------------
+    def matrix_to_links(M):
+        source, target, value = [], [], []
+        for i in range(M.shape[0]):
+            for j in range(M.shape[0]):
+                v = M[i][j]
+                if v and v > 0:
+                    source.append(i)              # origins indexed 0..13
+                    target.append(M.shape[0] + j)          # targets indexed 14..27
+                    value.append(v)
+        return source, target, value
+    
+    
+    
+    # ----------------------------
+    # Create subplots (3 rows x 4 cols)
+    # ----------------------------
+    subplot_titles = [f"{y} | {s}" for y in years for s in scenarios]
+    fig = make_subplots(rows=len(years), cols=len(scenarios),
+                        specs=[[{"type": "domain"} for _ in scenarios] for _ in years],
+                        subplot_titles=subplot_titles,
+                        horizontal_spacing=0.05,  # default ~0.2; smaller = closer
+                        vertical_spacing=0.03     # default ~0.3; smaller = closer
+    
+                        )
+    
+    
+    # Add Sankey traces per panel
+    for r, year in enumerate(years, start=1):
+        for c, scenario in enumerate(scenarios, start=1):
+            
+            scen_short = scen_map[scenario]
+            supply_map = np.copy(var_conv[scen_short]['NH3SMLVL']['Total'][year])
+            
+            production_shares = (var_conv[scen_short]['NH3SMLVL']['Total'][year].sum(axis=1) / 
+                                 var_conv[scen_short]['NH3SMLVL']['Total'][year].sum().sum()
+                                 )
+            production_shares.iloc[0] = 0.02
+            production_shares.iloc[1:] = 0.02 + production_shares.iloc[:-1].values
+            production_shares /= production_shares.sum() /0.98
+            
+            demand_shares = (var_conv[scen_short]['NH3SMLVL']['Total'][year].sum(axis=0) / 
                              var_conv[scen_short]['NH3SMLVL']['Total'][year].sum().sum()
                              )
-        production_shares.iloc[0] = 0.02
-        production_shares.iloc[1:] = 0.02 + production_shares.iloc[:-1].values
-        production_shares /= production_shares.sum() /0.98
-        
-        demand_shares = (var_conv[scen_short]['NH3SMLVL']['Total'][year].sum(axis=0) / 
-                         var_conv[scen_short]['NH3SMLVL']['Total'][year].sum().sum()
-                         )
-        demand_shares.iloc[0] = 0.02
-        demand_shares.iloc[1:] = 0.02 + demand_shares.iloc[:-1].values
-        demand_shares /= demand_shares.sum() / 0.98       
-        
-        
-        
-        # Fixed vertical order list (top-to-bottom). Example: O1..O14 and T1..T14
-        # Define evenly spaced y-positions for origins and targets:
-        y_orig = production_shares.cumsum().to_list()   # origins top→bottom
-        y_targ = demand_shares.cumsum().to_list()   # targets top→bottom
-        
-        # Combine into full arrays aligned with your labels = origins + targets
-        x_all = x_orig + x_targ
-        y_all = y_orig + y_targ
-        
-        src, tgt, val = matrix_to_links(supply_map)
-        
-        # Quick adjustment
-        # src = np.where(np.isclose(src, 0),
-        #                0.0001,
-        #                src)
-        # tgt = np.where(np.isclose(tgt, 0),
-        #                0.0001,
-        #                tgt)    
-        # src = np.where(np.isclose(src, num_countries),
-        #                num_countries-0.0001,
-        #                src)
-        # tgt = np.where(np.isclose(tgt, num_countries),
-        #                num_countries - 0.0001,
-        #                tgt)            
-        
-
-        # Link colours
-        link_colors = [country_colours[int(r)] for r in src]
-        
-        sankey = go.Sankey(
-            node=dict(
-                #pad=10,
-                thickness=15,
-                line=dict(color="black", width=0.5),
-                label=labels,
-                color=node_colors,
-                # x=x_all,                 # fixed positions
-                # y=y_all,                 # fixed positions
-            ),
-            link=dict(
-                source=src,
-                target=tgt,
-                value=val,
-                color=link_colors
-            ),
-            hoverlabel=dict(bgcolor="white")
-        )
-        fig.add_trace(sankey, row=r, col=c)
-
-fig.update_layout(
-    font_size=10,
-    width=1600,
-    height=2000,
-    margin=dict(l=3, r=3, t=30, b=10)
-)
-
-
-# Save outputs
-# fig.write_html("sankey_subplots_3x4.html")
-fig.write_image("sankey_subplots_3x4.png")
-fig.write_image(fp)
-
-
-fig.show()
+            demand_shares.iloc[0] = 0.02
+            demand_shares.iloc[1:] = 0.02 + demand_shares.iloc[:-1].values
+            demand_shares /= demand_shares.sum() / 0.98       
+            
+            
+            
+            # Fixed vertical order list (top-to-bottom). Example: O1..O14 and T1..T14
+            # Define evenly spaced y-positions for origins and targets:
+            y_orig = production_shares.cumsum().to_list()   # origins top→bottom
+            y_targ = demand_shares.cumsum().to_list()   # targets top→bottom
+            
+            # Combine into full arrays aligned with your labels = origins + targets
+            x_all = x_orig + x_targ
+            y_all = y_orig + y_targ
+            
+            src, tgt, val = matrix_to_links(supply_map)
+            
+            # Quick adjustment
+            # src = np.where(np.isclose(src, 0),
+            #                0.0001,
+            #                src)
+            # tgt = np.where(np.isclose(tgt, 0),
+            #                0.0001,
+            #                tgt)    
+            # src = np.where(np.isclose(src, num_countries),
+            #                num_countries-0.0001,
+            #                src)
+            # tgt = np.where(np.isclose(tgt, num_countries),
+            #                num_countries - 0.0001,
+            #                tgt)            
+            
+    
+            # Link colours
+            link_colors = [country_colours[int(r)] for r in src]
+            
+            sankey = go.Sankey(
+                node=dict(
+                    #pad=10,
+                    thickness=15,
+                    line=dict(color="black", width=0.5),
+                    label=labels,
+                    color=node_colors,
+                    # x=x_all,                 # fixed positions
+                    # y=y_all,                 # fixed positions
+                ),
+                link=dict(
+                    source=src,
+                    target=tgt,
+                    value=val,
+                    color=link_colors
+                ),
+                hoverlabel=dict(bgcolor="white")
+            )
+            fig.add_trace(sankey, row=r, col=c)
+    
+    fig.update_layout(
+        font_size=10,
+        width=1600,
+        height=2000,
+        margin=dict(l=3, r=3, t=30, b=10)
+    )
+    
+    
+    # Save outputs
+    # fig.write_html("sankey_subplots_3x4.html")
+    fig.write_image("sankey_subplots_3x4.png")
+    fig.write_image(fp)
+    
+    
+    fig.show()
 
 
 # %% Graph 4 - Delivery costs from top 5 exporters to top 5 imports - v1
 
-# file path
-fp = os.path.join('Graphs', 'fig4_delivery_costs_top5_exporters_w_target_v{}.{}'.format(VERSION, FORMAT))
-
-# Get the top 5 exporters in each scenario by 2050
-
-top_exporters = pd.DataFrame(index=["Top {}".format(i) for i in range(1,11)], columns=scen_main_map.keys())
-
-for scen, scen_short in scen_main_map.items():
+for assump in assumptions:
     
-    top_exporters.loc[:, scen] = list(var_conv[scen_short]["NH3EXP"]['Total'].loc[:, 2050].nlargest(10).index)
-    
-selected_top_exporters = ['Saudi Arabia', 'China', 'MENA', 'EU + UK']
-
-# Figure params
-figsize = (7.5, 15)
-# # Create subplot    
-fig, axes = plt.subplots(nrows=len(selected_top_exporters),
-                         ncols=3,
-                         figsize=figsize,
-                         sharex=True,
-                         sharey='row'
-                         )
-
-
-
-# Choose which scenario should serve as the proxy to figure out the top 3
-# target countries
-scen_proxy = 'S0'
-
-deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
-
-colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
-
-for r, reg in enumerate(selected_top_exporters):
-    
-    # Determine the top 3 targets
-    bila_trade_proxy = copy.deepcopy(var_conv[scen_proxy]["NH3SMLVL"]['Total'][2050])
-    bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
-    top3_targets = list(bila_trade_proxy.loc[reg, :].nlargest(3).index)
-    
-    for rt, reg_target in enumerate(top3_targets):
+    if assump == 'Default':
         
-        # Organise data
-        plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_main_map.keys())
+        scen_map = scen_main_map
+        scen_ref = 'S0'
         
-        for scen, scen_short in scen_main_map.items():
+    elif assump == 'Optimistic':
+        
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
+    
+    elif assump == 'Pessimistic':
+        
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
+        
+    # file path
+    fp = os.path.join('Graphs', 'fig4_delivery_costs_top5_exporters_w_target_v{}_{}.{}'.format(VERSION, assump, FORMAT))
+    
+    # Get the top 5 exporters in each scenario by 2050
+    
+    top_exporters = pd.DataFrame(index=["Top {}".format(i) for i in range(1,11)], columns=scen_map.keys())
+    
+    for scen, scen_short in scen_map.items():
+        
+        top_exporters.loc[:, scen] = list(var_conv[scen_short]["NH3EXP"]['Total'].loc[:, 2050].nlargest(10).index)
+        
+    selected_top_exporters = ['Saudi Arabia', 'China', 'MENA', 'EU + UK']
+    
+    # Figure params
+    figsize = (7.5, 15)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=len(selected_top_exporters),
+                             ncols=3,
+                             figsize=figsize,
+                             sharex=True,
+                             sharey='row'
+                             )
+    
+    
+    
+    # Choose which scenario should serve as the proxy to figure out the top 3
+    # target countries
+    scen_proxy = 'S0'
+    
+    deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
+    
+    colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
+    
+    for r, reg in enumerate(selected_top_exporters):
+        
+        # Determine the top 3 targets
+        bila_trade_proxy = copy.deepcopy(var_conv[scen_proxy]["NH3SMLVL"]['Total'][2050])
+        bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
+        top3_targets = list(bila_trade_proxy.loc[reg, :].nlargest(3).index)
+        
+        for rt, reg_target in enumerate(top3_targets):
             
-            plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["WPPR"]['Total'][2050].loc[reg] * 0.179 *1000
-            plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - plot_data.loc['Hydrogen production', scen]
-            plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
-            plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
+            # Organise data
+            plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_map.keys())
             
-            bottom = np.zeros(len(plot_data.columns))
-            for var, colour in colour_map.items():
-        
-                axes[r, rt].bar(np.arange(len(scen_main_map.keys())), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
-                            color=colour, label=var, edgecolor='white', linewidth=0.2)
+            for scen, scen_short in scen_map.items():
+                
+                plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["WPPR"]['Total'][2050].loc[reg] * 0.179 *1000
+                plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - plot_data.loc['Hydrogen production', scen]
+                plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
+                plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
+                
+                bottom = np.zeros(len(plot_data.columns))
+                for var, colour in colour_map.items():
             
-                bottom += plot_data.loc[var, :].values            
-
-        # X-axis setup
-        axes[r, rt].set_xticks(np.arange(len(scen_main_map.keys())))
-        axes[r, rt].set_xticklabels(scen_main_map.keys(), fontsize=8, rotation=90)
-        # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+                    axes[r, rt].bar(np.arange(len(scen_map.keys())), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                                color=colour, label=var, edgecolor='white', linewidth=0.2)
+                
+                    bottom += plot_data.loc[var, :].values            
+    
+            # X-axis setup
+            axes[r, rt].set_xticks(np.arange(len(scen_main_map.keys())))
+            axes[r, rt].set_xticklabels(scen_map.keys(), fontsize=8, rotation=90)
+            # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+            
+        
+            # Labels
+            if rt ==0 : axes[r, rt].set_ylabel("Source:\n{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(reg))
+            axes[r, rt].set_title("Target: {}".format(reg_target), fontsize=8)
         
     
-        # Labels
-        if rt ==0 : axes[r, rt].set_ylabel("Source:\n{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(reg))
-        axes[r, rt].set_title("Target: {}".format(reg_target), fontsize=8)
+    # Legend
+    h1, l1 = axes[0, 0].get_legend_handles_labels()
     
-
-# Legend
-h1, l1 = axes[0, 0].get_legend_handles_labels()
-
-fig.legend(handles=h1[:len(deliv_cost_comps)],
-            labels=l1[:len(deliv_cost_comps)], 
-            loc='lower center',
-            bbox_to_anchor=(0.5, 0.08),
-            frameon=False,
-            borderaxespad=0.,
-            ncol=4,
-            title="Cost categories",
-            fontsize=8)
-
-fig.subplots_adjust(hspace=0.2, wspace=0.0, right=0.97, bottom=0.22, left=0.1, top=0.95)
-
-
+    fig.legend(handles=h1[:len(deliv_cost_comps)],
+                labels=l1[:len(deliv_cost_comps)], 
+                loc='lower center',
+                bbox_to_anchor=(0.5, 0.08),
+                frameon=False,
+                borderaxespad=0.,
+                ncol=4,
+                title="Cost categories",
+                fontsize=8)
     
-plt.show()
-plt.savefig(fp)        
+    fig.subplots_adjust(hspace=0.2, wspace=0.0, right=0.97, bottom=0.22, left=0.1, top=0.95)
+    
+    
+        
+    plt.show()
+    plt.savefig(fp)        
 
 # %% Graph 4 - Delivery costs from all countries to top 5 target countries
 
-# file path
-fp = os.path.join('Graphs', 'fig4_delivery_costs_all_exporters_w_target_v{}.{}'.format(VERSION, FORMAT))
-
-# Figure params
-figsize = (7.5, 20)
-# # Create subplot    
-fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)),
-                         ncols=3,
-                         figsize=figsize,
-                         sharex=True,
-                         sharey='row'
-                         )
-
-
-
-# Choose which scenario should serve as the proxy to figure out the top 3
-# target countries
-scen_proxy = 'S0'
-
-deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
-
-colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
-
-for r, reg in enumerate(reg_aggs_wo_glo):
+for assump in assumptions:
     
-    # Determine the top 3 targets
-    bila_trade_proxy = copy.deepcopy(var_conv[scen_proxy]["NH3SMLVL"]['Total'][2050])
-    bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
-    top3_targets = list(bila_trade_proxy.loc[reg, :].nlargest(3).index)
-    
-    for rt, reg_target in enumerate(top3_targets):
+    if assump == 'Default':
         
-        # Organise data
-        plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_main_map.keys())
-        check_data = pd.DataFrame(0.0, index=deliv_cost_comps+['Delivery Cost'], columns=scen_main_map.keys())
+        scen_map = scen_main_map
+        scen_ref = 'S0'
         
-        for scen, scen_short in scen_main_map.items():
-            
-            plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
-            plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
-            plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
-            plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
-            
-            check_data.loc[deliv_cost_comps, :] = copy.deepcopy(plot_data)
-            check_data.loc['Delivery Cost', :] = var_conv[scen_short]["NH3DELIVCOST"]['Total'][2050].loc[reg, reg_target]
-            
-            bottom = np.zeros(len(plot_data.columns))
-            for var, colour in colour_map.items():
+    elif assump == 'Optimistic':
         
-                axes[r, rt].bar(np.arange(len(scen_main_map.keys())), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
-                            color=colour, label=var, edgecolor='white', linewidth=0.2)
-            
-                bottom += plot_data.loc[var, :].values            
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
+    
+    elif assump == 'Pessimistic':
+        
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
 
-        # X-axis setup
-        axes[r, rt].set_xticks(np.arange(len(scen_main_map.keys())))
-        axes[r, rt].set_xticklabels(scen_main_map.keys(), fontsize=8, rotation=90)
-        # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+    # file path
+    fp = os.path.join('Graphs', 'fig4_delivery_costs_all_exporters_w_target_v{}_{}.{}'.format(VERSION, assump, FORMAT))
+    
+    # Figure params
+    figsize = (7.5, 20)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)),
+                             ncols=3,
+                             figsize=figsize,
+                             sharex=True,
+                             sharey='row'
+                             )
+    
+    
+    
+    # Choose which scenario should serve as the proxy to figure out the top 3
+    # target countries
+    scen_proxy = 'S0'
+    
+    deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
+    
+    colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
+    
+    for r, reg in enumerate(reg_aggs_wo_glo):
+        
+        # Determine the top 3 targets
+        bila_trade_proxy = copy.deepcopy(var_conv[scen_proxy]["NH3SMLVL"]['Total'][2050])
+        bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
+        top3_targets = list(bila_trade_proxy.loc[reg, :].nlargest(3).index)
+        
+        for rt, reg_target in enumerate(top3_targets):
+            
+            # Organise data
+            plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_map.keys())
+            check_data = pd.DataFrame(0.0, index=deliv_cost_comps+['Delivery Cost'], columns=scen_map.keys())
+            
+            for scen, scen_short in scen_map.items():
+                
+                plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
+                plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
+                plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
+                plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
+                
+                check_data.loc[deliv_cost_comps, :] = copy.deepcopy(plot_data)
+                check_data.loc['Delivery Cost', :] = var_conv[scen_short]["NH3DELIVCOST"]['Total'][2050].loc[reg, reg_target]
+                
+                bottom = np.zeros(len(plot_data.columns))
+                for var, colour in colour_map.items():
+            
+                    axes[r, rt].bar(np.arange(len(scen_map.keys())), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                                color=colour, label=var, edgecolor='white', linewidth=0.2)
+                
+                    bottom += plot_data.loc[var, :].values            
+    
+            # X-axis setup
+            axes[r, rt].set_xticks(np.arange(len(scen_map.keys())))
+            axes[r, rt].set_xticklabels(scen_map.keys(), fontsize=8, rotation=90)
+            # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+            
+        
+            # Labels
+            if rt ==0 : axes[r, rt].set_ylabel("Source:\n{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(reg))
+            axes[r, rt].set_title("Target: {}".format(reg_target), fontsize=8)
         
     
-        # Labels
-        if rt ==0 : axes[r, rt].set_ylabel("Source:\n{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(reg))
-        axes[r, rt].set_title("Target: {}".format(reg_target), fontsize=8)
+    # Legend
+    h1, l1 = axes[0, 0].get_legend_handles_labels()
     
-
-# Legend
-h1, l1 = axes[0, 0].get_legend_handles_labels()
-
-fig.legend(handles=h1[:len(deliv_cost_comps)],
-            labels=l1[:len(deliv_cost_comps)], 
-            loc='lower center',
-            bbox_to_anchor=(0.5, 0.08),
-            frameon=False,
-            borderaxespad=0.,
-            ncol=4,
-            title="Cost categories",
-            fontsize=8)
-
-fig.subplots_adjust(hspace=0.8, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
-
-
+    fig.legend(handles=h1[:len(deliv_cost_comps)],
+                labels=l1[:len(deliv_cost_comps)], 
+                loc='lower center',
+                bbox_to_anchor=(0.5, 0.08),
+                frameon=False,
+                borderaxespad=0.,
+                ncol=4,
+                title="Cost categories",
+                fontsize=8)
     
-plt.show()
-plt.savefig(fp)        
+    fig.subplots_adjust(hspace=0.8, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
+    
+    
+        
+    plt.show()
+    plt.savefig(fp)        
 
 
 # %% Graph 5 - LCOH by technology and region
 
-# file path
-fp = os.path.join('Graphs', 'fig5_levelised_cost_v{}.{}'.format(VERSION, FORMAT))
+for assump in assumptions:
+    
+    if assump == 'Default':
+        
+        scen_map = scen_main_map
+        scen_ref = 'S0'
+        
+    elif assump == 'Optimistic':
+        
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
+    
+    elif assump == 'Pessimistic':
+        
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
 
-# Figure params
-figsize = (7.5, 20)
-# # Create subplot    
-fig, axes = plt.subplots(nrows=len(reg_aggs_wo_glo),
-                         ncols=len(scen_main_map.keys()),
-                         figsize=figsize,
-                         sharex=True,
-                         sharey='row')
-
-for scen_no, scen in enumerate(scen_main_map.keys()):
+    # file path
+    fp = os.path.join('Graphs', 'fig5_levelised_cost_v{}_{}.{}'.format(VERSION, assump, FORMAT))
     
-    scen_short = scen_main_map[scen]
+    # Figure params
+    figsize = (7.5, 20)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=len(reg_aggs_wo_glo),
+                             ncols=len(scen_map.keys()),
+                             figsize=figsize,
+                             sharex=True,
+                             sharey='row')
     
-    axes[0, scen_no].set_title(scen)
-    
-    for r, reg in enumerate(reg_aggs_wo_glo):
+    for scen_no, scen in enumerate(scen_map.keys()):
         
-        # axes[r, 0].set_ylabel("{}\n{}{}".format(reg, "$", r"$^{2024}/\\text{kg } H_{2}$"))
-        axes[r, 0].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/kgH\u2082".format(reg))
+        scen_short = scen_map[scen]
         
-        for tech in tech_col_map.keys():
+        axes[0, scen_no].set_title(scen)
         
-            axes[r, scen_no].plot(np.asarray(np.arange(2023, 2051)),
-                                  var_conv[scen_short]['HYLC'][reg].loc[tech, 2023:2050].T.values,
-                                  color=tech_col_map[tech],
-                                  label=tech)
+        for r, reg in enumerate(reg_aggs_wo_glo):
             
-        # axes[r, scen_no].set_ylim(0, 20)
-        axes[r, scen_no].set_xlim(2023, 2050)
-        
-# Legend
-h1, l1 = axes[0, 0].get_legend_handles_labels()
-
-fig.legend(handles=h1,
-            labels=l1, 
-            loc='lower center',
-            bbox_to_anchor=(0.5, 0.055),
-            frameon=False,
-            borderaxespad=0.,
-            ncol=6,
-            title="Technologies",
-            fontsize=8)
-
-fig.subplots_adjust(hspace=0.15, wspace=0.0, right=0.97, bottom=0.13, left=0.1, top=0.95)
-
-plt.show()
-plt.savefig(fp) 
+            # axes[r, 0].set_ylabel("{}\n{}{}".format(reg, "$", r"$^{2024}/\\text{kg } H_{2}$"))
+            axes[r, 0].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/kgH\u2082".format(reg))
+            
+            for tech in tech_col_map.keys():
+            
+                axes[r, scen_no].plot(np.asarray(np.arange(2023, 2051)),
+                                      var_conv[scen_short]['HYLC'][reg].loc[tech, 2023:2050].T.values,
+                                      color=tech_col_map[tech],
+                                      label=tech)
+                
+            # axes[r, scen_no].set_ylim(0, 20)
+            axes[r, scen_no].set_xlim(2023, 2050)
+            
+    # Legend
+    h1, l1 = axes[0, 0].get_legend_handles_labels()
+    
+    fig.legend(handles=h1,
+                labels=l1, 
+                loc='lower center',
+                bbox_to_anchor=(0.5, 0.055),
+                frameon=False,
+                borderaxespad=0.,
+                ncol=6,
+                title="Technologies",
+                fontsize=8)
+    
+    fig.subplots_adjust(hspace=0.15, wspace=0.0, right=0.97, bottom=0.13, left=0.1, top=0.95)
+    
+    plt.show()
+    plt.savefig(fp) 
 
 # %% Graph 6 - Investment
 
 # from matplotlib.patches import Patch
 
-# file path
-fp = os.path.join('Graphs', 'fig6_cumulative_investment_v{}.{}'.format(VERSION, FORMAT))
-
-# Figure params
-figsize = (7.5, 20)
-# # Create subplot    
-fig, axes = plt.subplots(nrows=len(scen_main_map.keys()),
-                         ncols=3,
-                         figsize=figsize,
-                         # sharex=True,
-                         # sharey='row'
-                         )
-
-region_col_map_wo_glo = {reg: colour for reg, colour in region_col_map.items() if reg != 'Global'}
+for assump in assumptions:
     
-for scen_no, scen in enumerate(scen_main_map.keys()):
-    
-    # Set titles
-    if scen_no == 0:
-        axes[scen_no, 0].set_title('Haber-Bosch capacity\nby region')
-        axes[scen_no, 1].set_title('H2 capacity\nby region')
-        axes[scen_no, 2].set_title('H2 capacity\nby technology')
+    if assump == 'Default':
         
-    # Set labels
-    axes[scen_no, 0].set_ylabel("{}\n\n\n\n".format(scen))
-    
-    scen_short = scen_main_map[scen]
-    
-    # Set a centre circle to make each pie chart a doughnut plot
-    
-    # centre_circle = axes[scen_no, 1].Circle((0, 0), 0.70, fc='white')
-    # centre_circle = axes[scen_no, 2].Circle((0, 0), 0.70, fc='white')
+        scen_map = scen_main_map
+        scen_ref = 'S0'
         
-    # HB investment by region
-    hb_inv_by_reg = pd.Series(0.0, index=reg_aggs_wo_glo)
-    # Base it on NH3 Production, assume 85% capacity factor
-    for reg in reg_aggs_wo_glo:
+    elif assump == 'Optimistic':
         
-        # Capacity is estimated using a 85% capacity factor on production
-        capacity_estimate = var_conv[scen_short]['NH3PROD']['Total'] / 0.85
-        # Get annual differences
-        cap_diff = capacity_estimate.diff(axis=1)
-        # Remove negative values
-        cap_diff[cap_diff<0.0] = 0.0
-        # Estimate replacement of depreciated capacity
-        # cap_dprc = capacity_estimate * (1/30)
-        # Now estimate investment using IEA's CAPEX number (770 USD/tNH3)
-        # [kt Nh3] * [USD/tNH3] * [t NH3/ktNH3] * [bUSD/USD]
-        annual_investment = cap_diff * 770 * 1e3 * 1e-9
-        hb_inv_by_reg = annual_investment.loc[:, 2025:2050].cumsum(axis=1).loc[:, 2050]
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
     
+    elif assump == 'Pessimistic':
         
-    # plot chart
-    explode  = 0.05 * np.ones((len(reg_aggs_wo_glo)))
-    axes[scen_no, 0].pie(hb_inv_by_reg.values, 
-                         colors=region_col_map_wo_glo.values(),
-                          labels=region_col_map_wo_glo.keys(),
-                          labeldistance=None,
-                         autopct='%1.1f%%', pctdistance=1.33,
-                         explode=explode,
-                         textprops={'fontsize': 8})
-    centre_circle = plt.Circle((0, 0), 0.70, fc='white')
-    axes[scen_no, 0].add_artist(centre_circle)
-    axes[scen_no, 0].text(
-        -0.3, 0, "{}\nbillion".format(hb_inv_by_reg.sum().round(0)),
-        va='center', fontsize=10, fontweight="bold", color='black')                             
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
+
+    # file path
+    fp = os.path.join('Graphs', 'fig6_cumulative_investment_v{}_{}.{}'.format(VERSION, assump, FORMAT))
     
-    # H2 investment by region
-    h2_inv_by_reg = pd.Series(0.0, index=reg_aggs_wo_glo)
-    for reg in reg_aggs_wo_glo:
-        h2_inv_by_reg.loc[reg] = var_conv[scen_short]['HYIT'][reg].loc[:, 2025:2050].cumsum(axis=1).loc[:, 2050].sum() * 0.001       
+    # Figure params
+    figsize = (7.5, 20)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=len(scen_map.keys()),
+                             ncols=3,
+                             figsize=figsize,
+                             # sharex=True,
+                             # sharey='row'
+                             )
+    
+    region_col_map_wo_glo = {reg: colour for reg, colour in region_col_map.items() if reg != 'Global'}
         
-    # plot chart
-    explode  = 0.05 * np.ones((len(reg_aggs_wo_glo)))
-    axes[scen_no, 1].pie(h2_inv_by_reg.values, 
-                         colors=region_col_map_wo_glo.values(),
-                           labels=region_col_map_wo_glo.keys(),
-                           labeldistance=None,
-                         autopct='%1.1f%%', pctdistance=1.33,
-                         explode=explode,
-                         textprops={'fontsize': 8})
-    centre_circle = plt.Circle((0, 0), 0.70, fc='white')
-    axes[scen_no, 1].add_artist(centre_circle)        
-    axes[scen_no, 1].text(
-        -0.3, 0, "{}\nbillion".format(h2_inv_by_reg.sum().round(0)),
-        va='center', fontsize=10, fontweight="bold", color='black')        
-    
-    
-    # H2 investment by tech group
-    h2_inv_by_tech = var_conv[scen_short]['HYIT']['Global'].loc[:, 2025:2050].cumsum(axis=1).loc[:, 2050]* 0.001 
-
+    for scen_no, scen in enumerate(scen_map.keys()):
         
-    # plot chart
-    explode  = 0.05 * np.ones((len(tech_col_map.keys())))
-    axes[scen_no, 2].pie(h2_inv_by_tech.values, 
-                         colors=tech_col_map.values(),
-                           labels=tech_col_map.keys(),
-                           labeldistance=None,
-                         autopct='%1.1f%%', pctdistance=1.33,
-                         explode=explode,
-                         textprops={'fontsize': 8})
-    centre_circle = plt.Circle((0, 0), 0.70, fc='white')
-    axes[scen_no, 2].add_artist(centre_circle)
-    axes[scen_no, 2].text(
-        -0.3, 0, "{}\nbillion".format(h2_inv_by_tech.sum().round(0)),
-        va='center', fontsize=10, fontweight="bold", color='black')
+        # Set titles
+        if scen_no == 0:
+            axes[scen_no, 0].set_title('Haber-Bosch capacity\nby region')
+            axes[scen_no, 1].set_title('H2 capacity\nby region')
+            axes[scen_no, 2].set_title('H2 capacity\nby technology')
+            
+        # Set labels
+        axes[scen_no, 0].set_ylabel("{}\n\n\n\n".format(scen))
+        
+        scen_short = scen_map[scen]
+        
+        # Set a centre circle to make each pie chart a doughnut plot
+        
+        # centre_circle = axes[scen_no, 1].Circle((0, 0), 0.70, fc='white')
+        # centre_circle = axes[scen_no, 2].Circle((0, 0), 0.70, fc='white')
+            
+        # HB investment by region
+        hb_inv_by_reg = pd.Series(0.0, index=reg_aggs_wo_glo)
+        # Base it on NH3 Production, assume 85% capacity factor
+        for reg in reg_aggs_wo_glo:
+            
+            # Capacity is estimated using a 85% capacity factor on production
+            capacity_estimate = var_conv[scen_short]['NH3PROD']['Total'] / 0.85
+            # Get annual differences
+            cap_diff = capacity_estimate.diff(axis=1)
+            # Remove negative values
+            cap_diff[cap_diff<0.0] = 0.0
+            # Estimate replacement of depreciated capacity
+            # cap_dprc = capacity_estimate * (1/30)
+            # Now estimate investment using IEA's CAPEX number (770 USD/tNH3)
+            # [kt Nh3] * [USD/tNH3] * [t NH3/ktNH3] * [bUSD/USD]
+            annual_investment = cap_diff * 770 * 1e3 * 1e-9
+            hb_inv_by_reg = annual_investment.loc[:, 2025:2050].cumsum(axis=1).loc[:, 2050]
+        
+            
+        # plot chart
+        explode  = 0.05 * np.ones((len(reg_aggs_wo_glo)))
+        axes[scen_no, 0].pie(hb_inv_by_reg.values, 
+                             colors=region_col_map_wo_glo.values(),
+                              labels=region_col_map_wo_glo.keys(),
+                              labeldistance=None,
+                             autopct='%1.1f%%', pctdistance=1.33,
+                             explode=explode,
+                             textprops={'fontsize': 8})
+        centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+        axes[scen_no, 0].add_artist(centre_circle)
+        axes[scen_no, 0].text(
+            -0.3, 0, "{}\nbillion".format(hb_inv_by_reg.sum().round(0)),
+            va='center', fontsize=10, fontweight="bold", color='black')                             
+        
+        # H2 investment by region
+        h2_inv_by_reg = pd.Series(0.0, index=reg_aggs_wo_glo)
+        for reg in reg_aggs_wo_glo:
+            h2_inv_by_reg.loc[reg] = var_conv[scen_short]['HYIT'][reg].loc[:, 2025:2050].cumsum(axis=1).loc[:, 2050].sum() * 0.001       
+            
+        # plot chart
+        explode  = 0.05 * np.ones((len(reg_aggs_wo_glo)))
+        axes[scen_no, 1].pie(h2_inv_by_reg.values, 
+                             colors=region_col_map_wo_glo.values(),
+                               labels=region_col_map_wo_glo.keys(),
+                               labeldistance=None,
+                             autopct='%1.1f%%', pctdistance=1.33,
+                             explode=explode,
+                             textprops={'fontsize': 8})
+        centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+        axes[scen_no, 1].add_artist(centre_circle)        
+        axes[scen_no, 1].text(
+            -0.3, 0, "{}\nbillion".format(h2_inv_by_reg.sum().round(0)),
+            va='center', fontsize=10, fontweight="bold", color='black')        
+        
+        
+        # H2 investment by tech group
+        h2_inv_by_tech = var_conv[scen_short]['HYIT']['Global'].loc[:, 2025:2050].cumsum(axis=1).loc[:, 2050]* 0.001 
     
-# Legend
-h1, l1 = axes[0, 0].get_legend_handles_labels()
-# l1 = list(region_col_map_wo_glo.keys())
-
-# h1 = [Patch(facecolor=c, edgecolor='white', label=l) for c, l in region_col_map_wo_glo.items()]
-
-fig.legend(handles=h1,
-            labels=l1, 
-            loc='lower center',
-            bbox_to_anchor=(0.3, 0.15),
-            frameon=False,
-            borderaxespad=0.,
-            ncol=3,
-            title="Regions",
-            fontsize=8)
-
-h2, l2 = axes[0, 2].get_legend_handles_labels()
-# l2 = list(tech_col_map.keys())
-fig.legend(handles=h2,
-            labels=l2, 
-            loc='lower center',
-            bbox_to_anchor=(0.8, 0.15),
-            frameon=False,
-            borderaxespad=0.,
-            ncol=2,
-            title="Technologies",
-            fontsize=8)
-
-fig.subplots_adjust(hspace=0.2, wspace=0.15, right=0.97, bottom=0.25, left=0.1, top=0.95)
- 
-plt.show()
-plt.savefig(fp)         
+            
+        # plot chart
+        explode  = 0.05 * np.ones((len(tech_col_map.keys())))
+        axes[scen_no, 2].pie(h2_inv_by_tech.values, 
+                             colors=tech_col_map.values(),
+                               labels=tech_col_map.keys(),
+                               labeldistance=None,
+                             autopct='%1.1f%%', pctdistance=1.33,
+                             explode=explode,
+                             textprops={'fontsize': 8})
+        centre_circle = plt.Circle((0, 0), 0.70, fc='white')
+        axes[scen_no, 2].add_artist(centre_circle)
+        axes[scen_no, 2].text(
+            -0.3, 0, "{}\nbillion".format(h2_inv_by_tech.sum().round(0)),
+            va='center', fontsize=10, fontweight="bold", color='black')
+        
+    # Legend
+    h1, l1 = axes[0, 0].get_legend_handles_labels()
+    # l1 = list(region_col_map_wo_glo.keys())
+    
+    # h1 = [Patch(facecolor=c, edgecolor='white', label=l) for c, l in region_col_map_wo_glo.items()]
+    
+    fig.legend(handles=h1,
+                labels=l1, 
+                loc='lower center',
+                bbox_to_anchor=(0.3, 0.15),
+                frameon=False,
+                borderaxespad=0.,
+                ncol=3,
+                title="Regions",
+                fontsize=8)
+    
+    h2, l2 = axes[0, 2].get_legend_handles_labels()
+    # l2 = list(tech_col_map.keys())
+    fig.legend(handles=h2,
+                labels=l2, 
+                loc='lower center',
+                bbox_to_anchor=(0.8, 0.15),
+                frameon=False,
+                borderaxespad=0.,
+                ncol=2,
+                title="Technologies",
+                fontsize=8)
+    
+    fig.subplots_adjust(hspace=0.2, wspace=0.15, right=0.97, bottom=0.25, left=0.1, top=0.95)
+     
+    plt.show()
+    plt.savefig(fp)         
 
 # %% Graph 7 - Sensitivity around costs
 
 # %% Graph 8 - Sensitivity around market share of production 
 
 # %% Table 1 - Emissions (total, direct, indirect, transport)
+
+emis_cats_map = {"Direct emissions":    "HYEF",  
+                 "Indirect emissions":  "NH3EFINDIRECT",
+                 "Transport emissions": "NH3TRANSPORTEMISSIONFACTOR",
+                 "Total emissions":     None}
+
+market_segments = ['Default', 'Mandated', 'Total']
+emissions_table = {}
+
+year = 2050
+
+for segment in market_segments:
+
+    emissions_table[segment] = pd.DataFrame(0.0, index=scen_all_map.keys(), columns=emis_cats_map.keys())
+    
+    for scen_name, scen in scen_all_map.items():
+        
+        emissions_table[segment].loc[scen_name, "Direct emissions"] =  np.sum(var_conv[scen]['HYEF'][segment][year])
+        emissions_table[segment].loc[scen_name, "Indirect emissions"] =  np.sum(var_conv[scen]['HYEFINDIRECT'][segment][year])
+        emissions_table[segment].loc[scen_name, "Indirect emissions"] +=  np.sum(var_conv[scen]['NH3EFINDIRECT'][segment][year])
+        emissions_table[segment].loc[scen_name, "Transport emissions"] = np.sum(var_conv[scen]['NH3TRANSPORTEMISSIONFACTOR'][segment][year].sum())
+        emissions_table[segment].loc[scen_name, "Total emissions"] = emissions_table[segment].loc[scen_name, :].sum()
+        
+    # Convert to Mt CO2
+    emissions_table[segment] *= 0.001
+    
+
+
+
+
 
 # %% Annex graph x - Grid emission factors
 
