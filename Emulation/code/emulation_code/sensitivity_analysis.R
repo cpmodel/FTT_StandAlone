@@ -47,7 +47,7 @@ inputs <- input_df_rescaled[,2:length(names(input_df_rescaled))]
 
 
 # 1) A clean OAT‐sens function
-oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0, upper = 1) {
+oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0.25, upper = 0.75) {
   # ref: named numeric vector length d, e.g. rep(0.5, d)
   # emulator: what you pass to PredictGasp()
   # n: grid points per parameter
@@ -167,7 +167,7 @@ oaatSensvarSummaryPlot <- function(oat_sens_mat,
 #ref_pol <- setNames(rep(0, 18), colnames(inputs[1:18]))
 # Just for pol values - take any inputs df
 
-ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # CN & US levels
+ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # CN & US levels change back to 0 for main SA
 ref_techeco <- setNames(rep(0.5, 14), colnames(inputs[16:29]))
 ref <- c(ref_pol, ref_techeco)
 
@@ -218,9 +218,9 @@ colnames(global_sens_mat) <- c("US phaseouts", "US subsidies", "US carbon prices
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
 
-write.csv(global_sens_mat, 
-          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/gbl_sa.csv",
-          row.names = F)
+# write.csv(global_sens_mat, 
+#           file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/gbl_sa.csv",
+#           row.names = F)
 
 # 5) (Optional) Plot them all at once
 oaatSensvarSummaryPlot(global_sens_mat, threshold = 0.01)
