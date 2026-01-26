@@ -199,7 +199,7 @@ df_long <- df_check %>%
 
 # Plot histograms for each variable
 ggplot(df_long, aes(x = value)) +
-  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  geom_histogram(binwidth = 0.02, boundary = 0, fill = "skyblue", color = "black") +
   facet_wrap(~variable, scales = "free") +
   theme_minimal() +
   labs(title = "Distribution of Sampled Variables", x = "Value", y = "Count")

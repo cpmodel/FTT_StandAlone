@@ -5,11 +5,13 @@ library(purrr)
 library(ggplot2)
 library(viridis)
 library(vroom)
+library(ggpattern)
+
 ### Plotting
 
 # Upload file or object
-df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/IN_polcomp_lead_grid_2.csv")
-#df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_emissions_amb.csv")
+df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/IN_norm.csv")
+#df <- vroom("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_norm.csv")
 
 
 # adding in factor variables
@@ -295,8 +297,7 @@ levels(shaded_df$IN_phase) = c("Phaseouts - None", "Phaseouts - Mid", "Phaseouts
 # Capacity distributions with percentile lines
 ggplot(
   df %>% 
-    filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030") &
-             IN_cp == 'CP - None') %>%
+    filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>%
     group_by(year, id, sample_id) %>% 
     mutate(total_value = sum(prediction, na.rm = TRUE)) %>%
     ungroup(),
@@ -304,20 +305,21 @@ ggplot(
 ) +
   geom_density(alpha = 0.5, show.legend = FALSE, adjust = 2) +
   # Shaded area above threshold
-  geom_area(data = shaded_df, aes(x = x, y = y),
-             fill = "red", alpha = 0.3, inherit.aes = FALSE) +
-  # geom_area_pattern(
-  #   data = shaded_df,
-  #   aes(x = x, y = y),
-  #   pattern = "stripe",          # or "crosshatch", "circle", etc.
-  #   pattern_fill = "red",        # color of the stripes
-  #   pattern_density = 0.4,       # spacing of stripes
-  #   pattern_angle = 45,          # angle of the stripes
-  #   fill = NA,                   # no solid fill
-  #   alpha = 0.6,                 # transparency of the pattern
-  #   inherit.aes = FALSE
-  # ) +
-  # geom_vline(aes(xintercept = 393), color = "red") +
+  #geom_area(data = shaded_df, aes(x = x, y = y),
+             # fill = "red", alpha = 0.3, inherit.aes = FALSE) +
+  ggpattern::geom_area_pattern(
+    data = total_density,
+    aes(x = x, y = y,
+        group = interaction(IN_subsidy, IN_phase)),
+    inherit.aes     = FALSE,
+    pattern         = "stripe",
+    fill            = "blue",
+    pattern_fill    = "red",
+    pattern_colour  = "red",
+    pattern_density = 0.4,
+    pattern_angle   = 45,
+    alpha           = 0.6
+  ) +
   geom_segment(
     data = total_density,
     aes(x = x, xend = xend, y = yend, yend = y_at_393),
@@ -370,7 +372,7 @@ ggplot(
                                
                                "Total Capacity" = "Total Capacity")) +
   
-  scale_x_continuous(limits = c(0, 750)) +
+  scale_x_continuous(limits = c(0, 800)) +
   
   labs(
     x = "Capacity (GW)", 
@@ -399,6 +401,121 @@ ggplot(
   )
 
 
+#########################################################
+
+
+##### Capacity striped
+
+
+#########################################################
+
+
+# Tech df
+tech_df <- df %>% 
+  filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>%
+  group_by(year, id, sample_id) %>% 
+  mutate(total_value = sum(prediction, na.rm = TRUE)) 
+
+tech_df_plot <- df %>% 
+  filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>%
+  filter(prediction >= 0, prediction <= 800) |>
+  mutate(
+    curve_type = dplyr::recode(
+      emulator,
+      "MEWK_solar_IN_2030"   = "Solar PV",
+      "MEWK_onshore_IN_2030" = "Onshore"
+    )
+  )
+
+total_density <- total_density %>%
+  mutate(region = ifelse(total_value > 393, "above", "below"))
+
+total_density_plot <- total_density |>
+  filter(total_value >= 0,  total_value <= 800) |>
+  mutate(curve_type = "Total Capacity")
+
+
+ggplot(tech_df_plot) +
+  geom_density(
+    aes(x = prediction, fill = curve_type),
+    alpha = 0.5, adjust = 2
+  ) +
+  facet_grid(IN_subsidy ~ IN_phase, labeller = label_value) +
+  
+  geom_area(
+    data = subset(total_density_plot, region == "below"),
+    aes(x, y, fill = curve_type),
+    stat = "identity",
+    colour = NA,
+    alpha = 0.8
+  ) +
+  geom_area_pattern(
+    data = subset(total_density_plot, region == "above"),
+    aes(x, y, fill = curve_type, pattern = region),
+    stat = "identity",
+    colour = NA,
+    alpha = 0.2,
+    pattern = "stripe",
+    pattern_fill = "black",
+    pattern_density = 0.4,
+    pattern_spacing = 0.03,
+    pattern_angle = 45
+  ) +
+  
+  # Line mapped to curve_type so it follows the same legend/categories
+  geom_line(
+    data = total_density_plot,
+    aes(x, y, colour = curve_type),
+    linewidth = 0.7, show.legend = FALSE
+  ) +
+  
+  #geom_vline(xintercept = threshold, linetype = 2) + 
+  # Add median and percentile lines for total
+  geom_vline(data = summary_stats %>% filter(emulator == "Total"),
+             aes(xintercept = median_total),
+             color = "black", linetype = "solid", size = 0.6, show.legend = FALSE) +
+  geom_vline(data = summary_stats %>% filter(emulator == "Total"),
+             aes(xintercept = p25_total),
+             color = "black", linetype = "dotted", size = 0.8, , show.legend = FALSE) +
+  geom_vline(data = summary_stats %>% filter(emulator == "Total"),
+             aes(xintercept = p75_total),
+             color = "black", linetype = "dotted", size = 0.8, , show.legend = FALSE) +
+  
+  scale_fill_manual(
+    values = c(
+      "Onshore"    = "#0072B2",
+      "Solar PV"       = "#D55E00",
+      "Total Capacity" = "grey80"   # or whatever you like for the area fill
+    )
+  ) +
+  scale_colour_manual(
+    values = c(
+      "Total Capacity" = "black"
+    ),
+    guide = "none"  # or keep if you want a separate line legend
+  ) +
+  
+  labs(
+    x = "Capacity (GW)", 
+    y = "Density",
+    fill = "Technology",
+    colour = ""
+  ) +
+  guides(colour = "none") +
+  theme(
+    legend.position = "bottom",
+    axis.title.x  = element_text(size = 14, face = "bold"),
+    axis.title.y  = element_text(size = 14, face = "bold"),
+    axis.text.x   = element_text(size = 12, face = "bold", angle = 45, hjust = 1),
+    axis.text.y   = element_text(size = 12),
+    strip.text    = element_text(size = 13),
+    legend.title  = element_text(size = 14, face = "bold"),
+    legend.text   = element_text(size = 12),
+    plot.title    = element_text(size = 18, face = "bold", hjust = 0.5),
+    panel.spacing.x = unit(0.5, "lines")
+  )
+
+
 
 ##################################################################
 
@@ -410,8 +527,8 @@ ggplot(
 summary_stats_3 <- df %>% subset(emulator %in% c('MEWE_IN_2030', 'MEWE_IN_2050') & 
                                    IN_cp == 'CP - None' & 
                                    IN_subsidy == 'Subsidy - None' & 
-                                   IN_phase != 'Phaseouts - High' &
-                                   !is.na(lead_total)) %>%
+                                   #IN_phase != 'Phaseouts - High' &
+                                   !is.na(cr_total)) %>%
   
   # Create US policy factor variable
   mutate(
@@ -421,7 +538,7 @@ summary_stats_3 <- df %>% subset(emulator %in% c('MEWE_IN_2030', 'MEWE_IN_2050')
         emulator == "MEWE_IN_2050" ~ "2050"
       ),
       levels = c("2030",  "2050"))) %>%
-  group_by(IN_phase, lead_total, emulator) %>%
+  group_by(IN_phase, cr_total, emulator, coal_p) %>%
   summarise(median_pred = median(prediction, na.rm = TRUE),
             .groups = 'drop') 
 
@@ -430,8 +547,8 @@ df %>%
     emulator %in% c('MEWE_IN_2030', 'MEWE_IN_2050') &
       IN_cp == 'CP - None' & 
       IN_subsidy == 'Subsidy - None' & 
-      IN_phase != 'Phaseouts - High' &
-      !is.na(lead_total)
+      #IN_phase != 'Phaseouts - High' &
+      !is.na(cr_total)
   ) %>%
   
   mutate(
@@ -483,7 +600,7 @@ df %>%
     linetype = "dashed", size = 0.6, show.legend = FALSE
   ) +
   
-  facet_grid(IN_phase ~ lead_total, labeller = label_value, scales = 'fixed') +
+  facet_grid(IN_phase ~ cr_total + coal_p, labeller = label_value, scales = 'fixed') +
   
   labs(
     x = expression("Power Sector Emissions Levels (MtCO"[2]*"/year)"), 
@@ -715,9 +832,10 @@ ggplot(plot_df,
 ############################################
 #FOT
 # stats for plot
-summary_stats_3 <- df %>% subset(emulator %in% c('MEWE_GBL_2030', 'MEWE_GBL_2050') & 
-                                   !is.na(lead_total)) %>%
-                                 
+summary_stats_3 <- df %>%
+  subset(emulator %in% c("MEWE_GBL_2030", "MEWE_GBL_2050")) %>%
+  filter(!is.na(cr_total) & !is.na(lead_total)) %>%
+
   # Create US policy factor variable
   mutate(
     year = factor(
@@ -726,16 +844,21 @@ summary_stats_3 <- df %>% subset(emulator %in% c('MEWE_GBL_2030', 'MEWE_GBL_2050
         emulator == "MEWE_GBL_2050" ~ "2050"
       ),
       levels = c("2030",  "2050"))) %>%
-  group_by(CN_phase, lead_total, emulator) %>%
+  group_by(CN_phase, lead_total, cr_total, emulator) %>%
   summarise(median_pred = median(prediction, na.rm = TRUE),
             p25_pred = quantile(prediction, 0.05, na.rm = TRUE),
             p75_pred = quantile(prediction, 0.95, na.rm = TRUE),
-            .groups = 'drop') 
+            .groups = 'drop') %>%
+  # Change negative values to 0 for plotting
+  # Negative values come from the modeled increase in negative emissions technologies
+  mutate(
+    median_pred = pmax(median_pred, 0)   # set negatives to 0
+  )
 
 
 
-df %>% subset(emulator %in% c('MEWE_GBL_2030', 'MEWE_GBL_2050') & 
-                                !is.na(lead_total)) %>%
+df %>% subset(emulator %in% c('MEWE_GBL_2030', 'MEWE_GBL_2050')) %>%
+                filter(!is.na(cr_total) & !is.na(lead_total)) %>%
 
   # Create US policy factor variable
   mutate(
@@ -772,7 +895,7 @@ df %>% subset(emulator %in% c('MEWE_GBL_2030', 'MEWE_GBL_2050') &
   #   linetype = "dashed", size = 0.6, show.legend = FALSE
   # ) +
   
-  facet_grid(CN_phase  ~ lead_total, , labeller = label_value, scales = 'fixed') +
+  facet_grid(CN_phase  ~ lead_total + cr_total, , labeller = label_value, scales = 'fixed') +
   # Define strong colors for each emulator
   labs(
     x = expression("Power Sector Emissions Levels (MtCO"[2]*"/year)"), 
@@ -780,7 +903,7 @@ df %>% subset(emulator %in% c('MEWE_GBL_2030', 'MEWE_GBL_2050') &
     fill = "Year"
   ) + 
   scale_fill_viridis_d(option = "C") +
-  scale_x_continuous(limits = c(0, 12500)) +
+  scale_x_continuous(limits = c(0, 21000)) +
   scale_color_manual(
     values = c(
       "MEWE_GBL_2030"  = "purple",
