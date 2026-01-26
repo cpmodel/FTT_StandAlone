@@ -167,7 +167,7 @@ oaatSensvarSummaryPlot <- function(oat_sens_mat,
 #ref_pol <- setNames(rep(0, 18), colnames(inputs[1:18]))
 # Just for pol values - take any inputs df
 
-ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # EA, CN & US levels
+ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # CN & US levels
 ref_techeco <- setNames(rep(0.5, 14), colnames(inputs[16:29]))
 ref <- c(ref_pol, ref_techeco)
 
@@ -186,7 +186,7 @@ rds_files_all
 #  COULD WE DO THIS WITH JUST 2030 & 40??
 
 # SA on GBL emissions & capacites
-global_param_files <- rds_files_all[c(c(1:3), c(25:30))]
+global_param_files <- rds_files_all[c(c(1:3), c(19:24))]
 #global_param_files <- rds_files_all[c(1:3)]
 
 # 2) Read them into a named list
@@ -235,7 +235,7 @@ oaatSensvarSummaryPlot(global_sens_mat, threshold = 0.01)
 
 #### 2030 
 
-IN_polcompare_files <- rds_files_all[c(c(4:6), c(10:21))]
+IN_polcompare_files <- rds_files_all[c(4:18)]
 
 # 2) Read them into a named list
 IN_polcompare_list <- setNames(
