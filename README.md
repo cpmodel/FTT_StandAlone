@@ -9,6 +9,14 @@ This repository contains a family of Future Technology Transformation (FTT) mode
 * FTT:Transport (Mercure et al, 2018) - data up to 2022
 * FTT:Freight *under construction, update expected in 2024*
 
+## Emulation
+This branch is dedicated to emulation and uncertainty analysis as proposed in the working paper:
+'Policy Robustness & Uncertainty in Model-based Decision Support for the Energy Transition'
+Burton, I.J, Njisse, F.J.M.M, Salter, J.M - https://arxiv.org/abs/2510.11177
+
+For more detailed information on performing emulation with this repo please consult the README.md file in the Emulation folder. 
+
+
 ## Theoretical background
 The FTT family of models are based on [evolutionary economics](https://en.wikipedia.org/wiki/Evolutionary_economics). The uptake of new technologies typically follows an S-curve, which can be represented well with evolutionary dynamics (Mercure et al, 2012). The core equations for all of the models in the model family are coupled logistic equations of the [Lotka-Volterra family](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations), also known as the predator-prey equations. These equations are used to determine the evolution of the shares of various technologies in the models. Each model contains between ~10 to 25 technologies competing for market share. 
 

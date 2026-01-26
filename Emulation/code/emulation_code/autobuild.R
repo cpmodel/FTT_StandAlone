@@ -51,7 +51,7 @@ full_output <- bind_rows(dfs)
 
 ########  EDIT VARS ##############################################
 
-full_output <- full_output[full_output$variable %in% c('MEWP', 'MEWW', 'MEWE', 'MEWK','MEWS'),] #'MEWP', 'MEWW', 'MEWE', 'MEWK'
+full_output <- full_output[full_output$variable %in% c( 'MEWK', 'MEWP', 'MEWS', 'MEWW', 'MEWE'),] #'MEWP', 'MEWW', 'MEWE', 'MEWK'
 
 ##################################################################
 
@@ -71,11 +71,11 @@ ranges <- list(
   learning_wind = list(min = -0.276, max = -0.112),
   lifetime_solar = list(min = 25, max = 35),
   lifetime_wind = list(min = 25, max = 35),
-  lead_solar = list(min = 1, max = 3),
-  lead_onshore = list(min = 2, max = 3),
+  lead_solar = list(min = 0.5, max = 3),
+  lead_onshore = list(min = 1, max = 3),
   lead_commission = list(min = 0, max = 1),
-   cr_wind = list(min = -1.108, max = -0.622),
-  cr_solar = list(min = -3.377, max = -1.392)
+   cr_wind = list(min = -2, max = -0.1),
+  cr_solar = list(min = -3.3, max = -0.2)
 )
 
 
@@ -198,7 +198,7 @@ techs = list(
   c(short = 'gas', full = '7 CCGT'),
   c(short = 'coal', full = '3 Coal')
 )
-cap_techs <- techs[1:3]
+cap_techs <- techs[c(1,3)]
 renew_techs <- techs[1:7]
 nonff_techs <- techs[1:9]
 

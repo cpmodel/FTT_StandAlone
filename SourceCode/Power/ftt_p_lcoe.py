@@ -245,18 +245,18 @@ def get_lcoe(data, titles, year):
         dlcoe = np.sqrt(summed_variance)/utility_tot
 
         # Cannibalisation adjustment
-        if year > 2023:
+        #if year > 2022:
 
-            # Rows corresponding to renewable technologies
-            renew_rows = slice(16, 19)  
-            
-            # Determine change in market shares since last time step
-            shares_renew = data['MEWS'][r, renew_rows, 0]
+        # Rows corresponding to renewable technologies
+        renew_rows = slice(16, 19)  
+        
+        # Determine change in market shares since last time step
+        shares_renew = data['MEWS'][r, renew_rows, 0]
 
-            # Adjust value factor based on cannibalisation factor and change in shares
-            cann_adjustment = shares_renew * bcet[renew_rows, c2ti['24 Cannibalisation factor']]
-            vf_adjustment = bcet[renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment)
-            bcet[renew_rows, c2ti['23 Value factor']] = vf_adjustment
+        # Adjust value factor based on cannibalisation factor and change in shares
+        cann_adjustment = shares_renew * bcet[renew_rows, c2ti['24 Cannibalisation factor']]
+        vf_adjustment = bcet[renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment)
+        bcet[renew_rows, c2ti['23 Value factor']] = vf_adjustment
 
 
 

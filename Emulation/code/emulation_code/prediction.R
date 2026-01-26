@@ -59,7 +59,18 @@ pol_df$IN_phase_pol <- grid$IN_phase_pol
 pol_df$IN_price_pol <- grid$IN_price_pol
 pol_df$IN_cp_pol <- grid$IN_cp_pol
 
+# Extract techecon variables 
+tech_params <- names(input_df_rescaled[17:30])
+
 ##########################################################################
+
+
+
+###################################
+
+#### India Uncertainty Analysis
+
+####################################
 
 
 n_iterations <- 10000
@@ -68,9 +79,11 @@ sampling_method <- "lhs"  # Options: "lhs", "normal", or "set"
 # Initialize storage
 input_dfs <- list()
 
+
 # Define which columns should use LHS
-lhs_cols <- c("elec_demand", "lead_commission", "lead_solar", 
+lhs_cols <- c("elec_demand", "lead_commission", "lead_solar",
               "lead_onshore", "discr", "cr_wind", "cr_solar")
+#lhs_cols <- tech_params
 
 for (i in 1:nrow(pol_df)) {
   
@@ -83,19 +96,28 @@ for (i in 1:nrow(pol_df)) {
     colnames(varied_sample) <- varied_columns
     
   } else if (sampling_method == "normal") {
+    # Normal Distribution Sampling
+    # Define ranges (mean and sd) for the varied columns
+    # Replace this logic with actual ranges for your data
+    var_min <- rep(0, length(varied_columns))  # Example: min = 0 for all variables
+    var_max <- rep(1, length(varied_columns))  # Example: max = 1 for all variables
+    mean_values <- (var_min + var_max) / 2     # Midpoint of the range
+    sd_values <- (var_max - var_min) / 4      
     
-    var_min <- rep(0, length(varied_columns))
-    var_max <- rep(1, length(varied_columns))
-    mean_values <- (var_min + var_max) / 2
-    sd_values <- (var_max - var_min) / 4
-    
+    # Generate samples from a normal distribution
     varied_sample <- as.data.frame(
       sapply(seq_along(varied_columns), function(j) {
         sampled_values <- rnorm(n_iterations, mean = mean_values[j], sd = sd_values[j])
-        pmin(pmax(sampled_values, 0), 1)
+        # Clip the values to ensure they are within the [0, 1] range
+        sampled_values <- pmin(pmax(sampled_values, 0), 1)
+        
+        return(sampled_values)
       })
     )
+    
+    # Set column names
     colnames(varied_sample) <- varied_columns
+ 
     
   } else if (sampling_method == "lhs") {
     
@@ -134,9 +156,13 @@ for (i in 1:nrow(pol_df)) {
       colnames(normal_sample) <- normal_use
     }
     
-    # Combine LHS + normal samples into one data frame (original column order)
+    # Combine LHS + normal samples into one data frame (original column order) if varying
+    if (length(normal_use) > 0) {
     varied_sample <- cbind(lhs_sample, normal_sample)[, varied_columns]
-    
+    }
+    else {
+      varied_sample <- lhs_sample
+    }
   } else {
     stop("Invalid sampling method. Choose 'lhs', 'normal', or 'set'.")
   }
@@ -153,20 +179,31 @@ for (i in 1:nrow(pol_df)) {
 }
 
 
-
-
-
-
-
-
-
-
-
 # Save file
-saveRDS(input_dfs, file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_IN_polcomp_grid.RData")
+saveRDS(input_dfs, file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_IN_norm.RData")
+
+
 
 # Reload file if needed
-#input_dfs <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_IN_polcomp_grid.RData")
+input_dfs <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_IN_norm.RData")
+
+
+## Input Sample distribution
+
+# Pick one of the generated data frames
+df_check <- input_dfs[["id_1"]]
+
+# Melt into long format for faceting
+df_long <- df_check %>%
+  pivot_longer(cols = all_of(varied_columns), names_to = "variable", values_to = "value")
+
+# Plot histograms for each variable
+ggplot(df_long, aes(x = value)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+  facet_wrap(~variable, scales = "free") +
+  theme_minimal() +
+  labs(title = "Distribution of Sampled Variables", x = "Value", y = "Count")
+
 
 # combine into df
 all_inputs_df <- do.call(rbind, input_dfs)
@@ -238,8 +275,10 @@ rownames(final_results_df) <- NULL
 
 # Save to df
 write.csv(final_results_df, 
-          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/IN_polcomp_lead_grid_2.csv",
+          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/IN_norm.csv",
           row.names = F)
+
+
 
 
 ####################################################
@@ -251,7 +290,7 @@ write.csv(final_results_df,
 # Define grid values
 grid_vals <- c(0, 0.5, 1)
 
-pol_params <- names(input_df[2:16])
+pol_params <- names(input_df_rescaled[2:16])
 
 # Create a matrix with 3 rows, each filled with 0, 0.5, and 1 respectively
 values <- matrix(rep(c(0, 0.5, 1), each = length(pol_params)), 
@@ -268,11 +307,16 @@ names(pol_df) <- pol_params
 
 #######################
 
-n_iterations <- 20000
-sampling_method <- "normal"  # Options: "lhs" or "normal"
+n_iterations <- 10000
+sampling_method <- "lhs"  # Options: "lhs" or "normal"
 
 # Initialize list to store each row's data frame of samples
 input_dfs <- list()
+
+# Define which columns should use LHS
+lhs_cols <- c("elec_demand", "lead_commission", "lead_solar", 
+               "lead_onshore", "discr", "cr_wind", "cr_solar")
+#lhs_cols <- tech_params
 
 # Loop through each row in plot_grid
 for (i in 1:nrow(pol_df)) {
@@ -310,9 +354,55 @@ for (i in 1:nrow(pol_df)) {
     
     # Set column names
     colnames(varied_sample) <- varied_columns
+  } 
+  
+  else if (sampling_method == "lhs") {
     
+    ## Split columns
+    lhs_use <- intersect(lhs_cols, varied_columns)
+    normal_use <- setdiff(varied_columns, lhs_cols)
     
-  } else {
+    ## Prepare empty list
+    lhs_sample <- NULL
+    normal_sample <- NULL
+    
+    # LHS sampling for specific columns
+    if (length(lhs_use) > 0) {
+      var_min_lhs <- rep(0, length(lhs_use))
+      var_max_lhs <- rep(1, length(lhs_use))
+      
+      lhs_matrix <- randomLHS(n_iterations, length(lhs_use))
+      
+      lhs_sample <- as.data.frame(lhs_matrix)
+      colnames(lhs_sample) <- lhs_use
+    }
+    
+    # Normal distribution for the rest
+    if (length(normal_use) > 0) {
+      var_min_norm <- rep(0, length(normal_use))
+      var_max_norm <- rep(1, length(normal_use))
+      mean_values <- (var_min_norm + var_max_norm) / 2
+      sd_values <- (var_max_norm - var_min_norm) / 4
+      
+      normal_sample <- as.data.frame(
+        sapply(seq_along(normal_use), function(j) {
+          sampled_values <- rnorm(n_iterations, mean = mean_values[j], sd = sd_values[j])
+          pmin(pmax(sampled_values, 0), 1)
+        })
+      )
+      colnames(normal_sample) <- normal_use
+    }
+    
+    # Combine LHS + normal samples into one data frame (original column order) if varying
+    if (length(normal_use) > 0) {
+      varied_sample <- cbind(lhs_sample, normal_sample)[, varied_columns]
+    }
+    else {
+      varied_sample <- lhs_sample
+    }
+  }
+  
+  else {
     stop("Invalid sampling method. Choose 'lhs' or 'normal'.")
   }
   
@@ -332,7 +422,7 @@ for (i in 1:nrow(pol_df)) {
 
 
 # Save file
-saveRDS(input_dfs, file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_GBL_emiss.RData")
+saveRDS(input_dfs, file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_GBL_lhs.RData")
 
 # Reload file
 #input_dfs <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_GBL_emiss.RData")
@@ -399,7 +489,7 @@ rownames(final_results_df) <- NULL
 
 # Save to df
 write.csv(final_results_df, 
-          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_emissions_amb.csv",
+          file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/GBL_lhs.csv",
           row.names = F)
 
 
