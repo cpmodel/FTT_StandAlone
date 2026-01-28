@@ -42,7 +42,7 @@ from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_ye
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
 GREEN_INDICES_HP = [9, 10, 11]
 
-from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
+from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
 
@@ -352,13 +352,13 @@ def solve(data, time_lag, titles, histend, year, domain):
                   dt
                   )
 
-            # Seed heat pumps in regions with low adoption (2025-2030)
+            # Seed heat pumps in regions with low adoption (first five years simulation)
             data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP)
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, histend['HEWF'])
 
             # Change capacity and sales after mandate (only runs if hp mandate != 0)
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["hp mandate"])
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["HP mandate"])
             
             # Calculate HEWG, HEWS and HEWF after mandates  
             

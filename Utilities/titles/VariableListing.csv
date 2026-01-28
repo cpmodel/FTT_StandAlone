@@ -122,7 +122,7 @@ HTVS,FTT-Heat Subsidy on investment cost,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HTRT,FTT-Heat Subsidy/tax on fuel use,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HREG,FTT-Heat Regulations on heating technologies,,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HWSA,FTT-Heat Exogenous market share changes,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
-hp mandate,FTT-Heat,Switch for 2035 phase-out,NA,NA,NA,NA,FTT-H,,,,,,
+HP mandate,FTT-Heat,heat pump mandate info,RTI,MAN,NA,NA,FTT-H,,,,,,
 HEFI,FTT-Heat Feed-in-tariff,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 HETR,FTT-Heat Turn-over rate,%,RTI,HTTI,NA,TIME,FTT-H,,,2001,,,
 BHTC,FTT-Heat Cost matrix,,RTI,HTTI,C4TI,NA,FTT-H,,,2014,,,
@@ -147,8 +147,7 @@ HEFF,FTT-H Technology efficiency,,RTI,HTTI,NA,TIME,FTT-H,,,2014,,,Y
 FU14A,Fuel demand for heating in 2014,GWh,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 FU14B,Fuel demand for heating in 2014,ktoe,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 TWSA,FTT-Transport Exogenous vehicle sales (must sum to zero),th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
-EV mandate,FTT_transport switch to turn on EV mandate,,NA,NA,NA,NA,FTT-Tr,-,-,-,-,Y,Y
-EV kickstarter,FTT transport switch to turn on EV kickstarter policy,,RTI,NA,NA,NA,FTT-Tr,-,-,-,-,Y,Y
+EV mandate,FTT:Tr mandate info,,RTI,MAN,NA,NA,FTT-Tr,-,-,-,-,Y,Y
 emissions regulation,FTT transport switch to turn on emissions regulation policy,,RTI,NA,NA,NA,FTT-Tr,-,-,-,-,Y,Y
 TWIY,FTT-Transport Investment in private vehicles,2000$M (Correct year?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TVFP,FTT-Transport,$2012/vkm (?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
@@ -325,7 +324,7 @@ ZJNJ,FTT-Fr Fuel use by fuel type,ktoe,RTI,JTI,NA,TIME,FTT-Fr,,,2001,,,
 ZEWE,FTT-Fr Emissions,MTCO2,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
 ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,2018,2018,,,Y
 ZWIY,FTT-Fr Investment by Technology (monetary value),$,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
-EV truck mandate,FTT freight switch to turn on EV mandate,,RTI,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
+EV truck mandate,FTT freight mandate information,,RTI,MAN,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 EV truck kickstarter,FTT freight switch to turn on EV kickstarter policy,,RTI,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 emissions regulation,FTT freight switch to turn on emissions regulation policy,,RTI,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 ZGAM,FTT-Fr Gamma values,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,

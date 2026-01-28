@@ -33,6 +33,8 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
+from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
+
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
@@ -40,11 +42,11 @@ from SourceCode.support.check_market_shares import check_market_shares
 
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies
-from SourceCode.Freight.ftt_fr_mandate import implement_seeding, implement_mandate
-from SourceCode.Freight.ftt_fr_kickstarter import implement_kickstarter
 from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
+
+GREEN_INDICES_EV = [6]
 
 # %% main function
 # -----------------------------------------------------------------------------
@@ -106,6 +108,10 @@ def solve(data, time_lag, titles, histend, year, domain):
         output = output[:, :, None]
        
         return output
+    
+    def get_class(var, veh_class):
+        '''Select all values corresponding to specific vehicle class'''
+        return var[:, veh_class::n_veh_classes]
 
     # Initialise up to the last year of historical data
     if year <= histend["RFLZ"]:
@@ -235,25 +241,37 @@ def solve(data, time_lag, titles, histend, year, domain):
                  
                     )
             
-            data['ZEWI'], zewi_t, data['ZEWK'] = implement_seeding(
-                            data['ZEWK'], data['ZEWI'], zewi_t,
-                            n_veh_classes, histend, year)
-
-            # Mutually exclusive policies: only ONE of mandate, kickstarter,
-            # or emissions regulation can be active at a time
-            mandate_active = not np.all(data["EV truck mandate"][:, 0, 0] == 0)
-            kickstarter_active = not np.all(data["EV truck kickstarter"][:, 0, 0] == 0)
+            # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
+            # Check which policies are active
+            mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
             emissions_reg_active = "emissions regulation" in data and not np.all(data["emissions regulation"][:, 0, 0] == 0)
 
-            if mandate_active:
-                data['ZEWI'], zewi_t, data['ZEWK'] = implement_mandate(
-                                data['ZEWK'], data["EV truck mandate"], data['ZEWI'], zewi_t,
-                                n_veh_classes, year)
-            elif kickstarter_active:
-                data['ZEWI'], zewi_t, data['ZEWK'] = implement_kickstarter(
-                                data['ZEWK'], data["EV truck kickstarter"], data['ZEWI'], zewi_t,
-                                n_veh_classes, year)
-            elif emissions_reg_active:
+            
+            for v_class in range(n_veh_classes):
+                
+                # Indices corresponding to class
+                idx = slice(v_class, None, n_veh_classes)
+                
+                # Regions with very low EV numbers see some diffusion from other regions
+                data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_seeding(
+                            data['ZEWK'][:, idx],
+                            data['ZEWI'][:, idx],
+                            zewi_t[:, idx],
+                            year, GREEN_INDICES_EV, histend['RFLZ']
+                        )
+
+                if mandate_active:
+                    # A policy of a minimum sales share
+                    data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_mandate(
+                                data['ZEWK'][:, idx],
+                                data['ZEWI'][:, idx],
+                                zewi_t[:, idx],
+                                year, GREEN_INDICES_EV,
+                                data['EV truck mandate']
+                            )
+                
+
+            if emissions_reg_active and not mandate_active:
                 data['ZEWI'], zewi_t, data['ZEWK'] = implement_emissions_regulation(
                                 data['ZEWK'], data["emissions regulation"], data['ZEWI'], zewi_t,
                                 n_veh_classes, year,
@@ -394,6 +412,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         # Calculate total investment by technology in terms of truck purchases
         data['ZWIY'] = data['ZEWI'] * data["BZTC"][:, :, c6ti['1 Purchase cost (USD/veh)'], None]
-
+        
+        if year == 2050:
+            print(f'Number of electric trucks globally: {np.sum(get_class(data['ZEWK'], 3)[:, 6])/1e6:.1f}M')
 
     return data

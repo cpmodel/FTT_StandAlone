@@ -46,7 +46,6 @@ from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domai
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
-from SourceCode.Transport.ftt_tr_kickstarter import implement_kickstarter
 from SourceCode.Transport.ftt_tr_emissions_regulation import implement_emissions_regulation
 
 # Green technology indices for Transport (EVs)
@@ -327,28 +326,23 @@ def solve(data, time_lag, titles, histend, year, domain):
                 dt=dt
                 )
 
-            # Apply EV seeding (2025-2030) - small boost for low-adoption regions
+            # Apply EV seeding (first 5 years) - small boost for low-adoption regions
             data["TEWI"], tewi_t, data["TEWK"] = implement_seeding(
-                data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV
+                data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, np.min(data["TDA1"][:, 0, 0]) 
             )
-
-            # Policy levers are MUTUALLY EXCLUSIVE: mandate OR kickstarter OR emissions regulation
+            
+            
+            # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
-            mandate_active = not np.all(data["EV mandate"][:, 0, 0] == 0)
-            kickstarter_active = not np.all(data["EV kickstarter"][:, 0, 0] == 0)
+            mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
             emissions_reg_active = ("emissions regulation" in data and
                                     not np.all(data["emissions regulation"][:, 0, 0] == 0))
 
             if mandate_active:
-                # Full mandate - only runs if EV mandate != 0 (disabled in S0)
                 data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
-                    data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, data["EV mandate"]
+                    data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, data['EV mandate']
                 )
-            elif kickstarter_active:
-                # Kickstarter policy - only runs if EV kickstarter != 0 (disabled in S0)
-                data["TEWI"], tewi_t, data["TEWK"] = implement_kickstarter(
-                    data['TEWK'], data["EV kickstarter"], data['TEWI'], tewi_t, year
-                )
+
             elif emissions_reg_active:
                 # Emissions regulation - segment-specific targets with proportional redistribution
                 # Baseline emissions are cached in the module, not in data dictionary

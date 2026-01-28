@@ -175,7 +175,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
                     # If the first dimension is regions
                     # Quick fix for ZLER (first dim here is FTTI)
-                    if (dims[var][0] == 'RTI') or (var == "ZLER"):
+                    if dims[var][0] == 'RTI':
                         # If there are only regions
                         if all(dim_length == 1 for dim_length in dims_length[1:]):
                             try:
