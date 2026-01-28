@@ -121,43 +121,42 @@ def get_cbam(data, h2_input, titles):
     emission_intensity_green = (
         # First direct emissions
         np.divide(
-            np.sum(data["WGWG"][:, :, 0] * data["HYEF"][:, :, 0] * h2_input, axis=1),
-            np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1),
-            where=np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1) > 0.0
-        )
+            np.sum(data["WGWG"][:, :, 0] * data["HYEF"][:, :, 0], axis=1),
+            np.sum(data["WGWG"][:, :, 0], axis=1),
+            where=np.sum(data["WGWG"][:, :, 0], axis=1) > 0.0
+        )  * h2_input
         # Then indirect emissions if we permit them
         + data["CBAMEFFECTONINDIRECTEMISSIONS"][:, 0, 0]
-        * (
-            # Indirect emission from H2 production
-            np.divide(
-                np.sum(data["WGWG"][:, :, 0] * data["HYEFINDIRECT"][:, :, 0] * h2_input, axis=1),
-                np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1),
-                where=np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1) > 0.0
-                
-            )
-            # Indirect emissions fro NH3 production
-            + data["NH3EFINDIRECT"][:, 0, 0]
+            * (
+                # Indirect emission from H2 production
+                np.divide(
+                    np.sum(data["WGWG"][:, :, 0] * data["HYEFINDIRECT"][:, :, 0], axis=1),
+                    np.sum(data["WGWG"][:, :, 0], axis=1),
+                    where=np.sum(data["WGWG"][:, :, 0] * h2_input, axis=1) > 0.0                   
+                )  * h2_input
+                # Indirect emissions fro NH3 production
+                + data["NH3EFINDIRECT"][:, 0, 0]
         )
     )
     
     emission_intensity_grey = (
         # First direct emissions from H2 production
         np.divide(
-            np.sum(data["WBWG"][:, :, 0] * data["HYEF"][:, :, 0] * h2_input, axis=1),
-            np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1),
-            where=np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1) > 0.0
-        )
+            np.sum(data["WBWG"][:, :, 0] * data["HYEF"][:, :, 0], axis=1),
+            np.sum(data["WBWG"][:, :, 0], axis=1),
+            where=np.sum(data["WBWG"][:, :, 0], axis=1) > 0.0
+        )  * h2_input
         # Then indirect emissions if we permit them
         + data["CBAMEFFECTONINDIRECTEMISSIONS"][:, 0, 0]
-        * (
-            # Indirect emission from H2 production
-            np.divide(
-                np.sum(data["WBWG"][:, :, 0] * data["HYEFINDIRECT"][:, :, 0] * h2_input, axis=1),
-                np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1),
-                where=np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1) > 0.0
-            )
-            # Indirect emissions fro NH3 production
-            + data["NH3EFINDIRECT"][:, 0, 0]
+            * (
+                # Indirect emission from H2 production
+                np.divide(
+                    np.sum(data["WBWG"][:, :, 0] * data["HYEFINDIRECT"][:, :, 0], axis=1),
+                    np.sum(data["WBWG"][:, :, 0], axis=1),
+                    where=np.sum(data["WBWG"][:, :, 0] * h2_input, axis=1) > 0.0
+                )  * h2_input
+                # Indirect emissions fro NH3 production
+                + data["NH3EFINDIRECT"][:, 0, 0]
         )
     )
 

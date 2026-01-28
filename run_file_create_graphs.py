@@ -47,7 +47,7 @@ domain = model.domain
 tl = model.timeline
 scens = model.scenarios
 
-scen_dict = dict(zip(model.scenarios, ['REF', 'CP', 'MD', 'CP+MD']))
+# scen_dict = dict(zip(model.scenarios, ['REF', 'CP', 'MD', 'CP+MD']))
 # %%
 # Call the 'run' method of the ModelRun class to solve the model
 # model.run()
@@ -97,15 +97,14 @@ region_mapping = {'Global' :                    list(region_titles),
                    # 'Canada':                     [region_titles[35]],
                   'China':                      [region_titles[40]],
                   'India':                      [region_titles[41]],
-                  'Russia':                     [region_titles[38]],
-                  'Indonesia':                  [region_titles[49]],
-                  'Saudi Arabia':               [region_titles[54]],
+                  'KSA':               [region_titles[54]],
                   'MENA':                       [region_titles[idx] for idx in [51, 57, 61, 66, 69]],
-                   # 'Brazil':                     [region_titles[43]],
-                   'LATAM':                      [region_titles[idx] for idx in[42, 43, 44, 45, 46]],
-                  'EU + UK':                    [region_titles[idx] for idx in (list(np.arange(0, 27)) + [30])],
+                    'Brazil':                     [region_titles[43]],
+                   'LATAM':                      [region_titles[idx] for idx in[42, 44, 45, 46]],
+                  'EU27+UK':                    [region_titles[idx] for idx in (list(np.arange(0, 27)) + [30])],
                   'Japan + Korea':              [region_titles[idx] for idx in [34, 47]],
-                  'CANZUK':    [region_titles[idx] for idx in[35, 36, 37]],
+                  'Canada':                     [region_titles[35]],
+                  'Australia':                  [region_titles[36]],
                   # 'Rest of the World':          [region_titles[idx] for idx in 
                   #                                [27, 28, 29, 31, 32, 39, 48, 50,
                   #                                52, 53, 55, 56, 58, 59, 60, 62,
@@ -125,16 +124,17 @@ region_col_map = {'Global' :                    'lime',
                   # 'Canada':                     'orangered',
                   'China':                      'red',
                   'India':                      'darkorange',
-                  'Russia':                     'darkgreen',
-                  'Indonesia':                  'purple',
-                  'Saudi Arabia':               'saddlebrown',
+                  # 'Russia':                     'darkgreen',
+                  # 'Indonesia':                  'purple',
+                  'KSA':               'saddlebrown',
                   'MENA':                       'salmon',
-                  # 'Brazil':                     'teal',
+                   'Brazil':                     'teal',
                   'LATAM':                      'cadetblue',
-                  'EU + UK':                    'crimson',
+                  'EU27+UK':                    'crimson',
                   'Japan + Korea':              'violet',
-                  'CANZUK':    'goldenrod',
-                  'RoW':          'darkgray'
+                  'Canada':                     'goldenrod',
+                  'Australia':                  'darkgreen',
+                  'RoW':                        'darkgray'
                   } 
 
 reg_conv = pd.DataFrame(0.0, index=region_mapping.keys(), columns=region_titles)
@@ -173,6 +173,7 @@ tech_col_map = {'Grey':                         'darkgray',
 
 # Scenarios
 assumptions = ['Default', 'Optimistic', 'Pessimistic']
+market_segments = ['Default', 'Mandated', 'Total']
 
 scen_main_map = {'Baseline':                'S0',
                  'Carbon price':            'S1',
@@ -634,109 +635,123 @@ for scen_name, scen in scen_all_map.items():
 
 for assump in assumptions:
     
-    if assump == 'Default':
-        
-        scen_map = scen_main_map
-        scen_ref = 'S0'
-        
-    elif assump == 'Optimistic':
-        
-        scen_map = scen_opt_map
-        scen_ref = 'S4'
+    for segment in market_segments:
     
-    elif assump == 'Pessimistic':
-        
-        scen_map = scen_pes_map
-        scen_ref = 'S8'
-        
-    # file path
-    fp = os.path.join('Graphs', 'fig1_production_v{}.{}'.format(VERSION, FORMAT))
-    
-    # Figure params
-    figsize = (7.5, 20)
-    # # Create subplot    
-    fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
-                             ncols=2,
-                             figsize=figsize,
-                             sharex=True,
-                             sharey=True)
-    
-    axes_flat = axes.flatten()
-    # axes_flat[-1].set_visible(False)
-    
-    col_names = ['2023']
-    col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
-    col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
-    
-    small_gap = 1
-    large_gap = small_gap * 1.5
-    bar_width = small_gap*0.8
-    x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
-    x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
-    
-    
-    for r, reg in enumerate(reg_aggs_wo_glo):
-        
-        plot_data = pd.DataFrame(0.0, index=list(tech_mapping.keys()), columns=col_names)
-        plot_data.loc[:, '2023'] = var_conv['S0']['HYG1'][reg].loc[:, 2023]
-        
-        for scen, scen_short in scen_map.items(): 
+        if assump == 'Default':
             
-            scen_out = scen.split(' (')[0]
+            scen_map = scen_main_map
+            scen_ref = 'S0'
             
-            plot_data.loc[:, '{} 2035'.format(scen_out)] = var_conv[scen_short]['HYG1'][reg].loc[:, 2035]
-            plot_data.loc[:, '{} 2050'.format(scen_out)] = var_conv[scen_short]['HYG1'][reg].loc[:, 2050]
+        elif assump == 'Optimistic':
             
-        # Convert data to Mt NH3
-        plot_data *= 0.001
+            scen_map = scen_opt_map
+            scen_ref = 'S4'
         
-        bottom = np.zeros(len(plot_data.columns))
-        for tech, colour in tech_col_map.items():
+        elif assump == 'Pessimistic':
             
-            axes_flat[r].bar(x_positions, plot_data.loc[tech, :].values, width=bar_width, bottom=bottom,
-                        color=colour, label=tech, edgecolor='white', linewidth=0.2)
+            scen_map = scen_pes_map
+            scen_ref = 'S8'
             
-            bottom += plot_data.loc[tech, :].values
+        if segment == 'Default':
             
-    
-        # X-axis setup
-        axes_flat[r].set_xticks(x_positions)
-        axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
-        axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+            prod_var = 'WBWG'
+            
+        elif segment == 'Mandated':
+            
+            prod_var = 'WGWG'
+            
+        else:
+            
+            prod_var = 'HYG1'
+            
+        # file path
+        fp = os.path.join('Graphs', 'fig1_production_v{}_{}_{}.{}'.format(VERSION, segment, assump, FORMAT))
         
-    
-        # Labels
-        axes_flat[r].set_title(reg)
-        axes_flat[r].set_ylabel('Mt NH$_3$')
-        # axes_flat[r].label_outer()
+        # Figure params
+        figsize = (7.5, 20)
+        # # Create subplot    
+        fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
+                                 ncols=2,
+                                 figsize=figsize,
+                                 sharex=True,
+                                 sharey=True)
         
-    
-        # Optional: visual separators for the large gaps
-        for i in [0, 4]:
-            separator_x = x_positions[i] + large_gap/2
-            axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
-    
+        axes_flat = axes.flatten()
+        # axes_flat[-1].set_visible(False)
         
-    
-    # Legend
-    h1, l1 = axes_flat[0].get_legend_handles_labels()
-    
-    fig.legend(handles=h1,
-               labels=l1, 
-               loc='lower center',
-               bbox_to_anchor=(0.5, 0.05),
-               frameon=False,
-               borderaxespad=0.,
-               ncol=3,
-               title="Technologies",
-               fontsize=8)
-    
-    fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
-    
-    
+        col_names = ['2023']
+        col_names += ['{} 2035'.format(scen) for scen in scen_main_map.keys()]
+        col_names += ['{} 2050'.format(scen) for scen in scen_main_map.keys()]
         
-    plt.show()
-    plt.savefig(fp)
+        small_gap = 1
+        large_gap = small_gap * 1.5
+        bar_width = small_gap*0.8
+        x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
+        x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
+        
+        
+        for r, reg in enumerate(reg_aggs_wo_glo):
+            
+            plot_data = pd.DataFrame(0.0, index=list(tech_mapping.keys()), columns=col_names)
+            plot_data.loc[:, '2023'] = var_conv['S0'][prod_var][reg].loc[:, 2023]
+            
+            for scen, scen_short in scen_map.items(): 
+                
+                scen_out = scen.split(' (')[0]
+                
+                plot_data.loc[:, '{} 2035'.format(scen_out)] = var_conv[scen_short][prod_var][reg].loc[:, 2035]
+                plot_data.loc[:, '{} 2050'.format(scen_out)] = var_conv[scen_short][prod_var][reg].loc[:, 2050]
+                
+            # Convert data to Mt NH3
+            plot_data *= 0.001
+            
+            bottom = np.zeros(len(plot_data.columns))
+            for tech, colour in tech_col_map.items():
+                
+                axes_flat[r].bar(x_positions, plot_data.loc[tech, :].values, width=bar_width, bottom=bottom,
+                            color=colour, label=tech, edgecolor='white', linewidth=0.2)
+                
+                bottom += plot_data.loc[tech, :].values
+                
+        
+            # X-axis setup
+            axes_flat[r].set_xticks(x_positions)
+            axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
+            axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+            
+        
+            # Labels
+            axes_flat[r].set_title(reg)
+            axes_flat[r].set_ylabel('Mt NH$_3$')
+            # axes_flat[r].label_outer()
+            
+        
+            # Optional: visual separators for the large gaps
+            for i in [0, 4]:
+                separator_x = x_positions[i] + large_gap/2
+                axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
+        
+            
+        
+        # Legend
+        h1, l1 = axes_flat[0].get_legend_handles_labels()
+        
+        fig.legend(handles=h1,
+                   labels=l1, 
+                   loc='lower center',
+                   bbox_to_anchor=(0.5, 0.05),
+                   frameon=False,
+                   borderaxespad=0.,
+                   ncol=3,
+                   title="Technologies",
+                   fontsize=8)
+        
+        fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
+        
+        
+            
+        plt.show()
+        plt.savefig(fp)
     
     
 
@@ -746,149 +761,151 @@ for assump in assumptions:
 
 for assump in assumptions:
     
-    if assump == 'Default':
-        
-        scen_map = scen_main_map
-        scen_ref = 'S0'
-        
-    elif assump == 'Optimistic':
-        
-        scen_map = scen_opt_map
-        scen_ref = 'S4'
+    for segment in market_segments:
     
-    elif assump == 'Pessimistic':
-        
-        scen_map = scen_pes_map
-        scen_ref = 'S8'
-    
-        
-    # file path
-    fp = os.path.join('Graphs', 'fig2_demand_comp_v{}_{}.{}'.format(VERSION, assump, FORMAT))
-    
-    # Figure params
-    figsize = (7.5, 20)
-    # # Create subplot    
-    fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
-                             ncols=2,
-                             figsize=figsize,
-                             sharex=True,
-                             sharey=True)
-    
-    axes_flat = axes.flatten()
-    # axes_flat[-1].set_visible(False)
-    
-    col_names = ['2023']
-    col_names += ['{} 2035'.format(scen.split(' (')[0]) for scen in scen_map.keys()]
-    col_names += ['{} 2050'.format(scen.split(' (')[0]) for scen in scen_map.keys()]
-    
-    row_names = ['Production', 'Imports', 'Exports']
-    
-    small_gap = 1
-    large_gap = small_gap * 1.5
-    bar_width = small_gap*0.8
-    x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
-    x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
-    
-    colour_map = dict(zip(row_names, ['teal', 'burlywood', 'tomato']))
-    
-    for r, reg in enumerate(reg_aggs_wo_glo):
-        
-        # Bar chart data
-        plot_data = pd.DataFrame(0.0, index=row_names, columns=col_names)
-        plot_data.loc['Production', '2023'] = var_conv[scen_ref]['NH3PROD']['Total'].loc[reg, 2023]
-        plot_data.loc['Exports', '2023'] = -var_conv[scen_ref]['NH3EXP']['Total'].loc[reg, 2023]
-        plot_data.loc['Imports', '2023'] = var_conv[scen_ref]['NH3IMP']['Total'].loc[reg, 2023]
-        
-        plot_demand = pd.Series(0.0, index=col_names)
-        plot_demand.loc['2023'] = var_conv[scen_ref]['NH3DEM']['Total'].loc[reg, 2023]
-        
-        for scen, scen_short in scen_map.items(): 
+        if assump == 'Default':
             
-            scen_out = scen.split(' (')[0]
+            scen_map = scen_main_map
+            scen_ref = 'S0'
             
-            plot_data.loc['Production', '{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2035]
-            plot_data.loc['Exports', '{} 2035'.format(scen_out)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2035]
-            plot_data.loc['Imports', '{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2035]
+        elif assump == 'Optimistic':
             
-            plot_data.loc['Production', '{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3PROD']['Total'].loc[reg, 2050]
-            plot_data.loc['Exports', '{} 2050'.format(scen_out)] = -var_conv[scen_short]['NH3EXP']['Total'].loc[reg, 2050]
-            plot_data.loc['Imports', '{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3IMP']['Total'].loc[reg, 2050]
-            
-            plot_demand.loc['{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2035]
-            plot_demand.loc['{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3DEM']['Total'].loc[reg, 2050]
-            
-           
-        # Convert data to Mt NH3
-        plot_data *= 0.001
-        plot_demand *= 0.001
+            scen_map = scen_opt_map
+            scen_ref = 'S4'
         
-        bottom = np.zeros(len(plot_data.columns))
-        for var, colour in colour_map.items():
+        elif assump == 'Pessimistic':
             
-            if var != 'Exports':
+            scen_map = scen_pes_map
+            scen_ref = 'S8'
+        
             
-                axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
-                            color=colour, label=var, edgecolor='white', linewidth=0.2)
+        # file path
+        fp = os.path.join('Graphs', 'fig2_demand_comp_v{}_{}_{}.{}'.format(VERSION, segment, assump, FORMAT))
+        
+        # Figure params
+        figsize = (7.5, 20)
+        # # Create subplot    
+        fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
+                                 ncols=2,
+                                 figsize=figsize,
+                                 sharex=True,
+                                 sharey=True)
+        
+        axes_flat = axes.flatten()
+        # axes_flat[-1].set_visible(False)
+        
+        col_names = ['2023']
+        col_names += ['{} 2035'.format(scen.split(' (')[0]) for scen in scen_map.keys()]
+        col_names += ['{} 2050'.format(scen.split(' (')[0]) for scen in scen_map.keys()]
+        
+        row_names = ['Production', 'Imports', 'Exports']
+        
+        small_gap = 1
+        large_gap = small_gap * 1.5
+        bar_width = small_gap*0.8
+        x_steps = np.asarray([large_gap, small_gap, small_gap, small_gap, large_gap, small_gap, small_gap, small_gap])
+        x_positions = np.asarray([0.0] + list(x_steps.cumsum()))
+        
+        colour_map = dict(zip(row_names, ['teal', 'burlywood', 'tomato']))
+        
+        for r, reg in enumerate(reg_aggs_wo_glo):
+            
+            # Bar chart data
+            plot_data = pd.DataFrame(0.0, index=row_names, columns=col_names)
+            plot_data.loc['Production', '2023'] = var_conv[scen_ref]['NH3PROD'][segment].loc[reg, 2023]
+            plot_data.loc['Exports', '2023'] = -var_conv[scen_ref]['NH3EXP'][segment].loc[reg, 2023]
+            plot_data.loc['Imports', '2023'] = var_conv[scen_ref]['NH3IMP'][segment].loc[reg, 2023]
+            
+            plot_demand = pd.Series(0.0, index=col_names)
+            plot_demand.loc['2023'] = var_conv[scen_ref]['NH3DEM'][segment].loc[reg, 2023]
+            
+            for scen, scen_short in scen_map.items(): 
                 
-                bottom += plot_data.loc[var, :].values
+                scen_out = scen.split(' (')[0]
                 
-            else:
+                plot_data.loc['Production', '{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3PROD'][segment].loc[reg, 2035]
+                plot_data.loc['Exports', '{} 2035'.format(scen_out)] = -var_conv[scen_short]['NH3EXP'][segment].loc[reg, 2035]
+                plot_data.loc['Imports', '{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3IMP'][segment].loc[reg, 2035]
                 
-                axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=np.zeros(len(plot_data.columns)),
-                            color=colour, label=var, edgecolor='white', linewidth=0.2)   
+                plot_data.loc['Production', '{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3PROD'][segment].loc[reg, 2050]
+                plot_data.loc['Exports', '{} 2050'.format(scen_out)] = -var_conv[scen_short]['NH3EXP'][segment].loc[reg, 2050]
+                plot_data.loc['Imports', '{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3IMP'][segment].loc[reg, 2050]
                 
-        # Add demand
-        axes_flat[r].scatter(x_positions, plot_demand.values, color='black', label='Demand')
+                plot_demand.loc['{} 2035'.format(scen_out)] = var_conv[scen_short]['NH3DEM'][segment].loc[reg, 2035]
+                plot_demand.loc['{} 2050'.format(scen_out)] = var_conv[scen_short]['NH3DEM'][segment].loc[reg, 2050]
                 
-        # axes_flat[r].scatter(x_positions, scatter_y, s=60, color='#2F4B7C', zorder=3, label='Scatter metric')
-    
-        # X-axis setup
-        axes_flat[r].set_xticks(x_positions)
-        axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
-        axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+               
+            # Convert data to Mt NH3
+            plot_data *= 0.001
+            plot_demand *= 0.001
+            
+            bottom = np.zeros(len(plot_data.columns))
+            for var, colour in colour_map.items():
+                
+                if var != 'Exports':
+                
+                    axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                                color=colour, label=var, edgecolor='white', linewidth=0.2)
+                    
+                    bottom += plot_data.loc[var, :].values
+                    
+                else:
+                    
+                    axes_flat[r].bar(x_positions, plot_data.loc[var, :].values, width=bar_width, bottom=np.zeros(len(plot_data.columns)),
+                                color=colour, label=var, edgecolor='white', linewidth=0.2)   
+                    
+            # Add demand
+            axes_flat[r].scatter(x_positions, plot_demand.values, color='black', label='Demand')
+                    
+            # axes_flat[r].scatter(x_positions, scatter_y, s=60, color='#2F4B7C', zorder=3, label='Scatter metric')
         
-    
-        # Labels
-        axes_flat[r].set_title(reg)
-        axes_flat[r].set_ylabel('Mt NH$_3$')
-        # axes_flat[r].label_outer()
+            # X-axis setup
+            axes_flat[r].set_xticks(x_positions)
+            axes_flat[r].set_xticklabels(col_names, fontsize=8, rotation=90)
+            axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+            
         
-    
-        # axes_flat[r].yaxis.set_minor_locator(mticker.FixedLocator([0]))
-        # axes_flat[r].grid(which='minor', axis='y', linestyle='--', linewidth=1.2, color='#666666', alpha=0.8, zorder=1)
-    
-    
-        # axes_flat[r].grid(which='major', axis='y', color='#DDDDDD', linewidth=0.8, linestyle='-')
-        axes_flat[r].axhline(0, color='#666666', linewidth=1.2, linestyle='--', alpha=0.9, zorder=1)
-    
+            # Labels
+            axes_flat[r].set_title(reg)
+            axes_flat[r].set_ylabel('Mt NH$_3$')
+            # axes_flat[r].label_outer()
+            
         
-        # Optional: visual separators for the large gaps
-        for i in [0, 4]:
-            separator_x = x_positions[i] + large_gap/2
-            axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
+            # axes_flat[r].yaxis.set_minor_locator(mticker.FixedLocator([0]))
+            # axes_flat[r].grid(which='minor', axis='y', linestyle='--', linewidth=1.2, color='#666666', alpha=0.8, zorder=1)
         
-    
-    # Legend
-    h1, l1 = axes_flat[0].get_legend_handles_labels()
-    h1_adj = h1[1:] + [h1[0]]
-    l1_adj = l1[1:] + [l1[0]]
-    
-    fig.legend(handles=h1_adj,
-               labels=l1_adj, 
-               loc='lower center',
-               bbox_to_anchor=(0.5, 0.08),
-               frameon=False,
-               borderaxespad=0.,
-               ncol=4,
-               title="NH$_3$ flow",
-               fontsize=8)
-    
-    fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
-    
-    
         
-    plt.show()
-    plt.savefig(fp)
+            # axes_flat[r].grid(which='major', axis='y', color='#DDDDDD', linewidth=0.8, linestyle='-')
+            axes_flat[r].axhline(0, color='#666666', linewidth=1.2, linestyle='--', alpha=0.9, zorder=1)
+        
+            
+            # Optional: visual separators for the large gaps
+            for i in [0, 4]:
+                separator_x = x_positions[i] + large_gap/2
+                axes_flat[r].axvline(separator_x, color='gray', linestyle='--', linewidth=0.8, alpha=0.6)
+            
+        
+        # Legend
+        h1, l1 = axes_flat[0].get_legend_handles_labels()
+        h1_adj = h1[1:] + [h1[0]]
+        l1_adj = l1[1:] + [l1[0]]
+        
+        fig.legend(handles=h1_adj,
+                   labels=l1_adj, 
+                   loc='lower center',
+                   bbox_to_anchor=(0.5, 0.08),
+                   frameon=False,
+                   borderaxespad=0.,
+                   ncol=4,
+                   title="NH$_3$ flow",
+                   fontsize=8)
+        
+        fig.subplots_adjust(hspace=0.5, wspace=0.22, right=0.97, bottom=0.22, left=0.1, top=0.95)
+        
+        
+            
+        plt.show()
+        plt.savefig(fp)
 
 # %% Graph 3 - Sankey Diagrams of trade flows 2023, 2035, 2050 each scenario
 
@@ -896,171 +913,177 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import kaleido
 
+
+
 for assump in assumptions:
     
-    if assump == 'Default':
-        
-        scen_map = scen_main_map
-        scen_ref = 'S0'
-        
-    elif assump == 'Optimistic':
-        
-        scen_map = scen_opt_map
-        scen_ref = 'S4'
+    for segment in market_segments:
     
-    elif assump == 'Pessimistic':
-        
-        scen_map = scen_pes_map
-        scen_ref = 'S8'
-
-    # file path
-    fp = os.path.join('Graphs', 'fig3_sankey_diagram_of_flows_v{}_{}.{}'.format(VERSION, assump, FORMAT))
-    
-    
-    # ----------------------------
-    # Configuration
-    # ----------------------------
-    num_countries = len(reg_aggs_wo_glo)
-    years = [2030, 2040, 2050]
-    scenarios = scen_map.keys()
-    
-    # Node labels (left: origins, right: targets)
-    labels = reg_aggs_wo_glo + reg_aggs_wo_glo  
-    
-    # Colors: origins (blue), targets (orange)
-    country_colours = [colour for reg, colour in region_col_map.items() if reg != 'Global']
-    node_colors = country_colours + country_colours
-    
-    
-    
-    
-    # Fixed horizontal positions: left for origins, right for targets
-    x_orig = [0.01] * num_countries
-    x_targ = [0.99] * num_countries
-    
-    
-    
-    
-    # ----------------------------
-    # Helper: convert matrix to Sankey link arrays
-    # ----------------------------
-    def matrix_to_links(M):
-        source, target, value = [], [], []
-        for i in range(M.shape[0]):
-            for j in range(M.shape[0]):
-                v = M[i][j]
-                if v and v > 0:
-                    source.append(i)              # origins indexed 0..13
-                    target.append(M.shape[0] + j)          # targets indexed 14..27
-                    value.append(v)
-        return source, target, value
-    
-    
-    
-    # ----------------------------
-    # Create subplots (3 rows x 4 cols)
-    # ----------------------------
-    subplot_titles = [f"{y} | {s}" for y in years for s in scenarios]
-    fig = make_subplots(rows=len(years), cols=len(scenarios),
-                        specs=[[{"type": "domain"} for _ in scenarios] for _ in years],
-                        subplot_titles=subplot_titles,
-                        horizontal_spacing=0.05,  # default ~0.2; smaller = closer
-                        vertical_spacing=0.03     # default ~0.3; smaller = closer
-    
-                        )
-    
-    
-    # Add Sankey traces per panel
-    for r, year in enumerate(years, start=1):
-        for c, scenario in enumerate(scenarios, start=1):
+        if assump == 'Default':
             
-            scen_short = scen_map[scenario]
-            supply_map = np.copy(var_conv[scen_short]['NH3SMLVL']['Total'][year])
+            scen_map = scen_main_map
+            scen_ref = 'S0'
             
-            production_shares = (var_conv[scen_short]['NH3SMLVL']['Total'][year].sum(axis=1) / 
-                                 var_conv[scen_short]['NH3SMLVL']['Total'][year].sum().sum()
+        elif assump == 'Optimistic':
+            
+            scen_map = scen_opt_map
+            scen_ref = 'S4'
+        
+        elif assump == 'Pessimistic':
+            
+            scen_map = scen_pes_map
+            scen_ref = 'S8'
+    
+        # file path
+        fp = os.path.join('Graphs', 'fig3_sankey_diagram_of_flows_v{}_{}_{}.{}'.format(VERSION, segment, assump, FORMAT))
+        
+        
+        # ----------------------------
+        # Configuration
+        # ----------------------------
+        num_countries = len(reg_aggs_wo_glo)
+        years = [2030, 2040, 2050]
+        scenarios = scen_map.keys()
+        
+        # Node labels (left: origins, right: targets)
+        labels = reg_aggs_wo_glo + reg_aggs_wo_glo  
+        
+        # Colors: origins (blue), targets (orange)
+        country_colours = [colour for reg, colour in region_col_map.items() if reg != 'Global']
+        node_colors = country_colours + country_colours
+        
+        
+        
+        
+        # Fixed horizontal positions: left for origins, right for targets
+        x_orig = [0.01] * num_countries
+        x_targ = [0.99] * num_countries
+        
+        
+        
+        
+        # ----------------------------
+        # Helper: convert matrix to Sankey link arrays
+        # ----------------------------
+        def matrix_to_links(M):
+            source, target, value = [], [], []
+            for i in range(M.shape[0]):
+                for j in range(M.shape[0]):
+                    v = M[i][j]
+                    if v and v > 0:
+                        source.append(i)              # origins indexed 0..13
+                        target.append(M.shape[0] + j)          # targets indexed 14..27
+                        value.append(v)
+            return source, target, value
+        
+        
+        
+        # ----------------------------
+        # Create subplots (3 rows x 4 cols)
+        # ----------------------------
+        subplot_titles = [f"{y} | {s}" for y in years for s in scenarios]
+        fig = make_subplots(rows=len(years), cols=len(scenarios),
+                            specs=[[{"type": "domain"} for _ in scenarios] for _ in years],
+                            subplot_titles=subplot_titles,
+                            horizontal_spacing=0.05,  # default ~0.2; smaller = closer
+                            vertical_spacing=0.03     # default ~0.3; smaller = closer
+        
+                            )
+        
+        
+        # Add Sankey traces per panel
+        for r, year in enumerate(years, start=1):
+            for c, scenario in enumerate(scenarios, start=1):
+                
+                scen_short = scen_map[scenario]
+                supply_map = np.copy(var_conv[scen_short]['NH3SMLVL'][segment][year])
+                
+                production_shares = (var_conv[scen_short]['NH3SMLVL'][segment][year].sum(axis=1) / 
+                                     var_conv[scen_short]['NH3SMLVL'][segment][year].sum().sum()
+                                     )
+                production_shares.iloc[0] = 0.02
+                production_shares.iloc[1:] = 0.02 + production_shares.iloc[:-1].values
+                production_shares /= production_shares.sum() /0.98
+                
+                demand_shares = (var_conv[scen_short]['NH3SMLVL'][segment][year].sum(axis=0) / 
+                                 var_conv[scen_short]['NH3SMLVL'][segment][year].sum().sum()
                                  )
-            production_shares.iloc[0] = 0.02
-            production_shares.iloc[1:] = 0.02 + production_shares.iloc[:-1].values
-            production_shares /= production_shares.sum() /0.98
-            
-            demand_shares = (var_conv[scen_short]['NH3SMLVL']['Total'][year].sum(axis=0) / 
-                             var_conv[scen_short]['NH3SMLVL']['Total'][year].sum().sum()
-                             )
-            demand_shares.iloc[0] = 0.02
-            demand_shares.iloc[1:] = 0.02 + demand_shares.iloc[:-1].values
-            demand_shares /= demand_shares.sum() / 0.98       
-            
-            
-            
-            # Fixed vertical order list (top-to-bottom). Example: O1..O14 and T1..T14
-            # Define evenly spaced y-positions for origins and targets:
-            y_orig = production_shares.cumsum().to_list()   # origins top→bottom
-            y_targ = demand_shares.cumsum().to_list()   # targets top→bottom
-            
-            # Combine into full arrays aligned with your labels = origins + targets
-            x_all = x_orig + x_targ
-            y_all = y_orig + y_targ
-            
-            src, tgt, val = matrix_to_links(supply_map)
-            
-            # Quick adjustment
-            # src = np.where(np.isclose(src, 0),
-            #                0.0001,
-            #                src)
-            # tgt = np.where(np.isclose(tgt, 0),
-            #                0.0001,
-            #                tgt)    
-            # src = np.where(np.isclose(src, num_countries),
-            #                num_countries-0.0001,
-            #                src)
-            # tgt = np.where(np.isclose(tgt, num_countries),
-            #                num_countries - 0.0001,
-            #                tgt)            
-            
-    
-            # Link colours
-            link_colors = [country_colours[int(r)] for r in src]
-            
-            sankey = go.Sankey(
-                node=dict(
-                    #pad=10,
-                    thickness=15,
-                    line=dict(color="black", width=0.5),
-                    label=labels,
-                    color=node_colors,
-                    # x=x_all,                 # fixed positions
-                    # y=y_all,                 # fixed positions
-                ),
-                link=dict(
-                    source=src,
-                    target=tgt,
-                    value=val,
-                    color=link_colors
-                ),
-                hoverlabel=dict(bgcolor="white")
-            )
-            fig.add_trace(sankey, row=r, col=c)
-    
-    fig.update_layout(
-        font_size=10,
-        width=1600,
-        height=2000,
-        margin=dict(l=3, r=3, t=30, b=10)
-    )
-    
-    
-    # Save outputs
-    # fig.write_html("sankey_subplots_3x4.html")
-    fig.write_image("sankey_subplots_3x4.png")
-    fig.write_image(fp)
-    
-    
-    fig.show()
-
+                demand_shares.iloc[0] = 0.02
+                demand_shares.iloc[1:] = 0.02 + demand_shares.iloc[:-1].values
+                demand_shares /= demand_shares.sum() / 0.98       
+                
+                
+                
+                # Fixed vertical order list (top-to-bottom). Example: O1..O14 and T1..T14
+                # Define evenly spaced y-positions for origins and targets:
+                y_orig = production_shares.cumsum().to_list()   # origins top→bottom
+                y_targ = demand_shares.cumsum().to_list()   # targets top→bottom
+                
+                # Combine into full arrays aligned with your labels = origins + targets
+                x_all = x_orig + x_targ
+                y_all = y_orig + y_targ
+                
+                src, tgt, val = matrix_to_links(supply_map)
+                
+                # Quick adjustment
+                # src = np.where(np.isclose(src, 0),
+                #                0.0001,
+                #                src)
+                # tgt = np.where(np.isclose(tgt, 0),
+                #                0.0001,
+                #                tgt)    
+                # src = np.where(np.isclose(src, num_countries),
+                #                num_countries-0.0001,
+                #                src)
+                # tgt = np.where(np.isclose(tgt, num_countries),
+                #                num_countries - 0.0001,
+                #                tgt)            
+                
+        
+                # Link colours
+                link_colors = [country_colours[int(r)] for r in src]
+                
+                sankey = go.Sankey(
+                    node=dict(
+                        #pad=10,
+                        thickness=15,
+                        line=dict(color="black", width=0.5),
+                        label=labels,
+                        color=node_colors,
+                        # x=x_all,                 # fixed positions
+                        # y=y_all,                 # fixed positions
+                    ),
+                    link=dict(
+                        source=src,
+                        target=tgt,
+                        value=val,
+                        color=link_colors
+                    ),
+                    hoverlabel=dict(bgcolor="white")
+                )
+                fig.add_trace(sankey, row=r, col=c)
+        
+        fig.update_layout(
+            font_size=10,
+            width=1600,
+            height=2000,
+            margin=dict(l=3, r=3, t=30, b=10)
+        )
+        
+        
+        # Save outputs
+        # fig.write_html("sankey_subplots_3x4.html")
+        fig.write_image("sankey_subplots_3x4.png")
+        fig.write_image(fp)
+        
+        
+        fig.show()
 
 # %% Graph 4 - Delivery costs from top 5 exporters to top 5 imports - v1
 
+
+main_importers = ['China', 'India', 'MENA', 'EU27+UK', 'USA']
+
 for assump in assumptions:
     
     if assump == 'Default':
@@ -1079,7 +1102,7 @@ for assump in assumptions:
         scen_ref = 'S8'
         
     # file path
-    fp = os.path.join('Graphs', 'fig4_delivery_costs_top5_exporters_w_target_v{}_{}.{}'.format(VERSION, assump, FORMAT))
+    fp = os.path.join('Graphs', 'fig4_delivery_costs_top5_demanders_v{}_{}.{}'.format(VERSION, assump, FORMAT))
     
     # Get the top 5 exporters in each scenario by 2050
     
@@ -1092,61 +1115,153 @@ for assump in assumptions:
     selected_top_exporters = ['Saudi Arabia', 'China', 'MENA', 'EU + UK']
     
     # Figure params
-    figsize = (7.5, 15)
+    figsize = (7.5, 16)
     # # Create subplot    
-    fig, axes = plt.subplots(nrows=len(selected_top_exporters),
-                             ncols=3,
+    fig, axes = plt.subplots(nrows=len(scen_map.keys()) + 1,
+                             ncols=len(main_importers),
                              figsize=figsize,
-                             sharex=True,
-                             sharey='row'
+                             sharex=False,
+                             sharey=True
                              )
-    
-    
-    
-    # Choose which scenario should serve as the proxy to figure out the top 3
-    # target countries
-    scen_proxy = 'S0'
     
     deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
     
     colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
     
-    for r, reg in enumerate(selected_top_exporters):
+    
+    
+    for r, reg in enumerate(main_importers):
         
-        # Determine the top 3 targets
-        bila_trade_proxy = copy.deepcopy(var_conv[scen_proxy]["NH3SMLVL"]['Total'][2050])
-        bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
-        top3_targets = list(bila_trade_proxy.loc[reg, :].nlargest(3).index)
-        
-        for rt, reg_target in enumerate(top3_targets):
+        for s, scen in enumerate(scen_map.keys()):
+            scen_short = scen_map[scen]
+            
+            axes2 = axes[s, r].twinx()
+            
+            segment = 'Default'
+            # Determine the top 3 targets
+            bila_trade_proxy = copy.deepcopy(var_conv[scen_short]["NH3SMLVL"][segment][2050])
+            bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
+            top3_sources = list(bila_trade_proxy.loc[:, reg].nlargest(5).index)
+            if "RoW" in top3_sources:
+                top3_sources = [reg2 for reg2 in top3_sources if reg2 != 'RoW']
+            elif reg in top3_sources:
+                top3_sources = [reg2 for reg2 in top3_sources if reg2 != reg]
+                
+            top3_sources = top3_sources[:3]
+            
+            top3_sources = [reg] + top3_sources
+            labels = copy.deepcopy(top3_sources)
+            labels[0] = "Self-consumption:\n{}".format(reg)
+            
             
             # Organise data
-            plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_map.keys())
-            
-            for scen, scen_short in scen_map.items():
+            plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=top3_sources)
+            imp_share = pd.Series(0.0, index=top3_sources)
+        
+            for rt, reg_source in enumerate(top3_sources):
                 
-                plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["WPPR"]['Total'][2050].loc[reg] * 0.179 *1000
-                plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - plot_data.loc['Hydrogen production', scen]
-                plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
-                plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
+                
+                plot_data.loc['Hydrogen production', reg_source] = var_conv[scen_short]["WPPR"][segment][2050].loc[reg_source] * 0.179 *1000
+                plot_data.loc['Haber Bosch', reg_source] = var_conv[scen_short]["NH3LC"][segment][2050].loc[reg_source] - plot_data.loc['Hydrogen production', reg_source]
+                plot_data.loc['Transportation costs', reg_source] = var_conv[scen_short]["NH3TCCout"][segment][2050].loc[reg_source, reg]
+                plot_data.loc['CBAM penalty', reg_source] = var_conv[scen_short]["NH3CBAM"][segment][2050].loc[reg_source, reg]
+                
+                tot_imp = var_conv[scen_short]["NH3DEM"]['Total'].loc[reg, 2050]
+                imp_share.loc[reg_source] = var_conv[scen_short]["NH3SMLVL"][segment][2050].loc[reg_source, reg] / tot_imp * 100
                 
                 bottom = np.zeros(len(plot_data.columns))
                 for var, colour in colour_map.items():
             
-                    axes[r, rt].bar(np.arange(len(scen_map.keys())), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                    axes[s, r].bar(np.arange(len(top3_sources)), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
                                 color=colour, label=var, edgecolor='white', linewidth=0.2)
                 
-                    bottom += plot_data.loc[var, :].values            
+                    bottom += plot_data.loc[var, :].values  
+            
+            # Plot secondary axis
+            axes2.scatter(np.arange(len(top3_sources)), imp_share.values, color='black')
+            if r == len(main_importers): axes2.set_ylabel("Supply share")
+            axes2.set_ylim(0, 100)
+            if r == len(main_importers): 
+                axes2.set_yticks([np.arange(0, 101, step=25)])
+            else:
+                axes2.set_yticks([])
     
             # X-axis setup
-            axes[r, rt].set_xticks(np.arange(len(scen_main_map.keys())))
-            axes[r, rt].set_xticklabels(scen_map.keys(), fontsize=8, rotation=90)
+            axes[s, r].set_xticks(np.arange(len(top3_sources)))
+            axes[s, r].set_xticklabels(top3_sources, fontsize=8, rotation=90)
             # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
             
         
             # Labels
-            if rt ==0 : axes[r, rt].set_ylabel("Source:\n{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(reg))
-            axes[r, rt].set_title("Target: {}".format(reg_target), fontsize=8)
+            if r ==0 : axes[s, r].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(scen+ '\nDefault market'))
+            if s ==0: axes[s, r].set_title("Target: {}".format(reg), fontsize=8)
+            
+            
+        # ================== Add green market for the mandate scenario
+        scen = list(scen_map.keys())[-1]
+        scen_short = scen_map[scen]
+        s = -1
+        
+        axes2 = axes[s, r].twinx()
+        
+        segment = 'Mandated'
+        
+        # Determine the top 3 targets
+        bila_trade_proxy = copy.deepcopy(var_conv[scen_short]["NH3SMLVL"][segment][2050])
+        bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
+        top3_sources = list(bila_trade_proxy.loc[:, reg].nlargest(5).index)
+        if "RoW" in top3_sources:
+            top3_sources = [reg2 for reg2 in top3_sources if reg2 != 'RoW']
+        elif reg in top3_sources:
+            top3_sources = [reg2 for reg2 in top3_sources if reg2 != reg]
+            
+        top3_sources = top3_sources[:3]
+        
+        top3_sources = [reg] + top3_sources
+        labels = copy.deepcopy(top3_sources)
+        labels[0] = "Self-consumption:\n{}".format(reg)
+        
+        # Organise data
+        plot_data_mandate = pd.DataFrame(0.0, index=deliv_cost_comps, columns=top3_sources)
+        imp_share = pd.Series(0.0, index=top3_sources)
+    
+        for rt, reg_source in enumerate(top3_sources):
+            
+            
+            plot_data_mandate.loc['Hydrogen production', reg_source] = var_conv[scen_short]["WPPR"][segment][2050].loc[reg_source] * 0.179 *1000
+            plot_data_mandate.loc['Haber Bosch', reg_source] = var_conv[scen_short]["NH3LC"][segment][2050].loc[reg_source] - plot_data_mandate.loc['Hydrogen production', reg_source]
+            plot_data_mandate.loc['Transportation costs', reg_source] = var_conv[scen_short]["NH3TCCout"][segment][2050].loc[reg_source, reg]
+            plot_data_mandate.loc['CBAM penalty', reg_source] = var_conv[scen_short]["NH3CBAM"][segment][2050].loc[reg_source, reg]
+            
+            tot_imp = var_conv[scen_short]["NH3IMP"]['Total'].loc[reg, 2050]
+            imp_share.loc[reg_source] = var_conv[scen_short]["NH3SMLVL"][segment][2050].loc[reg_source, reg] / tot_imp * 100
+            
+            bottom = np.zeros(len(plot_data.columns))
+            for var, colour in colour_map.items():
+        
+                axes[s, r].bar(np.arange(len(top3_sources)), plot_data_mandate.loc[var, :].values, width=bar_width, bottom=bottom,
+                            color=colour, label=var, edgecolor='white', linewidth=0.2)
+            
+                bottom += plot_data_mandate.loc[var, :].values     
+                
+        # Plot secondary axis
+        axes2.scatter(np.arange(len(top3_sources)), imp_share.values, color='black')
+        if r == len(main_importers): axes[s, r].set_ylabel("Import share")
+        axes2.set_ylim(0, 100)
+        if r == len(main_importers): 
+            axes2.set_yticks([np.arange(0, 101, step=25)])
+        else:
+            axes2.set_yticks([])
+
+        # X-axis setup
+        axes[s, r].set_xticks(np.arange(len(top3_sources)))
+        axes[s, r].set_xticklabels(top3_sources, fontsize=8, rotation=90)
+        # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+        
+    
+        # Labels
+        if r ==0 : axes[s, r].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(scen + '\nMandated market'))
+        # axes[s, r].set_title("Target: {}".format(reg), fontsize=8)
         
     
     # Legend
@@ -1162,116 +1277,12 @@ for assump in assumptions:
                 title="Cost categories",
                 fontsize=8)
     
-    fig.subplots_adjust(hspace=0.2, wspace=0.0, right=0.97, bottom=0.22, left=0.1, top=0.95)
+    fig.subplots_adjust(hspace=1.0, wspace=0.2, right=0.97, bottom=0.2, left=0.1, top=0.95)
     
     
         
     plt.show()
-    plt.savefig(fp)        
-
-# %% Graph 4 - Delivery costs from all countries to top 5 target countries
-
-for assump in assumptions:
-    
-    if assump == 'Default':
-        
-        scen_map = scen_main_map
-        scen_ref = 'S0'
-        
-    elif assump == 'Optimistic':
-        
-        scen_map = scen_opt_map
-        scen_ref = 'S4'
-    
-    elif assump == 'Pessimistic':
-        
-        scen_map = scen_pes_map
-        scen_ref = 'S8'
-
-    # file path
-    fp = os.path.join('Graphs', 'fig4_delivery_costs_all_exporters_w_target_v{}_{}.{}'.format(VERSION, assump, FORMAT))
-    
-    # Figure params
-    figsize = (7.5, 20)
-    # # Create subplot    
-    fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)),
-                             ncols=3,
-                             figsize=figsize,
-                             sharex=True,
-                             sharey='row'
-                             )
-    
-    
-    
-    # Choose which scenario should serve as the proxy to figure out the top 3
-    # target countries
-    scen_proxy = 'S0'
-    
-    deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
-    
-    colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
-    
-    for r, reg in enumerate(reg_aggs_wo_glo):
-        
-        # Determine the top 3 targets
-        bila_trade_proxy = copy.deepcopy(var_conv[scen_proxy]["NH3SMLVL"]['Total'][2050])
-        bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
-        top3_targets = list(bila_trade_proxy.loc[reg, :].nlargest(3).index)
-        
-        for rt, reg_target in enumerate(top3_targets):
-            
-            # Organise data
-            plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=scen_map.keys())
-            check_data = pd.DataFrame(0.0, index=deliv_cost_comps+['Delivery Cost'], columns=scen_map.keys())
-            
-            for scen, scen_short in scen_map.items():
-                
-                plot_data.loc['Hydrogen production', scen] = var_conv[scen_short]["NH3LC"]['Total'][2050].loc[reg] - var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
-                plot_data.loc['Haber Bosch', scen] = var_conv[scen_short]["NH3LCexclH2"]['Total'][2050].loc[reg]
-                plot_data.loc['Transportation costs', scen] = var_conv[scen_short]["NH3TCCout"]['Total'][2050].loc[reg, reg_target]
-                plot_data.loc['CBAM penalty', scen] = var_conv[scen_short]["NH3CBAM"]['Total'][2050].loc[reg, reg_target]
-                
-                check_data.loc[deliv_cost_comps, :] = copy.deepcopy(plot_data)
-                check_data.loc['Delivery Cost', :] = var_conv[scen_short]["NH3DELIVCOST"]['Total'][2050].loc[reg, reg_target]
-                
-                bottom = np.zeros(len(plot_data.columns))
-                for var, colour in colour_map.items():
-            
-                    axes[r, rt].bar(np.arange(len(scen_map.keys())), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
-                                color=colour, label=var, edgecolor='white', linewidth=0.2)
-                
-                    bottom += plot_data.loc[var, :].values            
-    
-            # X-axis setup
-            axes[r, rt].set_xticks(np.arange(len(scen_map.keys())))
-            axes[r, rt].set_xticklabels(scen_map.keys(), fontsize=8, rotation=90)
-            # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
-            
-        
-            # Labels
-            if rt ==0 : axes[r, rt].set_ylabel("Source:\n{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(reg))
-            axes[r, rt].set_title("Target: {}".format(reg_target), fontsize=8)
-        
-    
-    # Legend
-    h1, l1 = axes[0, 0].get_legend_handles_labels()
-    
-    fig.legend(handles=h1[:len(deliv_cost_comps)],
-                labels=l1[:len(deliv_cost_comps)], 
-                loc='lower center',
-                bbox_to_anchor=(0.5, 0.08),
-                frameon=False,
-                borderaxespad=0.,
-                ncol=4,
-                title="Cost categories",
-                fontsize=8)
-    
-    fig.subplots_adjust(hspace=0.8, wspace=0.0, right=0.97, bottom=0.2, left=0.1, top=0.95)
-    
-    
-        
-    plt.show()
-    plt.savefig(fp)        
+    plt.savefig(fp) 
 
 
 # %% Graph 5 - LCOH by technology and region
@@ -1507,6 +1518,8 @@ for assump in assumptions:
 
 # %% Graph 7 - Sensitivity around costs
 
+
+
 # %% Graph 8 - Sensitivity around market share of production 
 
 # %% Table 1 - Emissions (total, direct, indirect, transport)
@@ -1516,7 +1529,7 @@ emis_cats_map = {"Direct emissions":    "HYEF",
                  "Transport emissions": "NH3TRANSPORTEMISSIONFACTOR",
                  "Total emissions":     None}
 
-market_segments = ['Default', 'Mandated', 'Total']
+
 emissions_table = {}
 
 year = 2050

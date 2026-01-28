@@ -462,8 +462,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain, dimensions, s
                     fn = (penalties * fn)/np.sum(penalties * fn)
                     
                     # Assume that at least 30% gets allocated domestically (initially)
-                    time_lag['NH3SMSHAR'][:, r, green_idx] = (1-0.3) * fn
-                    time_lag['NH3SMSHAR'][r, r, green_idx] += 0.3
+                    time_lag['NH3SMSHAR'][:, r, green_idx] = (1-0.75) * fn
+                    time_lag['NH3SMSHAR'][r, r, green_idx] += 0.75
                     
                 # Rescale the supply map in shares
                 time_lag['NH3SMSHAR'][:, r, green_idx] = time_lag['NH3SMSHAR'][:, r, green_idx] / time_lag['NH3SMSHAR'][:, r, green_idx].sum()

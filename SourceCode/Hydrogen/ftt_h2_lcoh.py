@@ -129,10 +129,30 @@ def get_lcoh(data, titles):
         
         # Average fuel costs
         ct = np.zeros([len(titles['HYTI']), int(max_lt)])
-        data['HYCO'][r, :, 0] = (data['BCHY'][r,:, c7ti['Emission factor']] + data['HYEFINDIRECT'][r,:, 0]) * data['HYPR'][r, : ,0] * 1e-3
+        data['HYCO'][r, :, 0] = (data['HYEF'][r,:, 0] + data['HYEFINDIRECT'][r,:, 0]) * data['HYPR'][r, : ,0] * 1e-3
             
         ct = ct + data['HYCO'][r, :, :]
         ct = np.where(lt_mask, ct, 0)
+        
+        # CBAM effect
+        # If a country exports to a country where the CBAM applies, then it
+        # accounts for the carbon price in said country.
+        cbam = np.zeros([len(titles['HYTI']), int(max_lt)])
+        
+        # First check if CBAM is applied anywhere in the world
+        if np.any(data['NH3CBAM'] > 0.0) and data['NH3SMLVL'][r, :, 1].sum() > 0.0:
+            
+            # Get export shares
+            export_share = data['NH3SMLVL'][r, :, 1] / data['NH3SMLVL'][r, :, 1].sum()
+            # Calculate average CBAM effect
+            avg_cbam = (data['NH3CBAMSWITCH'][:, 0, 0] * data['HYPR'][:, 0 ,0]) - data['HYPR'][r, 0 ,0]
+            avg_cbam[avg_cbam<0.0] = 0.0
+            avg_cbam = np.sum(export_share * avg_cbam, axis=0)
+            # CBAM effect
+            cbam_effect = (data['HYEF'][r,:, 0] + data['HYEFINDIRECT'][r,:, 0]) * avg_cbam * 1e-3
+            
+            cbam = cbam + cbam_effect[:, None]   
+        cbam = np.where(lt_mask, cbam, 0)
 
         # Fixed OPEX
         opex_fix = np.zeros([len(titles['HYTI']), int(max_lt)])
@@ -168,9 +188,9 @@ def get_lcoh(data, titles):
 
         # 1-Expenses
         # 1.1-NPV
-        npv_expenses1 = (it+st+ft+ct+opex_fix+opex_var)/denominator
+        npv_expenses1 = (it+st+ft+ct+opex_fix+opex_var+cbam)/denominator
         # 1.2-NPV for CSC 
-        npv_expenses2 = (it_base+st+ct+ft+opex_fix_base+opex_var)/denominator
+        npv_expenses2 = (it_base+st+ct+ft+opex_fix_base+opex_var+cbam)/denominator
 
         # 2-Utility
         npv_utility = energy_prod/denominator
