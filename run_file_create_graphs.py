@@ -670,8 +670,8 @@ for assump in assumptions:
         # Figure params
         figsize = (7.5, 20)
         # # Create subplot    
-        fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
-                                 ncols=2,
+        fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/3),
+                                 ncols=3,
                                  figsize=figsize,
                                  sharex=True,
                                  sharey=True)
@@ -785,8 +785,8 @@ for assump in assumptions:
         # Figure params
         figsize = (7.5, 20)
         # # Create subplot    
-        fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/2),
-                                 ncols=2,
+        fig, axes = plt.subplots(nrows=int(len(reg_aggs_wo_glo)/3),
+                                 ncols=3,
                                  figsize=figsize,
                                  sharex=True,
                                  sharey=True)

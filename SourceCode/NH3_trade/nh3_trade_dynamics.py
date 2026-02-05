@@ -71,32 +71,46 @@ def calculate_nh3_trade(data, time_lags, demand_step, data_dt, year, sub_rate, m
                 d_trade_competition[r_exp2, r_exp1] = delta_d21
                 
         # 
-        # avg_deliv_cost = np.sum(data_dt['NH3SMSHAR'][:, r_imp, m_idx] * data_dt['NH3DELIVCOST'][:, r_imp, m_idx])
-        # sigma = np.sqrt(np.sum(data_dt['NH3LCSD'][:, 0, 0]**2))# * data_dt['NH3SMSHAR'][:, r_imp, m_idx]))
-        # if np.isclose(sigma, 0.0): sigma = 0.1 * avg_deliv_cost
-        # exponent = -(data_dt['NH3DELIVCOST'][:, r_imp, m_idx] - avg_deliv_cost) / sigma
-        # # Set bounds to the exponent
-        # exponent[exponent>10] = 10
-        # exponent[exponent<-10] = -10
-        # # Logistic function
-        # fn = np.exp(exponent)
-        # # Estimate most preferred source
-        # # Export shares (of global total) indicate of existing infrastructure
-        # if data_dt['NH3EXP'][:, m_idx, 0].sum() > 0.0:
-        #     export_shares = data_dt['NH3EXP'][:, m_idx, 0] / data_dt['NH3EXP'][:, m_idx, 0].sum()
-        # else:
-        #     export_shares = 1.0/float(len(titles['RTI']))
+        avg_deliv_cost = np.sum(data_dt['NH3SMSHAR'][:, r_imp, m_idx] * data_dt['NH3DELIVCOST'][:, r_imp, m_idx])
+        sigma = np.sqrt(np.sum(data_dt['NH3LCSD'][:, 0, 0]**2))# * data_dt['NH3SMSHAR'][:, r_imp, m_idx]))
+        if np.isclose(sigma, 0.0): sigma = 0.1 * avg_deliv_cost
+        exponent = -(data_dt['NH3DELIVCOST'][:, r_imp, m_idx] - avg_deliv_cost) / sigma
+        # Set bounds to the exponent
+        exponent[exponent>10] = 10
+        exponent[exponent<-10] = -10
+        # Logistic function
+        fn = np.exp(exponent)
+        # Estimate most preferred source
+        # Export shares (of global total) indicate of existing infrastructure
+        if data_dt['NH3EXP'][:, m_idx, 0].sum() > 0.0:
+            export_shares = data_dt['NH3EXP'][:, m_idx, 0] / data_dt['NH3EXP'][:, m_idx, 0].sum()
+        else:
+            export_shares = 1.0/float(len(titles['RTI']))
             
-        # # Optimal allocation
-        # new_entries_optimal = fn / np.sum(fn)
-        # # Allocation scaled with export shares  
-        # new_entries_pathdep = export_shares * fn / np.sum(export_shares * fn)
-        # # Weighted average
-        # # new_entries = new_entries_optimal * 0.5 + new_entries_pathdep * 0.5
-        # new_entries = new_entries_pathdep
+        # Optimal allocation
+        new_entries_optimal = (export_shares * fn) / np.sum(export_shares * fn)
+
+        # Average of optimal allocation and pathdepency
+        # for the case of increasing demand
+        new_entries_addition = new_entries_optimal * 0.2 + data_dt['NH3SMSHAR'][:, r_imp, m_idx] * 0.8
+        # rescale
+        new_entries_addition = new_entries_addition / np.sum(new_entries_addition)
+        # for the case of decreasing demand
+        new_entries_decrease = (1.0 - new_entries_optimal) * 0.2 + data_dt['NH3SMSHAR'][:, r_imp, m_idx] * 0.8
+        # rescale
+        new_entries_decrease = new_entries_decrease / np.sum(new_entries_decrease)
+        
+        # Check which one to use
+        if delta_demand_step[r_imp] > 0.0:
+            
+            new_entries = new_entries_addition/sum(new_entries_addition)
+            
+        else:
+            
+            new_entries = (1-new_entries_decrease)/sum(1-new_entries_decrease)
         
         # Estimate change in supply flows due to market growth
-        d_market_growth = delta_demand_step[r_imp] * data_dt['NH3SMSHAR'][:, r_imp, m_idx]
+        d_market_growth = delta_demand_step[r_imp] * new_entries
         
         # Total change in bilateral flows
         d_total = d_market_growth + d_trade_competition.sum(axis=1)
