@@ -1082,7 +1082,12 @@ for assump in assumptions:
 # %% Graph 4 - Delivery costs from top 5 exporters to top 5 imports - v1
 
 
-main_importers = ['China', 'India', 'MENA', 'EU27+UK', 'USA']
+# main_importers = ['China', 'India', 'MENA', 'EU27+UK', 'USA']
+main_importers = list(var_conv['S0']["NH3IMP"]['Default'][2050].nlargest(6).index)
+if "RoW" in main_importers:
+    main_importers = [reg2 for reg2 in main_importers if reg2 != 'RoW']
+elif reg in main_importers:
+    main_importers = main_importers[:5]
 
 for assump in assumptions:
     
@@ -1179,12 +1184,22 @@ for assump in assumptions:
             
             # Plot secondary axis
             axes2.scatter(np.arange(len(top3_sources)), imp_share.values, color='black')
-            if r == len(main_importers): axes2.set_ylabel("Supply share")
             axes2.set_ylim(0, 100)
-            if r == len(main_importers): 
-                axes2.set_yticks([np.arange(0, 101, step=25)])
+            if r == len(main_importers)-1: 
+                # axes2.set_yticks([np.arange(0, 101, step=25)])
+                axes2.yaxis.set_visible(True)
+                axes2.spines['right'].set_visible(True)
+                axes2.set_ylabel("Supply share (%)")
             else:
-                axes2.set_yticks([])
+                axes2.spines['right'].set_visible(False)
+                axes2.yaxis.set_visible(False)
+                
+            if r == 0 :
+                axes[s, r].yaxis.set_visible(True)
+                axes[s, r].spines['left'].set_visible(True)
+            else:
+                axes[s, r].spines['left'].set_visible(False)
+                axes[s, r].yaxis.set_visible(False)
     
             # X-axis setup
             axes[s, r].set_xticks(np.arange(len(top3_sources)))
@@ -1246,22 +1261,251 @@ for assump in assumptions:
                 
         # Plot secondary axis
         axes2.scatter(np.arange(len(top3_sources)), imp_share.values, color='black')
-        if r == len(main_importers): axes[s, r].set_ylabel("Import share")
         axes2.set_ylim(0, 100)
-        if r == len(main_importers): 
-            axes2.set_yticks([np.arange(0, 101, step=25)])
+        if r == len(main_importers)-1: 
+            # axes2.set_yticks([np.arange(0, 101, step=25)])
+            axes2.yaxis.set_visible(True)
+            axes2.spines['right'].set_visible(True)
+            axes2.set_ylabel("Supply share (%)")
         else:
-            axes2.set_yticks([])
+            axes2.spines['right'].set_visible(False)
+            axes2.yaxis.set_visible(False)
+            
+        if r == 0 :
+            axes[s, r].yaxis.set_visible(True)
+            axes[s, r].spines['left'].set_visible(True)
+        else:
+            axes[s, r].spines['left'].set_visible(False)
+            axes[s, r].yaxis.set_visible(False)
 
         # X-axis setup
         axes[s, r].set_xticks(np.arange(len(top3_sources)))
         axes[s, r].set_xticklabels(top3_sources, fontsize=8, rotation=90)
         # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
-        
     
+
         # Labels
         if r ==0 : axes[s, r].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(scen + '\nMandated market'))
         # axes[s, r].set_title("Target: {}".format(reg), fontsize=8)
+            
+    
+    # Legend
+    h1, l1 = axes[0, 0].get_legend_handles_labels()
+    
+    fig.legend(handles=h1[:len(deliv_cost_comps)],
+                labels=l1[:len(deliv_cost_comps)], 
+                loc='lower center',
+                bbox_to_anchor=(0.5, 0.08),
+                frameon=False,
+                borderaxespad=0.,
+                ncol=4,
+                title="Cost categories",
+                fontsize=8)
+    
+    fig.subplots_adjust(hspace=1.1, wspace=0.2, right=0.9, bottom=0.19, left=0.1, top=0.95)
+    
+    
+        
+    plt.show()
+    plt.savefig(fp) 
+
+# %% Graph 4b - Delivery costs from top 5 exporters to top 5 imports - v2
+
+for assump in assumptions:
+    
+    if assump == 'Default':
+        
+        scen_map = scen_main_map
+        scen_ref = 'S0'
+        
+    elif assump == 'Optimistic':
+        
+        scen_map = scen_opt_map
+        scen_ref = 'S4'
+    
+    elif assump == 'Pessimistic':
+        
+        scen_map = scen_pes_map
+        scen_ref = 'S8'
+        
+    # file path
+    fp = os.path.join('Graphs', 'fig4v2_delivery_costs_top5_demanders_v{}_{}.{}'.format(VERSION, assump, FORMAT))
+
+    
+    # Figure params
+    figsize = (7.5, 13)
+    # # Create subplot    
+    fig, axes = plt.subplots(nrows=len(scen_map.keys()),
+                             ncols=len(main_importers),
+                             figsize=figsize,
+                             sharex=False,
+                             sharey=True
+                             )
+    
+    deliv_cost_comps = ['Haber Bosch', 'Hydrogen production', 'Transportation costs', 'CBAM penalty']
+    
+    colour_map = dict(zip(deliv_cost_comps, ['green', 'blue', 'purple', 'firebrick']))
+    
+    
+    
+    for r, reg in enumerate(main_importers):
+        
+        for s, scen in enumerate(scen_map.keys()):
+            scen_short = scen_map[scen]
+            
+            axes2 = axes[s, r].twinx()
+            
+            if not 'Mandate' in scen:
+            
+                segment = 'Default'
+                # Determine the top 3 targets
+                bila_trade_proxy = copy.deepcopy(var_conv[scen_short]["NH3SMLVL"][segment][2050])
+                bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
+                top3_sources = list(bila_trade_proxy.loc[:, reg].nlargest(5).index)
+                if "RoW" in top3_sources:
+                    top3_sources = [reg2 for reg2 in top3_sources if reg2 != 'RoW']
+                elif reg in top3_sources:
+                    top3_sources = [reg2 for reg2 in top3_sources if reg2 != reg]
+                    
+                top3_sources = top3_sources[:3]
+                
+                top3_sources = [reg] + top3_sources
+                labels = copy.deepcopy(top3_sources)
+                labels[0] = "Self-consumption:\n{}".format(reg)
+                
+                
+                # Organise data
+                plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=top3_sources)
+                imp_share = pd.Series(0.0, index=top3_sources)
+            
+                for rt, reg_source in enumerate(top3_sources):
+                    
+                    
+                    plot_data.loc['Hydrogen production', reg_source] = var_conv[scen_short]["WPPR"][segment][2050].loc[reg_source] * 0.179 *1000
+                    plot_data.loc['Haber Bosch', reg_source] = var_conv[scen_short]["NH3LC"][segment][2050].loc[reg_source] - plot_data.loc['Hydrogen production', reg_source]
+                    plot_data.loc['Transportation costs', reg_source] = var_conv[scen_short]["NH3TCCout"][segment][2050].loc[reg_source, reg]
+                    plot_data.loc['CBAM penalty', reg_source] = var_conv[scen_short]["NH3CBAM"][segment][2050].loc[reg_source, reg]
+                    
+                    tot_imp = var_conv[scen_short]["NH3DEM"]['Total'].loc[reg, 2050]
+                    imp_share.loc[reg_source] = var_conv[scen_short]["NH3SMLVL"][segment][2050].loc[reg_source, reg] / tot_imp * 100
+                    
+                    bottom = np.zeros(len(plot_data.columns))
+                    for var, colour in colour_map.items():
+                
+                        axes[s, r].bar(np.arange(len(top3_sources)), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                                    color=colour, label=var, edgecolor='white', linewidth=0.2)
+                    
+                        bottom += plot_data.loc[var, :].values  
+                
+                # Plot secondary axis
+                axes2.scatter(np.arange(len(top3_sources)), imp_share.values, color='black')
+                axes2.set_ylim(0, 100)
+                if r == len(main_importers)-1: 
+                    # axes2.set_yticks([np.arange(0, 101, step=25)])
+                    axes2.yaxis.set_visible(True)
+                    axes2.spines['right'].set_visible(True)
+                    axes2.set_ylabel("Supply share (%)")
+                else:
+                    axes2.spines['right'].set_visible(False)
+                    axes2.yaxis.set_visible(False)
+                    
+                if r == 0 :
+                    axes[s, r].yaxis.set_visible(True)
+                    axes[s, r].spines['left'].set_visible(True)
+                else:
+                    axes[s, r].spines['left'].set_visible(False)
+                    axes[s, r].yaxis.set_visible(False)
+    
+                    
+                # else:
+                    # axes2.set_yticks([])
+        
+                # X-axis setup
+                axes[s, r].set_xticks(np.arange(len(top3_sources)))
+                axes[s, r].set_xticklabels(top3_sources, fontsize=8, rotation=90)
+                # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+                
+            
+                # Labels
+                if r ==0 : axes[s, r].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(scen+ '\nDefault market'))
+                if s ==0: axes[s, r].set_title("Target: {}".format(reg), fontsize=8)
+                
+            else:
+                
+                
+                segment = 'Mandated'
+                # Determine the top 3 targets
+                bila_trade_proxy = copy.deepcopy(var_conv[scen_short]["NH3SMLVL"][segment][2050])
+                bila_trade_proxy *= np.ones((num_countries, num_countries)) - np.eye(num_countries)
+                top3_sources = list(bila_trade_proxy.loc[:, reg].nlargest(5).index)
+                if "RoW" in top3_sources:
+                    top3_sources = [reg2 for reg2 in top3_sources if reg2 != 'RoW']
+                elif reg in top3_sources:
+                    top3_sources = [reg2 for reg2 in top3_sources if reg2 != reg]
+                    
+                top3_sources = top3_sources[:3]
+                
+                top3_sources = [reg] + top3_sources
+                labels = copy.deepcopy(top3_sources)
+                labels[0] = "Self-consumption:\n{}".format(reg)
+                
+                
+                # Organise data
+                plot_data = pd.DataFrame(0.0, index=deliv_cost_comps, columns=top3_sources)
+                imp_share = pd.Series(0.0, index=top3_sources)
+            
+                for rt, reg_source in enumerate(top3_sources):
+                    
+                    
+                    plot_data.loc['Hydrogen production', reg_source] = var_conv[scen_short]["WPPR"][segment][2050].loc[reg_source] * 0.179 *1000
+                    plot_data.loc['Haber Bosch', reg_source] = var_conv[scen_short]["NH3LC"][segment][2050].loc[reg_source] - plot_data.loc['Hydrogen production', reg_source]
+                    plot_data.loc['Transportation costs', reg_source] = var_conv[scen_short]["NH3TCCout"][segment][2050].loc[reg_source, reg]
+                    plot_data.loc['CBAM penalty', reg_source] = var_conv[scen_short]["NH3CBAM"][segment][2050].loc[reg_source, reg]
+                    
+                    tot_imp = var_conv[scen_short]["NH3DEM"]['Total'].loc[reg, 2050]
+                    imp_share.loc[reg_source] = var_conv[scen_short]["NH3SMLVL"][segment][2050].loc[reg_source, reg] / tot_imp * 100
+                    
+                    bottom = np.zeros(len(plot_data.columns))
+                    for var, colour in colour_map.items():
+                
+                        axes[s, r].bar(np.arange(len(top3_sources)), plot_data.loc[var, :].values, width=bar_width, bottom=bottom,
+                                    color=colour, label=var, edgecolor='white', linewidth=0.2)
+                    
+                        bottom += plot_data.loc[var, :].values  
+                
+                # Plot secondary axis
+                axes2.scatter(np.arange(len(top3_sources)), imp_share.values, color='black')
+                axes2.set_ylim(0, 100)
+                if r == len(main_importers)-1: 
+                    # axes2.set_yticks([np.arange(0, 101, step=25)])
+                    axes2.yaxis.set_visible(True)
+                    axes2.spines['right'].set_visible(True)
+                    axes2.set_ylabel("Supply share (%)")
+                else:
+                    axes2.spines['right'].set_visible(False)
+                    axes2.yaxis.set_visible(False)
+                    
+                if r == 0 :
+                    axes[s, r].yaxis.set_visible(True)
+                    axes[s, r].spines['left'].set_visible(True)
+                else:
+                    axes[s, r].spines['left'].set_visible(False)
+                    axes[s, r].yaxis.set_visible(False)
+    
+                    
+                # else:
+                    # axes2.set_yticks([])
+        
+                # X-axis setup
+                axes[s, r].set_xticks(np.arange(len(top3_sources)))
+                axes[s, r].set_xticklabels(top3_sources, fontsize=8, rotation=90)
+                # axes_flat[r].set_xlim(x_positions[0] - 0.5, x_positions[-1] + bar_width + 0.5)
+                
+            
+                # Labels
+                if r ==0 : axes[s, r].set_ylabel("{}\n$\u2082\u2080\u2082\u2084/tNH\u2083".format(scen+ '\nMandated market'))
+                if s ==0: axes[s, r].set_title("Target: {}".format(reg), fontsize=8)
+        
         
     
     # Legend
@@ -1277,13 +1521,12 @@ for assump in assumptions:
                 title="Cost categories",
                 fontsize=8)
     
-    fig.subplots_adjust(hspace=1.0, wspace=0.2, right=0.97, bottom=0.2, left=0.1, top=0.95)
+    fig.subplots_adjust(hspace=1.0, wspace=0.2, right=0.9, bottom=0.2, left=0.1, top=0.95)
     
     
         
     plt.show()
     plt.savefig(fp) 
-
 
 # %% Graph 5 - LCOH by technology and region
 
@@ -1536,7 +1779,13 @@ year = 2050
 
 for segment in market_segments:
 
-    emissions_table[segment] = pd.DataFrame(0.0, index=scen_all_map.keys(), columns=emis_cats_map.keys())
+    emissions_table[segment] = pd.DataFrame(0.0, index=['2025']+list(scen_all_map.keys()), columns=emis_cats_map.keys())
+    
+    emissions_table[segment].loc['2025', "Direct emissions"] =  np.sum(var_conv['S0']['HYEF'][segment][2025])
+    emissions_table[segment].loc['2025', "Indirect emissions"] =  np.sum(var_conv['S0']['HYEFINDIRECT'][segment][2025])
+    emissions_table[segment].loc['2025', "Indirect emissions"] +=  np.sum(var_conv['S0']['NH3EFINDIRECT'][segment][2025])
+    emissions_table[segment].loc['2025', "Transport emissions"] = np.sum(var_conv['S0']['NH3TRANSPORTEMISSIONFACTOR'][segment][2025].sum())
+    emissions_table[segment].loc['2025', "Total emissions"] = emissions_table[segment].loc['2025', :].sum()
     
     for scen_name, scen in scen_all_map.items():
         
@@ -1548,6 +1797,8 @@ for segment in market_segments:
         
     # Convert to Mt CO2
     emissions_table[segment] *= 0.001
+    
+    emissions_table[segment] .to_csv("Emissions_in_{}_market.csv".format(segment))
     
 
 
