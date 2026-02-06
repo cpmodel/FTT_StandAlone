@@ -44,10 +44,10 @@ rotate <- function(x) t(apply(x, 2, rev))
 input_df_rescaled <- read.csv(paste0("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/scenarios/S3_scen_levels_rescaled.csv"))
 inputs <- input_df_rescaled[,2:length(names(input_df_rescaled))]
 
-
+#inputs_red <- c("cr_solar", "cr_wind", "lead_solar", "lead_onshore")
 
 # 1) A clean OAT‐sens function
-oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0.25, upper = 0.75) {
+oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0, upper = 1) {
   # ref: named numeric vector length d, e.g. rep(0.5, d)
   # emulator: what you pass to PredictGasp()
   # n: grid points per parameter
@@ -60,9 +60,24 @@ oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0.25, upper = 0.7
   for(i in seq_len(d)) {
     # make an n×d matrix all = ref
     X_oat <- matrix(ref, nrow = n, ncol = d, byrow = TRUE)
+    
+    # choose bounds for this variable
+    if (varnames[i] %in% inputs_red) {
+      low_i  <- 0.45
+      high_i <- 0.55
+    } else {
+      low_i  <- lower
+      high_i <- upper
+    }
+  
+  
     # replace column i by its own grid
-    X_oat[,i] <- seq(lower, upper, length.out = n)
+    X_oat[, i] <- seq(low_i, high_i, length.out = n)
     colnames(X_oat) <- varnames
+    
+    # # replace column i by its own grid
+    # X_oat[,i] <- seq(lower, upper, length.out = n)
+    # colnames(X_oat) <- varnames
     
     # predict: PredictGasp often returns a vector or a list with $mean
     pred <- PredictGasp(as.data.frame(X_oat), emulator)
@@ -234,6 +249,16 @@ oaatSensvarSummaryPlot(global_sens_mat, threshold = 0.01)
 ############################################
 
 #### 2030 
+# Specific set up for India
+ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # CN & US levels change back to 0 for main SA
+ref_techeco <- setNames(rep(0.5, 14), colnames(inputs[16:29]))
+ref <- c(ref_pol, ref_techeco)
+
+ref_pol['IN_phase_pol'] <- 0.5
+ref_pol['IN_price_pol'] <- 0.5
+ref_pol['IN_cp_pol'] <- 0.5
+
+
 
 IN_polcompare_files <- rds_files_all[c(4:18)]
 
@@ -276,7 +301,9 @@ colnames(IN_polcompare_mat) <- c("US phaseouts", "US subsidies", "US carbon pric
 oaatSensvarSummaryPlot(IN_polcompare_mat, threshold = 0.001)
 
 
-
+# write.csv(global_sens_mat, 
+#           file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/in_sa.csv",
+#           row.names = F)
 
 
 

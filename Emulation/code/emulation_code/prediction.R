@@ -423,7 +423,7 @@ for (i in 1:nrow(pol_df)) {
 
 # Save file
 saveRDS(input_dfs, file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_GBL_lhs.RData")
-
+input_dfs <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_GBL_lhs.RData")
 # Reload file
 #input_dfs <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/input_dfs_GBL_emiss.RData")
 
@@ -506,8 +506,8 @@ df_long <- df_check %>%
   pivot_longer(cols = all_of(varied_columns), names_to = "variable", values_to = "value")
 
 # Plot histograms for each variable
-ggplot(df_long, aes(x = value)) +
-  geom_histogram(bins = 30, fill = "skyblue", color = "black") +
+ggplot(subset(df_long, value > 0 | value < 1), aes(x = value)) +
+  geom_histogram(bins = 50, fill = "skyblue", color = "black") +
   facet_wrap(~variable, scales = "free") +
   theme_minimal() +
   labs(title = "Distribution of Sampled Variables", x = "Value", y = "Count")
