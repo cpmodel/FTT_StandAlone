@@ -1,11 +1,13 @@
 from nicegui import ui
-from plotly import graph_objects as go
-import plotly.io as pio
 
 from .shared import shared_layout
 from .state import state
 
 def render_results_page():
+        # Lazy import plotly only when results page is actually rendered
+        from plotly import graph_objects as go
+        import plotly.io as pio
+        
         shared_layout()
 
         with ui.column().classes('w-full no-wrap gap-3 items-start'):
@@ -17,8 +19,6 @@ def render_results_page():
                 fig = go.Figure(go.Scatter(name='1 Belgium', x=[2020, 2030, 2040, 2050], y=[1, 2, 3, 2.5]))
                 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), template = plt_tem, showlegend=True)
                 plot = ui.plotly(fig).classes('w-full h-[250px]')
-
-                print(list(pio.templates))
 
             # SECTION 2. Data selector
             with ui.card().classes('w-full h-[240px] p-4 shadow-sm border border-gray-200'):
@@ -53,27 +53,6 @@ def render_results_page():
                                 ui.select(options=["a","b"], label = "Dim 2").classes('w-50')
                                 ui.select(options=["a","b"], label = "Dim 3").classes('w-50')
 
-                        with ui.tab_panel(t4):
-                            with ui.row():
-                                grouped_options = [
-                                    {
-                                        'label': 'Fruits', # This is the header for the group
-                                        'children': [
-                                            {'label': 'Apple', 'value': 'apple'},
-                                            {'label': 'Banana', 'value': 'banana'},
-                                        ]
-                                    },
-                                    {
-                                        'label': 'Vegetables',
-                                        'children': [
-                                            {'label': 'Carrot', 'value': 'carrot'},
-                                            {'label': 'Potato', 'value': 'potato'},
-                                        ]
-                                    }
-                                ]
-
-                                ui.select(
-                                    options=grouped_options, 
-                                    with_input=True, 
-                                    label='Search Categories'
-                                ).classes('w-64').props('emit-value map-options')
+                        with ui.tab_panel(t4).classes('w-full h-full items-center justify-center'):
+                            with ui.row().classes('items-center'):
+                                ui.select(options=["a","b"], label = "Setting 1").classes('w-50')

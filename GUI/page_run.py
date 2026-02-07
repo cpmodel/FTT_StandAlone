@@ -5,7 +5,6 @@ from pathlib import Path
 
 from .shared import shared_layout
 from .state import state
-from SourceCode.model_class import ModelRun
 
 def render_run_page():
     # Add shared layout (header, footer, etc.)
@@ -99,6 +98,8 @@ def execute_model(models, end_year, scenarios, output_name):
         config.write(configfile)
 
     # This remains the bridge to your existing Model class
+    # Import ModelRun only when needed (lazy loading for faster GUI startup)
+    from SourceCode.model_class import ModelRun
     model = ModelRun()
     model.run()
     # Save output for all scenarios to pickle
