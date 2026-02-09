@@ -101,7 +101,10 @@ class ResultsEngine:
         Returns:
             List of dimension codes: [Dim1, Dim2, Dim3, Dim4]
         """
-        var_row = self.time_variables[self.time_variables['Variable name'] == variable_name].iloc[0]
+        matching = self.time_variables[self.time_variables['Variable name'] == variable_name]
+        if matching.empty:
+            return ['NA', 'NA', 'NA', 'TIME']
+        var_row = matching.iloc[0]
         return [var_row['Dim1'], var_row['Dim2'], var_row['Dim3'], var_row['Dim4']]
     
     def get_dimension_values(self, dim_code):
@@ -153,6 +156,10 @@ class ResultsEngine:
             
             var_data = scenario_data[variable_name]  # Shape: (region, tech, cat, time)
             
+            # Ensure var_data has 4 dimensions
+            while var_data.ndim < 4:
+                var_data = np.expand_dims(var_data, axis=-1)
+            
             # Get selected indices for each dimension
             indices = []
             for i, dim_name in enumerate(dims):
@@ -160,7 +167,8 @@ class ResultsEngine:
                     indices.append([0])
                 elif i == 3:
                     # TIME dimension - always use ALL time points (it's the x-axis)
-                    indices.append(list(range(var_data.shape[3])))
+                    max_time = var_data.shape[3] if var_data.ndim > 3 else 1
+                    indices.append(list(range(max_time)))
                 else:
                     selected_vals = dim_selections.get(i, [])
                     if not selected_vals:
@@ -180,22 +188,24 @@ class ResultsEngine:
                     data_slice = var_data.copy()
                     
                     # Apply slicing/aggregation for dims 0-2
-                    for dim_idx in range(3):
+                    for dim_idx in range(min(3, len(combo))):
                         # Select specific indices for this dimension first
                         if isinstance(combo[dim_idx], list):
                             idx_list = combo[dim_idx]
                         else:
                             idx_list = [combo[dim_idx]]
 
-                        data_slice = np.take(data_slice, idx_list, axis=dim_idx)
+                        if dim_idx < data_slice.ndim:
+                            data_slice = np.take(data_slice, idx_list, axis=dim_idx)
 
-                        # If aggregating, sum only across the selected indices
-                        if dim_aggregates[dim_idx]:
-                            data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
+                            # If aggregating, sum only across the selected indices
+                            if dim_idx < len(dim_aggregates) and dim_aggregates[dim_idx]:
+                                data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
                     
                     # Extract time series (dim 3) - take all time indices or selected ones
-                    time_indices = indices[3] if len(indices) > 3 else range(data_slice.shape[3])
-                    data_slice = np.take(data_slice, time_indices, axis=3)
+                    if data_slice.ndim > 3:
+                        time_indices = indices[3] if len(indices) > 3 else range(data_slice.shape[3])
+                        data_slice = np.take(data_slice, time_indices, axis=3)
                     
                     # Flatten to get 1D array
                     y_values = data_slice.flatten()
@@ -209,9 +219,9 @@ class ResultsEngine:
                                 val_idx = combo[i][0] if isinstance(combo[i], list) else combo[i]
                                 dim_vals = self.get_dimension_values(dim_name)
                                 if val_idx < len(dim_vals):
-                                    label_parts.append(dim_vals[val_idx])
+                                    label_parts.append(dim_vals[val_idx][:15])
                     
-                    trace_label = ' - '.join(label_parts)
+                    trace_label = ' '.join(label_parts)
                     
                     # Generate x-axis (years)
                     # Default: start at 2010
@@ -239,14 +249,13 @@ class ResultsEngine:
             xaxis_title='Year',
             yaxis_title=y_title,
             yaxis=dict(title=dict(text=y_title, standoff=15, font=dict(size=11))),
-            title=variable_name,
-            hovermode='x unified'
+            title=variable_name
         )
         
         # Add hover template with 3 decimal places
         for trace in fig.data:
             trace.hovertemplate = '<b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
-        
+    
         return fig
     
     def _generate_combinations(self, indices_list, aggregate_flags):

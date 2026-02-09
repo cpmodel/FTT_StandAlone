@@ -121,21 +121,21 @@ def render_results_page():
             # If no variable selected yet, show empty selectors (disabled)
             if not state.selected_variable:
                 dims = ['Dim1', 'Dim2', 'Dim3']
-                dim_labels = ['Region', 'Technology', 'Category']
                 for i, dim_name in enumerate(dims):
                     with dimension_container:
-                        with ui.column().classes('min-w-[350px] max-w-[350px] gap-1'):
-                            ui.label(f'{dim_name} - {dim_labels[i]}').classes('text-xs font-semibold')
+                        with ui.column().classes('w-full gap-1'):
+                            ui.label(f'{dim_name}').classes('text-xs font-semibold')
+
                             dim_select = ui.select(
                                 options=[],
                                 label=f'Select {dim_name}',
                                 multiple=True,
-                                with_input=True
+                                with_input=True,
+                                clearable=True
                             ).classes('w-full max-w-[350px]').props('dense').disable()
                             with ui.row().classes('w-full gap-2'):
                                 ui.checkbox('All').props('dense').disable()
                                 ui.checkbox('Sum').props('dense').disable()
-                                ui.button('Clear').props('dense').disable()
                 return
 
             # Get dimension info for selected variable
@@ -150,16 +150,18 @@ def render_results_page():
                 dim_values = engine.get_dimension_values(dim_name)
 
                 with dimension_container:
-                    with ui.column().classes('min-w-[350px] max-w-[350px] gap-1'):
+                    with ui.column().classes('w-full gap-1'):
                         dim_labels = ['Region', 'Technology', 'Category', 'Time']
                         ui.label(f'{dim_name} - {dim_labels[i]}').classes('text-xs font-semibold')
+                        # ui.label(f'{dim_name}').classes('text-xs font-semibold')
 
                         # Multi-select for dimension values
                         dim_select = ui.select(
                             options=dim_values,
                             label=f'Select {dim_name}',
                             multiple=True,
-                            with_input=True
+                            with_input=True,
+                            clearable=True
                         ).classes('w-full max-w-[350px]').props('dense')
 
                         # Initialize with first value if not set
@@ -176,7 +178,7 @@ def render_results_page():
 
                         dim_select.on_value_change(make_select_handler(i))
 
-                        # Checkboxes (Select All and Sum) and Clear button
+                        # Checkboxes (Select All and Sum)
                         with ui.row().classes('w-full gap-2'):
                             # Select All checkbox
                             select_all = ui.checkbox('All').props('dense')
@@ -199,16 +201,6 @@ def render_results_page():
                                     update_plot()
                                 return handler
                             agg_check.on_value_change(make_agg_handler(i))
-
-                            # Clear selections button
-                            def make_clear_handler(selector, idx):
-                                def handler():
-                                    selector.value = []
-                                    state.dim_selections[idx][f'dim{idx}_values'] = []
-                                    update_plot()
-                                return handler
-
-                            ui.button('Clear', on_click=make_clear_handler(dim_select, i)).props('dense')
         
         # Function to update plot
         def update_plot():
