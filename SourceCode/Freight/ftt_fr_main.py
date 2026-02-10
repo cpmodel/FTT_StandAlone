@@ -195,7 +195,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Interpolations to avoid staircase profile
             D = time_lag['RVKZ'] + (data['RVKZ'] - time_lag['RVKZ']) * t * dt
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
-            Utot = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
+            Utot_dt = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * (t - 1) * dt
+            Utot_reshaped = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
            
             # The core FTT equations, taking into account old shares, costs and regulations
             change_in_shares = shares_change(
@@ -212,7 +213,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Calculate endogenous market shares
             endo_shares = data_dt['ZEWS'][:, :, 0] + change_in_shares
-            endo_capacity = endo_shares * Utot
+            endo_capacity = endo_shares * Utot_reshaped
             
             # Shares after exogenous sales and regulation correction taken into account
             data['ZEWS'] = implement_shares_policies(
@@ -228,7 +229,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['BZTC'][:, :, 1:20] = data_dt['BZTC'][:, :, 1:20]
             
             # Number of trucks by technology
-            data['ZEWK'] = data['ZEWS'] * Utot[:, :, None]
+            data['ZEWK'] = data['ZEWS'] * Utot_reshaped[:, :, None]
            
             # Investment (sales) = new capacity created
             # zewi_t is new additions at current timestep/iteration
