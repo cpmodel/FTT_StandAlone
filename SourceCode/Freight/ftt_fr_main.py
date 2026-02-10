@@ -116,15 +116,16 @@ def solve(data, time_lag, titles, histend, year, domain):
     # Initialise up to the last year of historical data
     if year <= histend["RFLZ"]:
         
-        summed_zews = sum_over_classes(data['ZEWS'])
+        # Normalise market shares if they do not add up to 1
+        class_totals = sum_over_classes(data['ZEWS'])
         for r in range(num_regions):
-            # Correction to market shares for each vehicle class
-            # Sometimes historical market shares do not add up to 1.0
             for veh_class in range(n_veh_classes):
-                if (~np.isclose(summed_zews[r, veh_class, 0], 1.0, atol=1e-9)
-                    and summed_zews[r, veh_class, 0] > 0.0):
-                        data['ZEWS'][r, :, 0] = np.divide(data['ZEWS'][r, veh_class::n_veh_classes, 0],
-                                                    summed_zews[r, veh_class, 0])
+                idx = slice(veh_class, None, n_veh_classes)
+        
+                if (not np.isclose(class_totals[r, veh_class, 0], 1.0, atol=1e-9)
+                    and class_totals[r, veh_class, 0] > 0.0):
+        
+                    data['ZEWS'][r, idx, 0] /= class_totals[r, veh_class, 0]
             
         
         # Calculate number of vehicles per technology. First reshape rflz into right format
