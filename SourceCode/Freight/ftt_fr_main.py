@@ -128,7 +128,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                     data['ZEWS'][r, idx, 0] /= class_totals[r, veh_class, 0]
             
         
-        # Calculate number of vehicles per technology. First reshape rflz into right format
+        # Calculate number of vehicles per technology. Repeat demand 'rflz' across columns to match 'ZEWS' shape
         rflz_reshaped = np.tile(data['RFLZ'], (1, data['ZEWS'].shape[1] // data['RFLZ'].shape[1], 1))
         data['ZEWK'] = data['ZEWS'] * rflz_reshaped
         
@@ -183,9 +183,9 @@ def solve(data, time_lag, titles, histend, year, domain):
                 
 
         # Find if there is a regulation and if it is exceeded
-        division = divide((time_lag['ZEWK'][:, :, 0] - data['ZREG'][:, :, 0]),
+        relative_excess = divide((time_lag['ZEWK'][:, :, 0] - data['ZREG'][:, :, 0]),
                            data['ZREG'][:, :, 0])       # 0 when dividing by 0
-        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
         reg_constr[data['ZREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['ZREG'][:, :, 0] == -1.0] = 0.0
 

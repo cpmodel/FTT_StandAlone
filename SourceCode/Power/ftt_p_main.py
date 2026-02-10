@@ -410,10 +410,10 @@ def solve(data, time_lag, titles, histend, year, domain):
         data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
 
         # Create the regulation variable
-        division = np.zeros_like(data_dt['MEWR'][:, :, 0])
+        relative_excess = np.zeros_like(data_dt['MEWR'][:, :, 0])
         np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0],
-                  out=division, where=data['MEWR'][:, :, 0] > 0)
-        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+                  out=relative_excess, where=data['MEWR'][:, :, 0] > 0)
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
        
 
         reg_constr[data['MEWR'][:, :, 0] == 0.0] = 1.0

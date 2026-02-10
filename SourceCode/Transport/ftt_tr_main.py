@@ -221,9 +221,9 @@ def solve(data, time_lag, titles, histend, year, domain):
 
 
         # Create the regulation variable
-        division = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
+        relative_excess = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
                           [:, :, 0]), data['TREG'][:, :, 0])  # 0 when dividing by 0
-        reg_constr = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
+        reg_constr = 0.5 + 0.5*np.tanh(1.5 + 10 * relative_excess)
         reg_constr[data['TREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['TREG'][:, :, 0] == -1.0] = 0.0
 

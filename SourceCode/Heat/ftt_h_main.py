@@ -219,9 +219,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         data["FU14A"] = time_lag["FU14A"]
         data["FU14B"] = time_lag["FU14B"]
 
-        division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
+        relative_excess = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
-        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
         reg_constr[data['HREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['HREG'][:, :, 0] == -1.0] = 0.0
     
