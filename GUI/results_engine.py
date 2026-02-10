@@ -241,15 +241,15 @@ class ResultsEngine:
         
         # Update layout
         template = 'plotly_dark' if dark_mode else 'simple_white'
-        y_title = f"{var_row['Variable description']} ({var_row['Unit']})"
+        y_title = f"{var_row['Unit']}"
         fig.update_layout(
             margin=dict(l=10, r=10, t=40, b=40),
             template=template,
             showlegend=True,
             xaxis_title='Year',
             yaxis_title=y_title,
-            yaxis=dict(title=dict(text=y_title, standoff=15, font=dict(size=11))),
-            title=variable_name
+            yaxis=dict(title=dict(text=y_title, standoff=10, font=dict(size=14))),
+            title=f"{variable_name} - {var_row['Variable description']}"
         )
         
         # Add hover template with 3 decimal places

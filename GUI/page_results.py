@@ -15,10 +15,10 @@ def render_results_page():
         # Initialize results engine
         engine = ResultsEngine()
 
-        with ui.column().classes('w-full no-wrap gap-3 items-start'):
+        with ui.column().classes('w-full h-[calc(100vh-8rem)] flex no-wrap items-start'):
             
             # SECTION 1. Figure
-            with ui.card().classes('w-full p-4 shadow-sm border border-gray-200'):
+            with ui.card().classes('w-full h-3/5 shadow-sm border p-0 border-gray-200'):
                 plt_tem = 'plotly_dark' if state.dark_mode else 'simple_white'
                 fig = go.Figure()
                 fig.update_layout(
@@ -28,92 +28,94 @@ def render_results_page():
                     xaxis_title='Year',
                     yaxis_title='Value'
                 )
-                plot = ui.plotly(fig).classes('w-full h-[270px]')
+                plot = ui.plotly(fig).classes('w-full h-full p-0')
 
             # SECTION 2. Data selector
-            with ui.card().classes('w-full h-[220px] p-3 shadow-sm border border-gray-200'):
+            with ui.card().classes('w-full h-2/5 p-3 shadow-sm border border-gray-200'):
                 with ui.row().classes('w-full h-full'):
                     # set tabs
                     with ui.tabs().props('vertical stretch=true indicator-color=blue-400 dense=true').classes('h-full justify-center p-1 border-r') as tabs:
                         t1 = ui.tab('Load Files')
-                        t2 = ui.tab('Scenarios')
-                        t3 = ui.tab('Analysis')
+                        t2 = ui.tab('Analysis')
 
                     with ui.tab_panels(tabs, value=t1).classes('flex-grow h-full'):
                 
                         # TAB 1: FILE PICKER
-                        with ui.tab_panel(t1).classes('w-full h-full items-center justify-center p-4'):
-                            ui.label('Select pickle files to load').classes('text-sm font-semibold mb-2')
-                            
-                            # Get available pickle files from engine
-                            pickle_files = engine.get_available_pickle_files()
-                            
-                            file_picker = ui.select(
-                                options=pickle_files,
-                                label='Available Files',
-                                multiple=True,
-                                with_input=True
-                            ).classes('w-96')
-                            
-                            def load_pickles():
-                                if file_picker.value:
-                                    engine.load_pickle_files(file_picker.value)
-                                    # Update scenario selector options
-                                    scenarios = engine.get_scenario_names()
-                                    scenario_selector.options = scenarios
-                                    # Auto-select all scenarios
-                                    scenario_selector.value = scenarios
-                                    scenario_selector.update()
-                                    ui.notify(f'Loaded {len(scenarios)} scenarios', type='positive')
-                            
-                            ui.button('Load Selected Files', on_click=load_pickles).classes('mt-2')
+                        with ui.tab_panel(t1).classes('w-full h-full p-3 overflow-auto'):
+                            with ui.row().classes('w-full h-full gap-4 items-center'):
+                                # Left side: Pickle file section
+                                with ui.column().classes('flex-1 items-start'):
+                                    ui.label('Select pickle files to load').classes('text-sm font-semibold')
+                                    
+                                    # Get available pickle files from engine
+                                    pickle_files = engine.get_available_pickle_files()
+                                    
+                                    file_picker = ui.select(
+                                        options=pickle_files,
+                                        label='Available Files',
+                                        multiple=True,
+                                        with_input=True
+                                    ).classes('w-full')
+                                    
+                                    def load_pickles():
+                                        if file_picker.value:
+                                            engine.load_pickle_files(file_picker.value)
+                                            # Update scenario selector options
+                                            scenarios = engine.get_scenario_names()
+                                            scenario_selector.options = scenarios
+                                            # Auto-select all scenarios
+                                            scenario_selector.value = scenarios
+                                            scenario_selector.update()
+                                            ui.notify(f'Loaded {len(scenarios)} scenarios', type='positive')
+                                    
+                                    ui.button('Load Selected', on_click=load_pickles).classes('w-50 h-10 items-center')
 
-                        # TAB 2: SCENARIO PICKER
-                        with ui.tab_panel(t2).classes('w-full h-full items-start p-4'):
-                            ui.label('Select scenarios to plot').classes('text-sm font-semibold mb-2')
-                            
-                            scenario_selector = ui.select(
-                                options=[],
-                                label='Scenarios',
-                                multiple=True,
-                                with_input=True
-                            ).classes('w-96').bind_value(state, 'selected_scenarios')
-                            
-                            baseline_selector = ui.select(
-                                options=[],
-                                label='Baseline (optional)',
-                                with_input=True,
-                                clearable=True
-                            ).classes('w-96 mt-2')
-                            
-                            # Update baseline options when scenarios change
-                            def update_baseline_options():
-                                baseline_selector.options = state.selected_scenarios
-                                baseline_selector.update()
-                            
-                            scenario_selector.on_value_change(update_baseline_options)
+                                # Right side: Scenario section
+                                with ui.column().classes('flex-1 items-start'):
+                                    ui.label('Select scenarios to plot').classes('text-sm font-semibold')
+                                    
+                                    scenario_selector = ui.select(
+                                        options=[],
+                                        label='Scenarios',
+                                        multiple=True,
+                                        with_input=True
+                                    ).classes('w-full').bind_value(state, 'selected_scenarios')
+                                    
+                                    baseline_selector = ui.select(
+                                        options=[],
+                                        label='Baseline (optional)',
+                                        with_input=True,
+                                        clearable=True
+                                    ).classes('w-full')
+                                    
+                                    # Update baseline options when scenarios change
+                                    def update_baseline_options():
+                                        baseline_selector.options = state.selected_scenarios
+                                        baseline_selector.update()
+                                    
+                                    scenario_selector.on_value_change(update_baseline_options)
 
-                        # TAB 3: VARIABLE & DIMENSIONS EXPLORER
-                        with ui.tab_panel(t3).classes('w-full h-full items-start p-3 overflow-auto'):
-                            # Variable selector
-                            var_options = engine.get_variable_options()
-                            
-                            variable_selector = ui.select(
-                                options=var_options,
-                                label='Variable',
-                                with_input=True
-                            ).classes('w-full mb-2').props('dense')
-                            
-                            def on_variable_change(e):
-                                state.selected_variable = e.value
-                                update_dimensions()
-                                update_plot()
-                            
-                            variable_selector.on_value_change(on_variable_change)
+                        # TAB 2: VARIABLE & DIMENSIONS EXPLORER
+                        with ui.tab_panel(t2).classes('w-full h-full p-2'):
+                            with ui.column().classes('w-full h-full justify-center gap-1'):
+                                # Variable selector
+                                ui.label('Select variable').classes('text-sm p-0 justify-left font-semibold').props('dense')
+                                var_options = engine.get_variable_options()
+                                variable_selector = ui.select(
+                                    options=var_options,
+                                    label='Variable',
+                                    with_input=True
+                                ).classes('w-full p-0').props('dense')
+                                
+                                def on_variable_change(e):
+                                    state.selected_variable = e.value
+                                    update_dimensions()
+                                    update_plot()
+                                
+                                variable_selector.on_value_change(on_variable_change)
 
-                            # Dimension selectors (horizontal layout)
-                            dimension_container = ui.row().classes('w-full max-w-full gap-2 items-center justify-center flex-nowrap overflow-x-auto')
-        
+                                # Dimension selectors (horizontal layout)
+                                dimension_container = ui.row().classes('w-full gap-1 items-center justify-center flex-nowrap overflow-hidden')
         # Function to update dimension selectors when variable changes
         def update_dimensions():
             dimension_container.clear()
@@ -132,7 +134,7 @@ def render_results_page():
                                 multiple=True,
                                 with_input=True,
                                 clearable=True
-                            ).classes('w-full max-w-[350px]').props('dense').disable()
+                            ).classes('w-full overflow-auto').props('dense').disable()
                             with ui.row().classes('w-full gap-2'):
                                 ui.checkbox('All').props('dense').disable()
                                 ui.checkbox('Sum').props('dense').disable()
@@ -150,7 +152,7 @@ def render_results_page():
                 dim_values = engine.get_dimension_values(dim_name)
 
                 with dimension_container:
-                    with ui.column().classes('w-full gap-1'):
+                    with ui.column().classes('w-full gap-1 overflow-auto'):
                         dim_labels = ['Region', 'Technology', 'Category', 'Time']
                         ui.label(f'{dim_name} - {dim_labels[i]}').classes('text-xs font-semibold')
                         # ui.label(f'{dim_name}').classes('text-xs font-semibold')
@@ -162,7 +164,7 @@ def render_results_page():
                             multiple=True,
                             with_input=True,
                             clearable=True
-                        ).classes('w-full max-w-[350px]').props('dense')
+                        ).classes('w-full max-h-[50px] max-w-[400px] overflow-auto items-center').props('dense use-chips options-dense')
 
                         # Initialize with first value if not set
                         if dim_values and f'dim{i}_values' not in state.dim_selections[i]:
