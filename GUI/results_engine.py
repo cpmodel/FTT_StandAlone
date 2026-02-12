@@ -249,12 +249,12 @@ class ResultsEngine:
             xaxis_title='Year',
             yaxis_title=y_title,
             yaxis=dict(title=dict(text=y_title, standoff=10, font=dict(size=14))),
-            title=f"{variable_name} - {var_row['Variable description']}"
+            title=dict(text=f"{variable_name} - {var_row['Variable description']}", font=dict(size=18))
         )
         
         # Add hover template with 3 decimal places
         for trace in fig.data:
-            trace.hovertemplate = '<b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
+            trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
     
         return fig
     
