@@ -150,7 +150,7 @@ def render_results_page():
 
             for i, dim_name in enumerate(dims):
                 # Skip NA and TIME (dim 4) selectors
-                if dim_name == 'NA' or i == 3:
+                if dim_name == 'NA' or i == 3 or isinstance(dim_name, float):
                     continue
 
                 # Get available values for this dimension
