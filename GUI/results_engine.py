@@ -169,10 +169,20 @@ class ResultsEngine:
             
             var_data = scenario_data[variable_name]  # Shape: (region, tech, cat, time)
             
-            # Ensure var_data has 4 dimensions
-            # Expand at the beginning so TIME stays at axis 3
-            while var_data.ndim < 4:
-                var_data = np.expand_dims(var_data, axis=0)
+            # Ensure var_data has 4 dimensions by inserting size-1 dims where dims[i] == 'NA'
+            # Build the target 4D shape based on which dimensions are active
+            shape_4d = []
+            data_idx = 0
+            for dim_name in dims:
+                if dim_name == 'NA':
+                    shape_4d.append(1)
+                else:
+                    if data_idx < var_data.ndim:
+                        shape_4d.append(var_data.shape[data_idx])
+                        data_idx += 1
+                    else:
+                        shape_4d.append(1)
+            var_data = var_data.reshape(shape_4d)
             
             # Get selected indices for each dimension
             indices = []
@@ -322,10 +332,20 @@ class ResultsEngine:
         
         var_data = scenario_data[variable_name]
         
-        # Ensure var_data has 4 dimensions
-        # Expand at the beginning so TIME stays at axis 3
-        while var_data.ndim < 4:
-            var_data = np.expand_dims(var_data, axis=0)
+        # Ensure var_data has 4 dimensions by inserting size-1 dims where dims[i] == 'NA'
+        # Build the target 4D shape based on which dimensions are active
+        shape_4d = []
+        data_idx = 0
+        for dim_name in dims:
+            if dim_name == 'NA':
+                shape_4d.append(1)
+            else:
+                if data_idx < var_data.ndim:
+                    shape_4d.append(var_data.shape[data_idx])
+                    data_idx += 1
+                else:
+                    shape_4d.append(1)
+        var_data = var_data.reshape(shape_4d)
         
         # Get selected indices for each dimension
         indices = []
