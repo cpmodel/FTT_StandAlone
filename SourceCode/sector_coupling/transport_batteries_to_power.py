@@ -10,6 +10,9 @@ Second-hand batteries repurposing module
 
 import numpy as np 
 
+# EV indices used when summing over electric vehicle categories in BTTC/TEWK
+EV_INDICES = [18, 19, 20]
+
 def get_sector_coupling_dict(data, titles):
     sector_coupling_assumps = dict(zip(
                 list(titles['SCA']),
@@ -18,7 +21,7 @@ def get_sector_coupling_dict(data, titles):
     return sector_coupling_assumps
 
     
-def second_hand_batteries(data, time_lag, iter_lag, year, titles):
+def second_hand_batteries(data, time_lag, year, titles):
     """
     This function estimates the size of the second-hand battery market
     based on scrappage of electric vehicles from FTT:Tr. We use batteries
@@ -33,6 +36,10 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     Returns:
         data dictionary with updated battery capacity in GWh
         # Todo: check if units still correct
+
+    Mutates:
+        Updates `data` in-place: keys 'Second-hand batteries by age'
+        and 'Second-hand battery stock' are modified.
         
     """
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
@@ -65,7 +72,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     # Add newly scrapped vehicle batteries to tracking matrix
     data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
     
-    # All all batteries together
+    # All batteries together
     data['Second-hand battery stock'] = \
             np.sum(data['Second-hand batteries by age'], axis=1, keepdims=True)
                         
@@ -150,7 +157,7 @@ def vehicle_to_grid(data, time_lag, year, titles):
     elif year > 2040:
         tech_readiness = 1
     else:
-        tech_readiness = (year-2024) * 1/15
+        tech_readiness = (year - 2024) * 1/15
     
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
@@ -159,8 +166,8 @@ def vehicle_to_grid(data, time_lag, year, titles):
     total_batteries = time_lag["TEWK"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
     
     
-    # Sum over the EVs only (assume PHEV too small per Xu et al. )
-    batteries_EVs_only = np.sum(total_batteries[:, [18, 19, 20], :], axis=1, keepdims=True)
+    # Sum over the EVs only (assume PHEV too small per Xu et al.)
+    batteries_EVs_only = np.sum(total_batteries[:, EV_INDICES, :], axis=1, keepdims=True)
     
     # Available batteries
     available_batteries = ( batteries_EVs_only
@@ -169,7 +176,7 @@ def vehicle_to_grid(data, time_lag, year, titles):
     # Convert to GWh (TEWK in 1000 cars, battery capacity in kWh)
     available_batteries = available_batteries / 1000
     
-    # All all batteries together
+    # All batteries together
     data['V2G battery stock'] = available_batteries
     
     return data

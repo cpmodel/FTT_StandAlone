@@ -73,14 +73,14 @@ from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
 from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-from SourceCode.Power.ftt_p_mewp import get_marginal_fuel_prices_mewp
-# from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
-from SourceCode.Power.ftt_p_surv import survival_function
+from SourceCode.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
+#from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
+#from SourceCode.Power.ftt_p_surv import survival_function
 from SourceCode.Power.ftt_p_costc import cost_curves
 from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
-from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
+from SourceCode.sector_coupling.battery_lbd import power_battery_additions_dt
 
 
 
@@ -88,7 +88,7 @@ from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -100,14 +100,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Model variables for the current year
     time_lag: type
         Model variables in previous year
-    iter_lag: type
-        Description
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
         Final year of historical data by variable
     year: int
-        Current/active year of solution
+        Current year
     domain: dictionary of lists
         Pairs variables to domains
 
@@ -171,7 +169,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data = get_lcoe(data, titles)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, 1, titles, histend)
+        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    num_regions, num_techs, num_loadbands)
@@ -183,26 +181,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Calculate load factor (MEWL) and generation by load-band in place
         calculate_load_factors_from_dispatch(data, titles)
 
-        for r in range(len(titles['RTI'])):
-
-            # Capacities
-            data['MEWK'][r, :, 0] = divide(data['MEWG'][r, :, 0], data['MEWL'][r, :, 0]) / 8766
-
-            # Update market shares (safe divide to avoid inf when capacity sum is zero)
-            cap_sum_r = data['MEWK'][r, :, 0].sum()
-            if cap_sum_r > 0.0:
-                data["MEWS"][r, :, 0] = data['MEWK'][r, :, 0] / cap_sum_r
-            else:
-                data["MEWS"][r, :, 0] = 0.0
-
-
-        # Update capacities and market shares
+        # Capacities
         data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-        # Safe divide to avoid inf when capacity sum is zero
-        cap_sum = data['MEWK'].sum(axis=1, keepdims=True)
-        data['MEWS'] = np.divide(data['MEWK'], cap_sum,
-                                 out=np.zeros_like(data['MEWK']),
-                                 where=cap_sum > 0.0)
+        
+        # Update market shares (safe divide to avoid inf when capacity sum is zero)
+        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
+        
 
 
         for r in range(len(titles['RTI'])):
@@ -250,11 +234,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         else:
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
 
-        # Safe divide to avoid inf when capacity sum is zero
-        cap_sum = data['MEWK'].sum(axis=1, keepdims=True)
-        data['MEWS'] = np.divide(data['MEWK'], cap_sum,
-                                 out=np.zeros_like(data['MEWK']),
-                                 where=cap_sum > 0.0)
+        # Update market shares (safe divide to avoid inf when capacity sum is zero)
+        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
@@ -265,7 +246,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year >= 2013:
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, iter_lag, year, 1, titles, histend)
+            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -329,10 +310,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Update capacities MEWK and market shares MEWS
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
             # Safe divide to avoid inf when capacity sum is zero
-            cap_sum = data['MEWK'].sum(axis=1, keepdims=True)
-            data['MEWS'] = np.divide(data['MEWK'], cap_sum,
-                                     out=np.zeros_like(data['MEWK']),
-                                     where=cap_sum > 0.0)
+            data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
 
             # Compute early scrapping costs
             # TODO: check it makes sense. It does not seem to be used elsewhere
@@ -432,10 +410,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
 
         # Create the regulation variable
-        division = np.zeros_like(data_dt['MEWR'][:, :, 0])
+        relative_excess = np.zeros_like(data_dt['MEWR'][:, :, 0])
         np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0],
-                  out=division, where=data['MEWR'][:, :, 0] > 0)
-        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+                  out=relative_excess, where=data['MEWR'][:, :, 0] > 0)
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
        
 
         reg_constr[data['MEWR'][:, :, 0] == 0.0] = 1.0
@@ -532,7 +510,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Second-hand batteries. Only run at first timestep
             # =================================================================
             if t == 1:
-                data = second_hand_batteries(data, time_lag, iter_lag, year, titles)
+                data = second_hand_batteries(data, time_lag, year, titles)
 
             # =================================================================
             # Residual load-duration curve
@@ -638,7 +616,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
 
             # Track Power sector battery capacity additions for sector coupling
-            data["Battery cap additions"][0, t-1, 0] = quarterly_bat_add_power(no_it, data, data_dt, titles)
+            data["Battery cap additions"][0, t-1, 0] = power_battery_additions_dt(no_it, data, data_dt, titles)
 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):
@@ -690,19 +668,18 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Calculate levelised cost again
             data = get_lcoe(data, titles)
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
             # =================================================================
             # Update the time-loop variables data_dt
             # =================================================================
             
-            # Store power variables that have changed in data_dt
-            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-P')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
+        
+        data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
 
         if year == 2050:
-            print(f"Total amount of solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
+            print(f"Total solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
     return data

@@ -8,16 +8,16 @@ Sectors call these functions with their specific green technology indices.
 Functions:
     get_mandate_share: Calculate year-based mandate share (linear progression)
     get_new_sales_under_mandate: Apply mandate to sales distribution
-    implement_seeding: Small boost for low-adoption regions (2025-2030)
+    implement_seeding: Small boost for low-adoption regions (first 5 years simulation)
     implement_mandate: Full mandate with flexible end year
 
-@author: Amir Akther
+@author: Amir Akther and Femke Nijsse
 """
 
 import numpy as np
 
 
-def get_mandate_share(year, mandate_start_year, mandate_end_year):
+def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
     """
     Calculate the mandate share based on the year.
 
@@ -32,21 +32,23 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year):
         Year when mandate begins (e.g., 2025)
     mandate_end_year : int
         Year when mandate reaches 100% (e.g., 2036)
+    max_mandate
+        The mandate at the last year (usually 1, but lower for kick-start)
 
     Returns
     -------
     float
         Mandate share between 0.0 and 1.0
     """
-    if year < mandate_start_year:
-        return 0.0
-    elif year >= mandate_end_year:
-        return 0.0
+    if (year < mandate_start_year).all():
+        return np.full(mandate_start_year.shape[0], 0.0)
+    elif (year >= mandate_end_year).all():
+        return np.full(mandate_start_year.shape[0], 0.0)
     else:
-        return (year + 1 - mandate_start_year) / (mandate_end_year - mandate_start_year)
+        return (year + 1 - mandate_start_year) / (mandate_end_year - mandate_start_year) * max_mandate
 
 
-def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=None):
+def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
     """
     Apply mandate to sales distribution.
 
@@ -57,7 +59,7 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=
     ----------
     sales_in : ndarray
         Sales array (regions x techs x 1)
-    mandate_share : float
+    mandate_shares : float
         Target share for green technologies (0.0 to 1.0)
     green_indices : list
         Indices of green technologies
@@ -70,11 +72,12 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=
         Adjusted sales array
     """
     sales_after_mandate = np.copy(sales_in)
-    if regions is None:
-        regions = range(sales_in.shape[0])
+    
+    regions = np.where(mandate_shares > 0)[0] 
 
     for r in regions:
         total_sales = np.sum(sales_in[r, :, 0])
+        mandate_share = mandate_shares[r]
 
         # Skip region if there are no sales
         if total_sales == 0:
@@ -119,14 +122,14 @@ def get_new_sales_under_mandate(sales_in, mandate_share, green_indices, regions=
 
 
 def implement_seeding(cap, cum_sales_in, sales_in, year, green_indices,
-                      start_year=2025, end_year=2030, seed_fraction=0.15):
+                      histend, seeding_years=5, seed_fraction=0.15):
     """
     Seed green technologies in low-adoption regions.
 
     Applies a small mandate (fraction of global green share) to bootstrap
     green technology adoption in regions with little or no adoption.
     Runs from start_year to end_year.
-
+    
     Parameters
     ----------
     cap : ndarray
@@ -137,54 +140,52 @@ def implement_seeding(cap, cum_sales_in, sales_in, year, green_indices,
         Current period sales
     year : int
         Current simulation year
+    histend : int
+        Last historical year
+    seeding_years : int, optional
+        Number of years seeding applies
     green_indices : list
         Indices of green technologies for this sector
-    start_year : int, optional
-        Year seeding begins (default 2025)
-    end_year : int, optional
-        Year seeding ends (default 2030)
     seed_fraction : float, optional
-        Fraction of global green share to use as target (default 0.15)
+        Fraction of global green share to use as target (default 0.15) #todo, make sense
 
     Returns
     -------
     tuple
         (cum_sales_after, sales_after, cap_after)
     """
+    
     # Calculate global green share
     total_sales = np.sum(sales_in)
     if total_sales == 0:
         return cum_sales_in, sales_in, cap
-
     green_share = np.sum(sales_in[:, green_indices]) / total_sales
 
-    # Seeding target = year_factor * seed_fraction * global_green_share
-    mandate_share = get_mandate_share(year, start_year, end_year) * seed_fraction * green_share
+    start_years = np.full(sales_in.shape[0], histend)
+    end_years = start_years + seeding_years
+    
+    seed_fraction = seed_fraction * (year - start_years + 1) / seeding_years
+    
+    # The max mandate is an increasing fraction of the green sales share
+    max_mandate = np.full(sales_in.shape[0], seed_fraction * green_share)
+    
+    mandate_info = mandate_info = np.stack([start_years, end_years, max_mandate], axis=1)
+    
+    # Seeding works the same as a weak mandate, so reuse mandate function
+    cum_sales_after_mandate, sales_after_mandate, cap = implement_mandate(
+                    cap, cum_sales_in, sales_in, year, green_indices,
+                                          mandate_info)
+    
+    return cum_sales_after_mandate, sales_after_mandate, cap
 
-    if mandate_share > 0:
-        sales_after_mandate = get_new_sales_under_mandate(sales_in, mandate_share, green_indices)
-
-        # Update capacity
-        sales_difference = sales_after_mandate - sales_in
-        cap = cap + sales_difference
-        cap[:, :, 0] = np.maximum(cap[:, :, 0], 0)
-
-        # Update cumulative sales
-        cum_sales_after_mandate = np.copy(cum_sales_in)
-        cum_sales_after_mandate[:, :, 0] += sales_difference[:, :, 0]
-
-        return cum_sales_after_mandate, sales_after_mandate, cap
-
-    return cum_sales_in, sales_in, cap
 
 
 def implement_mandate(cap, cum_sales_in, sales_in, year, green_indices,
-                      mandate_switch, start_year=2025, default_duration=11):
+                      mandate_info):
     """
     Implement full green technology mandate.
 
     Linearly increases required green share from 0% to 100% over the mandate period.
-    Only runs if mandate_switch is non-zero.
 
     Parameters
     ----------
@@ -198,42 +199,33 @@ def implement_mandate(cap, cum_sales_in, sales_in, year, green_indices,
         Current simulation year
     green_indices : list
         Indices of green technologies for this sector
-    mandate_switch : ndarray or scalar
-        Controls mandate activation:
-        - 0: mandate off
-        - 1: mandate on with default end year
-        - 2040-2060: custom end year (stretches/compresses mandate)
-    start_year : int, optional
-        Year mandate begins (default 2025)
-    default_duration : int, optional
-        Years to reach 100% if no custom end year (default 11)
+    mandate_info:
+        Contains start year, end year and share at end year per region
 
     Returns
     -------
     tuple
         (cum_sales_after, sales_after, cap_after)
     """
-    # Extract switch value if array
-    if isinstance(mandate_switch, np.ndarray):
-        switch_value = mandate_switch.flat[0] if mandate_switch.size > 0 else 0
-    else:
-        switch_value = mandate_switch
-
-    # Check if mandate is active
-    if switch_value == 0:
+    
+    start_years = mandate_info[:, 0]
+    end_years = mandate_info[:, 1]
+    max_mandate = mandate_info[:, 2]
+    
+    # Return if no mandates in scenario
+    if (max_mandate == 0).all():
         return cum_sales_in, sales_in, cap
 
-    # Determine end year
-    end_year = start_year + default_duration
-    if 2025 <= switch_value <= 2060:
-        # Custom end year specified
-        end_year = int(switch_value)
-
     # Calculate mandate share for this year
-    mandate_share = get_mandate_share(year, start_year, end_year)
-
-    if mandate_share > 0:
-        sales_after_mandate = get_new_sales_under_mandate(sales_in, mandate_share, green_indices)
+    mandate_shares = get_mandate_share(year, start_years, end_years, max_mandate)
+    
+    # Return if no mandates active this year
+    if (mandate_shares == 0).all():
+        return cum_sales_in, sales_in, cap
+    
+    # Compute new sales 
+    if (mandate_shares > 0).any():
+        sales_after_mandate = get_new_sales_under_mandate(sales_in, mandate_shares, green_indices)
 
         # Update capacity
         sales_difference = sales_after_mandate - sales_in
@@ -246,4 +238,3 @@ def implement_mandate(cap, cum_sales_in, sales_in, year, green_indices,
 
         return cum_sales_after_mandate, sales_after_mandate, cap
 
-    return cum_sales_in, sales_in, cap

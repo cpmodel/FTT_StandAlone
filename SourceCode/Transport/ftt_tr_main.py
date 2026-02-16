@@ -36,6 +36,7 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
+from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
 from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 from SourceCode.support.divide import divide
@@ -45,11 +46,9 @@ from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domai
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
-from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
-from SourceCode.Transport.ftt_tr_kickstarter import implement_kickstarter
 from SourceCode.Transport.ftt_tr_emissions_regulation import implement_emissions_regulation
 
-# Green technology indices for Transport (EVs and PHEVs)
+# Green technology indices for Transport (EVs)
 GREEN_INDICES_EV = [18, 19, 20]
 
 
@@ -66,7 +65,7 @@ GREEN_INDICES_EV = [18, 19, 20]
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -78,14 +77,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Model variables for the given year of solution
     time_lag: type
         Model variables in previous year
-    iter_lag: type
-        Description
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
-        Curernt/active year of solution
+        Current year
     domain: dictionary of lists
         Pairs variables to domains
 
@@ -102,26 +99,26 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     jti = {category: index for index, category in enumerate(titles['JTI'])}
 
-    fuelvars = ['FR_1', 'FR_2', 'FR_3', 'FR_4', 'FR_5', 'FR_6',
-                'FR_7', 'FR_8', 'FR_9', 'FR_10', 'FR_11', 'FR_12']
-
     sector = "tr_road_pass"
     sector_index = 0
     sector_index = 15  #titles['FUTI'].index('16 Road Transport')
+    
+    num_regions = len(titles['RTI'])
+    num_techs = len(titles['VTTI'])
 
     # Store fuel prices and convert to $2013/toe
     # It's actually in current$/toe
     # TODO: Temporary deflator values
-    data['TE3P'][:, jti["5 Middle distillates"], 0] = iter_lag['PFRM'][:, sector_index, 0] / 1.33
-    data['TE3P'][:, jti["7 Natural gas"], 0] = iter_lag['PFRG'][:, sector_index, 0] / 1.33
-    data['TE3P'][:, jti["8 Electricity"], 0] = iter_lag['PFRE'][:, sector_index, 0] / 1.33
-    data['TE3P'][:, jti["11 Biofuels"], 0] = iter_lag['PFRB'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["5 Middle distillates"], 0] = time_lag['PFRM'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["7 Natural gas"], 0] = time_lag['PFRG'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["8 Electricity"], 0] = time_lag['PFRE'][:, sector_index, 0] / 1.33
+    data['TE3P'][:, jti["11 Biofuels"], 0] = time_lag['PFRB'][:, sector_index, 0] / 1.33
 #    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
 
     # Use data-driven timing based on TDA2 (last year of cost data)
     if year == np.min(data["TDA2"][:, 0, 0]):
-        start_i_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
-        for veh in range(len(titles['VTTI'])):
+        start_i_cost = np.zeros([num_regions, num_techs, 1])
+        for veh in range(num_techs):
             if 17 < veh < 24:
                 # Starting EV/PHEV cost (without battery)
                 # Uses global Battery price instead of per-vehicle battery cost
@@ -139,7 +136,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Define starting battery capacity, this does not change
         data["TWWB"] = np.copy(data["TEWW"])
-        for veh in range(len(titles['VTTI'])):
+        for veh in range(num_techs):
             if (veh < 18) or (veh > 23):
                 # Set starting cumulative battery capacities to 0 for ICE vehicles
                 data["TWWB"][0, veh, 0] = 0
@@ -150,7 +147,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data['TEVC'] = np.copy(time_lag['TEVC'])  # The cost without batteries
         data['TWWB'] = np.copy(time_lag['TWWB'])
 
-    for r in range(len(titles['RTI'])):
+    for r in range(num_regions):
         # %% Initialise
         # Up to the last year of historical market share data
         if year <= data["TDA1"][r, 0, 0]:
@@ -179,7 +176,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         if year == data["TDA1"][r, 0, 0]: 
             # Define starting battery capacity
             start_bat_cap = np.copy(data["TEWW"])
-            for veh in range(len(titles['VTTI'])):
+            for veh in range(num_techs):
                 if (veh < 18) or (veh > 23):
                     # Set starting cumulative battery capacities to 0 for ICE vehicles
                     start_bat_cap[0,veh,0] = 0
@@ -224,9 +221,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
         # Create the regulation variable
-        division = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
+        relative_excess = divide((time_lag['TEWK'][:, :, 0] - data['TREG']
                           [:, :, 0]), data['TREG'][:, :, 0])  # 0 when dividing by 0
-        reg_constr = 0.5 + 0.5*np.tanh(1.5 + 10 * division)
+        reg_constr = 0.5 + 0.5*np.tanh(1.5 + 10 * relative_excess)
         reg_constr[data['TREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['TREG'][:, :, 0] == -1.0] = 0.0
 
@@ -260,20 +257,20 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 costs_sd=data_dt["TLCD"],       # Standard deviation of log(costs)
                 subst=data['TEWA'] * data['BTTC'][:, :, c3ti['17 Turnover rate'], None],  # Substitution turnover rate
                 reg_constr=reg_constr,          # Constraint due to regulation
-                num_regions=len(titles['RTI']), # Number of regions
-                num_techs=len(titles['VTTI'])   # Number of techs
+                num_regions=num_regions, # Number of regions
+                num_techs=num_techs   # Number of techs
             )
             
-            endo_shares = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
+            endo_shares = np.zeros((num_regions, num_techs))
             endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
             endo_capacity = endo_shares * rfltt[:, np.newaxis]
 
             
             # Implement exogenous sales and correct for stretching
             for r in regions:
-                if r < len(titles['RTI']):  # Safety check
-                    dUkTK = np.zeros([len(titles['VTTI'])])
-                    dUkREG = np.zeros([len(titles['VTTI'])])
+                if r < num_regions:  # Safety check
+                    dUkTK = np.zeros([num_techs])
+                    dUkREG = np.zeros([num_techs])
                     TWSA_scalar = 1.0
                     
                     # Check that exogenous sales additions aren't too large
@@ -292,7 +289,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
                     # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
                     # if rflt (i.e. total demand) had not grown.
-                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfllt[r, np.newaxis]) * reg_constr[r, :].reshape([len(titles['VTTI'])])
+                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfllt[r, np.newaxis]) * reg_constr[r, :].reshape([num_techs])
                     
                     # Sum effect of exogenous sales additions (if any) with effect of regulations.
                     dUk = dUkTK + dUkREG
@@ -329,28 +326,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 dt=dt
                 )
 
-            # Apply EV seeding (2025-2030) - small boost for low-adoption regions
+            # Apply EV seeding (first 5 years) - small boost for low-adoption regions
             data["TEWI"], tewi_t, data["TEWK"] = implement_seeding(
-                data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV
+                data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, np.min(data["TDA1"][:, 0, 0]) 
             )
-
-            # Policy levers are MUTUALLY EXCLUSIVE: mandate OR kickstarter OR emissions regulation
+            
+            
+            # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
-            mandate_active = not np.all(data["EV mandate"][:, 0, 0] == 0)
-            kickstarter_active = not np.all(data["EV kickstarter"][:, 0, 0] == 0)
+            mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
             emissions_reg_active = ("emissions regulation" in data and
                                     not np.all(data["emissions regulation"][:, 0, 0] == 0))
 
             if mandate_active:
-                # Full mandate - only runs if EV mandate != 0 (disabled in S0)
                 data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
-                    data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, data["EV mandate"]
+                    data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, data['EV mandate']
                 )
-            elif kickstarter_active:
-                # Kickstarter policy - only runs if EV kickstarter != 0 (disabled in S0)
-                data["TEWI"], tewi_t, data["TEWK"] = implement_kickstarter(
-                    data['TEWK'], data["EV kickstarter"], data['TEWI'], tewi_t, year
-                )
+
             elif emissions_reg_active:
                 # Emissions regulation - segment-specific targets with proportional redistribution
                 # Baseline emissions are cached in the module, not in data dictionary
@@ -363,10 +355,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data['BTTC'][:, :, c3ti['14 CO2Emissions']]
                 )
 
-            # Recalculate TEWS/TEWG after seeding
-            for r in regions:
-                if np.sum(data['TEWK'][r, :, 0]) > 0:
-                    data['TEWS'][r, :, 0] = data['TEWK'][r, :, 0] / np.sum(data['TEWK'][r, :, 0])
+            # Recalculate TEWS/TEWG after seeding. Do not touch regions with pseudoshares (>51)
+            total_capacity = data['TEWK'].sum(axis=1, keepdims=True)
+            mask = total_capacity[:, 0, 0] > 0
+            data['TEWS'][mask] = data['TEWK'][mask] / total_capacity[mask]
             data['TEWG'][:, :, 0] = data['TEWK'][:, :, 0] * rvkmt[:, np.newaxis] * 1e-3
 
             # Fuel use and emissions
@@ -391,8 +383,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["Battery cap additions"][1, t-1, 0] = np.sum(new_bat) / 1000  # In GWh
 
             # Cumulative investment for learning cost reductions
-            bi = np.zeros((len(titles['RTI']), len(titles['VTTI'])))
-            for r in range(len(titles['RTI'])):
+            bi = np.zeros((num_regions, num_techs))
+            for r in range(num_regions):
                 # Investment spillover
                 bi[r, :] = np.matmul(data['TEWB'][0, :, :], tewi_t[r, :, 0])
 
@@ -409,10 +401,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data["BTCI"] = np.copy(data_dt['BTCI'])
 
             # Global battery learning via sector coupling
-            data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+            data = battery_costs(data, time_lag, year, t, titles, histend)
 
             # Initialise variable for indirect EV/PHEV costs
-            id_cost = np.zeros([len(titles['RTI']), len(titles['VTTI']), 1])
+            id_cost = np.zeros([num_regions, num_techs, 1])
 
             # Copy prices during historical period
             rs_to_copy = year <= data["TDA2"][:, 0, 0]
@@ -420,7 +412,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BTTC'][rs_to_copy] = time_lag['BTTC'][rs_to_copy]
 
             # Learning-by-doing effects on investment
-            for veh in range(len(titles['VTTI'])):
+            for veh in range(num_techs):
                 if data['TEWW'][0, veh, 0] > 0.1:
                     # Calculate new costs (separate treatments for ICE vehicles and EVs/PHEVs)
                     if 17 < veh < 24:
@@ -462,7 +454,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # =================================================================
             
             # Copy transport variables that have changed in data_dt
-            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-Tr')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
             

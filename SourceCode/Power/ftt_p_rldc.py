@@ -286,7 +286,7 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     Snotvar = 1 - data['MWDD'][0, :, 5]
 
     # Sector coupling: update battery costs based on cumulative capacity
-    data = battery_costs(data, data_dt, time_lag, year, t, titles, histend)
+    data = battery_costs(data, time_lag, year, t, titles, histend)
 
     for r in range(len(titles['RTI'])):
         # if Sw[r] + Ss[r] == 0:
@@ -514,9 +514,6 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
 
             #data['MSSC_histend'] = time_lag['MSSC_histend'].copy()
             data['MLSC_histend'] = time_lag['MLSC_histend'].copy()
-
-            # data['MSCC'][:,0,0] = iter_lag['MSCC'][:,0,0] * (iter_lag['MSSC'][:,0,0].sum()/39.91390) ** learning_exp_ss
-            # data['MLCC'][:,0,0] = iter_lag['MLCC'][:,0,0] * (iter_lag['MLSC'][:,0,0].sum()/5.336314) ** learning_exp_ls
 
             # Apply learning rate to levelised cost of storage (MSCC and MLCC)
             data['MSCC'][:,0,0] = data['Battery price'][:, 0, 0] / 1000 * 1.25 * 1e6  # Times 1.25 based on BNEF LCOS calculations vs battery pack price

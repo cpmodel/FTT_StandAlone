@@ -17,7 +17,7 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
         Calculate change in electricity demand from baseline S0 scenario from other models
     """
 
-    jti = titles["JTI"]
+    jti = titles["JTI"]         # Energy carrier classification
     elec_index = jti.index("8 Electricity")
     
     # Electricity mapping for each model

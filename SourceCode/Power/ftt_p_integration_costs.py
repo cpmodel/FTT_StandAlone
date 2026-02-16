@@ -3,7 +3,7 @@
 Integration costs for variable renewable energy (VRE).
 
 Adds balancing and grid integration costs to electricity prices as VRE
-share increases. Based on cascading's ftt_p_mewp.py but simplified for
+share increases. Based on cascading's ftt_p_fuel_costs.py but simplified for
 main's architecture (no load band generation required).
 
 Reference: https://www.sciencedirect.com/science/article/pii/S0360544213009390

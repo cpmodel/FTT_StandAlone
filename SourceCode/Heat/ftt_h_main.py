@@ -42,7 +42,7 @@ from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_ye
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
 GREEN_INDICES_HP = [9, 10, 11]
 
-from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
+from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
 
@@ -52,7 +52,7 @@ from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
 
@@ -64,8 +64,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         Model variables for the given year of solution
     time_lag: type
         Model variables in previous year
-    iter_lag: type
-        Description
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
@@ -86,6 +84,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
 
     sector = 'residential'
+    num_regions = len(titles['RTI'])
+    num_techs = len(titles['HTTI'])
 
     data['PRSC14'] = np.copy(time_lag['PRSC14'] )
     if year == 2014:
@@ -108,7 +108,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # The historical data contains final energy demand
         data['HEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
-        for r in range(len(titles['RTI'])):
+        for r in range(num_regions):
 
             # Total useful heat demand
             # This is the demand driver for FTT:Heat
@@ -144,7 +144,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Emissions
         data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]] / 1e6
 
-        for r in range(len(titles['RTI'])):
+        for r in range(num_regions):
             # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
                 # Fuel use for heating
@@ -160,8 +160,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                               data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']],
                               year)
             
-            bi = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
-            for r in range(len(titles['RTI'])):
+            bi = np.zeros((num_regions, num_techs))
+            for r in range(num_regions):
                 bi[r,:] = np.matmul(data['HEWB'][0, :, :], data['HEWI'][r, :, 0])
             dw = np.sum(bi, axis=0)
             data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
@@ -178,7 +178,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # Now transform price rates by fuel to price rates by boiler
         #data['HEWP'][:, :, 0] = np.matmul(data['HFFC'][:, :, 0], data['HJET'][0, :, :].T)
 
-        for r in range(len(titles['RTI'])):
+        for r in range(num_regions):
 
             # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
@@ -219,9 +219,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         data["FU14A"] = time_lag["FU14A"]
         data["FU14B"] = time_lag["FU14B"]
 
-        division = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
+        relative_excess = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
                            data['HREG'][:, :, 0]) # 0 if dividing by 0
-        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * division)
+        reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
         reg_constr[data['HREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['HREG'][:, :, 0] == -1.0] = 0.0
     
@@ -251,14 +251,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 costs_sd=data_dt["HWCD"],          # Standard deviations costs
                 subst=data["HEWA"] * data["HETR"], # Substitution turnover rates
                 reg_constr=reg_constr,             # Constraint due to regulation
-                num_regions = len(titles['RTI']),  # Number of regions
-                num_techs = len(titles['HTTI']),   # Number of technologies
+                num_regions = num_regions,         # Number of regions
+                num_techs = num_techs,             # Number of technologies
             )
 
             # Calculate scrappage rate for all regions
-            SR_all = np.zeros((len(titles['RTI']), len(titles['HTTI'])))
-            for r in range(len(titles['RTI'])):
-                SR = divide(np.ones(len(titles['HTTI'])),
+            SR_all = np.zeros((num_regions, num_techs))
+            for r in range(num_regions):
+                SR = divide(np.ones(num_techs),
                             data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :, 0]
                 SR_all[r, :] = np.where(SR<0.0, 0.0, SR)
             
@@ -273,8 +273,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 costs_payb_sd=data_dt["HGD3"],      # SD Payback costs (HGD3)
                 subst=data["HEWA"] * SR_all[:, :, np.newaxis],  # Substitution turnover rates
                 reg_constr=reg_constr,              # Regulation constraint
-                num_regions = len(titles['RTI']),   # Number of regions
-                num_techs = len(titles['HTTI']),    # Number of technologies
+                num_regions=num_regions,            # Number of regions
+                num_techs=num_techs,                # Number of technologies
             )
 
             # Calculate endogenous market shares from both changes
@@ -283,7 +283,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             #################### Regulatory policies #################
 
-            for r in range(len(titles['RTI'])):
+            for r in range(num_regions):
 
                 if rhudt[r] == 0.0:
                     continue
@@ -298,9 +298,9 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # endogenous result! Note that it's different from the
                 # ExogSales specification!
                 Utot = rhudt[r]
-                dUk = np.zeros([len(titles['HTTI'])])
-                dUkTK = np.zeros([len(titles['HTTI'])])
-                dUkREG = np.zeros([len(titles['HTTI'])])
+                dUk = np.zeros([num_techs])
+                dUkTK = np.zeros([num_techs])
+                dUkREG = np.zeros([num_techs])
 
                 # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation.
                 # Otherwise, the corrections won't line up with the market shares.
@@ -317,7 +317,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
                 # if total demand had not grown.
 
-                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * reg_constr[r, :].reshape([len(titles['HTTI'])])
+                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * reg_constr[r, :].reshape([num_techs])
                      
 
                 # Sum effect of exogenous sales additions (if any) with
@@ -352,13 +352,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                   dt
                   )
 
-            # Seed heat pumps in regions with low adoption (2025-2030)
+            # Seed heat pumps in regions with low adoption (first five years simulation)
             data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP)
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, histend['HEWF'])
 
             # Change capacity and sales after mandate (only runs if hp mandate != 0)
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["hp mandate"])
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["HP mandate"])
             
             # Calculate HEWG, HEWS and HEWF after mandates  
             
@@ -401,8 +401,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Using a technological spill-over matrix (HEWB) together with capacity
             # additions (HEWI) we can estimate total global spillover of similar
             # technologies
-            bi = np.zeros((len(titles['RTI']),len(titles['HTTI'])))
-            for r in range(len(titles['RTI'])):
+            bi = np.zeros((num_regions,num_techs))
+            for r in range(num_regions):
                 bi[r,:] = np.matmul(data['HEWB'][0, :, :],hewi_t[r, :, 0])
             dw = np.sum(bi, axis=0)
 
@@ -413,7 +413,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['BHTC'] = np.copy(data_dt['BHTC'])
 
             # Learning-by-doing effects on investment and efficiency
-            for b in range(len(titles['HTTI'])):
+            for b in range(num_techs):
 
                 if data['HEWW'][0, b, 0] > 0.0001:
 
@@ -439,7 +439,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
 
             # Store heat variables that have changed in data_dt
-            vars_to_copy = get_loop_vars_to_copy(data, data_dt, domain, 'FTT-H')
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
