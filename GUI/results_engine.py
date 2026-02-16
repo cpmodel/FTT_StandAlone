@@ -86,6 +86,33 @@ class ResultsEngine:
         """Get list of loaded scenario names."""
         return list(self.loaded_pickles.keys())
     
+    def get_models_run(self):
+        """
+        Detect which FTT models were run based on shares variables.
+        
+        Returns:
+            dict: {scenario_name: list of model names that were run}
+        """
+        model_vars = {
+            'FTT-H': 'HEWS',   # Heat
+            'FTT-P': 'MEWS',   # Power
+            'FTT-Tr': 'TEWS',  # Transport
+            'FTT-Fr': 'ZEWS'   # Freight
+        }
+        
+        results = {}
+        for scenario, vars_dict in self.loaded_pickles.items():
+            models_run = []
+            for model_name, var_name in model_vars.items():
+                if var_name in vars_dict:
+                    # Check if sum is non-zero (model was run)
+                    total = np.sum(np.abs(vars_dict[var_name]))
+                    if total > 0:
+                        models_run.append(model_name)
+            results[scenario] = models_run
+        
+        return results
+    
     def get_variable_options(self):
         """Get dictionary of {var_code: var_description}."""
         return {row['Variable name']: f"{row['Variable name']} - {row['Variable description']}" 

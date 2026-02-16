@@ -70,9 +70,52 @@ def render_results_page():
                                             # Auto-select all scenarios
                                             scenario_selector.value = scenarios
                                             scenario_selector.update()
+                                            
+                                            # Update models display
+                                            models_info = engine.get_models_run()
+                                            models_container.clear()
+                                            
+                                            # Define colors for each model
+                                            model_colors = {
+                                                'FTT-P': 'blue',
+                                                'FTT-H': 'orange',
+                                                'FTT-Tr': 'green',
+                                                'FTT-Fr': 'purple'
+                                            }
+                                            
+                                            with models_container:
+                                                # Group scenarios by models to show more compactly
+                                                models_by_scenario = {}
+                                                for scenario, models in sorted(models_info.items()):
+                                                    models_key = tuple(sorted(models)) if models else ()
+                                                    if models_key not in models_by_scenario:
+                                                        models_by_scenario[models_key] = []
+                                                    models_by_scenario[models_key].append(scenario)
+                                                # Display each unique model combination
+                                                for models_tuple, scen_list in sorted(models_by_scenario.items(), 
+                                                                                    key=lambda x: (-len(x[0]), x[0])):
+                                            
+                                                    # Model badges
+                                                    if models_tuple:
+                                                        with ui.column().classes('gap-1 items-center mb-1'):
+                                                            for model in models_tuple:
+                                                                color = model_colors.get(model, 'gray')
+                                                                ui.badge(model).props(f'color={color}').classes('text-body1')
+                                                    else:
+                                                        ui.badge('No models').props('color=red').classes('text-body1')
+                                                    
+                                                    # Scenario names
+                                                    # ui.label(', '.join(scen_list)).classes('text-xs text-gray-600')
+                                            
                                             ui.notify(f'Loaded {len(scenarios)} scenarios', type='positive')
                                     
                                     ui.button('Load Selected', on_click=load_pickles).classes('w-50 h-10 items-center')
+                                    
+                                    # Models run display
+                                    ui.label('Model results loaded').classes('text-sm font-semibold gap-2')
+                                    models_container = ui.row().classes('w-full gap-2')
+                                    with models_container:
+                                        ui.badge('No models').props('color=red').classes('text-body1')
 
                                 # Right side: Scenario section
                                 with ui.column().classes('flex-1 items-start'):
@@ -127,9 +170,6 @@ def render_results_page():
                                 if result_type_selector is not None:
                                     result_type_selector.value = 'Levels'
                             
-                            # Disable/enable options based on availability
-                            # In NiceGUI, we can disable specific options by modifying the native element
-                            # For now, we'll keep them all enabled but show grayed out via CSS if needed
                         with ui.tab_panel(t2).classes('w-full items-start overflow-auto p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
                                 # Variable selector row with download button
