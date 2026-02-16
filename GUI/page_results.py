@@ -90,16 +90,46 @@ def render_results_page():
                                         label='Baseline (optional)',
                                         with_input=True,
                                         clearable=True
-                                    ).classes('w-full')
+                                    ).classes('w-full').bind_value(state, 'selected_baseline')
                                     
                                     # Update baseline options when scenarios change
                                     def update_baseline_options():
                                         baseline_selector.options = state.selected_scenarios
                                         baseline_selector.update()
+                                        update_result_type_availability()
                                     
                                     scenario_selector.on_value_change(update_baseline_options)
+                                    
+                                    # Update availability and plot when baseline changes
+                                    def on_baseline_change(e):
+                                        update_result_type_availability()
+                                        update_plot()
+                                    
+                                    baseline_selector.on_value_change(on_baseline_change)
 
-                        # TAB 2: VARIABLE & DIMENSIONS EXPLORER
+                        # Define update_result_type_availability function that will be used in Analysis tab
+                        def update_result_type_availability():
+                            """
+                            Enable/disable result type options based on available scenarios and baseline.
+                            Differences from baseline require:
+                            - At least 2 scenarios loaded
+                            - A baseline scenario selected (not None)
+                            """
+                            has_baseline = state.selected_baseline is not None and state.selected_baseline != ''
+                            sufficient_scenarios = len(engine.get_scenario_names()) >= 2
+                            
+                            can_show_diffs = has_baseline and sufficient_scenarios
+                            
+                            # If differences aren't available but user selected them, revert to 'Levels'
+                            if not can_show_diffs and state.result_type != 'levels':
+                                state.result_type = 'levels'
+                                # Update selector value if it exists
+                                if result_type_selector is not None:
+                                    result_type_selector.value = 'Levels'
+                            
+                            # Disable/enable options based on availability
+                            # In NiceGUI, we can disable specific options by modifying the native element
+                            # For now, we'll keep them all enabled but show grayed out via CSS if needed
                         with ui.tab_panel(t2).classes('w-full items-start overflow-auto p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
                                 # Variable selector
@@ -119,10 +149,29 @@ def render_results_page():
                                 variable_selector.on_value_change(on_variable_change)
 
                                 # Dimension selectors (horizontal layout)
-                                dimension_container = ui.row().classes('w-[calc(75vw-12rem)] h-full gap-3 overflow-y-auto flex-nowrap')
+                                dimension_container = ui.row().classes('w-[calc(100vw-12rem)] h-full gap-3 overflow-y-auto flex-nowrap')
+                        
+                        # Track result_type_selector reference (will be recreated in update_dimensions)
+                        result_type_selector = None
+                        
+                        # Define result type options and handler outside of update_dimensions
+                        # so they persist across dimension rebuilds
+                        result_type_options = {
+                            'Levels': 'levels',
+                            'Absolute difference from baseline': 'absolute_diff',
+                            'Relative difference from baseline': 'relative_diff'
+                        }
+                        
+                        def on_result_type_change(e):
+                            # Convert display label to internal value
+                            state.result_type = result_type_options.get(e.value, 'levels')
+                            # Reset to 'levels' if conditions aren't met
+                            update_result_type_availability()
+                            update_plot()
                             
         # Function to update dimension selectors when variable changes
         def update_dimensions():
+            nonlocal result_type_selector
             dimension_container.clear()
 
             # If no variable selected yet, show empty selectors (disabled)
@@ -143,6 +192,17 @@ def render_results_page():
                             with ui.row().classes('w-full gap-2'):
                                 ui.checkbox('All').props('dense').disable()
                                 ui.checkbox('Sum').props('dense').disable()
+                
+                # Add result type selector to the right of dimension selectors
+                with dimension_container:
+                    with ui.column().classes('w-full h-full gap-1 border-l border-gray-300 pl-8'):
+                        ui.label('Transformation').classes('text-xs font-semibold')
+                        result_type_selector = ui.select(
+                            options=list(result_type_options.keys()),
+                            value='Levels',
+                            label='Select Transformation',
+                            with_input=False
+                        ).classes('w-full h-full overflow-auto').props('dense').disable()
                 return
 
             # Get dimension info for selected variable
@@ -208,6 +268,25 @@ def render_results_page():
                                     update_plot()
                                 return handler
                             agg_check.on_value_change(make_agg_handler(i))
+            
+            # Add result type selector to the right of dimension selectors
+            with dimension_container:
+                with ui.column().classes('w-full h-full gap-1 border-l border-gray-300 pl-4'):
+                    ui.label('Transformation').classes('text-xs font-semibold')
+                    # Get current value from state to preserve selection
+                    current_value = 'Levels'
+                    for label, val in result_type_options.items():
+                        if val == state.result_type:
+                            current_value = label
+                            break
+                    
+                    result_type_selector = ui.select(
+                        options=list(result_type_options.keys()),
+                        value=current_value,
+                        label='Select Transformation',
+                        with_input=False
+                    ).classes('w-full h-full overflow-auto').props('dense')
+                    result_type_selector.on_value_change(on_result_type_change)
         
         # Function to update plot
         def update_plot():
@@ -226,13 +305,18 @@ def render_results_page():
                 scenarios=state.selected_scenarios,
                 dim_selections=dim_selections,
                 dim_aggregates=state.dim_aggregate,
-                dark_mode=state.dark_mode
+                dark_mode=state.dark_mode,
+                result_type=state.result_type,
+                baseline_scenario=state.selected_baseline
             )
 
             plot.update_figure(fig)
         
         # Initial render of dimension selectors
         update_dimensions()
+        
+        # Initialize result type availability
+        update_result_type_availability()
 
         # Bind scenario selector update
         scenario_selector.on_value_change(update_plot)

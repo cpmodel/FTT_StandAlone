@@ -120,7 +120,7 @@ class ResultsEngine:
         return self.classifications.get(dim_code, [])
     
     def extract_and_aggregate(self, variable_name, scenarios, dim_selections, dim_aggregates, 
-                             year_range=None, dark_mode=False):
+                             year_range=None, dark_mode=False, result_type="levels", baseline_scenario=None):
         """
         Extract data from loaded pickles and generate plotly figure.
         
@@ -132,6 +132,8 @@ class ResultsEngine:
             dim_aggregates: List of booleans indicating which dims to sum over
             year_range: Tuple of (start_year, end_year) or None for all
             dark_mode: Boolean for plotly template
+            result_type: "levels" (default), "absolute_diff", or "relative_diff"
+            baseline_scenario: Name of baseline scenario (required if result_type != "levels")
         
         Returns:
             plotly Figure object
@@ -146,10 +148,21 @@ class ResultsEngine:
         # Build figure
         fig = go.Figure()
         
-        for scenario in scenarios:
+        # Extract baseline data if needed
+        baseline_data = None
+        if result_type != "levels" and baseline_scenario and baseline_scenario in self.loaded_pickles:
+            baseline_data = self._extract_scenario_data(baseline_scenario, variable_name, dims, 
+                                                        dim_selections, dim_aggregates)
+        
+        for idx_scenario, scenario in enumerate(scenarios):
+            # Skip baseline scenario when plotting differences (it would show all zeros)
+            if result_type != "levels" and scenario == baseline_scenario:
+                continue
+                
             if scenario not in self.loaded_pickles:
                 continue
             
+            # Extract scenario data
             scenario_data = self.loaded_pickles[scenario]
             if variable_name not in scenario_data:
                 continue
@@ -210,6 +223,12 @@ class ResultsEngine:
                     # Flatten to get 1D array
                     y_values = data_slice.flatten()
                     
+                    # Apply result type transformations
+                    if result_type == "absolute_diff" and baseline_data is not None:
+                        y_values = self._calculate_absolute_diff(y_values, baseline_data, idx_scenario, combo)
+                    elif result_type == "relative_diff" and baseline_data is not None:
+                        y_values = self._calculate_relative_diff(y_values, baseline_data, idx_scenario, combo)
+                    
                     # Generate label
                     label_parts = [scenario]
                     for i in range(3):
@@ -239,9 +258,16 @@ class ResultsEngine:
                     traceback.print_exc()
                     continue
         
-        # Update layout
+        # Update layout with appropriate y-axis title
         template = 'plotly_dark' if dark_mode else 'simple_white'
-        y_title = f"{var_row['Unit']}"
+        
+        if result_type == "absolute_diff":
+            y_title = f"Abs. diff from baseline ({var_row['Unit']})"
+        elif result_type == "relative_diff":
+            y_title = "Rel. diff from baseline (%)"
+        else:
+            y_title = f"{var_row['Unit']}"
+        
         fig.update_layout(
             margin=dict(l=10, r=10, t=40, b=40),
             template=template,
@@ -253,8 +279,12 @@ class ResultsEngine:
         )
         
         # Add hover template with 3 decimal places
+        # For relative differences, append % sign to the value
         for trace in fig.data:
-            trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
+            if result_type == "relative_diff":
+                trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}%<extra></extra>'
+            else:
+                trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
     
         return fig
     
@@ -278,3 +308,119 @@ class ResultsEngine:
         for combo in itertools.product(*combos):
             results.append(combo)
         return results
+    
+    def _extract_scenario_data(self, scenario, variable_name, dims, dim_selections, dim_aggregates):
+        """
+        Extract all data combinations for a scenario to serve as baseline.
+        
+        Returns a dictionary mapping combo -> y_values for efficient lookup.
+        """
+        scenario_data = self.loaded_pickles[scenario]
+        if variable_name not in scenario_data:
+            return {}
+        
+        var_data = scenario_data[variable_name]
+        
+        # Ensure var_data has 4 dimensions
+        while var_data.ndim < 4:
+            var_data = np.expand_dims(var_data, axis=-1)
+        
+        # Get selected indices for each dimension
+        indices = []
+        for i, dim_name in enumerate(dims):
+            if dim_name == 'NA':
+                indices.append([0])
+            elif i == 3:
+                max_time = var_data.shape[3] if var_data.ndim > 3 else 1
+                indices.append(list(range(max_time)))
+            else:
+                selected_vals = dim_selections.get(i, [])
+                if not selected_vals:
+                    dim_values = self.get_dimension_values(dim_name)
+                    indices.append([0])
+                else:
+                    dim_values = self.get_dimension_values(dim_name)
+                    indices.append([dim_values.index(v) for v in selected_vals if v in dim_values])
+        
+        # Generate combinations and extract data
+        combinations = self._generate_combinations(indices, dim_aggregates)
+        baseline_dict = {}
+        
+        for combo in combinations:
+            try:
+                data_slice = var_data.copy()
+                
+                # Apply slicing/aggregation for dims 0-2
+                for dim_idx in range(min(3, len(combo))):
+                    if isinstance(combo[dim_idx], list):
+                        idx_list = combo[dim_idx]
+                    else:
+                        idx_list = [combo[dim_idx]]
+
+                    if dim_idx < data_slice.ndim:
+                        data_slice = np.take(data_slice, idx_list, axis=dim_idx)
+
+                        if dim_idx < len(dim_aggregates) and dim_aggregates[dim_idx]:
+                            data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
+                
+                # Extract time series
+                if data_slice.ndim > 3:
+                    time_indices = indices[3] if len(indices) > 3 else range(data_slice.shape[3])
+                    data_slice = np.take(data_slice, time_indices, axis=3)
+                
+                y_values = data_slice.flatten()
+                baseline_dict[str(combo)] = y_values
+            except Exception as e:
+                print(f"ERROR extracting baseline combo {combo}: {str(e)}")
+                continue
+        
+        return baseline_dict
+    
+    def _calculate_absolute_diff(self, scenario_values, baseline_dict, scenario_idx, combo):
+        """
+        Calculate absolute difference (scenario - baseline).
+        
+        Args:
+            scenario_values: 1D array of scenario data
+            baseline_dict: Dictionary of baseline data from _extract_scenario_data
+            scenario_idx: Index of current scenario (used to identify which combo)
+            combo: Current combo tuple
+        
+        Returns:
+            1D array of absolute differences
+        """
+        combo_key = str(combo)
+        if combo_key in baseline_dict:
+            baseline_values = baseline_dict[combo_key]
+            if len(scenario_values) == len(baseline_values):
+                return scenario_values - baseline_values
+        
+        return scenario_values
+    
+    def _calculate_relative_diff(self, scenario_values, baseline_dict, scenario_idx, combo):
+        """
+        Calculate relative difference as percentage: ((scenario - baseline) / |baseline|) * 100
+        
+        Handles division by zero by returning 0 when baseline is 0.
+        
+        Args:
+            scenario_values: 1D array of scenario data
+            baseline_dict: Dictionary of baseline data from _extract_scenario_data
+            scenario_idx: Index of current scenario (used to identify which combo)
+            combo: Current combo tuple
+        
+        Returns:
+            1D array of relative differences (in percentage)
+        """
+        combo_key = str(combo)
+        if combo_key in baseline_dict:
+            baseline_values = baseline_dict[combo_key]
+            if len(scenario_values) == len(baseline_values):
+                # Handle division by zero
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    rel_diff = ((scenario_values - baseline_values) / np.abs(baseline_values)) * 100
+                    # Replace NaN and Inf with 0 where baseline is 0
+                    rel_diff = np.where(np.isfinite(rel_diff), rel_diff, 0)
+                return rel_diff
+        
+        return scenario_values
