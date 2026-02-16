@@ -115,7 +115,8 @@ def render_results_page():
                                     ui.label('Model results loaded').classes('text-sm font-semibold gap-2')
                                     models_container = ui.row().classes('w-full gap-2')
                                     with models_container:
-                                        ui.badge('No models').props('color=red').classes('text-body1')
+                                        with ui.column().classes('gap-1 items-center mb-1'):
+                                            ui.badge('No models').props('color=red').classes('text-body1')
 
                                 # Right side: Scenario section
                                 with ui.column().classes('flex-1 items-start'):
