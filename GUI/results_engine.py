@@ -170,8 +170,9 @@ class ResultsEngine:
             var_data = scenario_data[variable_name]  # Shape: (region, tech, cat, time)
             
             # Ensure var_data has 4 dimensions
+            # Expand at the beginning so TIME stays at axis 3
             while var_data.ndim < 4:
-                var_data = np.expand_dims(var_data, axis=-1)
+                var_data = np.expand_dims(var_data, axis=0)
             
             # Get selected indices for each dimension
             indices = []
@@ -322,8 +323,9 @@ class ResultsEngine:
         var_data = scenario_data[variable_name]
         
         # Ensure var_data has 4 dimensions
+        # Expand at the beginning so TIME stays at axis 3
         while var_data.ndim < 4:
-            var_data = np.expand_dims(var_data, axis=-1)
+            var_data = np.expand_dims(var_data, axis=0)
         
         # Get selected indices for each dimension
         indices = []
