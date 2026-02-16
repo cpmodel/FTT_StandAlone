@@ -132,21 +132,65 @@ def render_results_page():
                             # For now, we'll keep them all enabled but show grayed out via CSS if needed
                         with ui.tab_panel(t2).classes('w-full items-start overflow-auto p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
-                                # Variable selector
+                                # Variable selector row with download button
                                 ui.label('Select variable').classes('text-xs p-0 justify-left font-semibold').props('dense')
-                                var_options = engine.get_variable_options()
-                                variable_selector = ui.select(
-                                    options=var_options,
-                                    label='Variable',
-                                    with_input=True
-                                ).classes('w-full gap-1').props('dense')
-                                
-                                def on_variable_change(e):
-                                    state.selected_variable = e.value
-                                    update_dimensions()
-                                    update_plot()
-                                
-                                variable_selector.on_value_change(on_variable_change)
+                                with ui.row().classes('w-full gap-10 items-center'):
+                                    var_options = engine.get_variable_options()
+                                    variable_selector = ui.select(
+                                        options=var_options,
+                                        label='Variable',
+                                        with_input=True
+                                    ).classes('flex-grow gap-1').props('dense')
+                                    
+                                    def on_variable_change(e):
+                                        state.selected_variable = e.value
+                                        update_dimensions()
+                                        update_plot()
+                                    
+                                    variable_selector.on_value_change(on_variable_change)
+                                    
+                                    # Download CSV button
+                                    def download_csv():
+                                        import io
+                                        import pandas as pd
+                                        from datetime import datetime
+                                        
+                                        if not plot.figure or not plot.figure.data:
+                                            ui.notify('No data to download', type='warning')
+                                            return
+                                        
+                                        # Extract data from plotly figure
+                                        data_dict = {'Year': []}
+                                        for trace in plot.figure.data:
+                                            data_dict[trace.name] = []
+                                        
+                                        # Get x values (years) from first trace
+                                        if len(plot.figure.data) > 0:
+                                            x_values = list(plot.figure.data[0].x)
+                                            data_dict['Year'] = x_values
+                                            
+                                            # Get y values for each trace
+                                            for trace in plot.figure.data:
+                                                data_dict[trace.name] = list(trace.y)
+                                        
+                                        # Create DataFrame and CSV
+                                        df = pd.DataFrame(data_dict)
+                                        # convert to longform
+                                        df_long = df.melt(id_vars=['Year'], var_name='Scenario', value_name='Value')
+                                        csv_buffer = io.StringIO()
+                                        df_long.to_csv(csv_buffer, index=False)
+                                        csv_content = csv_buffer.getvalue()
+                                        
+                                        # Generate filename
+                                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                        var_name = state.selected_variable if state.selected_variable else 'data'
+                                        filename = f"{var_name}_{timestamp}.csv"
+                                        
+                                        # Trigger download
+                                        ui.download(csv_content.encode(), filename)
+                                        ui.notify(f'Downloaded {filename}', type='positive')
+                                    
+                                    ui.button('Download data', on_click=download_csv, icon='download').classes('h-full text-xs')
 
                                 # Dimension selectors (horizontal layout)
                                 dimension_container = ui.row().classes('w-[calc(100vw-12rem)] h-full gap-3 overflow-y-auto flex-nowrap')
@@ -195,7 +239,7 @@ def render_results_page():
                 
                 # Add result type selector to the right of dimension selectors
                 with dimension_container:
-                    with ui.column().classes('w-full h-full gap-1 border-l border-gray-300 pl-8'):
+                    with ui.column().classes('w-full h-full gap-1 border-l border-gray-300 pl-4'):
                         ui.label('Transformation').classes('text-xs font-semibold')
                         result_type_selector = ui.select(
                             options=list(result_type_options.keys()),
