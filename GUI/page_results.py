@@ -39,8 +39,8 @@ def render_results_page():
                     else:
                         tab_style = 'vertical indicator-color=blue-400 active-color=black active-bg-color=gray-200'
                     with ui.tabs().props(tab_style).classes('p-1 h-full border-r') as tabs:
-                        t1 = ui.tab('Load Files').classes('h-1/2').props('icon=folder_open')
-                        t2 = ui.tab('Analysis').classes('h-1/2').props('icon=bar_chart')
+                        t1 = ui.tab('Load Files').classes('justify-center px-2').props('icon=folder_open')
+                        t2 = ui.tab('Analysis').classes('justify-center px-2').props('icon=bar_chart')
 
                     with ui.tab_panels(tabs, value=t1).classes('flex-grow h-full'):
                 
