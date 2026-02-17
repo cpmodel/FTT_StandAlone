@@ -1,7 +1,6 @@
-bottle
 numba
 numpy
 openpyxl
 pandas
-paste
 tqdm
+nicegui

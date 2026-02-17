@@ -24,7 +24,8 @@ import pandas as pd
 
 from SourceCode.support.debug_messages import input_functions_message
 
-def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
+def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart, 
+              progress_callback=None, log_callback=None):
     """
     Load all model data for all variables and all years.
 
@@ -36,7 +37,16 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
         Variable classifications by dimension
     timeline: list of int
         Years of both historical data and forecast period
-    scenarios:
+    scenarios: str
+        Comma-separated scenario names
+    ftt_modules: str
+        Comma-separated module names
+    forstart: dict
+        Dictionary of forecast start years
+    progress_callback: callable, optional
+        Function(current, total) to report progress
+    log_callback: callable, optional
+        Function(message) to report log messages
 
     Returns
     ----------
@@ -56,7 +66,11 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
 
     modules_enabled = [x.strip() for x in ftt_modules.split(',')]
     modules_enabled += ['General']
-
+    
+    # Calculate total steps for progress (estimate based on scenarios and modules)
+    total_scenarios = len(scenario_list)
+    total_modules_per_scenario = len(modules_enabled)
+    
     # Create container with the correct dimensions
     data = {
         scen : {
@@ -69,13 +83,22 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
         } for scen in scenario_list
     }
 
-
-    for scen in data:
+    # Track progress through data loading
+    current_step = 0
+    total_steps = total_scenarios * total_modules_per_scenario
+    
+    for scen_idx, scen in enumerate(data):
         if scen != 'S0':
             data[scen] = copy.deepcopy(data['S0'])
 
-
-        for ftt in modules_enabled:
+        for module_idx, ftt in enumerate(modules_enabled):
+            # Update progress
+            current_step += 1
+            if progress_callback:
+                # Reserve first 20% of total progress for data loading (before solve_all)
+                # Map current_step/total_steps to 0-20% range
+                progress_fraction = (current_step / total_steps) * 0.2
+                progress_callback(int(progress_fraction * 1000), 1000)
 
             # Start reading csv files
             directory = os.path.join('Inputs', scen, ftt)
