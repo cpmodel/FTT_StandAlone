@@ -53,7 +53,11 @@ class ResultsEngine:
     def get_available_pickle_files(self):
         """Get list of available pickle files in Output directory."""
         output_dir = Path('Output')
-        return sorted([f.name for f in output_dir.glob('*.pickle')]) if output_dir.exists() else []
+        if output_dir.exists():
+            # Return dict mapping display names (without .pickle) to full filenames
+            files = sorted([f.name for f in output_dir.glob('*.pickle')])
+            return {f.replace('.pickle', ''): f for f in files}
+        return {}
     
     def load_pickle_files(self, filenames):
         """
