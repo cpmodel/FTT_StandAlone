@@ -38,15 +38,15 @@ def render_results_page():
                         tab_style = 'vertical indicator-color=blue-400 active-color=white active-bg-color=gray-700'
                     else:
                         tab_style = 'vertical indicator-color=blue-400 active-color=black active-bg-color=gray-200'
-                    with ui.tabs().props(tab_style).classes('p-1 h-full border-r') as tabs:
-                        t1 = ui.tab('Load Files').classes('justify-center px-2').props('icon=folder_open')
-                        t2 = ui.tab('Analysis').classes('justify-center px-2').props('icon=bar_chart')
+                    with ui.tabs().props(tab_style).classes('border-r') as tabs:
+                        t1 = ui.tab('Load Files').classes('h-1/2').props('icon=folder_open')
+                        t2 = ui.tab('Analysis').classes('h-1/2').props('icon=bar_chart')
 
                     with ui.tab_panels(tabs, value=t1).classes('flex-grow h-full'):
                 
                         # TAB 1: FILE PICKER
                         with ui.tab_panel(t1).classes('w-full h-full p-3 overflow-auto'):
-                            with ui.row().classes('w-full h-full gap-4 items-center'):
+                            with ui.row().classes('w-full h-full gap-4 items-stretch'):
                                 # Left side: Pickle file section
                                 with ui.column().classes('flex-1 items-start'):
                                     ui.label('Select pickle files to load').classes('text-sm font-semibold')
@@ -54,69 +54,70 @@ def render_results_page():
                                     # Get available pickle files from engine
                                     pickle_files = engine.get_available_pickle_files()
                                     
-                                    file_picker = ui.select(
-                                        options=pickle_files,
-                                        label='Available Files',
-                                        multiple=True,
-                                        with_input=True
-                                    ).classes('w-full')
-                                    
-                                    def load_pickles():
-                                        if file_picker.value:
-                                            engine.load_pickle_files(file_picker.value)
-                                            # Update scenario selector options
-                                            scenarios = engine.get_scenario_names()
-                                            scenario_selector.options = scenarios
-                                            # Auto-select all scenarios
-                                            scenario_selector.value = scenarios
-                                            scenario_selector.update()
-                                            
-                                            # Update models display
-                                            models_info = engine.get_models_run()
-                                            models_container.clear()
-                                            
-                                            # Define colors for each model
-                                            model_colors = {
-                                                'FTT-P': 'blue',
-                                                'FTT-H': 'orange',
-                                                'FTT-Tr': 'green',
-                                                'FTT-Fr': 'purple'
-                                            }
-                                            
-                                            with models_container:
-                                                # Group scenarios by models to show more compactly
-                                                models_by_scenario = {}
-                                                for scenario, models in sorted(models_info.items()):
-                                                    models_key = tuple(sorted(models)) if models else ()
-                                                    if models_key not in models_by_scenario:
-                                                        models_by_scenario[models_key] = []
-                                                    models_by_scenario[models_key].append(scenario)
-                                                # Display each unique model combination
-                                                for models_tuple, scen_list in sorted(models_by_scenario.items(), 
-                                                                                    key=lambda x: (-len(x[0]), x[0])):
-                                            
-                                                    # Model badges
-                                                    if models_tuple:
-                                                        with ui.column().classes('gap-1 items-center mb-1'):
-                                                            for model in models_tuple:
-                                                                color = model_colors.get(model, 'gray')
-                                                                ui.badge(model).props(f'color={color}').classes('text-body1')
-                                                    else:
-                                                        ui.badge('No models').props('color=red').classes('text-body1')
-                                                    
-                                                    # Scenario names
-                                                    # ui.label(', '.join(scen_list)).classes('text-xs text-gray-600')
-                                            
-                                            ui.notify(f'Loaded {len(scenarios)} scenarios', type='positive')
-                                    
-                                    ui.button('Load Selected', on_click=load_pickles).classes('w-50 h-10 items-center')
+                                    with ui.row().classes('w-full'):
+                                        
+                                        file_picker = ui.select(
+                                            options=pickle_files,
+                                            label='Available Files',
+                                            multiple=True,
+                                            with_input=True
+                                        ).classes('w-2/3')
+                                        
+                                        def load_pickles():
+                                            if file_picker.value:
+                                                engine.load_pickle_files(file_picker.value)
+                                                # Update scenario selector options
+                                                scenarios = engine.get_scenario_names()
+                                                scenario_selector.options = scenarios
+                                                # Auto-select all scenarios
+                                                scenario_selector.value = scenarios
+                                                scenario_selector.update()
+                                                
+                                                # Update models display
+                                                models_info = engine.get_models_run()
+                                                models_container.clear()
+                                                
+                                                # Define colors for each model
+                                                model_colors = {
+                                                    'FTT-P': 'blue',
+                                                    'FTT-H': 'orange',
+                                                    'FTT-Tr': 'green',
+                                                    'FTT-Fr': 'purple'
+                                                }
+                                                
+                                                with models_container:
+                                                    # Group scenarios by models to show more compactly
+                                                    models_by_scenario = {}
+                                                    for scenario, models in sorted(models_info.items()):
+                                                        models_key = tuple(sorted(models)) if models else ()
+                                                        if models_key not in models_by_scenario:
+                                                            models_by_scenario[models_key] = []
+                                                        models_by_scenario[models_key].append(scenario)
+                                                    # Display each unique model combination
+                                                    with ui.column().classes('gap-1 mb-1'):
+                                                        ui.label('Model results loaded').classes('text-sm font-semibold gap-2')
+                                                    for models_tuple, scen_list in sorted(models_by_scenario.items(), 
+                                                                                        key=lambda x: (-len(x[0]), x[0])):
+                                                        # Model badges
+                                                        if models_tuple:
+                                                            with ui.row().classes('w-full'):
+
+                                                                for model in models_tuple:
+                                                                    color = model_colors.get(model, 'gray')
+                                                                    ui.badge(model).props(f'color={color}').classes('text-body1')
+                                                                ui.label(scen_list)
+                                                        else:
+                                                            ui.badge('No models').props('color=red').classes('text-body1')
+                                                        
+                                                        # Scenario names
+                                                        # ui.label(', '.join(scen_list)).classes('text-xs text-gray-600')
+                                                
+                                                ui.notify(f'Loaded {len(scenarios)} scenarios', type='positive')
+                                        
+                                        ui.button('Load Selected', on_click=load_pickles).classes('w-1/4 h-10 text-sm px-2')
                                     
                                     # Models run display
-                                    ui.label('Model results loaded').classes('text-sm font-semibold gap-2')
                                     models_container = ui.row().classes('w-full gap-2')
-                                    with models_container:
-                                        with ui.column().classes('gap-1 items-center mb-1'):
-                                            ui.badge('No models').props('color=red').classes('text-body1')
 
                                 # Right side: Scenario section
                                 with ui.column().classes('flex-1 items-start'):
@@ -171,11 +172,11 @@ def render_results_page():
                                 if result_type_selector is not None:
                                     result_type_selector.value = 'Levels'
                             
-                        with ui.tab_panel(t2).classes('w-full items-start overflow-auto p-2'):
+                        with ui.tab_panel(t2).classes('w-full items-start p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
                                 # Variable selector row with download button
                                 ui.label('Select variable').classes('text-xs p-0 justify-left font-semibold').props('dense')
-                                with ui.row().classes('w-full gap-10 items-center'):
+                                with ui.row().classes('w-full gap-5 items-center'):
                                     var_options = engine.get_variable_options()
                                     variable_selector = ui.select(
                                         options=var_options,
@@ -234,7 +235,7 @@ def render_results_page():
                                     ui.button('Download data', on_click=download_csv, icon='download').classes('h-full text-xs')
 
                                 # Dimension selectors (horizontal layout)
-                                dimension_container = ui.row().classes('w-[calc(100vw-12rem)] h-full gap-3 overflow-y-auto flex-nowrap')
+                                dimension_container = ui.row().classes('w-[calc(100vw-14rem)] h-full gap-3 overflow-y-auto flex-nowrap')
                         
                         # Track result_type_selector reference (will be recreated in update_dimensions)
                         result_type_selector = None
@@ -280,7 +281,7 @@ def render_results_page():
                 
                 # Add result type selector to the right of dimension selectors
                 with dimension_container:
-                    with ui.column().classes('w-full h-full gap-1 border-l border-gray-300 pl-4'):
+                    with ui.column().classes('w-full h-full no-scroll gap-1 border-l border-gray-300 pl-4'):
                         ui.label('Transformation').classes('text-xs font-semibold')
                         result_type_selector = ui.select(
                             options=list(result_type_options.keys()),
@@ -356,7 +357,7 @@ def render_results_page():
             
             # Add result type selector to the right of dimension selectors
             with dimension_container:
-                with ui.column().classes('w-full h-full gap-1 border-l border-gray-300 pl-4'):
+                with ui.column().classes('w-full h-full no-scroll gap-1 border-l border-gray-300 pl-4'):
                     ui.label('Transformation').classes('text-xs font-semibold')
                     # Get current value from state to preserve selection
                     current_value = 'Levels'
@@ -370,7 +371,7 @@ def render_results_page():
                         value=current_value,
                         label='Select Transformation',
                         with_input=False
-                    ).classes('w-full h-full overflow-auto').props('dense')
+                    ).classes('w-full h-full overflow-none').props('dense')
                     result_type_selector.on_value_change(on_result_type_change)
         
         # Function to update plot
