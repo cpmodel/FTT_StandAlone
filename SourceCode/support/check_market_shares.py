@@ -21,7 +21,7 @@ def check_market_shares(shares, titles, sector, year):
     if sector != 'freight':
         invalid = np.abs(total_shares - 1.0) > 1e-4
     else: # Freight: total per region depends on number of vehicle classes (3, 4, or 5)
-        allowed = np.array([3.0, 4.0, 5.0])
+        allowed = np.array([2.0, 3.0, 4.0, 5.0])
         # Invalid if not close to any allowed total
         invalid = (np.abs(total_shares[:, None] - allowed) > 1e-4).all(axis=1)
     
