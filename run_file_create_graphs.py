@@ -391,7 +391,7 @@ for scen_name, scen in scen_all_map.items():
             var_conv[scen][var]['Total'][year] = var_conv[scen][var]['Default'][year] + var_conv[scen][var]['Mandated'][year] 
     
     # Convert H2 technology variables, region and technology conversion
-    for var in ['HYG1', 'WBWG', 'WGWG', 'HYIY', 'HYIT']:
+    for var in ['HYG1', 'WBWG', 'WGWG', 'HYIY', 'HYIT', 'HYMT']:
         
         var_conv[scen][var] = {}
         
