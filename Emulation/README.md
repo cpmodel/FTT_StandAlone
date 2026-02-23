@@ -6,7 +6,7 @@ Burton, I.J, Njisse, F.J.M.M, Salter, J.M - https://arxiv.org/abs/2510.11177
 
 Workflow:
 
-1. Parameterisation
+1. Parameterisation (python)
     -   ALL SECTIONS OF PARAMETERISATION AND SIMULATION CAN BE PERFORMED CONTINUOUSLY SETTING ALL "run" sections in config to "true"
     a. Creating policy scenarios
         - Masterfiles in the Inputs/_MasterFiles/FTT-P folder act as the parameter bounds for policy inputs
@@ -26,14 +26,14 @@ Workflow:
         - edit file paths
         - run Emulation/code/simulation_code/main.py
 
-2. Simulation
+2. Simulation (python)
     a. edit scenarios to run in "scens_run" (editable subgroup of scenarios for testing) 
     b. edit config "run_ambition_vary": true, "run_run_simulations": true, "run_output_manipulation": true,-  with all other "run" modules set to "false"
     c. run Emulation/code/simulation_code/main.py (eta 45s/scenario)
-3. Emulation
+3. Emulation (R)
     a.  edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/autobuild.R
     b. run autobuild.R
-4. Prediciton/Analysis
+4. Prediciton/Analysis (R)
     a. Sensitivity analysis
         - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/sensitivity_analysis.R
     b. Prediction
