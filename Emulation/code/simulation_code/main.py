@@ -9,6 +9,7 @@ sys.path.append(root_dir)
 os.chdir(root_dir)
 
 from Emulation.code.simulation_code.utils import load_config
+from Emulation.code.simulation_code.scenario_generator_1 import scen_generator
 from Emulation.code.simulation_code.compare_scenarios_2 import compare_scenarios, export_compare
 from Emulation.code.simulation_code.ambition_vary_3 import process_ambition_variation
 from Emulation.code.simulation_code.run_emulation_5 import main as run_simulations
@@ -32,6 +33,10 @@ def main():
     scenarios = config['scenarios']
     amb_scenario = scenarios['ambitious']
     base_scenario = scenarios['base']
+    params = config['params']
+    ranges = config['ranges']
+    Nscens = config['Nscens']
+    regions = config['regions']
     region_groups = config['region_groups']
     params = config['params']
     general_vars = config['general_vars']
@@ -39,12 +44,15 @@ def main():
     cost_matrix_structure = config['cost_matrix_structure']
     updates_config = config['updates_config']
     scens_run = config['scens_run']
+    round_decimals = config['round_decimals']
   
 
     run_compare_scenarios = config.get('run_compare_scenarios', True)
+    run_generate_scenarios = config.get('run_generate_scenarios', True)
     run_ambition_vary = config.get('run_ambition_vary', True)
     run_run_simulations = config.get('run_run_simulations', True)
     run_output_manipulation = config.get('run_output_manipulation', True)
+
 
     # Compare scenarios
     if run_compare_scenarios:
@@ -52,6 +60,11 @@ def main():
         export_compare(comparison_results, comparison_path)
         print(f"Comparison results saved to {comparison_path}")
         
+    if run_generate_scenarios:
+        # Generate scenarios with ambitious scen code
+        scen_code = scenarios['ambitious']
+        scen_generator(regions, params, Nscens, scen_code, ranges, round_decimals = 3, output_path=scen_levels_path)
+        print(f"Scenarios saved to {scen_levels_path}")
     
     # Process ambition variation
     if run_ambition_vary:

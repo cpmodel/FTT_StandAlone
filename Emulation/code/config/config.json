@@ -1,8 +1,9 @@
-{
-  "scens_run": [0, 500],
+{ "Nscens": 501,
+  "scens_run": [0, 2],
 
-  "run_compare_scenarios": true,
-  "run_ambition_vary": false,
+  "run_compare_scenarios": false,
+  "run_generate_scenarios": true,
+  "run_ambition_vary": true,
   "run_run_simulations": false,
   "run_output_manipulation": false,
 
@@ -38,6 +39,11 @@
     "HR", "TR", "MK", "US", "JA", "CA", "AU", "NZ", "RS", "RA", "CN", "KR"] 
   },
 
+  "comparison_path": "Emulation/data/comparisons/S0_S3_comparison.xlsx",
+  "scen_levels_path": "Emulation/data/scenarios/S3_scen_levels_test.csv",
+  "base_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx",
+  "ambitious_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S3.xlsx",
+  "carbon_price_path": "Emulation/data/variable_data/carbon_price/REPPX_amb.csv",
 
 
   "params": {
@@ -75,7 +81,7 @@
       "discr": 17
     }
   },
-  "Nscens": 501,
+
   "scen_code": "S3",
   "scenarios": {"base": "S0", "ambitious": "S3"},
   "round_decimals": 3,
@@ -85,11 +91,6 @@
   "vars_non_costmatrix": ["MEWD", "MCSC"],
   "general_vars": ["MCSC"],
   "batch_size": 50,
-  "scen_levels_path": "Emulation/data/scenarios/S3_scen_levels.csv",
-  "base_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx",
-  "ambitious_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S3.xlsx",
-  "comparison_path": "Emulation/data/comparisons/S0_S3_comparison.xlsx",
-  "carbon_price_path": "Emulation/data/variable_data/carbon_price/REPPX_amb.csv",
   "cost_matrix_var": "BCET",
   "cost_matrix_structure": {
     "regions": 71,
