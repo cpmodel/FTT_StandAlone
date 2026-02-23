@@ -210,8 +210,8 @@ summary_stats <- df %>%
             .groups = 'drop') %>%
   bind_rows(
     df %>%
-      filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030") & 
-               IN_cp == "CP - None") %>%
+      filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>% #& 
+              # IN_cp == "CP - None") %>%
       group_by(year, id, sample_id) %>% 
       mutate(total_value = sum(prediction, na.rm = TRUE)) %>% 
       ungroup() %>%
@@ -269,10 +269,16 @@ tech_df_plot <- df %>%
          
 
 
-total_density_plot <- total_density |>
-  filter(x >= 0,  x <= 800) |>
-  mutate(curve_type = "Total Capacity")
+########################################################
 
+total_density_plot <- total_density |>
+  filter(x >= 0, x <= 800) |>
+  mutate(
+    curve_type = case_when(
+      region == "below" ~ "Total (below target)",
+      region == "above" ~ "Total (above target)"
+    )
+  )
 
 ggplot(tech_df_plot) +
   geom_density(
@@ -281,6 +287,7 @@ ggplot(tech_df_plot) +
   ) +
   facet_grid(IN_subsidy ~ IN_phase, labeller = label_value) +
   
+  # Solid grey for below
   geom_area(
     data = subset(total_density_plot, region == "below"),
     aes(x, y, fill = curve_type),
@@ -288,6 +295,7 @@ ggplot(tech_df_plot) +
     colour = NA,
     alpha = 0.8
   ) +
+  # Hatched for above
   geom_area_pattern(
     data = subset(total_density_plot, region == "above"),
     aes(x, y, fill = curve_type, pattern = region),
@@ -301,58 +309,69 @@ ggplot(tech_df_plot) +
     pattern_angle = 45
   ) +
   
-  # Line mapped to curve_type so it follows the same legend/categories
+  # Separate lines if needed, or drop show.legend = FALSE on one
   geom_line(
     data = total_density_plot,
     aes(x, y, colour = curve_type),
-    linewidth = 0.7, show.legend = FALSE
+    linewidth = 0.7
   ) +
   
-  #geom_vline(xintercept = threshold, linetype = 2) + 
-  # Add median and percentile lines for total
+  # Vlines unchanged
   geom_vline(data = summary_stats %>% filter(emulator == "Total"),
              aes(xintercept = median_total),
              color = "black", linetype = "solid", size = 0.6, show.legend = FALSE) +
   geom_vline(data = summary_stats %>% filter(emulator == "Total"),
              aes(xintercept = p25_total),
-             color = "black", linetype = "dotted", size = 0.8, , show.legend = FALSE) +
+             color = "black", linetype = "dotted", size = 0.8, show.legend = FALSE) +
   geom_vline(data = summary_stats %>% filter(emulator == "Total"),
              aes(xintercept = p75_total),
-             color = "black", linetype = "dotted", size = 0.8, , show.legend = FALSE) +
+             color = "black", linetype = "dotted", size = 0.8, show.legend = FALSE) +
   
   scale_fill_manual(
     values = c(
-      "Onshore"    = "#0072B2",
-      "Solar PV"       = "#D55E00",
-      "Total Capacity" = "grey80"   # or whatever you like for the area fill
+      "Onshore" = "#0072B2",
+      "Solar PV" = "#D55E00",
+      "Total (below target)" = "grey80",
+      "Total (above target)" = "grey80"
     )
   ) +
   scale_colour_manual(
     values = c(
-      "Total Capacity" = "black"
+      "Total (below target)" = "black",
+      "Total (above target)" = "black"
     ),
-    guide = "none"  # or keep if you want a separate line legend
+    guide = "none"
   ) +
+  scale_pattern_manual(
+    values = c("below" = "none", "above" = "stripe"),
+    guide = guide_legend(
+      title = "Total Capacity Region",
+      override.aes = list(fill = "grey80", pattern_fill = "black")
+    )
+  ) +
+  
   
   labs(
     x = "Capacity (GW)", 
     y = "Density",
     fill = "Technology",
-    colour = ""
+    pattern = ""
   ) +
-  guides(colour = "none") +
   theme(
     legend.position = "bottom",
-    axis.title.x  = element_text(size = 14, face = "bold"),
-    axis.title.y  = element_text(size = 14, face = "bold"),
-    axis.text.x   = element_text(size = 12, face = "bold", angle = 45, hjust = 1),
-    axis.text.y   = element_text(size = 12),
-    strip.text    = element_text(size = 13),
-    legend.title  = element_text(size = 14, face = "bold"),
-    legend.text   = element_text(size = 12),
-    plot.title    = element_text(size = 18, face = "bold", hjust = 0.5),
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    strip.text = element_text(size = 13),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12),
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
     panel.spacing.x = unit(0.5, "lines")
   )
+
+
+
 
 
 
@@ -361,46 +380,6 @@ ggplot(tech_df_plot) +
 ######## Emissions & demand
 
 #################################################################
-
-summary_stats_3 <- df %>% 
-  subset(
-    emulator %in% c("MEWE_IN_2050"),
-    IN_cp == "CP - None",
-    IN_subsidy == "Subsidy - None",
-    IN_phase != "Phaseouts - High",
-    !is.na(cr_total)
-  ) %>%
-  mutate(
-    year = factor(
-      case_when(
-        emulator == "MEWE_IN_2050" ~ "2050"
-      ),
-      levels = c("2050")
-    ),
-    demand = factor(
-      case_when(
-        demand == "Low demand"  ~ "Low",
-        demand == "High demand" ~ "High"
-      ),
-      levels = c("Low", "High")
-    )
-  ) %>%
-  group_by(IN_phase, demand, cr_total, emulator, coal_p) %>%
-  summarise(
-    median_pred = median(prediction/1000, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-
-
-
-
-
-
-
-
-
-
 
 # stats for plot
 summary_stats_3 <- df %>% subset(emulator %in% c( 'MEWE_IN_2050') & #'MEWE_IN_2030',
@@ -468,7 +447,7 @@ df %>%
   geom_vline(
     data = summary_stats_3, 
     aes(xintercept = median_pred, colour = demand),
-    linetype = "dashed", size = 0.6, show.legend = FALSE
+    linetype = "dashed", size = 0.8, show.legend = FALSE
   ) +
 
   facet_grid(IN_phase ~ cr_total + coal_p, labeller = label_value, scales = 'fixed') +
