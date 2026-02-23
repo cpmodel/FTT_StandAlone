@@ -7,6 +7,7 @@ Burton, I.J, Njisse, F.J.M.M, Salter, J.M - https://arxiv.org/abs/2510.11177
 Workflow:
 
 1. Parameterisation
+    -   ALL SECTIONS OF PARAMETERISATION AND SIMULATION CAN BE PERFORMED CONTINUOUSLY SETTING ALL "run" sections in config to "true"
     a. Creating policy scenarios
         - Masterfiles in the Inputs/_MasterFiles/FTT-P folder act as the parameter bounds for policy inputs
         - S0 is the baseline and S3 (changeable) represents the upper bounds for policy vars

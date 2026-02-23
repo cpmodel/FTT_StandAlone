@@ -45,7 +45,8 @@ def main():
     updates_config = config['updates_config']
     scens_run = config['scens_run']
     round_decimals = config['round_decimals']
-  
+    output_path = config['output_path']
+
 
     run_compare_scenarios = config.get('run_compare_scenarios', True)
     run_generate_scenarios = config.get('run_generate_scenarios', True)
@@ -82,8 +83,8 @@ def main():
 
     # Manipulate the output data into csv files for emulation
     if run_output_manipulation:
-        output_mainuplation()
-        print("Output processed and saved")
+        output_mainuplation(scen_levels_path, output_path, scens_run)
+        print(f"Output processed and saved to {output_path}")
     
 
         

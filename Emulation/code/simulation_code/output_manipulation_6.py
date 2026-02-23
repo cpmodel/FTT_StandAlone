@@ -122,17 +122,17 @@ def process_and_save_results_file(scen, vars_to_compare, output_dir, titles):
     save_dataframe_to_csv(df, output_dir, scen)
 
 # Example usage
-def main():
+
+def main(scen_levels_path, output_path, scens_run):
     # Define the scenarios and variables to compare
-    scen_levels = pd.read_csv('Emulation/data/scenarios/S3_scen_levels.csv')
-    emulation_scens = scen_levels['scenario']
-    vars_to_compare = ['MEWS', 'MEWK', 'MEWG', 'MEWE', 'MEWW', 'METC', 'MEWC', 'MECW', "MEWP"]
-    output_dir = 'Emulation/data/runs'
+    scen_levels = pd.read_csv(scen_levels_path)
     
+    vars_to_compare = ['MEWS', 'MEWK', 'MEWG', 'MEWE', 'MEWW', 'METC', 'MEWC', 'MECW', "MEWP"]
+
+    # set scenarios to run
+    start, end = scens_run
     # Process each results file one at a time and save as a batch
-    for scen in tqdm(scen_levels['scenario'], desc = "Converting output", unit = "scenario"):
-        process_and_save_results_file(scen, vars_to_compare, output_dir, titles)
+    for scen in tqdm(scen_levels['scenario'].iloc[start:end], desc = "Converting output", unit = "scenario"):
+        process_and_save_results_file(scen, vars_to_compare, output_path, titles)
 
 
-if __name__ == "__main__":
-    main()

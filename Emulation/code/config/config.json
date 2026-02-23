@@ -2,10 +2,10 @@
   "scens_run": [0, 2],
 
   "run_compare_scenarios": false,
-  "run_generate_scenarios": true,
-  "run_ambition_vary": true,
+  "run_generate_scenarios": false,
+  "run_ambition_vary": false,
   "run_run_simulations": false,
-  "run_output_manipulation": false,
+  "run_output_manipulation": true,
 
   "ranges": {
     "learning_solar": [-0.405, -0.233],
@@ -44,6 +44,8 @@
   "base_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S0.xlsx",
   "ambitious_master_path": "Inputs/_Masterfiles/FTT-P/FTT-P-22x71_2024_S3.xlsx",
   "carbon_price_path": "Emulation/data/variable_data/carbon_price/REPPX_amb.csv",
+  "batch_output_dir": "output/batches/",
+  "output_path": "Emulation/data/runs/",
 
 
   "params": {
@@ -86,7 +88,6 @@
   "scenarios": {"base": "S0", "ambitious": "S3"},
   "round_decimals": 3,
   "output_dir": "Inputs",
-  "batch_output_dir": "output/batches/",
   "vars_to_compare": ["MEFI", "MEWT", "MEWR"],
   "vars_non_costmatrix": ["MEWD", "MCSC"],
   "general_vars": ["MCSC"],
