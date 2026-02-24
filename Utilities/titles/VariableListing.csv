@@ -290,8 +290,8 @@ IRG5,FTT-IH-OIS regulations (based on capacity),GW,RTI,ITTI,NA,TIME,FTT-IH-OIS2,
 ISB5,FTT-IH-OIS subsidies (percentage of investment cost),%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 IXS5,FTT-IH-OIS exogenous share changes,%,RTI,ITTI,NA,TIME,FTT-IH-OIS2,,,2000,,,
 RVKZ,FTT-Fr Demand,Million Tkm,RTI,FSTI,NA,TIME,FTT-Fr,,2018,1995,,,Y
-RFLZ,FTT-Fr Number in Fleet,veh,RTI,FSTI,NA,TIME,FTT-Fr,,2023,2001,,,Y
-ZEWS,FTT-Fr Market Shares,%,RTI,FTTI,NA,TIME,FTT-Fr,,2023,2001,,Y,Y
+RFLZ,FTT-Fr Number in Fleet,veh,RTI,FSTI,NA,TIME,FTT-Fr,,2024,2001,,,Y
+ZEWS,FTT-Fr Market Shares,%,RTI,FTTI,NA,TIME,FTT-Fr,,2024,2001,,Y,Y
 ZREG,FTT-Fr regulations,,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
 ZWSA,FTT-Fr Exogenous market share,%,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
 ZTVT,FTT-Fr vehicle tax,$,RTI,FTTI,NA,TIME,FTT-Fr,,,2018,,,Y
