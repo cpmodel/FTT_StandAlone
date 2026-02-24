@@ -14,7 +14,7 @@ This branch is dedicated to emulation and uncertainty analysis as proposed in th
 'Policy Robustness & Uncertainty in Model-based Decision Support for the Energy Transition'
 Burton, I.J, Njisse, F.J.M.M, Salter, J.M - https://arxiv.org/abs/2510.11177
 
-For more detailed information on performing emulation with this repo please consult the README.md file in the Emulation folder. 
+## For more detailed information on performing emulation with this repo please consult the README.md file in the Emulation folder. 
 
 
 ## Theoretical background

@@ -127,7 +127,7 @@ def main(scen_levels_path, output_path, scens_run):
     # Define the scenarios and variables to compare
     scen_levels = pd.read_csv(scen_levels_path)
     
-    vars_to_compare = ['MEWS', 'MEWK', 'MEWG', 'MEWE', 'MEWW', 'METC', 'MEWC', 'MECW', "MEWP"]
+    vars_to_compare = ['MEWS', 'MEWK', 'MEWE', 'MEWW', "MEWP"]
 
     # set scenarios to run
     start, end = scens_run

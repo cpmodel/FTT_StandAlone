@@ -1,4 +1,6 @@
 
+# Load libraries ----
+
 library(R.matlab)
 library(ggplot2)
 library(reshape2)
@@ -15,80 +17,79 @@ library(patchwork)
 library(tidyr)
 library(lhs)
 library(stargazer)
+library(jsonlite)
+library(rstudioapi)
 
-## Retrieve functions taken from other repositories
+# Set up config file & paths ---------------------------------------------------
+
+# path to current script
+script_path <- rstudioapi::getActiveDocumentContext()$path
+# set the working directory as FTT folder
+wd <- dirname(dirname(dirname(dirname(script_path))))
+setwd(wd)
+
+# import config
+config_path <- "Emulation/code/config/config.json"
+config <- jsonlite::fromJSON(config_path) 
+
+# main paths TODO: are any unnecessary
+data_path <- "Emulation/data"
+input_path <- config$scen_levels_path
+input_path_rescaled <- paste0(substr(input_path, 1, nchar(input_path)-4), "_rescaled.csv")
+
+output_path <- paste0(data_path, "/runs")
+# pattern for looping through runs
+output_pattern <- paste0(config$scen_code, "_.*\\.csv")
+
+# source code paths
+uq_path <- "Emulation/code/emulation_code/imported_code/UQ/Gasp.R"
+
+# output vars of interest
+output_vars <- c( 'MEWK', 'MEWP', 'MEWS', 'MEWW', 'MEWE')
+
+
+
+# Source imported code ---------------------------------------------------------
+
+## Source functions taken from other repositories
 ## Functons and scripts copied from ExeterUQ https://github.com/BayesExeter/ExeterUQ &
 ## https://github.com/JSalter90/UQ
-setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code')
-source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/UQ/Gasp.R') ### Created by James Salter
-setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code')
+source(uq_path) ### Created by James Salter
+# reset working dir
+setwd(wd)
 
-#################################
+                   
+# Load input & output matrix -------------------------------------------------------
 
-## Set up data
-
-#################################
-
-
-#### DESIGN MATRIX ###########
-
-file_path <- "C:/Users/ib400/Github/FTT_StandAlone/Emulation/"
-
-### Load design matrix (inputs)
-input_df <- read.csv(paste0(file_path, "data/scenarios/S3_scen_levels.csv"))
-#input_df_rescaled <- read.csv(paste0(file_path, "data/scenarios/S3_scen_levels_rescaled.csv"))
-
-
-##### OUTPUT MATRIX #########
-csv_files <- list.files(path = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/runs", 
-                        pattern = "S3_.*\\.csv", full.names = T)
-
+## load output
+csv_files <- list.files(path = output_path, 
+                        pattern = output_pattern, full.names = T)
 csv_files <- mixedsort(csv_files)
-
-# Read each CSV file and store them in a list
 dfs <- lapply(csv_files, read_csv)
 full_output <- bind_rows(dfs)
 
-########  EDIT VARS ##############################################
 
-full_output <- full_output[full_output$variable %in% c( 'MEWK', 'MEWP', 'MEWS', 'MEWW', 'MEWE'),] #'MEWP', 'MEWW', 'MEWE', 'MEWK'
+full_output <- full_output[full_output$variable %in% output_vars] 
 
-##################################################################
-
-#full_output_2 <- full_output
-# Delete to save memory
+# Delete raw output for memory
 dfs <- NULL
 
-#############################
-
-## Input rescaling
-
-#############################
-
-# This can all be done from config file now e.g. cfg <- jsonlite::fromJSON("config.json")
-ranges <- list(
-  learning_solar = list(min = -0.405, max = -0.233),
-  learning_wind = list(min = -0.276, max = -0.112),
-  lifetime_solar = list(min = 25, max = 35),
-  lifetime_wind = list(min = 25, max = 35),
-  lead_solar = list(min = 0.5, max = 3),
-  lead_onshore = list(min = 1, max = 3),
-  lead_commission = list(min = 0, max = 1),
-   cr_wind = list(min = -2, max = -0.1),
-  cr_solar = list(min = -3.3, max = -0.2)
-)
+## load input
+input_df <- read.csv(input_path)
+#input_df_rescaled <- read.csv(input_path_rescaled)
 
 
-# List of columns to be rescaled
-columns_to_rescale <- c('learning_solar',
-                        'learning_wind',
-                        'lifetime_solar',
-                        'lifetime_wind',
-                        'lead_solar',
-                        'lead_onshore',
-                        'lead_commission',
-                        'cr_wind', 
-                        'cr_solar')
+# Normalise inputs --------------------------------------------------------
+
+# extract policy  & technoeconomic cols
+col_names <- names(input_df)
+cols_pol <- col_names[grepl("pol$", col_names)]
+cols_tech <- col_names[!grepl("pol$", col_names)]
+# remove scenario id
+cols_tech <- cols_tech[-1]
+
+# load input parameter ranges and format
+ranges <- lapply(config$ranges, function(x) list(min = x[1], max = x[2]))
 
 # Copy input_df for rescaling
 input_df_rescaled <- input_df
@@ -99,19 +100,19 @@ rescale_column <- function(column, range) {
 }
 
 # Rescale specified columns and overwrite the original columns
-for (col in columns_to_rescale) {
+for (col in cols_tech) {
   input_df_rescaled[[col]] <- rescale_column(input_df_rescaled[[col]], ranges[[col]])
 }
 
+
+### Invert certain parameters for readability
 # Function to invert the values in a column
 invert_values <- function(values) {
   return(1 - values)
 }
 
-# Apply the inversion to a specific column in the dataframe
 input_df_rescaled$learning_solar <- invert_values(input_df_rescaled$learning_solar)
 input_df_rescaled$learning_wind <- invert_values(input_df_rescaled$learning_wind)
-# Invert values for CR so it is more intuitive
 input_df_rescaled$cr_wind <- invert_values(input_df_rescaled$cr_wind)
 input_df_rescaled$cr_solar <- invert_values(input_df_rescaled$cr_solar)
 
@@ -121,20 +122,19 @@ numeric_cols <- sapply(input_df_rescaled, is.numeric)
 # Create a logical vector identifying rows with any numeric value outside 0-1
 rows_outside <- apply(input_df_rescaled[, numeric_cols], 1, function(row) any(row < 0 | row > 1, na.rm = TRUE))
 input_df_rescaled[rows_outside, ] ## should be 0
+# Error message if ranges out of bounds
+if(nrow(input_df_rescaled[rows_outside, ]) != 0) {
+  stop("Error: Rows outside bounds detected!")
+}
 
 # save checked table
-write.csv(input_df_rescaled, paste0(file_path, 'data/scenarios/S3_scen_levels_rescaled.csv'), row.names = FALSE)
+write.csv(input_df_rescaled, input_path_rescaled, row.names = FALSE)
 
 
 
+# Build single year emulator ----------------------------------------------
 
-
-#############################
-
-## Single output emulator
-
-############################
-input_df_rescaled <- read.csv(paste0(file_path, 'data/scenarios/S3_scen_levels_rescaled.csv'))
+input_df_rescaled <- read.csv(input_path_rescaled)
 
 # Set seed for function
 seed_it = 5000
