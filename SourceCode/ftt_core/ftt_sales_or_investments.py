@@ -84,7 +84,7 @@ def get_sales(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
     return sales_or_investment, sales_dt
 
 
-def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales, year=None):
+def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales):
     """
     Calculate new sales/investments for all FTT models before simulation starts (e.g. TEWI)
 
@@ -104,8 +104,6 @@ def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales, year=None
         capacity at the previous year
     timescales: np.array
         the average lifetime of the various technologies
-    year: int, optional
-        Current year (unused, for compatibility with Cascading branch)
 
     Returns
     ----------

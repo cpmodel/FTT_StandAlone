@@ -157,8 +157,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         # Investment (= capacity additions) by technology (in GW/y)
         if year > 2014:
             data["HEWI"] = get_sales_yearly(data["HEWK"], time_lag["HEWK"],
-                              data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']],
-                              year)
+                              data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']])
             
             bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
