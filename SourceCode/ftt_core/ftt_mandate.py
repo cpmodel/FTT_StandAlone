@@ -22,7 +22,7 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
     Calculate the mandate share based on the year.
 
     Linear increase from 0 to 1 between start and end years.
-    Returns 0 before start year and after end year.
+    Returns array of 0s before start year and after end year.
 
     Parameters
     ----------
@@ -41,9 +41,9 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
         Mandate share between 0.0 and 1.0
     """
     if (year < mandate_start_year).all():
-        return np.full(mandate_start_year.shape[0], 0.0)
+        return np.zeros(mandate_start_year.shape[0])
     elif (year >= mandate_end_year).all():
-        return np.full(mandate_start_year.shape[0], 0.0)
+        return np.zeros(mandate_start_year.shape[0])
     else:
         return (year + 1 - mandate_start_year) / (mandate_end_year - mandate_start_year) * max_mandate
 
@@ -169,7 +169,7 @@ def implement_seeding(cap, cum_sales_in, sales_in, year, green_indices,
     # The max mandate is an increasing fraction of the green sales share
     max_mandate = np.full(sales_in.shape[0], seed_fraction * green_share)
     
-    mandate_info = mandate_info = np.stack([start_years, end_years, max_mandate], axis=1)
+    mandate_info = np.stack([start_years, end_years, max_mandate], axis=1)
     
     # Seeding works the same as a weak mandate, so reuse mandate function
     cum_sales_after_mandate, sales_after_mandate, cap = implement_mandate(
