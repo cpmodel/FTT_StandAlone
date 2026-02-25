@@ -63,17 +63,17 @@ def initialise_state(model):
     
     scenario = 'S0'
 
-    # Identifying the variables needed for automation
+    # Create maps from model to specific variable name
     maps = get_model_maps(model)
     share_vars = maps['shares']
     cost_vars = maps['costs']
     gamma_inds = maps['gamma_inds']
     techs_vars = maps['techs']
 
-    # Initialising container for automation variables
+    # Initialising dictionary for state variable
     state = {}
     
-    # Establisting timeline for automation algorithm
+    # Establish timeline
     # Note: for power, we must start in 2010, otherwise things go wrong, in this model version. Why?
     model.timeline = set_timeline(model, modules_to_assess)
     
@@ -84,7 +84,7 @@ def initialise_state(model):
         N_regions = len(model.titles['RTI_short'])
         N_techs = len(model.titles[techs_vars[mod]])
       
-        # Automation variable list for this module
+        # Initialise state variable dict per model
         state[mod] = {}
             
         state[mod][share_vars[mod]] = (
@@ -101,25 +101,25 @@ def initialise_state(model):
         state[mod]['score'] =  np.zeros((N_regions, N_techs))
         state[mod]['score_lag'] =  np.zeros((N_regions, N_techs))
 
-
-    # Looping through years in automation timeline
+    # Set all gamma values to zero
+    for mod in modules_to_assess:
+        
+        model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :] = 0
+          
+    # Loop through timeline
     for year_index, year in enumerate(model.timeline):
         
-        # Solving the model for each year
+        # Solve the model for each year
         model.variables, model.lags = model.solve_year(year, year_index, scenario)
-        
+            
         # Save initial values of interest
         for mod in modules_to_assess:
-            
-            # Resetting gamma values to zero (smarter to start from existing gamma values?)
-            model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :] = np.zeros_like(
-                model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :])
-            
+        
             # Read in the historical and simulated shares
             var = share_vars[mod]
             state[mod][var][:, :, :, year_index] =  model.variables[var]
         
-            # Compute the rate of change from the shares variable
+            # Compute the rate of change and score from the shares variable
             state[mod]["rate of change"] = compute_roc(state, share_vars, mod)            
             state[mod]["roc_diff"], state[mod]["hist_share_avg"] = compute_roc_log(state, model, mod)
             state[mod]["score"] = compute_scores(state, mod)
@@ -130,7 +130,7 @@ def run_model(state, model):
     '''Run the model with new gamma values'''
     scenario = 'S0'
 
-    # Identifying the model vars needed
+    # Identify the model vars needed
     maps = get_model_maps(model)
     share_vars = maps['shares']
     cost_vars = maps['costs']
@@ -138,16 +138,16 @@ def run_model(state, model):
   
     model.timeline = set_timeline(model, modules_to_assess)
     
-    # Looping through all FTT mods to update gamma values
+    # Loop through all FTT mods to update gamma values
     for mod in modules_to_assess:
             
         model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :] = (
             state[mod]['gamma'][:, :, :])
 
-    # Looping through years in timeline
+    # Loop through timeline
     for year_index, year in enumerate(model.timeline):
     
-        # Solving the model for each year
+        # Solve the model for each year
         model.variables, model.lags = model.solve_year(year, year_index, scenario)
         
         for mod in modules_to_assess:
@@ -157,12 +157,9 @@ def run_model(state, model):
                  model.variables[share_vars[mod]] )
     
     for mod in modules_to_assess:
-        # Define the ROC variable for each mod
-        state[mod]["rate of change"] = compute_roc(state, share_vars, mod)
-        # state[mod]["roc_diff"], _ = roc_diff(state, model, mod)
-        # state[mod]["score"] = get_scores(state, mod)
         
-        # Inside the for mod in modules_to_assess loop:
+        # Define the ROC variable for each model
+        state[mod]["rate of change"] = compute_roc(state, share_vars, mod)        
         state[mod]['roc_diff'], _ = compute_roc_log(state, model, mod)
         state[mod]['score'] = compute_scores(state, mod)
         
@@ -230,7 +227,7 @@ def roc_diff(state, model, mod):
     '''
     timeline = model.timeline
     
-    # Identifying the vars needed
+    # Identify the vars needed
     maps = get_model_maps(model)
     share_vars = maps['shares']
     histend_vars = maps['histend']
@@ -254,7 +251,7 @@ def roc_diff(state, model, mod):
 
 
 
-def adjust_gamma_values_simulated_annealing(state, model, mod, it):
+def adjust_gamma_values_simulated_annealing(state, mod, it):
     """Randomly choose delta gamma for each model version, using a standard deviation with 
     an adjustable standard deviation."""
        
@@ -328,7 +325,7 @@ def compute_scores(state, mod):
     return combined
 
 
-def accept_or_reject_gamma_changes(state, model, mod, it, T0):
+def accept_or_reject_gamma_changes(state, mod, it, T0):
     
     '''
     Adjust the gamma values based on regulated simulated annealing. 
@@ -357,19 +354,14 @@ def accept_or_reject_gamma_changes(state, model, mod, it, T0):
     
     if it%50 == 0:
         print(f"At {it} it, the acceptance rate is {state[mod]['acceptance_rate']:.3f} at T {T:.5f}")
-
         
     return state 
+
 
 def set_initial_temperature(state, model, mod):
     """ Set the initial temperature T0 based on the typical change in score
     between the first two iterations
     """
-        # pull relevant arrays straight from the state
-    roc_diff = state[mod]['roc_diff']
-    roc_diff_lag = state[mod]['roc_diff_lag']
-    gamma = state[mod]['gamma'][:, :, 0]
-    gamma_lag = state[mod]['gamma_lag'][:, :, 0]
     
     score, score_lag = get_score_and_lagged_score(state, mod)
     
@@ -383,6 +375,7 @@ def set_initial_temperature(state, model, mod):
     
     return T0 
 
+
 def check_convergence(gamma, gamma_lag, mod, it, max_it, already_converged):
     '''Return true if gamma values no longer changing much, or if max_it is reached'''
     mask = (gamma != 0) & (gamma_lag != 0)
@@ -390,14 +383,15 @@ def check_convergence(gamma, gamma_lag, mod, it, max_it, already_converged):
     gamma_change = np.average(np.absolute(gamma[mask] - gamma_lag[mask]))
     
     if gamma_change < convergence_threshold and not already_converged:
-        print(f"Convergence {mod} reached at iter {it}, little change in gamma values last iteration")
+        print(f"Convergence {mod} reached at iter {it}, little change in gamma values since last iteration")
         converged = True
         
     elif it >= max_it - 1:
-        print(f"Maximum iterations reached at it {it}. Gammas {mod} still changing by {gamma_change:.4f} on average")
+        print(f"Maximum iterations reached at iter {it}. Gammas {mod} still changing by {gamma_change:.4f} on average")
         converged = True
     
     return converged
+
  
 def get_median_score(scores):
     nonzero = (scores != 0)
@@ -410,7 +404,7 @@ def gamma_auto(model):
     run the simulated annealing script over all the models. 
     '''
     
-    # Initialising automation vars
+    # Initialise state
     state = initialise_state(model)
     run_history = {}
     
@@ -442,7 +436,7 @@ def gamma_auto(model):
         # Iterative loop for gamma convergence
         for it in range(max_it):
                         
-            # First save the lagged vars, and find new gamma values to try
+            # 1. Save the lagged vars, and find new gamma values to try
             for mod in modules_to_assess:
                 
                 if it%50 == 0: # Print median score every 25 iterations
@@ -452,31 +446,25 @@ def gamma_auto(model):
 
                 
                 # Save previous gamma and roc values
-                state[mod]['gamma_lag'][:, :, 0] = (
-                            state[mod]['gamma'][:, :, 0])
-                
-                state[mod]["roc_diff_lag"][:, :] = (
-                            state[mod]["roc_diff"][:, :] )
-                
-                state[mod]["score_lag"][:, :] = (
-                            state[mod]["score"][:, :] )
+                state[mod]['gamma_lag'][:, :, 0] = state[mod]['gamma'][:, :, 0]
+                state[mod]["roc_diff_lag"][:, :] = state[mod]["roc_diff"][:, :]
+                state[mod]["score_lag"][:, :] = state[mod]["score"][:, :]
                 
                 # Update gamma values semi-randomly
-                state = adjust_gamma_values_simulated_annealing(
-                                            state, model, mod, it)
+                state = adjust_gamma_values_simulated_annealing(state, mod, it)
                 
 
-            # Second: running the model, updating vars of interest
+            # 2. Run the model, update vars of interest
             state = run_model(state, model)
             
 
-            # Third, save vars, accept and reject new gammas, and check convergence
+            # 3. Save vars, accept and reject new gammas, and check convergence
             for n_mod, mod in enumerate(modules_to_assess):
                 
                 # Inside the for mod in modules_to_assess loop:
                 state[mod]['roc_diff'], _ = compute_roc_log(state, model, mod)
                 state[mod]['score'] = compute_scores(state, mod)
-                state = accept_or_reject_gamma_changes(state, model, mod, it, T0[n_mod])
+                state = accept_or_reject_gamma_changes(state, mod, it, T0[n_mod])
                 
                 if it == 0:
                     # Update initial temperature, based on differences in initial scores
@@ -492,7 +480,7 @@ def gamma_auto(model):
                     run_history[mod]['gamma'][run] = gamma
                     run_history[mod]['score'][run] = state[mod]['score']
             
-            # Fourth: re-run model with accepted gamma values, updating vars of interest
+            # 4. Re-run model with accepted gamma values, updating vars of interest
             state = run_model(state, model)
             
                 
@@ -518,8 +506,7 @@ modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
 
 # %% Run combined function
 
-# Little difference between runs typically: 3 runs to be safe. 
-# Consider reducing no_it for more rapid estimates
+# Little difference between runs typically: 2 runs to be safe. 
 total_runs = 2
 max_it = 200
 lambda_reg = 0.05  # Regularisation strength
@@ -556,7 +543,7 @@ for mod in modules_to_assess:
 
 
 
-# %% Saving almost to the right format (I'm naming the gamma row the same for each model.. )
+# %% Save almost to the right format (I'm naming the gamma row the same for each model.. )
 import csv
 
 # How many empty placeholders are in the masterfiles?
