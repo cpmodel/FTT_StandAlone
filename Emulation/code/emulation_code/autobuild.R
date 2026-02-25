@@ -44,8 +44,50 @@ output_pattern <- paste0(config$scen_code, "_.*\\.csv")
 # source code paths
 uq_path <- "Emulation/code/emulation_code/imported_code/UQ/Gasp.R"
 
+# Data paths
+emul_path <- "Emulation/data/emulators"
+valid_plot_path <- "Emulation/data/validation/plots"
+valid_model_path <- "Emulation/data/validation/models"
+
+
+
+# Set up vars for emulators -----------------------------------------------
+
 # output vars of interest
-output_vars <- c( 'MEWK', 'MEWP', 'MEWS', 'MEWW', 'MEWE')
+# if subsetting comment out and make new object preserving key
+output_vars <- c('MEWK', # capacity
+                 'MEWP', # electricity cost
+                 'MEWS', # shares
+                 'MEWW', # global capacity
+                 'MEWE') # emissions
+
+# regions
+regions <- c('GBL', 
+             'IN') # CN, US, RGN, RGS
+years <- c(2030, 
+           2040, 
+           2050)
+
+# techs and subgroups
+techs = list(
+  # renewables
+  c(short = 'solar', full = '19 Solar PV'),
+  c(short = 'onshore', full = '17 Onshore'),#,
+  c(short = 'offshore', full = '18 Offshore'),
+  c(short = 'hydro_pump', full = '14 Pumped Hydro'),#,
+  c(short = 'csp', full = '20 CSP'),
+  c(short = 'biomass', full = '11 Biomass'),
+  c(short = 'biomass', full = '12 Biomass + CCS'),
+  # non-fossil based
+  c(short = 'nuclear', full = '1 Nuclear'),#,
+  c(short = 'hydro', full = '13 Large Hydro'),#,
+  # fossil-based 
+  c(short = 'gas', full = '7 CCGT'),
+  c(short = 'coal', full = '3 Coal')
+)
+cap_techs <- techs[c(1,2)]
+renew_techs <- techs[1:7]
+nonff_techs <- techs[1:9]
 
 
 
@@ -139,7 +181,7 @@ input_df_rescaled <- read.csv(input_path_rescaled)
 # Set seed for function
 seed_it = 5000
 
-############## Function for building and saving emulators based on specific output_data
+############## Function for building and saving emulators
 build_and_save_emulator <- function(output_data, key, seed = seed_it) {
   print(paste('Building emulator: ', key))
   # Merge with inputs for training
@@ -155,16 +197,16 @@ build_and_save_emulator <- function(output_data, key, seed = seed_it) {
   em <- BuildGasp('value', em_data, mean_fn = 'step')
   
   # Save emulator
-  saveRDS(em, file = paste0(file_path, "data/emulators/em_", key, ".rds"))
+  saveRDS(em, file = paste0(emul_path, "em_", key, ".rds"))
   
   # Generate validation plots
-  png(paste0(file_path, "data/validation/plots/", key, ".png"), width = 1200, height = 900, res = 150)
+  png(paste0(valid_plot_path, key, ".png"), width = 1200, height = 900, res = 150)
   par(mfrow = c(5, 4), mar = c(4, 2, 2, 2))
   ValidateGasp(em, IndivPars = TRUE)
   dev.off()
   
   # Save regression analysis
-  html_output <- paste0(file_path, "data/validation/models/", key, "_lm_summary.html")
+  html_output <- paste0(valid_model_path, key, "_lm_summary.html")
   stargazer(em$lm$linModel, type = "html", out = html_output)
   print(paste('Emulator: ', key, ', validation plot and model saved'))
   return(em)  # Return the emulator object in case further analysis is needed
@@ -172,47 +214,10 @@ build_and_save_emulator <- function(output_data, key, seed = seed_it) {
 
 
 
-# Define general variables for output of interest
-vars <- c('MEWW', 'MEWE', 'MEWK', 'MEWP','MEWS') #'MEWW', 'MEWE', 'MEWK',
-regions <- c('GBL', 'IN') #',
-years <- c(2030, 2040, 2050)
+# Execute -----------------------------------------------------------------
 
-# techs and subgroups
-techs = list(
-  # renewables
-  c(short = 'solar', full = '19 Solar PV'),
-  c(short = 'offshore', full = '18 Offshore'),
-  c(short = 'onshore', full = '17 Onshore'),#,
-  c(short = 'hydro_pump', full = '14 Pumped Hydro'),#,
-  c(short = 'csp', full = '20 CSP'),
-  c(short = 'biomass', full = '11 Biomass'),
-  c(short = 'biomass', full = '12 Biomass + CCS'),
-  # non-fossil based
-  c(short = 'nuclear', full = '1 Nuclear'),#,
-  c(short = 'hydro', full = '13 Large Hydro'),#,
-  
-  ### do we need to add to this for renew shares target?
-  ### also take out nuke and hydro, geo?
-  
-  # fossil-based 
-  c(short = 'gas', full = '7 CCGT'),
-  c(short = 'coal', full = '3 Coal')
-)
-cap_techs <- techs[c(1,3)]
-renew_techs <- techs[1:7]
-nonff_techs <- techs[1:9]
-
-
-# Input df if needs reloading 
-#input_df <- read.csv(paste0(file_path, "data/scenarios/S3_scen_levels.csv"))
-#input_df_rescaled <- read.csv(paste0(file_path, "data/scenarios/S3_scen_levels_rescaled.csv"), row.names = 1)
-# Loop through each combination of vars, techs, and regions
-file_path <- "C:/Users/ib400/Github/FTT_StandAlone/Emulation/"
-
-
-
-############## Execute for each var
-for (var in vars) {
+# Loop through vars
+for (var in output_vars) {
   for (end_year in years){
     if (var == 'MEWW'){
       for (tech in cap_techs){
@@ -311,147 +316,3 @@ for (var in vars) {
 
 
 
-####### Build Bases - seperate and summed
-
-
-# Reload the dictionary to store DataBasis_ftt and q for each combination
-# DataBasis_path <- "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/designs/DataBasis_dict.rds"
-# DataBasis_dict <- readRDS(DataBasis_path)
-# DataBasis_dict <- list()
-# 
-# # Loop through each combination of vars, techs, and regions
-# for (var in vars) {
-#   # for (tech in techs) { 
-#     # Adjust regions if var is MEWW to only perform once with region 'GBL'
-#     region_list <- if (var == "MEWW") c("GBL") else regions
-#     
-#     for (region in region_list) {
-#       
-#       # Create a unique key based on the current combination
-#       #key <- paste(var, tech["short"], region, sep = "_")
-#       # summed var
-#       key <- paste(var, region, sep = "_")
-#       
-#       
-#       # Filter output_df for the specific combination of var, tech, and region
-#       # output_df <- subset(full_output, 
-#       #                     variable == var & 
-#       #                       technology == tech["full"] &
-#       #                       country_short == region)
-#       # Block for summed variables e.g. emission
-#       output_df <- full_output %>% subset(variable == var) %>%
-#           group_by(scenario, year) %>%
-#           summarise(year_value = sum(value, na.rm = TRUE))
-# 
-#       # If the subset is empty, skip to the next iteration
-#       if (nrow(output_df) == 0) next
-#       
-#       # Convert to wide format with 'scenario' as columns, 'year' as rows, and 'value'
-#       wide_data <- dcast(output_df, year ~ scenario, value.var = "year_value")
-#       
-#       # Reorder columns of wide_data to match input_df_rescaled scenarios
-#       wide_data <- wide_data[, match(input_df_rescaled$scenario, colnames(wide_data))]
-#       
-#       # Create the basis object
-#       DataBasis_ftt <- MakeDataBasis(as.matrix(wide_data))
-#       
-#       # Calculate the number of vectors to explain 99.99% of the variability
-#       q <- ExplainT(DataBasis_ftt, vtot = 0.9999)
-#       
-#       # Store both DataBasis_ftt and q in the dictionary
-#       DataBasis_dict[[key]] <- list(DataBasis_ftt = DataBasis_ftt, q = q)
-#     }
-#   }
-# #}
-# # Save dictionary
-# saveRDS(DataBasis_dict, file = paste0("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/designs/DataBasis_dict.rds"))
-# DataBasis_dict <- readRDS("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/designs/DataBasis_dict.rds")
-
-#############################
-
-### Build Bases Emulators
-
-#############################
-
-# # Define whether to split data for validation
-# val <- "Y"  # Set to "Y" for validation split, "N" for full dataset training
-# 
-# # Initialize or reload the dictionary to store validation data
-# # ValidationData_path <- paste0(file_path, "/data/designs/DataBasis_dict.rds")
-# # ValidationData_dict <- readRDS(ValidationData_path)
-# 
-# ValidationData_dict <- list()
-# 
-# # TODO Create if statement for summed vars etc
-# # Iterate over each key in DataBasis_dict
-# for (key in names(DataBasis_dict[3])) {
-#   
-#   file_path <- "C:/Users/ib400/Github/FTT_StandAlone/Emulation/"
-#   
-#   # Extract var, tech, and region from the key
-#   split_key <- strsplit(key, "_")[[1]]
-#   var <- split_key[1]
-#   #tech_short <- split_key[2]
-#   region <- split_key[2]
-#   
-#   # Check if the current combination is in the selected lists
-#   if (var %in% vars && tech_short %in% unlist(techs, recursive = TRUE) && region %in% regions) {
-#     
-#     # Retrieve DataBasis_ftt and q from DataBasis_dict
-#     DataBasis_ftt <- DataBasis_dict[[key]]$DataBasis_ftt
-#     q <- DataBasis_dict[[key]]$q
-#     
-#     # Data for coefficients, predicted by inputs, with Coeffs determining the projection
-#     Coeffs <- Project(data = DataBasis_ftt$CentredField, 
-#                       basis = DataBasis_ftt$tBasis[,1:q])
-#     colnames(Coeffs)[1:q] <- paste("C", 1:q, sep = "")
-#     
-#     # Combine coefficients with design and add noise vector
-#     input_coeffs <- data.frame(input_df_rescaled[,-1],  # Use the scaled version from before
-#                                Noise = runif(nrow(input_df_rescaled), -1, 1), 
-#                                Coeffs)
-#     
-#     ## Create train/test data if validation is needed
-#     if (val == "Y") {
-#       set.seed(321)
-#       inds <- sample(1:nrow(input_df_rescaled), nrow(input_df_rescaled))
-#       
-#       # Calculate 90% for training and 10% for validation
-#       train_size <- round(0.9 * nrow(input_df_rescaled))
-#       train_inds <- inds[1:train_size]
-#       val_inds <- inds[(train_size + 1):nrow(input_df_rescaled)]
-#       
-#       train_data <- input_coeffs[train_inds,]
-#       val_data <- input_coeffs[val_inds,]
-#       
-#       # Store the validation data in the ValidationData_dict with the same key
-#       ValidationData_dict[[key]] <- val_data
-#     } else {
-#       # Use the entire dataset for training if validation is not required
-#       train_data <- input_coeffs
-#     }
-#     
-#     # Build emulator on training data 
-#     emulator <- BasisEmulators(train_data, q, mean_fn = 'step', maxdf = 5, training_prop = 1)
-#     
-#     # Save the emulator using the current var, tech_short, and region
-#     saveRDS(emulator, file = paste0(file_path, "data/emulators/base_em_", key, ".rds"))
-#     
-#     # Save initial validation plots
-#     if (val == "Y") {
-#       for (i in seq(1, length(emulator), by = 1)) {
-#         
-#         png(paste0(file_path,"data/validation/validation_", key, i, ".png"), width = 1200, height = 900, res = 150)
-#         par(mfrow = c(4,4), mar = c(4,2,2,2))
-#         ValidateGasp(emulator[[i]], val_data)
-#         dev.off()  # Close the graphics device
-# 
-#     } 
-#   }
-#   }
-# }
-# 
-# # Save validation data
-# saveRDS(ValidationData_dict, file = paste0(file_path, "/data/validation/ValidationData_dict.rds"))
-
-      
