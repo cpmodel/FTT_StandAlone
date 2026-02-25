@@ -57,8 +57,8 @@ output_pattern <- paste0(config$scen_code, "_.*\\.csv")
 
 # Data paths
 emul_path <- "Emulation/data/emulators"
-valid_plot_path <- "Emulation/data/validation/plots"
-valid_model_path <- "Emulation/data/validation/models"
+valid_plot_path <- "Emulation/data/validation/plots/"
+valid_model_path <- "Emulation/data/validation/models/"
 
 
 # Set up vars for emulators -----------------------------------------------
