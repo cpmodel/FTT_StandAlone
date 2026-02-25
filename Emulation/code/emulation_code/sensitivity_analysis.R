@@ -1,52 +1,76 @@
 
-# Code adapted from Mcneall 2023 - Sensitivity analysis
+# Load libraries ----------------------------------------------------------
 
 library(ggplot2)
 library(dplyr)
 library(emtools)
 
 
+# Set up working directory and source imported code ---------------------------------------------------------
 
-## Retrieve functions taken from other repositories
+script_dir <- this.path::this.dir()
+wd <- dirname(dirname(dirname(script_dir)))
+# set the working directory as FTT folder
+setwd(wd)
+
+## Source functions taken from other repositories
 ## Functons and scripts copied from ExeterUQ https://github.com/BayesExeter/ExeterUQ &
-## https://github.com/JSalter90/UQ & https://github.com/MetOffice/jules_ppe_gmd
-setwd('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code')
-source('C:/Users/ib400/GitHub/FTT_StandAlone/Emulation/code/emulation_code/imported_code/UQ/Gasp.R') ### Created by James Salter
+## https://github.com/JSalter90/UQ
+# source code paths
+uq_path <- "Emulation/code/emulation_code/imported_code/UQ/Gasp.R"
+source(uq_path) ### Created by James Salter
+# reset working dir
+setwd(wd)
+
+# Set up config file & paths ---------------------------------------------------
+
+# import config
+config_path <- "Emulation/code/config/config.json"
+config <- jsonlite::fromJSON(config_path) 
+
+# main paths TODO: are any unnecessary
+data_path <- "Emulation/data"
+input_path <- config$scen_levels_path
+input_path_rescaled <- paste0(substr(input_path, 1, nchar(input_path)-4), "_rescaled.csv")
+
+
+# Data paths
+emul_path <- "Emulation/data/emulators"
+
+## Output paths
+output_dir <- paste0(data_path, "/predictions/")
+
+# Global
+gbl_sa_filename <- "gbl_sa.csv"
+
+gbl_plot_title <- "sa_gbl.png"
+gbl_plot_path <- paste0(data_path, "/figures/", gbl_plot_title)
+
+# India
+in_sa_filename <- "in_sa.csv"
+
+in_plot_title <- "sa_in.png"
+in_plot_path <- paste0(data_path, "/figures/", in_plot_title)
 
 
 
-########################################
+# Load input data ---------------------------------------------------------
 
-## Stylised workflow
-
-########################################
-
-rotate <- function(x) t(apply(x, 2, rev))
-
-
-# # First step
-# sensvar = function(oaat_pred, n, d){
-#   # oaat_pred$mean is a long vector of predictions:
-#   #   for parameter 1 we have n predictions,
-#   #   then for parameter 2 another n, etc., total length = n*d
-#   out = numeric(d)
-#   for(i in 1:d){
-#     idx = ((i-1)*n + 1):(i*n)
-#     out[i] = var(pred$mean[idx])
-#   }
-#   out
-# }
-
-
-
-
-
-input_df_rescaled <- read.csv(paste0("C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/scenarios/S3_scen_levels_rescaled.csv"))
+input_df_rescaled <- read.csv(input_path_rescaled)
 inputs <- input_df_rescaled[,2:length(names(input_df_rescaled))]
 
-#inputs_red <- c("cr_solar", "cr_wind", "lead_solar", "lead_onshore")
+# Indentify inputs to constrain e.g. cannibalisation rates
+inputs_red <- c()
+# set the bounds somewhere between 0-1
+inputs_red_bounds <- list(min = 0.45, max = 0.55)
 
-# 1) A clean OAT‐sens function
+
+# Set up functions --------------------------------------------------------
+
+# Function for plotting
+rotate <- function(x) t(apply(x, 2, rev))
+
+# A clean OAT‐sens function
 oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0, upper = 1) {
   # ref: named numeric vector length d, e.g. rep(0.5, d)
   # emulator: what you pass to PredictGasp()
@@ -63,21 +87,16 @@ oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0, upper = 1) {
     
     # choose bounds for this variable
     if (varnames[i] %in% inputs_red) {
-      low_i  <- 0.45
-      high_i <- 0.55
+      low_i  <- inputs_red_bounds$min
+      high_i <- inputs_red_bounds$max
     } else {
       low_i  <- lower
       high_i <- upper
     }
   
-  
     # replace column i by its own grid
     X_oat[, i] <- seq(low_i, high_i, length.out = n)
     colnames(X_oat) <- varnames
-    
-    # # replace column i by its own grid
-    # X_oat[,i] <- seq(lower, upper, length.out = n)
-    # colnames(X_oat) <- varnames
     
     # predict: PredictGasp often returns a vector or a list with $mean
     pred <- PredictGasp(as.data.frame(X_oat), emulator)
@@ -89,21 +108,9 @@ oat_sens_pretrained <- function(ref, emulator, n = 30, lower = 0, upper = 1) {
   sens
 }
 
-##################################
-
-##################################
-
-
+# oat SA plot function
 oaatSensvarSummaryPlot <- function(oat_sens_mat,
                                    threshold = 0.01) {
-  
-  # # 0) drop _pol parameters with (near) zero mean sensitivity
-  # param_means <- colMeans(oat_sens_mat)
-  # drop_pol   <- grepl("_pol$", names(param_means)) &
-  #   (param_means <= threshold)
-  # if(any(drop_pol)) {
-  #   oat_sens_mat <- oat_sens_mat[, !drop_pol, drop = FALSE]
-  # }
   
   # normalize & average
   normsens <- normalize(t(oat_sens_mat))  # rows: params, cols: outputs
@@ -172,50 +179,48 @@ oaatSensvarSummaryPlot <- function(oat_sens_mat,
 
 
 
-###############################################################
-
-# Plots
-
-###############################################################
+# Set up params and files for SA ------------------------------------------
 
 # Reference grid, policies at 0 and techecon params at mean (0.5)
-#ref_pol <- setNames(rep(0, 18), colnames(inputs[1:18]))
-# Just for pol values - take any inputs df
-
-ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # CN & US levels change back to 0 for main SA
-ref_techeco <- setNames(rep(0.5, 14), colnames(inputs[16:29]))
+# alter these fixed values to perform SA elsewhere in input space
+pol_fixed_value <- 0
+techeco_fixed_value <- 0.5
+ref_pol <- setNames(rep(pol_fixed_value, 15), colnames(inputs[1:15])) 
+ref_techeco <- setNames(rep(techeco_fixed_value, 14), colnames(inputs[16:29]))
 ref <- c(ref_pol, ref_techeco)
 
-# 1) List all your .rds files
-rds_dir   <- "C:\\Users\\ib400\\Github\\FTT_StandAlone\\Emulation\\data\\emulators"
-rds_files_all <- list.files(rds_dir, pattern = "\\.rds$", full.names = TRUE)
-rds_files_all
-
-############################################
-
-#####  Global Parameters
-
-############################################
-
-#### 2030 global paramters
-#  COULD WE DO THIS WITH JUST 2030 & 40??
+# List all your .rds files
+rds_files_all <- list.files(emul_path, pattern = "\\.rds$", full.names = TRUE)
 
 # SA on GBL emissions & capacites
 global_param_files <- rds_files_all[c(c(1:3), c(19:24))]
-#global_param_files <- rds_files_all[c(1:3)]
+global_param_files <- rds_files_all[grepl("GBL", rds_files_all)]
 
-# 2) Read them into a named list
+
+# SA on for India - performed in different subsection of input space
+ref_pol['IN_phase_pol'] <- 0.5
+ref_pol['IN_price_pol'] <- 0.5
+ref_pol['IN_cp_pol'] <- 0.5
+
+india_param_files <- rds_files_all[grepl("IN", rds_files_all)]
+
+
+
+# Global sensitivity analysis ---------------------------------------------
+
+
+# Read them into a named list
 global_params_list <- setNames(
   lapply(global_param_files, readRDS),
   tools::file_path_sans_ext(basename(global_param_files))
 )
 
-# 3) Run OAT sensitivity on each emulator
+# Run OAT sensitivity on each emulator
 global_sens_list <- lapply(global_params_list, function(em) {
   oat_sens_pretrained(ref, em, n = 30)
 })
 
-# 4) Stack into a matrix
+# Stack into a matrix - THIS NEEDS EDITING IF VARS ARE EDITED
 global_sens_mat <- do.call(rbind, global_sens_list)
 rownames(global_sens_mat) <- c("Emissions 2030", "Emissions 2040", "Emissions 2050",
                                "Onshore 2030", "Onshore 2040", "Onshore 2050",
@@ -232,50 +237,34 @@ colnames(global_sens_mat) <- c("US phaseouts", "US subsidies", "US carbon prices
                                "cannibalisation: wind", "cannibalisation: solar",
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
+# Save sensitivity matrix
+write.csv(global_sens_mat,
+          file = paste0(output_dir, gbl_sa_filename),
+          row.names = F)
 
-# write.csv(global_sens_mat, 
-#           file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/gbl_sa.csv",
-#           row.names = F)
-
-# 5) (Optional) Plot them all at once
+# Plot and save
+png(gbl_plot_path, width = 1400, height = 1100, res = 150)
 oaatSensvarSummaryPlot(global_sens_mat, threshold = 0.01)
+dev.off()
 
 
-
-############################################
-
-##### India instrument comparison
-
-############################################
-
-#### 2030 
-# Specific set up for India
-ref_pol <- setNames(rep(0, 15), colnames(inputs[1:15])) # CN & US levels change back to 0 for main SA
-ref_techeco <- setNames(rep(0.5, 14), colnames(inputs[16:29]))
-ref <- c(ref_pol, ref_techeco)
-
-ref_pol['IN_phase_pol'] <- 0.5
-ref_pol['IN_price_pol'] <- 0.5
-ref_pol['IN_cp_pol'] <- 0.5
+# India sensitivity analysis ----------------------------------------------
 
 
-
-IN_polcompare_files <- rds_files_all[c(4:18)]
-
-# 2) Read them into a named list
-IN_polcompare_list <- setNames(
-  lapply(IN_polcompare_files, readRDS),
-  tools::file_path_sans_ext(basename(IN_polcompare_files))
+# Read them into a named list
+india_param_list <- setNames(
+  lapply(india_param_files, readRDS),
+  tools::file_path_sans_ext(basename(india_param_files))
 )
 
-# 3) Run OAT sensitivity on each emulator
-IN_polcompare_list <- lapply(IN_polcompare_list, function(em) {
+# Run OAT sensitivity on each emulator
+india_param_list <- lapply(india_param_list, function(em) {
   oat_sens_pretrained(ref, em, n = 30)
 })
 
-# 4) Stack into a matrix
-IN_polcompare_mat <- do.call(rbind, IN_polcompare_list)
-rownames(IN_polcompare_mat) <- c("Emissions 2030", "Emissions 2040", "Emissions 2050",
+# Stack into a matrix - THIS NEEDS EDITING IF VARS ARE EDITED
+india_sens_mat <- do.call(rbind, india_param_list)
+rownames(india_sens_mat) <- c("Emissions 2030", "Emissions 2040", "Emissions 2050",
                                  "Onshore 2030",  "Onshore 2040", "Onshore 2050", 
                                  "Solar 2030", "Solar 2040", "Solar 2050",
                                  "Electricity Price 2030", "Electricity Price 2040", "Electricity Price 2050",
@@ -283,7 +272,7 @@ rownames(IN_polcompare_mat) <- c("Emissions 2030", "Emissions 2040", "Emissions 
                                 
                                 # "Onshore Generation 2030", "Onshore Generation 2040", "Onshore Generation 2050",
                                 # "Solar PV Generation 2030", "Solar PV Generation 2040", "Solar PV Generation 2050",
-colnames(IN_polcompare_mat) <- c("US phaseouts", "US subsidies", "US carbon prices",
+colnames(india_sens_mat) <- c("US phaseouts", "US subsidies", "US carbon prices",
                                "CN phaseouts", "CN subsidies", "CN carbon prices",
                                "IN phaseouts", "IN subsidies", "IN carbon prices",
                                "RGS phaseouts", "RGS subsidies", "RGS carbon prices",
@@ -296,16 +285,16 @@ colnames(IN_polcompare_mat) <- c("US phaseouts", "US subsidies", "US carbon pric
                                "discount rate", "electricity demand", "gas prices (ccgt)", 
                                "coal prices", "technical potential")
 
-
-# 5) (Optional) Plot them all at once
-oaatSensvarSummaryPlot(IN_polcompare_mat, threshold = 0.001)
-
-
-# write.csv(global_sens_mat, 
-#           file = "C:/Users/ib400/Github/FTT_StandAlone/Emulation/data/predictions/in_sa.csv",
-#           row.names = F)
+# Save sensitivity matrix
+write.csv(india_sens_mat,
+          file = paste0(output_dir, in_sa_filename),
+          row.names = F)
 
 
+# Plot and save
+png(in_plot_path, width = 1400, height = 1100, res = 150)
+oaatSensvarSummaryPlot(india_sens_mat, threshold = 0.01)
+dev.off()
 
 
 
