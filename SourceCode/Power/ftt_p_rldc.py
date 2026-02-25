@@ -282,7 +282,6 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
 
     for r in range(len(titles['RTI'])):
         if Sw[r] + Ss[r] == 0:
-            print(f"No wind or solar in region {r}")
             continue
 
         # SHORT-TERM STORAGE
