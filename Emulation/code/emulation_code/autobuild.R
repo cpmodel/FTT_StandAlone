@@ -18,7 +18,6 @@ library(tidyr)
 library(lhs)
 library(stargazer)
 library(jsonlite)
-#library(rstudioapi)
 library(this.path)
 
 
@@ -173,7 +172,7 @@ write.csv(input_df_rescaled, input_path_rescaled, row.names = FALSE)
 
 
 
-# Build single year emulator ----------------------------------------------
+# Build emulators ----------------------------------------------
 
 # Reload if needed
 #input_df_rescaled <- read.csv(input_path_rescaled)
