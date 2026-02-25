@@ -18,15 +18,27 @@ library(tidyr)
 library(lhs)
 library(stargazer)
 library(jsonlite)
-library(rstudioapi)
+#library(rstudioapi)
+library(this.path)
+
+
+# Set up working directory and source imported code ---------------------------------------------------------
+
+script_dir <- this.path::this.dir()
+wd <- dirname(dirname(dirname(script_dir)))
+# set the working directory as FTT folder
+setwd(wd)
+
+## Source functions taken from other repositories
+## Functons and scripts copied from ExeterUQ https://github.com/BayesExeter/ExeterUQ &
+## https://github.com/JSalter90/UQ
+# source code paths
+uq_path <- "Emulation/code/emulation_code/imported_code/UQ/Gasp.R"
+source(uq_path) ### Created by James Salter
+# reset working dir
+setwd(wd)
 
 # Set up config file & paths ---------------------------------------------------
-
-# path to current script
-script_path <- rstudioapi::getActiveDocumentContext()$path
-# set the working directory as FTT folder
-wd <- dirname(dirname(dirname(dirname(script_path))))
-setwd(wd)
 
 # import config
 config_path <- "Emulation/code/config/config.json"
@@ -41,14 +53,12 @@ output_path <- paste0(data_path, "/runs")
 # pattern for looping through runs
 output_pattern <- paste0(config$scen_code, "_.*\\.csv")
 
-# source code paths
-uq_path <- "Emulation/code/emulation_code/imported_code/UQ/Gasp.R"
+
 
 # Data paths
 emul_path <- "Emulation/data/emulators"
 valid_plot_path <- "Emulation/data/validation/plots"
 valid_model_path <- "Emulation/data/validation/models"
-
 
 
 # Set up vars for emulators -----------------------------------------------
@@ -90,28 +100,17 @@ renew_techs <- techs[1:7]
 nonff_techs <- techs[1:9]
 
 
-
-# Source imported code ---------------------------------------------------------
-
-## Source functions taken from other repositories
-## Functons and scripts copied from ExeterUQ https://github.com/BayesExeter/ExeterUQ &
-## https://github.com/JSalter90/UQ
-source(uq_path) ### Created by James Salter
-# reset working dir
-setwd(wd)
-
-                   
 # Load input & output matrix -------------------------------------------------------
 
 ## load output
 csv_files <- list.files(path = output_path, 
                         pattern = output_pattern, full.names = T)
 csv_files <- mixedsort(csv_files)
-dfs <- lapply(csv_files, read_csv)
+dfs <- lapply(csv_files, read_csv) 
 full_output <- bind_rows(dfs)
 
 
-full_output <- full_output[full_output$variable %in% output_vars] 
+full_output <- full_output[full_output$variable %in% output_vars,] 
 
 # Delete raw output for memory
 dfs <- NULL
@@ -176,7 +175,8 @@ write.csv(input_df_rescaled, input_path_rescaled, row.names = FALSE)
 
 # Build single year emulator ----------------------------------------------
 
-input_df_rescaled <- read.csv(input_path_rescaled)
+# Reload if needed
+#input_df_rescaled <- read.csv(input_path_rescaled)
 
 # Set seed for function
 seed_it = 5000
@@ -193,7 +193,7 @@ build_and_save_emulator <- function(output_data, key, seed = seed_it) {
                         value = train_data$value)
   
   # Build emulator with seed for training set
-  set.seed(seed)
+  set.seed(seed_it)
   em <- BuildGasp('value', em_data, mean_fn = 'step')
   
   # Save emulator
