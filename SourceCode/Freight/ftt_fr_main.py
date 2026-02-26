@@ -43,7 +43,7 @@ from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies
 from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
-from SourceCode.Freight.ftt_fr_local_learning import get_start_local_capacity, add_local_capacity
+from SourceCode.Freight.ftt_fr_local_learning import get_start_local_capacity, add_local_capacity, get_local_learning
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
 
@@ -372,8 +372,16 @@ def solve(data, time_lag, titles, histend, year, domain):
                     if data['ZEWW'][0, tech, 0] > 0.1:
                         
                         # Wright's law approximation for discrete time
-                        learning_factor = (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
-                                             * dw[tech] / data['ZEWW'][0, tech, 0])
+                        # Apply only a fraction of learning as global learning
+                        # e.g., 75% of the learning effect is global; the rest is local
+                        global_learning_share = 0.75
+                        global_learning_factor = (
+                            1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
+                            * dw[tech] / data['ZEWW'][0, tech, 0]
+                        )
+                        local_learning_factor = get_local_learning(data, zewi_t, titles, tech)
+                        
+                        learning_factor = 1.0 + global_learning_share * (global_learning_factor - 1.0) + (1.0 - global_learning_share) * (local_learning_factor - 1.0)
                         
                         # For PHEV, BEV, and FCEVs, add the battery costs to the non-battery costs
                         if tech in range(25, 35) or tech in range(40, 45):
@@ -392,27 +400,28 @@ def solve(data, time_lag, titles, histend, year, domain):
                                     + (data['Battery price'][:, 0, 0]
                                     * data["BZTC"][:, tech, c6ti['16 Battery capacity (kWh)']])
                                     )
+                            # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
+                            # Just do this for EVs for now, as it's more likely that learning effects would reduce maintenance costs for EVs than for ICE vehicles
+                            data['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] =  (
+                                    data_dt['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] 
+                                    * learning_factor )
                             
+                            # Learning-by-doing for the standard deviations, scaling with above
+                            data['BZTC'][:, tech, c6ti['2 Std of purchase cost']] = (
+                                data_dt['BZTC'][:, tech, c6ti['2 Std of purchase cost']] * learning_factor )
+                            data['BZTC'][:, tech, c6ti['6 std O&M']] = (
+                                data_dt['BZTC'][:, tech, c6ti['6 std O&M']] * learning_factor)
                         
-                        # For non-EVs, add only the non-battery costs
+                        # For non-EVs, add only the non-battery costs (and still use global learning factor)
                         else:
                             data['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] = (
                                     data_dt['BZTC'][:, tech, c6ti['1 Purchase cost (USD/veh)']] 
-                                                    * learning_factor )
-                            
-                        # Introducing LBD on O&M costs, assuming the same learning rate. #TODO: think about this again
-                        # Doesn't make too much sense for non-EVs, but does make sense for EVs
-                        data['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] =  (
-                                data_dt['BZTC'][:, tech, c6ti['5 O&M costs (USD/km)']] 
-                                * learning_factor )
+                                                    * global_learning_factor )                            
                         
-                        # Learning-by-doing for the standard deviations, scaling with above
-                        data['BZTC'][:, tech, c6ti['2 Std of purchase cost']] = (
-                            data_dt['BZTC'][:, tech, c6ti['2 Std of purchase cost']] * learning_factor )
-                        data['BZTC'][:, tech, c6ti['6 std O&M']] = (
-                            data_dt['BZTC'][:, tech, c6ti['6 std O&M']] * learning_factor )
+                            # Learning-by-doing for the standard deviations, scaling with above
+                            data['BZTC'][:, tech, c6ti['2 Std of purchase cost']] = (
+                                data_dt['BZTC'][:, tech, c6ti['2 Std of purchase cost']] * global_learning_factor )
                         
-
             # Calculate levelised cost
             carbon_costs = set_carbon_tax(data, c6ti)
             data = get_lcof(data, titles, carbon_costs, year)

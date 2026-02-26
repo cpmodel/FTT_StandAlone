@@ -57,3 +57,28 @@ def add_local_capacity(data, data_dt, zewi_t, year):
     data["Freight local capacity"][:,:,0] = local_additions + data_dt["Freight local capacity"][:,:,0]
         
     return data
+
+def get_local_learning(data, zewi_t, titles, tech):
+    """
+    Function to calculate local learning factor for each technology in each region.
+
+    Parameters
+    -----------
+    data: dict
+        Dictionary containing the data for each region and technology.
+    zewi_t: ndarray
+        Array of new vehicle sales for each region and technology.
+    titles: dict
+        Dictionary containing the titles for each category.
+    tech: int
+        Technology index for which to calculate local learning factor.
+
+    Returns
+    ----------
+    local_learning_factor: ndarray
+        Local learning factor for each technology in each region, with shape (regions, vehicles, 1).
+    """
+    c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
+    local_learning_factor = (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
+                            * zewi_t[:, tech, 0] / data['Freight local capacity'][:, tech, 0] )
+    return local_learning_factor
