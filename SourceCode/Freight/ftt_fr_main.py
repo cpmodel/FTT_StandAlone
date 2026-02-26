@@ -245,7 +245,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
-            mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
+            mandate_active = not np.all(data["EV truck mandate"][:, 2, 0] == 0)
             emissions_reg_active = "emissions regulation" in data and not np.all(data["emissions regulation"][:, 0, 0] == 0)
 
             
@@ -263,13 +263,17 @@ def solve(data, time_lag, titles, histend, year, domain):
                         )
 
                 if mandate_active:
+                    # Adjust max mandate for HDTs (1/2 of stated maximum)
+                    truck_mandate = np.copy(data['EV truck mandate'])
+                    if v_class == 3:  # HDTs
+                        truck_mandate[:, 2, 0] = 0.5 * truck_mandate[:, 2, 0]
                     # A policy of a minimum sales share
                     data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_mandate(
                                 data['ZEWK'][:, idx],
                                 data['ZEWI'][:, idx],
                                 zewi_t[:, idx],
                                 year, GREEN_INDICES_EV,
-                                data['EV truck mandate']
+                                truck_mandate
                             )
                 
 
