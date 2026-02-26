@@ -207,7 +207,23 @@ for (i in 1:nrow(pol_df)) {
 # Save input scenarios
 saveRDS(input_dfs, paste0(output_dir, output_scenarios_gbl))
 
+## Input Sample distribution plot
+# Pick one of the generated data frames
+df_check <- input_dfs[["id_1"]]
 
+# Melt into long format for faceting
+df_long <- df_check %>%
+  pivot_longer(cols = all_of(varied_columns), names_to = "variable", values_to = "value")
+
+# Plot histograms for each variable
+p <- ggplot(df_long, aes(x = value)) +
+  geom_histogram(binwidth = 0.02, boundary = 0, fill = "skyblue", color = "black") +
+  facet_wrap(~variable, scales = "free") +
+  theme_minimal() +
+  labs(title = "Distribution of Sampled Variables (India)", x = "Value", y = "Count")
+# Save to figures folder
+ggsave(paste0(data_path, "/figures/scen_input_dist_GBL.png"), p, 
+       width = 8, height = 6, dpi = 100)
 
 # Scenario creation - INDIA -------------------------------------------------
 
@@ -367,29 +383,6 @@ rownames(final_results_df) <- NULL
 write.csv(final_results_df, 
           file = paste0(output_dir, out_gbl_preds),
           row.names = F)
-
-
-## Input Sample distribution plot
-# Pick one of the generated data frames
-df_check <- input_dfs[["id_1"]]
-
-# Melt into long format for faceting
-df_long <- df_check %>%
-  pivot_longer(cols = all_of(varied_columns), names_to = "variable", values_to = "value")
-
-# Plot histograms for each variable
-p <- ggplot(df_long, aes(x = value)) +
-  geom_histogram(binwidth = 0.02, boundary = 0, fill = "skyblue", color = "black") +
-  facet_wrap(~variable, scales = "free") +
-  theme_minimal() +
-  labs(title = "Distribution of Sampled Variables (India)", x = "Value", y = "Count")
-# Save to figures folder
-ggsave(paste0(data_path, "/figures/scen_input_dist_GBL.png"), p, 
-       width = 8, height = 6, dpi = 100)
-
-
-
-
 
 
 
