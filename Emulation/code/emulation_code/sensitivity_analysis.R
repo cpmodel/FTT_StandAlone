@@ -242,7 +242,7 @@ write.csv(global_sens_mat,
           file = paste0(output_dir, gbl_sa_filename),
           row.names = F)
 
-# Plot and save
+# Plot and save - FIG 2
 png(gbl_plot_path, width = 1400, height = 1100, res = 150)
 oaatSensvarSummaryPlot(global_sens_mat, threshold = 0.01)
 dev.off()
@@ -291,7 +291,7 @@ write.csv(india_sens_mat,
           row.names = F)
 
 
-# Plot and save
+# Plot and save - FIG 3
 png(in_plot_path, width = 1400, height = 1100, res = 150)
 oaatSensvarSummaryPlot(india_sens_mat, threshold = 0.01)
 dev.off()
