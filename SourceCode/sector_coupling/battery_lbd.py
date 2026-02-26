@@ -89,8 +89,9 @@ def update_cumulative_cap(data, time_lag, year, t):
     """Add all the sectoral additions together for cumulative additions
     This function is called from battery_costs below"""
         
-    
-    battery_additions = guess_battery_additions(data, time_lag, t)
+    # CL 25/02/26 -- think this function shouldn't be called as it overestimates additions
+    # battery_additions = guess_battery_additions(data, time_lag, t)
+    battery_additions = np.sum(data["Battery cap additions"][:, :t])
     # Add battery capacity additions across models and across timesteps
     data["Cumulative total batcap"] = time_lag["Cumulative total batcap"] + battery_additions
         
