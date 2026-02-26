@@ -43,6 +43,7 @@ from SourceCode.support.check_market_shares import check_market_shares
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies
 from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
+from SourceCode.Freight.ftt_fr_local_learning import get_start_local_capacity, add_local_capacity
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
 
@@ -168,6 +169,9 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # # Battery starting capacity
             data["Cumulative total batcap"] = get_start_cap(data, titles)
+            
+            # Get local learning
+            data["Freight local capacity"] = get_start_local_capacity(data, year)
 
 
     "Model Dynamics"
@@ -178,7 +182,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data_dt = {}
         
         for var in time_lag.keys():
-            if var.startswith(("R", "Z", "B")):
+            if var.startswith(("R", "Z", "B")) or var in ["Freight local capacity"]:
                 data_dt[var] = np.copy(time_lag[var])
                 
 
@@ -339,6 +343,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             data['ZEWW'][0, :, 0] = data_dt['ZEWW'][0, :, 0] + dw
             
+            # Update local capacity based on new sales
+            data = add_local_capacity(data, data_dt, zewi_t, year)
             
             # Learning-by-doing based on global battery learning
             
@@ -413,7 +419,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # Set up data_dt for next timestep
             for var in time_lag.keys():
-                if var.startswith(("R", "Z", "B")):
+                if var.startswith(("R", "Z", "B")) or var in ["Freight local capacity"]:
                     data_dt[var] = np.copy(data[var])
         
         # Calculate total investment by technology in terms of truck purchases
