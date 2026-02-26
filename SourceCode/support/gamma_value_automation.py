@@ -15,9 +15,10 @@ For the power sector, ensure that MWKA is set to zero, as the algorithm cannot d
 import numpy as np
 import os
 from pathlib import Path
+import sys
 
-# Go two levels up: Support → SourceCode → repo root
 repo_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(repo_root))
 os.chdir(repo_root)
 
 from SourceCode import model_class
