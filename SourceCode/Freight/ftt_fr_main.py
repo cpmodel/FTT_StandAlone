@@ -89,8 +89,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_techs = len(titles['FTTI'])       # Number of technologies
     num_fuels = len(titles['JTI'])
     n_veh_classes = len(titles['FSTI'])   # Number of classes
-    
-    
+
     # Factor used to create intermediate data from annual figures
     no_it = int(data['noit'][0, 0, 0])
     dt = 1 / no_it
@@ -178,7 +177,6 @@ def solve(data, time_lag, titles, histend, year, domain):
 
     # Endogenous calculation starts here
     if year > histend['RFLZ']:
-
         data_dt = {}
         
         for var in time_lag.keys():
@@ -267,10 +265,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                         )
 
                 if mandate_active:
-                    # Adjust max mandate for HDTs (1/2 of stated maximum)
+                    # Adjust max mandate for HDTs (2/3 of stated maximum)
                     truck_mandate = np.copy(data['EV truck mandate'])
                     if v_class == 3:  # HDTs
-                        truck_mandate[:, 2, 0] = 0.5 * truck_mandate[:, 2, 0]
+                        truck_mandate[:, 2, 0] = 0.67 * truck_mandate[:, 2, 0]
                     # A policy of a minimum sales share
                     data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_mandate(
                                 data['ZEWK'][:, idx],
@@ -425,6 +423,9 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Calculate levelised cost
             carbon_costs = set_carbon_tax(data, c6ti)
             data = get_lcof(data, titles, carbon_costs, year)
+            
+            # Save non bat costs
+            data["non battery truck cost"] = nonbat_cost
 
             # Set up data_dt for next timestep
             for var in time_lag.keys():
