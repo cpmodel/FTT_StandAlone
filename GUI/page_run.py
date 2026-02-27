@@ -21,13 +21,11 @@ def render_run_page():
                 
                 # Layout grid for inputs inside the card to look cleaner
                 with ui.grid(columns=2).classes('w-full gap-4'):
-                    available_models = ('FTT-P,FTT-Tr,FTT-H,FTT-Fr').split(',')
-                    model_select = ui.select(available_models, label='Model(s) to run', multiple=True)
-                    model_select.value = [available_models[0]]
+                    available_models = get_available_models()
+                    model_select = ui.select(available_models, value='FTT-P', label='Model(s) to run', multiple=True)
 
-                    available_scenarios = ('S0,S1,S2').split(',')
-                    scenario_select = ui.select(available_scenarios, label='Scenario(s) to run', multiple=True)
-                    scenario_select.value = [available_scenarios[0]]
+                    available_scenarios = get_available_scenarios()
+                    scenario_select = ui.select(available_scenarios, value='S0', label='Scenario(s) to run', multiple=True)
 
                     default_horizon = 2050
                     horizon = ui.number(label = 'End year', value=default_horizon,
@@ -173,3 +171,27 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
         pickle.dump(results, f)
     
     log_queue.put(f"Results saved to Output/{output_name}.pickle")
+    
+def get_available_scenarios():
+    """
+    Returns a list of available scenario names based on the folders located in
+    inputs folder (exclues folders with _prefix)
+
+    Returns:
+        scenario_list: List of available scenario names
+    """
+    input_path = Path('inputs')
+    scenario_list = [folder.name for folder in input_path.iterdir() if folder.is_dir() and not folder.name.startswith('_')]
+    return scenario_list
+
+def get_available_models():
+    """
+    Returns a list of available model names based on the folders located in 
+    Inputs/_MasterFiles
+
+    Returns:
+        model_list: List of available model names
+    """
+    source_path = Path('Inputs/_MasterFiles')
+    model_list = [folder.name for folder in source_path.iterdir() if folder.is_dir()]
+    return model_list
