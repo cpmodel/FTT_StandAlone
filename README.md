@@ -14,7 +14,7 @@ This repository contains a family of Future Technology Transformation (FTT) mode
 The FTT family of models are based on [evolutionary economics](https://en.wikipedia.org/wiki/Evolutionary_economics). The uptake of new technologies typically follows an S-curve, which can be represented well with evolutionary dynamics (Mercure et al, 2012). The core equations for all of the models in the model family are coupled logistic equations of the [Lotka-Volterra family](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations), also known as the predator-prey equations. These equations are used to determine the evolution of the shares of various technologies in the models. Each model contains between ~10 to 25 technologies competing for market share. 
 
 ## FTT and macro-economic models
-This repository contains the main version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
+This repository contains the primary version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
 
 ## Installation
 
@@ -43,9 +43,9 @@ Alternatively, you can download ftt by clicking the green `Code` button in the t
 
 ## How to contribute
 We welcome contributions from everyone. You can report issues, fix bugs, improve the documentation, or write and propose model changes and provide updated data. 
-1. New contributors can open pull requests with suggested code improvements by first forking the repository
-2. Join our [Open community meetings](https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fmeetup-join%2F19%3Ameeting_NTA1YmM0MGUtN2JmMS00ZjQ3LWFiM2UtNDkzNTM3OTFhMjNh%40thread.v2%2F0%3Fcontext%3D%257b%2522Tid%2522%253a%2522912a5d77-fb98-4eee-af32-1334d8f04a53%2522%252c%2522Oid%2522%253a%25222273eeaa-a79f-4eff-a90d-3083812f1175%2522%257d%26anon%3Dtrue&type=meetup-join&deeplinkId=68922fd8-cc1e-4549-83cd-af2c34badff2&directDl=true&msLaunch=true&enableMobilePage=true&suppressPrompt=true), typically on the last Friday of the month.
-3. When you have questions, ask them on Github, so other people can benefit from the answers. Bugs and feature requests should be raised in [GitHub Issues](https://github.com/cpmodel/FTT_StandAlone/issues). Questions should be posted at the GitHub Discussions tab.
+1. New contributors can fork the repository to open pull requests with suggested code improvements
+2. Join our [Open community meetings](https://teams.microsoft.com/l/meetup-join/19%3ameeting_NTA1YmM0MGUtN2JmMS00ZjQ3LWFiM2UtNDkzNTM3OTFhMjNh%40thread.v2/0?context=%7b%22Tid%22%3a%22912a5d77-fb98-4eee-af32-1334d8f04a53%22%2c%22Oid%22%3a%222273eeaa-a79f-4eff-a90d-3083812f1175%22%7d), typically on the last Friday of the month.
+3. When you have questions, ask them on GitHub, so other people can benefit from the answers. Bugs and feature requests should be raised in [GitHub Issues](https://github.com/cpmodel/FTT_StandAlone/issues). Questions should be posted at the GitHub Discussions tab.
 4. Whether you open a PR or ask questions, ensure that you're using the latest version of the code. Rebase your branch before you open a PR.
 
 ### Collaborations and publications
