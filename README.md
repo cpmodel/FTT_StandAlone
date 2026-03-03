@@ -42,7 +42,7 @@ Alternatively, you can download ftt by clicking the green `Code` button in the t
 3. Create new scenarios by adding a new folder in the Inputs folder. Data is read in first from this folder, and missing data is read from the S0 baseline folder.
 
 ## How to contribute
-We welcome contributions from everyone. You can report issues fix bugs, improve the documentation or even write and propose model changes and provide updated data. 
+We welcome contributions from everyone. You can report issues, fix bugs, improve the documentation, or write and propose model changes and provide updated data. 
 1. New contributors can open pull requests with suggested code improvements by first forking the repository
 2. Join our [Open community meetings](https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fmeetup-join%2F19%3Ameeting_NTA1YmM0MGUtN2JmMS00ZjQ3LWFiM2UtNDkzNTM3OTFhMjNh%40thread.v2%2F0%3Fcontext%3D%257b%2522Tid%2522%253a%2522912a5d77-fb98-4eee-af32-1334d8f04a53%2522%252c%2522Oid%2522%253a%25222273eeaa-a79f-4eff-a90d-3083812f1175%2522%257d%26anon%3Dtrue&type=meetup-join&deeplinkId=68922fd8-cc1e-4549-83cd-af2c34badff2&directDl=true&msLaunch=true&enableMobilePage=true&suppressPrompt=true), typically on the last Friday of the month.
 3. When you have questions, ask them on Github, so other people can benefit from the answers. Bugs and feature requests should be raised in [GitHub Issues](https://github.com/cpmodel/FTT_StandAlone/issues). Questions should be posted at the GitHub Discussions tab.
