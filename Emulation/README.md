@@ -30,9 +30,11 @@ Workflow:
     a. edit scenarios to run in "scens_run" (editable subgroup of scenarios for testing) 
     b. edit config "run_ambition_vary": true, "run_run_simulations": true, "run_output_manipulation": true,-  with all other "run" modules set to "false"
     c. run Emulation/code/simulation_code/main.py (eta 45s/scenario)
+
 3. Emulation (R)
     a.  edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/autobuild_1.R
     b. run autobuild.R
+    
 4. Prediciton/Analysis (R)
     a. Sensitivity analysis
         - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/sensitivity_analysis_2.R
