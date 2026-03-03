@@ -44,12 +44,14 @@ Alternatively, you can download ftt by clicking the green `Code` button in the t
 ## How to contribute
 We welcome contributions from everyone. You can report issues fix bugs, improve the documentation or even write and propose model changes and provide updated data. 
 1. New contributors can open pull requests with suggested code improvements by first forking the repository
-2. Join our [https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fmeetup-join%2F19%3Ameeting_NTA1YmM0MGUtN2JmMS00ZjQ3LWFiM2UtNDkzNTM3OTFhMjNh%40thread.v2%2F0%3Fcontext%3D%257b%2522Tid%2522%253a%2522912a5d77-fb98-4eee-af32-1334d8f04a53%2522%252c%2522Oid%2522%253a%25222273eeaa-a79f-4eff-a90d-3083812f1175%2522%257d%26anon%3Dtrue&type=meetup-join&deeplinkId=68922fd8-cc1e-4549-83cd-af2c34badff2&directDl=true&msLaunch=true&enableMobilePage=true&suppressPrompt=true](open community meetings), typically on the last Friday of the month.
-3. When you have questions, ask them on Github, so other people can benefit from the answers. Bugs and feature requests should be raised in [https://github.com/cpmodel/FTT_StandAlone/issues](GitHub Issues). Questions should be posted at the GitHub Discussions tab. If you require more extensive support, the expectation is that you contribute to modelling or data.
+2. Join our [Open community meetings](https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fmeetup-join%2F19%3Ameeting_NTA1YmM0MGUtN2JmMS00ZjQ3LWFiM2UtNDkzNTM3OTFhMjNh%40thread.v2%2F0%3Fcontext%3D%257b%2522Tid%2522%253a%2522912a5d77-fb98-4eee-af32-1334d8f04a53%2522%252c%2522Oid%2522%253a%25222273eeaa-a79f-4eff-a90d-3083812f1175%2522%257d%26anon%3Dtrue&type=meetup-join&deeplinkId=68922fd8-cc1e-4549-83cd-af2c34badff2&directDl=true&msLaunch=true&enableMobilePage=true&suppressPrompt=true), typically on the last Friday of the month.
+3. When you have questions, ask them on Github, so other people can benefit from the answers. Bugs and feature requests should be raised in [GitHub Issues](https://github.com/cpmodel/FTT_StandAlone/issues). Questions should be posted at the GitHub Discussions tab.
 4. Whether you open a PR or ask questions, ensure that you're using the latest version of the code. Rebase your branch before you open a PR.
 
-###
+### Collaborations and publications
 If you plan to publish work using this codebase, please let us know. Where capacity allows, we are happy to review results or confirm that analyses are consistent with the implementation.
+
+We encourage a community-driven approach. If you need more detailed support, we welcome contributions back to the project through improvements to code, training material or data, to help strengthen the work for everyone.
 
 ## References
 * Heat: Knobloch, F., Pollitt H., Chewpreecha U., Daioglou V. and Mercure J-F. (2018) ‘[Simulating the deep decarbonisation of residential heating for limiting global warming to 1.5°C](https://link.springer.com/article/10.1007/s12053-018-9710-0)’, Energy Efficiency **12**, Issue 2, pp 521–550.
