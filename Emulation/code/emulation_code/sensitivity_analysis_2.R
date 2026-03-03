@@ -41,15 +41,15 @@ emul_path <- "Emulation/data/emulators"
 output_dir <- paste0(data_path, "/predictions/")
 
 # Global
-gbl_sa_filename <- "gbl_sa.csv"
+gbl_sa_filename <- "sa_gbl.csv"
 
-gbl_plot_title <- "sa_gbl.png"
+gbl_plot_title <- "sa_gbl_fig2.png"
 gbl_plot_path <- paste0(data_path, "/figures/", gbl_plot_title)
 
 # India
-in_sa_filename <- "in_sa.csv"
+in_sa_filename <- "sa_in.csv"
 
-in_plot_title <- "sa_in.png"
+in_plot_title <- "sa_in_fig3.png"
 in_plot_path <- paste0(data_path, "/figures/", in_plot_title)
 
 

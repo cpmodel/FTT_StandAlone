@@ -31,15 +31,15 @@ Workflow:
     b. edit config "run_ambition_vary": true, "run_run_simulations": true, "run_output_manipulation": true,-  with all other "run" modules set to "false"
     c. run Emulation/code/simulation_code/main.py (eta 45s/scenario)
 3. Emulation (R)
-    a.  edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/autobuild.R
+    a.  edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/autobuild_1.R
     b. run autobuild.R
 4. Prediciton/Analysis (R)
     a. Sensitivity analysis
-        - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/sensitivity_analysis.R
+        - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/sensitivity_analysis_2.R
     b. Prediction
-        - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/prediction.R
+        - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/prediction_3.R
         - run prediction.R
     c. Plotting
-        - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/plotting.R
+        - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/plotting_4.R
         - run plotting.R
 

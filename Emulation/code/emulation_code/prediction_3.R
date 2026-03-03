@@ -98,7 +98,7 @@ values <- matrix(rep(c(0, 0.5, 1), each = length(pol_params)),
 pol_df  <- as.data.frame(values)
 names(pol_df) <- pol_params
 
-n_iterations <- 10000
+n_iterations <- 100
 
 # Define which columns should use LHS, ALL BY DEFAULT
 lhs_cols <- tech_params
@@ -131,7 +131,7 @@ pol_df$IN_phase_pol <- grid$IN_phase_pol
 pol_df$IN_price_pol <- grid$IN_price_pol
 pol_df$IN_cp_pol <- grid$IN_cp_pol
 
-n_iterations <- 10000
+n_iterations <- 100
 
 # Define which columns should use LHS, ALL BY DEFAULT, rest will be normally distributed
 lhs_cols <- tech_params

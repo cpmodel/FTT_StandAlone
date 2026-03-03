@@ -1,5 +1,4 @@
 
-
 # Load libraries ----------------------------------------------------------
 
 library(dplyr)
@@ -337,8 +336,6 @@ summary_stats <- df_in %>%
       mutate(emulator = "Total")
   )
 
-
-
 # Compute total_value per sample
 total_df <- df_in %>%
   filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030"),
@@ -354,11 +351,6 @@ total_df <- df_in %>%
   summarise(total_value = sum(prediction, na.rm = TRUE),
             curve_type = "Total Capacity", .groups = "drop") 
 
-
-
-
-
-# line data
 # Compute total density for each facet and extract y value at x = 393
 total_density <- total_df %>%
   group_by(IN_subsidy, IN_phase) %>%
@@ -366,11 +358,11 @@ total_density <- total_df %>%
   mutate(dens_df = purrr::map(dens, ~ data.frame(x = .x$x, y = .x$y))) %>%
   tidyr::unnest(dens_df) 
 
-
+# create threshold for target and label
 threshold <- 393
 total_density$region <- ifelse(total_density$x >= threshold, "above", "below")
 
-
+# simplify labelling
 tech_df_plot <- df_in %>% 
   mutate(
     curve_type = dplyr::recode(
@@ -381,10 +373,7 @@ tech_df_plot <- df_in %>%
   ) %>%
   filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030"))
          
-
-
-
-
+# cut of extreme values for plotting (explained in paper)
 total_density_plot <- total_density |>
   filter(x >= 0, x <= 800) |>
   mutate(
@@ -394,7 +383,8 @@ total_density_plot <- total_density |>
     )
   )
 
-ggplot(tech_df_plot) +
+# plot
+p <- ggplot(tech_df_plot) +
   geom_density(
     aes(x = prediction, fill = curve_type),
     alpha = 0.5, adjust = 2
@@ -472,8 +462,6 @@ ggplot(tech_df_plot) +
     pattern = ""
   ) +
   
-  
-  
   theme(
     legend.position = "bottom",
     axis.title.x = element_text(size = 14, face = "bold"),
@@ -487,17 +475,19 @@ ggplot(tech_df_plot) +
     panel.spacing.x = unit(0.5, "lines")
   )
 
+# save 
+ggsave(paste0(data_path, "figures/capacity_in_fig5.png"), p, 
+       width = 10, height = 8, dpi = 100)
+
 
 
 # Emission and demand INDIA -----------------------------------------------
 
+# Reverse levels for intuitive plot
+df_in$IN_phase <- factor(df_in$IN_phase, levels = rev(levels(df_in$IN_phase)))
 
-
-
-
-
-# stats for plot
-summary_stats_3 <- df %>% subset(emulator %in% c( 'MEWE_IN_2050') & #'MEWE_IN_2030',
+# compute summary stats for plot
+summary_stats_3 <- df_in %>% subset(emulator %in% c( 'MEWE_IN_2050') & #'MEWE_IN_2030',
                                    IN_cp == 'CP - None' & 
                                    IN_subsidy == 'Subsidy - None' & 
                                    IN_phase != 'Phaseouts - High' &
@@ -522,7 +512,8 @@ summary_stats_3 <- df %>% subset(emulator %in% c( 'MEWE_IN_2050') & #'MEWE_IN_20
   summarise(median_pred = median(prediction/1000, na.rm = TRUE),
             .groups = 'drop') 
 
-df %>% 
+# plot
+p <- df_in %>% 
   subset(
     emulator %in% c( 'MEWE_IN_2050') & #'MEWE_IN_2030',
       IN_cp == 'CP - None' & 
@@ -612,25 +603,18 @@ df %>%
     panel.spacing.x = unit(0.5, "lines")
 )
 
-
-
-
-
-
-
-
+ggsave(paste0(data_path, "figures/emiss_in_fig6.png"), p, 
+       width = 10, height = 8, dpi = 100)
 
 
 
 # Robustness INDIA --------------------------------------------------------
 
+## Create multiple summary tables for each output of interest
 
-
-
-
-# ### Capacity - solar & onshore 2030
+# Capacity - solar & onshore 2030
 threshold <- 393
-summ_1 <- df %>%
+summ_1 <- df_in %>%
   filter(emulator %in% c("MEWK_solar_IN_2030", "MEWK_onshore_IN_2030")) %>%
   group_by(year, id, sample_id) %>%
   mutate(total_value = sum(prediction, na.rm = TRUE)) %>%
@@ -644,9 +628,9 @@ summ_1 <- df %>%
     mean = mean(total_value)) %>%
   drop_na()
 
-#### elec price
-threshold <- 68
-summ_2 <- df %>% 
+# elec price of generation (weighted average)
+threshold <- 68 # baseline projection for 2030
+summ_2 <- df_in %>% 
   filter(emulator %in% c("MEWP_elec_price_IN_2030")) %>%
   group_by(`Policy Combination`, lead_total, cr_total, demand, discount_rate) %>%
   summarise(
@@ -658,9 +642,9 @@ summ_2 <- df %>%
   drop_na()
 
 
-#####  emissions 
+#  emissions (yearly 2030)
 threshold <- 1000
-summ_3 <- df %>% 
+summ_3 <- df_in %>% 
   filter(emulator %in% c("MEWE_IN_2030")) %>%
   group_by(`Policy Combination`, lead_total, cr_total, demand, discount_rate) %>%
   summarise(
@@ -671,10 +655,9 @@ summ_3 <- df %>%
     mean = mean(prediction)) %>%
   drop_na()
 
-########## shares
-#####  emissions 
+## shares of generation mix
 threshold <- 0.55
-summ_4 <- df %>% 
+summ_4 <- df_in %>% 
   filter(emulator %in% c("MEWS_renew_IN_2030")) %>%
   group_by(`Policy Combination`, lead_total, cr_total, demand, discount_rate) %>%
   summarise(
@@ -685,38 +668,28 @@ summ_4 <- df %>%
     mean = mean(prediction)) %>%
   drop_na()
 
-# Can we do the plotting with just this df
-summ <- rbind(summ_2, summ_3, summ_4)
-# create column for ordering
-summ <- summ %>% #filter(`Policy Combination` != 'No policy') %>%
+# Combine sunmmary tables and add ordering col
+summ <- rbind(summ_2, summ_3, summ_4) %>% 
   group_by(`Policy Combination`, lead_total, cr_total, demand, discount_rate) %>%
   mutate(combined_prop = round(sum(`Proportion achieving target`), 2))
 
-
-
-## Add together
-plot_df <- summ %>% #filter(`Policy Combination` != 'No policy') %>%
-  # e.g. emissions_prop
+# edit for plotting
+plot_df <- summ %>% 
   bind_rows(summ) %>%
   mutate(
-    # nicer labels
-    # `Policy Combination` = factor(`Policy Combination`,
-    #                               levels = c("Baseline", "Sub-CP", "CP-Phaseout", 
-    #                                          "CP-Phaseout", "Subsidy & Phaseout"),
-    #                               labels = c("Baseline",  "Sub-CP",  "CP-Phase", "CP-Sub-Phase", "Sub-Phase")),
     target = factor(target,
-                    levels = c("Electricity Price", "Emissions", "Shares"), #"Capacity",
-                    labels = c("Electricity Price","Emissions", "Shares")) #"Capacity",
+                    levels = c("Electricity Price", "Emissions", "Shares"), 
+                    labels = c("Electricity Price","Emissions", "Shares"))
   ) %>%
   ungroup() 
 
-# Colour blind friendly pal
+# CB friendly pal
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 
 
 # Final plot for proportions over targets
-ggplot(plot_df,
+p <- ggplot(plot_df,
        aes(
          x    = `Policy Combination`,
          y    = `Proportion achieving target`,
@@ -767,6 +740,9 @@ ggplot(plot_df,
     panel.spacing.x = unit(0.5, "lines")
   )
 
+# save
+ggsave(paste0(data_path, "figures/robustness_in_fig7.png"), p, 
+       width = 10, height = 8, dpi = 100)
 
 
 
@@ -776,88 +752,6 @@ ggplot(plot_df,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Inital bar plot cap & elec_price
-ggplot(summ,
-       aes(x = `Policy Combination`,
-           y = `Proportion achieving target`,
-           fill = target)) +
-  geom_col(position = position_dodge(width = 0.7), width = 0.7) +
-  facet_grid(
-    discount_rate ~ coal_p + demand,
-    labeller = label_both,
-    scales = "fixed"
-  ) +
-  labs(
-    x = "Policy Combination",
-    y = "Proportion achieving target",
-    fill = "Target type",
-    title = "Proportion of simulations over each target,\nby policy combo"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x   = element_text(angle = 45, hjust = 1),
-    strip.text   = element_text(face = "bold"),
-    legend.position = "bottom"
-  )
-
-
-
-
-# stats on peaks relative size - APPENDIX??
-summary_df <-  df %>% 
-    filter(
-      emulator == 'MEWE_IN_2030',
-      IN_phase == 'Phase - Mid',
-      IN_cp == 'CP - None',
-      `Solar Learning` == 'Low'
-    ) %>%
-    group_by(demand) %>%
-    summarise(
-      n = n(),
-      mean = mean(prediction, na.rm = TRUE),
-      sd = sd(prediction, na.rm = TRUE),
-      min = min(prediction, na.rm = TRUE),
-      p2.5 = quantile(prediction, 0.025, na.rm = TRUE),
-      p25 = quantile(prediction, 0.25, na.rm = TRUE),
-      median = median(prediction, na.rm = TRUE),
-      p75 = quantile(prediction, 0.75, na.rm = TRUE),
-      p97.5 = quantile(prediction, 0.975, na.rm = TRUE),
-      max = max(prediction, na.rm = TRUE)
-    ) %>%
-    arrange(demand)
-
-# Box plot - one policy by demand - APPENDIX??
-df %>%
-  filter(
-    emulator == 'MEWE_IN_2030',
-    IN_phase == 'Phase - Mid',
-    IN_cp == 'CP - None',
-    `Solar Learning` == 'Low'
-  ) %>%
-  ggplot(aes(x = demand, y = prediction, fill = demand)) +
-  geom_boxplot(alpha = 0.6) +
-  labs(
-    x = "Demand Category",
-    y = "Prediction",
-    title = "Distribution of Predictions by Demand"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
 
 
 
