@@ -28,24 +28,37 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
     ----------
     year : int
         Current simulation year
-    mandate_start_year : int
+    mandate_start_year : int or ndarray
         Year when mandate begins (e.g., 2025)
-    mandate_end_year : int
+    mandate_end_year : int or ndarray
         Year when mandate reaches 100% (e.g., 2036)
-    max_mandate
+    max_mandate : float or ndarray
         The mandate at the last year (usually 1, but lower for kick-start)
 
     Returns
     -------
-    float
-        Mandate share between 0.0 and 1.0
+    ndarray
+        Mandate share between 0.0 and 1.0 for each region
     """
-    if (year < mandate_start_year).all():
-        return np.full(mandate_start_year.shape[0], 0.0)
-    elif (year >= mandate_end_year).all():
-        return np.full(mandate_start_year.shape[0], 0.0)
-    else:
-        return (year + 1 - mandate_start_year) / (mandate_end_year - mandate_start_year) * max_mandate
+    # Ensure inputs are arrays
+    # mandate_start_year = np.atleast_1d(mandate_start_year)
+    # mandate_end_year = np.atleast_1d(mandate_end_year)
+    # max_mandate = np.atleast_1d(max_mandate)
+    
+    n_regions = mandate_start_year.shape[0]
+    mandate_shares = np.zeros(n_regions)
+    
+    # Calculate mandate share element-wise for each region
+    for i in range(n_regions):
+        if year < mandate_start_year[i]:
+            mandate_shares[i] = 0.0
+        elif year >= mandate_end_year[i]:
+            mandate_shares[i] = max_mandate[i]
+        else:
+            mandate_shares[i] = ((year + 1 - mandate_start_year[i]) / 
+                                (mandate_end_year[i] - mandate_start_year[i]) * max_mandate[i])
+    
+    return mandate_shares
 
 
 def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
