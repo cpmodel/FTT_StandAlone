@@ -28,11 +28,11 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
     ----------
     year : int
         Current simulation year
-    mandate_start_year : int or ndarray
+    mandate_start_year : ndarray
         Year when mandate begins (e.g., 2025)
-    mandate_end_year : int or ndarray
+    mandate_end_year : ndarray
         Year when mandate reaches 100% (e.g., 2036)
-    max_mandate : float or ndarray
+    max_mandate : ndarray
         The mandate at the last year (usually 1, but lower for kick-start)
 
     Returns
@@ -40,11 +40,6 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
     ndarray
         Mandate share between 0.0 and 1.0 for each region
     """
-    # Ensure inputs are arrays
-    # mandate_start_year = np.atleast_1d(mandate_start_year)
-    # mandate_end_year = np.atleast_1d(mandate_end_year)
-    # max_mandate = np.atleast_1d(max_mandate)
-    
     n_regions = mandate_start_year.shape[0]
     mandate_shares = np.zeros(n_regions)
     
