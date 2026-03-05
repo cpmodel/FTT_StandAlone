@@ -172,7 +172,7 @@ write.csv(input_df_rescaled, input_path_rescaled, row.names = FALSE)
 
 
 
-# Build emulators ----------------------------------------------
+# Emulator design ----------------------------------------------
 
 # Reload if needed
 #input_df_rescaled <- read.csv(input_path_rescaled)
