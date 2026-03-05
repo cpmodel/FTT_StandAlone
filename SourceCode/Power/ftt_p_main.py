@@ -348,8 +348,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # For dispatchable techs with zero share, set decision load factor at MEWL
             data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
 
-            # Investment in terms of power technologies (cumulative):
-            data['MWIY'][:, :, 0] = time_lag['MWIY'][:, :, 0] + data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
+            # Yearly investment in power technology
+            data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
 
             # =====================================================================
             # Cost-supply curve
@@ -405,9 +405,6 @@ def solve(data, time_lag, titles, histend, year, domain):
         vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-P')
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
-
-        # Initialize MWIY accumulator for this year (will accumulate within timesteps)
-        data_dt['MWIY'] = np.zeros([len(titles['RTI']), len(titles['T2TI']), 1])
 
         # Create the regulation variable
         relative_excess = np.zeros_like(data_dt['MEWR'][:, :, 0])
@@ -637,9 +634,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
 
 
-            # Investment accumulation (cumulative within year, 1.33 an exchange rate factor)
-            data['MWIY'][:, :, 0] = (data_dt['MWIY'][:, :, 0]
-                                     + (data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33))
+            # Investment
+            data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
 
             # =================================================================
             # Cost-Supply curves
