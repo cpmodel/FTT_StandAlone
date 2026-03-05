@@ -34,6 +34,100 @@ def set_carbon_tax(data, c6ti):
                        
     return carbon_costs
 
+
+def calculate_tco_subsidy(data, titles, c6ti, n_veh_classes):
+    """
+    Calculates the required BEV subsidy rate (ZTVT) to achieve parity in
+    levelised freight cost (ZTTC) with the closest ICE equivalent by class.
+
+    Notes
+    -----
+    - ZTVT is treated as a rate in this module (negative values are subsidies).
+    - The subsidy is only updated for regions where
+      ``freight tco feebate switch[r, 0, 0] == 1``.
+    - Uses the previous-step ZTTC values (lagged update within the yearly loop).
+    """
+    ftti_titles = titles.get('FTTI', [])
+    name_to_idx = {name.lower(): idx for idx, name in enumerate(ftti_titles)}
+
+    bev_by_class = {}
+    ice_by_class = {}
+
+    for idx, tech_name in enumerate(ftti_titles):
+        if tech_name.lower().startswith('bev '):
+            class_name = tech_name.split()[-1]
+            class_id = idx % n_veh_classes
+            bev_by_class[class_id] = idx
+
+            preferred_ice = [
+                f"Diesel {class_name}".lower(),
+                f"Adv diesel {class_name}".lower(),
+                f"Petrol {class_name}".lower(),
+                f"Adv petrol {class_name}".lower(),
+            ]
+            for ice_name in preferred_ice:
+                if ice_name in name_to_idx:
+                    ice_by_class[class_id] = name_to_idx[ice_name]
+                    break
+
+    if not bev_by_class:
+        bev_indices = list(range(30, min(35, len(ftti_titles))))
+        for bev_idx in bev_indices:
+            bev_by_class[bev_idx % n_veh_classes] = bev_idx
+            diesel_idx = 10 + (bev_idx % n_veh_classes)
+            if diesel_idx < len(ftti_titles):
+                ice_by_class[bev_idx % n_veh_classes] = diesel_idx
+
+    switch = data['freight tco feebate switch']
+    n_regions = len(titles['RTI'])
+
+    for r in range(n_regions):
+        is_active = switch[r, 0, 0] == 1
+        if not is_active:
+            continue
+        
+        print(f"Calculating TCO subsidy for region {titles['RTI'][r]}")
+        for veh_class in range(n_veh_classes):
+            bev_idx = bev_by_class.get(veh_class)
+            ice_idx = ice_by_class.get(veh_class)
+
+            if bev_idx is None or ice_idx is None:
+                continue
+
+            bev_tco = data['ZTTC'][r, bev_idx, 0]
+            ice_tco = data['ZTTC'][r, ice_idx, 0]
+            tco_gap = bev_tco - ice_tco
+
+            if not np.isfinite(tco_gap) or tco_gap <= 0:
+                data['ZTVT'][r, bev_idx, 0] = 0.0
+                continue
+
+            avg_mileage = data['BZTC'][r, bev_idx, c6ti['15 Average mileage (km/y)']]
+            load_factor = data['BZTC'][r, bev_idx, c6ti['10 Loads (t or passengers/veh)']]
+            discount_rate = data['BZTC'][r, bev_idx, c6ti['7 Discount rate']]
+            lifetime = data['BZTC'][r, bev_idx, c6ti['8 Lifetime (y)']]
+            purchase_cost = data['BZTC'][r, bev_idx, c6ti['1 Purchase cost (USD/veh)']]
+
+            if (not np.isfinite(avg_mileage) or not np.isfinite(load_factor)
+                or not np.isfinite(discount_rate) or not np.isfinite(lifetime)
+                or not np.isfinite(purchase_cost) or purchase_cost <= 0):
+                data['ZTVT'][r, bev_idx, 0] = 0.0
+                continue
+
+            dr = max(discount_rate, -0.99)
+            lt_int = max(int(round(lifetime)), 1)
+            discount_factors = 1.0 / ((1.0 + dr) ** np.arange(1, lt_int + 1))
+            pv_service = avg_mileage * load_factor * np.sum(discount_factors)
+
+            if not np.isfinite(pv_service) or pv_service <= 0:
+                data['ZTVT'][r, bev_idx, 0] = 0.0
+                continue
+
+            required_subsidy = tco_gap * pv_service
+            data['ZTVT'][r, bev_idx, 0] = -required_subsidy / purchase_cost
+        
+
+
 def verify_revenue_neutrality(data, titles, c6ti):
     """
     Verify revenue neutrality of the feebate system for countries with active subsidies.
@@ -150,14 +244,12 @@ def get_lcof(data, titles, carbon_costs, year):
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
     n_veh_classes = 5
 
-    # Check if feebate system is active
-    if data.get('Feebate active', np.zeros((1,1,1)))[0,0,0] == 1:
-        if data.get('iteration', 0) == 0:
-            print("\nFeebate system is active")
-            calculate_feebate_rates(data, titles, c6ti, n_veh_classes)
-            print("\nVerifying revenue neutrality...")
-            verify_revenue_neutrality(data, titles, c6ti)
-
+    if data.get('iteration', 0) == 0:      
+        tco_subsidy_active = np.any(data['freight tco feebate switch'][:, 0, 0] == 1)
+        
+        if tco_subsidy_active:
+            print("Calling tco subsidy calculation")
+            calculate_tco_subsidy(data, titles, c6ti, n_veh_classes)
     
     tf = np.ones([len(titles['FTTI']), 1])
     tf[20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV exempt
