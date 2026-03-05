@@ -267,8 +267,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                 if mandate_active:
                     # Adjust max mandate for HDTs (2/3 of stated maximum)
                     truck_mandate = np.copy(data['EV truck mandate'])
-                    if v_class == 3:  # HDTs
-                        truck_mandate[:, 2, 0] = 0.67 * truck_mandate[:, 2, 0]
+                    # if v_class == 3:  # HDTs
+                    #     truck_mandate[:, 2, 0] = 0.67 * truck_mandate[:, 2, 0]
                     # A policy of a minimum sales share
                     data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_mandate(
                                 data['ZEWK'][:, idx],
@@ -284,7 +284,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                                 data['ZEWK'], data["emissions regulation"], data['ZEWI'], zewi_t,
                                 n_veh_classes, year,
                                 data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']])
-
+            
             # Recalculate zews per class
             for r in range(num_regions):
                 for veh_class in range(n_veh_classes):
@@ -293,8 +293,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                         data['ZEWS'][r, veh_class::n_veh_classes, 0] = ( 
                                 data['ZEWK'][r, veh_class::n_veh_classes, 0]
                                 / denominator )
-                
-            
+
             
             # Find total service area and demand, first by tech, then by vehicle class     
             data['ZEVV'] = data['ZEWK'] * data['BZTC'][:, :, c6ti['15 Average mileage (km/y)'], np.newaxis] / 1e6
@@ -371,8 +370,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                         
                         # Wright's law approximation for discrete time
                         # Apply only a fraction of learning as global learning
-                        # e.g., 75% of the learning effect is global; the rest is local
-                        global_learning_share = 0.75
+                        # e.g., 70% of the learning effect is global; the rest is local
+                        global_learning_share = 0.7
                         global_learning_factor = (
                             1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
                             * dw[tech] / data['ZEWW'][0, tech, 0]
