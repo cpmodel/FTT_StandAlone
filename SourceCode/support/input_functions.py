@@ -127,21 +127,21 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                 if dims[var][3] == 'TIME':
                     try:
                         var_tl = list(range(int(forstart[var]), timeline[-1]+1))
-                    except ValueError as e:
+                    except ValueError:
                         print(f'var is {var}')
                         print(f'forstart[var] is {forstart[var]}')
                         print(f'timeline is {timeline}')
-                        raise(e)
+                        raise
                     var_tl_fit = [year for year in var_tl if year in timeline]
                     var_tl_inds = [i for i, year in enumerate(timeline) if year in var_tl]
-                    #print(csv.columns, var)
-                    csv.columns = [int(year) for year in csv.columns]
+                    
                     
                     try:
+                        csv.columns = [int(year) for year in csv.columns]
                         read = csv.loc[:, var_tl]
-                    except KeyError as e:
+                    except (KeyError, ValueError):
                         input_functions_message(scen, var, dims, read, var_tl)
-                        raise e
+                        raise
 
                 else:
                     read = csv
@@ -159,15 +159,15 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         if dims_length[3] > 1:
                             try:
                                 data[scen][var][reg_index, i, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[i][var_tl_fit]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read, var_tl_fit, reg_index)
-                                raise(e)
+                                raise
                         else:
                             try:
                                 data[scen][var][reg_index, i, :, 0] = read.iloc[i, :]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read, reg_index = reg_index)
-                                raise(e)
+                                raise
                             
 
                 # If the file does not have a region key like _BE
@@ -180,17 +180,17 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         if all(dim_length == 1 for dim_length in dims_length[1:]):
                             try:
                                 data[scen][var][:, 0, 0, 0] = read.iloc[:, 0]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read)
-                                raise(e)
+                                raise
       
                         # If there is a second dimension # TODO: check if this is correct
                         if dims_length[1] > 1:
                             try: 
                                 data[scen][var][:, :, 0, 0] = read
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read, reg_index = reg_index)
-                                raise(e)
+                                raise
                         
                         # If there is a third dimension only
                         elif dims_length[2] > 1:
@@ -198,17 +198,17 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                             print("Test if this is ever used")
                             try:
                                 data[scen][var][:, 0, :, 0] = read
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read)
-                                raise(e)    
+                                raise
                         
                         # If there is a fourth dimension only (time)
                         elif dims_length[3] > 1:
                             try:
                                 data[scen][var][:, 0, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
-                                raise(e)
+                                raise
 
                     # If the first dimension is not regions
                     else:
@@ -216,9 +216,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         if all(dim_length == 1 for dim_length in dims_length):
                             try: 
                                 data[scen][var][0, 0, 0, 0] = read.iloc[0,0]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read)
-                                raise(e)
+                                raise
 
                         # If there is no third dimension
                         # Exception: SectorCouplingAssumps has dims (NA, SCA, NA, NA) - no TIME
@@ -226,9 +226,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         elif dims_length[2] == 1 and var != 'SectorCouplingAssumps':
                             try:
                                 data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
-                                raise(e)
+                                raise
                             except KeyError:
                                 # Skip files where year columns don't match (non-TIME dimension variables)
                                 pass
@@ -237,9 +237,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
                         elif dims_length[3] == 1:
                             try:
                                 data[scen][var][0, :, :, 0] = read.iloc[:,:len(titles[dims[var][2]])]
-                            except (IndexError, ValueError) as e:
+                            except (IndexError, ValueError):
                                 input_functions_message(scen, var, dims, read)
-                                raise(e)
+                                raise
 
     return data
 
