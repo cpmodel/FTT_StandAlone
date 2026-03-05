@@ -16,15 +16,14 @@ import numpy as np
 
 def set_carbon_tax(data, c6ti):
     '''
-    Convert the carbon price in REPP from euro / tC to 2012$/km 
     Apply the carbon price to freight sector technologies based on their emission factors
 
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    carbon_costs = (data["REPP3X"][:, :, 0]                          # Carbon price in euro / tC
-                    * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]     # g CO2 / km
-                    / 3.666 / 10**6                                   # Conversion from C to CO2, and g to tonne
+    carbon_costs = (data["CO2taxFr"][:, :, 0]                                   # Carbon price in USD/tCO2
+                    * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]    # g CO2 / km
+                    / 10**6                                                     # Conversion from g to tonne
                     )
     
     if np.isnan(carbon_costs).any():

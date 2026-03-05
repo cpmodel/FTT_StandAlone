@@ -27,7 +27,7 @@ import numpy as np
 
 def set_carbon_tax(data, c3ti, year):
     '''
-    Convert the carbon price in REPP from euro / tC to 2022$/pkm
+    Convert the carbon price in REPP from USD / tCO2 to 2022$/pkm
     Apply the carbon price to transport sector technologies based on their emission factors
 
     Returns:
@@ -41,12 +41,12 @@ def set_carbon_tax(data, c3ti, year):
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
 
 
-    carbon_costs = (data["REPP2X"][:, :, 0]                                   # Carbon price in euro / tC
+    carbon_costs = (data["CO2taxTr"][:, :, 0]                                   # Carbon price in USD/tCO2
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
-                    / ns / ff                                               # Conversion from per km to per pkm
-                    / 3.666 / 10**6                                         # Conversion from C to CO2 and grams to tonnes.
+                    / ns / ff                                                 # Conversion from per km to per pkm
+                    / 10**6                                                  # Conversion from grams to tonnes.
                     )
-
+    
 
     if np.isnan(carbon_costs).any():
         print(f"Carbon price is nan in year {year}")

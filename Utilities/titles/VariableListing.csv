@@ -76,38 +76,36 @@ MEWDX,Exogenous demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,Fr
 MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-,,Y
 MWDL,FTT:Power lagged demand,PJ,RTI,JTI,NA,TIME,FTT-P,,,2010,-,,Y
 FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,From E3ME results,,Y
-MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,-,,Y
 PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
 RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,From E3ME results,,Y
-METCX,Exogenous METC (from E3ME run),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
-METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MLCO,Levelised costs of operation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MLCO,Levelised costs of operation,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MERCX,Exogenous MERC (from E3ME run),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results,,Y
 MERC,FTT Resource prices or costs (2013$/GJ or 2013$/MWh),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEPD,FTT:Power total primary energy demand by resource type (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MELO,"Electricity demand residual (due to imports, losses, ets.)",GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,,Y
 MELF,FTT:Power lifetime of power equipment,y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEKA,FTT:Power age-tracking matrix of existing capacity,GW,RTI,T2TI,TYTI,TIME,FTT-P,-,-,2001,-,,Y
-MEFI,FTT:Power feed-in-tariffs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECW,"LCOE bare, no policies, with carbon cost (2013$/MWh)",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECW battery only,"LCOE bare, no policies, only battery costs",$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECS,LCOE incl. carbon price incl subsidies no FiT (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECD,MEWC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECC,LCOE (for price) no carbon price incl subsidies incl CF (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECC incl CO2,LCOE (for price) including all policies (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MECC only CO2,LCOE (for price) including all policies (2013$/MWh),$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEC6,TLCOE load band 6,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEC5,TLCOE load band 5,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEC4,TLCOE load band 4,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEC3,TLCOE load band 3,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEC2,TLCOE load band 2,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
-MEC1,TLCOE load band 1,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEFI,FTT:Power feed-in-tariffs,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECW,"LCOE bare, no policies, with carbon cost (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECW battery only,"LCOE bare, no policies, only battery costs",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECS,LCOE incl. carbon price incl subsidies no FiT (2013$/MWh),USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECD,MEWC standard deviation,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECC,LCOE (for price) no carbon price incl subsidies incl CF (2013$/MWh),USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECC incl CO2,LCOE (for price) including all policies (2013$/MWh),USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MECC only CO2,LCOE (for price) including all policies (2013$/MWh),USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEC6,TLCOE load band 6,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEC5,TLCOE load band 5,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEC4,TLCOE load band 4,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEC3,TLCOE load band 3,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEC2,TLCOE load band 2,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
+MEC1,TLCOE load band 1,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MCTN,FTT:Power Net curtailment rate by technology (-),%,RTI,T2TI,NA,TIME,FTT-P,,,2001,,,Y
 HJET,FTT-Heat Tech to fuel conversion matrix,,NA,HTTI,JTI,NA,FTT-H,,,,,,
 HJFC,FTT-Heat Fraction of energy use for heating in households,,RTI,JTI,NA,NA,FTT-H,,,,,,
@@ -347,14 +345,14 @@ FU14B,Fuel demand for heating in 2014,ktoe,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 MCSC,FTT:Power cost-supply curves,na,RTI,ERTI,CSCTI,NA,FTT-P,-,-,2001,-,Y,Y
 MCRT,FTT:Power curtailment of VRE (% of generation),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCRG,Curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
-REPPX,FTT:P regional emission permit price,(euro/tC),RTI,NA,NA,TIME,FTT-P,,,2010,,,
-REPP2X,FTT:Tr regional emission price,(euro/tC),RTI,NA,NA,TIME,FTT-Tr,,,2010,,,
-REPP3X,FTT:Fr regional emissions price,(euro/tC),RTI,NA,NA,TIME,FTT-Fr,,,2010,,,
-REPP4X,FTT:H regional emissions price,(euro/tC),RTI,NA,NA,TIME,FTT-H,,,2010,,,
-MCOC,FTT:Power CO2 cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+CO2taxP,FTT:P regional emission permit price,USD(2023)/tCO2,RTI,NA,NA,TIME,FTT-P,,,2010,,,
+CO2taxTr,FTT:Tr regional emission price,USD(2023)/tCO3,RTI,NA,NA,TIME,FTT-Tr,,,2010,,,
+CO2taxFr,FTT:Fr regional emissions price,USD(2023)/tCO4,RTI,NA,NA,TIME,FTT-Fr,,,2010,,,
+CO2taxH,FTT:H regional emissions price,USD(2023)/tCO5,RTI,NA,NA,TIME,FTT-H,,,2010,,,
+MCOC,FTT:Power CO2 cost component,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCNA,FTT:Power Net curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
 MCGA,FTT:Power Gross curtailed electricity by technology (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,,,2001,,Y,Y
-MCFC,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
+MCFC,FTT:Power load factor scaling cost component,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-,Y,Y
 MADG,Additional generation due storage losses and curtailment,GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-,Y,Y
 FRETX,Exogenous FRET (from E3ME run),ktoe,RTI,FUTI,NA,TIME,General,-,-,2010,From E3ME results,Y,Y
@@ -368,7 +366,6 @@ IFT2,FTT-IH-FBT Fuel tax (2010 Euros/MWh),2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH
 IFT3,FTT-IH-MTM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-MTM,-,-,2000,-,Y,Y
 IFT4,FTT-IH-NMM Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-NMM,-,-,2000,-,Y,Y
 IFT5,FTT-IH-OIS Fuel tax (2010 Euros/MWh) ,2010 Euros/MWh,RTI,ITTI,NA,TIME,FTT-IH-OIS2,-,-,2000,-,Y,Y
-MCFCX,FTT:Power load factor scaling cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-,Y,Y
 RZFT,FTT-Fr Fuel tax,$/MJ,RTI,NA,NA,TIME,FTT-Fr,-,-,2018,-,,
 MTFT,FTT:Power fuel tax,,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,,,
 ZWIC,FTT-Fr Vehicle purchase cost,$,RTI,FTTI,NA,TIME,FTT-Fr,-,-,2001,-,,Y
