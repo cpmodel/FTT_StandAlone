@@ -8,3 +8,4 @@ settings.ini
 .DS_Store
 Inputs/S0/.DS_Store
 SourceCode/.DS_Store
+.venv

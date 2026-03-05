@@ -216,6 +216,51 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
     
     return BCET, MEWL, MERC
 
+def update_capacity_factors_original(BCET, MEWG, MEWL, BCSC, CSC_Q, MEPD, MERC,
+                                     tech_to_resource, num_regions, num_techs, ):
+    # Type 2: Original variable renewables cost curves (reduced capacity factors)
+    CFvar = np.zeros([990])
+   
+    # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
+    for r in range(num_regions):           # Loop over region
+        for j in range(num_techs):      # Loop over technology 
+            if(MEPD[r, tech_to_resource[j]] > 0.0):
+
+               
+                # For variable renewables (e.g. wind, solar, wave)
+                # the overall (average) capacity factor decreases as new units have lower and lower CFs
+                if(BCET[r, j, 11] == 0):
+
+                    X = CSC_Q[r, tech_to_resource[j], :]
+                    Y = BCSC[r, tech_to_resource[j], 4:]
+    
+                    # Note: the curve is in the form of an inverse capacity factor in BCSC
+                    X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
+                    if X0 > 0.0:
+                        Y0 = np.interp(X0, X, Y)
+                        ind = np.searchsorted(X, X0)  # Find corresponding index
+                    MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
+                    BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
+                    
+                    
+                    # CSP is more efficient than PV by a factor 2
+                    if j == 19 :
+                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
+    
+                    if(MEWG[r, j, 0] > 0.01 and X0 > 0):
+    
+                        # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
+                        CFvar = np.sum(1.0 / (Y[:ind + 1] + 1e-6) / (ind + 1))
+                        
+                        if CFvar > 0:
+                            MEWL[r, j, 0] = CFvar
+                     
+                        # CSP is more efficient than PV by a factor 2
+                        if j == 19 :
+                            MEWL[r, j, 0] = CFvar * 2.0
+        
+        return BCET, MEWL, MERC
+
 
 def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, investment_type_mask):
     '''Increasing investment term type of limit, for technologies such as
@@ -342,7 +387,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     
     resource_in_use_mask = (MEPD[:, tech_to_resource, 0] > 0.0)
     fuel_type_mask = (BCET[:, :, 11] == 1) & resource_in_use_mask  # Type 1: Fuel type resource
-    # loadfactor_type_mask = (BCET[:, :, 11] == 0) & resource_in_use_mask
+    loadfactor_type_mask = (BCET[:, :, 11] == 0) & resource_in_use_mask
     # investment_type_mask = (BCET[:, :, 11] == 3) & resource_in_use_mask
     
     # Type 1: Fossil fuel and nuclear cost curves (increased fossil fuel costs)
@@ -357,59 +402,17 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     CSC_Q[:, techs, :] = (BCSC[:, techs, 1, None]
                           + lmo * (BCSC[:, techs, 2, None] - BCSC[:, techs, 1, None]) / (BCSC[:, techs, 3, None] - 1))
         
-    # # Type 2: New variable renewables cost curves (reduced capacity factors)
-    # BCET, MEWL, MERC = update_capacity_factors(
-    #     BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask
-    #     )
+    # Type 2: New variable renewables cost curves (reduced capacity factors)
+    BCET, MEWL, MERC = update_capacity_factors(
+        BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask
+        )
     
     # Type 3: Investment cost type of cost-supply curve
     # If you turn this one on again, make sure CSC_Q are defined for these techs too
     # MERC, BCET = update_investment_cost(
     #     BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, investment_type_mask
     #     )
-    
-    
-    # Type 2: Original variable renewables cost curves (reduced capacity factors)
-    CFvar = np.zeros([990])
-   
-    # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
-    for r in range(num_regions):           # Loop over region
-        for j in range(num_techs):      # Loop over technology 
-            if(MEPD[r, tech_to_resource[j]] > 0.0):
-
-               
-                # For variable renewables (e.g. wind, solar, wave)
-                # the overall (average) capacity factor decreases as new units have lower and lower CFs
-                if(BCET[r, j, 11] == 0):
-
-                    X = CSC_Q[r, tech_to_resource[j], :]
-                    Y = BCSC[r, tech_to_resource[j], 4:]
-    
-                    # Note: the curve is in the form of an inverse capacity factor in BCSC
-                    X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
-                    if X0 > 0.0:
-                        Y0 = np.interp(X0, X, Y)
-                        ind = np.searchsorted(X, X0)  # Find corresponding index
-                    MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
-                    BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
-                    
-                    
-                    # CSP is more efficient than PV by a factor 2
-                    if j == 19 :
-                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
-    
-                    if(MEWG[r, j, 0] > 0.01 and X0 > 0):
-    
-                        # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
-                        CFvar = np.sum(1.0 / (Y[:ind + 1] + 1e-6) / (ind + 1))
-                        
-                        if CFvar > 0:
-                            MEWL[r, j, 0] = CFvar
-                     
-                        # CSP is more efficient than PV by a factor 2
-                        if j == 19 :
-                            MEWL[r, j, 0] = CFvar * 2.0
-                    
+           
 
                         
     

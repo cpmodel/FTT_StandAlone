@@ -92,7 +92,7 @@ def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales):
        old.
     2. The amount of existing capacity that is depreciated (retired) as it
        reaches its end of life.
-    
+
     Capacity depreciation is based on the technology lifetime in the
     cost matrix. 1/lifetime is depreciated each year.
 
@@ -109,7 +109,7 @@ def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales):
     ----------
     investment_or_sales: np.array
         investment or sales up to and including time t
-    
+
     """
     # Find capacity growth since last year
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]

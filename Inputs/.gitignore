@@ -4,3 +4,6 @@
 *.mre
 !????X*.csv
 !REXX.csv
+!Battery price.csv
+!*mandate.csv
+!S0/*/CO2tax**.csv
