@@ -94,6 +94,12 @@ def get_local_learning(data, zewi_t, titles, tech):
     # calcaulate capacity additions considering spillover matrix
     veh_aggregated = zewi_t[:, :, 0] @ data["ZEWB"][0, :, :]
     local_additions = data["region spillover"][0, :, :] @ veh_aggregated
-    local_learning_factor = (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
-                            * local_additions[:, tech] / data['Freight local capacity'][:, tech, 0] )
+    # Safe division to avoid divide-by-zero warnings. When existing local capacity is
+    # zero, treat the incremental contribution as zero (no learning from past capacity).
+    denom = np.asarray(data['Freight local capacity'][:, tech, 0], dtype=float)
+    numer = np.asarray(local_additions[:, tech], dtype=float)
+    ratio = np.zeros_like(denom, dtype=float)
+    np.divide(numer, denom, out=ratio, where=denom != 0)
+
+    local_learning_factor = 1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']] * ratio
     return local_learning_factor
