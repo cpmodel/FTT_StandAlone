@@ -55,4 +55,4 @@ if __name__ == "__main__":
     (Path('.') / 'Output').mkdir(parents=True, exist_ok=True)
     with open(Path('.') / 'Output' / 'Results.pickle', 'wb') as f:
         pickle.dump(output_all, f)
-    print("\nResults saved to Output/Results.pickle")
+    print("Results saved to Output/Results.pickle")
