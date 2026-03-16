@@ -8,6 +8,8 @@ is smooth across the boundary between the historical and simulated period.
 
 For the power sector, ensure that MWKA is set to zero, as the algorithm cannot deal with partial data yet.
 
+The data gets saved into the Inputs folder, and needs to be manually copied into the Masterfiles (to be further automated when data structures are finalised.)
+
 """
 
 # %%
@@ -555,7 +557,7 @@ for mod in modules_to_assess:
     rounded_data = np.round(expanded_data, 2)
     
     # Save to CSV with mixed types
-    with open(f"{mod}_gamma.csv", "w", newline="") as f:
+    with open(f"Inputs/{mod}_gamma.csv", "w", newline="") as f:
         writer = csv.writer(f)
         
         # Write four empty lines for easier copy-paste
