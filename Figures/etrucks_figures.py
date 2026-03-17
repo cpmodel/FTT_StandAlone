@@ -12,17 +12,20 @@ import pandas as pd
 import pickle
 import configparser
 
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['font.sans-serif'] = ['Roboto', 'Arial', 'DejaVu Sans']
+plt.rcParams['font.family'] = 'outfit'
 plt.rcParams['font.size'] = 12
-plt.rcParams['axes.titlesize'] = 13
+plt.rcParams['axes.titlesize'] = 14
 plt.rcParams['axes.labelsize'] = 12
-plt.rcParams['legend.fontsize'] = 11
-plt.rcParams['xtick.labelsize'] = 11
-plt.rcParams['ytick.labelsize'] = 11
+plt.rcParams['legend.fontsize'] = 12
+plt.rcParams['xtick.labelsize'] = 12
+plt.rcParams['ytick.labelsize'] = 12
 
-FIGURE_WIDTH = 16
+FIGURE_WIDTH = 12
+FIGURE_WIDTH = 8
+
 ROW_HEIGHT = 4.2
+ROW_HEIGHT = 2.3
+
 
 # Local library imports
 
@@ -337,7 +340,7 @@ def plot_ztvt_timeseries(regions, scenario_name, pickle_name='Results', tech_ind
 
     year_mask = (years >= 2025) & (years <= 2050)
     if not np.any(year_mask):
-        raise ValueError("No years available in the requested 2025-2050 range.")
+        raise ValueError("No years available in 2025-2050 range.")
     years = years[year_mask]
 
     mdt_series = ztvt[region_indices, mdt_idx, 0, :][:, year_mask]
@@ -391,9 +394,9 @@ def plot_ztvt_timeseries(regions, scenario_name, pickle_name='Results', tech_ind
         plt.show()
 
 
-def plot_zest_hdt_stacked(regions, scenarios, pickle_name='Results'):
+def plot_zewk_hdt_stacked(regions, scenarios, pickle_name='Results'):
     """
-    Plot stacked area charts of ZEST (service area MTKM) for HDT technology groups.
+    Plot stacked area charts of ZEWK (number of trucks) for HDT and MDT technology groups.
 
     Layout:
     - Scenarios across columns
@@ -427,10 +430,10 @@ def plot_zest_hdt_stacked(regions, scenarios, pickle_name='Results'):
 
     # HDT indices from user spec (0-based): 3,8,13,18,23,28,33,38,43
     group_indices = {
-        'Diesel': [13, 18],
-        'CNG/LPG': [23],
-        'BEV': [33],
-        'Other': [3, 8, 28, 38, 43],
+        'Diesel': [12, 13, 17, 18],
+        'CNG/LPG': [22, 23],
+        'BEV': [32, 33],
+        'Other': [2, 3, 7, 8, 27, 28, 37, 38, 42, 43],
     }
     group_order = ['Diesel', 'CNG/LPG', 'BEV', 'Other']
     group_colors = ['#264653', '#2a9d8f', '#4cc9f0', '#8d99ae']
@@ -461,8 +464,13 @@ def plot_zest_hdt_stacked(regions, scenarios, pickle_name='Results'):
 
     year_mask = (years >= 2025) & (years <= 2050)
     if not np.any(year_mask):
-        raise ValueError("No years available in the requested 2025-2050 range.")
+        raise ValueError("No years available in 2025-2050 range.")
     years = years[year_mask]
+
+    # Require 2050 explicitly for the annotation
+    if 2050 not in years:
+        raise ValueError("Year 2050 is not available in the selected time range/data.")
+    year_2050_idx = int(np.where(years == 2050)[0][0])
 
     n_rows = len(region_ids)
     n_cols = len(scenario_keys)
@@ -471,14 +479,24 @@ def plot_zest_hdt_stacked(regions, scenarios, pickle_name='Results'):
         n_cols,
         figsize=(FIGURE_WIDTH + 1 * n_cols, ROW_HEIGHT * n_rows),
         sharex=True,
-        sharey=False,
-        layout='constrained'
+        sharey=False
     )
+
     axes = np.atleast_2d(axes)
+
+    # Baseline scenario is first scenario/first column
+    baseline_key = scenario_keys[0]
+    bev_idxs = group_indices['BEV']
 
     stack_handles = None
     for r, (region_id, region_label) in enumerate(zip(region_ids, region_labels)):
         region_idx = int(region_id) - 1
+
+        # Baseline BEV value in 2050 for this region (thousands of trucks)
+        baseline_bev_2050 = (
+            np.sum(results[baseline_key]['ZEWK'][region_idx, bev_idxs, 0, :], axis=0)[year_mask] / 1000.0
+        )[year_2050_idx]
+
         for c, scenario_key in enumerate(scenario_keys):
             ax = axes[r, c]
             zewk = results[scenario_key]['ZEWK']
@@ -498,23 +516,49 @@ def plot_zest_hdt_stacked(regions, scenarios, pickle_name='Results'):
             ax.margins(x=0)
             ax.set_xlim(years[0], years[-1])
 
+            # BEV increase annotation in 2050 vs baseline
+            scenario_bev_2050 = grouped[group_order.index('BEV')][year_2050_idx]
+            if baseline_bev_2050 == 0:
+                if scenario_bev_2050 == 0:
+                    pct_text = ""
+                else:
+                    pct_text = "n/a"
+            else:
+                pct_change = (scenario_bev_2050 - baseline_bev_2050) / baseline_bev_2050 * 100.0
+                pct_text = f"{pct_change:+.1f}%"
+                
+            if not c == 0:  # Don't annotate baseline column
+                
+                ax.text(
+                    0.96, 0.8, pct_text,
+                    transform=ax.transAxes,
+                    ha='right', va='top',
+                    fontsize=11, weight='bold',
+                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white', edgecolor='none', alpha=0.75)
+                )
+
             if r == 0:
                 ax.set_title(scenario_labels[scenario_key], weight='bold')
             if c == 0:
-                    ax.set_ylabel(region_label, labelpad=5, weight='bold')
+                ax.set_ylabel(region_label, fontsize = 14, labelpad=5, weight='bold')
+            else:
+                ax.set_yticklabels([])
+
+    fig.subplots_adjust(wspace=.1, hspace=.1)
 
     if stack_handles is not None:
         fig.legend(
             handles=stack_handles,
             labels=group_order,
             loc='lower center',
-            bbox_to_anchor=(0.5, 0.01),
+            bbox_to_anchor=(0.5, 0.05),
             ncol=len(group_order),
             frameon=True
         )
 
-        fig.supylabel('Number of trucks (thousands)', ha='left', va='center', x=0.01)
-        plt.tight_layout(rect=(0.01, 0.08, 1, 0.95), h_pad=1.1)
+        fig.supylabel('Number of trucks (thousands)', ha='left', va='center', fontsize=14, x=0.04)
+        # plt.tight_layout(rect=(0.01, 0.08, 1, 0.95))
+        plt.savefig('Figures/Output/zewk_hdt_stacked.png', dpi=300, bbox_inches="tight")
 
     plt.show()
 
@@ -531,19 +575,18 @@ if __name__ == '__main__':
     #     pickle_name='Results'
     # )
     
-    plot_ztvt_timeseries(
-        regions={82:"Berlin", 115:"Delhi", 87:"Milan", 110:"London", 95:"Rotterdam"},
-        scenario_name={'tco_parity': 'TCO Parity'},
-        pickle_name='Results_tco_subsidy',
-        tech_indices=(32, 33)
-    )
-    
-    # plot_zest_hdt_stacked(
-    #     regions={82:"Berlin", 115:"Delhi", 110:"London", 87:"Milan", 95:"Rotterdam", 75:"Shanghai"},
-    #     scenarios={'S0': 'Baseline',
-    #                "carbon_tax": "Carbon tax",
-    #                "emissions_regulation": "Emissions regulation",
-    #                'city_mandates_100': 'City mandates (100pct by 2040)'},
-    #     pickle_name='Results'
+    # plot_ztvt_timeseries(
+    #     regions={82:"Berlin", 115:"Delhi", 87:"Milan", 110:"London", 95:"Rotterdam"},
+    #     scenario_name={'tco_parity': 'TCO Parity'},
+    #     pickle_name='Results_tco_subsidy',
+    #     tech_indices=(32, 33)
     # )
     
+    plot_zewk_hdt_stacked(
+        regions={72:"Beijing", 82:"Berlin", 115:"Delhi", 110:"London", 87:"Milan", 95:"Rotterdam"},
+        scenarios={'S0': 'Baseline',
+                   "carbon_tax": "Carbon tax",
+                   "tco_parity": "TCO feebate",
+                   'city_mandates_100': 'City mandates'},
+        pickle_name='Results_stacked_figure'
+    )
