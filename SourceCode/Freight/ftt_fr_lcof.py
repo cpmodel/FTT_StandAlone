@@ -35,7 +35,7 @@ def set_carbon_tax(data, c6ti):
     return carbon_costs
 
 
-def calculate_tco_subsidy(data, titles, c6ti, n_veh_classes):
+def calculate_tco_subsidy(data, data_dt, titles, c6ti, n_veh_classes):
     """
     Calculates the required BEV subsidy rate (ZTVT) to achieve parity in
     levelised freight cost (ZTTC) with the closest ICE equivalent by class.
@@ -47,6 +47,9 @@ def calculate_tco_subsidy(data, titles, c6ti, n_veh_classes):
       ``freight tco feebate switch[r, 0, 0] == 1``.
     - Uses the previous-step ZTTC values (lagged update within the yearly loop).
     """
+    if data_dt is None:
+        return
+    
     ftti_titles = titles.get('FTTI', [])
     name_to_idx = {name.lower(): idx for idx, name in enumerate(ftti_titles)}
 
@@ -86,7 +89,6 @@ def calculate_tco_subsidy(data, titles, c6ti, n_veh_classes):
         if not is_active:
             continue
         
-        print(f"Calculating TCO subsidy for region {titles['RTI'][r]}")
         for veh_class in range(n_veh_classes):
             bev_idx = bev_by_class.get(veh_class)
             ice_idx = ice_by_class.get(veh_class)
@@ -94,19 +96,19 @@ def calculate_tco_subsidy(data, titles, c6ti, n_veh_classes):
             if bev_idx is None or ice_idx is None:
                 continue
 
-            bev_tco = data['ZTTC'][r, bev_idx, 0]
-            ice_tco = data['ZTTC'][r, ice_idx, 0]
+            bev_tco = data_dt['ZTLC'][r, bev_idx, 0]
+            ice_tco = data_dt['ZTLC'][r, ice_idx, 0]
             tco_gap = bev_tco - ice_tco
 
             if not np.isfinite(tco_gap) or tco_gap <= 0:
                 data['ZTVT'][r, bev_idx, 0] = 0.0
                 continue
 
-            avg_mileage = data['BZTC'][r, bev_idx, c6ti['15 Average mileage (km/y)']]
-            load_factor = data['BZTC'][r, bev_idx, c6ti['10 Loads (t or passengers/veh)']]
-            discount_rate = data['BZTC'][r, bev_idx, c6ti['7 Discount rate']]
-            lifetime = data['BZTC'][r, bev_idx, c6ti['8 Lifetime (y)']]
-            purchase_cost = data['BZTC'][r, bev_idx, c6ti['1 Purchase cost (USD/veh)']]
+            avg_mileage = data_dt['BZTC'][r, bev_idx, c6ti['15 Average mileage (km/y)']]
+            load_factor = data_dt['BZTC'][r, bev_idx, c6ti['10 Loads (t or passengers/veh)']]
+            discount_rate = data_dt['BZTC'][r, bev_idx, c6ti['7 Discount rate']]
+            lifetime = data_dt['BZTC'][r, bev_idx, c6ti['8 Lifetime (y)']]
+            purchase_cost = data_dt['BZTC'][r, bev_idx, c6ti['1 Purchase cost (USD/veh)']]
 
             if (not np.isfinite(avg_mileage) or not np.isfinite(load_factor)
                 or not np.isfinite(discount_rate) or not np.isfinite(lifetime)
@@ -209,7 +211,7 @@ def calculate_feebate_rates(data, titles, c6ti, n_veh_classes):
                 ice_tax_rate = min(ice_tax_rate, 1.0)  # Cap at 100%
                 data['ZTVT'][r, ice_indices_class, 0] = ice_tax_rate
 
-def get_lcof(data, titles, carbon_costs, year):
+def get_lcof(data, data_dt, titles, carbon_costs, year, iteration):
     """
     Calculate levelized costs.
 
@@ -244,12 +246,17 @@ def get_lcof(data, titles, carbon_costs, year):
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
     n_veh_classes = 5
 
-    if data.get('iteration', 0) == 0:      
+    if iteration == 1:      
         tco_subsidy_active = np.any(data['freight tco feebate switch'][:, 0, 0] == 1)
         
         if tco_subsidy_active:
-            print("Calling tco subsidy calculation")
-            calculate_tco_subsidy(data, titles, c6ti, n_veh_classes)
+            calculate_tco_subsidy(data, data_dt, titles, c6ti, n_veh_classes)
+            calculate_feebate_rates(data, titles, c6ti, n_veh_classes)
+            verify_revenue_neutrality(data, titles, c6ti)
+            
+    # debugging: print subsidy rates to check
+    ztvt_ml = data['ZTVT'][86, 31:34, 0]  # BEV indices
+    print(f"Subsidy rates for Milan BEVs: {ztvt_ml} for year {year} iteration {iteration}")
     
     tf = np.ones([len(titles['FTTI']), 1])
     tf[20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV exempt

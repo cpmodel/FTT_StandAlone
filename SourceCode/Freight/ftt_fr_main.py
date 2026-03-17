@@ -158,7 +158,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                                     data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
         
         carbon_costs = set_carbon_tax(data, c6ti)
-        data = get_lcof(data, titles, carbon_costs, year)
+        data = get_lcof(data, None, titles, carbon_costs, year, iteration = 1)
 
         
         if year == histend["RFLZ"]:
@@ -421,7 +421,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                         
             # Calculate levelised cost
             carbon_costs = set_carbon_tax(data, c6ti)
-            data = get_lcof(data, titles, carbon_costs, year)
+            data = get_lcof(data, data_dt, titles, carbon_costs, year, iteration = t)
             
             # Save non bat costs
             data["non battery truck cost"] = nonbat_cost
