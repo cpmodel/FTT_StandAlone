@@ -179,40 +179,51 @@ def compute_roc_log(state, model, mod, epsilon=1e-6):
     """
     Computes the difference in percentage growth rates across the boundary.
     Uses log-space for stability and symmetry.
+
+    FTT-Tr uses TDA1, a per-country variable for the last year of historical
+    share data, so the boundary index is looked up per region.
     """
     timeline = model.timeline
     maps = get_model_maps(model)
     share_vars = maps['shares']
     histend_vars = maps['histend']
-    
-    # Boundary identification
-    hist_end_year = model.histend[histend_vars[mod]]
-    mid = np.where(timeline == hist_end_year)[0][0]
-    
+
     # Extract shares and apply floor to avoid ln(0)
     # Shape: (regions, techs, years)
     shares = state[mod][share_vars[mod]][:, :, 0, :]
     shares_safe = np.maximum(shares, epsilon)
-    
+
     # Calculate Log-Rate of Change (Annual % growth approximation)
     # log(S_t) - log(S_t-1)
     lroc = np.diff(np.log(shares_safe), axis=-1)
-    
-    # Define Windows: 4 years of growth rate
-    # Historical LROC: the 4 growth steps leading UP to the boundary
-    # Simulated LROC: the first 4 growth steps OF the simulation
-    avg_lroc_hist = np.mean(lroc[:, :, mid-4:mid], axis=-1)
-    avg_lroc_sim  = np.mean(lroc[:, :, mid:mid+4], axis=-1)
-    
+
+    N_regions, N_techs = shares.shape[:2]
+
+    if mod == 'FTT-Tr':
+        # Per-country boundary: TDA1 records the last historical year per region
+        hist_end_years = model.input['S0']['TDA1'][:, 0, 0].astype(int)
+        avg_lroc_hist = np.zeros((N_regions, N_techs))
+        avg_lroc_sim  = np.zeros((N_regions, N_techs))
+        avg_share_hist = np.zeros((N_regions, N_techs))
+        for r in range(N_regions):
+            mid_r = np.where(timeline == hist_end_years[r])[0][0]
+            avg_lroc_hist[r] = np.mean(lroc[r, :, mid_r-4:mid_r], axis=-1)
+            avg_lroc_sim[r]  = np.mean(lroc[r, :, mid_r:mid_r+4], axis=-1)
+            avg_share_hist[r] = np.mean(shares[r, :, mid_r-4:mid_r+1], axis=-1)
+    else:
+        # Uniform boundary for all regions
+        hist_end_year = model.histend[histend_vars[mod]]
+        mid = np.where(timeline == hist_end_year)[0][0]
+        avg_lroc_hist = np.mean(lroc[:, :, mid-4:mid], axis=-1)
+        avg_lroc_sim  = np.mean(lroc[:, :, mid:mid+4], axis=-1)
+        avg_share_hist = np.mean(shares[:, :, mid-4:mid+1], axis=-1)
+
     # The 'Physics' Difference
     diff = avg_lroc_sim - avg_lroc_hist
-    
-    # Calculate avg share for weighting
-    avg_share_hist = np.mean(shares[:, :, mid-4:mid+1], axis=-1)
-    
+
     # Mask out techs that aren't present (to avoid chasing noise)
     diff = np.where(avg_share_hist <= epsilon, 0, diff)
-    
+
     return diff, avg_share_hist
 
 
@@ -225,7 +236,9 @@ def roc_diff(state, model, mod):
     difference = (average_roc / average_share_sim) - (average_hist_roc / average_share_hist)
     
     Compared to a ratio of rate_of_change, this should be more stable for periods of low historical change.
-    
+
+    FTT-Tr uses TDA1, a per-country variable for the last year of historical
+    share data, so the boundary index is looked up per region.
     '''
     timeline = model.timeline
     
@@ -233,23 +246,40 @@ def roc_diff(state, model, mod):
     maps = get_model_maps(model)
     share_vars = maps['shares']
     histend_vars = maps['histend']
-        
-    mid = np.where(timeline == model.histend[histend_vars[mod]])[0][0] + 1
-    start, end, end1 = mid-4, mid+4, mid+4
-    if end == 0: end1=None
-    
-    avg_share_hist = state[mod][share_vars[mod]][:, :, 0, start:mid].sum(axis=-1) / 4
-    avg_share_sim  = state[mod][share_vars[mod]][:, :, 0, mid:end1  ].sum(axis=-1) / 4
-    avg_growth_hist = state[mod]["rate of change"][:, :, 0, start-1:mid-1].sum(axis=-1) / 4
-    avg_growth_sim  = state[mod]["rate of change"][:, :, 0, mid-1:end-1  ].sum(axis=-1) / 4  
-    boundary_share = state[mod][share_vars[mod]][:, :, 0, mid-1]
+
+    if mod == 'FTT-Tr':
+        hist_end_years = model.input['S0']['TDA1'][:, 0, 0].astype(int)
+        N_regions = state[mod][share_vars[mod]].shape[0]
+        N_techs   = state[mod][share_vars[mod]].shape[1]
+        avg_share_hist  = np.zeros((N_regions, N_techs))
+        avg_share_sim   = np.zeros((N_regions, N_techs))
+        avg_growth_hist = np.zeros((N_regions, N_techs))
+        avg_growth_sim  = np.zeros((N_regions, N_techs))
+        boundary_share  = np.zeros((N_regions, N_techs))
+        for r in range(N_regions):
+            mid_r = np.where(timeline == hist_end_years[r])[0][0] + 1
+            start_r, end_r = mid_r - 4, mid_r + 4
+            avg_share_hist[r]  = state[mod][share_vars[mod]][r, :, 0, start_r:mid_r].sum(axis=-1) / 4
+            avg_share_sim[r]   = state[mod][share_vars[mod]][r, :, 0, mid_r:end_r].sum(axis=-1) / 4
+            avg_growth_hist[r] = state[mod]["rate of change"][r, :, 0, start_r-1:mid_r-1].sum(axis=-1) / 4
+            avg_growth_sim[r]  = state[mod]["rate of change"][r, :, 0, mid_r-1:end_r-1].sum(axis=-1) / 4
+            boundary_share[r]  = state[mod][share_vars[mod]][r, :, 0, mid_r-1]
+    else:
+        mid = np.where(timeline == model.histend[histend_vars[mod]])[0][0] + 1
+        start, end, end1 = mid-4, mid+4, mid+4
+        if end == 0: end1=None
+        avg_share_hist = state[mod][share_vars[mod]][:, :, 0, start:mid].sum(axis=-1) / 4
+        avg_share_sim  = state[mod][share_vars[mod]][:, :, 0, mid:end1  ].sum(axis=-1) / 4
+        avg_growth_hist = state[mod]["rate of change"][:, :, 0, start-1:mid-1].sum(axis=-1) / 4
+        avg_growth_sim  = state[mod]["rate of change"][:, :, 0, mid-1:end-1  ].sum(axis=-1) / 4  
+        boundary_share = state[mod][share_vars[mod]][:, :, 0, mid-1]
     
     rel_change_hist = np.divide(avg_growth_hist, avg_share_hist, where=avg_share_hist != 0, out=np.zeros_like(avg_share_hist))
     rel_change_sim = np.divide(avg_growth_sim, avg_share_sim, where=avg_share_sim != 0, out=np.zeros_like(avg_share_sim))
     
     roc_diff = np.where( (rel_change_hist == 0) | (rel_change_sim == 0), 0, rel_change_sim - rel_change_hist)
     
-    return roc_diff, boundary_share 
+    return roc_diff, boundary_share
 
 
 
