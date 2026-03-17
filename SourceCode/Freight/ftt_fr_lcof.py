@@ -254,10 +254,6 @@ def get_lcof(data, data_dt, titles, carbon_costs, year, iteration):
             calculate_feebate_rates(data, titles, c6ti, n_veh_classes)
             verify_revenue_neutrality(data, titles, c6ti)
             
-    # debugging: print subsidy rates to check
-    ztvt_ml = data['ZTVT'][86, 31:34, 0]  # BEV indices
-    print(f"Subsidy rates for Milan BEVs: {ztvt_ml} for year {year} iteration {iteration}")
-    
     tf = np.ones([len(titles['FTTI']), 1])
     tf[20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV exempt
     taxable_fuels = np.zeros([len(titles['RTI']), len(titles['FTTI']), 1])
