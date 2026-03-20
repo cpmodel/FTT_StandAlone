@@ -97,7 +97,6 @@ def initialise_state(model):
 
         # Create container for rate of change (roc) vars
         state[mod]['roc_diff'] = np.zeros((N_regions, N_techs))
-        state[mod]['roc_diff_lag'] = np.zeros((N_regions, N_techs))
 
         state[mod]['hist_share_avg'] = np.zeros((N_regions, N_techs))
         state[mod]['score'] =  np.zeros((N_regions, N_techs))
@@ -228,61 +227,6 @@ def compute_roc_log(state, model, mod, epsilon=1e-6):
 
 
 
-# %%
-def roc_diff(state, model, mod):
-    '''
-    Calculate the relative average historical rate of change (roc) and the simulated roc for each mod
-    Then, calculate the difference between them
-    difference = (average_roc / average_share_sim) - (average_hist_roc / average_share_hist)
-    
-    Compared to a ratio of rate_of_change, this should be more stable for periods of low historical change.
-
-    FTT-Tr uses TDA1, a per-country variable for the last year of historical
-    share data, so the boundary index is looked up per region.
-    '''
-    timeline = model.timeline
-    
-    # Identify the vars needed
-    maps = get_model_maps(model)
-    share_vars = maps['shares']
-    histend_vars = maps['histend']
-
-    if mod == 'FTT-Tr':
-        hist_end_years = model.input['S0']['TDA1'][:, 0, 0].astype(int)
-        N_regions = state[mod][share_vars[mod]].shape[0]
-        N_techs   = state[mod][share_vars[mod]].shape[1]
-        avg_share_hist  = np.zeros((N_regions, N_techs))
-        avg_share_sim   = np.zeros((N_regions, N_techs))
-        avg_growth_hist = np.zeros((N_regions, N_techs))
-        avg_growth_sim  = np.zeros((N_regions, N_techs))
-        boundary_share  = np.zeros((N_regions, N_techs))
-        for r in range(N_regions):
-            mid_r = np.where(timeline == hist_end_years[r])[0][0] + 1
-            start_r, end_r = mid_r - 4, mid_r + 4
-            avg_share_hist[r]  = state[mod][share_vars[mod]][r, :, 0, start_r:mid_r].sum(axis=-1) / 4
-            avg_share_sim[r]   = state[mod][share_vars[mod]][r, :, 0, mid_r:end_r].sum(axis=-1) / 4
-            avg_growth_hist[r] = state[mod]["rate of change"][r, :, 0, start_r-1:mid_r-1].sum(axis=-1) / 4
-            avg_growth_sim[r]  = state[mod]["rate of change"][r, :, 0, mid_r-1:end_r-1].sum(axis=-1) / 4
-            boundary_share[r]  = state[mod][share_vars[mod]][r, :, 0, mid_r-1]
-    else:
-        mid = np.where(timeline == model.histend[histend_vars[mod]])[0][0] + 1
-        start, end, end1 = mid-4, mid+4, mid+4
-        if end == 0: end1=None
-        avg_share_hist = state[mod][share_vars[mod]][:, :, 0, start:mid].sum(axis=-1) / 4
-        avg_share_sim  = state[mod][share_vars[mod]][:, :, 0, mid:end1  ].sum(axis=-1) / 4
-        avg_growth_hist = state[mod]["rate of change"][:, :, 0, start-1:mid-1].sum(axis=-1) / 4
-        avg_growth_sim  = state[mod]["rate of change"][:, :, 0, mid-1:end-1  ].sum(axis=-1) / 4  
-        boundary_share = state[mod][share_vars[mod]][:, :, 0, mid-1]
-    
-    rel_change_hist = np.divide(avg_growth_hist, avg_share_hist, where=avg_share_hist != 0, out=np.zeros_like(avg_share_hist))
-    rel_change_sim = np.divide(avg_growth_sim, avg_share_sim, where=avg_share_sim != 0, out=np.zeros_like(avg_share_sim))
-    
-    roc_diff = np.where( (rel_change_hist == 0) | (rel_change_sim == 0), 0, rel_change_sim - rel_change_hist)
-    
-    return roc_diff, boundary_share
-
-
-
 def adjust_gamma_values_simulated_annealing(state, mod, it):
     """Randomly choose delta gamma for each model version, using a standard deviation with 
     an adjustable standard deviation."""
@@ -315,16 +259,6 @@ def adjust_gamma_values_simulated_annealing(state, mod, it):
     state[mod]['gamma'] = gamma[:, :, np.newaxis]
 
     return state
-
-def get_score_and_lagged_score(state, mod):
-    '''Get score and score lag to compare'''
-    
-    # Compute the regularised score for current and new solutions
-    score = state[mod]['score']
-    score_lag = state[mod]['score_lag']
-    
-    return score, score_lag
-
 
 def compute_scores(state, mod):
     """
@@ -371,7 +305,8 @@ def accept_or_reject_gamma_changes(state, mod, it, T0):
     
     gamma = state[mod]['gamma'][:, :, 0]
     gamma_lag = state[mod]['gamma_lag'][:, :, 0]
-    score, score_lag = get_score_and_lagged_score(state, mod)
+    score = state[mod]['score']
+    score_lag = state[mod]['score_lag']
 
     # Element-wise acceptance condition
     acceptance_mask = (score > score_lag) | (
@@ -395,7 +330,8 @@ def set_initial_temperature(state, model, mod):
     between the first two iterations
     """
     
-    score, score_lag = get_score_and_lagged_score(state, mod)
+    score = state[mod]['score']
+    score_lag = state[mod]['score_lag']
     
     # Rule of thumb is to divide by 5. Ignoring non-zero values
     non_zero_mask = (score != 0) & (score_lag != 0)
@@ -455,10 +391,6 @@ def gamma_auto(model):
             # Initialising automation vars
             state = initialise_state(model) 
         
-        # Initial roc_diff values
-        for mod in modules_to_assess:
-            state[mod]['roc_diff'], state[mod]['hist_share_avg'] = roc_diff(state, model, mod)
-        
         # Break when all models have reached convergence
         convergence = [False] * len(modules_to_assess)
         
@@ -479,7 +411,6 @@ def gamma_auto(model):
                 
                 # Save previous gamma and roc values
                 state[mod]['gamma_lag'][:, :, 0] = state[mod]['gamma'][:, :, 0]
-                state[mod]["roc_diff_lag"][:, :] = state[mod]["roc_diff"][:, :]
                 state[mod]["score_lag"][:, :] = state[mod]["score"][:, :]
                 
                 # Update gamma values semi-randomly
@@ -525,12 +456,6 @@ def gamma_auto(model):
     return state, run_history
 #%%
 model = model_class.ModelRun()
-# Cache simple model maps for reuse across this module
-try:
-    model.maps = get_model_maps(model)
-except Exception:
-    # Don't fail if mapping cannot be built here; code will still work using inline dict(zip(...))
-    model.maps = {}
 
 # Compute gamma values for models turned on in settings.ini
 modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
@@ -547,8 +472,6 @@ decay_rate_steps = 0.96
 cooling_rate = 0.94 # Quite substantial cooling
 convergence_threshold = 0.0010
 global_weight = 0.5
-
-gamma_global = []
 
 state, run_history = gamma_auto(model)
 
