@@ -11,7 +11,8 @@ def plot_ztvt_timeseries(
     pickle_name='Results', 
     tech_indices=(32, 33),
     FIGURE_WIDTH=9,
-    ROW_HEIGHT=3.3
+    ROW_HEIGHT=3.3,
+    output_name='tco_subsidy'
     ):
     """
     Plot ZTVT subsidy-rate time series (2025-2050) for one scenario
@@ -117,4 +118,4 @@ def plot_ztvt_timeseries(
         ncol=max(1, len(region_labels)),
         frameon=True
     )
-    plt.savefig('Figures/output/tco_subsidy.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")

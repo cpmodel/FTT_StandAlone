@@ -11,7 +11,8 @@ def plot_mandate_tco(
     scenario_names, 
     pickle_name='Results',
     FIGURE_WIDTH=7,
-    ROW_HEIGHT=2.7):
+    ROW_HEIGHT=2.7,
+    output_name='tco_parity'):
     """
     Function to plot yearly ZTTC lines for BEV and Diesel freight trucks.
     Creates one subplot per region and compares BEV across baseline/scenarios
@@ -30,6 +31,8 @@ def plot_mandate_tco(
         {scenario_key: friendly_label}.
     pickle_name: str
         Name of the pickle file containing the results.
+    output_name: str
+        Name of the output file (without extension).
     """
     with open(f'Output/{pickle_name}.pickle', 'rb') as f:
         results = pickle.load(f)
@@ -255,4 +258,4 @@ def plot_mandate_tco(
     fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', x=-0.02)
 
     # Ensure adequate vertical padding when using tight layout
-    plt.savefig('Figures/output/tco_parity.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")

@@ -67,8 +67,9 @@ if "policy_effect" in selected_plots:
         scenarios={'S0': 'Baseline',
                    "carbon_tax": "Carbon tax",
                    "tco_parity": "TCO feebate",
-                   'city_mandates_100': 'City mandates'},
-        pickle_name='Results_stacked_figure'
+                   'city_mandates_2040': 'City mandates'},
+        pickle_name='Results_stacked_figure_fast_to',
+        output_name='zewk_hdt_stacked_fast_to'
     )
     print("Policy effectiveness plot created.")
 

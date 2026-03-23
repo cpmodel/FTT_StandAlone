@@ -16,7 +16,8 @@ def plot_costs(
                          "S2": "negative"}, 
     pickle_name='Results',
     FIGURE_WIDTH=7,
-    ROW_HEIGHT=2.7):
+    ROW_HEIGHT=2.7,
+    output_name='current_traj_costs'):
     """
     Plot line charts of costs for HDT and MDT technology groups.
     Function uses the ZTTC variable.
@@ -35,6 +36,8 @@ def plot_costs(
         Dictionary mapping scenario keys to whether scenario is main estimate or positive/negative sensitivity.
     pickle_name : str
         Name of pickle file in Output/ (without extension).
+    output_name : str
+        Name of the output file (without extension).
     """
     if not isinstance(regions, dict) or len(regions) == 0:
         raise ValueError("regions must be a non-empty dictionary of {region_id: region_label}.")
@@ -184,4 +187,4 @@ def plot_costs(
     )
     fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', fontsize=14, x=-0.02)
 
-    plt.savefig('Figures/output/current_traj_costs.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches='tight')
