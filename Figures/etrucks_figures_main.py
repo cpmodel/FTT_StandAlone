@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from plot_code.plot_stacked_area import plot_zewk_hdt_stacked
 from plot_code.plot_subsidy import plot_ztvt_timeseries
 from plot_code.plot_tco_parity import plot_mandate_tco
+from plot_code.plot_current_traj import plot_costs
 
 # create output directory if it doesn't exist
 output_dir = 'output'
@@ -30,7 +31,7 @@ plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 12
 
 
-plot_options = ["mandate_tco", "subsidy", "policy_effect"]
+plot_options = ["mandate_tco", "subsidy", "policy_effect", "costs", "shares"]
 # Get cmd line arguments
 arguments = sys.argv[1:]
 if not arguments:
@@ -41,7 +42,7 @@ else:
 
 if "mandate_tco" in selected_plots:
     plot_mandate_tco(
-    regions={41:"China", 3:"Germany", 42:"India",  8:"Italy", 10:"Netherlands", 5:"Spain"},
+    regions={41:"China", 3:"Germany", 42:"India",  8:"Italy", 5:"Spain", 15:"UK"},
     baseline_name={'S0': 'Baseline'},
     scenario_names={'city_mandates_2030': '100pct sales by 2030',
                     'city_mandates_2035': '100pct sales by 2035',
@@ -62,7 +63,7 @@ if "subsidy" in selected_plots:
 
 if "policy_effect" in selected_plots:
     plot_zewk_hdt_stacked(
-        regions={72:"Beijing", 82:"Berlin", 115:"Delhi",98:"Madrid", 87:"Milan", 95:"Rotterdam"},
+        regions={72:"Beijing", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid", 87:"Milan"},
         scenarios={'S0': 'Baseline',
                    "carbon_tax": "Carbon tax",
                    "tco_parity": "TCO feebate",
@@ -70,3 +71,12 @@ if "policy_effect" in selected_plots:
         pickle_name='Results_stacked_figure'
     )
     print("Policy effectiveness plot created.")
+
+if "costs" in selected_plots:
+    plot_costs(
+        regions={72:"Beijing", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid", 87:"Milan"},
+        scenario_name_map={'S0': 'Baseline'},
+        scenario_type_map={'S0': 'main', 'S1': 'positive', 'S2': 'negative'},
+        pickle_name='Results_sensitivities'
+    )
+    print("Cost trajectory plot created.")

@@ -172,6 +172,8 @@ def plot_mandate_tco(
     legend_handles = {}
 
     col_order = ['MDT', 'HDT']
+    col_titles = {'MDT': 'Medium duty truck', 'HDT': 'Heavy duty truck'}
+
     for i in range(n_regions_selected):
         for j, vehicle_class in enumerate(col_order):
             ax = axes[i, j]
@@ -235,11 +237,12 @@ def plot_mandate_tco(
                 )
                 annotation_index += 1
 
-            ax.set_title(f'{region_labels[i]} - {vehicle_class}', weight='bold')
+            if i == 0:
+                ax.set_title(col_titles[vehicle_class], weight='bold')
             if j == 0:
-                # ax.set_ylabel('Levelized Cost ($/tkm)')
-                pass
-            ax.grid(True, alpha=0.3)
+                ax.set_ylabel(region_labels[i], fontsize=14, labelpad=5, weight='bold')
+            # ax.set_title(f'{region_labels[i]} - {vehicle_class}', weight='bold')
+            # ax.grid(True, alpha=0.3)
 
     fig.legend(
         handles=list(legend_handles.values()),
@@ -249,7 +252,7 @@ def plot_mandate_tco(
         ncol=2,
         frameon=True
     )
-    fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', x=0.01)
+    fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', x=-0.02)
 
     # Ensure adequate vertical padding when using tight layout
     plt.savefig('Figures/output/tco_parity.png', dpi=300, bbox_inches="tight")
