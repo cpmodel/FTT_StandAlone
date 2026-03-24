@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from plot_code.plot_stacked_area import plot_zewk_hdt_stacked
 from plot_code.plot_subsidy import plot_ztvt_timeseries
 from plot_code.plot_tco_parity import plot_mandate_tco
-from plot_code.plot_current_traj import plot_costs
+from plot_code.plot_current_traj import plot_costs, plot_shares
 
 # create output directory if it doesn't exist
 output_dir = 'output'
@@ -68,8 +68,7 @@ if "policy_effect" in selected_plots:
                    "carbon_tax": "Carbon tax",
                    "tco_parity": "TCO feebate",
                    'city_mandates_2040': 'City mandates'},
-        pickle_name='Results_stacked_figure_fast_to',
-        output_name='zewk_hdt_stacked_fast_to'
+        pickle_name='Results_stacked_figure',
     )
     print("Policy effectiveness plot created.")
 
@@ -78,6 +77,15 @@ if "costs" in selected_plots:
         regions={72:"Beijing", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid", 87:"Milan"},
         scenario_name_map={'S0': 'Baseline'},
         scenario_type_map={'S0': 'main', 'S1': 'positive', 'S2': 'negative'},
-        pickle_name='Results_sensitivities'
+        pickle_name='Results_sensitivities',
     )
     print("Cost trajectory plot created.")
+    
+if "shares" in selected_plots:  
+    plot_shares(
+        regions={72:"Beijing", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid", 87:"Milan"},
+        scenario_name_map={'S0': 'Baseline'},
+        scenario_type_map={'S0': 'main', 'S1': 'positive', 'S2': 'negative'},
+        pickle_name='Results_sensitivities',
+    )
+    print("Share trajectory plot created.")

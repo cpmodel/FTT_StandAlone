@@ -4,6 +4,7 @@ import configparser
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, VPacker
 
 def plot_mandate_tco(
     regions, 
@@ -192,13 +193,19 @@ def plot_mandate_tco(
             legend_handles[f'Diesel'] = diesel_plot
             plt.margins(x=0)  # Remove horizontal margins to align with year ticks
 
+            color_dict = {
+                'S0': '#4cc9f0',
+                'city_mandates_2030': '#1f77b4',
+                'city_mandates_2035': '#ff7f0e',
+                'city_mandates_2040': '#2ca02c',
+            }
             crossover_years = {}
             scenario_colors = {}
             bev_lines_by_scenario = {}
 
             for scenario in scenario_keys:
                 bev_line = bev_series_by_class_scenario[vehicle_class][scenario][i]
-                bev_plot = ax.plot(years, bev_line, label=f'BEV ({scenario_labels[scenario]})', linewidth=2)[0]
+                bev_plot = ax.plot(years, bev_line, color=color_dict.get(scenario), label=f'BEV ({scenario_labels[scenario]})', linewidth=2)[0]
                 legend_handles[f'BEV ({scenario_labels[scenario]})'] = bev_plot
                 scenario_colors[scenario] = bev_plot.get_color()
                 bev_lines_by_scenario[scenario] = bev_line
@@ -215,7 +222,7 @@ def plot_mandate_tco(
                     )
 
             baseline_cross_year = crossover_years.get(baseline_key)
-            annotation_index = 0
+            annotation_entries = []
             for scenario in scenario_keys:
                 if scenario == baseline_key:
                     continue
@@ -226,19 +233,36 @@ def plot_mandate_tco(
                 delta_years = scenario_cross_year - baseline_cross_year
                 y_at_cross = float(np.interp(scenario_cross_year, years, bev_lines_by_scenario[scenario]))
 
-                ax.annotate(
-                    f'{delta_years:+.2f} y',
-                    xy=(scenario_cross_year, y_at_cross * 1.035),  # Add vertical offset to avoid overlap with lines
-                    xytext=(25, -18 * annotation_index),
-                    textcoords='offset points',
-                    color=scenario_colors[scenario],
-                    fontsize=12,
-                    weight='bold',
-                    ha='left',
-                    va='bottom',
-                    bbox=dict(boxstyle='round,pad=0.2', facecolor='white', edgecolor='none', alpha=0.7)
+                annotation_entries.append((f'{delta_years:+.2f} yrs', scenario_colors[scenario]))
+
+            if annotation_entries:
+                annotation_boxes = [
+                    TextArea(
+                        text,
+                        textprops=dict(color=color, fontsize=10, weight='bold')
+                    )
+                    for text, color in annotation_entries
+                ]
+                annotation_box = VPacker(
+                    children=annotation_boxes,
+                    align='right',
+                    pad=0,
+                    sep=4
                 )
-                annotation_index += 1
+                anchored_box = AnchoredOffsetbox(
+                    loc='upper right',
+                    child=annotation_box,
+                    pad=0.2,
+                    borderpad=0.2,
+                    frameon=True,
+                    bbox_to_anchor=(0.98, 0.98),
+                    bbox_transform=ax.transAxes
+                )
+                anchored_box.patch.set_boxstyle('round,pad=0.2')
+                anchored_box.patch.set_facecolor('white')
+                anchored_box.patch.set_edgecolor('gray')
+                anchored_box.patch.set_alpha(0.85)
+                ax.add_artist(anchored_box)
 
             if i == 0:
                 ax.set_title(col_titles[vehicle_class], weight='bold')
@@ -255,7 +279,7 @@ def plot_mandate_tco(
         ncol=2,
         frameon=True
     )
-    fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', x=-0.02)
+    fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', fontsize=14, x=-0.04)
 
     # Ensure adequate vertical padding when using tight layout
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
