@@ -299,7 +299,7 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                 data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
                 # Impact of net curtailment on load factors for VRE technologies
                 # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-                data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * data['MCNA'][r, 0, 0] / data['MCGA'][r, 0, 0]
+                data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * divide(data['MCNA'][r, 0, 0], data['MCGA'][r, 0, 0])
                                 
                 # Total additional electricity that needs to be generated
                 data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r, 0, 0] + data['MSSG'][r,0,0]
