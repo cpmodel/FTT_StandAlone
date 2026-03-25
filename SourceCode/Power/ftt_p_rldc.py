@@ -244,11 +244,11 @@ def rldc(data, time_lag, data_dt, year, titles, histend):
                                  -1.0)*np.sum(data['MEWS'][:, [16,17], 0], axis=1),
                                  0.005)
     
-    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, [17,18], 0], axis=1)
+    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, [16,17], 0], axis=1)
     vre_ggr_wind = np.maximum((divide(np.sum(data['MEWS'][:, [16, 17], 0] * data['MEWL'][:, [16, 17], 0], axis=1),
                                  np.sum(time_lag['MEWS'][:, [16, 17], 0] * time_lag['MEWL'][:, [16, 17], 0], axis=1))
                                  -1.0)*np.sum(data['MEWG'][:, [16,17], 0], axis=1),
-                                 0.002 * np.sum(data['MEWG'][:, [17,18], 0], axis=1))
+                                 0.002 * np.sum(data['MEWG'][:, [16,17], 0], axis=1))
     
 
     # What is the impact of additional solar
