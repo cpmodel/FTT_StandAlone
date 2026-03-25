@@ -229,17 +229,19 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     
     # Different configurations of vre_powers to estimate splits between solar
     # and wind
+
+    solar_ind = [18, 22]
     vre_gr_sol = 0.005 * np.ones(len(titles['RTI']))
-    vre_gr_sol = np.maximum((divide(data['MEWS'][:, 18, 0] * data['MEWL'][:, 18, 0],
-                               time_lag['MEWS'][:, 18, 0] * time_lag['MEWL'][:, 18, 0])
-                               - 1.0) * data['MEWS'][:, 18, 0],
-                                0.005)
+    vre_gr_sol = np.maximum((divide(np.sum(data['MEWS'][:, solar_ind, 0] * data['MEWL'][:, solar_ind, 0], axis=1),
+                                 np.sum(time_lag['MEWS'][:, solar_ind, 0] * time_lag['MEWL'][:, solar_ind, 0], axis=1))
+                                 -1.0)*np.sum(data['MEWS'][:, solar_ind, 0], axis=1),
+                                 0.005)
     
-    vre_ggr_sol = 0.002 * data['MEWG'][:, 18, 0]
-    vre_ggr_sol = np.maximum((divide(data['MEWS'][:, 18, 0] * data['MEWL'][:, 18, 0],
-                                 time_lag['MEWS'][:, 18, 0] * time_lag['MEWL'][:, 18, 0])
-                                 -1.0)*data['MEWG'][:, 18, 0],
-                                 0.002 * data['MEWG'][:, 18, 0])
+    vre_ggr_sol = 0.002 * np.sum(data['MEWG'][:, solar_ind, 0], axis=1)
+    vre_ggr_sol = np.maximum((divide(np.sum(data['MEWS'][:, solar_ind, 0] * data['MEWL'][:, solar_ind, 0], axis=1),
+                                 np.sum(time_lag['MEWS'][:, solar_ind, 0] * time_lag['MEWL'][:, solar_ind, 0], axis=1))
+                                 -1.0)*np.sum(data['MEWG'][:, solar_ind, 0], axis=1),
+                                 0.002 * np.sum(data['MEWG'][:, solar_ind, 0], axis=1))
     
     vre_gr_wind = 0.005 * np.ones(len(titles['RTI']))
     vre_gr_wind = np.maximum((divide(np.sum(data['MEWS'][:, [16, 17], 0] * data['MEWL'][:, [16, 17], 0], axis=1),
@@ -247,11 +249,11 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
                                  -1.0)*np.sum(data['MEWS'][:, [16,17], 0], axis=1),
                                  0.005)
     
-    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, [17,18], 0], axis=1)
+    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, [16,17], 0], axis=1)
     vre_ggr_wind = np.maximum((divide(np.sum(data['MEWS'][:, [16, 17], 0] * data['MEWL'][:, [16, 17], 0], axis=1),
                                  np.sum(time_lag['MEWS'][:, [16, 17], 0] * time_lag['MEWL'][:, [16, 17], 0], axis=1))
                                  -1.0)*np.sum(data['MEWG'][:, [16,17], 0], axis=1),
-                                 0.002 * np.sum(data['MEWG'][:, [17,18], 0], axis=1))
+                                 0.002 * np.sum(data['MEWG'][:, [16,17], 0], axis=1))
     
 
     # What is the impact of additional solar
