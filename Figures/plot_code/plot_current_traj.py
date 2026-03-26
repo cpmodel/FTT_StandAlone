@@ -16,7 +16,7 @@ def plot_costs(
                          "S2": "negative"}, 
     pickle_name='Results',
     FIGURE_WIDTH=7,
-    ROW_HEIGHT=2.7,
+    ROW_HEIGHT=3.3,
     output_name='current_traj_costs'):
     """
     Plot line charts of costs for HDT and MDT technology groups.
@@ -209,7 +209,7 @@ def plot_shares(
                          "S2": "negative"}, 
     pickle_name='Results',
     FIGURE_WIDTH=7,
-    ROW_HEIGHT=2.7,
+    ROW_HEIGHT=3.4,
     output_name='current_traj_shares'):
     """
     Plot line charts of shares for HDT and MDT technology groups.
@@ -309,7 +309,7 @@ def plot_shares(
         sharex=True,
         sharey=True
     )
-    fig.subplots_adjust(hspace=0.1, wspace=0.3)
+    fig.subplots_adjust(hspace=0.1, wspace=0.2)
     axes = np.atleast_2d(axes)
 
     legend_handles = {}
@@ -397,7 +397,7 @@ def plot_shares(
         handles=[legend_handles[label] for label in legend_labels],
         labels=legend_labels,
         loc='lower center',
-        bbox_to_anchor=(0.5, 0.06),
+        bbox_to_anchor=(0.5, 0.07),
         ncol=len(legend_handles),
         frameon=True
     )

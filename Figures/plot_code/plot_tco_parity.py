@@ -12,7 +12,7 @@ def plot_mandate_tco(
     scenario_names, 
     pickle_name='Results',
     FIGURE_WIDTH=7,
-    ROW_HEIGHT=2.7,
+    ROW_HEIGHT=3.6,
     output_name='tco_parity'):
     """
     Function to plot yearly ZTTC lines for BEV and Diesel freight trucks.
@@ -275,7 +275,7 @@ def plot_mandate_tco(
         handles=list(legend_handles.values()),
         labels=list(legend_handles.keys()),
         loc='lower center',
-        bbox_to_anchor=(0.5, 0.03),
+        bbox_to_anchor=(0.5, 0.05),
         ncol=2,
         frameon=True
     )

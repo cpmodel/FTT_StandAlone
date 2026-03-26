@@ -8,7 +8,7 @@ def plot_zewk_hdt_stacked(
     scenarios, 
     pickle_name='Results',
     FIGURE_WIDTH=8,
-    ROW_HEIGHT=2.4,
+    ROW_HEIGHT=3,
     output_name='zewk_hdt_stacked'):
     """
     Plot stacked area charts of ZEWK (number of trucks) for HDT and MDT technology groups.
@@ -166,7 +166,7 @@ def plot_zewk_hdt_stacked(
             handles=stack_handles,
             labels=group_order,
             loc='lower center',
-            bbox_to_anchor=(0.5, 0.05),
+            bbox_to_anchor=(0.5, 0.07),
             ncol=len(group_order),
             frameon=True
         )
