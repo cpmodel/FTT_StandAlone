@@ -607,14 +607,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
         # =====================================================================
 
         # Start the computation of shares
+
+        # ------------------------ MY ALTERATIONS ---------------------------------
+        # Initialise household_shares once per year from MEWG/MEWDH, but only when
+        # the persisted values from time_lag are still uninitialized (all zeros).
+        # In subsequent years and sub-iterations the correct value is carried in
+        # data_dt['household_shares'] via the domain update at the foot of the loop.
+        if not np.any(data_dt['household_shares'] > 0):
+            data_dt['household_shares'][:, 0] = (
+                data_dt['MEWG'][:, t2ti['23 Rooftop Solar']] /
+                (data_dt['MEWDH'][:, :, 0] * 11.63)
+            )
+            data_dt['household_shares'][:, 1] = 1 - data_dt['household_shares'][:, 0]
+        # --------------------------------------------------------------------------
+
         for t in range(1, no_it + 1):
             
             # ------------------------ MY ALTERATIONS ---------------------------------
-
-            # Calculates the initial shares to add to variable data_dt -> shares_dt (1ktoe = 11.63 GWh)
-            data_dt['household_shares'] = np.zeros((num_regions, 2, 1))
-            data_dt['household_shares'][:, 0] = data_dt['MEWG'][:, t2ti['23 Rooftop Solar']] / (data_dt['MEWDH'][:, :, 0]*11.63)
-            data_dt['household_shares'][:, 1] = 1 - data_dt['household_shares'][:, 0]
             
             # To pass the information for costs (calculate de LCOE)
             data_dt['costs_household'] = np.zeros((num_regions, 2, 1))
@@ -810,6 +819,13 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
             data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
                                            denominator) 
+
+            # Restore rooftop solar generation from the household model.
+            # The general generation update above uses total-grid MEWS (a tiny fraction
+            # of total capacity) which gives a value incompatible with the household
+            # shares model.  Overwrite with the household-derived value so that
+            # data_dt['MEWG'][:, -1] stays consistent going into the next sub-iteration.
+            data['MEWG'][:, -1, 0] = data['household_shares'][:, 0, 0] * (data_dt['MEWDH'][:, 0, 0] * 11.63)
 
             # Update capacities
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
