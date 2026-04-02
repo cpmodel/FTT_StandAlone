@@ -182,16 +182,25 @@ def compute_roc(state, share_vars, mod):
     
     return roc
 
-def compute_roc_logit(state, model, mod, epsilon=1e-6, window=5):
+def compute_roc_logit(state, model, mod, epsilon=1e-6, sim_window=5, max_hist_window=14):
     """
     Computes the difference in logit-share trend slopes across the histend boundary.
 
-    Uses OLS linear regression on logit(s) = log(s / (1-s)), which is the
+    Uses OLS linear regression on logit(s) = log(s / (1-s)), which is the correct
     linearising transform for logistic (S-curve) diffusion:
-      - Interannual variability (e.g. wind speed) shifts the regression intercept
-        but barely affects the slope, unlike averaged first-differences.
+      - Moderate-to-large shares (e.g. wind at 15-30%): log(s) flattens
+        artificially; logit does not.
       - New/emerging technologies: logit(epsilon) is a large negative constant,
         so its OLS slope is zero (correctly: "not growing yet").
+
+    Historical window is chosen adaptively (sim_window..max_hist_window years) by
+    selecting the window size that minimises the standard error of the OLS slope.
+    This handles high-variability technologies (e.g. wind, where interannual
+    resource variation can make a short window unrepresentative of the real trend)
+    without penalising fast-changing technologies that genuinely need a short window.
+
+    The simulation window is fixed at sim_window years — FTT output is smooth so
+    there is no benefit to adaptive windowing on that side.
 
     FTT-Tr uses TDA1, a per-country variable for the last year of historical
     share data, so the boundary index is looked up per region.
@@ -208,33 +217,57 @@ def compute_roc_logit(state, model, mod, epsilon=1e-6, window=5):
 
     N_regions, N_techs = shares.shape[:2]
 
-    # Pre-compute centred time vector and sum-of-squares (same for both windows)
-    t = np.arange(window, dtype=float)
-    t -= t.mean()
-    ss = np.dot(t, t)
-
-    def ols_slope(ls_window):
-        """OLS slope over last axis. ls_window shape: (..., window)."""
+    def ols_slope_fixed(ls_window):
+        """OLS slope over last axis for a fixed window."""
+        w = ls_window.shape[-1]
+        t = np.arange(w, dtype=float) - (w - 1) / 2.0
+        ss = np.dot(t, t)
         return np.sum((ls_window - ls_window.mean(axis=-1, keepdims=True)) * t, axis=-1) / ss
+
+    def ols_slope_adaptive(ls_max_window, min_w):
+        """
+        Try trailing windows of size min_w..ls_max_window.shape[-1] and return
+        the slope whose standard error is smallest. Vectorised over all leading
+        dimensions (..., max_w).
+        """
+        max_w = ls_max_window.shape[-1]
+        best_slope = None
+        best_se    = None
+        for w in range(min_w, max_w + 1):
+            data = ls_max_window[..., -w:]
+            t = np.arange(w, dtype=float) - (w - 1) / 2.0
+            ss = np.dot(t, t)
+            slope  = np.sum((data - data.mean(axis=-1, keepdims=True)) * t, axis=-1) / ss
+            resid  = data - (slope[..., np.newaxis] * t + data.mean(axis=-1, keepdims=True))
+            se     = np.sqrt(np.mean(resid ** 2, axis=-1) / ss)
+            if best_slope is None:
+                best_slope, best_se = slope, se
+            else:
+                pick_new   = se < best_se
+                best_slope = np.where(pick_new, slope, best_slope)
+                best_se    = np.where(pick_new, se,    best_se)
+        return best_slope
 
     if mod == 'FTT-Tr':
         # Per-country boundary: TDA1 records the last historical year per region
         hist_end_years = model.input['S0']['TDA1'][:, 0, 0].astype(int)
-        slope_hist = np.zeros((N_regions, N_techs))
-        slope_sim  = np.zeros((N_regions, N_techs))
+        slope_hist     = np.zeros((N_regions, N_techs))
+        slope_sim      = np.zeros((N_regions, N_techs))
         avg_share_hist = np.zeros((N_regions, N_techs))
         for r in range(N_regions):
-            mid_r = np.where(timeline == hist_end_years[r])[0][0]
-            slope_hist[r] = ols_slope(logit_shares[r, :, mid_r-window:mid_r])
-            slope_sim[r]  = ols_slope(logit_shares[r, :, mid_r:mid_r+window])
-            avg_share_hist[r] = np.mean(shares[r, :, mid_r-window:mid_r+1], axis=-1)
+            mid_r  = np.where(timeline == hist_end_years[r])[0][0]
+            avail  = min(max_hist_window, mid_r)
+            slope_hist[r]     = ols_slope_adaptive(logit_shares[r, :, mid_r-avail:mid_r], sim_window)
+            slope_sim[r]      = ols_slope_fixed(logit_shares[r, :, mid_r:mid_r+sim_window])
+            avg_share_hist[r] = np.mean(shares[r, :, mid_r-avail:mid_r+1], axis=-1)
     else:
         # Uniform boundary for all regions
         hist_end_year = model.histend[histend_vars[mod]]
-        mid = np.where(timeline == hist_end_year)[0][0]
-        slope_hist = ols_slope(logit_shares[:, :, mid-window:mid])
-        slope_sim  = ols_slope(logit_shares[:, :, mid:mid+window])
-        avg_share_hist = np.mean(shares[:, :, mid-window:mid+1], axis=-1)
+        mid   = np.where(timeline == hist_end_year)[0][0]
+        avail = min(max_hist_window, mid)
+        slope_hist     = ols_slope_adaptive(logit_shares[:, :, mid-avail:mid], sim_window)
+        slope_sim      = ols_slope_fixed(logit_shares[:, :, mid:mid+sim_window])
+        avg_share_hist = np.mean(shares[:, :, mid-avail:mid+1], axis=-1)
 
     # The 'physics' difference: mismatch in trend growth rate across the boundary
     diff = slope_sim - slope_hist
