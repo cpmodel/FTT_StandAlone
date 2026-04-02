@@ -6,7 +6,8 @@ A simulated annealing algorithm for finding the gamma values used in FTT simulat
 This algorithm should find the values of gamma such that the diffusion of shares
 is smooth across the boundary between the historical and simulated period.
 
-For the power sector, ensure that MWKA is set to zero, as the algorithm cannot deal with partial data yet.
+For the power sector, MWKA (exogenous capacity) is automatically set to -1 during calibration so that
+exogenous capacity constraints do not interfere with the gamma optimisation.
 
 The data gets saved into the Inputs folder, and needs to be manually copied into the Masterfiles (to be further automated when data structures are finalised.)
 
@@ -106,6 +107,13 @@ def initialise_state(model):
     for mod in modules_to_assess:
         
         model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :] = 0
+
+    # Disable exogenous capacity for FTT-P: -1 means the constraint is inactive.
+    # Without this, MWKA (e.g. exogenous capacity in the simulation period from incomplete data) 
+    # fights the gamma optimisation and produces spuriously gamma values
+    
+    if 'FTT-P' in modules_to_assess:
+        model.input[scenario]['MWKA'][:] = -1
           
     # Loop through timeline
     for year_index, year in enumerate(model.timeline):
@@ -122,7 +130,7 @@ def initialise_state(model):
         
             # Compute the rate of change and score from the shares variable
             state[mod]["rate of change"] = compute_roc(state, share_vars, mod)            
-            state[mod]["roc_diff"], state[mod]["hist_share_avg"] = compute_roc_log(state, model, mod)
+            state[mod]["roc_diff"], state[mod]["hist_share_avg"] = compute_roc_logit(state, model, mod)
             state[mod]["score"] = compute_scores(state, mod)
 
     return state
@@ -161,7 +169,7 @@ def run_model(state, model):
         
         # Define the ROC variable for each model
         state[mod]["rate of change"] = compute_roc(state, share_vars, mod)        
-        state[mod]['roc_diff'], _ = compute_roc_log(state, model, mod)
+        state[mod]['roc_diff'], _ = compute_roc_logit(state, model, mod)
         state[mod]['score'] = compute_scores(state, mod)
         
     return state
@@ -174,10 +182,16 @@ def compute_roc(state, share_vars, mod):
     
     return roc
 
-def compute_roc_log(state, model, mod, epsilon=1e-6):
+def compute_roc_logit(state, model, mod, epsilon=1e-6, window=5):
     """
-    Computes the difference in percentage growth rates across the boundary.
-    Uses log-space for stability and symmetry.
+    Computes the difference in logit-share trend slopes across the histend boundary.
+
+    Uses OLS linear regression on logit(s) = log(s / (1-s)), which is the
+    linearising transform for logistic (S-curve) diffusion:
+      - Interannual variability (e.g. wind speed) shifts the regression intercept
+        but barely affects the slope, unlike averaged first-differences.
+      - New/emerging technologies: logit(epsilon) is a large negative constant,
+        so its OLS slope is zero (correctly: "not growing yet").
 
     FTT-Tr uses TDA1, a per-country variable for the last year of historical
     share data, so the boundary index is looked up per region.
@@ -187,40 +201,45 @@ def compute_roc_log(state, model, mod, epsilon=1e-6):
     share_vars = maps['shares']
     histend_vars = maps['histend']
 
-    # Extract shares and apply floor to avoid ln(0)
     # Shape: (regions, techs, years)
     shares = state[mod][share_vars[mod]][:, :, 0, :]
-    shares_safe = np.maximum(shares, epsilon)
-
-    # Calculate Log-Rate of Change (Annual % growth approximation)
-    # log(S_t) - log(S_t-1)
-    lroc = np.diff(np.log(shares_safe), axis=-1)
+    s_safe = np.clip(shares, epsilon, 1 - epsilon)
+    logit_shares = np.log(s_safe / (1 - s_safe))
 
     N_regions, N_techs = shares.shape[:2]
+
+    # Pre-compute centred time vector and sum-of-squares (same for both windows)
+    t = np.arange(window, dtype=float)
+    t -= t.mean()
+    ss = np.dot(t, t)
+
+    def ols_slope(ls_window):
+        """OLS slope over last axis. ls_window shape: (..., window)."""
+        return np.sum((ls_window - ls_window.mean(axis=-1, keepdims=True)) * t, axis=-1) / ss
 
     if mod == 'FTT-Tr':
         # Per-country boundary: TDA1 records the last historical year per region
         hist_end_years = model.input['S0']['TDA1'][:, 0, 0].astype(int)
-        avg_lroc_hist = np.zeros((N_regions, N_techs))
-        avg_lroc_sim  = np.zeros((N_regions, N_techs))
+        slope_hist = np.zeros((N_regions, N_techs))
+        slope_sim  = np.zeros((N_regions, N_techs))
         avg_share_hist = np.zeros((N_regions, N_techs))
         for r in range(N_regions):
             mid_r = np.where(timeline == hist_end_years[r])[0][0]
-            avg_lroc_hist[r] = np.mean(lroc[r, :, mid_r-4:mid_r], axis=-1)
-            avg_lroc_sim[r]  = np.mean(lroc[r, :, mid_r:mid_r+4], axis=-1)
-            avg_share_hist[r] = np.mean(shares[r, :, mid_r-4:mid_r+1], axis=-1)
+            slope_hist[r] = ols_slope(logit_shares[r, :, mid_r-window:mid_r])
+            slope_sim[r]  = ols_slope(logit_shares[r, :, mid_r:mid_r+window])
+            avg_share_hist[r] = np.mean(shares[r, :, mid_r-window:mid_r+1], axis=-1)
     else:
         # Uniform boundary for all regions
         hist_end_year = model.histend[histend_vars[mod]]
         mid = np.where(timeline == hist_end_year)[0][0]
-        avg_lroc_hist = np.mean(lroc[:, :, mid-4:mid], axis=-1)
-        avg_lroc_sim  = np.mean(lroc[:, :, mid:mid+4], axis=-1)
-        avg_share_hist = np.mean(shares[:, :, mid-4:mid+1], axis=-1)
+        slope_hist = ols_slope(logit_shares[:, :, mid-window:mid])
+        slope_sim  = ols_slope(logit_shares[:, :, mid:mid+window])
+        avg_share_hist = np.mean(shares[:, :, mid-window:mid+1], axis=-1)
 
-    # The 'Physics' Difference
-    diff = avg_lroc_sim - avg_lroc_hist
+    # The 'physics' difference: mismatch in trend growth rate across the boundary
+    diff = slope_sim - slope_hist
 
-    # Mask out techs that aren't present (to avoid chasing noise)
+    # Mask out techs that aren't present (avoid chasing noise)
     diff = np.where(avg_share_hist <= epsilon, 0, diff)
 
     return diff, avg_share_hist
@@ -425,7 +444,7 @@ def gamma_auto(model):
             for n_mod, mod in enumerate(modules_to_assess):
                 
                 # Inside the for mod in modules_to_assess loop:
-                state[mod]['roc_diff'], _ = compute_roc_log(state, model, mod)
+                state[mod]['roc_diff'], _ = compute_roc_logit(state, model, mod)
                 state[mod]['score'] = compute_scores(state, mod)
                 state = accept_or_reject_gamma_changes(state, mod, it, T0[n_mod])
                 
