@@ -182,7 +182,7 @@ def compute_roc(state, share_vars, mod):
     
     return roc
 
-def compute_roc_logit(state, model, mod, epsilon=1e-6, sim_window=5, max_hist_window=14):
+def compute_roc_logit(state, model, mod, epsilon=1e-6, sim_window=5, max_hist_window=12):
     """
     Computes the difference in logit-share trend slopes across the histend boundary.
 
