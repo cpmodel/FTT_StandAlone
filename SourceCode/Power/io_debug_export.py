@@ -6,6 +6,7 @@ from pathlib import Path
 def export_io_summary(
     data_dt,
     t2ti,
+    year,
     tech_key="23 Rooftop Solar",
     outfile="io_check.txt",
     *,
@@ -63,11 +64,20 @@ def export_io_summary(
         else:
             return f"{body}  (shape={arr.shape}, total={n})"
 
-    outpath = Path(outfile)
+    # outpath = Path(outfile)
+    output_dir = Path("IO_Output")
+    output_dir.mkdir(exist_ok=True)
+
+    # Create year-specific filename
+    year_outfile = f"{Path(outfile).stem}_{year}.txt"
+
+    outpath = output_dir / year_outfile
+    
     with outpath.open("w", encoding="utf-8") as f:
-        f.write("# IO CHECK SUMMARY\n")
+        f.write(f"# IO CHECK SUMMARY YEAR: {year}\n")
         f.write(f"# Generated: {datetime.now().isoformat(timespec='seconds')}\n")
         f.write(f"# Tech key: '{tech_key}' (index {tech_idx})\n")
+        # f.write(f"# Year: {year}\n")
         f.write(f"# Iterations: {n_iter}\n")
         f.write(f"# Print limits: max_items={max_items}, edge_items={edge_items}\n")
         f.write("#" + "-"*78 + "\n\n")
@@ -97,20 +107,20 @@ def export_io_summary(
             f.write(f"  Cost Std: rooftop={fmt_val(std_roof_o)}, grid={fmt_val(std_grid_o)}\n")
             f.write("\n")
 
-            print(f"Wrote iteration {i+1}/{n_iter}")
+            # print(f"Wrote iteration {i+1}/{n_iter}")
 
         f.write("# End of report\n")
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # Example: call with custom truncation if desired
-    try:
-        export_io_summary(
-            data_dt, t2ti,
-            tech_key="23 Rooftop Solar",
-            outfile="io_check.txt",
-            max_items=20,
-            edge_items=5
-        )
-        print("Summary written to io_check.txt")
-    except NameError:
-        print("Define `data_dt` and `t2ti` before running this script, or import them here.")
+#    try:
+#        export_io_summary(
+#            data_dt, t2ti, year,
+#            tech_key="23 Rooftop Solar",
+#            outfile="io_check.txt",
+#            max_items=20,
+#            edge_items=5
+#        )
+#        print("Summary written to io_check.txt")
+#    except NameError:
+#        print("Define `data_dt` and `t2ti` before running this script, or import them here.")

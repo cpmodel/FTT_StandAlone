@@ -638,8 +638,12 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data_dt['costs_household_std'][:, 1] = 0.3*data_dt['costs_household'][:, 1]
             
             # initial substitution matrix -> defined as 1 
-            subst_households = np.ones((71, 2, 2))
-            
+            # subst_households = np.ones((71, 2, 2))
+            # Assuming 4 years for the decision of people going grid -> solar and 30 years for solar -> grid
+            subst_households = np.zeros((71, 2, 2))
+            subst_households[:, 0, 1] = 1/4   # above diagonal
+            subst_households[:, 1, 0] = 1/15  # below diagonal
+
             change_in_shares = shares_change(
                      dt=dt,
                      regions=valid_regions,
@@ -720,6 +724,8 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # data['MEWS'] = data['MEWK'] / data['MEWK'].sum()
             data['MEWS'] = data['MEWK'] / data['MEWK'].sum(axis=1, keepdims=True)  
             
+            export_io_summary(data_dt, t2ti, year, tech_key="23 Rooftop Solar", outfile="io_check.txt")
+
             # VERIFY FROM HERE
             
             if np.any(np.isnan(data['MEWS'])):
@@ -975,12 +981,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
                     data_dt[var] = np.copy(data[var])
             
-        
+            # export_io_summary(data_dt, t2ti, year, tech_key="23 Rooftop Solar", outfile="io_check.txt")
+
         if year == 2050 and t == no_it:
             print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.1f} M GWh, "
                   f"solar&wind is {np.sum(data['MEWG'][:, 16:19, 0])/10**6:.1f} M GWh")
-
-         
-        export_io_summary(data_dt, t2ti, tech_key="23 Rooftop Solar", outfile="io_check.txt")
 
     return data
