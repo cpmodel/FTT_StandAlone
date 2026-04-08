@@ -2,6 +2,7 @@
 battery_lr,1.1,0.9
 bev_truck_lr,1.1,0.9
 turnover_rate,1.1,0.9
+lifetime,1,1
 mileage,1.1,0.9
 payload,1.1,0.9
 truck_lr,1.1,0.9

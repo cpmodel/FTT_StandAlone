@@ -23,6 +23,7 @@ BEV_TRUCKS = ["BEV MDT", "BEV HDT"]
 DICT_BZTC = {
     "turnover_rate": 14,
     "payload": 10,
+    "lifetime": 8,
     "mileage": 15,
     "truck_lr": 13,
     "inv_cost": 1,

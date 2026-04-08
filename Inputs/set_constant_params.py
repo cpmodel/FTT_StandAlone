@@ -12,6 +12,7 @@ DICT_BZTC = {
     "discount_rate": 7,
     "lifetime": 8,
     "payload": 10,
+    "turnover_rate": 14,
     "mileage": 15,
 }
 ROWS_PER_REGION = 45

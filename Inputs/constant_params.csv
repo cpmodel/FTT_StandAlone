@@ -3,6 +3,8 @@ discount_rate,MDT,0.1
 discount_rate,HDT,0.1
 lifetime,MDT,12
 lifetime,HDT,12
+turnover_rate,MDT,0.25
+turnover_rate,HDT,0.25
 mileage,MDT,30000
 mileage,HDT,60000
 payload,MDT,7.7
