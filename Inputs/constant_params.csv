@@ -1,0 +1,10 @@
+﻿parameter,truck_type,value
+discount_rate,MDT,0.1
+discount_rate,HDT,0.1
+lifetime,MDT,12
+lifetime,HDT,12
+mileage,MDT,30000
+mileage,HDT,60000
+payload,MDT,7.7
+payload,HDT,17.8
+payload_penalty,BEV,0.1

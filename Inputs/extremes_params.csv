@@ -1,0 +1,9 @@
+﻿parameter,positive,negative
+battery_lr,1.1,0.9
+bev_truck_lr,1.1,0.9
+turnover_rate,1.1,0.9
+mileage,1.1,0.9
+payload,1.1,0.9
+truck_lr,1.1,0.9
+inv_cost,0.9,1.1
+inv_cost_std,0.9,1.1
