@@ -111,6 +111,77 @@ def export_io_summary(
 
         f.write("# End of report\n")
 
+
+def export_rooftop_trace(
+    data,
+    data_dt,
+    titles,
+    year,
+    first_year=None,
+    region_key="34 USA (US)",
+    tech_key="23 Rooftop Solar",
+    outfile="rooftop_trace.txt",
+):
+    """Write a one-line year-end trace for rooftop solar in a single region."""
+
+    if region_key not in titles["RTI"]:
+        raise KeyError(f"'{region_key}' not found in titles['RTI']")
+    if tech_key not in titles["T2TI"]:
+        raise KeyError(f"'{tech_key}' not found in titles['T2TI']")
+
+    region_idx = int(titles["RTI"].index(region_key))
+    tech_idx = int(titles["T2TI"].index(tech_key))
+
+    output_dir = Path("IO_Output")
+    output_dir.mkdir(exist_ok=True)
+    outpath = output_dir / Path(outfile).name
+
+    mode = "w" if (first_year is not None and year == first_year) else "a"
+
+    with outpath.open(mode, encoding="utf-8") as f:
+        if mode == "w":
+            f.write(f"# Rooftop trace generated {datetime.now().isoformat(timespec='seconds')}\n\n")
+        f.write(f"Year {year} | Region {region_key} | Tech {tech_key}\n")
+        f.write(
+            f"  MEWDH={data_dt['MEWDH'][region_idx, 0, 0]:,.6g} | "
+            f"PRICH={data_dt['PRICH'][region_idx, 0, 0]:,.6g} | "
+            f"METC={data_dt['METC'][region_idx, tech_idx, 0]:,.6g} | "
+            f"MTCD={data_dt['MTCD'][region_idx, tech_idx, 0]:,.6g}\n"
+        )
+        cost_source = data if ('costs_household' in data and 'costs_household_std' in data) else data_dt
+        if 'costs_household' in cost_source and 'costs_household_std' in cost_source:
+            f.write(
+                f"  cost_roof={cost_source['costs_household'][region_idx, 0, 0]:,.6g} | "
+                f"cost_grid={cost_source['costs_household'][region_idx, 1, 0]:,.6g} | "
+                f"std_roof={cost_source['costs_household_std'][region_idx, 0, 0]:,.6g} | "
+                f"std_grid={cost_source['costs_household_std'][region_idx, 1, 0]:,.6g}\n"
+            )
+        f.write(
+            f"  share={data['household_shares'][region_idx, 0, 0]:,.6g} | "
+            f"MEWG={data['MEWG'][region_idx, tech_idx, 0]:,.6g} | "
+            f"MEWL={data['MEWL'][region_idx, tech_idx, 0]:,.6g} | "
+            f"MEWK={data['MEWK'][region_idx, tech_idx, 0]:,.6g} | "
+            f"MEWS={data['MEWS'][region_idx, tech_idx, 0]:,.6g}\n"
+        )
+
+        rooftop_cap = float(data['MEWK'][region_idx, tech_idx, 0])
+        total_cap = float(np.sum(data['MEWK'][region_idx, :, 0]))
+        non_rooftop_cap = total_cap - rooftop_cap
+
+        f.write(
+            f"  total_cap={total_cap:,.6g} | "
+            f"non_rooftop_cap={non_rooftop_cap:,.6g} | "
+            f"rooftop_cap_share={rooftop_cap / total_cap if total_cap > 0 else 0.0:,.6g}\n"
+        )
+
+        top_n = min(3, len(titles['T2TI']))
+        top_idx = np.argsort(data['MEWK'][region_idx, :, 0])[::-1][:top_n]
+        top_caps = ", ".join(
+            [f"{titles['T2TI'][int(i)]}={data['MEWK'][region_idx, int(i), 0]:,.6g}" for i in top_idx]
+        )
+        f.write(f"  top_capacity_techs: {top_caps}\n")
+        f.write("\n")
+
 #if __name__ == "__main__":
     # Example: call with custom truncation if desired
 #    try:

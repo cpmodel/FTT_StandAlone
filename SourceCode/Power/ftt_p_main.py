@@ -80,6 +80,7 @@ from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_
 from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 
 from SourceCode.Power.io_debug_export import export_io_summary
+from SourceCode.Power.io_debug_export import export_rooftop_trace
 
 
 
@@ -255,7 +256,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
     elif year <= histend['MEWG']:
         if year == 2015: 
             data['PRSC15'] = np.copy(data['PRSCX'])
-
 
         # Set starting values for MERC
         data['MERC'][:, 0, 0] = 0.255
@@ -629,13 +629,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data_dt['costs_household'] = np.zeros((num_regions, 2, 1))
             data_dt['costs_household'][:, 0] = data_dt['METC'][:, t2ti['23 Rooftop Solar']]
             
-            # convert from euro/toe to usd/MWh
-            data_dt['costs_household'][:, 1] = data_dt['PRICH'][:, :, 0]*(11.63/1000)/ data['EXX'][33, 0, 0]
+            # Convert from EUR/toe to USD/MWh for consistent comparison with METC.
+            data_dt['costs_household'][:, 1] = (
+                data_dt['PRICH'][:, :, 0] / 11.63 / data_dt['EXX'][:, 0, 0][:, np.newaxis]
+            )
             
             # Std deviation for costs households
             data_dt['costs_household_std'] = np.zeros((num_regions, 2, 1))
             data_dt['costs_household_std'][:, 0] = data_dt['MTCD'][:, t2ti['23 Rooftop Solar']]
             data_dt['costs_household_std'][:, 1] = 0.3*data_dt['costs_household'][:, 1]
+
+            # Keep diagnostics in the main data container for year-end tracing.
+            data['costs_household'] = np.copy(data_dt['costs_household'])
+            data['costs_household_std'] = np.copy(data_dt['costs_household_std'])
             
             # initial substitution matrix -> defined as 1 
             # subst_households = np.ones((71, 2, 2))
@@ -662,11 +668,14 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             
             # Get the power load factor for rooftop solar
             data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
+
+            # Interpolate household demand within the year, analogous to grid demand.
+            MEWDHt = time_lag['MEWDH'][:, 0, 0] + (data['MEWDH'][:, 0, 0] - time_lag['MEWDH'][:, 0, 0]) * t/no_it
                
             # Recalculating the generation with the new share information in GWh - 1 toe = 11.63 MWh -> 1 ktoe = 11.63 GWh
             # Opposite of above: there we went from generation to shares,
             # here we go from shares to generation with household demand
-            data['MEWG'][:, -1] = data['household_shares'][:, 0] * (data_dt['MEWDH'][:, 0]*11.63)
+            data['MEWG'][:, -1] = data['household_shares'][:, 0] * (MEWDHt[:, np.newaxis]*11.63)
                
             # Recalculating the capacity with the new generation calculated
             # Capacity = MEWK, 8766 = number of hours
@@ -831,10 +840,23 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # of total capacity) which gives a value incompatible with the household
             # shares model.  Overwrite with the household-derived value so that
             # data_dt['MEWG'][:, -1] stays consistent going into the next sub-iteration.
-            data['MEWG'][:, -1, 0] = data['household_shares'][:, 0, 0] * (data_dt['MEWDH'][:, 0, 0] * 11.63)
+            data['MEWG'][:, -1, 0] = data['household_shares'][:, 0, 0] * (MEWDHt * 11.63)
+
+            # Keep rooftop-solar accounting aligned with the household model.
+            data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
 
             # Update capacities
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+            rooftop_idx = t2ti['23 Rooftop Solar']
+            if year == (histend['MEWG'] + 1):
+                data['MEWK'][:, rooftop_idx, 0] = np.maximum(
+                    data['MEWK'][:, rooftop_idx, 0],
+                    time_lag['MEWK'][:, rooftop_idx, 0]
+                )
+                data['MEWG'][:, rooftop_idx, 0] = (
+                    data['MEWK'][:, rooftop_idx, 0] * data['MEWL'][:, rooftop_idx, 0] * 8766
+                )
+            data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
@@ -982,6 +1004,19 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                     data_dt[var] = np.copy(data[var])
             
             # export_io_summary(data_dt, t2ti, year, tech_key="23 Rooftop Solar", outfile="io_check.txt")
+
+        if year >= 2022:
+            export_rooftop_trace(data, data_dt, titles, year,
+                                 first_year=(histend['MEWG'] + 1),
+                                 region_key="34 USA (US)",
+                                 tech_key="23 Rooftop Solar",
+                                 outfile="rooftop_trace_usa.txt")
+            if "37 Australia (AU)" in titles['RTI']:
+                export_rooftop_trace(data, data_dt, titles, year,
+                                     first_year=(histend['MEWG'] + 1),
+                                     region_key="37 Australia (AU)",
+                                     tech_key="23 Rooftop Solar",
+                                     outfile="rooftop_trace_au.txt")
 
         if year == 2050 and t == no_it:
             print(f"Total solar in 2050 is: {np.sum(data['MEWG'][:, 18, 0])/10**6:.1f} M GWh, "
