@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # local imports
 from plot_code.plot_stacked_area import plot_zewk_hdt_stacked
 from plot_code.plot_subsidy import plot_ztvt_timeseries
-from plot_code.plot_tco_parity import plot_mandate_tco
+from plot_code.plot_tco_parity import plot_mandate_tco, plot_tco_years
 from plot_code.plot_current_traj import plot_costs, plot_shares
 
 # create output directory if it doesn't exist
@@ -31,7 +31,8 @@ plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 12
 
 
-plot_options = ["mandate_tco", "subsidy", "policy_effect", "costs", "shares"]
+plot_options = ["mandate_tco", "subsidy", "policy_effect", "costs", "shares",
+                "tco_parity"]
 # Get cmd line arguments
 arguments = sys.argv[1:]
 if not arguments:
@@ -89,3 +90,12 @@ if "shares" in selected_plots:
         pickle_name='Results_sensitivities',
     )
     print("Share trajectory plot created.")
+    
+if "tco_parity" in selected_plots:
+    plot_tco_years(
+        regions={
+            92:"Amsterdam", 97:"Barcelona", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid",
+            87:"Milan", 85:"Munich", 95:"Rotterdam", 105:"Stockholm"
+            },
+        pickle_name='Results_sensitivities',
+    )

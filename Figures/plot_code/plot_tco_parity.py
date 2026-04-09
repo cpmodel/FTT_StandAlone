@@ -283,3 +283,139 @@ def plot_mandate_tco(
 
     # Ensure adequate vertical padding when using tight layout
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
+    
+    
+def plot_tco_years(
+    regions, 
+    pickle_name='Results',
+    FIGURE_WIDTH=7,
+    ROW_HEIGHT=3.6,
+    output_name='tco_parity_years'):
+    """
+    Function to create a scatter plot, showing year TCO partity is achieved on the x-axis, 
+    and the y-axis showing the BEV market share in 2050.
+
+    Parameters
+    -----------
+    regions: list or dict
+        Either a list of region numbers or a dictionary mapping
+        region numbers to display names.
+    pickle_name: str
+        Name of the pickle file containing the results.
+    output_name: str
+        Name of the output file (without extension).
+    """
+    # Load results and extract ZEWS and ZTTC data
+    with open(f'Output/{pickle_name}.pickle', 'rb') as f:
+        results = pickle.load(f)
+    zttc_baseline = results['S0']['ZTTC']
+    zews_baseline = results['S0']['ZEWS']
+    
+    # Build year axis from settings.ini and validate against results timeline length
+    config = configparser.ConfigParser()
+    config.read('settings.ini')
+    simulation_start = int(config['settings']['simulation_start'])
+    simulation_end = int(config['settings']['simulation_end'])
+    years = np.arange(simulation_start, simulation_end + 1)
+    n_years = zttc_baseline.shape[3]
+    if len(years) != n_years:
+        years = np.arange(simulation_start, simulation_start + n_years)
+        
+    if isinstance(regions, dict):
+        region_ids = list(regions.keys())
+        region_labels = [str(regions[region_id]) for region_id in region_ids]
+    else:
+        region_ids = list(regions)
+        region_labels = [f'Region {region_id}' for region_id in region_ids]
+    n_regions = zttc_baseline.shape[0]
+    region_indices = np.asarray(region_ids, dtype=int) - 1
+    if np.any(region_indices < 0) or np.any(region_indices >= n_regions):
+        raise ValueError(f"Region indices must be in 1..{n_regions}. Received: {region_ids}")
+    n_techs = zttc_baseline.shape[1]
+    tech_indices = {
+        'MDT': {'diesel': 12, 'bev': 32},
+        'HDT': {'diesel': 13, 'bev': 33},
+    }
+    for vehicle_class, index_map in tech_indices.items():
+        for fuel, idx in index_map.items():
+            if idx < 0 or idx >= n_techs:
+                raise ValueError(
+                    f"{fuel.upper()} {vehicle_class} index {idx} is out of bounds for {n_techs} technologies"
+                )
+    diesel_series_by_class = {
+        vehicle_class: zttc_baseline[region_indices, index_map['diesel'], 0, :]
+        for vehicle_class, index_map in tech_indices.items()
+    }
+    bev_series_by_class = {
+        vehicle_class: zttc_baseline[region_indices, index_map['bev'], 0, :]
+        for vehicle_class, index_map in tech_indices.items()
+    }
+    zews_series_by_class = {
+        vehicle_class: zews_baseline[region_indices, index_map['bev'], 0, :]
+        for vehicle_class, index_map in tech_indices.items()
+    }
+    # Define crossover year function
+    def get_strict_crossover_year(bev_line, diesel_line, year_axis):
+        diff = bev_line - diesel_line
+        transition_indices = np.where((diff[:-1] > 0) & (diff[1:] <= 0))[0]
+        if transition_indices.size == 0:
+            return None
+        i = int(transition_indices[0])
+        y0, y1 = float(year_axis[i]), float(year_axis[i + 1])
+        d0, d1 = float(diff[i]), float(diff[i + 1])
+        if d1 == d0:
+            return y1
+        fraction = -d0 / (d1 - d0)
+        return y0 + fraction * (y1 - y0)
+    # Determine crossover years and 2050 market shares
+    crossover_years = {}
+    market_shares_2050 = {}
+    for vehicle_class in tech_indices.keys():
+        crossover_years[vehicle_class] = []
+        market_shares_2050[vehicle_class] = []
+        for i in range(len(region_indices)):
+            diesel_line = diesel_series_by_class[vehicle_class][i]
+            bev_line = bev_series_by_class[vehicle_class][i]
+            zews_line = zews_series_by_class[vehicle_class][i]
+            cross_year = get_strict_crossover_year(bev_line, diesel_line, years)
+            crossover_years[vehicle_class].append(cross_year)
+            market_share_2050 = float(zews_line[-1])
+            market_shares_2050[vehicle_class].append(market_share_2050)
+        
+    # Create scatter plot
+    fig, ax = plt.subplots(figsize=(FIGURE_WIDTH, ROW_HEIGHT))
+    markers = {'MDT': 'o', 'HDT': 's'}
+    colors = {'MDT': '#1f77b4', 'HDT': '#ff7f0e'}
+    col_titles = {'MDT': 'Medium duty truck', 'HDT': 'Heavy duty truck'}
+    for vehicle_class in tech_indices.keys():
+        ax.scatter(
+            crossover_years[vehicle_class],
+            market_shares_2050[vehicle_class],
+            label=col_titles[vehicle_class],
+            marker=markers[vehicle_class],
+            color=colors[vehicle_class],
+            s=100,
+            edgecolor='black',
+            alpha=0.8
+        )
+        # Add region labels to points
+        for i, (cross_year, market_share) in enumerate(zip(crossover_years[vehicle_class], market_shares_2050[vehicle_class])):
+            if cross_year is not None:
+                ax.annotate(
+                    f'{region_labels[i]}',
+                    xy=(cross_year, market_share),
+                    xytext=(5, 5),
+                    textcoords='offset points',
+                    fontsize=9,
+                    alpha=0.7
+                )
+    ax.set_xlabel('Year of BEV TCO parity', fontsize=12)
+    ax.set_ylabel('BEV market share in 2050', fontsize=12)
+    ax.xaxis.set_major_locator(plt.MultipleLocator(5))
+    ax.set_xlim(left=2025, right=2050)
+    ax.set_ylim(0, 0.8)
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter(1))    
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
+    # plt.savefig(f'Figures/output/{output_name}.svg', bbox_inches="tight")
