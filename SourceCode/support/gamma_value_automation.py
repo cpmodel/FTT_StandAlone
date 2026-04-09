@@ -521,10 +521,10 @@ modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
 
 # Little difference between runs typically: 3 runs to be safe. 
 # Consider reducing no_it for more rapid estimates
-total_runs = 2
+total_runs = 3
 max_it = 200
-lambda_reg = 0.05  # Regularisation strength
-starting_step_size = 0.3
+lambda_reg = 0.2  # Regularisation strength
+starting_step_size = 0.2
 decay_rate_steps = 0.96 
 cooling_rate = 0.94 # Quite substantial cooling
 convergence_threshold = 0.0010
