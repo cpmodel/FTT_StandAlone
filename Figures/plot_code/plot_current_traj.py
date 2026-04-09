@@ -7,6 +7,7 @@ import pickle
 import configparser
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 def plot_costs(
     regions, 
@@ -180,7 +181,7 @@ def plot_costs(
 
             ax.margins(x=0)
             ax.set_xlim(years[0], years[-1])
-            # ax.grid(True, alpha=0.3)
+            ax.grid(True, alpha=0.3)
 
             if r == 0:
                 ax.set_title(col_titles[vc], weight='bold')
@@ -258,9 +259,14 @@ def plot_shares(
         raise KeyError(f"Scenario(s) not found in results: {missing}")
 
     zews_main = results[main_key]['ZEWS']
+    zttc_main = results[main_key]['ZTTC']
     if zews_main.ndim != 4:
         raise ValueError(
             f"Expected ZEWS to be 4D (region, technology, share_component, year), got shape {zews_main.shape}"
+        )
+    if zttc_main.ndim != 4:
+        raise ValueError(
+            f"Expected ZTTC to be 4D (region, technology, cost_component, year), got shape {zttc_main.shape}"
         )
 
     region_ids = list(regions.keys())
@@ -296,6 +302,21 @@ def plot_shares(
         raise ValueError("No years available in 2025-2050 range.")
     years = years[year_mask]
 
+    def get_strict_crossover_year(bev_line, comparison_line, year_axis):
+        diff = bev_line - comparison_line
+        transition_indices = np.where((diff[:-1] > 0) & (diff[1:] <= 0))[0]
+        if transition_indices.size == 0:
+            return None
+
+        i = int(transition_indices[0])
+        y0, y1 = float(year_axis[i]), float(year_axis[i + 1])
+        d0, d1 = float(diff[i]), float(diff[i + 1])
+        if d1 == d0:
+            return y1
+
+        fraction = -d0 / (d1 - d0)
+        return y0 + fraction * (y1 - y0)
+
     col_order = ['MDT', 'HDT']
     col_titles = {'MDT': 'Medium duty truck', 'HDT': 'Heavy duty truck'}
     bev_color = '#4cc9f0'
@@ -319,6 +340,11 @@ def plot_shares(
 
         for c, vc in enumerate(col_order):
             ax = axes[r, c]
+            comparison_fuel = 'diesel'
+            if vc == 'MDT' and str(region_label).strip().lower() == 'delhi':
+                comparison_fuel = 'cng'
+
+            comparison_idx = tech_indices[vc][comparison_fuel]
             diesel_idx = tech_indices[vc]['diesel']
             cng_idx = tech_indices[vc]['cng']
             bev_idx = tech_indices[vc]['bev']
@@ -374,15 +400,35 @@ def plot_shares(
                     np.maximum(bev_pos, bev_neg),
                     color=bev_color, alpha=0.2
                 )
+
+            bev_tco_line = results[main_key]['ZTTC'][ri, bev_idx, 0, :][year_mask]
+            comparison_tco_line = results[main_key]['ZTTC'][ri, comparison_idx, 0, :][year_mask]
+            cross_year = get_strict_crossover_year(bev_tco_line, comparison_tco_line, years)
+            if cross_year is not None:
+                ax.axvline(
+                    cross_year,
+                    linestyle=':',
+                    linewidth=4,
+                    color=bev_color,
+                    alpha=0.6
+                )
+
             if 'BEV' not in legend_handles:
                 legend_handles['BEV'] = h_bev
             if 'CNG' not in legend_handles:
                 legend_handles['CNG'] = h_cng
             if 'Diesel' not in legend_handles:
                 legend_handles['Diesel'] = h_diesel
+            if 'TCO parity' not in legend_handles and cross_year is not None:
+                legend_handles['TCO parity'] = Line2D(
+                    [0], [0],
+                    color=bev_color,
+                    linewidth=4,
+                    linestyle=':',
+                    alpha=0.6
+                )
 
-
-
+            ax.grid(True, alpha=0.3)
             ax.margins(x=0)
             ax.set_xlim(years[0], years[-1])
             ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'{y:.0%}'))
