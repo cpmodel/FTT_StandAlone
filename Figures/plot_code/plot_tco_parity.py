@@ -269,7 +269,8 @@ def plot_mandate_tco(
             if j == 0:
                 ax.set_ylabel(region_labels[i], fontsize=14, labelpad=5, weight='bold')
             # ax.set_title(f'{region_labels[i]} - {vehicle_class}', weight='bold')
-            # ax.grid(True, alpha=0.3)
+            ax.grid(True, alpha=0.3)
+            ax.margins(x=0)  # Remove horizontal margins for this subplot
 
     fig.legend(
         handles=list(legend_handles.values()),
