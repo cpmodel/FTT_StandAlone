@@ -200,6 +200,7 @@ def plot_costs(
     fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', fontsize=14, x=-0.02)
 
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches='tight')
 
 
 def plot_shares(
@@ -450,3 +451,4 @@ def plot_shares(
     fig.supylabel('Truck share', ha='left', va='center', fontsize=14, x=-0.02)
 
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches='tight')

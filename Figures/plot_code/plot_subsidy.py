@@ -119,3 +119,4 @@ def plot_ztvt_timeseries(
         frameon=True
     )
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")

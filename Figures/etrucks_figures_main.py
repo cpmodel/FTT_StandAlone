@@ -13,6 +13,7 @@ from plot_code.plot_stacked_area import plot_zewk_hdt_stacked
 from plot_code.plot_subsidy import plot_ztvt_timeseries
 from plot_code.plot_tco_parity import plot_mandate_tco, plot_tco_years
 from plot_code.plot_current_traj import plot_costs, plot_shares
+from plot_code.ff_shock_tco import plot_ff_shock_tco_impact
 
 # create output directory if it doesn't exist
 output_dir = 'output'
@@ -29,10 +30,12 @@ plt.rcParams['axes.labelsize'] = 12
 plt.rcParams['legend.fontsize'] = 12
 plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 12
+plt.rcParams['svg.fonttype'] = 'none'
 
 
 plot_options = ["mandate_tco", "subsidy", "policy_effect", "costs", "shares",
-                "tco_parity"]
+                "tco_parity", "ff_shock_tco"]
+
 # Get cmd line arguments
 arguments = sys.argv[1:]
 if not arguments:
@@ -99,3 +102,12 @@ if "tco_parity" in selected_plots:
             },
         pickle_name='Results_sensitivities',
     )
+       
+if "ff_shock_tco" in selected_plots:    
+    plot_ff_shock_tco_impact(
+        regions={92:"Amsterdam", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid", 87:"Milan"},
+        pickle_name='Results_diesel_shock',
+        scenario_name_map={'S0': 'Baseline', 'S3': '20% Diesel shock'},
+        output_name='ff_shock_tco_impact'
+    )
+

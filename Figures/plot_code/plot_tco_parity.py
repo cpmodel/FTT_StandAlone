@@ -1,6 +1,8 @@
 # Global imports
 import pickle
 import configparser
+import csv
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -284,6 +286,7 @@ def plot_mandate_tco(
 
     # Ensure adequate vertical padding when using tight layout
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
+    plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")
     
     
 def plot_tco_years(
@@ -291,7 +294,8 @@ def plot_tco_years(
     pickle_name='Results',
     FIGURE_WIDTH=7,
     ROW_HEIGHT=3.6,
-    output_name='tco_parity_years'):
+    output_name='tco_parity_years',
+    electricity_prices_csv='Figures/inputs/electricity_prices.csv'):
     """
     Function to create a scatter plot, showing year TCO partity is achieved on the x-axis, 
     and the y-axis showing the BEV market share in 2050.
@@ -305,6 +309,8 @@ def plot_tco_years(
         Name of the pickle file containing the results.
     output_name: str
         Name of the output file (without extension).
+    electricity_prices_csv: str
+        Path to CSV containing PLACE and ELECTRICITY_PRICE columns.
     """
     # Load results and extract ZEWS and ZTTC data
     with open(f'Output/{pickle_name}.pickle', 'rb') as f:
@@ -382,22 +388,61 @@ def plot_tco_years(
             crossover_years[vehicle_class].append(cross_year)
             market_share_2050 = float(zews_line[-1])
             market_shares_2050[vehicle_class].append(market_share_2050)
+
+    # Load electricity prices and align them to region labels.
+    csv_path = electricity_prices_csv
+    
+    if csv_path is None:
+        raise FileNotFoundError(
+            "Electricity prices CSV not found."
+        )
+
+    price_by_place = {}
+    with open(csv_path, newline='', encoding='utf-8-sig') as csv_file:
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            place = str(row.get('PLACE', '')).strip().lower()
+            price_raw = row.get('ELECTRICITY_PRICE', None)
+            if place and price_raw is not None and str(price_raw).strip() != '':
+                price_by_place[place] = float(price_raw)
+
+    electricity_prices = []
+    for region_label in region_labels:
+        lookup_key = str(region_label).strip().lower()
+        if lookup_key not in price_by_place:
+            raise KeyError(
+                f"No electricity price found for region label '{region_label}' in {csv_path}."
+            )
+        electricity_prices.append(price_by_place[lookup_key])
+    electricity_prices = np.asarray(electricity_prices, dtype=float)
         
     # Create scatter plot
     fig, ax = plt.subplots(figsize=(FIGURE_WIDTH, ROW_HEIGHT))
     markers = {'MDT': 'o', 'HDT': 's'}
-    colors = {'MDT': '#1f77b4', 'HDT': '#ff7f0e'}
     col_titles = {'MDT': 'Medium duty truck', 'HDT': 'Heavy duty truck'}
+    cmap = plt.cm.viridis
+    norm = plt.Normalize(vmin=float(np.min(electricity_prices)), vmax=float(np.max(electricity_prices)))
+
     for vehicle_class in tech_indices.keys():
+        valid_mask = np.array([year is not None for year in crossover_years[vehicle_class]], dtype=bool)
+        valid_crossover_years = np.asarray([y for y in crossover_years[vehicle_class] if y is not None], dtype=float)
+        valid_market_shares = np.asarray(
+            [share for idx, share in enumerate(market_shares_2050[vehicle_class]) if valid_mask[idx]],
+            dtype=float
+        )
+        valid_prices = electricity_prices[valid_mask]
+
         ax.scatter(
-            crossover_years[vehicle_class],
-            market_shares_2050[vehicle_class],
+            valid_crossover_years,
+            valid_market_shares,
+            c=valid_prices,
+            cmap=cmap,
+            norm=norm,
             label=col_titles[vehicle_class],
             marker=markers[vehicle_class],
-            color=colors[vehicle_class],
             s=100,
             edgecolor='black',
-            alpha=0.8
+            alpha=0.9
         )
         # Add region labels to points
         for i, (cross_year, market_share) in enumerate(zip(crossover_years[vehicle_class], market_shares_2050[vehicle_class])):
@@ -417,6 +462,8 @@ def plot_tco_years(
     ax.set_ylim(0, 0.8)
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(1))    
     ax.legend()
+    cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
+    cbar.set_label('Electricity price ($/kWh)')
     ax.grid(True, alpha=0.3)
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
-    # plt.savefig(f'Figures/output/{output_name}.svg', bbox_inches="tight")
+    plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")
