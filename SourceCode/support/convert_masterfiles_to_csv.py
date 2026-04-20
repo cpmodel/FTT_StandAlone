@@ -193,7 +193,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     the user may not want to lose their calibrated gamma values 
     """
     
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "BZTC": "ZGAM"}
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
@@ -266,9 +266,9 @@ def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     gamma values are defined for each year.
     """
 
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
-    gamma_index = {"BTTC": 14, "BHTC": 13, "ZCET": 14}
-    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "BZTC": "ZGAM"}
+    gamma_index = {"BTTC": 14, "BHTC": 13, "BZTC": 12}
+    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "BZTC": "FTTI"}
     gamma_var = costvar_to_gam_dict[var]
     gamma_1D = data[gamma_index[var]]
     col_names = timeline_dict[gamma_var]
