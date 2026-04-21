@@ -66,7 +66,7 @@ from SourceCode.ftt_core.ftt_shares import shares_change
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
-from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
+from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
