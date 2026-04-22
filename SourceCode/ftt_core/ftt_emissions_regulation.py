@@ -2,20 +2,30 @@
 """
 Centralized emissions regulation functions for FTT sectors.
 
-This module provides core emissions regulation policy functionality. The emissions
-regulation enforces declining CO2 targets per vehicle class, redistributing sales
-from high-emitting to low-emitting technologies to meet fleet-average targets.
+Single entry point: `implement_emissions_regulation`. Mirrors the flow of
+`ftt_mandate.py` — sectors call once per year with their full sales/capacity
+arrays plus a per-region info array, and this module handles segment/class
+grouping, eligibility, per-region timelines, and baseline caching.
 
-Unlike mandates which set BEV market share targets, emissions regulation targets
-fleet-average CO2 emissions (gCO2/km) that decline linearly to zero.
+Regulation info (per region):
+    [start_year, end_year, max_reduction]
+    - max_reduction = 1.0  → target reaches 0 at end_year
+    - max_reduction = 0.5  → target reaches 50% of baseline at end_year
+    - max_reduction <= 0   → regulation off for that region
+
+Behaviour:
+    - Baseline is the fleet-average CO2 at the region's start_year, computed
+      live and cached across years in this module.
+    - Target declines linearly from baseline to baseline * (1 - max_reduction)
+      over [start_year, end_year]. After end_year the target stays at that
+      floor (regulation persists, does not expire).
+    - Sales shift from high-emitting techs to eligible low-emitting techs
+      proportionally to their existing share of the eligible pool.
 
 Functions:
-    get_target_emissions: Get target emissions for a vehicle class in a given year
-    get_fleet_emissions: Calculate weighted average fleet emissions
-    find_advanced_counterpart: Find lower-emission variant of a technology
-    ensure_minimum_bev_share: Enforce minimum BEV market share
-    get_new_sales_under_emissions_regulation: Redistribute sales to meet emissions target
-    implement_emissions_regulation: Full emissions regulation implementation
+    get_fleet_emissions: Weighted average fleet CO2
+    implement_emissions_regulation: Main entry point
+    reset_baseline_cache: Clear cached baselines (for tests / fresh runs)
 
 @author: Amir Akther
 """
@@ -23,482 +33,276 @@ Functions:
 import numpy as np
 
 
-# Default emissions regulation configuration
-REGULATION_START_YEAR = 2025
-REGULATION_END_YEAR = 2040
-MIN_BEV_SHARE = 0.03
+# --- Sector configuration ---------------------------------------------------
 
-# Default emissions targets by vehicle class (gCO2/km)
-# These decline linearly from start values to 0 between 2025-2040
-DEFAULT_START_EMISSIONS = {
-    0: float('inf'),  # TWV - no limit
-    1: 300,           # LCV - 300 gCO2/km
-    2: 800,           # MDT - 800 gCO2/km
-    3: 1200,          # HDT - 1200 gCO2/km
-    4: float('inf')   # Bus - no limit
+# Passenger transport segments. Indices are into the flat 31-tech VTTI array.
+# Eligible receivers: Electric, PHEV only. The policy is labelled "EV
+# regulation" so donations should concentrate on EVs rather than siphoning
+# into mature Hybrid (which holds non-trivial share in markets like China
+# and would otherwise capture most of the proportional redistribution).
+# Everything else — Petrol, Adv Petrol, Diesel, Adv Diesel, CNG, Hybrid —
+# is a potential donor once target dips below its emissions; Hydrogen
+# stays neutral because its emissions are 0.
+_TRANSPORT_SEGMENTS = {
+    'econ': {'indices': [0, 3, 6, 9, 12, 15, 18, 21, 24],
+             'eligible': [18, 21]},
+    'mid':  {'indices': [1, 4, 7, 10, 13, 16, 19, 22, 25],
+             'eligible': [19, 22]},
+    'lux':  {'indices': [2, 5, 8, 11, 14, 17, 20, 23, 26],
+             'eligible': [20, 23]},
 }
 
+# Freight: 5 vehicle classes (TWV, LCV, MDT, HDT, Bus), 9 techs each,
+# interleaved in the 45-tech FTTI array. Per-class tech order:
+# 0 Petrol, 1 Adv petrol, 2 Diesel, 3 Adv diesel, 4 CNG/LPG,
+# 5 PHEV, 6 BEV, 7 Bioethanol, 8 FCEV.
+# Eligible receivers: Adv petrol, Adv diesel, PHEV, BEV, Bioethanol.
+# Excluded: CNG/LPG, FCEV (mirrors Transport's gas + hydrogen exclusion).
+_FREIGHT_N_CLASSES = 5
+_FREIGHT_ELIGIBLE = [1, 3, 5, 6, 7]
 
-def get_target_emissions(year, veh_class, start_emissions=None,
-                         start_year=None, end_year=None):
-    """
-    Calculate target emissions for a vehicle class in a given year.
+_SECTOR_CONFIG = {
+    'transport': {'layout': 'grouped', 'segments': _TRANSPORT_SEGMENTS},
+    'freight':   {'layout': 'interleaved',
+                  'n_classes': _FREIGHT_N_CLASSES,
+                  'eligible': _FREIGHT_ELIGIBLE},
+}
 
-    Linear reduction from start_emissions to 0 between start_year and end_year.
-    Returns infinity before start_year (no limit) and 0 at/after end_year
-    (full transition required).
+# Module-level baseline cache: sector -> (n_regions, n_classes) array.
+# NaN entries = "not yet computed". Populated the first time regulation is
+# active for that region. Persists across years within a simulation run.
+_baseline_cache = {}
 
-    Parameters
-    ----------
-    year : int
-        Current simulation year
-    veh_class : int
-        Vehicle class index (0=TWV, 1=LCV, 2=MDT, 3=HDT, 4=Bus)
-    start_emissions : dict, optional
-        Starting emissions by vehicle class in gCO2/km.
-        If None, uses DEFAULT_START_EMISSIONS.
-    start_year : int, optional
-        Year regulation begins (default 2025)
-    end_year : int, optional
-        Year emissions must reach zero (default 2040)
 
-    Returns
-    -------
-    float
-        Target emissions in gCO2/km (infinity means no limit)
-    """
-    if start_emissions is None:
-        start_emissions = DEFAULT_START_EMISSIONS
-    if start_year is None:
-        start_year = REGULATION_START_YEAR
-    if end_year is None:
-        end_year = REGULATION_END_YEAR
+def reset_baseline_cache():
+    """Clear cached baselines. Call between independent simulation runs."""
+    _baseline_cache.clear()
 
-    # Before regulation starts - no limit
-    if year < start_year:
-        return float('inf')
 
-    # At or after end year - full transition required
-    if year >= end_year:
-        return 0.0
-
-    # Linear interpolation
-    total_years = end_year - start_year
-    years_in = year - start_year
-    reduction_factor = 1 - (years_in / total_years)
-
-    return start_emissions.get(veh_class, float('inf')) * reduction_factor
-
+# --- Core numerics ----------------------------------------------------------
 
 def get_fleet_emissions(sales, emissions_intensity):
-    """
-    Calculate weighted average fleet emissions.
-
-    Parameters
-    ----------
-    sales : ndarray
-        Sales by technology (1D array)
-    emissions_intensity : ndarray
-        Emissions by technology in gCO2/km (1D array)
-
-    Returns
-    -------
-    float
-        Weighted average emissions in gCO2/km
-    """
+    """Weighted average fleet emissions. Returns 0 when total sales are 0."""
     total_sales = np.sum(sales)
-
     if total_sales == 0:
         return 0.0
-
-    total_emissions = np.sum(sales * emissions_intensity)
-    return total_emissions / total_sales
+    return np.sum(sales * emissions_intensity) / total_sales
 
 
-def find_advanced_counterpart(tech_idx, emissions_intensity):
+def _redistribute_proportionally(sales, emissions_intensity, target, eligible_mask):
     """
-    Find the advanced (lower-emission) version of a technology.
+    Shift sales from non-eligible above-target techs to eligible techs.
 
-    Checks if the next technology index has lower but non-zero emissions,
-    which would indicate it's an advanced variant of the current technology.
+    Eligible techs are always treated as protected destinations: they
+    never lose sales to the policy, regardless of their emissions rank.
+    This matters when the emissions data uses well-to-wheel accounting
+    (e.g. Transport, where EVs have non-zero grid emissions and PHEV can
+    sit below EV in the ranking). Without this rule, a declining target
+    would eventually push sales from EVs to PHEVs — the opposite of what
+    EV-regulation policy intends.
 
-    Parameters
-    ----------
-    tech_idx : int
-        Technology index to find counterpart for
-    emissions_intensity : ndarray
-        Emissions by technology in gCO2/km (1D array)
-
-    Returns
-    -------
-    int or None
-        Index of advanced counterpart, or None if not found
+    Donors: non-eligible techs with emissions above the target.
+    Receivers: eligible techs, weighted by current share.
+    Non-eligible below-target techs (e.g. Hydrogen in Transport) are
+    left untouched.
     """
-    base_emission = emissions_intensity[tech_idx]
+    sales_out = np.copy(sales)
 
-    # Check next technology to see if it's the advanced version
-    if tech_idx + 1 < len(emissions_intensity):
-        next_emission = emissions_intensity[tech_idx + 1]
-        # If next technology has lower emissions and isn't zero-emission
-        if 0 < next_emission < base_emission:
-            return tech_idx + 1
+    if np.sum(sales_out) == 0:
+        return sales_out
+    if get_fleet_emissions(sales_out, emissions_intensity) <= target:
+        return sales_out
 
-    return None
+    donor_mask = (emissions_intensity > target) & ~eligible_mask
+    receiver_mask = eligible_mask
 
+    if not np.any(donor_mask) or not np.any(receiver_mask):
+        return sales_out
 
-def ensure_minimum_bev_share(sales_in, emissions_intensity, zero_emission_index=None,
-                              min_share=None, regions=None):
-    """
-    Ensure BEV sales meet minimum share requirement.
+    donor_indices = np.where(donor_mask)[0]
+    receiver_indices = np.where(receiver_mask)[0]
 
-    Scales up BEV (zero-emission) sales and proportionally reduces
-    non-BEV sales to maintain total sales.
+    for _ in range(100):
+        current = get_fleet_emissions(sales_out, emissions_intensity)
+        if current <= target:
+            break
 
-    Parameters
-    ----------
-    sales_in : ndarray
-        Sales array. Can be 1D (techs) or 3D (regions x techs x 1)
-    emissions_intensity : ndarray
-        Emissions by technology in gCO2/km
-    zero_emission_index : int, optional
-        Index of zero-emission technology (BEV). If None, auto-detected.
-    min_share : float, optional
-        Minimum BEV share (default 0.03 = 3%)
-    regions : list, optional
-        Regions to apply to (only for 3D input). If None, applies to all.
+        shift_fraction = min(0.1, (current - target) / current)
+        donor_sales = np.sum(sales_out[donor_mask])
+        if donor_sales == 0:
+            break
+        shift_amount = donor_sales * shift_fraction
 
-    Returns
-    -------
-    ndarray
-        Adjusted sales array
-    """
-    if min_share is None:
-        min_share = MIN_BEV_SHARE
+        for i in donor_indices:
+            if sales_out[i] > 0:
+                sales_out[i] -= (sales_out[i] / donor_sales) * shift_amount
 
-    sales = np.copy(sales_in)
-
-    # Handle 1D input (single region/class)
-    if sales.ndim == 1:
-        total_sales = np.sum(sales)
-
-        if total_sales == 0:
-            return sales
-
-        # Find BEV index (technology with zero emissions)
-        if zero_emission_index is None:
-            zero_indices = np.where(emissions_intensity == 0)[0]
-            if len(zero_indices) == 0:
-                return sales  # No zero-emission tech found
-            bev_index = zero_indices[0]
+        receiver_sales = np.sum(sales_out[receiver_mask])
+        if receiver_sales > 0:
+            for i in receiver_indices:
+                sales_out[i] += (sales_out[i] / receiver_sales) * shift_amount
         else:
-            bev_index = zero_emission_index
+            per_tech = shift_amount / len(receiver_indices)
+            for i in receiver_indices:
+                sales_out[i] += per_tech
 
-        current_bev_share = sales[bev_index] / total_sales
+    return sales_out
 
-        if current_bev_share < min_share:
-            required_bev_sales = total_sales * min_share
-            bev_sales_increase = required_bev_sales - sales[bev_index]
 
-            non_bev_indices = [i for i in range(len(sales)) if i != bev_index]
-            total_non_bev = np.sum(sales[non_bev_indices])
+def _target_emissions(baseline, year, start_year, end_year, max_reduction):
+    """
+    Declining target: baseline at start_year, baseline*(1-max_reduction)
+    at end_year, held at that floor thereafter.
+    """
+    total_years = end_year - start_year
+    if total_years <= 0:
+        return baseline
+    progress = min(max(year - start_year, 0), total_years) / total_years
+    return baseline * (1 - max_reduction * progress)
 
-            if total_non_bev > 0:
-                reduction_factor = (total_non_bev - bev_sales_increase) / total_non_bev
-                for idx in non_bev_indices:
-                    sales[idx] *= reduction_factor
 
-            sales[bev_index] = required_bev_sales
+def _regulate_one_class(cap, cum_sales_in, sales_in, year,
+                        emissions_intensity, eligible_indices,
+                        start_years, end_years, max_reductions, baseline):
+    """
+    Apply regulation to one already-sliced class/segment.
+    Returns new (cum, sales, cap) triple for the slice.
+    """
+    sales_after = np.copy(sales_in)
+    eligible_mask = np.zeros(sales_in.shape[1], dtype=bool)
+    eligible_mask[eligible_indices] = True
 
-        return sales
+    for r in range(sales_in.shape[0]):
+        start_r = start_years[r]
+        end_r = end_years[r]
+        max_red_r = max_reductions[r]
 
-    # Handle 3D input (regions x techs x 1)
-    if regions is None:
-        regions = range(sales.shape[0])
-
-    # Find BEV index
-    if zero_emission_index is None:
-        # Use first region to find zero-emission index
-        if emissions_intensity.ndim == 1:
-            zero_indices = np.where(emissions_intensity == 0)[0]
-        else:
-            zero_indices = np.where(emissions_intensity[0, :] == 0)[0]
-        if len(zero_indices) == 0:
-            return sales
-        bev_index = zero_indices[0]
-    else:
-        bev_index = zero_emission_index
-
-    for r in regions:
-        total_sales = np.sum(sales[r, :, 0])
-
-        if total_sales == 0:
+        if max_red_r <= 0 or year < start_r or end_r <= start_r:
             continue
 
-        current_bev_share = sales[r, bev_index, 0] / total_sales
+        em_r = emissions_intensity[r, :]
+        sales_r = sales_in[r, :, 0]
 
-        if current_bev_share < min_share:
-            required_bev_sales = total_sales * min_share
-            bev_sales_increase = required_bev_sales - sales[r, bev_index, 0]
+        if np.isnan(baseline[r]):
+            baseline[r] = get_fleet_emissions(sales_r, em_r)
 
-            non_bev_indices = [i for i in range(sales.shape[1]) if i != bev_index]
-            total_non_bev = np.sum(sales[r, non_bev_indices, 0])
+        target = _target_emissions(baseline[r], year, start_r, end_r, max_red_r)
 
-            if total_non_bev > 0:
-                reduction_factor = (total_non_bev - bev_sales_increase) / total_non_bev
-                for idx in non_bev_indices:
-                    sales[r, idx, 0] *= reduction_factor
+        sales_after[r, :, 0] = _redistribute_proportionally(
+            sales_r, em_r, target, eligible_mask
+        )
 
-            sales[r, bev_index, 0] = required_bev_sales
+    sales_diff = sales_after - sales_in
+    cap_after = cap + sales_diff
+    cap_after[:, :, 0] = np.maximum(cap_after[:, :, 0], 0)
+    cum_sales_after = np.copy(cum_sales_in)
+    cum_sales_after[:, :, 0] += sales_diff[:, :, 0]
+    return cum_sales_after, sales_after, cap_after
 
-    return sales
 
-
-def get_new_sales_under_emissions_regulation(sales_in, emissions_intensity,
-                                              target_emissions, zero_emission_index=None,
-                                              regions=None):
-    """
-    Apply emissions regulation to sales distribution.
-
-    Redistributes sales from high-emitting to low-emitting technologies
-    to meet the target fleet-average emissions. Uses a strategy that:
-    1. Shifts sales from highest-emitting technologies first
-    2. Splits transfers 50/50 between advanced ICE and BEV when available
-    3. Transfers 100% to BEV when no advanced counterpart exists
-
-    Parameters
-    ----------
-    sales_in : ndarray
-        Sales array. Can be 1D (techs) or 3D (regions x techs x 1)
-    emissions_intensity : ndarray
-        Emissions by technology in gCO2/km
-    target_emissions : float
-        Target fleet-average emissions in gCO2/km
-    zero_emission_index : int, optional
-        Index of zero-emission technology (BEV). If None, auto-detected.
-    regions : list, optional
-        Regions to apply regulation to (only for 3D input). If None, applies to all.
-
-    Returns
-    -------
-    ndarray
-        Adjusted sales array
-    """
-    sales = np.copy(sales_in)
-
-    # Handle 1D input (single region/class)
-    if sales.ndim == 1:
-        total_sales = np.sum(sales)
-
-        if total_sales == 0:
-            return sales
-
-        # Find BEV index (technology with zero emissions)
-        if zero_emission_index is None:
-            zero_indices = np.where(emissions_intensity == 0)[0]
-            if len(zero_indices) == 0:
-                return sales  # No zero-emission tech found
-            bev_index = zero_indices[0]
-        else:
-            bev_index = zero_emission_index
-
-        # Sort non-BEV technologies by emissions intensity (highest first)
-        ice_indices = [i for i in range(len(sales)) if emissions_intensity[i] > 0]
-        ice_indices.sort(key=lambda x: emissions_intensity[x], reverse=True)
-
-        current_emissions = get_fleet_emissions(sales, emissions_intensity)
-
-        # Iteratively redistribute until target met
-        while current_emissions > target_emissions and current_emissions > 0:
-            for ice_idx in ice_indices:
-                if sales[ice_idx] > 0:
-                    # Check for advanced counterpart
-                    adv_idx = find_advanced_counterpart(ice_idx, emissions_intensity)
-
-                    # Calculate transfer amount (limit to 25% of total sales per iteration)
-                    transfer_amount = min(sales[ice_idx], total_sales * 0.25)
-
-                    if adv_idx is not None and emissions_intensity[adv_idx] > 0:
-                        # Split transfer 50/50 between advanced ICE and BEV
-                        adv_amount = transfer_amount * 0.5
-                        bev_amount = transfer_amount * 0.5
-
-                        sales[ice_idx] -= transfer_amount
-                        sales[adv_idx] += adv_amount
-                        sales[bev_index] += bev_amount
-                    else:
-                        # No advanced version - shift all to BEV
-                        sales[ice_idx] -= transfer_amount
-                        sales[bev_index] += transfer_amount
-
-                    # Recalculate fleet emissions
-                    current_emissions = get_fleet_emissions(sales, emissions_intensity)
-
-                    if current_emissions <= target_emissions:
-                        break
-
-        return sales
-
-    # Handle 3D input (regions x techs x 1)
-    if regions is None:
-        regions = range(sales.shape[0])
-
-    # Find BEV index
-    if zero_emission_index is None:
-        if emissions_intensity.ndim == 1:
-            zero_indices = np.where(emissions_intensity == 0)[0]
-        else:
-            zero_indices = np.where(emissions_intensity[0, :] == 0)[0]
-        if len(zero_indices) == 0:
-            return sales
-        bev_index = zero_indices[0]
-    else:
-        bev_index = zero_emission_index
-
-    for r in regions:
-        # Get emissions intensity for this region
-        if emissions_intensity.ndim == 1:
-            em_int = emissions_intensity
-        else:
-            em_int = emissions_intensity[r, :]
-
-        total_sales = np.sum(sales[r, :, 0])
-
-        if total_sales == 0:
-            continue
-
-        # Sort non-BEV technologies by emissions intensity (highest first)
-        ice_indices = [i for i in range(sales.shape[1]) if em_int[i] > 0]
-        ice_indices.sort(key=lambda x: em_int[x], reverse=True)
-
-        current_emissions = get_fleet_emissions(sales[r, :, 0], em_int)
-
-        # Iteratively redistribute until target met
-        while current_emissions > target_emissions and current_emissions > 0:
-            for ice_idx in ice_indices:
-                if sales[r, ice_idx, 0] > 0:
-                    # Check for advanced counterpart
-                    adv_idx = find_advanced_counterpart(ice_idx, em_int)
-
-                    # Calculate transfer amount
-                    transfer_amount = min(sales[r, ice_idx, 0], total_sales * 0.25)
-
-                    if adv_idx is not None and em_int[adv_idx] > 0:
-                        # Split transfer 50/50
-                        adv_amount = transfer_amount * 0.5
-                        bev_amount = transfer_amount * 0.5
-
-                        sales[r, ice_idx, 0] -= transfer_amount
-                        sales[r, adv_idx, 0] += adv_amount
-                        sales[r, bev_index, 0] += bev_amount
-                    else:
-                        # No advanced version - shift all to BEV
-                        sales[r, ice_idx, 0] -= transfer_amount
-                        sales[r, bev_index, 0] += transfer_amount
-
-                    # Recalculate fleet emissions
-                    current_emissions = get_fleet_emissions(sales[r, :, 0], em_int)
-
-                    if current_emissions <= target_emissions:
-                        break
-
-    return sales
-
+# --- Public entry point -----------------------------------------------------
 
 def implement_emissions_regulation(cap, cum_sales_in, sales_in, year,
-                                    emissions_intensity, zero_emission_index,
-                                    regulation_switch, veh_class=None,
-                                    start_emissions=None, start_year=None,
-                                    end_year=None, min_bev_share=None):
+                                   emissions_intensity, regulation_info,
+                                   sector):
     """
-    Implement emissions regulation policy.
-
-    Full implementation combining target calculation, minimum BEV share
-    enforcement, and sales redistribution to meet fleet-average emissions
-    targets.
+    Apply declining fleet-average CO2 regulation to a sector.
 
     Parameters
     ----------
     cap : ndarray
-        Capacity by region and technology
-    cum_sales_in : ndarray
-        Cumulative sales
-    sales_in : ndarray
-        Current period sales
+        Full capacity array (regions x techs x 1).
+    cum_sales_in, sales_in : ndarray
+        Full cumulative / current-period sales (regions x techs x 1).
     year : int
-        Current simulation year
+        Simulation year.
     emissions_intensity : ndarray
-        Emissions by technology in gCO2/km
-    zero_emission_index : int
-        Index of zero-emission technology (BEV)
-    regulation_switch : ndarray or scalar
-        Controls regulation activation per region:
-        - 0: regulation off
-        - non-zero: regulation on
-    veh_class : int, optional
-        Vehicle class for target lookup (required if using class-based targets)
-    start_emissions : dict, optional
-        Starting emissions by vehicle class. If None, uses DEFAULT_START_EMISSIONS.
-    start_year : int, optional
-        Year regulation begins (default 2025)
-    end_year : int, optional
-        Year emissions must reach zero (default 2040)
-    min_bev_share : float, optional
-        Minimum BEV share (default 0.03)
+        CO2 per tech (regions x techs) in gCO2/km.
+    regulation_info : ndarray
+        Per-region policy info, shape (regions, 3, 1) or (regions, 3):
+        columns [start_year, end_year, max_reduction]. max_reduction <= 0
+        disables regulation for that region.
+    sector : str
+        'transport' or 'freight'. Selects the internal grouping and
+        eligibility configuration.
 
     Returns
     -------
-    tuple
-        (cum_sales_after, sales_after, cap_after)
+    (cum_sales_after, sales_after, cap_after)
     """
-    if start_year is None:
-        start_year = REGULATION_START_YEAR
-    if min_bev_share is None:
-        min_bev_share = MIN_BEV_SHARE
+    if sector not in _SECTOR_CONFIG:
+        raise ValueError(f"Unknown sector '{sector}'. "
+                         f"Expected one of {list(_SECTOR_CONFIG)}.")
 
-    # Check if regulation is active for any region
-    if isinstance(regulation_switch, np.ndarray):
-        if np.all(regulation_switch == 0):
-            return cum_sales_in, sales_in, cap
-    elif regulation_switch == 0:
+    # Accept (regions, 3), (regions, 3, 1), or (regions, 3, 1, 1) — the loader
+    # produces 4D with trailing singleton dims. Collapse to strict (regions, 3).
+    info = np.asarray(regulation_info, dtype=float).reshape(
+        np.asarray(regulation_info).shape[0], -1
+    )[:, :3]
+    start_years = info[:, 0]
+    end_years = info[:, 1]
+    max_reductions = info[:, 2]
+
+    # Early exit if no region has active regulation this year
+    active = (max_reductions > 0) & (year >= start_years) & (end_years > start_years)
+    if not np.any(active):
         return cum_sales_in, sales_in, cap
 
-    # Get target emissions for this year and vehicle class
-    if veh_class is not None:
-        target = get_target_emissions(year, veh_class, start_emissions,
-                                       start_year, end_year)
-    else:
-        # Default to infinity (no target) if no vehicle class specified
-        target = float('inf')
+    config = _SECTOR_CONFIG[sector]
+    n_regions = sales_in.shape[0]
 
-    # Identify regions with regulation enabled
-    if isinstance(regulation_switch, np.ndarray):
-        regions = list(np.where(regulation_switch[:, 0, 0] != 0)[0])
-    else:
-        regions = None  # Apply to all
+    cum_out = np.copy(cum_sales_in)
+    sales_out = np.copy(sales_in)
+    cap_out = np.copy(cap)
 
-    # Step 1: Ensure minimum BEV share (if year >= start_year)
-    if year >= start_year:
-        sales_after = ensure_minimum_bev_share(
-            sales_in, emissions_intensity, zero_emission_index,
-            min_bev_share, regions
-        )
-    else:
-        sales_after = np.copy(sales_in)
+    if config['layout'] == 'grouped':
+        segments = config['segments']
+        if (sector not in _baseline_cache
+                or _baseline_cache[sector].shape != (n_regions, len(segments))):
+            _baseline_cache[sector] = np.full((n_regions, len(segments)), np.nan)
+        cache = _baseline_cache[sector]
 
-    # Step 2: Apply emissions regulation
-    if target < float('inf'):
-        sales_after = get_new_sales_under_emissions_regulation(
-            sales_after, emissions_intensity, target,
-            zero_emission_index, regions
-        )
+        for seg_idx, seg_cfg in enumerate(segments.values()):
+            indices = seg_cfg['indices']
+            eligible_local = [indices.index(e) for e in seg_cfg['eligible']]
 
-    # Update capacity
-    sales_difference = sales_after - sales_in
-    cap_after = cap + sales_difference
-    cap_after[:, :, 0] = np.maximum(cap_after[:, :, 0], 0)
+            cum_s, sales_s, cap_s = _regulate_one_class(
+                cap_out[:, indices, :],
+                cum_out[:, indices, :],
+                sales_out[:, indices, :],
+                year,
+                emissions_intensity[:, indices],
+                eligible_local,
+                start_years, end_years, max_reductions,
+                cache[:, seg_idx],
+            )
+            cum_out[:, indices, :] = cum_s
+            sales_out[:, indices, :] = sales_s
+            cap_out[:, indices, :] = cap_s
 
-    # Update cumulative sales
-    cum_sales_after = np.copy(cum_sales_in)
-    cum_sales_after[:, :, 0] += sales_difference[:, :, 0]
+    elif config['layout'] == 'interleaved':
+        n_classes = config['n_classes']
+        eligible_local = config['eligible']
+        if (sector not in _baseline_cache
+                or _baseline_cache[sector].shape != (n_regions, n_classes)):
+            _baseline_cache[sector] = np.full((n_regions, n_classes), np.nan)
+        cache = _baseline_cache[sector]
 
-    return cum_sales_after, sales_after, cap_after
+        for v_class in range(n_classes):
+            idx = slice(v_class, None, n_classes)
+
+            cum_s, sales_s, cap_s = _regulate_one_class(
+                cap_out[:, idx, :],
+                cum_out[:, idx, :],
+                sales_out[:, idx, :],
+                year,
+                emissions_intensity[:, idx],
+                eligible_local,
+                start_years, end_years, max_reductions,
+                cache[:, v_class],
+            )
+            cum_out[:, idx, :] = cum_s
+            sales_out[:, idx, :] = sales_s
+            cap_out[:, idx, :] = cap_s
+
+    return cum_out, sales_out, cap_out
