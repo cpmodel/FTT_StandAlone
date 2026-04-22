@@ -42,7 +42,7 @@ from SourceCode.support.check_market_shares import check_market_shares
 
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies
-from SourceCode.Freight.ftt_fr_emissions_regulation import implement_emissions_regulation
+from SourceCode.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
 
@@ -246,7 +246,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
             mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
-            emissions_reg_active = "emissions regulation" in data and not np.all(data["emissions regulation"][:, 0, 0] == 0)
+            emissions_reg_active = ("EV truck regulation" in data and
+                                    not np.all(data["EV truck regulation"][:, 2, 0] == 0))
 
             
             for v_class in range(n_veh_classes):
@@ -275,9 +276,11 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             if emissions_reg_active and not mandate_active:
                 data['ZEWI'], zewi_t, data['ZEWK'] = implement_emissions_regulation(
-                                data['ZEWK'], data["emissions regulation"], data['ZEWI'], zewi_t,
-                                n_veh_classes, year,
-                                data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']])
+                    data['ZEWK'], data['ZEWI'], zewi_t, year,
+                    data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']],
+                    data["EV truck regulation"],
+                    sector='freight',
+                )
 
             # Recalculate zews per class
             for r in range(num_regions):
