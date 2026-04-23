@@ -416,6 +416,6 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['ZWIY'] = data['ZEWI'] * data["BZTC"][:, :, c6ti['1 Purchase cost (USD/veh)'], None]
         
         if year == 2050:
-            print(f'Number of electric trucks globally: {np.sum(get_class(data['ZEWK'], 3)[:, 6])/1e6:.1f}M')
+            print(f"Number of electric trucks globally: {np.sum(get_class(data['ZEWK'], 3)[:, 6])/1e6:.1f}M")
 
     return data
