@@ -30,8 +30,6 @@ plt.rcParams['axes.labelsize'] = 12
 plt.rcParams['legend.fontsize'] = 12
 plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 12
-plt.rcParams['svg.fonttype'] = 'none'
-
 
 plot_options = ["mandate_tco", "subsidy", "policy_effect", "costs", "shares",
                 "tco_parity", "ff_shock_tco"]
@@ -107,7 +105,7 @@ if "ff_shock_tco" in selected_plots:
     plot_ff_shock_tco_impact(
         regions={92:"Amsterdam", 82:"Berlin", 115:"Delhi", 110:"London", 98:"Madrid", 87:"Milan"},
         pickle_name='Results_diesel_shock',
-        scenario_name_map={'S0': 'Baseline', 'S3': '20% Diesel shock'},
+        scenario_name_map={'S0': 'Baseline', 'S3': '30% Diesel shock'},
         output_name='ff_shock_tco_impact'
     )
 
