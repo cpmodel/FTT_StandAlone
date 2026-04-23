@@ -38,7 +38,7 @@ from currency_converter import CurrencyConverter
 
 # Local library imports
 from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
-from SourceCode.ftt_core.ftt_mandate import implement_mandate
+from SourceCode.ftt_core.ftt_mandate import implement_mandate, implement_seeding
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_sales, regulation_correction
 
@@ -56,7 +56,6 @@ from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-@profile
 def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -324,8 +323,6 @@ def solve(data, time_lag, titles, histend, year, domain):
 
                 if rhudt[r] == 0.0:
                     continue
-                
-                endo_gen = endo_shares[r] * rhudt[r, np.newaxis]
 
                 # -----------------------------------------------------
                 # Step 3: Exogenous sales additions

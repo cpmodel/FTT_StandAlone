@@ -485,9 +485,6 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Update the time-loop variables
             # =================================================================
 
-            # Calculate levelised cost again
-            data = get_lcot(data, titles, year)
-
             # Update time loop variables:
             for var in vars_to_copy:
 
