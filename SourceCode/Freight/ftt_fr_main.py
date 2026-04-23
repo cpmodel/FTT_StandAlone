@@ -245,7 +245,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
-            mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
+            mandate_active = not np.all(data["EV truck mandate"][:, 2, 0] == 0)
             emissions_reg_active = ("EV truck regulation" in data and
                                     not np.all(data["EV truck regulation"][:, 2, 0] == 0))
 
