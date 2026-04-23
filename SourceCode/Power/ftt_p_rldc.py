@@ -249,11 +249,11 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
                                  -1.0)*np.sum(data['MEWS'][:, [16,17], 0], axis=1),
                                  0.005)
     
-    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, [17,18], 0], axis=1)
+    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, [16,17], 0], axis=1)
     vre_ggr_wind = np.maximum((divide(np.sum(data['MEWS'][:, [16, 17], 0] * data['MEWL'][:, [16, 17], 0], axis=1),
                                  np.sum(time_lag['MEWS'][:, [16, 17], 0] * time_lag['MEWL'][:, [16, 17], 0], axis=1))
                                  -1.0)*np.sum(data['MEWG'][:, [16,17], 0], axis=1),
-                                 0.002 * np.sum(data['MEWG'][:, [17,18], 0], axis=1))
+                                 0.002 * np.sum(data['MEWG'][:, [16,17], 0], axis=1))
     
 
     # What is the impact of additional solar
@@ -289,9 +289,6 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     data = battery_costs(data, time_lag, year, t, titles, histend)
 
     for r in range(len(titles['RTI'])):
-        # if Sw[r] + Ss[r] == 0:
-        #     print(f"No wind or solar in region {r}")
-        #     continue
 
         # SHORT-TERM STORAGE
         # Multidimensional polynomial from Ueckerdt et al. (2017)
