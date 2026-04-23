@@ -195,7 +195,6 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Interpolations to avoid staircase profile
             D = time_lag['RVKZ'] + (data['RVKZ'] - time_lag['RVKZ']) * t * dt
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
-            Utot_dt = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * (t - 1) * dt
             Utot_reshaped = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
            
             # The core FTT equations, taking into account old shares, costs and regulations
@@ -246,8 +245,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
             mandate_active = not np.all(data["EV truck mandate"][:, 2, 0] == 0)
-            emissions_reg_active = ("EV truck regulation" in data and
-                                    not np.all(data["EV truck regulation"][:, 2, 0] == 0))
+            emissions_reg_active = ("EV truck CO2 regulation" in data and
+                                    not np.all(data["EV truck CO2 regulation"][:, 2, 0] == 0))
 
             
             for v_class in range(n_veh_classes):
@@ -278,7 +277,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 data['ZEWI'], zewi_t, data['ZEWK'] = implement_emissions_regulation(
                     data['ZEWK'], data['ZEWI'], zewi_t, year,
                     data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']],
-                    data["EV truck regulation"],
+                    data["EV truck CO2 regulation"],
                     sector='freight',
                 )
 

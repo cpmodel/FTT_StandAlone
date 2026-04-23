@@ -335,8 +335,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
             mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
-            emissions_reg_active = ("EV regulation" in data and
-                                    not np.all(data["EV regulation"][:, 2, 0] == 0))
+            emissions_reg_active = ("EV CO2 regulation" in data and
+                                    not np.all(data["EV CO2 regulation"][:, 2, 0] == 0))
 
             if mandate_active:
                 data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
@@ -350,7 +350,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 data["TEWI"], tewi_t, data["TEWK"] = implement_emissions_regulation(
                     data['TEWK'], data['TEWI'], tewi_t, year,
                     data['BTTC'][:, :, c3ti['14 CO2Emissions']],
-                    data['EV regulation'],
+                    data['EV CO2 regulation'],
                     sector='transport',
                 )
 
