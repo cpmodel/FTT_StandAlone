@@ -41,7 +41,7 @@ from SourceCode.sector_coupling.battery_lbd import battery_costs
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
-from SourceCode.support.get_vars_to_copy import get_loop_vars_to_copy, get_domain_vars_to_copy
+from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use

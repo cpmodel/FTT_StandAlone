@@ -33,6 +33,8 @@ Functions included:
 """
 # Third party imports
 import numpy as np
+from currency_converter import CurrencyConverter
+
 
 # Local library imports
 from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
@@ -52,6 +54,7 @@ from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
+@profile
 def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.
@@ -88,10 +91,19 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_techs = len(titles['HTTI'])
 
     data['PRSC14'] = np.copy(time_lag['PRSC14'] )
+    
+    # TODO: remove once dimensions normalised
+    if isinstance(time_lag['USD to EUR'], float):
+        data['USD to EUR'] = np.copy(time_lag['USD to EUR'])
+    else:
+        data['USD to EUR'] = 0
     if year == 2014:
         data['PRSC14'] = np.copy(data['PRSCX'])
+        c = CurrencyConverter()
+        data['USD to EUR'] = c.convert(1, 'USD', 'EUR')     # TODO: this one call is over half a second. Can be replaced?
 
-    # Calculate the LCOH for each heating technology
+
+    # Calculate the LCOH for each heating technology    
     carbon_costs = set_carbon_tax(data, c4ti)
     data = get_lcoh(data, titles, carbon_costs)
 
