@@ -343,11 +343,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                     data['TEWK'], data['TEWI'], tewi_t, year, GREEN_INDICES_EV, data['EV mandate']
                 )
 
-            elif emissions_reg_active and year >= 2025:
-                # Year gate: avoid entering the regulation function in pre-start
-                # years so that years before regulation fires are bit-identical
-                # to S0 (function-internal numpy temp allocations were causing
-                # a tiny perturbation that amplified through learning-by-doing).
+            elif emissions_reg_active:
+                # Do not hard-code a calendar threshold here: regulation timing
+                # should be driven by the policy input and handled inside the
+                # regulation implementation for inactive/pre-start years.
                 data["TEWI"], tewi_t, data["TEWK"] = implement_emissions_regulation(
                     data['TEWK'], data['TEWI'], tewi_t, year,
                     data['BTTC'][:, :, c3ti['14 CO2Emissions']],
