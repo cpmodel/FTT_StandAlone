@@ -92,9 +92,17 @@ def plot_ff_shock_tco_impact(
         )
 
     tech_indices = {
-        'MDT': {'diesel': 12, 'bev': 32},
+        'MDT': {'diesel': 12, 'cng': 22, 'bev': 32},
         'HDT': {'diesel': 13, 'bev': 33},
     }
+    # use cng if India (or Inidan city) mdt
+    india_regions = ["india", "delhi", "mumbai", "bangalore", "chennai", "ahmedabad"]
+
+    def get_reference_tech_index(vehicle_class, region_label):
+        if vehicle_class == 'MDT' and str(region_label).strip().lower() in india_regions:
+            print(f"Using CNG as reference for MDT in India.")
+            return tech_indices[vehicle_class]['cng']
+        return tech_indices[vehicle_class]['diesel']
 
     def get_strict_crossover_year(bev_line, diesel_line, year_axis):
         diff = bev_line - diesel_line
@@ -114,9 +122,9 @@ def plot_ff_shock_tco_impact(
         'HDT': {'baseline': [], 'shock': []},
     }
     for vehicle_class, idx_map in tech_indices.items():
-        diesel_idx = idx_map['diesel']
         bev_idx = idx_map['bev']
-        for ri in region_indices:
+        for ri, region_label in zip(region_indices, region_labels):
+            diesel_idx = get_reference_tech_index(vehicle_class, region_label)
             bev_base = zttc_baseline[ri, bev_idx, 0, :]
             diesel_base = zttc_baseline[ri, diesel_idx, 0, :]
             bev_shock = zttc_shock[ri, bev_idx, 0, :]
@@ -223,4 +231,18 @@ def plot_ff_shock_tco_impact(
 
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches='tight')
+    
+    # export the underlying data for the plot as CSV
+    with open(f'Figures/output/{output_name}_data.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        header = ['Region', 'Vehicle Class', 'Comparing Against', 'Baseline Parity Year', 'Shock Parity Year']
+        writer.writerow(header)
+        for i, region in enumerate(region_labels):
+            for j, vehicle_class in enumerate(class_order):
+                base_year = crossover_years[vehicle_class]['baseline'][i]
+                shock_year = crossover_years[vehicle_class]['shock'][i]
+                comparing_against = 'CNG' if vehicle_class == 'MDT' and str(region).strip().lower() in india_regions else 'Diesel'
+                writer.writerow([region, vehicle_class, comparing_against, base_year, shock_year])
+    
+    
     
