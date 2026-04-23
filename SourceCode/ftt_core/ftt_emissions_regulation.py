@@ -39,20 +39,22 @@ import numpy as np
 # --- Sector configuration ---------------------------------------------------
 
 # Passenger transport segments. Indices are into the flat 31-tech VTTI array.
-# Eligible receivers: Electric, PHEV only. The policy is labelled "EV
-# regulation" so donations should concentrate on EVs rather than siphoning
-# into mature Hybrid (which holds non-trivial share in markets like China
-# and would otherwise capture most of the proportional redistribution).
-# Everything else — Petrol, Adv Petrol, Diesel, Adv Diesel, CNG, Hybrid —
-# is a potential donor once target dips below its emissions; Hydrogen
-# stays neutral because its emissions are 0.
+# Eligible receivers: Adv Petrol, Adv Diesel, Electric, PHEV (mirrors the
+# freight philosophy — a broader "low-carbon basket" rather than pure-EV).
+# Hybrid is deliberately excluded: in markets with large Hybrid share
+# (e.g. China) it otherwise captures most of the proportional redistribution
+# and slows the EV transition. CNG and Hydrogen are also excluded — CNG as
+# a gas-fuel exclusion (parallels freight's CNG/LPG), Hydrogen because its
+# emissions are 0 so it is neutral rather than a donor or receiver.
+# Donors: any non-eligible tech above the current CO2 target (Petrol,
+# Diesel, CNG, Hybrid).
 _TRANSPORT_SEGMENTS = {
     'econ': {'indices': [0, 3, 6, 9, 12, 15, 18, 21, 24],
-             'eligible': [18, 21]},
+             'eligible': [3, 9, 18, 21]},
     'mid':  {'indices': [1, 4, 7, 10, 13, 16, 19, 22, 25],
-             'eligible': [19, 22]},
+             'eligible': [4, 10, 19, 22]},
     'lux':  {'indices': [2, 5, 8, 11, 14, 17, 20, 23, 26],
-             'eligible': [20, 23]},
+             'eligible': [5, 11, 20, 23]},
 }
 
 # Freight: 5 vehicle classes (TWV, LCV, MDT, HDT, Bus), 9 techs each,
