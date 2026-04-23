@@ -3,9 +3,12 @@
 Centralized emissions regulation functions for FTT sectors.
 
 Single entry point: `implement_emissions_regulation`. Mirrors the flow of
-`ftt_mandate.py` — sectors call once per year with their full sales/capacity
-arrays plus a per-region info array, and this module handles segment/class
-grouping, eligibility, per-region timelines, and baseline caching.
+`ftt_mandate.py`, sectors call it each sub-timestep of the annual loop
+with their current sales/capacity arrays plus a per-region info array, and
+this module handles segment/class grouping, eligibility, per-region
+timelines, and baseline caching. The target depends only on the integer
+`year` and the cached baseline, so repeated within-year calls share the
+ same target and are deterministic.
 
 Regulation info (per region):
     [start_year, end_year, max_reduction]
