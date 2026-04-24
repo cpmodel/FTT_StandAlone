@@ -47,7 +47,7 @@ from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
-from SourceCode.Transport.ftt_tr_emissions_regulation import implement_emissions_regulation
+from SourceCode.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
 # Green technology indices for Transport (EVs)
 GREEN_INDICES_EV = [18, 19, 20]
@@ -362,8 +362,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
             mandate_active = not np.all(data["EV mandate"][:, 2, 0] == 0)
-            emissions_reg_active = ("emissions regulation" in data and
-                                    not np.all(data["emissions regulation"][:, 0, 0] == 0))
+            emissions_reg_active = ("EV CO2 regulation" in data and
+                                    not np.all(data["EV CO2 regulation"][:, 2, 0] == 0))
 
             if mandate_active:
                 data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
@@ -371,15 +371,14 @@ def solve(data, time_lag, titles, histend, year, domain):
                 )
 
             elif emissions_reg_active:
-                # Emissions regulation - segment-specific targets with proportional redistribution
-                # Baseline emissions are cached in the module, not in data dictionary
+                # Do not hard-code a calendar threshold here: regulation timing
+                # should be driven by the policy input and handled inside the
+                # regulation implementation for inactive/pre-start years.
                 data["TEWI"], tewi_t, data["TEWK"] = implement_emissions_regulation(
-                    data['TEWK'],
-                    data["emissions regulation"],
-                    data['TEWI'],
-                    tewi_t,
-                    year,
-                    data['BTTC'][:, :, c3ti['14 CO2Emissions']]
+                    data['TEWK'], data['TEWI'], tewi_t, year,
+                    data['BTTC'][:, :, c3ti['14 CO2Emissions']],
+                    data['EV CO2 regulation'],
+                    sector='transport',
                 )
 
             # Recalculate TEWS/TEWG after seeding. Do not touch regions with pseudoshares (>51)

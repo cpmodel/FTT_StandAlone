@@ -146,7 +146,7 @@ FU14A,Fuel demand for heating in 2014,GWh,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 FU14B,Fuel demand for heating in 2014,ktoe,RTI,JTI,NA,NA,FTT-H,-,-,,-,,Y
 TWSA,FTT-Transport Exogenous vehicle sales (must sum to zero),th-veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
 EV mandate,FTT:Tr mandate info,,RTI,MAN,NA,NA,FTT-Tr,-,-,-,-,Y,Y
-emissions regulation,FTT transport switch to turn on emissions regulation policy,,RTI,NA,NA,NA,FTT-Tr,-,-,-,-,Y,Y
+EV CO2 regulation,FTT:Tr emissions regulation info,,RTI,MAN,NA,NA,FTT-Tr,-,-,-,-,Y,Y
 TWIY,FTT-Transport Investment in private vehicles,2000$M (Correct year?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TVFP,FTT-Transport,$2012/vkm (?),RTI,VTTI,NA,TIME,FTT-Tr,,,2017,,,
 TTVT,FTT-Transport Vehicle tax,th $/veh,RTI,VTTI,NA,TIME,FTT-Tr,,,2001,,,
@@ -324,7 +324,7 @@ ZEWW,FTT-Fr Cumulative Capacities,No. vehicles,NA,FTTI,NA,TIME,FTT-Fr,,2018,2018
 ZWIY,FTT-Fr Investment by Technology (monetary value),$,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,,,Y
 EV truck mandate,FTT freight mandate information,,RTI,MAN,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 EV truck kickstarter,FTT freight switch to turn on EV kickstarter policy,,RTI,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
-emissions regulation,FTT freight switch to turn on emissions regulation policy,,RTI,NA,NA,NA,FTT-Fr,-,-,-,-,Y,Y
+EV truck CO2 regulation,FTT:Fr emissions regulation info,,RTI,MAN,NA,NA,FTT-Fr,-,-,-,-,Y,Y
 ZGAM,FTT-Fr Gamma values,$/tkm,RTI,FTTI,NA,TIME,FTT-Fr,,,2014,,,
 noit,Number of iterations per year,,NA,NA,NA,NA,General,,,2000,,,
 IHF1,FTT-IH-CHI final fuel demand for industrial heat (ktoe),ktoe,RTI,JTI,NA,TIME,FTT-IH-CHI,,,2000,,,
