@@ -8,6 +8,7 @@ import configparser
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import polars as pl
 
 def plot_costs(
     regions, 
@@ -201,6 +202,44 @@ def plot_costs(
 
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches='tight')
+    
+    # next save the underlying data as csv
+    data_rows = []
+    for r, (region_id, region_label) in enumerate(zip(region_ids, region_labels)):
+        ri = int(region_id) - 1
+        for c, vc in enumerate(col_order):
+            comparison_fuel = 'diesel'
+            if vc == 'MDT' and str(region_label).strip().lower() == 'delhi':
+                comparison_fuel = 'cng'
+
+            comparison_idx = tech_indices[vc].get(comparison_fuel, tech_indices[vc]['diesel'])
+            bev_idx = tech_indices[vc]['bev']
+
+            bev_s0 = results[main_key]['ZTTC'][ri, bev_idx, 0, :][year_mask]
+            ice_s0 = results[main_key]['ZTTC'][ri, comparison_idx, 0, :][year_mask]
+            bev_s1 = results[pos_key]['ZTTC'][ri, bev_idx, 0, :][year_mask] if pos_key is not None else None
+            bev_s2 = results[neg_key]['ZTTC'][ri, bev_idx, 0, :][year_mask] if neg_key is not None else None
+            ice_s1 = results[pos_key]['ZTTC'][ri, comparison_idx, 0, :][year_mask] if pos_key is not None else None
+            ice_s2 = results[neg_key]['ZTTC'][ri, comparison_idx, 0, :][year_mask] if neg_key is not None else None
+
+            for i, year in enumerate(years):
+                row = {
+                    'Region': region_label,
+                    'Vehicle Class': col_titles[vc],
+                    'ICE Comparison Vehicle': comparison_fuel.upper(),
+                    'Year': year,
+                    'BEV Costs central': bev_s0[i],
+                    'BEV Costs positive': bev_s1[i] if bev_s1 is not None else None,
+                    'BEV Costs negative': bev_s2[i] if bev_s2 is not None else None,
+                    'ICE Costs central': ice_s0[i],
+                    'ICE Costs positive': ice_s1[i] if ice_s1 is not None else None,
+                    'ICE Costs negative': ice_s2[i] if ice_s2 is not None else None
+                }
+                data_rows.append(row)
+
+    # Save the underlying data as a CSV file
+    data_df = pl.DataFrame(data_rows)
+    data_df.write_csv(f'Figures/output/{output_name}.csv')
 
 
 def plot_shares(
@@ -452,3 +491,43 @@ def plot_shares(
 
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches='tight')
     plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches='tight')
+    # next save the underlying data as csv
+    data_rows = []
+    for r, (region_id, region_label) in enumerate(zip(region_ids, region_labels)):
+        ri = int(region_id) - 1
+        for c, vc in enumerate(col_order):
+            cng_idx = tech_indices[vc]['cng']
+            diesel_idx = tech_indices[vc]['diesel']
+
+            bev_idx = tech_indices[vc]['bev']
+
+            bev_s0 = results[main_key]['ZEWS'][ri, bev_idx, 0, :][year_mask]
+            cng_s0 = results[main_key]['ZEWS'][ri, cng_idx, 0, :][year_mask]
+            diesel_s0 = results[main_key]['ZEWS'][ri, diesel_idx, 0, :][year_mask]
+            bev_s1 = results[pos_key]['ZEWS'][ri, bev_idx, 0, :][year_mask] if pos_key is not None else None
+            bev_s2 = results[neg_key]['ZEWS'][ri, bev_idx, 0, :][year_mask] if neg_key is not None else None
+            cng_s1 = results[pos_key]['ZEWS'][ri, cng_idx, 0, :][year_mask] if pos_key is not None else None
+            cng_s2 = results[neg_key]['ZEWS'][ri, cng_idx, 0, :][year_mask] if neg_key is not None else None
+            diesel_s1 = results[pos_key]['ZEWS'][ri, diesel_idx, 0, :][year_mask] if pos_key is not None else None
+            diesel_s2 = results[neg_key]['ZEWS'][ri, diesel_idx, 0, :][year_mask] if neg_key is not None else None
+
+            for i, year in enumerate(years):
+                row = {
+                    'Region': region_label,
+                    'Vehicle Class': col_titles[vc],
+                    'Year': year,
+                    'BEV Shares central': bev_s0[i],
+                    'BEV Shares positive': bev_s1[i] if bev_s1 is not None else None,
+                    'BEV Shares negative': bev_s2[i] if bev_s2 is not None else None,
+                    'CNG Shares central': cng_s0[i],
+                    'CNG Shares positive': cng_s1[i] if cng_s1 is not None else None,
+                    'CNG Shares negative': cng_s2[i] if cng_s2 is not None else None,
+                    'Diesel Shares central': diesel_s0[i],
+                    'Diesel Shares positive': diesel_s1[i] if diesel_s1 is not None else None,
+                    'Diesel Shares negative': diesel_s2[i] if diesel_s2 is not None else None
+                }
+                data_rows.append(row)
+
+    # Save the underlying data as a CSV file
+    data_df = pl.DataFrame(data_rows)
+    data_df.write_csv(f'Figures/output/{output_name}.csv')
