@@ -7,7 +7,7 @@ Created on Thu Jul 24 15:40:57 2025
 Contains three types of regulatory policies
 1. Exogenous sales (which come in addition to endogenous sales)
 2. Exogenous capacity
-3. Correction for regulation under stretching
+3. Correction for regulation under stretching (demand growth)
 
 """
 
@@ -21,26 +21,27 @@ def exogenous_sales(
     Where exogenous sales contradict regulatory constraints, regulation has priority.
     Returns changes in capacity per region and tech
     """
-    avg_lifetime = np.mean(lifetimes, axis=1)  # Average lifetime per region
+    avg_lifetime = np.mean(lifetimes, axis=1)
+    has_demand = demand > 0
 
-    exog_sales_sum = np.sum(exog_sales, axis=1)  
-    max_allowed = 0.8 * demand / avg_lifetime 
+    exog_sales_sum = np.sum(exog_sales, axis=1)
+    max_allowed = 0.8 * demand / np.where(avg_lifetime > 0, avg_lifetime, 1.0)
 
-    # Scale down exogenous sales if they exceed 80% of total sales
+    safe_exog_sum = np.where(exog_sales_sum > 0, exog_sales_sum, 1.0)
     scaled_exog_sales = np.where(
         ((exog_sales_sum > max_allowed) & (max_allowed > 0))[:, None],
-        exog_sales * (max_allowed / exog_sales_sum)[:, None],
+        exog_sales * (max_allowed / safe_exog_sum)[:, None],
         exog_sales
-        ) / no_it
-    
-    # Endogenous capacity + additions must not exceed regulated capacity.
-    # If they do, regulations have priority over exogenous capacity.
-    reg_overrides_exog = (
-        ((endo_capacity + scaled_exog_sales) > regulation_cap) & 
-        (regulation_cap >= 0.0) )
-    dUk_exog_sales = np.where(reg_overrides_exog, 0.0, scaled_exog_sales)
+    ) / no_it
 
-    return dUk_exog_sales
+    # Zero out regions with no demand before the regulation check,
+    # so ZREG/TREG = 0 (maximum regulation) is not falsely triggered there
+    scaled_exog_sales = np.where(has_demand[:, None], scaled_exog_sales, 0.0)
+
+    reg_overrides_exog = (
+        ((endo_capacity + scaled_exog_sales) > regulation_cap) &
+        (regulation_cap >= 0.0) )
+    return np.where(reg_overrides_exog, 0.0, scaled_exog_sales)
 
 
 def exogenous_capacity(
@@ -61,17 +62,17 @@ def exogenous_capacity(
     share_remaining_gap_to_close = 1 / (no_it - t + 1)
     
     capacity_gap = exogenous_capacity - (endo_capacity + dcap_other)
-    dUk_exog_cap = capacity_gap * share_remaining_gap_to_close
+    dcap_exog_cap = capacity_gap * share_remaining_gap_to_close
     
     reg_overrides_exog = (exogenous_capacity > regulation_cap) & (regulation_cap >= 0)
         
     # Only apply where exogenous capacities turned on
-    dUk_exog_cap = np.where(exogenous_capacity >= 0, dUk_exog_cap, 0)
+    dcap_exog_cap = np.where(exogenous_capacity >= 0, dcap_exog_cap, 0)
     
     # Do not apply where regulations override exogenous capacity
-    dUk_exog_cap = np.where(reg_overrides_exog, 0, dUk_exog_cap)
+    dcap_exog_cap = np.where(reg_overrides_exog, 0, dcap_exog_cap)
                     
-    return dUk_exog_cap
+    return dcap_exog_cap
     
 
 def regulation_correction(
@@ -79,14 +80,13 @@ def regulation_correction(
     """
     Demand growth raises capacities while shares stay the same (stretching). 
     This extra capacity is not yet regulated. Correct for this underregulation.
-
     """
-    # Note: now aligned with E3ME, but no where statement before
+    
     cap_growth_from_stretching = endo_capacity - endo_shares * cap_sum_demand_dt
-    dUk_reg = np.where(cap_growth_from_stretching > 0,
+    dcap_reg_corr = np.where(cap_growth_from_stretching > 0,
                    -cap_growth_from_stretching * reg_constr,
                    0)
     
-    return dUk_reg
+    return dcap_reg_corr
     
 

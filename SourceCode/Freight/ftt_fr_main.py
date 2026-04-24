@@ -34,7 +34,7 @@ import numpy as np
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
-
+from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_sales, regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
@@ -215,11 +215,43 @@ def solve(data, time_lag, titles, histend, year, domain):
             endo_shares = data_dt['ZEWS'][:, :, 0] + change_in_shares
             endo_capacity = endo_shares * Utot_reshaped
             
-            # Shares after exogenous sales and regulation correction taken into account
-            data['ZEWS'] = implement_shares_policies(
-                endo_capacity, endo_shares, 
-                titles, data['ZWSA'], data['ZREG'], reg_constr,
+                        # Capacity change due to exogenous sales and regulation correction, per vehicle class
+            dcap_exog_sales = np.zeros_like(endo_capacity)
+            dcap_reg_corr = np.zeros_like(endo_capacity)
+            for veh_class in range(n_veh_classes):
+                idx = slice(veh_class, None, n_veh_classes)
+                dcap_exog_sales[:, idx] = exogenous_sales(
+                    data['ZWSA'][:, idx, 0], Utot[:, veh_class, 0], endo_capacity[:, idx],
+                    data['ZREG'][:, idx, 0], no_it,
+                    data['BZTC'][:, idx, c6ti['8 Lifetime (y)']]
+                )
+                dcap_reg_corr[:, idx] = regulation_correction(
+                    endo_capacity[:, idx], endo_shares[:, idx],
+                    Utot[:, veh_class, 0, np.newaxis], reg_constr[:, idx]
+                )
+
+            new_capacity = endo_capacity + dcap_exog_sales + dcap_reg_corr
+            zews_new = np.zeros((num_regions, num_techs, 1))
+            for veh_class in range(n_veh_classes):
+                idx = slice(veh_class, None, n_veh_classes)
+                class_total = new_capacity[:, idx].sum(axis=1, keepdims=True)
+                zews_new[:, idx, 0] = divide(new_capacity[:, idx], class_total)
+
+            # Old implementation kept for comparison
+            zews_old = implement_shares_policies(
+                endo_capacity, endo_shares,
+                titles, data['ZWSA'].copy(), data['ZREG'], reg_constr,
                 sum_over_classes, n_veh_classes, Utot, no_it)
+
+            if t == no_it and year in [2025, 2050]:
+                meaningful = np.sum(np.abs(zews_old), axis=(1, 2)) > 1e-6
+                diff = np.abs(zews_new[meaningful] - zews_old[meaningful])
+                old_vals = np.abs(zews_old[meaningful])
+                max_rel_diff = np.max(diff / (old_vals + 1e-10)) * 100
+                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
+                print(f"Max relative difference freight {year}: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
+
+            data['ZEWS'] = zews_new
                         
             
             check_market_shares(data['ZEWS'], titles, sector, year)
