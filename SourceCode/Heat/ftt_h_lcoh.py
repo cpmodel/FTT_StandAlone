@@ -42,7 +42,6 @@ import numpy as np
 # Local library imports
 from SourceCode.support.divide import divide
 
-
 def set_carbon_tax(data, c4ti):
     '''
     Convert the carbon price in REPP from euro / tC to 2020 euros / kWhUD. 
@@ -51,9 +50,13 @@ def set_carbon_tax(data, c4ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    carbon_costs = (data["REPPHX"][:, :, 0]                              # Carbon price in euro / tC
+ 
+    
+    carbon_costs = (data["CO2taxH"][:, :, 0]    # Carbon price in USD/tCO2
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
-                    / 3.666 / 1000 / 1000                                # Conversion from C to CO2 and MWh to kWh, kg to tonne 
+                     / 1000 / 1000              # Conversion from C to CO2 and MWh to kWh, kg to tonne 
+                     * data['USD to EUR']  # Currency converter from USD to EUR
+                     / 1.18                     # Hardcoded inflation from 2023 to 2020
                     )
     
     

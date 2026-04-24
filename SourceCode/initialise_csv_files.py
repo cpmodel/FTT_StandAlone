@@ -74,11 +74,11 @@ def get_masterfile(ftt_module, scenario):
         base_name = os.path.basename(matching_file[0]) # file name without directory
         end_index = base_name.index(f'_{scenario}.xlsx')
         file_root = base_name[:end_index]
-    except IndexError as e:
+    except IndexError:
         print("An error occurred while finding the masterfile.")
         print(f"the ftt model and scenario: {ftt_module}, {scenario}")
         print(f"The file that triggered the error: {matching_file}")
-        raise e
+        raise
 
 
     return matching_file, file_root

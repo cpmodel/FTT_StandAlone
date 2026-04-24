@@ -1,0 +1,9 @@
+Model,fuel_var,unit
+FTT-H,HJHF,GWh
+FTT-Tr,TJEF,ktoe
+FTT-Fr,ZJNJ,ktoe
+FTT-IH-CHI,IHF1,ktoe
+FTT-IH-FBT,IHF2,ktoe
+FTT-IH-MTM,IHF3,ktoe
+FTT-IH-NMM,IHF4,ktoe
+FTT-IH-OIS2,IHF5,ktoe
