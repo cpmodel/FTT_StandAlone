@@ -297,23 +297,20 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             #################### Regulatory policies #################
          
-            
-            # Calculate exogenous sales effects, capped at maximum sales
-            dUk_exog_sales = exogenous_sales(
+            # Change in generation from exogenous sales, capped at maximum sales
+            dgen_exog_sales = exogenous_sales(
                 data['HWSA'][regions, :, 0], rhudt[regions, 0, 0], endo_gen[regions],
                 data['HREG'][regions, :, 0], 
                 no_it, data['BHTC'][regions, :, c4ti['5 Lifetime']]
             )
             
-            # Correction for regulation when demand is growing
-            dUk_reg = regulation_correction(
+            # Correction for regulation when demand is growing; main effect in shares equation
+            dgen_reg_corr = regulation_correction(
                 endo_gen[regions], endo_shares[regions], rhudlt[regions, 0], reg_constr[regions])
             
-            # Calculate total capacity in each region
-            new_generation = endo_gen[regions] + dUk_exog_sales + dUk_reg
-            total_generation = np.sum(new_generation, axis=1)
-            
-            # Compute new shares
+            # New generation and shares
+            new_generation = endo_gen[regions] + dgen_exog_sales + dgen_reg_corr
+            total_generation = np.sum(new_generation, axis=1)           
             data['HEWS'][regions, :, 0] = divide(new_generation, total_generation[:, None])
             
             # ====================================== Old implementation

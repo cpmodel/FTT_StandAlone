@@ -44,7 +44,7 @@ def exogenous_sales(
 
 
 def exogenous_capacity(
-        exogenous_capacity, endo_capacity, dUk_other, regulation_cap,
+        exogenous_capacity, endo_capacity, dcap_other, regulation_cap,
         t, no_it
         ):
     """
@@ -60,7 +60,7 @@ def exogenous_capacity(
     # 1/19th of the remaining gap etc.
     share_remaining_gap_to_close = 1 / (no_it - t + 1)
     
-    capacity_gap = exogenous_capacity - (endo_capacity + dUk_other)
+    capacity_gap = exogenous_capacity - (endo_capacity + dcap_other)
     dUk_exog_cap = capacity_gap * share_remaining_gap_to_close
     
     reg_overrides_exog = (exogenous_capacity > regulation_cap) & (regulation_cap >= 0)

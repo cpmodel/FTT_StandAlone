@@ -439,10 +439,6 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Start the computation of shares
         for t in range(1, no_it + 1):
-
-            # Electricity demand is exogenous at the moment
-            # TODO: Replace, using price elasticities and feedback from other
-            # FTT modules
             
             # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
             # MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
@@ -490,19 +486,19 @@ def solve(data, time_lag, titles, histend, year, domain):
             endo_gen = endo_shares * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
             endo_capacity = endo_gen / mewl_dt / 8766
             
-            # Calculate correction for possible underregulation
-            dUk_reg = regulation_correction(
+            # Correction for regulation when demand is growing; main effect in shares equation
+            dcap_reg_corr = regulation_correction(
                 endo_capacity, endo_shares, np.sum(data_dt['MEWK'], axis=1), reg_constr)
             
-            # Calculate changes to capacity from exogenous capacity
-            dUk_exog_cap = exogenous_capacity(
-                data['MWKA'][:, :, 0], endo_capacity, dUk_reg, data['MEWR'][:, :, 0], t, no_it)
+            # Changes to capacity from exogenous capacity
+            dcap_exog_cap = exogenous_capacity(
+                data['MWKA'][:, :, 0], endo_capacity, dcap_reg_corr, data['MEWR'][:, :, 0], t, no_it)
             
-            dUk = dUk_reg + dUk_exog_cap
+            dcap_total = dcap_reg_corr + dcap_exog_cap
             
             # New market shares
-            total_capacity = np.sum(endo_capacity + dUk, axis=1)
-            mews = divide(endo_capacity + dUk, total_capacity[:, None])
+            total_capacity = np.sum(endo_capacity + dcap_total, axis=1)
+            mews = divide(endo_capacity + dcap_total, total_capacity[:, None])
            
             # New generation and capacity
             mewg = mews * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]

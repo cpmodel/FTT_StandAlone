@@ -265,25 +265,20 @@ def solve(data, time_lag, titles, histend, year, domain):
             endo_shares = np.zeros((num_regions, num_techs))
             endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
             endo_capacity = endo_shares * rfltt[:, np.newaxis]
-            
-            # New implementation exogenous sales and regulation correction =====
-            
-            
-            # Calculate exogenous sales effects, capped at maximum sales
-            dUk_exog_sales = exogenous_sales(
+                        
+            # Change in capacity from exogenous sales, capped at maximum sales
+            dcap_exog_sales = exogenous_sales(
                 data['TWSA'][regions, :, 0], rfltt[regions], endo_capacity[regions], data['TREG'][regions, :, 0], 
                 no_it, data['BTTC'][regions, :, c3ti['8 lifetime']]
             )
             
-            # Correction for regulation when demand is growing
-            dUk_reg = regulation_correction(
+            # Correction for regulation (phase-out) when demand is growing; main effect in shares equation
+            dcap_reg_corr = regulation_correction(
                 endo_capacity[regions], endo_shares[regions], rfltt[regions, None], reg_constr[regions])
             
-            # Calculate total capacity in each region
-            new_capacity = endo_capacity[regions] + dUk_exog_sales + dUk_reg
+            # New capacity and shares
+            new_capacity = endo_capacity[regions] + dcap_exog_sales + dcap_reg_corr
             total_capacity = np.sum(new_capacity, axis=1)
-            
-            # Compute new shares
             data['TEWS'][regions, :, 0] = divide(new_capacity, total_capacity[:, None])
             
             
