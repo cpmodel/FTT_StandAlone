@@ -245,11 +245,15 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             if t == no_it and year in [2025, 2050]:
                 meaningful = np.sum(np.abs(zews_old), axis=(1, 2)) > 1e-6
+                meaningful_regions = np.flatnonzero(meaningful)
                 diff = np.abs(zews_new[meaningful] - zews_old[meaningful])
                 old_vals = np.abs(zews_old[meaningful])
                 max_rel_diff = np.max(diff / (old_vals + 1e-10)) * 100
                 max_loc = np.unravel_index(np.argmax(diff), diff.shape)
-                print(f"Max relative difference freight {year}: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
+                print(
+                    f"Max relative difference freight {year}: {max_rel_diff:.3f}% "
+                    f"at region {meaningful_regions[max_loc[0]]}, tech {max_loc[1]}"
+                )
 
             data['ZEWS'] = zews_new
                         

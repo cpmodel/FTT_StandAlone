@@ -501,7 +501,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             mews = divide(endo_capacity + dcap_total, total_capacity[:, None])
            
             # New generation and capacity
-            mewg = mews * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
+            mewg = mews * e_demand[:, None] * mewl_dt / np.sum(mews * mewl_dt, axis=1)[:, None]
             mewk = mewg / mewl_dt / 8766
             
             # =================================================================
