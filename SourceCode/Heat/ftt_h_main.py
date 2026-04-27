@@ -40,7 +40,8 @@ from currency_converter import CurrencyConverter
 from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
 from SourceCode.ftt_core.ftt_mandate import implement_mandate, implement_seeding
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
-from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_sales, regulation_correction
+from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
+from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)

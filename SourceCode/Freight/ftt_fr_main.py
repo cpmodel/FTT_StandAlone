@@ -34,7 +34,8 @@ import numpy as np
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
-from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_sales, regulation_correction
+from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
+from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares

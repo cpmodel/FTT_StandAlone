@@ -26,7 +26,7 @@ curves. **Cost-supply curves** are recalculated at the end of the routine.
 Local library imports:
 
     FTT: Core functions:
-    - `get_sales <get_sales_or_investment.htlm>
+    - `get_sales <get_sales_or_investment.html>`__
         Generic investment function (new plus end-of-life replacement)
     - `shares <ftt_shares.html>`__
         Market shares simulation (core of the model)
@@ -36,7 +36,7 @@ Local library imports:
     - `rldc <ftt_p_rldc.html>`__
         Residual load duration curves
     - `dspch <ftt_p_dspch.html>`__
-        Dispatch of capcity
+        Dispatch of capacity
     - `get_lcoe <ftt_p_lcoe.html>`__
         Levelised cost calculation
     - `survival_function <ftt_p_surv.html>`__
@@ -60,7 +60,7 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.ftt_core.ftt_shares import shares_change
-from SourceCode.ftt_core.ftt_regulatory_policies import exogenous_capacity, regulation_correction
+from SourceCode.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
