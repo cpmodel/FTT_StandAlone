@@ -327,7 +327,9 @@ def solve(data, time_lag, titles, histend, year, domain):
                 old_values = np.abs(tews_old[meaningful_regions])
                 max_rel_diff = np.max(diff / (old_values + 1e-10)) * 100
                 max_loc = np.unravel_index(np.argmax(diff), diff.shape)
-                print(f"Max relative difference transport {year}: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
+                meaningful_region_indices = np.flatnonzero(meaningful_regions)
+                max_region = meaningful_region_indices[max_loc[0]]
+                print(f"Max relative difference transport {year}: {max_rel_diff:.3f}% at region {max_region}, tech {max_loc[1]}")
 
             # Raise error if there are negative values 
             # or regional market shares do not add up to one
