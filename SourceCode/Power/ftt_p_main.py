@@ -661,9 +661,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
 
 
-            # Investment
-            data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
-
+            
             # =================================================================
             # Cost-Supply curves
             # =================================================================  
@@ -701,7 +699,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-        data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']] / 1.33
+        # Investment
+        data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
         if year == 2050:
             print(f"Total solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
