@@ -75,12 +75,12 @@ def solve(data, time_lag, titles, histend, year, domain):
     -----------
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
-    time_lag: type
+    time_lag: dict
         Model variables in previous year
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
-        Final year of histrorical data by variable
+        Final year of historical data by variable
     year: int
         Current year
     domain: dictionary of lists
