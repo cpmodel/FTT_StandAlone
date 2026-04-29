@@ -30,7 +30,7 @@ def get_survival_ratio(survival_function_array):
 
 def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     """Add new cars to the age matrix.
-    Add the growth in capacity (positive or negative) to the scrappage    
+    Add the growth in capacity (positive or negative) to the scrappage.
     
     New car additions are set to zero if calculation is negative (f.i. with regulation)
     
