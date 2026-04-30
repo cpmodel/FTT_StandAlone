@@ -47,29 +47,33 @@ def model_run_results():
     tuple of (output dict, elapsed seconds)
     """
     # The model resolves settings.ini and Inputs/ relative to cwd.
+    original_cwd = Path.cwd()
     os.chdir(WORKSPACE_ROOT)
 
-    original_read = configparser.ConfigParser.read
+    try:
+        original_read = configparser.ConfigParser.read
 
-    def patched_read(self, filenames, encoding=None):
-        result = original_read(self, filenames, encoding=encoding)
-        if "settings" in self:
-            self.set("settings", "simulation_end", "2030")
-            self.set("settings", "enable_modules", "FTT-Tr, FTT-P, FTT-H, FTT-Fr")
-            self.set("settings", "scenarios", "S0")
-        return result
+        def patched_read(self, filenames, encoding=None):
+            result = original_read(self, filenames, encoding=encoding)
+            if "settings" in self:
+                self.set("settings", "simulation_end", "2030")
+                self.set("settings", "enable_modules", "FTT-Tr, FTT-P, FTT-H, FTT-Fr")
+                self.set("settings", "scenarios", "S0")
+            return result
 
-    with patch.object(configparser.ConfigParser, "read", patched_read):
-        model = ModelRun()
+        with patch.object(configparser.ConfigParser, "read", patched_read):
+            model = ModelRun()
 
-    for scen in model.input:
-        model.input[scen]["noit"][:] = 4
+        for scen in model.input:
+            model.input[scen]["noit"][:] = 4
 
-    t0 = time.perf_counter()
-    model.run()
-    elapsed = time.perf_counter() - t0
+        t0 = time.perf_counter()
+        model.run()
+        elapsed = time.perf_counter() - t0
 
-    return model.output, elapsed
+        yield model.output, elapsed
+    finally:
+        os.chdir(original_cwd)
 
 
 def test_no_nans_in_output(model_run_results):
