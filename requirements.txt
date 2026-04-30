@@ -5,5 +5,4 @@ openpyxl
 pandas
 paste
 tqdm
-pytest
 currencyconverter
