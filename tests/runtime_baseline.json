@@ -1,0 +1,4 @@
+{
+    "max_seconds": 10,
+    "_note": "Maximum allowed wall-clock seconds for the integration run (2010-2030, noit=4). If the model legitimately grows slower, update max_seconds to roughly 2x your measured local runtime and commit this file."
+}
