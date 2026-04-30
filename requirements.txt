@@ -6,3 +6,4 @@ pandas
 paste
 tqdm
 pytest
+currencyconverter
