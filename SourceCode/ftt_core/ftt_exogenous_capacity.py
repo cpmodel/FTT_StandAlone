@@ -16,21 +16,23 @@ import numpy as np
 
 
 def exogenous_capacity(
-        exogenous_capacity, endo_capacity, dcap_other, regulation_cap,
+        exogenous_capacity, endo_capacity, dcap_reg_corr, regulation_cap,
         t, no_it
         ):
     """
-    Calculate the change to endogenous capacity to reach exogenous capacities.
+    Adjust capacity towards a specified exogenous target.
     The goal is to move linearly to the new capacity over one year.
     Regulation overrides exogenous capacity in case of a conflict.
 
-    When no_it = 20, initially you need to close 1/20th of the remaining
-    gap. In the next step, you need 1/20th of the original step, which is
-    1/19th of the remaining gap etc.
+    At time step 1 (of no_it subannual steps), you close 1/no_it of the remaining gap.
+    At each subsequent step, you close a similar absolute amount as in the first step, 
+    which corresponds to an increasing share of the remaining gap (e.g. 1/(no_it - t + 1)
+    at step 2, and so on.
     """
     share_remaining_gap_to_close = 1 / (no_it - t + 1)
-
-    capacity_gap = exogenous_capacity - (endo_capacity + dcap_other)
+    
+    # Gap between endogenous capacity (computed from the shares equation) and exogenous target
+    capacity_gap = exogenous_capacity - (endo_capacity + dcap_reg_corr)
     dcap_exog_cap = capacity_gap * share_remaining_gap_to_close
 
     reg_overrides_exog = (exogenous_capacity > regulation_cap) & (regulation_cap >= 0)
