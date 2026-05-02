@@ -42,7 +42,6 @@ from SourceCode.support.check_market_shares import check_market_shares
 
 
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
-from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies
 from SourceCode.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
@@ -231,31 +230,13 @@ def solve(data, time_lag, titles, histend, year, domain):
                 )
 
             new_capacity = endo_capacity + dcap_exog_sales + dcap_reg_corr
-            zews_new = np.zeros((num_regions, num_techs, 1))
+            zews = np.zeros((num_regions, num_techs, 1))
             for veh_class in range(n_veh_classes):
                 idx = slice(veh_class, None, n_veh_classes)
                 class_total = new_capacity[:, idx].sum(axis=1, keepdims=True)
-                zews_new[:, idx, 0] = divide(new_capacity[:, idx], class_total)
+                zews[:, idx, 0] = divide(new_capacity[:, idx], class_total)
 
-            # Old implementation kept for comparison
-            zews_old = implement_shares_policies(
-                endo_capacity, endo_shares,
-                titles, data['ZWSA'].copy(), data['ZREG'], reg_constr,
-                sum_over_classes, n_veh_classes, Utot, no_it)
-
-            if t == no_it and year in [2025, 2050]:
-                meaningful = np.sum(np.abs(zews_old), axis=(1, 2)) > 1e-6
-                meaningful_regions = np.flatnonzero(meaningful)
-                diff = np.abs(zews_new[meaningful] - zews_old[meaningful])
-                old_vals = np.abs(zews_old[meaningful])
-                max_rel_diff = np.max(diff / (old_vals + 1e-10)) * 100
-                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
-                print(
-                    f"Max relative difference freight {year}: {max_rel_diff:.3f}% "
-                    f"at region {meaningful_regions[max_loc[0]]}, tech {max_loc[1]}"
-                )
-
-            data['ZEWS'] = zews_new
+            data['ZEWS'] = zews
                         
             
             check_market_shares(data['ZEWS'], titles, sector, year)

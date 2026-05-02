@@ -281,55 +281,6 @@ def solve(data, time_lag, titles, histend, year, domain):
             new_capacity = endo_capacity[regions] + dcap_exog_sales + dcap_reg_corr
             total_capacity = np.sum(new_capacity, axis=1)
             data['TEWS'][regions, :, 0] = divide(new_capacity, total_capacity[:, None])
-            
-            
-            # # Old implementation exogenous sales and correction for stretching ====
-            tews_old = np.zeros((len(titles['RTI']), len(titles['VTTI']),1))
-            for r in regions:
-                if r < num_regions:  # Safety check
-                    dUkTK = np.zeros([num_techs])
-                    dUkREG = np.zeros([num_techs])
-                    TWSA_scalar = 1.0
-                    
-                    # Check that exogenous sales additions aren't too large
-                    # As a proxy it can't be greater than 80% of the fleet size
-                    # divided by 13 (the average lifetime of vehicles)
-                    if (data['TWSA'][r, :, 0].sum() > 0.8 * rfltt[r] / 13):
-                        TWSA_scalar = data['TWSA'][r, :, 0].sum() / (0.8 * rfltt[r] / 13)
-                
-                    # Check endogenous capacity plus additions for a single time step does not exceed regulated capacity.
-                    reg_vs_exog = ((data['TWSA'][r, :, 0]/TWSA_scalar/no_it + endo_capacity[r])
-                                   > data['TREG'][r, :, 0]) & (data['TREG'][r, :, 0] >= 0.0)
-                    
-                    # TWSA is yearly capacity additions. We need to split it up based on the number of time steps, and also scale it if necessary.
-                    dUkTK = np.where(reg_vs_exog, 0.0, data['TWSA'][r, :, 0] / TWSA_scalar / no_it)
-                    
-                    # Correct for regulations due to the stretching effect. This is the difference in capacity due only to rflt increasing.
-                    # This is the difference between capacity based on the endogenous capacity, and what the endogenous capacity would have been
-                    # if rflt (i.e. total demand) had not grown.
-                    dUkREG = -(endo_capacity[r] - endo_shares[r] * rfllt[r, np.newaxis]) * reg_constr[r, :].reshape([num_techs])
-                    
-                    # Sum effect of exogenous sales additions (if any) with effect of regulations.
-                    dUk = dUkTK + dUkREG
-                    dUtot = np.sum(dUk)
-                    
-                    # Calculate changes to endogenous capacity, and use to find new market shares
-                    # Zero capacity will result in zero shares
-                    # All other capacities will be streched
-
-                    tews_old[r, :, 0] = (endo_capacity[r] + dUk) / (np.sum(endo_capacity[r]) + dUtot)
-            
-            
-            if t==no_it and year in [2025, 2050]:
-                # Only compare regions with meaningful market shares
-                meaningful_regions = np.sum(np.abs(tews_old), axis=(1,2)) > 1e-6
-                diff = np.abs(data['TEWS'][meaningful_regions] - tews_old[meaningful_regions])
-                old_values = np.abs(tews_old[meaningful_regions])
-                max_rel_diff = np.max(diff / (old_values + 1e-10)) * 100
-                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
-                meaningful_region_indices = np.flatnonzero(meaningful_regions)
-                max_region = meaningful_region_indices[max_loc[0]]
-                print(f"Max relative difference transport {year}: {max_rel_diff:.3f}% at region {max_region}, tech {max_loc[1]}")
 
             # Raise error if there are negative values 
             # or regional market shares do not add up to one

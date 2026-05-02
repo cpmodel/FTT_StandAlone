@@ -313,69 +313,6 @@ def solve(data, time_lag, titles, histend, year, domain):
             new_generation = endo_gen[regions] + dgen_exog_sales + dgen_reg_corr
             total_generation = np.sum(new_generation, axis=1)           
             data['HEWS'][regions, :, 0] = divide(new_generation, total_generation[:, None])
-            
-            # ====================================== Old implementation
-            
-            hews_old = np.zeros((len(titles['RTI']), len(titles['HTTI']),1))
-            for r in range(len(titles['RTI'])):
-
-                if rhudt[r] == 0.0:
-                    continue
-
-                # -----------------------------------------------------
-                # Step 3: Exogenous sales additions
-                # -----------------------------------------------------
-                # Add in exogenous sales figures. These are blended with
-                # endogenous result! Note that it's different from the
-                # ExogSales specification!
-                Utot = rhudt[r]
-                dUk = np.zeros([num_techs])
-                dUkTK = np.zeros([num_techs])
-                dUkREG = np.zeros([num_techs])
-
-
-                # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation.
-                # Otherwise, the corrections won't line up with the market shares.
-
-                
-                dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
-                # Check endogenous shares plus additions for a single time step does not exceed regulated shares
-                reg_vs_exog = ((data['HWSA'][r, :, 0]*Utot/no_it + endo_gen[r]) > data['HREG'][r, :, 0]*Utot) & (data['HREG'][r, :, 0] >= 0.0)
-                # Filter capacity additions based on regulated shares
-                dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
-
-
-                # Correct for regulations due to the stretching effect. This is the difference in generation due only to demand increasing.
-                # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
-                # if total demand had not grown.
-
-
-                dUkREG = -(endo_gen[r] - endo_shares[r] * rhudlt[r, 0]) * reg_constr[r, :].reshape([len(titles['HTTI'])])
-                 
-                # Sum effect of exogenous sales additions (if any) with
-                # effect of regulations
-                dUk = dUkREG + dUkTK
-                dUtot = np.sum(dUk)
-
-  
-                # Calaculate changes to endogenous generation, and use to find new market shares
-                # Zero generation will result in zero shares
-                # All other capacities will be streched
-                
-                
-
-                if (np.sum(endo_gen[r]) + dUtot) > 0.0:
-                    hews_old[r, :, 0] = (endo_gen[r] + dUk)/(np.sum(endo_gen[r])+dUtot)
-            
-            if t==no_it and year in [2025, 2050]:
-                diff = np.abs(data['HEWS'] - hews_old)
-                max_rel_diff = np.max(diff / (np.abs(hews_old) + 1e-10)) * 100
-                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
-                region_is_growing =  rhudt[max_loc[0]] > rhudlt[max_loc[0]]
-                print(f"Max relative difference heat: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
-                if not region_is_growing:
-                    print(f"In region {max_loc[0]} demand went down, explaining discrepancy")
-                
 
             # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['HEWS'], titles, sector, year)

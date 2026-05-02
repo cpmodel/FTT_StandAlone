@@ -69,7 +69,6 @@ from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
-from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 #from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
@@ -504,28 +503,11 @@ def solve(data, time_lag, titles, histend, year, domain):
             mewg = mews * e_demand[:, None] * mewl_dt / np.sum(mews * mewl_dt, axis=1)[:, None]
             mewk = mewg / mewl_dt / 8766
             
-            # =================================================================
-            # Old code to do regulatory policies
-            mews_old, mewg_old, mewk_old, dUk_reg_old, dUk_exog_cap_old = policies_old(
-                len(titles['RTI']), mewl_dt, len(titles['T2TI']),
-                endo_shares, MEWDt, data_dt['MEWK'],
-                reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
-            
-          
-            # ===============================================================
-            
             data['MEWS'] = mews[:, :, None]
             data['MEWL'] = mewl_dt[:, :, None]
             data['MEWG'] = mewg[:, :, None]
             data['MEWK'] = mewk[:, :, None]
-                        
-            
-            if t==no_it and year in [2025, 2050]:
-                diff = np.abs(data['MEWS'] - mews_old)
-                max_rel_diff = np.max(diff / (np.abs(mews_old) + 1e-10)) * 100
-                max_loc = np.unravel_index(np.argmax(diff), diff.shape)
-                print(f"Max relative difference power: {max_rel_diff:.3f}% at region {max_loc[0]}, tech {max_loc[1]}")
-            
+
             # Raise error if there are negative values 
             # or regional market shares do not add up to one
             check_market_shares(data['MEWS'], titles, 'FTT-P', year)
