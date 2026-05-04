@@ -52,7 +52,9 @@ def regulation_correction(
     Demand growth raises capacities while shares stay the same (stretching).
     This extra capacity is not yet regulated. Correct for this underregulation.
     """
+    # First term is with current demand, second with demand at previous t
     cap_growth_from_stretching = endo_capacity - endo_shares * cap_sum_demand_dt
+    # Apply regulation to excess capacity created by demand growth (rather than shares)
     dcap_reg_corr = np.where(cap_growth_from_stretching > 0,
                    -cap_growth_from_stretching * reg_constr,
                    0)
