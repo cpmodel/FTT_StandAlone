@@ -7,29 +7,29 @@ Centralized path configuration for FTT Stand-alone.
 
 This module provides a single place to configure the data directories used by
 the model (Inputs and Utilities). Override the defaults before instantiating
-:class:`~SourceCode.model_class.ModelRun` when using FTT Stand-alone as an
+:class:`~SourceCode.model_class.RunFTT` when using FTT Stand-alone as an
 imported package with local data.
 
 Example usage
 -------------
 Default behaviour (uses the data bundled with the repository)::
 
-    from ftt_standalone import ModelRun
-    model = ModelRun()
+    from ftt_standalone import RunFTT
+    model = RunFTT()
 
 Using custom data directories::
 
-    from ftt_standalone import ModelRun, set_paths
+    from ftt_standalone import RunFTT, set_paths
     set_paths(
         inputs_path="/path/to/my/Inputs",
         utilities_path="/path/to/my/Utilities",
     )
-    model = ModelRun()
+    model = RunFTT()
 
-Or equivalently via :class:`ModelRun` keyword arguments::
+Or equivalently via :class:`RunFTT` keyword arguments::
 
-    from ftt_standalone import ModelRun
-    model = ModelRun(
+    from ftt_standalone import RunFTT
+    model = RunFTT(
         inputs_path="/path/to/my/Inputs",
         utilities_path="/path/to/my/Utilities",
     )

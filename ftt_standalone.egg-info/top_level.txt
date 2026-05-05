@@ -1,2 +1,0 @@
-SourceCode
-ftt_standalone

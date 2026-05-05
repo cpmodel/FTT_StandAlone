@@ -1,2 +1,0 @@
-[console_scripts]
-ftt-run = ftt_standalone:run_cli
