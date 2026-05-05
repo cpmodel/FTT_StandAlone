@@ -28,10 +28,3 @@ ftt-run = "ftt_standalone:run_cli"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["SourceCode*", "ftt_standalone*"]
-
-[tool.setuptools.package-data]
-"*" = [
-    "Utilities/**/*",
-    "settings.ini",
-    "measures_meta.json",
-]

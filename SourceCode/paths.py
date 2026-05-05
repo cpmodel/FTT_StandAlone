@@ -75,7 +75,7 @@ def get_inputs_path() -> Path:
     Resolution order:
 
     1. A path set explicitly via :func:`set_paths` or the ``inputs_path``
-       argument of :class:`~SourceCode.model_class.ModelRun`.
+       argument of :class:`~SourceCode.model_class.RunFTT`.
     2. An ``Inputs/`` directory located next to the package root (works both
        for editable installs and for the source tree).
     3. ``Inputs/`` relative to the current working directory (legacy
