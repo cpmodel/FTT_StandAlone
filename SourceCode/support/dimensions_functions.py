@@ -27,7 +27,7 @@ def load_dims():
     # Check that classification titles file exists
     dims_path = get_utilities_path() / 'titles' / dims_file
     if not dims_path.is_file():
-        print('Dimensions name file not found.')
+        raise FileNotFoundError(f'Dimensions name file not found: {dims_path.resolve()}')
     dims_path = str(dims_path)
 
     dims_data = pd.read_csv(dims_path, skiprows=0, na_filter = False)
