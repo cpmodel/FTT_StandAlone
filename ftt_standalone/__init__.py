@@ -4,7 +4,7 @@ ftt_standalone
 ==============
 Public API for the FTT Stand-alone model.
 
-Importing this package gives access to the main :class:`ModelRun` class and the
+Importing this package gives access to the main :class:`RunFTT` class and the
 path-configuration helpers without needing to know the internal ``SourceCode``
 package layout.
 
@@ -12,14 +12,14 @@ Quick start
 -----------
 Run the model with the built-in data::
 
-    from ftt_standalone import ModelRun
-    model = ModelRun()
+    from ftt_standalone import RunFTT
+    model = RunFTT()
     model.run()
 
 Run with custom Inputs / Utilities folders::
 
-    from ftt_standalone import ModelRun
-    model = ModelRun(
+    from ftt_standalone import RunFTT
+    model = RunFTT(
         inputs_path="/path/to/my/Inputs",
         utilities_path="/path/to/my/Utilities",
     )
@@ -27,8 +27,8 @@ Run with custom Inputs / Utilities folders::
 
 Override individual settings programmatically::
 
-    from ftt_standalone import ModelRun
-    model = ModelRun(
+    from ftt_standalone import RunFTT
+    model = RunFTT(
         inputs_path="/path/to/my/Inputs",
         settings={
             "scenarios": "S0, S1",
@@ -66,7 +66,7 @@ def run(
     settings_path=None,
     settings=None,
 ) -> "RunFTT":
-    """Create a :class:`ModelRun`, solve it, and return the instance.
+    """Create a :class:`RunFTT`, solve it, and return the instance.
 
     Parameters
     ----------
@@ -83,7 +83,7 @@ def run(
 
     Returns
     -------
-    ModelRun
+    RunFTT
         The solved model instance (``model.output`` contains results).
     """
     model = RunFTT(

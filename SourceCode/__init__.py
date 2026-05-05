@@ -7,7 +7,7 @@ Internal package containing all FTT model source code.
 For external use, prefer importing from the ``ftt_standalone`` top-level
 package which provides the stable public API::
 
-    from ftt_standalone import ModelRun
+    from ftt_standalone import RunFTT
 """
 
 from SourceCode.model_class import RunFTT
