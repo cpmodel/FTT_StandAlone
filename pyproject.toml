@@ -23,8 +23,8 @@ web = ["bottle", "paste"]
 dev = ["pytest", "black", "sphinx"]
 
 [project.scripts]
-ftt-run = "ftt_standalone:run_cli"
+ftt-run = "future_technology_transformation:run_cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["SourceCode*", "ftt_standalone*"]
+include = ["SourceCode*", "future_technology_transformation*"]

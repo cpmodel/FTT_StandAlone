@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-ftt_standalone
-==============
+future_technology_transformation
+================================
 Public API for the FTT Stand-alone model.
 
 Importing this package gives access to the main :class:`RunFTT` class and the
@@ -12,13 +12,13 @@ Quick start
 -----------
 Run the model with the built-in data::
 
-    from ftt_standalone import RunFTT
+    from future_technology_transformation import RunFTT
     model = RunFTT()
     model.run()
 
 Run with custom Inputs / Utilities folders::
 
-    from ftt_standalone import RunFTT
+    from future_technology_transformation import RunFTT
     model = RunFTT(
         inputs_path="/path/to/my/Inputs",
         utilities_path="/path/to/my/Utilities",
@@ -27,7 +27,7 @@ Run with custom Inputs / Utilities folders::
 
 Override individual settings programmatically::
 
-    from ftt_standalone import RunFTT
+    from future_technology_transformation import RunFTT
     model = RunFTT(
         inputs_path="/path/to/my/Inputs",
         settings={

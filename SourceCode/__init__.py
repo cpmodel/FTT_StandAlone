@@ -4,10 +4,10 @@ FTT Stand-alone – SourceCode package
 =====================================
 Internal package containing all FTT model source code.
 
-For external use, prefer importing from the ``ftt_standalone`` top-level
-package which provides the stable public API::
+For external use, prefer importing from the ``future_technology_transformation``
+top-level package which provides the stable public API::
 
-    from ftt_standalone import RunFTT
+    from future_technology_transformation import RunFTT
 """
 
 from SourceCode.model_class import RunFTT

@@ -14,12 +14,12 @@ Example usage
 -------------
 Default behaviour (uses the data bundled with the repository)::
 
-    from ftt_standalone import RunFTT
+    from future_technology_transformation import RunFTT
     model = RunFTT()
 
 Using custom data directories::
 
-    from ftt_standalone import RunFTT, set_paths
+    from future_technology_transformation import RunFTT, set_paths
     set_paths(
         inputs_path="/path/to/my/Inputs",
         utilities_path="/path/to/my/Utilities",
@@ -28,7 +28,7 @@ Using custom data directories::
 
 Or equivalently via :class:`RunFTT` keyword arguments::
 
-    from ftt_standalone import RunFTT
+    from future_technology_transformation import RunFTT
     model = RunFTT(
         inputs_path="/path/to/my/Inputs",
         utilities_path="/path/to/my/Utilities",
