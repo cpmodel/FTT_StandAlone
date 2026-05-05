@@ -300,7 +300,8 @@ def solve(data, time_lag, titles, histend, year, domain):
          
             # Change in generation from exogenous sales, capped at maximum sales
             dgen_exog_sales = exogenous_sales(
-                data['HWSA'][regions, :, 0], rhudt[regions, 0, 0], endo_gen[regions],
+                data['HWSA'][regions, :, 0] * rhudt[regions, 0, 0][:, None],
+                rhudt[regions, 0, 0], endo_gen[regions],
                 data['HREG'][regions, :, 0] * rhudt[regions, 0, 0][:, None], 
                 no_it, data['BHTC'][regions, :, c4ti['5 Lifetime']]
             )
