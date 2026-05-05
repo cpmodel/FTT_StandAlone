@@ -1,0 +1,15 @@
+numpy
+pandas
+openpyxl
+tqdm
+numba
+currency-converter
+
+[dev]
+pytest
+black
+sphinx
+
+[web]
+bottle
+paste

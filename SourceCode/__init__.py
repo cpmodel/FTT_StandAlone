@@ -1,6 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Dec 17 15:21:17 2025
+FTT Stand-alone – SourceCode package
+=====================================
+Internal package containing all FTT model source code.
 
+For external use, prefer importing from the ``ftt_standalone`` top-level
+package which provides the stable public API::
+
+    from ftt_standalone import ModelRun
 """
+
+from SourceCode.model_class import RunFTT
+from SourceCode.paths import set_paths, get_inputs_path, get_utilities_path, reset_paths
+
+__all__ = [
+    "RunFTT",
+    "set_paths",
+    "get_inputs_path",
+    "get_utilities_path",
+    "reset_paths",
+]
 

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ftt-standalone"
+version = "0.1.0"
+description = "FTT Stand-alone model: Future Technology Transformations"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "pandas",
+    "openpyxl",
+    "tqdm",
+    "numba",
+    "currency-converter",
+]
+
+[project.optional-dependencies]
+web = ["bottle", "paste"]
+dev = ["pytest", "black", "sphinx"]
+
+[project.scripts]
+ftt-run = "ftt_standalone:run_cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["SourceCode*", "ftt_standalone*"]
+
+[tool.setuptools.package-data]
+"*" = [
+    "Utilities/**/*",
+    "settings.ini",
+    "measures_meta.json",
+]

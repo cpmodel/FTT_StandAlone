@@ -21,14 +21,14 @@ Local library imports:
 """
 
 # Local library imports
-from SourceCode.model_class import ModelRun
+from SourceCode.model_class import RunFTT
 import pickle
 from pathlib import Path
 
 if __name__ == "__main__":
         
     # Instantiate the run
-    model = ModelRun()
+    model = RunFTT()
 
     # Fetch ModelRun attributes, for examination
     # Titles of the model

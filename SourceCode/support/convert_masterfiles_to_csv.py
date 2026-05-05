@@ -16,26 +16,12 @@ The user can select one or more scenarios to convert from the excel sheet:
 
 from pathlib import Path
 import os
-import sys
 
 import pandas as pd
 import numpy as np
 import datetime
 
-# Get the absolute path of the current script
-current_script_path = os.path.abspath(__file__)
-
-# Get the absolute path of the root directory
-root_directory_path = os.path.dirname(os.path.dirname(os.path.dirname(current_script_path)))
-
-# Path to the 'support' directory
-support_directory_path = os.path.join(root_directory_path, 'SourceCode', 'support')
-
-# Add the 'support' directory to sys.path if it's not already there
-if support_directory_path not in sys.path:
-    sys.path.append(support_directory_path)
-
-from titles_functions import load_titles
+from SourceCode.support.titles_functions import load_titles
 
 #%% Function definitions
 
@@ -302,12 +288,12 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 # Core functions for the main programme
 def directories_setup():
     """ Set up directory masterfile and the general input directory"""
-    
-    dir_file = os.path.dirname(os.path.realpath(__file__))
-    dir_root = Path(dir_file).parents[1] 
-    dir_inputs = os.path.join(dir_root, "Inputs")  
-    dir_masterfiles = os.path.join(dir_root, "Inputs", "_MasterFiles")
-    
+
+    from SourceCode.paths import get_inputs_path
+    inputs = get_inputs_path()
+    dir_inputs = str(inputs)
+    dir_masterfiles = str(inputs / "_MasterFiles")
+
     return dir_inputs, dir_masterfiles
 
 

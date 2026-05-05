@@ -22,7 +22,7 @@ from bottle import (route, run, request, response, static_file)
 import numpy as np
 import pandas as pd
 
-from SourceCode.model_class import ModelRun
+from SourceCode.model_class import RunFTT
 
 
 # Switch for build
@@ -123,7 +123,7 @@ def run_model():
         config.write(configfile)
 
     # Initalise the model
-    model = ModelRun()
+    model = RunFTT()
     # Define the output based on the inputs
     # TODO: Ensure this matches any revision to model structure changes
     model.output = {scenario: {var: np.full_like(model.input[scenario][var], 0) for var in model.input[scenario]} for scenario in model.input}
@@ -1179,7 +1179,7 @@ def init_model(end_year):
     print (entries_to_run)
 
     global model
-    model = ModelRun()
+    model = RunFTT()
     years = list(model.timeline)
     years = [int(x) for x in years]
 
