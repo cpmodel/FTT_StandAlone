@@ -15,6 +15,14 @@ import os
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
 
 
+def _masterfile_roots():
+    """Return candidate masterfile roots in priority order."""
+    return [
+        Path('Inputs_existing') / '_MasterFiles',
+        Path('Inputs') / '_MasterFiles',
+    ]
+
+
 def initialise_csv_files(ftt_modules, scenarios):
     """
     This function initialises the csv files for the model run.
@@ -53,9 +61,13 @@ def get_masterfile(ftt_module, scenario):
     
     # The * denotes the regionxtechnologies and last year updated part of the string
     file_pattern = f"{ftt_module}*_{scenario}.xlsx"
-    matching_file = list(
-        (Path('Inputs') / '_MasterFiles' / ftt_module).glob(file_pattern)
-    )
+    matching_file = []
+    for root in _masterfile_roots():
+        module_dir = root / ftt_module
+        if module_dir.exists():
+            matching_file = list(module_dir.glob(file_pattern))
+        if matching_file:
+            break
 
     # Printing warnings 1: in case there is no corresponding excel file
     if len(matching_file) == 0:
