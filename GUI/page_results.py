@@ -171,9 +171,13 @@ def render_results_page():
                             # If differences aren't available but user selected them, revert to 'Levels'
                             if not can_show_diffs and state.result_type != 'levels':
                                 state.result_type = 'levels'
-                                # Update selector value if it exists
-                                if result_type_selector is not None:
+                            # Lock or unlock the transformation selector
+                            if result_type_selector is not None:
+                                if not can_show_diffs:
                                     result_type_selector.value = 'Levels'
+                                    result_type_selector.disable()
+                                else:
+                                    result_type_selector.enable()
                             
                         with ui.tab_panel(t2).classes('w-full items-start p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
@@ -380,6 +384,9 @@ def render_results_page():
                         with_input=False
                     ).classes('w-full h-full overflow-none').props('dense')
                     result_type_selector.on_value_change(on_result_type_change)
+            
+            # Apply correct enabled/disabled state to the newly created selector
+            update_result_type_availability()
         
         # Function to update plot
         def update_plot():
