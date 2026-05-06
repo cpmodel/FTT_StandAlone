@@ -10,6 +10,7 @@ Handles:
 """
 
 from pathlib import Path
+import configparser
 import pickle
 import pandas as pd
 import numpy as np
@@ -35,6 +36,14 @@ class ResultsEngine:
         
         # Data containers
         self.loaded_pickles = {}  # {scenario_name: {var_name: np_array}}
+        
+        # Read simulation_start from settings.ini (fall back to 2010 if unavailable)
+        config = configparser.ConfigParser()
+        config.read('settings.ini')
+        try:
+            self.simulation_start = int(config.get('settings', 'simulation_start'))
+        except (configparser.NoSectionError, configparser.NoOptionError, ValueError):
+            self.simulation_start = 2010
         
     def _parse_classifications(self):
         """Parse classification titles CSV into a dictionary."""
@@ -284,9 +293,8 @@ class ResultsEngine:
                     
                     trace_label = ' '.join(label_parts)
                     
-                    # Generate x-axis (years)
-                    # Default: start at 2010
-                    x_values = list(range(2010, 2010 + len(y_values)))
+                    # Generate x-axis (years) from simulation_start in settings.ini
+                    x_values = list(range(self.simulation_start, self.simulation_start + len(y_values)))
                     
                     fig.add_trace(go.Scatter(
                         x=x_values,
