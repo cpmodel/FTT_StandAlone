@@ -41,7 +41,6 @@ def shared_layout():
                 ('Exeter Climate Policy', 'https://exeterclimatepolicy.com/'),
                 ('GitHub', 'https://github.com/cpmodel/FTT_StandAlone')
                 ]:
-                color = 'blue-300' if current_path == path else 'white'
                 ui.link(label, url, new_tab=True).classes('text-gray-400 text-xs')
                 # format with seperator but ignore on last url entry (should find more elegant solution)
                 if label != 'GitHub':
