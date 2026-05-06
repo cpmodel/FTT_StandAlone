@@ -305,18 +305,8 @@ def directories_setup():
     
     dir_file = os.path.dirname(os.path.realpath(__file__))
     dir_root = Path(dir_file).parents[1] 
-    dir_inputs = os.path.join(dir_root, "Inputs")
-
-    # Keep writing csv outputs to Inputs/, but allow masterfiles to live in
-    # Inputs_existing/ after migration to the new format.
-    candidate_master_dirs = [
-        os.path.join(dir_root, "Inputs_existing", "_MasterFiles"),
-        os.path.join(dir_root, "Inputs", "_MasterFiles"),
-    ]
-    dir_masterfiles = next(
-        (path for path in candidate_master_dirs if os.path.isdir(path)),
-        candidate_master_dirs[-1],
-    )
+    dir_inputs = os.path.join(dir_root, "Inputs")  
+    dir_masterfiles = os.path.join(dir_root, "Inputs", "_MasterFiles")
     
     return dir_inputs, dir_masterfiles
 

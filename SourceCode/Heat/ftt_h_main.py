@@ -54,6 +54,7 @@ from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
+@profile
 def solve(data, time_lag, titles, histend, year, domain):
     """
     Main solution function for the module.

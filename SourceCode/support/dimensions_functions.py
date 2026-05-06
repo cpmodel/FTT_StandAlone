@@ -11,7 +11,6 @@ Functions included:
 
 # Standard library imports
 import os
-from pathlib import Path
 
 # Third party imports
 import pandas as pd
@@ -24,9 +23,7 @@ def load_dims():
     dims_file = 'VariableListing.csv'
 
     # Check that classification titles file exists
-    dir_file = os.path.dirname(os.path.realpath(__file__))
-    dir_root = Path(dir_file).parents[1]
-    dims_path = os.path.join(dir_root, 'Utilities', 'titles', dims_file)
+    dims_path = os.path.join('Utilities', 'titles', dims_file)
     if not os.path.isfile(dims_path):
         print('Dimensions name file not found.')
 

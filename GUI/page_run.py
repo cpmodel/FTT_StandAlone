@@ -186,12 +186,12 @@ def get_available_scenarios():
 
 def get_available_models():
     """
-    Returns a list of available model names (start with FTT) based on the 
-    folders located in Inputs/S0 folder
+    Returns a list of available model names based on the folders located in 
+    Inputs/_MasterFiles
 
     Returns:
         model_list: List of available model names
     """
-    source_path = Path('Inputs/S0')
-    model_list = [folder.name for folder in source_path.iterdir() if folder.is_dir() and folder.name.startswith('FTT')]
+    source_path = Path('Inputs/_MasterFiles')
+    model_list = [folder.name for folder in source_path.iterdir() if folder.is_dir()]
     return model_list
