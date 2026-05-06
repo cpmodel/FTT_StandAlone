@@ -22,10 +22,10 @@ def render_run_page():
                 # Layout grid for inputs inside the card to look cleaner
                 with ui.grid(columns=2).classes('w-full gap-4'):
                     available_models = get_available_models()
-                    model_select = ui.select(available_models, value='FTT-P', label='Model(s) to run', multiple=True)
+                    model_select = ui.select(available_models, value=['FTT-P'], label='Model(s) to run', multiple=True)
 
                     available_scenarios = get_available_scenarios()
-                    scenario_select = ui.select(available_scenarios, value='S0', label='Scenario(s) to run', multiple=True)
+                    scenario_select = ui.select(available_scenarios, value=['S0'], label='Scenario(s) to run', multiple=True)
 
                     default_horizon = 2050
                     horizon = ui.number(label = 'End year', value=default_horizon,
