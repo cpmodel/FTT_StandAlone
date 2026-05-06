@@ -249,7 +249,7 @@ class ResultsEngine:
             for combo in combinations:
                 # Extract and aggregate data
                 try:
-                    data_slice = var_data.copy()
+                    data_slice = var_data
                     
                     # Apply slicing/aggregation for dims 0-2
                     for dim_idx in range(min(3, len(combo))):
