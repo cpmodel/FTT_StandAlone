@@ -175,12 +175,14 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
 def get_available_scenarios():
     """
     Returns a list of available scenario names based on the folders located in
-    inputs folder (exclues folders with _prefix)
+    Inputs folder (exclues folders with _prefix)
 
     Returns:
         scenario_list: List of available scenario names
     """
-    input_path = Path('inputs')
+    input_path = Path('Inputs')
+    if not input_path.exists():
+        return []
     scenario_list = [folder.name for folder in input_path.iterdir() if folder.is_dir() and not folder.name.startswith('_')]
     return scenario_list
 
