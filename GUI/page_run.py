@@ -164,13 +164,14 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
     # Create Output folder if it doesn't exist
     (Path('.') / 'Output').mkdir(parents=True, exist_ok=True)
 
-    if len(output_name) < 1:
-        output_name = 'results'
+    safe_output_name = Path(output_name).name.strip()
+    if len(safe_output_name) < 1 or safe_output_name in {'.', '..'}:
+        safe_output_name = 'results'
 
-    with open(Path('.') / 'Output' / f'{output_name}.pickle', 'wb') as f:
+    with open(Path('.') / 'Output' / f'{safe_output_name}.pickle', 'wb') as f:
         pickle.dump(results, f)
     
-    log_queue.put(f"Results saved to Output/{output_name}.pickle")
+    log_queue.put(f"Results saved to Output/{safe_output_name}.pickle")
     
 def get_available_scenarios():
     """
