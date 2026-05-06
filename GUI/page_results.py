@@ -150,15 +150,20 @@ def render_results_page():
                         # Define update_result_type_availability function that will be used in Analysis tab
                         def update_result_type_availability():
                             """
-                            Enable/disable result type options based on available scenarios and baseline.
+                            Enable/disable result type options based on selected scenarios and baseline.
                             Differences from baseline require:
-                            - At least 2 scenarios loaded
-                            - A baseline scenario selected (not None)
+                            - At least 2 scenarios currently selected for plotting
+                            - A baseline scenario selected that is included in the selected scenarios
                             """
                             has_baseline = state.selected_baseline is not None and state.selected_baseline != ''
-                            sufficient_scenarios = len(engine.get_scenario_names()) >= 2
+                            selected = state.selected_scenarios or []
+                            sufficient_scenarios = (
+                                len(selected) >= 2 and
+                                has_baseline and
+                                state.selected_baseline in selected
+                            )
                             
-                            can_show_diffs = has_baseline and sufficient_scenarios
+                            can_show_diffs = sufficient_scenarios
                             
                             # If differences aren't available but user selected them, revert to 'Levels'
                             if not can_show_diffs and state.result_type != 'levels':
