@@ -75,6 +75,9 @@ def render_results_page():
                                             # Auto-select all scenarios
                                             scenario_selector.value = scenarios
                                             scenario_selector.update()
+                                            # Manually sync baseline options since setting .value
+                                            # programmatically does not fire on_value_change
+                                            update_baseline_options()
                                             
                                             # Update models display
                                             models_info = engine.get_models_run()
