@@ -22,5 +22,4 @@ def figures_page():
 def settings_page():
     render_settings_page()
 
-# Set reload to True to get GUI to automatically refresh when code changes
-ui.run(title="FTT", port=8080, favicon='GUI/images/ftt_favicon.png', reload=False)
+ui.run(title="FTT", port=8080, favicon='GUI/images/ftt_favicon.png', reload=True)

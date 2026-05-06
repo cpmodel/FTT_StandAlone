@@ -153,12 +153,18 @@ class ModelRun:
         # Load variable dimensions
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
+        # Set up csv files if they do not exist yet
+        if self.log_callback:
+            self.log_callback('Extracting CSV files...')
+        initialise_csv_files(self.ftt_modules, self.scenarios)
+        
         # Retrieve inputs
         if self.log_callback:
             self.log_callback('Loading input data...')
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
                                     self.forstart, self.progress_callback, self.log_callback)
+
 
         # Initialize remaining attributes
         self.variables = {}
