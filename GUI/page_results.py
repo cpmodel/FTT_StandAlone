@@ -259,6 +259,10 @@ def render_results_page():
         def update_dimensions():
             nonlocal result_type_selector
             dimension_container.clear()
+            # Reset dimension selections when the variable changes to avoid stale
+            # position-based selections from a previous variable bleeding through.
+            state.dim_selections = [{} for _ in range(4)]
+            state.dim_aggregate = [False, False, False, False]
 
             # If no variable selected yet, show empty selectors (disabled)
             if not state.selected_variable:
