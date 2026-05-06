@@ -195,5 +195,7 @@ def get_available_models():
         model_list: List of available model names
     """
     source_path = Path('Inputs/_MasterFiles')
+    if not source_path.exists():
+        return []
     model_list = [folder.name for folder in source_path.iterdir() if folder.is_dir()]
     return model_list
