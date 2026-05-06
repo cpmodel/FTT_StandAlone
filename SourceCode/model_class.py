@@ -186,6 +186,7 @@ class ModelRun:
                 for y, year in enumerate(self.timeline):
                     if y == 0:
                         start_time = time.time()
+
                     
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
@@ -205,6 +206,7 @@ class ModelRun:
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
             print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
+
 
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """
