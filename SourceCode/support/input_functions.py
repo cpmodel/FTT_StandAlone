@@ -25,7 +25,7 @@ import pandas as pd
 from SourceCode.support.debug_messages import input_functions_message
 
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart, 
-              progress_callback=None, log_callback=None):
+              progress_callback=None):
     """
     Load all model data for all variables and all years.
 
@@ -45,8 +45,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
         Dictionary of forecast start years
     progress_callback: callable, optional
         Function(current, total) to report progress
-    log_callback: callable, optional
-        Function(message) to report log messages
 
     Returns
     ----------

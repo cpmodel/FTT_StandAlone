@@ -162,7 +162,7 @@ class ModelRun:
             self.log_callback('Loading input data...')
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
-                                    self.forstart, self.progress_callback, self.log_callback)
+                                    self.forstart, self.progress_callback)
 
 
         # Initialize remaining attributes
