@@ -3,11 +3,9 @@
 =========================================
 ftt_p_main.py
 =========================================
-Power generation FTT module.
+Power generation FTT module, main file.
 
-
-This is the main file for the power module, FTT: Power. The power
-module models technological replacement of electricity generation technologies due
+The power module models technological replacement of electricity generation technologies due
 to simulated investor decision making. Investors compare the **levelised cost of
 electricity**, which leads to changes in the market shares of different technologies.
 
@@ -27,25 +25,24 @@ curves. **Cost-supply curves** are recalculated at the end of the routine.
 
 Local library imports:
 
-FTT: Core functions:
-    
-- `get_sales <get_sales_or_investment.htlm>`__
-    Generic investment function (new plus end-of-life replacement)
-    
-FTT: Power functions:
+    FTT: Core functions:
+    - `get_sales <get_sales_or_investment.html>`__
+        Generic investment function (new plus end-of-life replacement)
+    - `shares <ftt_shares.html>`__
+        Market shares simulation (core of the model)
+        
+    FTT: Power functions:
 
-- `rldc <ftt_p_rldc.html>`__
-    Residual load duration curves
-- `dspch <ftt_p_dspch.html>`__
-    Dispatch of capcity
-- `get_lcoe <ftt_p_lcoe.html>`__
-    Levelised cost calculation
-- `survival_function <ftt_p_surv.html>`__
-    Calculation of scrappage, sales, tracking of age, and average efficiency.
-- `shares <ftt_shares.html>`__
-    Market shares simulation (core of the model)
-- `cost_curves <ftt_p_costc.html>`__
-    Calculates increasing marginal costs of resources
+    - `rldc <ftt_p_rldc.html>`__
+        Residual load duration curves
+    - `dspch <ftt_p_dspch.html>`__
+        Dispatch of capacity
+    - `get_lcoe <ftt_p_lcoe.html>`__
+        Levelised cost calculation
+    - `survival_function <ftt_p_surv.html>`__
+        Calculate of scrappage, sales, tracking of age, and average efficiency.
+    - `cost_curves <ftt_p_costc.html>`__
+        Calculates increasing marginal costs of resources
 
 Support functions:
 
@@ -63,6 +60,7 @@ import numpy as np
 # Local library imports
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from SourceCode.ftt_core.ftt_shares import shares_change
+from SourceCode.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
@@ -71,7 +69,6 @@ from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
 from SourceCode.Power.ftt_p_rldc import rldc
 from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
-from SourceCode.Power.fft_p_regulatory_policies import policies_old
 from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from SourceCode.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 #from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
@@ -441,10 +438,6 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Start the computation of shares
         for t in range(1, no_it + 1):
-
-            # Electricity demand is exogenous at the moment
-            # TODO: Replace, using price elasticities and feedback from other
-            # FTT modules
             
             # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
             # MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
@@ -486,21 +479,37 @@ def solve(data, time_lag, titles, histend, year, domain):
                 T_Scal=10.0)                     # Power time scaling (applied after RK4)
             
             endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
+            # Grid operators guess expected generation based on load factors last time step
+            mewl_dt = data_dt['MEWL'][:, :, 0]           
             
+            endo_gen = endo_shares * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
+            endo_capacity = endo_gen / mewl_dt / 8766
             
-            mews, mewl, mewg, mewk = policies_old(
-                len(titles['RTI']), data_dt['MEWL'], len(titles['T2TI']),
-                data['MWLO'], time_lag['MEWS'],
-                endo_shares, MEWDt,  data_dt['MEWK'],
-                reg_constr, data['MWKA'], t, dt, no_it, data['MEWR'], time_lag['MEWK'])
+            # Correction for regulation when demand is growing; main effect in shares equation
+            dcap_reg_corr = regulation_correction(
+                endo_capacity, endo_shares, np.sum(data_dt['MEWK'], axis=1), reg_constr)
             
+            # Changes to capacity from exogenous capacity
+            dcap_exog_cap = exogenous_capacity(
+                data['MWKA'][:, :, 0], endo_capacity, dcap_reg_corr, data['MEWR'][:, :, 0], t, no_it)
             
-            data['MEWS'] = mews
-            data['MEWL'] = mewl
-            data['MEWG'] = mewg
-            data['MEWK'] = mewk
-                        
-            # Raise error if any values are negative or market shares do not sum to 1
+            dcap_total = dcap_reg_corr + dcap_exog_cap
+            
+            # New market shares
+            total_capacity = np.sum(endo_capacity + dcap_total, axis=1)
+            mews = divide(endo_capacity + dcap_total, total_capacity[:, None])
+           
+            # New generation and capacity
+            mewg = mews * e_demand[:, None] * mewl_dt / np.sum(mews * mewl_dt, axis=1)[:, None]
+            mewk = mewg / mewl_dt / 8766
+            
+            data['MEWS'] = mews[:, :, None]
+            data['MEWL'] = mewl_dt[:, :, None]
+            data['MEWG'] = mewg[:, :, None]
+            data['MEWK'] = mewk[:, :, None]
+
+            # Raise error if there are negative values 
+            # or regional market shares do not add up to one
             check_market_shares(data['MEWS'], titles, 'FTT-P', year)
 
             # =================================================================
@@ -634,9 +643,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
 
 
-            # Investment
-            data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * dt * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
-
+            
             # =================================================================
             # Cost-Supply curves
             # =================================================================  
@@ -674,7 +681,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-
+        # Investment
+        data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
         if year == 2050:
             print(f"Total solar generation in 2050 is {data['MEWG'][:, 18, 0].sum()/1e6:.3f} PWh")
         
