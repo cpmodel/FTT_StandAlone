@@ -15,6 +15,8 @@ import os
 # Third party imports
 import pandas as pd
 
+from SourceCode.paths import get_utilities_path
+
 
 def load_dims():
     """ Load model dimensions """
@@ -23,9 +25,10 @@ def load_dims():
     dims_file = 'VariableListing.csv'
 
     # Check that classification titles file exists
-    dims_path = os.path.join('Utilities', 'titles', dims_file)
-    if not os.path.isfile(dims_path):
-        print('Dimensions name file not found.')
+    dims_path = get_utilities_path() / 'titles' / dims_file
+    if not dims_path.is_file():
+        raise FileNotFoundError(f'Dimensions name file not found: {dims_path.resolve()}')
+    dims_path = str(dims_path)
 
     dims_data = pd.read_csv(dims_path, skiprows=0, na_filter = False)
    

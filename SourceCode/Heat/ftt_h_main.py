@@ -33,7 +33,6 @@ Functions included:
 """
 # Third party imports
 import numpy as np
-from currency_converter import CurrencyConverter
 
 
 # Local library imports
@@ -93,17 +92,9 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_regions = len(titles['RTI'])
     num_techs = len(titles['HTTI'])
 
-    data['PRSC14'] = np.copy(time_lag['PRSC14'] )
-    
-    # TODO: remove once dimensions normalised
-    if isinstance(time_lag['USD to EUR'], float):
-        data['USD to EUR'] = np.copy(time_lag['USD to EUR'])
-    else:
-        data['USD to EUR'] = 0
+    data['PRSC14'] = np.copy(time_lag['PRSC14'])
     if year == 2014:
         data['PRSC14'] = np.copy(data['PRSCX'])
-        c = CurrencyConverter()
-        data['USD to EUR'] = c.convert(1, 'USD', 'EUR')     # TODO: this one call is over half a second. Can be replaced?
 
 
     # Calculate the LCOH for each heating technology    
