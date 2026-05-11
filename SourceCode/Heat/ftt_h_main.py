@@ -71,7 +71,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
-        Final year of histrorical data by variable
+        Final year of historical data by variable
     year: int
         Current year
     domain: dictionary of lists
@@ -211,7 +211,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     if year > histend['HEWF']:
 
         # Create a local dictionary for timeloop variables
-        # It contains values between timeloop interations in the FTT core
+        # It contains values between timeloop iterations in the FTT core
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
@@ -247,7 +247,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Get regions with non-zero heat demand
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
                 
-            # The core FTT equations, taking into account old shares, costs and regulationss
+            # The core FTT equations, taking into account old shares, costs and regulations
             change_in_shares = shares_change(
                 dt=dt,
                 regions=regions,
