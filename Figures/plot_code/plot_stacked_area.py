@@ -2,12 +2,13 @@ import pickle
 import configparser
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 def plot_zewk_hdt_stacked(
     regions, 
     scenarios, 
     pickle_name='Results',
-    FIGURE_WIDTH=8,
+    FIGURE_WIDTH=12,
     ROW_HEIGHT=3,
     output_name='zewk_hdt_stacked'):
     """
@@ -104,6 +105,7 @@ def plot_zewk_hdt_stacked(
     bev_idxs = group_indices['BEV']
 
     stack_handles = None
+    data_records = []
     for r, (region_id, region_label) in enumerate(zip(region_ids, region_labels)):
         region_idx = int(region_id) - 1
 
@@ -128,6 +130,16 @@ def plot_zewk_hdt_stacked(
                 colors=group_colors,
                 alpha=0.9
             )
+
+            for group, values in zip(group_order, grouped):
+                for yr, val in zip(years, values):
+                    data_records.append({
+                        'region': region_label,
+                        'scenario': scenario_labels[scenario_key],
+                        'group': group,
+                        'year': int(yr),
+                        'value_thousands': val,
+                    })
             ax.margins(x=0)
             ax.set_xlim(years[0], years[-1])
 
@@ -148,14 +160,14 @@ def plot_zewk_hdt_stacked(
                     0.96, 0.8, pct_text,
                     transform=ax.transAxes,
                     ha='right', va='top',
-                    fontsize=11, weight='bold',
+                    fontsize=16, weight='bold',
                     bbox=dict(boxstyle='round,pad=0.2', facecolor='white', edgecolor='none', alpha=0.75)
                 )
 
             if r == 0:
                 ax.set_title(scenario_labels[scenario_key], weight='bold')
             if c == 0:
-                ax.set_ylabel(region_label, fontsize = 14, labelpad=5, weight='bold')
+                ax.set_ylabel(region_label, fontsize = 18, labelpad=5, weight='bold')
             else:
                 ax.set_yticklabels([])
 
@@ -166,11 +178,15 @@ def plot_zewk_hdt_stacked(
             handles=stack_handles,
             labels=group_order,
             loc='lower center',
-            bbox_to_anchor=(0.5, 0.07),
+            bbox_to_anchor=(0.5, 0.055),
             ncol=len(group_order),
             frameon=True
         )
 
-        fig.supylabel('Number of trucks (thousands)', ha='left', va='center', fontsize=14, x=0.04)
+        fig.supylabel('Number of trucks (thousands)', ha='left', va='center', fontsize=18, x=0.05)
         plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
         plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")
+
+    if data_records:
+        df = pd.DataFrame(data_records)
+        df.to_csv(f'Figures/output/{output_name}.csv', index=False)

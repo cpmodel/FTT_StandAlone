@@ -24,12 +24,12 @@ if not os.path.exists(output_dir):
 os.chdir('..')
 
 plt.rcParams['font.family'] = 'outfit'
-plt.rcParams['font.size'] = 12
-plt.rcParams['axes.titlesize'] = 14
-plt.rcParams['axes.labelsize'] = 12
-plt.rcParams['legend.fontsize'] = 12
-plt.rcParams['xtick.labelsize'] = 12
-plt.rcParams['ytick.labelsize'] = 12
+plt.rcParams['font.size'] = 16
+plt.rcParams['axes.titlesize'] = 18
+plt.rcParams['axes.labelsize'] = 16
+plt.rcParams['legend.fontsize'] = 16
+plt.rcParams['xtick.labelsize'] = 16
+plt.rcParams['ytick.labelsize'] = 16
 
 plot_options = ["mandate_tco", "policy_effect", "costs", "shares",
                 "tco_parity", "ff_shock_tco"]
@@ -61,6 +61,7 @@ if "policy_effect" in selected_plots:
                    "tco_parity": "TCO feebate",
                    'city_mandates_2040': 'Sales mandates'},
         pickle_name='Results_stacked_figure',
+        output_name='policy_effect'
     )
     print("Policy effectiveness plot created.")
 
