@@ -31,7 +31,7 @@ plt.rcParams['legend.fontsize'] = 12
 plt.rcParams['xtick.labelsize'] = 12
 plt.rcParams['ytick.labelsize'] = 12
 
-plot_options = ["mandate_tco", "subsidy", "policy_effect", "costs", "shares",
+plot_options = ["mandate_tco", "policy_effect", "costs", "shares",
                 "tco_parity", "ff_shock_tco"]
 
 # Get cmd line arguments
@@ -52,16 +52,6 @@ if "mandate_tco" in selected_plots:
     pickle_name='Results_mandates'
     )
     print("Mandate TCO plot created.")
-
-
-if "subsidy" in selected_plots:
-    plot_ztvt_timeseries(
-        regions={82:"Berlin", 115:"Delhi", 87:"Milan", 110:"London", 95:"Rotterdam"},
-        scenario_name={'tco_parity': 'TCO Parity'},
-        pickle_name='Results_stacked_figure',
-        tech_indices=(32, 33)
-    )
-    print("Subsidy plot created.")
 
 if "policy_effect" in selected_plots:
     plot_zewk_hdt_stacked(
@@ -108,4 +98,3 @@ if "ff_shock_tco" in selected_plots:
         scenario_name_map={'S0': 'Baseline', 'S3': '30% Diesel shock'},
         output_name='ff_shock_tco_impact'
     )
-
