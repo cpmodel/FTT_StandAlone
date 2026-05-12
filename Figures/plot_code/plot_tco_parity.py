@@ -420,7 +420,7 @@ def plot_tco_years(
     fig, ax = plt.subplots(figsize=(FIGURE_WIDTH, ROW_HEIGHT))
     markers = {'MDT': 'o', 'HDT': 's'}
     col_titles = {'MDT': 'Medium duty truck', 'HDT': 'Heavy duty truck'}
-    cmap = plt.cm.viridis
+    cmap = plt.cm.RdYlGn_r
     norm = plt.Normalize(vmin=float(np.min(electricity_prices)), vmax=float(np.max(electricity_prices)))
 
     for vehicle_class in tech_indices.keys():
