@@ -46,9 +46,9 @@ if "mandate_tco" in selected_plots:
     plot_mandate_tco(
     regions={41:"China", 3:"Germany", 42:"India",  8:"Italy", 5:"Spain", 15:"UK"},
     baseline_name={'S0': 'Baseline'},
-    scenario_names={'city_mandates_2030': '100pct sales by 2030',
-                    'city_mandates_2035': '100pct sales by 2035',
-                    'city_mandates_2040': '100pct sales by 2040'},
+    scenario_names={'city_mandates_2030': '100% sales by 2030',
+                    'city_mandates_2035': '100% sales by 2035',
+                    'city_mandates_2040': '100% sales by 2040'},
     pickle_name='Results_mandates'
     )
     print("Mandate TCO plot created.")

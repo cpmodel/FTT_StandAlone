@@ -7,14 +7,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, VPacker
+import pandas as pd
 
 def plot_mandate_tco(
     regions, 
     baseline_name, 
     scenario_names, 
     pickle_name='Results',
-    FIGURE_WIDTH=7,
-    ROW_HEIGHT=3.6,
+    FIGURE_WIDTH=9,
+    ROW_HEIGHT=2.5,
     output_name='tco_parity'):
     """
     Function to plot yearly ZTTC lines for BEV and Diesel freight trucks.
@@ -55,9 +56,9 @@ def plot_mandate_tco(
     else:
         scenario_label_map = {str(s): str(s) for s in scenario_names}
 
-    # Ensure any percent signs in labels are escaped for safe rendering
-    scenario_label_map = {k: v.replace('%', '%%') for k, v in scenario_label_map.items()}
-    baseline_label = str(baseline_label).replace('%', '%%')
+    # # Ensure any percent signs in labels are escaped for safe rendering
+    # scenario_label_map = {k: v.replace('%', '%%') for k, v in scenario_label_map.items()}
+    # baseline_label = str(baseline_label).replace('%', '%%')
 
     if baseline_key not in results:
         raise KeyError(f"Baseline scenario '{baseline_key}' not found in results.")
@@ -180,10 +181,20 @@ def plot_mandate_tco(
     col_order = ['MDT', 'HDT']
     col_titles = {'MDT': 'Medium duty truck', 'HDT': 'Heavy duty truck'}
 
+    data_records = []
     for i in range(n_regions_selected):
         for j, vehicle_class in enumerate(col_order):
             ax = axes[i, j]
             diesel_line = diesel_series_by_class[vehicle_class][i]
+            for yr, val in zip(years, diesel_line):
+                data_records.append({
+                    'region': region_labels[i],
+                    'vehicle_class': vehicle_class,
+                    'series': 'diesel',
+                    'scenario': scenario_labels[baseline_key],
+                    'year': int(yr),
+                    'levelised_cost_usd/tkm': val,
+                })
             diesel_plot = ax.plot(
                 years,
                 diesel_line,
@@ -207,7 +218,17 @@ def plot_mandate_tco(
 
             for scenario in scenario_keys:
                 bev_line = bev_series_by_class_scenario[vehicle_class][scenario][i]
-                bev_plot = ax.plot(years, bev_line, color=color_dict.get(scenario), label=f'BEV ({scenario_labels[scenario]})', linewidth=2)[0]
+                for yr, val in zip(years, bev_line):
+                    data_records.append({
+                        'region': region_labels[i],
+                        'vehicle_class': vehicle_class,
+                        'series': 'bev',
+                        'scenario': scenario_labels[scenario],
+                        'year': int(yr),
+                        'levelised_cost_usd/tkm': val,
+                    })
+                bev_plot = ax.plot(years, bev_line, color=color_dict.get(scenario),
+                                   label=f'BEV ({scenario_labels[scenario]})', linewidth=2)[0]
                 legend_handles[f'BEV ({scenario_labels[scenario]})'] = bev_plot
                 scenario_colors[scenario] = bev_plot.get_color()
                 bev_lines_by_scenario[scenario] = bev_line
@@ -235,13 +256,13 @@ def plot_mandate_tco(
                 delta_years = scenario_cross_year - baseline_cross_year
                 y_at_cross = float(np.interp(scenario_cross_year, years, bev_lines_by_scenario[scenario]))
 
-                annotation_entries.append((f'{delta_years:+.2f} yrs', scenario_colors[scenario]))
+                annotation_entries.append((f'{delta_years:+.1f} yrs', scenario_colors[scenario]))
 
             if annotation_entries:
                 annotation_boxes = [
                     TextArea(
                         text,
-                        textprops=dict(color=color, fontsize=10, weight='bold')
+                        textprops=dict(color=color, fontsize=14, weight='bold')
                     )
                     for text, color in annotation_entries
                 ]
@@ -269,7 +290,7 @@ def plot_mandate_tco(
             if i == 0:
                 ax.set_title(col_titles[vehicle_class], weight='bold')
             if j == 0:
-                ax.set_ylabel(region_labels[i], fontsize=14, labelpad=5, weight='bold')
+                ax.set_ylabel(region_labels[i], fontsize=16, labelpad=5, weight='bold')
             # ax.set_title(f'{region_labels[i]} - {vehicle_class}', weight='bold')
             ax.grid(True, alpha=0.3)
             ax.margins(x=0)  # Remove horizontal margins for this subplot
@@ -278,17 +299,20 @@ def plot_mandate_tco(
         handles=list(legend_handles.values()),
         labels=list(legend_handles.keys()),
         loc='lower center',
-        bbox_to_anchor=(0.5, 0.05),
+        bbox_to_anchor=(0.5, 0.01),
         ncol=2,
         frameon=True
     )
-    fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', fontsize=14, x=-0.04)
+    fig.supylabel('Levelized Cost ($/tkm)', ha='left', va='center', fontsize=16, x=-0.03)
 
     # Ensure adequate vertical padding when using tight layout
     plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
     plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")
-    
-    
+
+    if data_records:
+        pd.DataFrame(data_records).to_csv(f'Figures/output/{output_name}.csv', index=False)
+
+
 def plot_tco_years(
     regions, 
     pickle_name='Results',
@@ -465,5 +489,17 @@ def plot_tco_years(
     cbar = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
     cbar.set_label('Electricity price ($/kWh)')
     ax.grid(True, alpha=0.3)
-    plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
-    plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")
+    # plt.savefig(f'Figures/output/{output_name}.png', dpi=300, bbox_inches="tight")
+    # plt.savefig(f'Figures/output/svg/{output_name}.svg', bbox_inches="tight")
+
+    data_records = []
+    for vehicle_class in tech_indices.keys():
+        for i, region_label in enumerate(region_labels):
+            data_records.append({
+                'region': region_label,
+                'vehicle_class': vehicle_class,
+                'tco_parity_year': int(crossover_years[vehicle_class][i]) if crossover_years[vehicle_class][i] is not None else None,
+                'bev_market_share_2050': market_shares_2050[vehicle_class][i],
+                'electricity_price_usd_per_kwh': float(electricity_prices[i]),
+            })
+    pd.DataFrame(data_records).to_csv(f'Figures/output/{output_name}.csv', index=False)
