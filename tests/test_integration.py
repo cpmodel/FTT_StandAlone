@@ -29,7 +29,7 @@ BASELINE_FILE = Path(__file__).parent / "runtime_baseline.json"
 
 sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from SourceCode.model_class import ModelRun  # noqa: E402
+from SourceCode.model_class import RunFTT as ModelRun  # noqa: E402
 
 
 @pytest.fixture(scope="session")
