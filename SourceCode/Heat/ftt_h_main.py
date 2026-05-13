@@ -33,7 +33,6 @@ Functions included:
 """
 # Third party imports
 import numpy as np
-from currency_converter import CurrencyConverter
 
 
 # Local library imports
@@ -72,7 +71,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
-        Final year of histrorical data by variable
+        Final year of historical data by variable
     year: int
         Current year
     domain: dictionary of lists
@@ -93,17 +92,9 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_regions = len(titles['RTI'])
     num_techs = len(titles['HTTI'])
 
-    data['PRSC14'] = np.copy(time_lag['PRSC14'] )
-    
-    # TODO: remove once dimensions normalised
-    if isinstance(time_lag['USD to EUR'], float):
-        data['USD to EUR'] = np.copy(time_lag['USD to EUR'])
-    else:
-        data['USD to EUR'] = 0
+    data['PRSC14'] = np.copy(time_lag['PRSC14'])
     if year == 2014:
         data['PRSC14'] = np.copy(data['PRSCX'])
-        c = CurrencyConverter()
-        data['USD to EUR'] = c.convert(1, 'USD', 'EUR')     # TODO: this one call is over half a second. Can be replaced?
 
 
     # Calculate the LCOH for each heating technology    
@@ -220,7 +211,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     if year > histend['HEWF']:
 
         # Create a local dictionary for timeloop variables
-        # It contains values between timeloop interations in the FTT core
+        # It contains values between timeloop iterations in the FTT core
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
@@ -256,7 +247,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Get regions with non-zero heat demand
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
                 
-            # The core FTT equations, taking into account old shares, costs and regulationss
+            # The core FTT equations, taking into account old shares, costs and regulations
             change_in_shares = shares_change(
                 dt=dt,
                 regions=regions,

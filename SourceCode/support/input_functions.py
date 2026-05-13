@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 
 from SourceCode.support.debug_messages import input_functions_message
+from SourceCode.paths import get_inputs_path
 
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart, 
               progress_callback=None):
@@ -99,7 +100,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                 progress_callback(int(progress_fraction * 1000), 1000)
 
             # Start reading csv files
-            directory = os.path.join('Inputs', scen, ftt)
+            directory = str(get_inputs_path() / scen / ftt)
 
             # Check if the directory exists (skipping General for some scenarios)
             if not os.path.isdir(directory):

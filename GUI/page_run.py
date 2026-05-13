@@ -149,11 +149,11 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
     with open('settings.ini', 'w') as configfile:
         config.write(configfile)
     
-    # Import ModelRun only when needed (lazy loading for faster GUI startup)
-    from SourceCode.model_class import ModelRun
+    # Import RunFTT only when needed (lazy loading for faster GUI startup)
+    from SourceCode.model_class import RunFTT
     
     # Create model with callbacks
-    model = ModelRun(progress_callback=progress_callback, log_callback=log_callback)
+    model = RunFTT(progress_callback=progress_callback, log_callback=log_callback)
     
     log_queue.put("Running model...")
     model.run()

@@ -1,7 +1,2 @@
-numba
-numpy
-openpyxl
-pandas
-tqdm
-nicegui
-plotly
+# Install the package and all its dependencies (defined in pyproject.toml):
+-e ".[gui]"
