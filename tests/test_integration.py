@@ -29,7 +29,7 @@ BASELINE_FILE = Path(__file__).parent / "runtime_baseline.json"
 
 sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from SourceCode.model_class import RunFTT as ModelRun  # noqa: E402
+from SourceCode.model_class import RunFTT 
 
 
 @pytest.fixture(scope="session")
@@ -62,7 +62,7 @@ def model_run_results():
             return result
 
         with patch.object(configparser.ConfigParser, "read", patched_read):
-            model = ModelRun()
+            model = RunFTT()
 
         for scen in model.input:
             model.input[scen]["noit"][:] = 4
