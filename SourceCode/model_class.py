@@ -14,6 +14,7 @@ ModelRun class: main class for operation of model.
 # Standard library imports
 import configparser
 import time
+from pathlib import Path
 
 # Third party imports
 import numpy as np
@@ -45,7 +46,7 @@ from SourceCode.support.cross_section import cross_section as cs
 from SourceCode.initialise_csv_files import initialise_csv_files
 
 
-class ModelRun:
+class RunFTT:
     """
     Class to run the FTT model.
 
@@ -119,12 +120,53 @@ class ModelRun:
 
     """
 
-    def __init__(self):
-        """ Instantiate model run object """
+    def __init__(
+        self,
+        inputs_path=None,
+        utilities_path=None,
+        settings_path=None,
+        settings=None,
+    ):
+        """Instantiate model run object.
+
+        Parameters
+        ----------
+        inputs_path : str or Path, optional
+            Path to the *Inputs* directory.  When omitted the default from
+            :mod:`SourceCode.paths` is used (the repository's own ``Inputs/``
+            folder, or the current working directory as a last resort).
+        utilities_path : str or Path, optional
+            Path to the *Utilities* directory.  Same resolution order as
+            *inputs_path*.
+        settings_path : str or Path, optional
+            Path to a ``settings.ini`` configuration file.  Defaults to the
+            ``settings.ini`` in the package root, then the current working
+            directory.
+        settings : dict, optional
+            Key/value pairs that override individual ``[settings]`` entries in
+            the ini file, e.g. ``{"scenarios": "S0, S1",
+            "simulation_end": "2040"}``.  All values must be strings or be
+            convertible via ``str()``.
+        """
+        # Configure data paths before any data-loading calls.
+        from SourceCode.paths import set_paths, _PACKAGE_ROOT
+        set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
+
+        # Locate settings.ini
+        if settings_path is None:
+            pkg_settings = _PACKAGE_ROOT / "settings.ini"
+            settings_path = str(pkg_settings) if pkg_settings.exists() else "settings.ini"
 
         # Attributes given in settings.ini file
         config = configparser.ConfigParser()
-        config.read('settings.ini')
+        config.read(str(settings_path))
+
+        # Apply any programmatic overrides
+        if settings:
+            if not config.has_section("settings"):
+                config.add_section("settings")
+            for key, value in settings.items():
+                config.set("settings", key, str(value))
         self.name = config.get('settings', 'name')
         self.model_start = int(config.get('settings', 'model_start'))
         self.model_end = int(config.get('settings', 'model_end'))
@@ -186,6 +228,7 @@ class ModelRun:
                 for y, year in enumerate(self.timeline):
                     if y == 0:
                         start_time = time.time()
+
                     
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
@@ -205,6 +248,7 @@ class ModelRun:
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
             print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
+
 
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """

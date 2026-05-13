@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "future_technology_transformation"
+version = "0.1.0"
+description = "FTT Stand-alone model: Future Technology Transformations"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "pandas",
+    "openpyxl",
+    "tqdm",
+    "numba",
+]
+
+[project.optional-dependencies]
+web = ["bottle", "paste"]
+dev = ["pytest", "black", "sphinx"]
+
+[project.scripts]
+ftt-run = "future_technology_transformation:run_cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["SourceCode*", "future_technology_transformation*"]

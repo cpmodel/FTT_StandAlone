@@ -1,8 +1,2 @@
-bottle
-numba
-numpy
-openpyxl
-pandas
-paste
-tqdm
-currencyconverter
+# Install the package and all its dependencies (defined in pyproject.toml):
+-e ".[web]"

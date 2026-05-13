@@ -34,14 +34,14 @@ import numpy as np
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
 from SourceCode.ftt_core.ftt_shares import shares_change
 from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
-
+from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
+from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 from SourceCode.support.divide import divide
 from SourceCode.support.check_market_shares import check_market_shares
 
 
 from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
-from SourceCode.Freight.ftt_fr_regulatory_policies import implement_shares_policies
 from SourceCode.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
 from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
@@ -214,11 +214,29 @@ def solve(data, time_lag, titles, histend, year, domain):
             endo_shares = data_dt['ZEWS'][:, :, 0] + change_in_shares
             endo_capacity = endo_shares * Utot_reshaped
             
-            # Shares after exogenous sales and regulation correction taken into account
-            data['ZEWS'] = implement_shares_policies(
-                endo_capacity, endo_shares, 
-                titles, data['ZWSA'], data['ZREG'], reg_constr,
-                sum_over_classes, n_veh_classes, Utot, no_it)
+                        # Capacity change due to exogenous sales and regulation correction, per vehicle class
+            dcap_exog_sales = np.zeros_like(endo_capacity)
+            dcap_reg_corr = np.zeros_like(endo_capacity)
+            for veh_class in range(n_veh_classes):
+                idx = slice(veh_class, None, n_veh_classes)
+                dcap_exog_sales[:, idx] = exogenous_sales(
+                    data['ZWSA'][:, idx, 0], Utot[:, veh_class, 0], endo_capacity[:, idx],
+                    data['ZREG'][:, idx, 0], no_it,
+                    data['BZTC'][:, idx, c6ti['8 Lifetime (y)']]
+                )
+                dcap_reg_corr[:, idx] = regulation_correction(
+                    endo_capacity[:, idx], endo_shares[:, idx],
+                    Utot[:, veh_class, 0, np.newaxis], reg_constr[:, idx]
+                )
+
+            new_capacity = endo_capacity + dcap_exog_sales + dcap_reg_corr
+            zews = np.zeros((num_regions, num_techs, 1))
+            for veh_class in range(n_veh_classes):
+                idx = slice(veh_class, None, n_veh_classes)
+                class_total = new_capacity[:, idx].sum(axis=1, keepdims=True)
+                zews[:, idx, 0] = divide(new_capacity[:, idx], class_total)
+
+            data['ZEWS'] = zews
                         
             
             check_market_shares(data['ZEWS'], titles, sector, year)

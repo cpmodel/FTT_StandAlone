@@ -507,7 +507,7 @@ def gamma_auto(model):
 
     return state, run_history
 #%%
-model = model_class.ModelRun()
+model = model_class.RunFTT()
 
 # Compute gamma values for models turned on in settings.ini
 modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]

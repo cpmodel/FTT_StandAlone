@@ -33,13 +33,15 @@ Functions included:
 """
 # Third party imports
 import numpy as np
-from currency_converter import CurrencyConverter
 
 
 # Local library imports
 from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
-from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
+from SourceCode.ftt_core.ftt_mandate import implement_mandate, implement_seeding
 from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
+from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
+
 
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
 GREEN_INDICES_HP = [9, 10, 11]
@@ -69,11 +71,12 @@ def solve(data, time_lag, titles, histend, year, domain):
     titles: dictionary of lists
         Dictionary containing all title classification
     histend: dict of integers
-        Final year of histrorical data by variable
+        Final year of historical data by variable
     year: int
         Current year
     domain: dictionary of lists
         Pairs variables to domains
+
 
     Returns
     ----------
@@ -89,17 +92,9 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_regions = len(titles['RTI'])
     num_techs = len(titles['HTTI'])
 
-    data['PRSC14'] = np.copy(time_lag['PRSC14'] )
-    
-    # TODO: remove once dimensions normalised
-    if isinstance(time_lag['USD to EUR'], float):
-        data['USD to EUR'] = np.copy(time_lag['USD to EUR'])
-    else:
-        data['USD to EUR'] = 0
+    data['PRSC14'] = np.copy(time_lag['PRSC14'])
     if year == 2014:
         data['PRSC14'] = np.copy(data['PRSCX'])
-        c = CurrencyConverter()
-        data['USD to EUR'] = c.convert(1, 'USD', 'EUR')     # TODO: this one call is over half a second. Can be replaced?
 
 
     # Calculate the LCOH for each heating technology    
@@ -216,7 +211,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     if year > histend['HEWF']:
 
         # Create a local dictionary for timeloop variables
-        # It contains values between timeloop interations in the FTT core
+        # It contains values between timeloop iterations in the FTT core
         data_dt = {}
 
         # First, fill the time loop variables with the their lagged equivalents
@@ -252,7 +247,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Get regions with non-zero heat demand
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
                 
-            # The core FTT equations, taking into account old shares, costs and regulationss
+            # The core FTT equations, taking into account old shares, costs and regulations
             change_in_shares = shares_change(
                 dt=dt,
                 regions=regions,
@@ -289,60 +284,27 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # Calculate endogenous market shares from both changes
             endo_shares = data_dt['HEWS'][:, :, 0] + change_in_shares + changes_in_shares_prem_repl
-            
+            endo_gen = endo_shares * rhudt[:, 0]
+
             
             #################### Regulatory policies #################
-
-            for r in range(num_regions):
-
-                if rhudt[r] == 0.0:
-                    continue
-                
-                endo_gen = endo_shares[r] * rhudt[r, np.newaxis]
-
-
-                # -----------------------------------------------------
-                # Step 3: Exogenous sales additions
-                # -----------------------------------------------------
-                # Add in exogenous sales figures. These are blended with
-                # endogenous result! Note that it's different from the
-                # ExogSales specification!
-                Utot = rhudt[r]
-                dUk = np.zeros([num_techs])
-                dUkTK = np.zeros([num_techs])
-                dUkREG = np.zeros([num_techs])
-
-                # Note, as in FTT: H shares are shares of generation, corrections MUST be done in terms of generation.
-                # Otherwise, the corrections won't line up with the market shares.
-
-                
-                dUkTK = data['HWSA'][r, :, 0]*Utot/no_it
-                # Check endogenous shares plus additions for a single time step does not exceed regulated shares
-                reg_vs_exog = ((data['HWSA'][r, :, 0]*Utot/no_it + endo_gen) > data['HREG'][r, :, 0]*Utot) & (data['HREG'][r, :, 0] >= 0.0)
-                # Filter capacity additions based on regulated shares
-                dUkTK = np.where(reg_vs_exog, 0.0, dUkTK)
-
-
-                # Correct for regulations due to the stretching effect. This is the difference in generation due only to demand increasing.
-                # This will be the difference between generation based on the endogenous generation, and what the endogenous generation would have been
-                # if total demand had not grown.
-
-                dUkREG = -(endo_gen - endo_shares[r] * rhudlt[r,np.newaxis]) * reg_constr[r, :].reshape([num_techs])
-                     
-
-                # Sum effect of exogenous sales additions (if any) with
-                # effect of regulations
-                dUk = dUkREG + dUkTK
-                dUtot = np.sum(dUk)
-
-  
-                # Calaculate changes to endogenous generation, and use to find new market shares
-                # Zero generation will result in zero shares
-                # All other capacities will be streched
-
-                if (np.sum(endo_gen) + dUtot) > 0.0:
-                    data['HEWS'][r, :, 0] = (endo_gen + dUk)/(np.sum(endo_gen)+dUtot)
-
+         
+            # Change in generation from exogenous sales, capped at maximum sales
+            dgen_exog_sales = exogenous_sales(
+                data['HWSA'][regions, :, 0] * rhudt[regions, 0, 0][:, None],
+                rhudt[regions, 0, 0], endo_gen[regions],
+                data['HREG'][regions, :, 0] * rhudt[regions, 0, 0][:, None], 
+                no_it, data['BHTC'][regions, :, c4ti['5 Lifetime']]
+            )
+            
+            # Correction for regulation when demand is growing; main effect in shares equation
+            dgen_reg_corr = regulation_correction(
+                endo_gen[regions], endo_shares[regions], rhudlt[regions, 0], reg_constr[regions])
+            
+            # New generation and shares
+            new_generation = endo_gen[regions] + dgen_exog_sales + dgen_reg_corr
+            total_generation = np.sum(new_generation, axis=1)           
+            data['HEWS'][regions, :, 0] = divide(new_generation, total_generation[:, None])
 
             # Raise error if any values are negative or market shares do not sum to 1
             check_market_shares(data['HEWS'], titles, sector, year)
