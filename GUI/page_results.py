@@ -25,7 +25,7 @@ def render_results_page():
                     margin=dict(l=40, r=20, t=40, b=40),
                     template=plt_tem,
                     showlegend=True,
-                    xaxis_title='Year',
+                    xaxis=dict(title='Year', range=[state.plot_start_year, state.plot_end_year]),
                     yaxis_title='Value'
                 )
                 plot = ui.plotly(fig).classes('w-full h-full p-0')
@@ -405,6 +405,7 @@ def render_results_page():
                 scenarios=state.selected_scenarios,
                 dim_selections=dim_selections,
                 dim_aggregates=state.dim_aggregate,
+                year_range=(state.plot_start_year, state.plot_end_year),
                 dark_mode=state.dark_mode,
                 result_type=state.result_type,
                 baseline_scenario=state.selected_baseline

@@ -1,5 +1,22 @@
+import csv
+from pathlib import Path
 from nicegui import ui
 from .state import state
+
+
+def save_gui_settings():
+    """Persist current display settings from state to GUI/gui_settings.csv."""
+    settings_path = Path('GUI/gui_settings.csv')
+    rows = [
+        {'SETTING': 'dark_mode',       'VALUE': int(state.dark_mode)},
+        {'SETTING': 'plot_start_year', 'VALUE': int(state.plot_start_year)},
+        {'SETTING': 'plot_end_year',   'VALUE': int(state.plot_end_year)},
+    ]
+    with open(settings_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=['SETTING', 'VALUE'])
+        writer.writeheader()
+        writer.writerows(rows)
+
 
 def shared_layout():
     """

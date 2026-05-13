@@ -318,11 +318,15 @@ class ResultsEngine:
         else:
             y_title = f"{var_row['Unit']}"
         
+        xaxis_cfg = dict(title='Year')
+        if year_range is not None:
+            xaxis_cfg['range'] = [year_range[0], year_range[1]]
+
         fig.update_layout(
             margin=dict(l=10, r=10, t=40, b=40),
             template=template,
             showlegend=True,
-            xaxis_title='Year',
+            xaxis=xaxis_cfg,
             yaxis_title=y_title,
             yaxis=dict(title=dict(text=y_title, standoff=10, font=dict(size=14))),
             title=dict(text=f"{variable_name} - {var_row['Variable description']}", font=dict(size=18))
