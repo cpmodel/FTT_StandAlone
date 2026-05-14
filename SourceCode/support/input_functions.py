@@ -40,12 +40,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
 
     Behaviour
     ---------
-    Calls the legacy loader first for non-transport modules so that those
-    variables are populated.
-    When 'FTT-Tr' appears in *ftt_modules*, transport variables are read
-    from the CSVs in
-    ``Inputs_new/<scenario>/FTT-Tr/`` using polars.
-
+    For each enabled module, look for scenario folders in Inputs/ (e.g. Inputs/S1/FTT-Tr).
+    If found, read all CSV files in those folders and fill the data object.
+    
     Parameters
     ----------
     titles : dict of lists/tuples
@@ -74,6 +71,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
     titles['TIME'] = timeline
 
     models_enabled = [m.strip() for m in ftt_modules.split(',') if m.strip()]
+    # TODO: avoid hardcoding models here
     supported_models = {'FTT-Tr', 'FTT-P', 'FTT-H', 'FTT-Fr'}
     models_to_load = [m for m in models_enabled if m in supported_models]
     models_to_load.append('General')  # Always load General
