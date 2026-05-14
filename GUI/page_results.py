@@ -5,8 +5,6 @@ from .shared import shared_layout
 from .state import state
 from .results_engine import ResultsEngine
 
-_results_engine = ResultsEngine()
-
 def render_results_page():
         # Lazy import plotly only when results page is actually rendered
         from plotly import graph_objects as go
@@ -14,8 +12,8 @@ def render_results_page():
         
         shared_layout()
         
-        # Reuse the engine so loaded files persist when navigating between pages
-        engine = _results_engine
+        # Initialize results engine
+        engine = ResultsEngine()
 
         with ui.column().classes('w-full h-[calc(100vh-8rem)] flex no-wrap items-start'):
             
@@ -41,13 +39,13 @@ def render_results_page():
                     else:
                         tab_style = 'vertical indicator-color=blue-400 active-color=black active-bg-color=gray-200'
                     with ui.tabs().props(tab_style).classes('border-r') as tabs:
-                        t1 = ui.tab('Load Files').classes('h-1/2').props('icon=folder_open')
-                        t2 = ui.tab('Analysis').classes('h-1/2').props('icon=bar_chart')
+                        load_files_tab = ui.tab('Load Files').classes('h-1/2').props('icon=folder_open')
+                        analysis_tab = ui.tab('Analysis').classes('h-1/2').props('icon=bar_chart')
 
-                    with ui.tab_panels(tabs, value=t1).classes('flex-grow h-full'):
+                    with ui.tab_panels(tabs, value=load_files_tab).classes('flex-grow h-full'):
                 
                         # TAB 1: FILE PICKER
-                        with ui.tab_panel(t1).classes('w-full h-full p-2 overflow-hidden'):
+                        with ui.tab_panel(load_files_tab).classes('w-full h-full p-2 overflow-hidden'):
                             with ui.row().classes('w-full h-full gap-6 overflow-y-auto'):
                                 # Left side: Pickle file section
                                 with ui.column().classes('flex-1 min-w-0 gap-4 items-stretch overflow-y-auto'):
@@ -67,17 +65,29 @@ def render_results_page():
                                             on_change = lambda e: load_pickles()
                                         ).classes('w-full overflow-hidden').props('dense use-chips')
                                         
-                                    def load_pickles():
+                                    def load_pickles(restore_selection=False):
                                         if file_picker.value:
-                                            state.selected_result_files = list(file_picker.value)
                                             # Map display names back to actual filenames
-                                            actual_files = [pickle_files_map[name] for name in file_picker.value]
+                                            actual_files = [
+                                                pickle_files_map[name] for name in file_picker.value
+                                                if name in pickle_files_map
+                                            ]
+                                            if not actual_files:
+                                                return
+                                            state.selected_result_files = list(file_picker.value)
                                             engine.load_pickle_files(actual_files)
                                             # Update scenario selector options
                                             scenarios = engine.get_scenario_names()
                                             scenario_selector.options = scenarios
-                                            # Auto-select all scenarios
-                                            scenario_selector.value = scenarios
+                                            if restore_selection and state.selected_scenarios:
+                                                scenario_selector.value = [
+                                                    s for s in state.selected_scenarios if s in scenarios
+                                                ]
+                                                if not scenario_selector.value:
+                                                    scenario_selector.value = scenarios
+                                            else:
+                                                # Auto-select all scenarios
+                                                scenario_selector.value = scenarios
                                             scenario_selector.update()
                                             # Manually sync baseline options since setting .value
                                             # programmatically does not fire on_value_change
@@ -142,8 +152,9 @@ def render_results_page():
                                         # Update baseline options when scenarios change
                                         def update_baseline_options():
                                             baseline_selector.options = state.selected_scenarios
-                                            if state.selected_baseline not in state.selected_scenarios:
+                                            if state.selected_baseline and state.selected_baseline not in state.selected_scenarios:
                                                 state.selected_baseline = None
+                                                baseline_selector.value = None
                                             baseline_selector.update()
                                             update_result_type_availability()
                                         
@@ -156,14 +167,14 @@ def render_results_page():
                                         
                                         baseline_selector.on_value_change(on_baseline_change)
 
-                                        def on_tab_change(e):
-                                            if e.value == t2 and not engine.get_scenario_names():
+                                        def warn_if_no_scenarios():
+                                            if not engine.get_scenario_names():
                                                 ui.notify(
-                                                    'Load at least one output file before opening Analysis.',
+                                                    'Please load output files in "Load Files" before using Analysis.',
                                                     type='warning',
                                                 )
 
-                                        tabs.on_value_change(on_tab_change)
+                                        analysis_tab.on('click', lambda e: warn_if_no_scenarios())
 
                         # Define update_result_type_availability function that will be used in Analysis tab
                         def update_result_type_availability():
@@ -194,7 +205,7 @@ def render_results_page():
                                 else:
                                     result_type_selector.enable()
                             
-                        with ui.tab_panel(t2).classes('w-full items-start p-2'):
+                        with ui.tab_panel(analysis_tab).classes('w-full items-start p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
                                 # Variable selector row with download button
                                 ui.label('Select variable').classes('text-xs p-0 justify-left font-semibold').props('dense')
@@ -435,18 +446,10 @@ def render_results_page():
         # Initialize result type availability
         update_result_type_availability()
 
-        # Restore scenario options from already loaded results when returning to this page
-        existing_scenarios = engine.get_scenario_names()
-        if existing_scenarios:
-            scenario_selector.options = existing_scenarios
-            if state.selected_scenarios:
-                state.selected_scenarios = [
-                    s for s in state.selected_scenarios if s in existing_scenarios
-                ]
-            if not state.selected_scenarios:
-                state.selected_scenarios = existing_scenarios
-            scenario_selector.update()
-            update_baseline_options()
+        # Reload previously selected files to restore the Results tab state after page navigation
+        if state.selected_result_files:
+            file_picker.value = state.selected_result_files
+            load_pickles(restore_selection=True)
 
         # Bind scenario selector update
         scenario_selector.on_value_change(update_plot)
