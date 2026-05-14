@@ -19,7 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 web = ["bottle", "paste"]
-gui = ["nicegui", "plotly"]
+gui = ["nicegui", "plotly", "nest_asyncio"]
 dev = ["pytest", "black", "sphinx"]
 
 [project.scripts]
