@@ -43,7 +43,6 @@ import SourceCode.support.input_functions as in_f
 import SourceCode.support.titles_functions as titles_f
 import SourceCode.support.dimensions_functions as dims_f
 from SourceCode.support.cross_section import cross_section as cs
-from SourceCode.initialise_csv_files import initialise_csv_files
 
 
 class RunFTT:
@@ -183,9 +182,6 @@ class RunFTT:
 
         # Load variable dimensions
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
-        
-        # Set up csv files if they do not exist yet
-        initialise_csv_files(self.ftt_modules, self.scenarios)
         
         # Retrieve inputs
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
