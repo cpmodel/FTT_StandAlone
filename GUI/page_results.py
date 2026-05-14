@@ -5,6 +5,8 @@ from .shared import shared_layout
 from .state import state
 from .results_engine import ResultsEngine
 
+_results_engine = ResultsEngine()
+
 def render_results_page():
         # Lazy import plotly only when results page is actually rendered
         from plotly import graph_objects as go
@@ -12,8 +14,8 @@ def render_results_page():
         
         shared_layout()
         
-        # Initialize results engine
-        engine = ResultsEngine()
+        # Reuse the engine so loaded files persist when navigating between pages
+        engine = _results_engine
 
         with ui.column().classes('w-full h-[calc(100vh-8rem)] flex no-wrap items-start'):
             
@@ -60,12 +62,14 @@ def render_results_page():
                                             options=pickle_display_names,
                                             label='Available Files',
                                             multiple=True,
+                                            value=state.selected_result_files,
                                             with_input=True,
                                             on_change = lambda e: load_pickles()
                                         ).classes('w-full overflow-hidden').props('dense use-chips')
                                         
                                     def load_pickles():
                                         if file_picker.value:
+                                            state.selected_result_files = list(file_picker.value)
                                             # Map display names back to actual filenames
                                             actual_files = [pickle_files_map[name] for name in file_picker.value]
                                             engine.load_pickle_files(actual_files)
@@ -138,6 +142,8 @@ def render_results_page():
                                         # Update baseline options when scenarios change
                                         def update_baseline_options():
                                             baseline_selector.options = state.selected_scenarios
+                                            if state.selected_baseline not in state.selected_scenarios:
+                                                state.selected_baseline = None
                                             baseline_selector.update()
                                             update_result_type_availability()
                                         
@@ -149,6 +155,15 @@ def render_results_page():
                                             update_plot()
                                         
                                         baseline_selector.on_value_change(on_baseline_change)
+
+                                        def on_tab_change(e):
+                                            if e.value == t2 and not engine.get_scenario_names():
+                                                ui.notify(
+                                                    'Load at least one output file before opening Analysis.',
+                                                    type='warning',
+                                                )
+
+                                        tabs.on_value_change(on_tab_change)
 
                         # Define update_result_type_availability function that will be used in Analysis tab
                         def update_result_type_availability():
@@ -188,6 +203,7 @@ def render_results_page():
                                     variable_selector = ui.select(
                                         options=var_options,
                                         label='Variable',
+                                        value=state.selected_variable,
                                         with_input=True
                                     ).classes('flex-grow gap-1').props('dense')
                                     
@@ -418,6 +434,19 @@ def render_results_page():
         
         # Initialize result type availability
         update_result_type_availability()
+
+        # Restore scenario options from already loaded results when returning to this page
+        existing_scenarios = engine.get_scenario_names()
+        if existing_scenarios:
+            scenario_selector.options = existing_scenarios
+            if state.selected_scenarios:
+                state.selected_scenarios = [
+                    s for s in state.selected_scenarios if s in existing_scenarios
+                ]
+            if not state.selected_scenarios:
+                state.selected_scenarios = existing_scenarios
+            scenario_selector.update()
+            update_baseline_options()
 
         # Bind scenario selector update
         scenario_selector.on_value_change(update_plot)
