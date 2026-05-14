@@ -16,26 +16,12 @@ The user can select one or more scenarios to convert from the excel sheet:
 
 from pathlib import Path
 import os
-import sys
 
 import pandas as pd
 import numpy as np
 import datetime
 
-# Get the absolute path of the current script
-current_script_path = os.path.abspath(__file__)
-
-# Get the absolute path of the root directory
-root_directory_path = os.path.dirname(os.path.dirname(os.path.dirname(current_script_path)))
-
-# Path to the 'support' directory
-support_directory_path = os.path.join(root_directory_path, 'SourceCode', 'support')
-
-# Add the 'support' directory to sys.path if it's not already there
-if support_directory_path not in sys.path:
-    sys.path.append(support_directory_path)
-
-from titles_functions import load_titles
+from SourceCode.support.titles_functions import load_titles
 
 #%% Function definitions
 

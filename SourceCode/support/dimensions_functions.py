@@ -28,7 +28,7 @@ def load_dims():
     dir_root = Path(dir_file).parents[1]
     dims_path = os.path.join(dir_root, 'Utilities', 'titles', dims_file)
     if not os.path.isfile(dims_path):
-        print('Dimensions name file not found.')
+        raise FileNotFoundError(f'Dimensions name file not found: {dims_path}')
 
     dims_data = pd.read_csv(dims_path, skiprows=0, na_filter = False)
    
