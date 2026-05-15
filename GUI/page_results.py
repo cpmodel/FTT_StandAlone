@@ -295,6 +295,7 @@ def render_results_page():
         # Function to update dimension selectors when variable changes
         def update_dimensions():
             nonlocal result_type_selector, result_type_hint
+            _baseline_hint = 'Select ≥2 scenarios and a baseline to enable comparison.'
             dimension_container.clear()
             # Reset dimension selections when the variable changes to avoid stale
             # position-based selections from a previous variable bleeding through.
@@ -331,8 +332,8 @@ def render_results_page():
                             with_input=False
                         ).classes('w-full h-full overflow-auto').props('dense').disable()
                         result_type_hint = ui.label(
-                            'Select ≥2 scenarios and a baseline to enable comparison.'
-                        ).classes('text-xs text-gray-400 italic')
+                            _baseline_hint
+                        ).classes('text-xs text-gray-600 italic')
                 return
 
             # Get dimension info for selected variable
@@ -418,8 +419,8 @@ def render_results_page():
                     ).classes('w-full h-full overflow-none').props('dense')
                     result_type_selector.on_value_change(on_result_type_change)
                     result_type_hint = ui.label(
-                        'Select ≥2 scenarios and a baseline to enable comparison.'
-                    ).classes('text-xs text-gray-400 italic')
+                        _baseline_hint
+                    ).classes('text-xs text-gray-600 italic')
             
             # Apply correct enabled/disabled state to the newly created selector
             update_result_type_availability()
