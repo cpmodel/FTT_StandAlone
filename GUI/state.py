@@ -38,6 +38,7 @@ class GUIState:
         self.plot_start_year = _settings['plot_start_year']
         self.plot_end_year = _settings['plot_end_year']
         # Results page state
+        self.selected_result_files = []
         self.selected_scenarios = []
         self.selected_baseline = None
         self.selected_variable = None
