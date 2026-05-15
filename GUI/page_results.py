@@ -197,13 +197,15 @@ def render_results_page():
                             # If differences aren't available but user selected them, revert to 'Levels'
                             if not can_show_diffs and state.result_type != 'levels':
                                 state.result_type = 'levels'
-                            # Lock or unlock the transformation selector
+                            # Lock or unlock the transformation selector and show/hide hint
                             if result_type_selector is not None:
                                 if not can_show_diffs:
                                     result_type_selector.value = 'Levels'
                                     result_type_selector.disable()
                                 else:
                                     result_type_selector.enable()
+                            if result_type_hint is not None:
+                                result_type_hint.set_visibility(not can_show_diffs)
                             
                         with ui.tab_panel(analysis_tab).classes('w-full items-start p-2'):
                             with ui.column().classes('w-full items-start no-scroll gap-3'):
@@ -271,8 +273,9 @@ def render_results_page():
                                 # Dimension selectors (horizontal layout)
                                 dimension_container = ui.row().classes('w-[calc(100vw-14rem)] h-full gap-3 overflow-y-auto flex-nowrap')
                         
-                        # Track result_type_selector reference (will be recreated in update_dimensions)
+                        # Track result_type_selector and hint references (will be recreated in update_dimensions)
                         result_type_selector = None
+                        result_type_hint = None
                         
                         # Define result type options and handler outside of update_dimensions
                         # so they persist across dimension rebuilds
@@ -291,7 +294,7 @@ def render_results_page():
                             
         # Function to update dimension selectors when variable changes
         def update_dimensions():
-            nonlocal result_type_selector
+            nonlocal result_type_selector, result_type_hint
             dimension_container.clear()
             # Reset dimension selections when the variable changes to avoid stale
             # position-based selections from a previous variable bleeding through.
@@ -320,13 +323,16 @@ def render_results_page():
                 # Add result type selector to the right of dimension selectors
                 with dimension_container:
                     with ui.column().classes('w-full h-full no-scroll gap-1 border-l border-gray-300 pl-4'):
-                        ui.label('Transformation').classes('text-xs font-semibold')
+                        ui.label('Compare with Baseline').classes('text-xs font-semibold')
                         result_type_selector = ui.select(
                             options=list(result_type_options.keys()),
                             value='Levels',
-                            label='Select Transformation',
+                            label='Select comparison type',
                             with_input=False
                         ).classes('w-full h-full overflow-auto').props('dense').disable()
+                        result_type_hint = ui.label(
+                            'Select ≥2 scenarios and a baseline to enable comparison.'
+                        ).classes('text-xs text-gray-400 italic')
                 return
 
             # Get dimension info for selected variable
@@ -396,7 +402,7 @@ def render_results_page():
             # Add result type selector to the right of dimension selectors
             with dimension_container:
                 with ui.column().classes('w-full h-full no-scroll gap-1 border-l border-gray-300 pl-4'):
-                    ui.label('Transformation').classes('text-xs font-semibold')
+                    ui.label('Compare with Baseline').classes('text-xs font-semibold')
                     # Get current value from state to preserve selection
                     current_value = 'Levels'
                     for label, val in result_type_options.items():
@@ -407,10 +413,13 @@ def render_results_page():
                     result_type_selector = ui.select(
                         options=list(result_type_options.keys()),
                         value=current_value,
-                        label='Select Transformation',
+                        label='Select comparison type',
                         with_input=False
                     ).classes('w-full h-full overflow-none').props('dense')
                     result_type_selector.on_value_change(on_result_type_change)
+                    result_type_hint = ui.label(
+                        'Select ≥2 scenarios and a baseline to enable comparison.'
+                    ).classes('text-xs text-gray-400 italic')
             
             # Apply correct enabled/disabled state to the newly created selector
             update_result_type_availability()

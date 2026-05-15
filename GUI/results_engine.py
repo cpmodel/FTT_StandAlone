@@ -128,7 +128,7 @@ class ResultsEngine:
     
     def get_variable_options(self):
         """Get dictionary of {var_code: var_description}."""
-        return {row['Variable name']: f"{row['Variable name']} - {row['Variable description']}" 
+        return {row['Variable name']: f"{row['Variable name']} \u2013 {row['Variable description']}" 
                 for _, row in self.time_variables.iterrows()}
     
     def get_variable_dimensions(self, variable_name):
