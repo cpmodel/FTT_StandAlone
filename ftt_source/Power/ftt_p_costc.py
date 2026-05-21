@@ -21,8 +21,35 @@ Functions included:
 
 
 '''
+# Standard library imports
+from pathlib import Path
+
 # Third party imports
 import numpy as np
+import pandas as pd
+
+# Local library imports
+from ftt_source.paths import get_utilities_path
+
+
+# %% tech-to-resource mapping
+# -----------------------------------------------------------------------------
+
+def get_tech_to_resource(titles):
+    """Read converters_FTT.csv and return the tech-to-resource index mapping.
+
+    Returns a list where entry j is the 0-based index into titles['ERTI'] of the
+    resource used by technology j in titles['T2TI'].  Adding or removing rows in
+    converters_FTT.csv automatically updates the mapping.
+    """
+    csv_path = get_utilities_path() / 'titles' / 'converters_FTT.csv'
+    df = pd.read_csv(csv_path, keep_default_na=False)
+
+    t2ti = list(titles['T2TI'])
+    erti = list(titles['ERTI'])
+    tech_resource_map = dict(zip(df['T2TI'], df['ERTI']))
+
+    return [erti.index(tech_resource_map[tech]) for tech in t2ti]
 
 
 # %% marginal cost of production of non renewable resources
@@ -284,12 +311,11 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
 
 
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
-                num_regions, num_techs, num_resources, year, dt):
+                num_regions, num_techs, num_resources, year, dt, tech_to_resource):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
     '''
-
     # Sum electricity generation for all regions, transform into PJ (resource histograms in PJ)
     # MEWD is the non-power demand for resources
     # RERY is set in FTTinvP for fossil fuels
@@ -350,10 +376,6 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     L = 990
     lmo = np.arange(L)          # This will have length 990, from 0 to 989
     HistC = np.zeros([num_resources, L])
-
-    # Resources classification:
-    # Correspondence vector between techs and resources
-    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 6, 6]
 
     # BCSC is natural resource data with dimensions num_resources x num_techs x length of cost axis L
 

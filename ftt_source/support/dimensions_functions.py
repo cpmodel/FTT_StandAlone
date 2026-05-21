@@ -15,7 +15,7 @@ import os
 # Third party imports
 import pandas as pd
 
-from SourceCode.paths import get_utilities_path
+from ftt_source.paths import get_utilities_path
 
 
 def load_dims():

@@ -22,9 +22,9 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
-from SourceCode.sector_coupling.transport_batteries_to_power import share_transport_batteries, update_costs_from_transport_batteries, vehicle_to_grid
-from SourceCode.sector_coupling.battery_lbd import battery_costs
+from ftt_source.support.divide import divide
+from ftt_source.sector_coupling.transport_batteries_to_power import share_transport_batteries, update_costs_from_transport_batteries, vehicle_to_grid
+from ftt_source.sector_coupling.battery_lbd import battery_costs
 
 #%% FEQS
 def feqs(a):

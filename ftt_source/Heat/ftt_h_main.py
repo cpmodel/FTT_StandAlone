@@ -36,21 +36,21 @@ import numpy as np
 
 
 # Local library imports
-from SourceCode.ftt_core.ftt_shares import shares_change, shares_change_premature
-from SourceCode.ftt_core.ftt_mandate import implement_mandate, implement_seeding
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
-from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
-from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
+from ftt_source.ftt_core.ftt_shares import shares_change, shares_change_premature
+from ftt_source.ftt_core.ftt_mandate import implement_mandate, implement_seeding
+from ftt_source.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
+from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
 GREEN_INDICES_HP = [9, 10, 11]
 
-from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
-from SourceCode.support.divide import divide
-from SourceCode.support.check_market_shares import check_market_shares
+from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
+from ftt_source.support.divide import divide
+from ftt_source.support.check_market_shares import check_market_shares
 
-from SourceCode.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
+from ftt_source.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 
 
 # -----------------------------------------------------------------------------

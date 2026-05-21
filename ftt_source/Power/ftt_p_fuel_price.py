@@ -19,7 +19,7 @@ Created: Mon Nov 6 2023
 """
 
 import numpy as np
-from SourceCode.support.divide import divide
+from ftt_source.support.divide import divide
 
 
 def get_gen_share(data, r):

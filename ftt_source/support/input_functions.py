@@ -22,8 +22,8 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from SourceCode.support.debug_messages import input_functions_message
-from SourceCode.paths import get_inputs_path
+from ftt_source.support.debug_messages import input_functions_message
+from ftt_source.paths import get_inputs_path
 
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart):
     """

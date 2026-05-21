@@ -12,8 +12,8 @@ from pathlib import Path
 import os
 
 # Local library imports
-from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
-from SourceCode.paths import get_inputs_path
+from ftt_source.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
+from ftt_source.paths import get_inputs_path
 
 
 def initialise_csv_files(ftt_modules, scenarios):

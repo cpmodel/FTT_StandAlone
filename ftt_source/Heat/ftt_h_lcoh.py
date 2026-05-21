@@ -40,7 +40,7 @@ ce = conversion efficiency
 import numpy as np
 
 # Local library imports
-from SourceCode.support.divide import divide
+from ftt_source.support.divide import divide
 
 def set_carbon_tax(data, c4ti):
     '''

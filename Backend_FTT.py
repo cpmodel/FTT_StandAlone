@@ -22,7 +22,7 @@ from bottle import (route, run, request, response, static_file)
 import numpy as np
 import pandas as pd
 
-from SourceCode.model_class import RunFTT
+from ftt_source.model_class import RunFTT
 
 
 # Switch for build

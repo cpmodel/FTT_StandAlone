@@ -21,7 +21,7 @@ Local library imports:
 """
 
 # Local library imports
-from SourceCode.model_class import RunFTT
+from ftt_source.model_class import RunFTT
 import pickle
 from pathlib import Path
 

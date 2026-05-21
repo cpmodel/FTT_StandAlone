@@ -12,7 +12,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from SourceCode.support.divide import divide
+from ftt_source.support.divide import divide
 
 def electricity_price_feedback(data, time_lag):
     """    

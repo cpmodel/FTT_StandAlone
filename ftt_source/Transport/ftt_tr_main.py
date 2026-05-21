@@ -34,21 +34,21 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
-from SourceCode.ftt_core.ftt_shares import shares_change
-from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
-from SourceCode.sector_coupling.battery_lbd import battery_costs
-from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
-from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
+from ftt_source.ftt_core.ftt_sales_or_investments import get_sales
+from ftt_source.ftt_core.ftt_shares import shares_change
+from ftt_source.ftt_core.ftt_mandate import implement_seeding, implement_mandate
+from ftt_source.sector_coupling.battery_lbd import battery_costs
+from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
+from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
-from SourceCode.support.divide import divide
-from SourceCode.support.check_market_shares import check_market_shares
-from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
+from ftt_source.support.divide import divide
+from ftt_source.support.check_market_shares import check_market_shares
+from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from SourceCode.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
-from SourceCode.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
-from SourceCode.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
-from SourceCode.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
+from ftt_source.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
+from ftt_source.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
+from ftt_source.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
+from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
 # Green technology indices for Transport (EVs)
 GREEN_INDICES_EV = [18, 19, 20]

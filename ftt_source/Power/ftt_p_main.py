@@ -58,26 +58,26 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
-from SourceCode.ftt_core.ftt_shares import shares_change
-from SourceCode.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regulation_correction
+from ftt_source.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+from ftt_source.ftt_core.ftt_shares import shares_change
+from ftt_source.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regulation_correction
 
-from SourceCode.support.divide import divide
-from SourceCode.support.check_market_shares import check_market_shares
-from SourceCode.support.get_vars_to_copy import get_domain_vars_to_copy
+from ftt_source.support.divide import divide
+from ftt_source.support.check_market_shares import check_market_shares
+from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from SourceCode.Power.ftt_p_rldc import rldc
-from SourceCode.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
-from SourceCode.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
-from SourceCode.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-from SourceCode.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
-#from SourceCode.Power.ftt_p_integration_costs import add_vre_integration_costs
-#from SourceCode.Power.ftt_p_surv import survival_function
-from SourceCode.Power.ftt_p_costc import cost_curves
-from SourceCode.Power.ftt_p_phase_out import set_linear_coal_phase_out
+from ftt_source.Power.ftt_p_rldc import rldc
+from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
+from ftt_source.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
+from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
+from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
+#from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
+#from ftt_source.Power.ftt_p_surv import survival_function
+from ftt_source.Power.ftt_p_costc import cost_curves, get_tech_to_resource
+from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
-from SourceCode.sector_coupling.transport_batteries_to_power import second_hand_batteries
-from SourceCode.sector_coupling.battery_lbd import power_battery_additions_dt
+from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries
+from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt
 
 
 
@@ -121,6 +121,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_techs = len(titles['T2TI'])
     num_resources = len(titles['ERTI'])
     num_loadbands = len(titles['LBTI'])
+    tech_to_resource = get_tech_to_resource(titles)
 
 
     # Conditional vector concerning technology properties
@@ -151,7 +152,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, 1.0
+                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource
                 )
 
         data['BCET'] = bcet
@@ -162,7 +163,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['RERY'] = rery
         data['MRED'] = mred
         data['MRES'] = mres
-        
+
         data = get_lcoe(data, titles)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
@@ -355,7 +356,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, 1.0
+                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource
                 )
 
             data['BCET'] = bcet
@@ -366,7 +367,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['RERY'] = rery
             data['MRED'] = mred
             data['MRES'] = mres
-            
+
             # Take into account curtailment again:
             data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
             data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
@@ -651,7 +652,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, dt
+                num_regions, num_techs, num_resources, year, dt, tech_to_resource
                 )
 
             data['BCET'] = bcet

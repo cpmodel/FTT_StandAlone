@@ -19,11 +19,11 @@ import numpy as np
 import os
 from pathlib import Path
 
-# Go two levels up: Support → SourceCode → repo root
+# Go two levels up: Support → ftt_source → repo root
 repo_root = Path(__file__).resolve().parents[2]
 os.chdir(repo_root)
 
-from SourceCode import model_class
+from ftt_source import model_class
 
 
 # %%

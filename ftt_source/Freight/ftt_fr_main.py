@@ -31,20 +31,20 @@ Functions included:
 import numpy as np
 
 # Local library imports
-from SourceCode.ftt_core.ftt_sales_or_investments import get_sales
-from SourceCode.ftt_core.ftt_shares import shares_change
-from SourceCode.ftt_core.ftt_mandate import implement_seeding, implement_mandate
-from SourceCode.ftt_core.ftt_exogenous_sales import exogenous_sales
-from SourceCode.ftt_core.ftt_exogenous_capacity import regulation_correction
+from ftt_source.ftt_core.ftt_sales_or_investments import get_sales
+from ftt_source.ftt_core.ftt_shares import shares_change
+from ftt_source.ftt_core.ftt_mandate import implement_seeding, implement_mandate
+from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
+from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
-from SourceCode.support.divide import divide
-from SourceCode.support.check_market_shares import check_market_shares
+from ftt_source.support.divide import divide
+from ftt_source.support.check_market_shares import check_market_shares
 
 
-from SourceCode.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
-from SourceCode.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
+from ftt_source.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
+from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
-from SourceCode.sector_coupling.battery_lbd import battery_costs, get_start_cap
+from ftt_source.sector_coupling.battery_lbd import battery_costs, get_start_cap
 
 GREEN_INDICES_EV = [6]
 

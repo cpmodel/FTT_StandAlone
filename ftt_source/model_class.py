@@ -22,28 +22,28 @@ from tqdm import tqdm
 
 # Local library imports
 # Separate FTT modules
-import SourceCode.Power.ftt_p_main as ftt_p
-import SourceCode.Transport.ftt_tr_main as ftt_tr
-import SourceCode.Heat.ftt_h_main as ftt_h
-#import SourceCode.Steel.ftt_s_main as ftt_s
-#import SourceCode.Agri.ftt_agri_main as ftt_agri
-import SourceCode.Freight.ftt_fr_main as ftt_fr
-#import SourceCode.Hydrogen.ftt_h2_main as ftt_h2
-import SourceCode.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
-import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
-import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
-import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
-import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
-from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
-from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
+import ftt_source.Power.ftt_p_main as ftt_p
+import ftt_source.Transport.ftt_tr_main as ftt_tr
+import ftt_source.Heat.ftt_h_main as ftt_h
+#import ftt_source.Steel.ftt_s_main as ftt_s
+#import ftt_source.Agri.ftt_agri_main as ftt_agri
+import ftt_source.Freight.ftt_fr_main as ftt_fr
+#import ftt_source.Hydrogen.ftt_h2_main as ftt_h2
+import ftt_source.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
+import ftt_source.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
+import ftt_source.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
+import ftt_source.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
+import ftt_source.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
+from ftt_source.sector_coupling.electricity_price import electricity_price_feedback
+from ftt_source.sector_coupling.electricity_demand import electricity_demand_feedback
 
 
 # Support modules
-import SourceCode.support.input_functions as in_f
-import SourceCode.support.titles_functions as titles_f
-import SourceCode.support.dimensions_functions as dims_f
-from SourceCode.support.cross_section import cross_section as cs
-from SourceCode.initialise_csv_files import initialise_csv_files
+import ftt_source.support.input_functions as in_f
+import ftt_source.support.titles_functions as titles_f
+import ftt_source.support.dimensions_functions as dims_f
+from ftt_source.support.cross_section import cross_section as cs
+from ftt_source.initialise_csv_files import initialise_csv_files
 
 
 class RunFTT:
@@ -133,7 +133,7 @@ class RunFTT:
         ----------
         inputs_path : str or Path, optional
             Path to the *Inputs* directory.  When omitted the default from
-            :mod:`SourceCode.paths` is used (the repository's own ``Inputs/``
+            :mod:`ftt_source.paths` is used (the repository's own ``Inputs/``
             folder, or the current working directory as a last resort).
         utilities_path : str or Path, optional
             Path to the *Utilities* directory.  Same resolution order as
@@ -149,7 +149,7 @@ class RunFTT:
             convertible via ``str()``.
         """
         # Configure data paths before any data-loading calls.
-        from SourceCode.paths import set_paths, _PACKAGE_ROOT
+        from ftt_source.paths import set_paths, _PACKAGE_ROOT
         set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
 
         # Locate settings.ini

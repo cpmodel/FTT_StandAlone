@@ -11,7 +11,7 @@ Compute the cost relative cost reductions via learning-by-doing (lbd, Wright's l
 """
 
 import numpy as np
-from SourceCode.sector_coupling.transport_batteries_to_power import get_sector_coupling_dict, share_transport_batteries
+from ftt_source.sector_coupling.transport_batteries_to_power import get_sector_coupling_dict, share_transport_batteries
 
 def power_battery_additions_dt(no_it, data, data_dt, titles):
     "Get battery additions from the power sector each timestep"

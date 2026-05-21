@@ -21,7 +21,7 @@ import pandas as pd
 import numpy as np
 import datetime
 
-from SourceCode.support.titles_functions import load_titles
+from ftt_source.support.titles_functions import load_titles
 
 #%% Function definitions
 
@@ -289,7 +289,7 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 def directories_setup():
     """ Set up directory masterfile and the general input directory"""
 
-    from SourceCode.paths import get_inputs_path
+    from ftt_source.paths import get_inputs_path
     inputs = get_inputs_path()
     dir_inputs = str(inputs)
     dir_masterfiles = str(inputs / "_MasterFiles")

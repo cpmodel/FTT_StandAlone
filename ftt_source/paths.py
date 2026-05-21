@@ -7,7 +7,7 @@ Centralized path configuration for FTT Stand-alone.
 
 This module provides a single place to configure the data directories used by
 the model (Inputs and Utilities). Override the defaults before instantiating
-:class:`~SourceCode.model_class.RunFTT` when using FTT Stand-alone as an
+:class:`~ftt_source.model_class.RunFTT` when using FTT Stand-alone as an
 imported package with local data.
 
 Example usage
@@ -38,7 +38,7 @@ Or equivalently via :class:`RunFTT` keyword arguments::
 from pathlib import Path
 
 # Root of the installed / development package.
-# This is the directory that *contains* SourceCode/ (i.e. the repo root when
+# This is the directory that *contains* ftt_source/ (i.e. the repo root when
 # running from source, or the package root when pip-installed).
 _PACKAGE_ROOT: Path = Path(__file__).parents[1]
 
@@ -75,7 +75,7 @@ def get_inputs_path() -> Path:
     Resolution order:
 
     1. A path set explicitly via :func:`set_paths` or the ``inputs_path``
-       argument of :class:`~SourceCode.model_class.RunFTT`.
+       argument of :class:`~ftt_source.model_class.RunFTT`.
     2. An ``Inputs/`` directory located next to the package root (works both
        for editable installs and for the source tree).
     3. ``Inputs/`` relative to the current working directory (legacy
