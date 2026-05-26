@@ -54,6 +54,9 @@ Functions included:
         Main solution function for the module
 """
 
+# Standard library imports
+import configparser
+
 # Third party imports
 import numpy as np
 
@@ -66,7 +69,8 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from ftt_source.Power.ftt_p_rldc import rldc
+from ftt_source.paths import _PACKAGE_ROOT
+from ftt_source.Power.ftt_p_rldc import rldc, get_wind_solar_indices
 from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from ftt_source.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
 from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
@@ -125,6 +129,10 @@ def solve(data, time_lag, titles, histend, year, domain):
     tech_to_resource = get_tech_to_resource(titles)
     erti_jti_map = get_erti_jti_map(titles)
     cf_multipliers = get_cf_multipliers(titles)
+    wind_solar_indices = get_wind_solar_indices(titles)
+    _config = configparser.ConfigParser()
+    _config.read(str(_PACKAGE_ROOT / "settings.ini"))
+    storage_learning_base_year = int(_config.get('settings', 'storage_learning_base_year', fallback='2022'))
 
 
     # Conditional vector concerning technology properties
@@ -171,7 +179,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         data = get_lcoe(data, titles)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend)
+        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend,
+                    wind_solar_indices, storage_learning_base_year)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    num_regions, num_techs, num_loadbands)
@@ -248,7 +257,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         if year >= 2013:
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend)
+            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend,
+                    wind_solar_indices, storage_learning_base_year)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -528,7 +538,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Residual load-duration curve
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
-            data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend)
+            data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
+                        wind_solar_indices, storage_learning_base_year)
 
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]

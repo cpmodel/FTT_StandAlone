@@ -107,6 +107,8 @@ MEC3,TLCOE load band 3,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEC2,TLCOE load band 2,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MEC1,TLCOE load band 1,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-,,Y
 MCTN,FTT:Power Net curtailment rate by technology (-),%,RTI,T2TI,NA,TIME,FTT-P,,,2001,,,Y
+LAT,Latitude of region centroid,degrees,RTI,NA,NA,NA,FTT-P,-,-,-,-,,
+RLDCMAP,RLDC region mapping index (0-7),int,RTI,NA,NA,NA,FTT-P,-,-,-,-,,
 HJET,FTT-Heat Tech to fuel conversion matrix,,NA,HTTI,JTI,NA,FTT-H,,,,,,
 HJFC,FTT-Heat Fraction of energy use for heating in households,,RTI,JTI,NA,NA,FTT-H,,,,,,
 HEWA,FTT-Heat Substitution matrix,,NA,HTTI,HTTI,NA,FTT-H,,,,,,
