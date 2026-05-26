@@ -73,7 +73,8 @@ from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
 #from ftt_source.Power.ftt_p_surv import survival_function
-from ftt_source.Power.ftt_p_costc import cost_curves, get_tech_to_resource
+from ftt_source.Power.ftt_p_costc import (cost_curves, get_tech_to_resource,
+                                          get_erti_jti_map, get_cf_multipliers)
 from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries
@@ -122,6 +123,8 @@ def solve(data, time_lag, titles, histend, year, domain):
     num_resources = len(titles['ERTI'])
     num_loadbands = len(titles['LBTI'])
     tech_to_resource = get_tech_to_resource(titles)
+    erti_jti_map = get_erti_jti_map(titles)
+    cf_multipliers = get_cf_multipliers(titles)
 
 
     # Conditional vector concerning technology properties
@@ -152,7 +155,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource
+                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
+                erti_jti_map, cf_multipliers
                 )
 
         data['BCET'] = bcet
@@ -356,7 +360,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource
+                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
+                erti_jti_map, cf_multipliers
                 )
 
             data['BCET'] = bcet
@@ -652,7 +657,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, dt, tech_to_resource
+                num_regions, num_techs, num_resources, year, dt, tech_to_resource,
+                erti_jti_map, cf_multipliers
                 )
 
             data['BCET'] = bcet

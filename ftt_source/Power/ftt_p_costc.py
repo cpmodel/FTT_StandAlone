@@ -32,7 +32,7 @@ import pandas as pd
 from ftt_source.paths import get_utilities_path
 
 
-# %% tech-to-resource mapping
+# %% tech-to-resource mapping and related lookups
 # -----------------------------------------------------------------------------
 
 def get_tech_to_resource(titles):
@@ -50,6 +50,40 @@ def get_tech_to_resource(titles):
     tech_resource_map = dict(zip(df['T2TI'], df['ERTI']))
 
     return [erti.index(tech_resource_map[tech]) for tech in t2ti]
+
+
+def get_erti_jti_map(titles):
+    """Read ERTI_JTI_map.csv and return a dict of erti_idx -> [jti_idx, ...].
+
+    Used to sum non-power fuel demand (MEWD) into resource demand (MEPD) for
+    fossil-fuel ERTI entries without hardcoding JTI integer indices.
+    """
+    csv_path = get_utilities_path() / 'titles' / 'ERTI_JTI_map.csv'
+    df = pd.read_csv(csv_path, keep_default_na=False)
+
+    erti = list(titles['ERTI'])
+    jti = list(titles['JTI'])
+    result = {}
+    for _, row in df.iterrows():
+        erti_idx = erti.index(row['ERTI'])
+        jti_labels = [label.strip() for label in row['JTI'].split(',')]
+        result[erti_idx] = [jti.index(label) for label in jti_labels]
+    return result
+
+
+def get_cf_multipliers(titles):
+    """Read T2TI_CF_multiplier.csv and return a dict of tech_idx -> multiplier.
+
+    Technologies absent from the CSV are not included (treat as multiplier=1).
+    Used to apply technology-specific corrections to capacity factors computed
+    from cost-supply curves (e.g. CSP is twice as efficient as Solar PV).
+    """
+    csv_path = get_utilities_path() / 'titles' / 'T2TI_CF_multiplier.csv'
+    df = pd.read_csv(csv_path, keep_default_na=False)
+
+    t2ti = list(titles['T2TI'])
+    return {t2ti.index(row['T2TI']): float(row['CF_multiplier'])
+            for _, row in df.iterrows()}
 
 
 # %% marginal cost of production of non renewable resources
@@ -205,30 +239,31 @@ def update_fuel_costs(BCET, MERC, MRCL, tech_to_resource, fuel_type_mask):
     return BCET
 
 
-def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask):
+def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource,
+                            loadfactor_type_mask, cf_multipliers):
     """New capacity factor method. Much less strict that the previous version
     based on work by Rishi Sahastrabuddhe."""
-    
+
     k = 5 # Constant that determined how fast the load factors go up close to technical potential
-    
+
     # Select applicable techs and resources
     regions, techs = np.where(loadfactor_type_mask)
     resource_idx = np.array([tech_to_resource[j] for j in techs])
-    
+
     # How much generation in each region/tech combo in right units
     X0s = MEPD[regions, resource_idx, 0] / 3.6  # PJ -> TWh
-    
+
     # Share of technical potential used
     share_TP_used = X0s / (BCSC[regions, resource_idx, 2] + 1e-6)
     starting_CF = 1.0 / BCSC[regions, resource_idx, 4]
-    
+
     # Initially, little effect of cost-supply curves. CFs go down close to technical potential
     BCET[regions, techs, 10] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
     MERC[regions, resource_idx, 0] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
     # Integrate to find the average capacity factor
     MEWL[regions, techs, 0] = (starting_CF / share_TP_used
                                * (share_TP_used - (np.exp(k*share_TP_used) - 1) / (k*np.exp(k)) ) )
-    
+
     # Catch extreme values
     BCET[regions, techs, 10] = np.where(share_TP_used > 0.98,
                                         starting_CF * 0.1,
@@ -236,31 +271,31 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
     MEWL[regions, techs, 0] = np.where(share_TP_used > 0.98,
                                        starting_CF * 0.8,
                                        MEWL[regions, techs, 0])
-    
-    # CSP is twice as efficient as solar power typically
-    BCET[:, 19, 10] = BCET[:, 18, 10] * 2.0
-    MEWL[:, 19, 0] = MEWL[:, 18, 0] * 2.0
-    
+
+    # Apply per-technology CF multipliers (e.g. CSP is more efficient than Solar PV)
+    for j, multiplier in cf_multipliers.items():
+        BCET[:, j, 10] *= multiplier
+        MEWL[:, j, 0] *= multiplier
+
     return BCET, MEWL, MERC
 
 def update_capacity_factors_original(BCET, MEWG, MEWL, BCSC, CSC_Q, MEPD, MERC,
-                                     tech_to_resource, num_regions, num_techs, ):
+                                     tech_to_resource, num_regions, num_techs, cf_multipliers):
     # Type 2: Original variable renewables cost curves (reduced capacity factors)
     CFvar = np.zeros([990])
-   
+
     # Update costs in the technology cost matrix BCET (BCET(:, :, 11) is the type of cost curve)
     for r in range(num_regions):           # Loop over region
-        for j in range(num_techs):      # Loop over technology 
+        for j in range(num_techs):      # Loop over technology
             if(MEPD[r, tech_to_resource[j]] > 0.0):
 
-               
                 # For variable renewables (e.g. wind, solar, wave)
                 # the overall (average) capacity factor decreases as new units have lower and lower CFs
                 if(BCET[r, j, 11] == 0):
 
                     X = CSC_Q[r, tech_to_resource[j], :]
                     Y = BCSC[r, tech_to_resource[j], 4:]
-    
+
                     # Note: the curve is in the form of an inverse capacity factor in BCSC
                     X0 = MEPD[r, tech_to_resource[j], 0]/3.6 #PJ -> TWh
                     if X0 > 0.0:
@@ -268,24 +303,21 @@ def update_capacity_factors_original(BCET, MEWG, MEWL, BCSC, CSC_Q, MEPD, MERC,
                         ind = np.searchsorted(X, X0)  # Find corresponding index
                     MERC[r, tech_to_resource[j], 0] = 1.0/(Y0 + 0.000001)
                     BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
-                    
-                    
-                    # CSP is more efficient than PV by a factor 2
-                    if j == 19 :
-                        BCET[r, j, 10] = 1.0/(Y0 + 0.0000001) * 2.0
-    
+
+                    if j in cf_multipliers:
+                        BCET[r, j, 10] *= cf_multipliers[j]
+
                     if(MEWG[r, j, 0] > 0.01 and X0 > 0):
-    
+
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
                         CFvar = np.sum(1.0 / (Y[:ind + 1] + 1e-6) / (ind + 1))
-                        
+
                         if CFvar > 0:
                             MEWL[r, j, 0] = CFvar
-                     
-                        # CSP is more efficient than PV by a factor 2
-                        if j == 19 :
-                            MEWL[r, j, 0] = CFvar * 2.0
-        
+
+                        if j in cf_multipliers:
+                            MEWL[r, j, 0] *= cf_multipliers[j]
+
         return BCET, MEWL, MERC
 
 
@@ -311,7 +343,8 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
 
 
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
-                num_regions, num_techs, num_resources, year, dt, tech_to_resource):
+                num_regions, num_techs, num_resources, year, dt, tech_to_resource,
+                erti_jti_map, cf_multipliers):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
@@ -322,12 +355,9 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Uranium
     MEPD[:, 0, 0] = MEWG[:, 0, 0] / BCET[:, 0, 13] * 3.6e-3
-    # Oil
-    MEPD[:, 1, 0] = MEWD[:, 2, 0] + MEWD[:, 3, 0] + MEWD[:, 4, 0]
-    # Coal
-    MEPD[:, 2, 0] = MEWD[:, 0, 0] + MEWD[:, 1, 0]
-    # Gas
-    MEPD[:, 3, 0] = MEWD[:, 6, 0]
+    # Fossil fuels: sum MEWD carrier demands into resource demand using CSV-driven mapping
+    for erti_idx, jti_indices in erti_jti_map.items():
+        MEPD[:, erti_idx, 0] = sum(MEWD[:, j, 0] for j in jti_indices)
 
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
@@ -426,7 +456,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
         
     # Type 2: New variable renewables cost curves (reduced capacity factors)
     BCET, MEWL, MERC = update_capacity_factors(
-        BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask
+        BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask, cf_multipliers
         )
     
     # Type 3: Investment cost type of cost-supply curve
