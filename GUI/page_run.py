@@ -2,7 +2,6 @@ from nicegui import ui, run
 import pickle
 import configparser
 from pathlib import Path
-import asyncio
 from queue import Queue
 
 from .shared import shared_layout
@@ -64,7 +63,7 @@ def render_run_page():
             current, total = progress_queue.get()
             progress_value = current / total if total > 0 else 0
             progress_bar.set_value(progress_value)
-            progress_bar.props(f'instant-feedback')
+            progress_bar.props('instant-feedback')
         
         # Process log updates
         while not log_queue.empty():
@@ -91,7 +90,7 @@ def render_run_page():
             output_value = output_name.value
 
             # Execute model (IO bound thread)
-            log_console.push(f"Initializing model run...")
+            log_console.push("Initializing model run...")
             log_console.push(f"Models: {', '.join(models_value)}")
             log_console.push(f"Scenarios: {', '.join(scenarios_value)}")
             log_console.push(f"End year: {end_year_value}")

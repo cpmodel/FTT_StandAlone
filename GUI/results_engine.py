@@ -48,16 +48,25 @@ class ResultsEngine:
     def _parse_classifications(self):
         """Parse classification titles CSV into a dictionary."""
         classifications = {}
+        self.classification_labels = {}
         for _, row in self.classification_df.iterrows():
             class_code = row[0]
             if class_code and class_code not in ['Models', 'CSCTI']:
                 # Get full names (row with "Full name" at index 4)
                 if len(row) > 4 and row[4] == 'Full name':
+                    # Column 1 holds the human-readable classification name.
+                    label = str(row[1]).strip()
+                    if label and label != 'nan':
+                        self.classification_labels[class_code] = label
                     values = [v.strip() for v in row[5:] if v and isinstance(v, str) and v.strip()]
                     if values:
                         classifications[class_code] = values
         
         return classifications
+
+    def get_classification_label(self, dim_code):
+        """Get human-readable label for a classification code."""
+        return self.classification_labels.get(dim_code, dim_code)
     
     def get_available_pickle_files(self):
         """Get list of available pickle files in Output directory."""
@@ -237,11 +246,12 @@ class ResultsEngine:
                     selected_vals = dim_selections.get(i, [])
                     if not selected_vals:
                         # Default to first value
-                        dim_values = self.get_dimension_values(dim_name)
                         indices.append([0])
                     else:
                         dim_values = self.get_dimension_values(dim_name)
-                        indices.append([dim_values.index(v) for v in selected_vals if v in dim_values])
+                        selected_idx = [dim_values.index(v) for v in selected_vals if v in dim_values]
+                        # Fallback to first entry if a stale selection no longer exists.
+                        indices.append(selected_idx if selected_idx else [0])
             
             # Generate combinations for plotting
             combinations = self._generate_combinations(indices, dim_aggregates)
