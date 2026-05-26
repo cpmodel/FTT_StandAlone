@@ -26,7 +26,7 @@ from numba import njit, prange
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(cache=True, parallel=True)  # Removed fastmath=True to prevent inf/nan from unsafe float ops
-def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_techs, num_loadbands):
+def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_techs, num_loadbands, nuclear_idx):
     """
     Calculates dispatch of capacity.
 
@@ -98,27 +98,27 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
         # Average marginal cost
         m0 = np.sum(s_i * MWMC_lag[r, :, 0])
         
-        # First, allocate nuclear (tech 0) to the baseload band
-        if s_i[0] > 0.0:
-            if klb[0] <= s_i[0]:
-                MSLB[r,0,0] = MSLB[r,0,0] + klb[0]
-                s_i[0] = s_i[0] - klb[0]
+        # First, allocate nuclear to the baseload band
+        if s_i[nuclear_idx] > 0.0:
+            if klb[0] <= s_i[nuclear_idx]:
+                MSLB[r, nuclear_idx, 0] = MSLB[r, nuclear_idx, 0] + klb[0]
+                s_i[nuclear_idx] = s_i[nuclear_idx] - klb[0]
                 klb[0] = 0.0
             else:
-                klb[0] = klb[0] - s_i[0]
-                MSLB[r,0,0] = MSLB[r,0,0] + s_i[0]
-                s_i[0] = 0.0
-                
+                klb[0] = klb[0] - s_i[nuclear_idx]
+                MSLB[r, nuclear_idx, 0] = MSLB[r, nuclear_idx, 0] + s_i[nuclear_idx]
+                s_i[nuclear_idx] = 0.0
+
             # Allocate any remaining nuclear to the next load band
-            if klb[1] > 0.0 and s_i[0]>0.0:
-                if klb[1]<= s_i[0]:
-                    MSLB[r,0,1] = MSLB[r,0,1] + klb[1]
-                    s_i[0] = s_i[0] - klb[1]
+            if klb[1] > 0.0 and s_i[nuclear_idx] > 0.0:
+                if klb[1] <= s_i[nuclear_idx]:
+                    MSLB[r, nuclear_idx, 1] = MSLB[r, nuclear_idx, 1] + klb[1]
+                    s_i[nuclear_idx] = s_i[nuclear_idx] - klb[1]
                     klb[1] = 0.0
                 else:
-                    klb[1] = klb[1] - s_i[0]
-                    MSLB[r,0,1] = MSLB[r,0,1] + s_i[0]
-                    s_i[0] = 0.0            
+                    klb[1] = klb[1] - s_i[nuclear_idx]
+                    MSLB[r, nuclear_idx, 1] = MSLB[r, nuclear_idx, 1] + s_i[nuclear_idx]
+                    s_i[nuclear_idx] = 0.0
                 
 
         # Technologies bid for generation time: weighted MNL
@@ -234,8 +234,9 @@ def calculate_load_factors_from_dispatch(data, titles):
     Updates data['MEWL'] and data['Gen_by_lb'] in place.
     """
 
+    elec_idx = list(titles['JTI']).index('8 Electricity')
     # Total electricity demand, convert from PJ to GWh
-    tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
+    tot_elec_dem = data['MEWDX'][:, elec_idx, 0] * 1000/3.6
 
     # Generation by tech x load band = share * height * total demand
     share_x_height = data['MSLB'] * data['MLLB']

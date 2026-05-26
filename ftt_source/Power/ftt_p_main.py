@@ -78,7 +78,8 @@ from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
 #from ftt_source.Power.ftt_p_surv import survival_function
 from ftt_source.Power.ftt_p_costc import (cost_curves, get_tech_to_resource,
-                                          get_erti_jti_map, get_cf_multipliers)
+                                          get_erti_jti_map, get_cf_multipliers,
+                                          get_gen_tech_indices)
 from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
 
 from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries
@@ -144,6 +145,8 @@ def solve(data, time_lag, titles, histend, year, domain):
     rex_var = f"REX{str(ex_base_year)[2:]}"
     usd_idx = list(titles['RTI']).index(usd_exchange_region)
     gamma_mode = _config.get('settings', 'gamma_mode', fallback='multiplicative')
+    nuclear_idx = list(titles['T2TI']).index('1 Nuclear')
+    gen_tech_indices = get_gen_tech_indices(titles)
 
 
     # Conditional vector concerning technology properties
@@ -175,7 +178,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
                 num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
-                erti_jti_map, cf_multipliers
+                erti_jti_map, cf_multipliers, gen_tech_indices
                 )
 
         data['BCET'] = bcet
@@ -194,7 +197,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                     wind_solar_indices, storage_learning_base_year)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
-                                   num_regions, num_techs, num_loadbands)
+                                   num_regions, num_techs, num_loadbands, nuclear_idx)
         data['MSLB'] = mslb
         data['MLLB'] = mllb
         data['MES1'] = mes1
@@ -273,11 +276,11 @@ def solve(data, time_lag, titles, histend, year, domain):
             if year == rldc_start_year:
                 mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                         data['MEWL'], data['MWMC'], data['MMCD'],
-                                        num_regions, num_techs, num_loadbands)
+                                        num_regions, num_techs, num_loadbands, nuclear_idx)
             else:
                 mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                         data['MEWL'], time_lag['MWMC'], time_lag['MMCD'],
-                                        num_regions, num_techs, num_loadbands)
+                                        num_regions, num_techs, num_loadbands, nuclear_idx)
             data['MSLB'] = mslb
             data['MLLB'] = mllb
             data['MES1'] = mes1
@@ -379,7 +382,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
                 num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
-                erti_jti_map, cf_multipliers
+                erti_jti_map, cf_multipliers, gen_tech_indices
                 )
 
             data['BCET'] = bcet
@@ -563,7 +566,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                            data['MEWL'], data_dt['MWMC'], data_dt['MMCD'],
-                                           num_regions, num_techs, num_loadbands)
+                                           num_regions, num_techs, num_loadbands, nuclear_idx)
             data['MSLB'] = mslb
             data['MLLB'] = mllb
             data['MES1'] = mes1
@@ -677,7 +680,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
                 num_regions, num_techs, num_resources, year, dt, tech_to_resource,
-                erti_jti_map, cf_multipliers
+                erti_jti_map, cf_multipliers, gen_tech_indices
                 )
 
             data['BCET'] = bcet

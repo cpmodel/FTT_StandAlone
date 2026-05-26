@@ -86,6 +86,35 @@ def get_cf_multipliers(titles):
             for _, row in df.iterrows()}
 
 
+def get_gen_tech_indices(titles):
+    """Return T2TI and ERTI index pairs used in the generation-based primary energy demand block.
+
+    Each entry maps a resource name to (t2ti_index_or_list, erti_index).
+    """
+    t2ti = list(titles['T2TI'])
+    erti = list(titles['ERTI'])
+    return {
+        'nuclear':    (t2ti.index('1 Nuclear'),
+                       erti.index('1 Nuclear')),
+        'biomass':    ([t2ti.index('11 Biomass'), t2ti.index('12 Biomass + CCS')],
+                       erti.index('5 Biomass')),
+        'biogas':     ([t2ti.index('5 Waste'), t2ti.index('6 Waste + CCS')],
+                       erti.index('6 Biogas')),
+        'tidal':      (t2ti.index('16 Marine'),
+                       erti.index('8 Tidal')),
+        'hydro':      ([t2ti.index('13 Large Hydro'), t2ti.index('14 Pumped Hydro')],
+                       erti.index('9 Large Hydro')),
+        'onshore':    (t2ti.index('17 Onshore'),
+                       erti.index('10 Onshore')),
+        'offshore':   (t2ti.index('18 Offshore'),
+                       erti.index('11 Offshore')),
+        'solar':      ([t2ti.index('19 Solar PV'), t2ti.index('20 CSP')],
+                       erti.index('12 Solar PV')),
+        'geothermal': (t2ti.index('15 Geothermal'),
+                       erti.index('13 Geothermal')),
+    }
+
+
 # %% marginal cost of production of non renewable resources
 # -----------------------------------------------------------------------------
 # ----------------------- fuel costs non-renewables ---------------------------
@@ -344,7 +373,7 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
 
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
                 num_regions, num_techs, num_resources, year, dt, tech_to_resource,
-                erti_jti_map, cf_multipliers):
+                erti_jti_map, cf_multipliers, gen_tech_indices):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
@@ -354,7 +383,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # RERY is set in FTTinvP for fossil fuels
 
     # Uranium
-    MEPD[:, 0, 0] = MEWG[:, 0, 0] / BCET[:, 0, 13] * 3.6e-3
+    n_t, n_e = gen_tech_indices['nuclear']
+    MEPD[:, n_e, 0] = MEWG[:, n_t, 0] / BCET[:, n_t, 13] * 3.6e-3
     # Fossil fuels: sum MEWD carrier demands into resource demand using CSV-driven mapping
     for erti_idx, jti_indices in erti_jti_map.items():
         MEPD[:, erti_idx, 0] = sum(MEWD[:, j, 0] for j in jti_indices)
@@ -362,33 +392,38 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
-    MEPD[:, 4, 0] = (MEWG[:, 10, 0] / BCET[:, 10, 13]
-                    + MEWG[:, 11, 0] / BCET[:, 11, 13] ) \
-                    * 3.6e-3 # +  MEWD[11, :]   +   MEWD[10, :]
-    RERY[:, 4, 0] = MEPD[:, 4, 0]       # In PJ
+    b_ts, b_e = gen_tech_indices['biomass']
+    MEPD[:, b_e, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in b_ts) * 3.6e-3
+    RERY[:, b_e, 0] = MEPD[:, b_e, 0]
     # Biogas (which comes mostly from waste) (From here onwards cost curves are in TWh)
-    MEPD[:, 5, 0] = (MEWG[:, 4, 0] / BCET[:, 4, 13] 
-                     + MEWG[:, 5, 0] / BCET[:, 5, 13] ) * 3.6e-3
-    RERY[:, 5, 0] = MEPD[:, 5, 0]        # In PJ
+    bg_ts, bg_e = gen_tech_indices['biogas']
+    MEPD[:, bg_e, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in bg_ts) * 3.6e-3
+    RERY[:, bg_e, 0] = MEPD[:, bg_e, 0]
 
     # Tidal
-    MEPD[:, 7, 0] = MEWG[:, 15, 0] * 3.6e-3
-    RERY[:, 7, 0] = MEPD[:, 7, 0] # in PJ
+    td_t, td_e = gen_tech_indices['tidal']
+    MEPD[:, td_e, 0] = MEWG[:, td_t, 0] * 3.6e-3
+    RERY[:, td_e, 0] = MEPD[:, td_e, 0]
     # Hydro
-    MEPD[:, 8, 0] = (MEWG[:, 12, 0] + MEWG[:, 13, 0]) * 3.6e-3
-    RERY[:, 8, 0] = MEPD[:, 8, 0] # in PJ
+    hy_ts, hy_e = gen_tech_indices['hydro']
+    MEPD[:, hy_e, 0] = sum(MEWG[:, t, 0] for t in hy_ts) * 3.6e-3
+    RERY[:, hy_e, 0] = MEPD[:, hy_e, 0]
     # Onshore
-    MEPD[:, 9, 0] = MEWG[:, 16, 0] * 3.6e-3
-    RERY[:, 9, 0] = MEPD[:, 9, 0] # in PJ
+    on_t, on_e = gen_tech_indices['onshore']
+    MEPD[:, on_e, 0] = MEWG[:, on_t, 0] * 3.6e-3
+    RERY[:, on_e, 0] = MEPD[:, on_e, 0]
     # Offshore
-    MEPD[:, 10, 0] = MEWG[:, 17, 0] * 3.6e-3
-    RERY[:, 10, 0] = MEPD[:, 10, 0] # in PJ
+    off_t, off_e = gen_tech_indices['offshore']
+    MEPD[:, off_e, 0] = MEWG[:, off_t, 0] * 3.6e-3
+    RERY[:, off_e, 0] = MEPD[:, off_e, 0]
     # Solar (PV + CSP)
-    MEPD[:, 11, 0] = (MEWG[:, 18, 0] / BCET[:, 18, 13] +  MEWG[:, 19, 0] / BCET[:, 19, 13]) * 3.6e-3
-    RERY[:, 11, 0] = MEPD[:, 11, 0] # in PJ
+    sl_ts, sl_e = gen_tech_indices['solar']
+    MEPD[:, sl_e, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in sl_ts) * 3.6e-3
+    RERY[:, sl_e, 0] = MEPD[:, sl_e, 0]
     # Geothermal
-    MEPD[:, 12, 0] = MEWG[:, 14, 0] * 3.6e-3
-    RERY[:, 12, 0] = MEPD[:, 12, 0] # in PJ
+    geo_t, geo_e = gen_tech_indices['geothermal']
+    MEPD[:, geo_e, 0] = MEWG[:, geo_t, 0] * 3.6e-3
+    RERY[:, geo_e, 0] = MEPD[:, geo_e, 0]
 
 
     # All regions have the same information

@@ -22,7 +22,7 @@ import numpy as np
 from ftt_source.support.divide import divide
 
 
-def get_gen_share(data, r):
+def get_gen_share(data, r, solar_t2ti, wind_t2ti):
     """Compute share of solar PV and share of onshore + offshore wind.
 
     Parameters
@@ -31,6 +31,10 @@ def get_gen_share(data, r):
         Model variables dictionary
     r : int
         Region index
+    solar_t2ti : int
+        T2TI index for solar PV
+    wind_t2ti : list of int
+        T2TI indices for wind technologies
 
     Returns
     -------
@@ -41,8 +45,8 @@ def get_gen_share(data, r):
     if total_gen <= 0:
         return 0.0, 0.0
 
-    solar_share = data["MEWG"][r, 18] / total_gen
-    wind_share = np.sum(data["MEWG"][r, 16:18]) / total_gen
+    solar_share = data["MEWG"][r, solar_t2ti] / total_gen
+    wind_share = np.sum(data["MEWG"][r, wind_t2ti]) / total_gen
 
     return solar_share, wind_share
 
@@ -147,7 +151,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
         - MWMC: Marginal costs
         - MLBP: Load band prices (output for MPRI==2)
     titles : dict
-        Dimension titles, requires 'RTI' for regions
+        Dimension titles, requires 'RTI', 'JTI', 'ERTI', 'T2TI'
     Svar : ndarray
         Variable technology indicator (1 for VRE, 0 for dispatchable)
 
@@ -156,15 +160,34 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
     data : dict
         Updated with MEWP values
     """
+    jti = list(titles['JTI'])
+    erti = list(titles['ERTI'])
+    t2ti = list(titles['T2TI'])
+
+    hard_coal_jti      = jti.index('1 Hard coal')
+    other_coal_jti     = jti.index('2 Other coal etc')
+    crude_oil_jti      = jti.index('3 Crude oil etc')
+    heavy_fuel_oil_jti = jti.index('4 Heavy fuel oil')
+    biofuels_jti       = jti.index('11 Biofuels')
+    elec_idx           = jti.index('8 Electricity')
+
+    oil_erti     = erti.index('2 Oil')
+    coal_erti    = erti.index('3 Coal')
+    gas_erti     = erti.index('4 Gas')
+    biomass_erti = erti.index('5 Biomass')
+
+    solar_t2ti = t2ti.index('19 Solar PV')
+    wind_t2ti  = [t2ti.index('17 Onshore'), t2ti.index('18 Offshore')]
+
     # Set pricing mode to 1 (weighted LCOE) for all regions
     data["MPRI"][:] = 1
 
     # Set fuel prices for specific fuels
-    data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]   # Hard coal
-    data["MEWP"][:, 1, 0] = data["MERC"][:, 2, 0]   # Soft coal
-    data["MEWP"][:, 2, 0] = data["MERC"][:, 1, 0]   # Crude oil
-    data["MEWP"][:, 3, 0] = data["MERC"][:, 3, 0]   # Natural gas
-    data["MEWP"][:, 10, 0] = data["MERC"][:, 4, 0]  # Biomass
+    data["MEWP"][:, hard_coal_jti, 0]      = data["MERC"][:, coal_erti, 0]
+    data["MEWP"][:, other_coal_jti, 0]     = data["MERC"][:, coal_erti, 0]
+    data["MEWP"][:, crude_oil_jti, 0]      = data["MERC"][:, oil_erti, 0]
+    data["MEWP"][:, heavy_fuel_oil_jti, 0] = data["MERC"][:, gas_erti, 0]
+    data["MEWP"][:, biofuels_jti, 0]       = data["MERC"][:, biomass_erti, 0]
 
     # For each region
     for r in range(len(titles['RTI'])):
@@ -207,17 +230,17 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
                 weighted_lcoe_old = 0.0
 
             # Combined electricity price
-            data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
+            data["MEWP"][r, elec_idx, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
 
             # Add grid and balancing costs based on VRE share
-            solar_share, wind_share = get_gen_share(data, r)
-            data["MEWP"][r, 7, 0] += add_balancing_costs(solar_share, wind_share, r)
-            data["MEWP"][r, 7, 0] += add_grid_integration_costs(solar_share, wind_share, r)
+            solar_share, wind_share = get_gen_share(data, r, solar_t2ti, wind_t2ti)
+            data["MEWP"][r, elec_idx, 0] += add_balancing_costs(solar_share, wind_share, r)
+            data["MEWP"][r, elec_idx, 0] += add_grid_integration_costs(solar_share, wind_share, r)
 
 
         # MPRI == 2: Merit order approach (not used by default)
         elif data["MPRI"][r] == 2:
-                        
+
             # Load band weights
             n_loadbands = 6
             non_vre_lb_weight = [0] * 5
@@ -226,7 +249,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
             non_vre_lb_weight[2] = (2200.0 - 700.0) / 8766.0
             non_vre_lb_weight[1] = (4400.0 - 2200.0) / 8766.0
             non_vre_lb_weight[0] = (8766.0 - 4400.0) / 8766.0
-            
+
             gen_by_lb = data['Gen_by_lb'][r]
 
             # Loop over load bands
@@ -263,7 +286,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
             if np.sum(np.array([gen_by_lb[:, LB] for LB in range(n_loadbands - 1)])) > 0.0:
                 non_vre_price = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
 
-            data["MEWP"][r, 7, 0] = vre_weight * data["MLBP"][r, 5, 0] + (1.0 - vre_weight) * non_vre_price
+            data["MEWP"][r, elec_idx, 0] = vre_weight * data["MLBP"][r, 5, 0] + (1.0 - vre_weight) * non_vre_price
 
 
     return data
