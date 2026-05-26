@@ -133,6 +133,16 @@ def solve(data, time_lag, titles, histend, year, domain):
     _config = configparser.ConfigParser()
     _config.read(str(_PACKAGE_ROOT / "settings.ini"))
     storage_learning_base_year = int(_config.get('settings', 'storage_learning_base_year', fallback='2022'))
+    prsc_base_year = int(_config.get('settings', 'prsc_base_year', fallback='2013'))
+    ex_base_year = int(_config.get('settings', 'ex_base_year', fallback='2013'))
+    rldc_start_year = int(_config.get('settings', 'rldc_start_year', fallback='2013'))
+    usd_exchange_region = _config.get('settings', 'usd_exchange_region', fallback='34 USA (US)')
+    bcet_copy_range_end = int(_config.get('settings', 'bcet_copy_range_end', fallback='22'))
+    elec_idx = list(titles['JTI']).index('8 Electricity')
+    prsc_var = f"PRSC{str(prsc_base_year)[2:]}"
+    ex_var = f"EX{str(ex_base_year)[2:]}"
+    rex_var = f"REX{str(ex_base_year)[2:]}"
+    usd_idx = list(titles['RTI']).index(usd_exchange_region)
 
 
     # Conditional vector concerning technology properties
@@ -141,18 +151,18 @@ def solve(data, time_lag, titles, histend, year, domain):
 
     # Copy over PRSC/EX values
 
-    data['PRSC13'] = np.copy(time_lag['PRSC13'] )
-    data['EX13'] = np.copy(time_lag['EX13'] )
-    data['PRSC15'] = np.copy(time_lag['PRSC15'] )
-    data["REX13"] = np.copy(time_lag["REX13"])
+    data[prsc_var] = np.copy(time_lag[prsc_var])
+    data[ex_var] = np.copy(time_lag[ex_var])
+    data['PRSC15'] = np.copy(time_lag['PRSC15'])
+    data[rex_var] = np.copy(time_lag[rex_var])
     
     # %% First initialise if necessary
 
     # Initialisation
-    if year == 2013:
-        data['PRSC13'] = np.copy(data['PRSCX'])
-        data['EX13'] = np.copy(data['EXX'])
-        data['REX13'] = np.copy(data['REXX'])
+    if year == prsc_base_year:
+        data[prsc_var] = np.copy(data['PRSCX'])
+        data[ex_var] = np.copy(data['EXX'])
+        data[rex_var] = np.copy(data['REXX'])
 
         data['MEWL'][:, :, 0] = data["MWLO"][:, :, 0]
         data['MEWK'][:, :, 0] = np.divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0],
@@ -179,7 +189,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data = get_lcoe(data, titles)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
-        data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend,
+        data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
                     wind_solar_indices, storage_learning_base_year)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
@@ -224,16 +234,13 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['PRSC15'] = np.copy(data['PRSCX'])
 
 
-        # Set starting values for marginal costs of resources (MERC)
-        data['MERC'][:, 0, 0] = 0.255
-        data['MERC'][:, 1, 0] = 5.689
-        data['MERC'][:, 2, 0] = 0.4246
-        data['MERC'][:, 3, 0] = 3.374
+        # Carry over resource marginal costs; set unavailable carriers to a small floor
+        data['MERC'][:, :4, 0] = time_lag['MERC'][:, :4, 0]
         data['MERC'][:, 4, 0] = 0.001
         data['MERC'][:, 7, 0] = 0.001
 
 
-        if year > 2013: 
+        if year > prsc_base_year:
             data['MEWL'] = time_lag['MEWL'].copy()
 
         data['MEWL'] = np.where((data['MEWL'] < 0.01) & (data['MWLO'] > 0.0),
@@ -254,15 +261,15 @@ def solve(data, time_lag, titles, histend, year, domain):
 
 
         # Call RLDC function for capacity and load factor by LB, and storage costs
-        if year >= 2013:
+        if year >= rldc_start_year:
 
             # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, data["MEWDX"][:, 7, 0], time_lag, time_lag, year, 1, titles, histend,
+            data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
                     wind_solar_indices, storage_learning_base_year)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
-            if year == 2013:
+            if year == rldc_start_year:
                 mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                         data['MEWL'], data['MWMC'], data['MMCD'],
                                         num_regions, num_techs, num_loadbands)
@@ -278,10 +285,10 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Change currency from EUR2015 to USD2013
             if year >= 2015:
 
-                data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
-                data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
-                data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
-                data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis])/ data['EX13'][33, 0, 0]
+                data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
+                data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
+                data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
+                data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
 
             # TODO: This is not per se correct but it's how it is in E3ME
             else:
@@ -352,7 +359,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
 
             # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:22] = time_lag['BCET'][:, :, 1:22].copy()
+            data['BCET'][:, :, 1:bcet_copy_range_end] = time_lag['BCET'][:, :, 1:bcet_copy_range_end].copy()
 
             # Add in carbon costs due to EU ETS
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
@@ -446,7 +453,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         dt = 1 / float(no_it)
 
         data["MWDL"] = time_lag["MEWDX"]             # Save so that you can access twice lagged demand
-        growth_rate = 1 + (time_lag["MEWDX"][:, 7, 0] - time_lag["MWDL"][:, 7, 0])/time_lag["MWDL"][:, 7, 0]
+        growth_rate = 1 + (time_lag["MEWDX"][:, elec_idx, 0] - time_lag["MWDL"][:, elec_idx, 0])/time_lag["MWDL"][:, elec_idx, 0]
         
         # =====================================================================
         # Start of the quarterly time-loop
@@ -455,11 +462,11 @@ def solve(data, time_lag, titles, histend, year, domain):
         # Start the computation of shares
         for t in range(1, no_it + 1):
             
-            # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand. 
-            # MEWDt = time_lag['MEWDX'][:,7,0] + (time_lag['MEWDX'][:, 7, 0] * growth_rate - time_lag['MEWDX'][:, 7, 0]) * t/no_it
-            
+            # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand.
+            # MEWDt = time_lag['MEWDX'][:,elec_idx,0] + (time_lag['MEWDX'][:, elec_idx, 0] * growth_rate - time_lag['MEWDX'][:, elec_idx, 0]) * t/no_it
+
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
-            MEWDt = time_lag['MEWDX'][:,7,0] + (data['MEWDX'][:, 7, 0] - time_lag['MEWDX'][:, 7, 0]) * t/no_it
+            MEWDt = time_lag['MEWDX'][:, elec_idx, 0] + (data['MEWDX'][:, elec_idx, 0] - time_lag['MEWDX'][:, elec_idx, 0]) * t/no_it
             
             MEWDt += data_dt['MADG'][:,0,0] * 0.0036
             e_demand = MEWDt * 1000/3.6
@@ -542,10 +549,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                         wind_solar_indices, storage_learning_base_year)
 
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
-            data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-            data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-            data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
-            data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data['PRSC13'][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data['EX13'][33, 0, 0]
+            data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
+            data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
+            data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
+            data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
 
 
             # =================================================================
@@ -629,7 +636,7 @@ def solve(data, time_lag, titles, histend, year, domain):
            
 
             # Copy over the technology cost categories. We update the investment and capacity factors below
-            data['BCET'][:, :, 1:22] = time_lag['BCET'][:, :, 1:22].copy()
+            data['BCET'][:, :, 1:bcet_copy_range_end] = time_lag['BCET'][:, :, 1:bcet_copy_range_end].copy()
 
 
             # Add in carbon costs
