@@ -125,6 +125,8 @@ class RunFTT:
         utilities_path=None,
         settings_path=None,
         settings=None,
+        progress_callback=None,
+        log_callback=None,
     ):
         """Instantiate model run object.
 
@@ -146,6 +148,12 @@ class RunFTT:
             the ini file, e.g. ``{"scenarios": "S0, S1",
             "simulation_end": "2040"}``.  All values must be strings or be
             convertible via ``str()``.
+        progress_callback : callable, optional
+            Optional callback ``progress_callback(current, total)`` used by GUI
+            wrappers while loading inputs.
+        log_callback : callable, optional
+            Optional callback ``log_callback(message)`` used by GUI wrappers
+            for status messages.
         """
         # Configure data paths before any data-loading calls.
         from SourceCode.paths import set_paths, _PACKAGE_ROOT
@@ -186,7 +194,9 @@ class RunFTT:
         # Retrieve inputs
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
-                                    self.forstart)
+                                    self.forstart,
+                                    progress_callback=progress_callback,
+                                    log_callback=log_callback)
 
 
         # Initialize remaining attributes
