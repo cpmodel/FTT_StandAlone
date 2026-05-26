@@ -5,8 +5,8 @@ Created on Thu Dec 21 11:46:06 2023
 @author: Femke Nijsse
 """
 
-def input_functions_message(scen, var, dims, read, timeline="None", reg_index = "None"):
-    print(f"Critical error running input_functions, reading in csv files for {var}:")
+def data_loading_message(scen, var, dims, read, timeline="None", reg_index="None"):
+    print(f"Critical error running data_loading, reading in csv files for {var}:")
     print(f"Scenario is {scen}")
     print(f'Variable is {var} with dimensions {dims[var]}')
     print(f"Region is {reg_index}")
@@ -15,5 +15,9 @@ def input_functions_message(scen, var, dims, read, timeline="None", reg_index = 
     else:
         print(f'Timeline is {timeline}')
     print(f"file that's being read in is: {read}")
+
+
+# Backward-compatible alias for external imports.
+input_functions_message = data_loading_message
     
     

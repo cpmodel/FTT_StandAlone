@@ -14,7 +14,6 @@ ModelRun class: main class for operation of model.
 # Standard library imports
 import configparser
 import time
-from pathlib import Path
 
 # Third party imports
 import numpy as np
@@ -39,7 +38,7 @@ from SourceCode.sector_coupling.electricity_demand import electricity_demand_fee
 
 
 # Support modules
-import SourceCode.support.input_functions as in_f
+import SourceCode.support.data_loading as data_loading
 import SourceCode.support.titles_functions as titles_f
 import SourceCode.support.dimensions_functions as dims_f
 from SourceCode.support.cross_section import cross_section as cs
@@ -192,7 +191,7 @@ class RunFTT:
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Retrieve inputs
-        self.input = in_f.load_data(self.titles, self.dims, self.timeline,
+        self.input = data_loading.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
                                     self.forstart,
                                     progress_callback=progress_callback,
