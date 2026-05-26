@@ -48,7 +48,7 @@ def get_wind_solar_indices(titles):
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
 def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-         wind_solar_indices, storage_learning_base_year):
+         wind_solar_indices, storage_learning_base_year, sector_coupling=True):
     """
     Calculate RLDCs.
 
@@ -631,9 +631,10 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
             
 
     # Sector coupling: V2G and second-hand battery integration
-    data = vehicle_to_grid(data, time_lag, year, titles)
-    storage_ratio = share_transport_batteries(data, titles)
-    data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
+    if sector_coupling:
+        data = vehicle_to_grid(data, time_lag, year, titles)
+        storage_ratio = share_transport_batteries(data, titles)
+        data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
 
     # Store the storage capacities in last historical year
     if year <= histend["MSSC_histend"]:

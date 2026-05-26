@@ -91,7 +91,7 @@ from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, titles, histend, year, domain):
+def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
     """
     Main solution function for the module.
 
@@ -132,7 +132,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     cf_multipliers = get_cf_multipliers(titles)
     wind_solar_indices = get_wind_solar_indices(titles)
     _config = configparser.ConfigParser()
-    _config.read(str(_PACKAGE_ROOT / "settings.ini"))
+    _config.read(str(settings_path if settings_path is not None else _PACKAGE_ROOT / "settings.ini"))
     storage_learning_base_year = int(_config.get('settings', 'storage_learning_base_year', fallback='2022'))
     prsc_base_year = int(_config.get('settings', 'prsc_base_year', fallback='2013'))
     ex_base_year = int(_config.get('settings', 'ex_base_year', fallback='2013'))
@@ -147,6 +147,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     gamma_mode = _config.get('settings', 'gamma_mode', fallback='multiplicative')
     nuclear_idx = list(titles['T2TI']).index('1 Nuclear')
     gen_tech_indices = get_gen_tech_indices(titles)
+    sector_coupling = _config.getboolean('settings', 'sector_coupling', fallback=True)
 
 
     # Conditional vector concerning technology properties
@@ -194,7 +195,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
         data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                    wind_solar_indices, storage_learning_base_year)
+                    wind_solar_indices, storage_learning_base_year, sector_coupling)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    num_regions, num_techs, num_loadbands, nuclear_idx)
@@ -269,7 +270,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # 1 and 2 -- Estimate RLDC and storage parameters
             data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                    wind_solar_indices, storage_learning_base_year)
+                    wind_solar_indices, storage_learning_base_year, sector_coupling)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -542,7 +543,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # =================================================================
             # Second-hand batteries. Only run at first timestep
             # =================================================================
-            if t == 1:
+            if t == 1 and sector_coupling:
                 data = second_hand_batteries(data, time_lag, year, titles)
 
             # =================================================================
@@ -550,7 +551,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-                        wind_solar_indices, storage_learning_base_year)
+                        wind_solar_indices, storage_learning_base_year, sector_coupling)
 
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
@@ -650,7 +651,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
 
             # Track Power sector battery capacity additions for sector coupling
-            data["Battery cap additions"][0, t-1, 0] = power_battery_additions_dt(no_it, data, data_dt, titles)
+            if sector_coupling:
+                data["Battery cap additions"][0, t-1, 0] = power_battery_additions_dt(no_it, data, data_dt, titles)
 
             # Learning-by-doing effects on investment
             for tech in range(len(titles['T2TI'])):
