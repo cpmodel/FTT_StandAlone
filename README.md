@@ -31,7 +31,7 @@ Before you start, make sure that git is installed on your system, for instance b
    ```bash
    conda env create -f environment.yml
    ```
-3. On Windows, you can start the frontend with `open_frontend.bat`. If Python is not yet added to your path, [ensure you add this first](https://realpython.com/add-python-to-path/).
+3. On Windows, you can start the frontend with `launch_frontend.bat`. If Python is not yet added to your path, [ensure you add this first](https://realpython.com/add-python-to-path/).
 
 Alternatively, you can download ftt by clicking the green `Code` button in the top right, and selecting `Open with Github Desktop` if you have this installed. You can import the environment in Anaconda Navigator.
 
