@@ -31,13 +31,12 @@ Before you start, make sure that git is installed on your system, for instance b
    ```bash
    conda env create -f environment.yml
    ```
-3. On Windows, you can start the frontend with FTT_Stand_Alone_Launcher.cmd. If Python is not yet added to your path, [ensure you add this first](https://realpython.com/add-python-to-path/).
+3. On Windows, you can start the frontend with `launch_frontend.bat`. If Python is not yet added to your path, [ensure you add this first](https://realpython.com/add-python-to-path/).
 
 Alternatively, you can download ftt by clicking the green `Code` button in the top right, and selecting `Open with Github Desktop` if you have this installed. You can import the environment in Anaconda Navigator.
 
 ## Running the model
-1. You can run the front-end of the model in your browser by double clicking FTT_Stand_Alone_Launcher.cmd. Select the models to run and scenarios and explore the output.
-   1. The first time you run the model, csv input files will be created. This takes a few additional minutes. 
+1. You can run the front-end of the model in your browser by either double clicking `open_frontend.bat` or by running `run_frontend.py`. Select the models to run and scenarios and explore the output.
 2. Alternatively, you can run the model from the run_file.py script. Output is saved to a pickle file in the Output folder. Select the models and scenarios from the settings.ini file.
 3. Create new scenarios by adding a new folder in the Inputs folder. Data is read in first from this folder, and missing data is read from the S0 baseline folder. 
 

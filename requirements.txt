@@ -1,2 +1,2 @@
 # Install the package and all its dependencies (defined in pyproject.toml):
--e ".[web]"
+-e ".[gui]"
