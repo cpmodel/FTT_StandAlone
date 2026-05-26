@@ -143,6 +143,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     ex_var = f"EX{str(ex_base_year)[2:]}"
     rex_var = f"REX{str(ex_base_year)[2:]}"
     usd_idx = list(titles['RTI']).index(usd_exchange_region)
+    gamma_mode = _config.get('settings', 'gamma_mode', fallback='multiplicative')
 
 
     # Conditional vector concerning technology properties
@@ -186,7 +187,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['MRED'] = mred
         data['MRES'] = mres
 
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, gamma_mode)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
         data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
@@ -223,7 +224,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['MCFC'] = data['MWLO'].copy()
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
 
-        data = get_lcoe(data, titles)
+        data = get_lcoe(data, titles, gamma_mode)
         data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
 
@@ -257,7 +258,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
-            time_lag = get_lcoe(data, titles)
+            time_lag = get_lcoe(data, titles, gamma_mode)
 
 
         # Call RLDC function for capacity and load factor by LB, and storage costs
@@ -397,7 +398,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # =====================================================================
             # Initialise the LCOE variables
             # =====================================================================
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, gamma_mode)
             data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
             # Historical differences between demand and supply.
@@ -695,7 +696,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             
             # Calculate levelised cost again
-            data = get_lcoe(data, titles)
+            data = get_lcoe(data, titles, gamma_mode)
 
             # =================================================================
             # Update the time-loop variables data_dt

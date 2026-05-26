@@ -46,7 +46,7 @@ def set_carbon_tax(data, c2ti, year):
 # --------------------------- LCOE function -----------------------------------
 # -----------------------------------------------------------------------------
   
-def get_lcoe(data, titles):
+def get_lcoe(data, titles, gamma_mode='multiplicative'):
     """
     Calculate levelized costs.
 
@@ -190,14 +190,14 @@ def get_lcoe(data, titles):
     lcoe_incl_co2 = np.sum(npv_expenses_av_all, axis=2) / utility_sum - data['MEFI'][:, :, 0]
     lcoe_all_but_co2 = np.sum(npv_expenses_av_all_but_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]
 
-    # LCOE augmented with gamma values AND value factor (matches cascading branch)
-    # Formula: METC = lcoe_mu_all_policies * (1 + Gamma) / ValueFactor
-    # This properly accounts for VRE intermittency (value factor < 1 for solar/wind)
+    # LCOE augmented with gamma values (and optionally value factor)
     gamma = bcet[:, :, c2ti['22 Gamma']]
-    value_factor = bcet[:, :, c2ti['23 Value factor']]
-    # Guard against division by zero (value_factor should never be 0, but be safe)
-    value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
-    lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factor
+    if gamma_mode == 'additive':
+        lcoe_mu_gamma = lcoe_mu_all_policies + gamma
+    else:
+        value_factor = bcet[:, :, c2ti['23 Value factor']]
+        value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
+        lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factor
 
     # Pass to variables that are stored outside.
     data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes
