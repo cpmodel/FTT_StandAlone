@@ -114,7 +114,7 @@ def add_grid_integration_costs(solar_share, wind_share, r):
     grid_costs_wind = max_costs * wind_share_scaled
 
     grid_integration_costs = grid_costs_solar * solar_share + grid_costs_wind * wind_share
-    
+
     return grid_integration_costs[0]
 
 
