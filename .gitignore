@@ -1,7 +1,13 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+.venv
 *.py[cod]
 *$py.class
 *.pickle
 Output/Scenarios.json
 settings.ini
+.DS_Store
+Inputs/S0/.DS_Store
+SourceCode/.DS_Store
+.venv
+*.egg-info/

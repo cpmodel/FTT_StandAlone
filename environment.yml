@@ -1,0 +1,18 @@
+name: ftt
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - numpy
+  - pandas
+  - openpyxl
+  - tqdm
+  - numba
+  - spyder
+  - pytest
+  - black
+  - sphinx
+  - pip
+  - pip:
+      - nicegui
+      - plotly

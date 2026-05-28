@@ -1,5 +1,7 @@
 # Byte-compiled / optimized / DLL files
 *.csv
+*.db1
+*.mre
 !S0/General/SectorCouplingAssumps.csv
 *.db1
 *.mre
@@ -12,4 +14,6 @@
 !S1/*/?????X*.csv
 !S2*/?????X*.csv
 !REXX.csv
-!REPPX.csv
+!Battery price.csv
+!*mandate.csv
+!S0/*/CO2tax**.csv!REPPX.csv

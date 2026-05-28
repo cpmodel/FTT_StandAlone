@@ -14,17 +14,28 @@ Functions included:
 
 # Third party imports
 import numpy as np
-from numba import njit
+from numba import njit, prange
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
 
 
 # %% dispatch function
 # -----------------------------------------------------------------------------
-# -------------------------- DSPTCH of capacity ------------------------------
+# ------------------------- DISPATCH of capacity ------------------------------
 # -----------------------------------------------------------------------------
+<<<<<<< HEAD
 @njit(nopython=True)
 def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
+=======
+
+# Jit-in-time compilation. Comment this line out if you need to debug *in* the function
+@njit(cache=True, parallel=True)  # Removed fastmath=True to prevent inf/nan from unsafe float ops
+def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_techs, num_loadbands):
+>>>>>>> origin/main
     """
     Calculates dispatch of capacity.
 
@@ -47,11 +58,19 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
         Lagged marginal costs
     MMCD_lag: NumPy array
         Lagged standard deviation of marginal costs
+<<<<<<< HEAD
     rti: int
         Number of regions
     t2ti: int
         Number of technologies
     lbti: int
+=======
+    num_regions: int
+        Number of regions
+    num_techs: int
+        Number of technologies
+    num_loadbands: int
+>>>>>>> origin/main
         Number of load bands
 
     Returns
@@ -64,12 +83,15 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
         Upper market share limitation (1) -- virtually turned off
     MES2: NumPy array
         Lower market share limitation (2)
+<<<<<<< HEAD
 
 
     Notes
     ---------
     None.
 
+=======
+>>>>>>> origin/main
     """
 
     # dd is shorthand for load band suitability of different technologies
@@ -82,30 +104,36 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
     crit = 0.0001
 
     # Initialize variables to return (for numba)
-    MSLB = np.zeros((rti, t2ti, lbti))
-    MLLB = np.zeros((rti, t2ti, lbti))
-    MES1 = np.zeros((rti, t2ti, 1))
-    MES2 = np.zeros((rti, t2ti, 1))
+    MSLB = np.zeros((num_regions, num_techs, num_loadbands))
+    MLLB = np.zeros((num_regions, num_techs, num_loadbands))
+    MES1 = np.zeros((num_regions, num_techs, 1))
+    MES2 = np.zeros((num_regions, num_techs, 1))
 
-    for r in range(rti):
+    for r in prange(num_regions):
 
+<<<<<<< HEAD
        
         p_tech = np.zeros((t2ti, lbti))
         p_grid = np.zeros((t2ti, lbti))
         #slb = np.zeros((t2ti, lbti))
         d_slb = np.zeros((t2ti, lbti))
         cflb = np.zeros((t2ti, lbti))
+=======
+        p_tech = np.zeros((num_techs, num_loadbands))
+        p_grid = np.zeros((num_techs, num_loadbands))
+        d_slb = np.zeros((num_techs, num_loadbands))
+        cflb = np.zeros((num_techs, num_loadbands))
+>>>>>>> origin/main
         q = 0
-        d_s_tot = 1
         # Shares of capacity by tech
         s_i = s_not_var * MEWS[r, :, 0]
         # Shares of capacity by load band
-        klb = np.zeros((lbti))
+        klb = np.zeros((num_loadbands))
         klb[:5] = MKLB[r, :5, 0]
         # Average marginal cost
         m0 = np.sum(s_i * MWMC_lag[r, :, 0])
         
-        # First, allocate nuclear to the baseload band
+        # First, allocate nuclear (tech 0) to the baseload band
         if s_i[0] > 0.0:
             if klb[0] <= s_i[0]:
                 MSLB[r,0,0] = MSLB[r,0,0] + klb[0]
@@ -134,6 +162,7 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
         # to preferences. Probabilistic 'college admissions'/'stable matching'
         while (s_i.sum() > crit and q < 50):
 
+<<<<<<< HEAD
             for i in range(lbti - 1): # NOT intermittent renewables
                 # TODO: In FORTRAN, MMC1 is chosen (which does not include negative carbon prices for BECCS). Switch either. 
                 sig = np.sqrt(np.sum(dd[:,i] * MMCD_lag[r, :, 0]**2 * MEWS[r, :, 0]))
@@ -141,6 +170,13 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
                 
                 exponent = -(MWMC_lag[r, :, 0] - m0) / sig
                 fn = np.zeros((t2ti))
+=======
+            for i in range(num_loadbands - 1): # NOT intermittent renewables
+                # TODO: In FORTRAN, MMC1 is chosen (which does not include negative carbon prices for BECCS). Switch either. 
+                sig = np.sqrt(np.sum(dd[:,i] * MMCD_lag[r, :, 0]**2 * MEWS[r, :, 0]))
+                exponent = -(MWMC_lag[r, :, 0] - m0) / sig
+                fn = np.zeros((num_techs))
+>>>>>>> origin/main
                 # Approximate exponential
                 fn[np.abs(exponent) < 20] = np.exp(exponent[np.abs(exponent) < 20])
                 fn[exponent >= 20] = 1e9
@@ -149,14 +185,18 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
                 # Multinomial logit or simplification
                 if (np.sum(dd[:,i] * s_i) > 0 and sig > 0.001 and np.sum(dd[:,i] * s_i * fn) > 0):
 
+<<<<<<< HEAD
                     p_tech[:, i] = dd[:,i]*s_i*fn / np.sum(dd[:,i] * s_i * fn)
+=======
+                    p_tech[:, i] = dd[:,i]*s_i*fn / np.sum(dd[:,i]*s_i*fn)
+>>>>>>> origin/main
 
                 else:
 
-                    p_tech[:, i] = np.zeros((t2ti))
+                    p_tech[:, i] = np.zeros((num_techs))
 
             # Grid operator has preferences amongst what is bid for
-            for k in range(t2ti):
+            for k in range(num_techs):
 
                 # p_grid is likelihood grid accepts bid from tech k
                 sig = np.sqrt(np.sum(dd[k,:]*MMCD_lag[r, k, 0]**2))
@@ -167,30 +207,36 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
 
                 else:
 
-                    p_grid[k,:] = np.zeros((lbti))
+                    p_grid[k,:] = np.zeros((num_loadbands))
 
             # Increment q
             q += 1
             # Allocate one round of generation to load bands according to p_grid, p_tech
+<<<<<<< HEAD
             for i in range(lbti - 1):
+=======
+            for i in range(num_loadbands - 1):
+>>>>>>> origin/main
 
-                for k in range(t2ti):
+                for k in range(num_techs):
 
                     d_slb[k, i] = np.abs(np.minimum(np.abs(s_i[k]), np.abs(klb[i])) * p_tech[k, i] * p_grid[k, i])
 
-            d_slb[:, 5] = np.zeros((t2ti))
+            d_slb[:, 5] = np.zeros((num_techs))
             # Cumulative allocations each round
             MSLB[r, :, :] = MSLB[r, :, :] + d_slb
             # Remove allocation from what's left per tech and load band
             s_i = s_i - np.sum(d_slb, axis=1)
             klb = klb - np.sum(d_slb, axis=0)
-            d_s_tot = np.sum(d_slb)
 
         # Capacity of renewables
         for index in range(len(MWDD[0, :, 5])):
             if MWDD[0, index, 5]:
                 MSLB[r, index, 5] = MEWS[r, index, 0]
+<<<<<<< HEAD
         # slb[s_var, 5] = MEWS[r, s_var, 0]
+=======
+>>>>>>> origin/main
 
         # Capacity factors by load band (definitionally)
         cflb[:, 0] = 7500 / 8766
@@ -198,21 +244,28 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
         cflb[:, 2] = 2200 / 8766
         cflb[:, 3] = 700 / 8766
         cflb[:, 4] = 80 / 8766
+<<<<<<< HEAD
         cflb[:, 5] = np.zeros((t2ti))
+=======
+        cflb[:, 5] = np.zeros((num_techs))
+>>>>>>> origin/main
         
         for index in range(len(MWDD[0,:,5])):
             if MWDD[0,index,5]:
                 cflb[index, 5] = MEWL[r, index, 0] # * (1 - MCRT[r,index,0])
         cflb = np.where(cflb==0, 1, cflb)
-        # cflb[~cflb.astype(bool)] = 1
 
         # Save in data dict
+<<<<<<< HEAD
 #        MSLB[r,:,:] = slb*1
         MLLB[r,:,:] = cflb * 1
+=======
+        MLLB[r, :, :] = cflb * 1
+>>>>>>> origin/main
 
         # Upper share limit: set to ones for now (no upper limit, but
         # resistance to 100% market shares for any single tech)
-        MES1[r, :, 0] = np.ones(t2ti)
+        MES1[r, :, 0] = np.ones(num_techs)
 
         # Lower share limits
         # TODO: Are these compatible with storage cost incorporation? Maybe not...
@@ -224,10 +277,15 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
         grid_lim[3] = np.sum(dd[:, 3] * MEWS[r, :, 0]) - np.sum(MKLB[r, 3:5, 0])
         grid_lim[2] = np.sum(dd[:, 2] * MEWS[r, :, 0]) - np.sum(MKLB[r, 2:5, 0])
         grid_lim[1] = np.sum(dd[:, 1] * MEWS[r, :, 0]) - np.sum(MKLB[r, 1:5, 0])
+<<<<<<< HEAD
+=======
+        
+>>>>>>> origin/main
         # No lower limit for baseload band
         grid_lim[0] = np.sum(dd[:, 0] * MEWS[r, :, 0]) - np.sum(MKLB[r, 0:5, 0])
         
         # Temp is shares minus grid_lim for suitable LB
+<<<<<<< HEAD
         temp = np.zeros((t2ti, lbti))
         for i in range(1, lbti-1):
             temp[:,i] = dd[:,i] * (MEWS[r,:,0] - grid_lim[i])
@@ -241,3 +299,57 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, rti, t2ti, lbti):
 
     
    
+=======
+        temp = np.zeros((num_techs, num_loadbands))
+        for i in range(1, num_loadbands - 1):
+            temp[:,i] = dd[:,i] * (MEWS[r,:,0] - grid_lim[i])
+        
+        # For each tech, take largest value in temp or shares, whichever is less
+        for i in range(num_techs):
+            MES2[r, i, 0] = min(np.max(temp[i, :]), MEWS[r, i, 0])
+
+    return MSLB, MLLB, MES1, MES2
+
+
+def calculate_load_factors_from_dispatch(data, titles):
+    """
+    Calculate technology load factors from dispatch results across load bands.
+
+    Updates data['MEWL'] and data['Gen_by_lb'] in place.
+    """
+
+    # Total electricity demand, convert from PJ to GWh
+    tot_elec_dem = data['MEWDX'][:,7,0] * 1000/3.6
+
+    # Generation by tech x load band = share * height * total demand
+    share_x_height = data['MSLB'] * data['MLLB']
+    glb3 = share_x_height * tot_elec_dem[:, np.newaxis, np.newaxis]
+
+    # Capacity by tech x load band = generation / height
+    klb3 = np.divide(glb3, data['MLLB'],
+                     out=np.zeros_like(glb3),
+                     where=data['MLLB'] != 0)
+
+    # Calculate load factors MEWL: total generation / total capacity
+    total_capacity = np.sum(klb3, axis=2)
+    total_generation = np.sum(glb3, axis=2)
+
+    data['MEWL'][:, :, 0] = np.divide(
+        total_generation, total_capacity,
+        out=np.zeros_like(total_generation),
+        where=total_capacity > 0
+    )
+
+    # Store generation by load band (region x tech x lb)
+    data['Gen_by_lb'] = glb3
+
+    # Use default load factors for near-zero values (matching Cascading's simulation period behavior)
+    # Cascading line 664: uses <= 0.0001 threshold in simulation period
+    zero_lf = data['MEWL'][:, :, 0] <= 0.0001
+    data['MEWL'][:, :, 0] = np.where(
+        zero_lf,
+        data['MWLO'][:, :, 0],
+        data['MEWL'][:, :, 0]
+    )
+    
+>>>>>>> origin/main

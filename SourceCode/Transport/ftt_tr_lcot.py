@@ -27,36 +27,36 @@ import numpy as np
 
 def set_carbon_tax(data, c3ti, year):
     '''
-    Convert the carbon price in REPP from euro / tC to 2022$/pkm 
+    Convert the carbon price in REPP from USD / tCO2 to 2022$/pkm
     Apply the carbon price to transport sector technologies based on their emission factors
 
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    
+
     # Number of seats
     ns = data['BTTC'][:, :, c3ti['15 Seats/Veh']]
-    
+
     # Occupancy rates
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
-    
-    
-    carbon_costs = (data["REPP2X"][:, :, 0]                                   # Carbon price in euro / tC
+
+
+    carbon_costs = (data["CO2taxTr"][:, :, 0]                                   # Carbon price in USD/tCO2
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
-                    # * data["REX13"][33, 0, 0] / ( data["PRSCX"][:, :, 0] * data["EX13"][:, :, 0] / (data["PRSC13"][:, :, 0]  * data["EXX"][:, :, 0]) )
-                    / ns / ff                                               # Conversion from per km to per pkm
-                    / 3.666 / 10**6                                         # Conversion from C to CO2 and grams to tonnes. 
+                    / ns / ff                                                 # Conversion from per km to per pkm
+                    / 10**6                                                  # Conversion from grams to tonnes.
                     )
     
-    
+
     if np.isnan(carbon_costs).any():
         print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
-        print(f"Emissions intensity {data['BTTC'][:, :, c3ti['Emission factor']]}")
-        
+        print(f"Emissions intensity {data['BTTC'][:, :, c3ti['14 CO2Emissions']]}")
+
         raise ValueError
-                       
+
     return carbon_costs
+
 
 # %% lcot
 # -----------------------------------------------------------------------------
@@ -74,13 +74,13 @@ def get_lcot(data, titles, carbon_costs, year):
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
-    # Taxable categories for fuel - not all fuels subject to fuel tax
+    # Taxable categories for fuel tax, CNG, EVs and H2 exempt
     taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI']), 1])
-    # Make vehicles that do not use petrol/diesel exempt
     taxable_fuels[:, 12:15] = 0   # CNG
     taxable_fuels[:, 18:21] = 0   # EVs
     taxable_fuels[:, 24:27] = 0   # Hydrogen
     
+    # Taxable categories for carbon tax: only EVs and H2 exempt
     tf_carbon = np.ones([len(titles['VTTI']), 1])
     tf_carbon[18:21] = 0   # EVs
     tf_carbon[24:27] = 0   # Hydrogen
@@ -127,10 +127,10 @@ def get_lcot(data, titles, carbon_costs, year):
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
     ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
     # Fuel tax costs
-    fft = get_cost_elem(data['RTFT'][:, :, 0], en / ns / ff * taxable_fuels, lt_mask )
+    fft = get_cost_elem(data['RTFT'][:, :, 0], en / ns / ff * taxable_fuels, lt_mask)
     omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], 1 / ns / ff, lt_mask)
     domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], 1 / ns / ff, lt_mask)
-    # Road tax cost
+    # Yearly road tax cost
     rtt = get_cost_elem(data['TTRT'][:, :, 0], conv_full, lt_mask)
     
     # Discount rate
@@ -150,7 +150,7 @@ def get_lcot(data, titles, carbon_costs, year):
     utility_sum = np.sum(npv_utility, axis=2)
     
     # 3 – Standard deviation (propagation of error)
-    # Calculate variance terms and apply proper discounting
+    # Calculate variance terms and apply discounting
     variance_terms = dit**2 + dft**2 + domt**2
     summed_variance = np.sum(variance_terms/(denominator**2), axis=2)
     # Assume a 10% variation in load factors
@@ -162,8 +162,7 @@ def get_lcot(data, titles, carbon_costs, year):
     lcot = np.sum(npv_expenses_bare, axis = 2) / utility_sum
     # 1.2 – LCOT including policy costs
     tlcot = np.sum(npv_expenses_policy, axis = 2) / utility_sum
-    
-    # LCOT augmented with non-pecuniary costs (not used, note same)
+    # 1.3 – LCOT augmented with non-pecuniary costs (logtlcot used in further calculations)
     tlcotg = tlcot * (1 + bttc[:, :, c3ti['13 Gamma']])
 
     # 5 - Transform into lognormal space

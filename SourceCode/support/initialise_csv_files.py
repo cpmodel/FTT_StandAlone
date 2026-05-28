@@ -2,20 +2,18 @@
 # -*- coding: utf-8 -*-
 """
 This script makes preperation to extract data from FTT masterfiles in the
-"/In/FTTAssumptions/[model]" folders and save them in separate csv files.
-
-This scripts gets called in model_class
+"/Inputs/_MasterFiles/[model]" folders and save them in separate csv files.
 
 @author: Femke
 """
-
+    
 
 from pathlib import Path
 import os
 
-
 # Local library imports
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
+from SourceCode.paths import get_inputs_path
 
 
 def initialise_csv_files(ftt_modules, scenarios):
@@ -32,11 +30,16 @@ def initialise_csv_files(ftt_modules, scenarios):
     None
     """
     # Get the masterfiles
-    ftt_modules = ftt_modules.split(', ')
-    scenarios = scenarios.split(', ')
-
+    ftt_modules = [item.strip() for item in ftt_modules.split(',')]
+    scenarios = [item.strip() for item in scenarios.split(',')]
+    
     model_list = generate_model_list(ftt_modules, scenarios)
-
+    
+    # Return if there are no corresponding masterfiles
+    if not model_list:
+        print("No corresponding Excel files, so relying on csvs only")
+        return
+    
     # Convert masterfiles to csv
     convert_masterfiles_to_csv(model_list)
 
@@ -52,7 +55,7 @@ def get_masterfile(ftt_module, scenario):
     # The * denotes the regionxtechnologies and last year updated part of the string
     file_pattern = f"{ftt_module}*_{scenario}.xlsx"
     matching_file = list(
-        (Path('Inputs') / '_MasterFiles' / ftt_module).glob(file_pattern)
+        (get_inputs_path() / '_MasterFiles' / ftt_module).glob(file_pattern)
     )
 
     # Printing warnings 1: in case there is no corresponding excel file
@@ -72,11 +75,12 @@ def get_masterfile(ftt_module, scenario):
         base_name = os.path.basename(matching_file[0]) # file name without directory
         end_index = base_name.index(f'_{scenario}.xlsx')
         file_root = base_name[:end_index]
-    except IndexError as e:
+    except IndexError:
         print("An error occurred while finding the masterfile.")
         print(f"the ftt model and scenario: {ftt_module}, {scenario}")
         print(f"The file that triggered the error: {matching_file}")
         raise e
+
 
     return matching_file, file_root
 
@@ -98,12 +102,16 @@ def generate_model_list(ftt_modules, scenarios):
         file_root = None
         for scenario in scenarios:
             matching_file, current_file_root = get_masterfile(module, scenario)
+            # If there is a matching file name
             if matching_file:
                 # TODO: rewrite this and other code to allow for other types of scenario names
                 module_scenarios.append(int(scenario[1:]))
-            if current_file_root:  # Only change file_root if there is a masterfile related to the scenario
+            # Only change file_root if there is a masterfile related to the scenario
+            if current_file_root:  
                 file_root = current_file_root 
         if module_scenarios:
             models[module] = [module_scenarios, file_root]
+       
+    
     return models
 

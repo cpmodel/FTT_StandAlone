@@ -19,27 +19,17 @@ Functions included:
 
 """
 
-# Standard library imports
-from math import sqrt
-import os
-import copy
-import sys
-import warnings
 
 # Third party imports
-import pandas as pd
 import numpy as np
 from numba import njit
-
-# Local library imports
-from SourceCode.support.divide import divide
 
 
 # %% survival function
 # -----------------------------------------------------------------------------
 # -------------------------- Survival calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def survival_function(data, time_lag, histend, year, titles):
+def survival_function(data, time_lag, histend, year, titles, c2ti):
 
     """
     In this function scrappage, sales, tracking of age, and average efficiency
@@ -61,6 +51,8 @@ def survival_function(data, time_lag, histend, year, titles):
         Curernt/active year of solution
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
+    c2ti: dictionary
+        The names of the elements of the cost matrix
 
     Returns
     ----------
@@ -75,6 +67,16 @@ def survival_function(data, time_lag, histend, year, titles):
     ---------
     This function is currently unused.
     """
+    
+    # TODO: This is a generic survival function
+    HalfLife = data['BCET'][:, :, c2ti['9 Lifetime (years)']]/2
+    dLifeT = HalfLife/10
+
+    for age in range(len(titles['TYTI'])):
+
+        age_matrix = np.ones_like(data['MSRV'][:, :, age]) * age
+
+        data['MSRV'][:, :, age] = 1.0 - 0.5*(1+np.tanh(1.25*(HalfLife-age_matrix)/dLifeT))
 
     # Create a generic matrix of fleet-stock by age
     # Assume uniform distribution, but only do so when we still have historical
@@ -96,7 +98,7 @@ def survival_function(data, time_lag, histend, year, titles):
                 # Move all t1icles one year up:
                 # New sales will get added to the age-tracking matrix in the main
                 # routine.
-                data['MEKA'][r, t1, :-1] = copy.deepcopy(time_lag['MEKA'][r, t1, 1:])
+                data['MEKA'][r, t1, :-1] = time_lag['MEKA'][r, t1, 1:]
 
                 # Current age-tracking matrix:
                 # Only retain the fleet that survives
