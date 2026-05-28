@@ -1,0 +1,64 @@
+Review pull requests
+====================
+
+Pull requests (PRs) are used to review changes before they are merged into the main codebase. The goal is to ensure changes are scientifically correct, understandable, and do not break model coupling.
+
+Before starting
+---------------
+
+- Read the PR description
+- Check which files were changed
+- Confirm the purpose of the change
+- Ask questions if anything is unclear
+
+Reviewing changes
+-----------------
+
+Where possible:
+
+- Run the code locally
+- Check that it executes without errors
+- Compare outputs with the previous version
+- Check that scientific behaviour is sensible
+- Look for unintended side effects
+
+Focus on:
+
+- Clear and consistent variable names
+- Readable structure
+- Appropriate documentation
+- Avoiding unnecessary complexity (in particular, if code is partially LLM written)
+
+Coupled model variables
+-----------------------
+
+Some variables are coupled with MSET, which (will) import this repo as a package. Changes to these can break compatibility, including for investment and fuel use.
+
+Check carefully for changes to:
+
+- Variable names
+- Dimensions or indexing
+- Units and definitions
+
+Review comments
+---------------
+
+- Leave comments directly on relevant lines
+- Be specific with feedback, ensure that issues can be reproduced
+- PR authors should resolve comments
+
+Approving and merging
+---------------------
+
+Approve the PR when:
+
+- The code runs correctly
+- The scientific changes are justified
+- Review comments are resolved
+- The changes are safe to merge
+
+After merging:
+
+- Small PRs may be merged directly
+- Merge conflicts should be resolved by the author
+- Delete the branch unless it is still needed
