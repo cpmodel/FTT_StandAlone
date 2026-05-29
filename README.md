@@ -14,7 +14,7 @@ This repository contains a family of Future Technology Transformation (FTT) mode
 The FTT family of models are based on [evolutionary economics](https://en.wikipedia.org/wiki/Evolutionary_economics). The uptake of new technologies typically follows an S-curve, which can be represented well with evolutionary dynamics (Mercure et al, 2012). The core equations for all of the models in the model family are coupled logistic equations of the [Lotka-Volterra family](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations), also known as the predator-prey equations. These equations are used to determine the evolution of the shares of various technologies in the models. Each model contains between ~10 to 25 technologies competing for market share. 
 
 ## FTT and macro-economic models
-This repository contains the main version of FTT, written in Python. It comes as a package with can be imported into macro-economic models. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the  model. In specific, energy demand is an output from the coupled model. 
+This repository contains the main version of FTT, written in Python. It comes as a package that can be imported into macro-economic models. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the model. In specific, energy demand is an output from the coupled model. 
 
 ## Installation
 
