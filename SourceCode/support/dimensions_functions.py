@@ -11,11 +11,10 @@ Functions included:
 
 # Standard library imports
 import os
+from pathlib import Path
 
 # Third party imports
 import pandas as pd
-
-from SourceCode.paths import get_utilities_path
 
 
 def load_dims():
@@ -25,10 +24,11 @@ def load_dims():
     dims_file = 'VariableListing.csv'
 
     # Check that classification titles file exists
-    dims_path = get_utilities_path() / 'titles' / dims_file
-    if not dims_path.is_file():
-        raise FileNotFoundError(f'Dimensions name file not found: {dims_path.resolve()}')
-    dims_path = str(dims_path)
+    dir_file = os.path.dirname(os.path.realpath(__file__))
+    dir_root = Path(dir_file).parents[1]
+    dims_path = os.path.join(dir_root, 'Utilities', 'titles', dims_file)
+    if not os.path.isfile(dims_path):
+        raise FileNotFoundError(f'Dimensions name file not found: {dims_path}')
 
     dims_data = pd.read_csv(dims_path, skiprows=0, na_filter = False)
    

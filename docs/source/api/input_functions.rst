@@ -1,7 +1,7 @@
-input\_functions module
-=======================
+data\_loading module
+====================
 
-.. automodule:: input_functions
+.. automodule:: data_loading
    :members:
    :show-inheritance:
    :undoc-members:

@@ -25,12 +25,21 @@ def _enable_interactive_asyncio_patch() -> None:
 
 
 def _select_port(preferred: int = 8080, max_tries: int = 10) -> int:
+    """Return a free TCP port.
+
+    Tries a preferred contiguous range first, then falls back to an OS-assigned
+    ephemeral port so launch does not fail just because a small range is busy.
+    """
     for port in range(preferred, preferred + max_tries):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             if sock.connect_ex(('127.0.0.1', port)) != 0:
                 return port
-    raise RuntimeError(f'No free port found in range {preferred}-{preferred + max_tries - 1}')
+
+    # Fallback: ask OS for any available port.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(('127.0.0.1', 0))
+        return sock.getsockname()[1]
 
 
 if _is_interactive():
@@ -63,6 +72,6 @@ def settings_page():
 # Select an available port and start the server
 selected_port = _select_port(8080)
 if selected_port != 8080:
-    print(f'Port 8080 is in use, starting frontend on port {selected_port} instead.')
+    print(f'Port 8080 is unavailable, starting frontend on port {selected_port} instead.')
 
 ui.run(title="FTT", port=selected_port, favicon='GUI/images/ftt_favicon.png', reload=False)
