@@ -67,7 +67,7 @@ Focus on:
 - Clear and consistent variable names
 - Readable structure
 - Appropriate documentation
-- Avoiding unnecessary complexity (in particular, if code is partially LLM written)
+- Avoiding unnecessary complexity (in particular, if code is partially LLM-written)
 
 Coupled model variables
 -----------------------
