@@ -54,7 +54,7 @@ Before starting
 Reviewing changes
 ^^^^^^^^^^^^^^^
 
-Where possible:
+Review model output:
 
 - Run the code locally
 - Check that it executes without errors
@@ -62,7 +62,7 @@ Where possible:
 - Check that scientific behaviour is sensible
 - Look for unintended side effects
 
-Focus on:
+Review code quality:
 
 - Clear and consistent variable names
 - Readable structure
