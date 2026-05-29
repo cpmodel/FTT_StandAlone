@@ -84,7 +84,7 @@ Review comments
 ^^^^^^^^^^^^^^^
 
 - Leave comments directly on relevant lines
-- Be specific with feedback, ensure that issues can be reproduced
+- Be specific with feedback and ensure that issues can be reproduced
 - PR authors should resolve comments
 
 Approving and merging
