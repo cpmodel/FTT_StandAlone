@@ -3,19 +3,17 @@
 =========================================
 run_file.py
 =========================================
-Run file for FTT Stand alone.
 
-
-Programme calls the FTT stand-alone model run class, and executes model run.
+Programme calls the RunFTT class, and executes model run.
 Run this script from Spyder or VS Code directly, 
- or call it from the command line (or terminal) to run FTT Stand Alone.
+ or call it from the command line (or terminal).
 
 Local library imports:
 
     Model Class:
 
-    - `ModelRun <model_class.html>`__
-        Creates a new instance of the ModelRun class
+    - `RunFTT <model_class.html>`__
+        Creates a new instance of the RunFTT class
 
 
 """
@@ -44,7 +42,7 @@ if __name__ == "__main__":
     tl = model.timeline
     scens = model.scenarios
 
-    # Call the 'run' method of the ModelRun class to solve the model
+    # Call the 'run' method of the RunFTT class to solve the model
     model.run()
 
     # Fetch ModelRun attributes, for examination

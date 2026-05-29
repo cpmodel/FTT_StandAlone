@@ -1,6 +1,6 @@
-# FTT StandAlone
+# Future Technology Transformation (FTT)
 
-## Future Technology Transformation
+## Modules
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
 
 * FTT:Power (Mercure, 2012) - updated to 2022 (generation) and 2023 (prices)
@@ -13,8 +13,8 @@ This repository contains a family of Future Technology Transformation (FTT) mode
 ## Theoretical background
 The FTT family of models are based on [evolutionary economics](https://en.wikipedia.org/wiki/Evolutionary_economics). The uptake of new technologies typically follows an S-curve, which can be represented well with evolutionary dynamics (Mercure et al, 2012). The core equations for all of the models in the model family are coupled logistic equations of the [Lotka-Volterra family](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations), also known as the predator-prey equations. These equations are used to determine the evolution of the shares of various technologies in the models. Each model contains between ~10 to 25 technologies competing for market share. 
 
-## FTT and E3ME
-This repository contains the public standalone version of FTT, written in Python. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the standalone model. In specific, energy demand is an output from the coupled model. 
+## FTT and macro-economic models
+This repository contains the main version of FTT, written in Python. It comes as a package with can be imported into macro-economic models. A FORTRAN version of the model family is often used together with a macro-economic model as: [E3ME-FTT](https://www.e3me.com/). This model is managed by Cambridge Econometrics, and informs some of the inputs for the  model. In specific, energy demand is an output from the coupled model. 
 
 ## Installation
 
@@ -36,7 +36,7 @@ Before you start, make sure that git is installed on your system, for instance b
 Alternatively, you can download ftt by clicking the green `Code` button in the top right, and selecting `Open with Github Desktop` if you have this installed. You can import the environment in Anaconda Navigator.
 
 ## Running the model
-1. You can run the front-end of the model in your browser by either double clicking `open_frontend.bat` or by running `run_frontend.py`. Select the models to run and scenarios and explore the output.
+1. You can run the frontend of the model in your browser by either double clicking `open_frontend.bat` or by running `run_frontend.py`. Select the models to run and scenarios and explore the output.
 2. Alternatively, you can run the model from the run_file.py script. Output is saved to a pickle file in the Output folder. Select the models and scenarios from the settings.ini file.
 3. Create new scenarios by adding a new folder in the Inputs folder. Data is read in first from this folder, and missing data is read from the S0 baseline folder. 
 

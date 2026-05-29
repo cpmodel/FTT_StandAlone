@@ -8,7 +8,7 @@ Ideally, FTT:Power is updated every one or two years. The last data update was d
 3. The IEA World Energy Balances does not distinguish between onshore and offshore. For consistency, we use the overall wind generation data from IEA, but split it out by country using the [historical generation from IRENA](https://pxweb.irena.org/pxweb/en/IRENASTAT). Due to data extraction limits, capacity and generation data should be extracted as separate files.
 4. The generation data is often not quite up-to-date (typically a year behind the capacity data available). You can get more up-to-date capacity data from IRENA. This can be added to the exogenous capacity (policy) variable, the MWKA variable. The IRENA and EMBER datasets provide capacity estimate for all main technologies which allow for an accurate update of the MWLO variable to the last year of history (2022)   
 5. For technologies like CSP and offshore, introduce a 'seed' in countries without. The FTT code base does not allow for a new technology to appear if a region does not have any capacity in that technology. To combat this limitation, we add 1% of total wind energy in a country as offshore and 1% of solar PV as CSP in regions without any (and regions with less than 1%). CCS tech is also seeded at 0.01% of current fossil generation and 1% of Biomass for BECCS.
-6. Edit the end-years in FTT-Standalone/Utilities/Titles/VariableListing.csv. For instance, change J3 from 2021 to 2022 after you've updated the historical generation to include 2022 data. 
+6. Edit the end-years in Utilities/Titles/VariableListing.csv. For instance, change J3 from 2021 to 2022 after you've updated the historical generation to include 2022 data. 
 7. Update RERY (how?)
 
 ### Costs
@@ -20,7 +20,7 @@ Ideally, FTT:Power is updated every one or two years. The last data update was d
     1.  Fast update: do the same as above for fuel costs. Note that costs are higher for technologies with CCS.
     2.  The [UK data services under the International Energy Agency](https://stats2.digitalresources.jisc.ac.uk/index.aspx?r=721229&DataSetCode=IEA_CO2_AB) is down at the moment, but Exeter has access until May 2025, so ask Ian. The dataset is the World Energy Prices Yearly. Sector is Industry. Take the average of the last 5 years to account for fluctuations. Take the sample standard deviation over the last 5 years for the standard deviation of fuel costs. Convert the units for coal and for oil into MWh. 
     3.  Fuel costs of coal and gas from IEA have been averaged over 2019-2023 with appropriate conversion of units if necessary.
-3. Edit the BCET "History end" in FTT-Standalone/Utilities/Titles/VariableListing.csv. This is found in column J. This ensures learning-by-doing starts in the right year.
+3. Edit the BCET "History end" in Utilities/Titles/VariableListing.csv. This is found in column J. This ensures learning-by-doing starts in the right year.
 4. Verify that LCOE estimates in the model are roughly in accordance with independent estimates. You can compare for instance compare with BNEF if you have access or [Lazard prices](https://www.lazard.com/research-insights/levelized-cost-of-energyplus/).
 5. Adjust the currency conversions in the code to the new currency (for instance, from 2013USD to 2023USD). Ideally, this is done automatically from histend.
 
@@ -28,10 +28,11 @@ Note - WB has access to Enerdata that wasn't used in the current, but might be u
 
 ### Calibration (the gamma values)
 The FTT model is calibrated to ensure a historical trends do not suddenly change in the absence of new policies. We ensure the second derivative of the shares (MEWS) variable is approximately zero. We estimate a gamma value per country and per technology. 
-1. To calibrate the gamma values, run the frontend of the standalone version (FTT_Stand_Alone_Launcher.cmd). Navigate to GAMMA. Initialize the power sector model, and do the following by country
-2. Pick a start date which gives you 5 years of historical data, and an end date with 5 year of future data
-3. Per technology, choose a gamma value that ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. If gamma values are often larger than 30, there may be structural errors in the model. Investigate why or contact an experienced modeller. 
-4. Save the gamma values in Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. 
+1. To calibrate the gamma values, first run the gamma_value_automation.py file; this will give you a starting point for gamma values.
+2. Then run the model in the frontend to check if any manual adjustment need to be made
+3. Pick a start date which gives you 5 years of historical data, and an end date with 5 year of future data
+4. Per technology, adjust gamma values if still necessary ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. Gamma values are between -1 and 1. When you encounter larger values (above 0.5), you may need to explore structural and data issues.
+5. Save the gamma values in Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. 
 
 ## Less frequent updates
 

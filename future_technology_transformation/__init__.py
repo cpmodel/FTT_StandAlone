@@ -2,7 +2,7 @@
 """
 future_technology_transformation
 ================================
-Public API for the FTT Stand-alone model.
+Public API for the Future Technology transformation model.
 
 Importing this package gives access to the main :class:`RunFTT` class and the
 path-configuration helpers without needing to know the internal ``SourceCode``
@@ -103,7 +103,7 @@ def run_cli() -> None:
     from pathlib import Path
 
     parser = argparse.ArgumentParser(
-        description="Run the FTT Stand-alone model from the command line."
+        description="Run the FTT model from the command line."
     )
     parser.add_argument(
         "--inputs", metavar="DIR", default=None,
