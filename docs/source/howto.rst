@@ -12,7 +12,6 @@ Adding a variable is not too difficult. The steps depend on whether the variable
    - `Dim1` is only used for 3D variables, for the regions.  
    - `Dim2` refers to the rows.  
    - `Dim3` refers to the columns.  
-   - The `summary` and `detailed` columns indicate how the variable is displayed in the frontend.
 
 2. **Add new dimensions (if needed).**  
    If your variable uses a new dimension, add it to `classification_titles`.
@@ -29,13 +28,6 @@ Adding a variable is not too difficult. The steps depend on whether the variable
         - The format is `"tl_" + year` when the series starts.  
         - Ensure dimensions match `VariableListing.csv`.  
         - Ensure there is enough information in the Masterfile for all years of the horizon (usually until 2100) to prevent errors.
-
-4. **Update the manager metadata.**  
-   Run::
-
-      python manager_new/update_manager_metadata.py
-
-   This ensures your variable is added to the JSON file required by the frontend manager.
 
 
 Review pull requests
