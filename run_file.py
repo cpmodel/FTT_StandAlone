@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Instantiate the run
     model = RunFTT()
 
-    # Fetch ModelRun attributes, for examination
+    # Fetch RunFTT attributes, for examination
     # Titles of the model
     titles = model.titles
     # Dimensions of model variables
