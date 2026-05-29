@@ -31,7 +31,7 @@ The FTT model is calibrated to ensure a historical trends do not suddenly change
 1. To calibrate the gamma values, first run the gamma_value_automation.py file; this will give you a starting point for gamma values.
 2. Then run the model in the frontend to check if any manual adjustment need to be made
 3. Pick a start date which gives you 5 years of historical data, and an end date with 5 year of future data
-4. Per technology, adjust gamma values if still necessary ensures historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. Gamma values are between -1 and 1. When you encounter larger values (above 0.5), you may need to explore structural and data issues.
+4. Per technology, adjust gamma values, if still necessary, to ensure historical trends continue. The gamma value is considered a "price premium". Positive gamma values will make the technology less attractive, negative values will make it more attractive. Gamma values are between -1 and 1. When you encounter larger values (above 0.5), you may need to explore structural and data issues.
 5. Save the gamma values in Inputs/_MasterFiles/FTT-P/FTT-P-24x70_2021_S[0-1-2].xlsx. 
 
 ## Less frequent updates
