@@ -2,7 +2,7 @@
 """
 future_technology_transformation
 ================================
-Public API for the Future Technology transformation model.
+Public API for the Future Technology Transformation model.
 
 Importing this package gives access to the main :class:`RunFTT` class and the
 path-configuration helpers without needing to know the internal ``SourceCode``
