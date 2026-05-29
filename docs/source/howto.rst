@@ -39,7 +39,7 @@ Adding a variable is not too difficult. The steps depend on whether the variable
 
 
 Review pull requests
-====================
+--------------------
 
 Pull requests (PRs) are used to review changes before they are merged into the main codebase. The goal is to ensure changes are scientifically correct, understandable, and do not break model coupling.
 
