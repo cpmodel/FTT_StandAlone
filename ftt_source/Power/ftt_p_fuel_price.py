@@ -45,8 +45,8 @@ def get_gen_share(data, r, solar_t2ti, wind_t2ti):
     if total_gen <= 0:
         return 0.0, 0.0
 
-    solar_share = data["MEWG"][r, solar_t2ti] / total_gen
-    wind_share = np.sum(data["MEWG"][r, wind_t2ti]) / total_gen
+    solar_share = float(np.sum(data["MEWG"][r, solar_t2ti])) / total_gen
+    wind_share = float(np.sum(data["MEWG"][r, wind_t2ti])) / total_gen
 
     return solar_share, wind_share
 

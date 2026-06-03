@@ -147,7 +147,8 @@ def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
     gamma_mode = _config.get('settings', 'gamma_mode', fallback='multiplicative')
     nuclear_idx = list(titles['T2TI']).index('1 Nuclear')
     gen_tech_indices = get_gen_tech_indices(titles)
-    sector_coupling = _config.getboolean('settings', 'sector_coupling', fallback=True)
+    sector_coupling  = _config.getboolean('settings', 'sector_coupling',  fallback=True)
+    mset_coupling    = _config.getboolean('settings', 'mset_coupling',    fallback=False)
 
 
     # Conditional vector concerning technology properties
@@ -192,7 +193,8 @@ def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
         data['MRES'] = mres
 
         data = get_lcoe(data, titles, gamma_mode)
-        data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+        if not mset_coupling:
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
         data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
                     wind_solar_indices, storage_learning_base_year, sector_coupling)
@@ -229,7 +231,8 @@ def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
 
         data = get_lcoe(data, titles, gamma_mode)
-        data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+        if not mset_coupling:
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
 
     #%%
@@ -403,7 +406,8 @@ def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles, gamma_mode)
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+            if not mset_coupling:
+                data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
@@ -710,7 +714,8 @@ def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
         
-        data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+        if not mset_coupling:
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
 
         # Investment
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]

@@ -36,13 +36,13 @@ from ftt_source.paths import get_utilities_path
 # -----------------------------------------------------------------------------
 
 def get_tech_to_resource(titles):
-    """Read converters_FTT.csv and return the tech-to-resource index mapping.
+    """Read converters.csv and return the tech-to-resource index mapping.
 
     Returns a list where entry j is the 0-based index into titles['ERTI'] of the
     resource used by technology j in titles['T2TI'].  Adding or removing rows in
-    converters_FTT.csv automatically updates the mapping.
+    converters.csv automatically updates the mapping.
     """
-    csv_path = get_utilities_path() / 'titles' / 'converters_FTT.csv'
+    csv_path = get_utilities_path() / 'titles' / 'converters.csv'
     df = pd.read_csv(csv_path, keep_default_na=False)
 
     t2ti = list(titles['T2TI'])
@@ -86,31 +86,81 @@ def get_cf_multipliers(titles):
             for _, row in df.iterrows()}
 
 
+def _detect_power_schema(t2ti):
+    """Return '22tech' or '12tech' by probing a discriminating T2TI label.
+
+    22-tech uses '11 Biomass'; 12-tech uses '7 Bioenergy'.  These labels are
+    mutually exclusive across the two schemas so a single membership test is
+    sufficient.  Raises ValueError if neither sentinel is found.
+    """
+    if '11 Biomass' in t2ti:
+        return '22tech'
+    if '7 Bioenergy' in t2ti:
+        return '12tech'
+    raise ValueError(
+        "Cannot detect FTT:Power T2TI schema: expected '11 Biomass' (22-tech) "
+        f"or '7 Bioenergy' (12-tech) in T2TI. Got: {t2ti}"
+    )
+
+
 def get_gen_tech_indices(titles):
     """Return T2TI and ERTI index pairs used in the generation-based primary energy demand block.
 
     Each entry maps a resource name to (t2ti_index_or_list, erti_index).
+    The schema (22-tech or 12-tech) is detected automatically from titles['T2TI'].
+
+    22-tech: separate entries for Biomass/Biomass+CCS, Waste/Waste+CCS, Marine,
+             Geothermal, Onshore, Offshore, Solar PV, CSP, Large Hydro, Pumped Hydro.
+    12-tech: Bioenergy and Bioenergy+CCS replace Biomass+Waste; biogas gets an empty
+             list (zero demand). Marine and Geothermal are merged into Other Renewable;
+             Onshore and Offshore both map to Wind (approximation — both ERTI slots
+             receive the full aggregate Wind generation). CSP is merged into Solar.
     """
     t2ti = list(titles['T2TI'])
     erti = list(titles['ERTI'])
+    schema = _detect_power_schema(t2ti)
+
+    if schema == '22tech':
+        return {
+            'nuclear':    (t2ti.index('1 Nuclear'),
+                           erti.index('1 Nuclear')),
+            'biomass':    ([t2ti.index('11 Biomass'), t2ti.index('12 Biomass + CCS')],
+                           erti.index('5 Biomass')),
+            'biogas':     ([t2ti.index('5 Waste'), t2ti.index('6 Waste + CCS')],
+                           erti.index('6 Biogas')),
+            'tidal':      (t2ti.index('16 Marine'),
+                           erti.index('8 Tidal')),
+            'hydro':      ([t2ti.index('13 Large Hydro'), t2ti.index('14 Pumped Hydro')],
+                           erti.index('9 Large Hydro')),
+            'onshore':    (t2ti.index('17 Onshore'),
+                           erti.index('10 Onshore')),
+            'offshore':   (t2ti.index('18 Offshore'),
+                           erti.index('11 Offshore')),
+            'solar':      ([t2ti.index('19 Solar PV'), t2ti.index('20 CSP')],
+                           erti.index('12 Solar PV')),
+            'geothermal': (t2ti.index('15 Geothermal'),
+                           erti.index('13 Geothermal')),
+        }
+
+    # 12-tech schema
     return {
         'nuclear':    (t2ti.index('1 Nuclear'),
                        erti.index('1 Nuclear')),
-        'biomass':    ([t2ti.index('11 Biomass'), t2ti.index('12 Biomass + CCS')],
+        'biomass':    ([t2ti.index('7 Bioenergy'), t2ti.index('8 Bioenergy + CCS')],
                        erti.index('5 Biomass')),
-        'biogas':     ([t2ti.index('5 Waste'), t2ti.index('6 Waste + CCS')],
+        'biogas':     ([],
                        erti.index('6 Biogas')),
-        'tidal':      (t2ti.index('16 Marine'),
+        'tidal':      (t2ti.index('12 Other Renewable'),
                        erti.index('8 Tidal')),
-        'hydro':      ([t2ti.index('13 Large Hydro'), t2ti.index('14 Pumped Hydro')],
+        'hydro':      ([t2ti.index('9 Hydro')],
                        erti.index('9 Large Hydro')),
-        'onshore':    (t2ti.index('17 Onshore'),
+        'onshore':    (t2ti.index('11 Wind'),
                        erti.index('10 Onshore')),
-        'offshore':   (t2ti.index('18 Offshore'),
+        'offshore':   (t2ti.index('11 Wind'),
                        erti.index('11 Offshore')),
-        'solar':      ([t2ti.index('19 Solar PV'), t2ti.index('20 CSP')],
+        'solar':      ([t2ti.index('10 Solar')],
                        erti.index('12 Solar PV')),
-        'geothermal': (t2ti.index('15 Geothermal'),
+        'geothermal': (t2ti.index('12 Other Renewable'),
                        erti.index('13 Geothermal')),
     }
 

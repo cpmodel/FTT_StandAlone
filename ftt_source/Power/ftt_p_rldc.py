@@ -34,13 +34,17 @@ def feqs(a):
 
 
 def get_wind_solar_indices(titles):
-    """Load wind/solar/CSP technology indices from T2TI_roles.csv."""
+    """Load wind/solar/CSP technology indices from T2TI_roles.csv.
+
+    'csp' is optional — if absent from the CSV (e.g. 12-tech schema where CSP is
+    merged into Solar), csp_idx is set to None and the RLDC skips the CSP addend.
+    """
     csv_path = get_utilities_path() / 'titles' / 'T2TI_roles.csv'
     df = pd.read_csv(csv_path, index_col='role', keep_default_na=False)
     t2ti = list(titles['T2TI'])
     wind_indices = [t2ti.index(label.strip()) for label in df.loc['wind', 'T2TI'].split(',')]
     solar_idx = t2ti.index(df.loc['solar', 'T2TI'].strip())
-    csp_idx = t2ti.index(df.loc['csp', 'T2TI'].strip())
+    csp_idx = t2ti.index(df.loc['csp', 'T2TI'].strip()) if 'csp' in df.index else None
     return {'wind': wind_indices, 'solar': solar_idx, 'csp': csp_idx}
 
 # %% rldc function
@@ -276,7 +280,9 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     Snotvar = 1 - data['MWDD'][0, :, 5]
 
     # Sector coupling: update battery costs based on cumulative capacity
-    data = battery_costs(data, time_lag, year, t, titles, histend)
+    # Only when FTT:Transport is coupled (SCA dimension present AND sector_coupling enabled)
+    if 'SCA' in titles and sector_coupling:
+        data = battery_costs(data, time_lag, year, t, titles, histend)
 
     for r in range(len(titles['RTI'])):
 
@@ -561,8 +567,9 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
             
             # Total VRE generation (with floor to prevent division by zero)
             vre = max(0.00001, np.sum(Svar * data['MEWG'][r, :, 0]))
-            # CSP also taken into account for long-term storage needs
-            vre_long = max(0.00001, vre + data['MEWG'][r, csp_idx, 0])
+            # CSP also taken into account for long-term storage needs (omitted if CSP merged into Solar)
+            csp_add = data['MEWG'][r, csp_idx, 0] if csp_idx is not None else 0.0
+            vre_long = max(0.00001, vre + csp_add)
             
             # Wind (note we're using a different rldc outcome!)
             Hp_wind = rldc_prod_wind[7]
