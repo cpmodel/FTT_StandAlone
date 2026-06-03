@@ -5,3 +5,4 @@ __pycache__/
 *.pickle
 Output/Scenarios.json
 settings.ini
+.venv/

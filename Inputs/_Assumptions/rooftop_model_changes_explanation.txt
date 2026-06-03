@@ -1,0 +1,330 @@
+FTT small-scale rooftop solar updates: explanation and rationale
+================================================================
+
+Purpose
+-------
+This note summarises the rooftop-solar changes implemented during the debugging and methodology discussion. The main objective was to remove unrealistic rooftop-solar generation/capacity drops at the simulation boundary, make the rooftop-vs-grid household choice more defensible, and prepare the model structure for a future FTT-Transport coupling through EV complementarity.
+
+
+1. Original problem
+-------------------
+The model showed strange drops in rooftop-solar generation and capacity as soon as the simulation started after the historical period. This was especially visible around 2023/2024.
+
+The underlying modelling problem was that rooftop solar had been added as a power-sector technology, but rooftop PV should not compete directly with utility-scale generation technologies. Rooftop PV is a small-scale household decision. It should compete against buying electricity from the grid, while the grid itself represents the utility technology mix.
+
+The resulting model structure is:
+
+    household choice: rooftop solar vs grid electricity
+    utility choice: grid electricity mix among utility technologies
+
+
+2. Household share initialisation
+---------------------------------
+The rooftop household share was originally initialised with a broad global check. That could leave some regions with invalid or zero household shares, causing erratic behaviour at the simulation boundary.
+
+Implemented change:
+
+    household_shares are now initialised and normalised per region.
+
+Reasoning:
+
+    Each region needs a valid two-option household share vector:
+
+        rooftop share + grid share = 1
+
+    This prevents region-specific numerical artefacts when the simulation leaves the historical period.
+
+
+3. 2023/2024 near-term handoff calibration
+------------------------------------------
+The model now includes a near-term handoff layer for 2023 and 2024.
+
+Implemented change:
+
+    For 2023 and 2024, where near-historical rooftop data exist, rooftop shares are guided toward those values. If the near-term input implies a rooftop PV decline relative to the previous year, the model holds rooftop generation flat rather than forcing an artificial fall.
+
+Reasoning:
+
+    Rooftop PV capacity/generation should not show an unexplained collapse at the historical-to-simulation boundary. The handoff layer makes the first simulated years consistent with observed or near-observed values, then allows FTT dynamics to take over from 2025 onward.
+
+Important caveat:
+
+    This is not intended to lock the long-term rooftop trajectory. It is a transition treatment for the first simulated years only.
+
+
+4. Perceived-cost calibration term
+----------------------------------
+A region-specific rooftop perceived-cost adjustment was added for the first simulated step.
+
+Implemented change:
+
+    The model calibrates a rooftop perceived-cost offset so that the first simulated rooftop household share can reproduce the near-term observed/calibrated share where data are available.
+
+Reasoning:
+
+    The FTT share equation depends on relative perceived costs and turnover rates. If the raw cost data do not reproduce the first observed rooftop step, the simulation can jump or fall immediately. The calibration term makes the model begin from a realistic point without imposing a hard generation floor over the whole simulation.
+
+
+5. Feed-in tariff unit correction
+---------------------------------
+The feed-in tariff spreadsheet values were confirmed to be in USD/kWh.
+
+Implemented change:
+
+    RSFT is now converted from USD/kWh to USD/MWh in the rooftop household cost calculation:
+
+        price_export = RSFT * 1000
+
+Reasoning:
+
+    Retail electricity price and rooftop PV costs are compared in USD/MWh. Without this conversion, the export value of rooftop PV is understated by a factor of 1000.
+
+
+6. Rooftop household cost equation
+----------------------------------
+The rooftop decision now uses an avoided-cost structure.
+
+Implemented structure:
+
+    annual rooftop benefit =
+        self_consumption_rate * retail_grid_price
+        + (1 - self_consumption_rate) * feed_in_tariff
+
+    net present rooftop cost =
+        PV investment cost per MWh
+        - discounted annual benefit
+
+    grid baseline cost =
+        0
+
+Reasoning:
+
+    The household decision compares installing rooftop PV against continuing to buy from the grid. Since grid purchases are included as an avoided cost in the rooftop benefit, the grid option can be represented as the zero baseline in this two-option comparison.
+
+
+7. Allow zero grid baseline cost in the FTT share equation
+---------------------------------------------------------
+The FTT share equation originally skipped technologies with zero cost.
+
+Implemented change:
+
+    The share equation now accepts finite costs, including zero.
+
+Reasoning:
+
+    The household grid option has a zero baseline cost by construction. Skipping zero-cost options would break the rooftop-vs-grid comparison.
+
+
+8. Literature-based rooftop ceiling assumptions (RSMX)
+------------------------------------------------------
+An explicit country/region rooftop ceiling file was added:
+
+    Inputs/_Assumptions/RSMX.csv
+
+The file contains:
+
+    region
+    max_rooftop_share
+    confidence
+    source_group
+    basis
+
+Implemented change:
+
+    The rooftop household share is constrained by a country/region-specific maximum rooftop share.
+
+Reasoning:
+
+    Without a ceiling, rooftop PV can saturate almost completely in some regions. That is not plausible because household rooftop adoption is constrained by roof availability, dwelling type, tenancy, ownership, grid/export limits, self-consumption limits, and practical adoption barriers.
+
+The ceiling values are based on a hierarchy of sources:
+
+    EU countries:
+        Bódis et al. (2019), high-resolution rooftop PV potential in the European Union.
+
+    United States:
+        NREL rooftop PV technical potential study.
+
+    Australia:
+        APVI/UNSW/ISF rooftop potential estimates.
+
+    Non-EU and aggregate regions:
+        Gernaat et al. (2020) residential rooftop PV potential and regional archetypes, supported by global rooftop PV potential literature such as Joshi et al. (2021).
+
+Important interpretation:
+
+    RSMX is a practical no-EV rooftop ceiling, not a raw technical maximum.
+
+
+9. Residual utility demand treatment
+------------------------------------
+Rooftop generation is now treated separately from utility generation.
+
+Implemented change:
+
+    Household rooftop generation is calculated from household demand and rooftop household share. Utility technologies then serve residual electricity demand after rooftop production is accounted for.
+
+Reasoning:
+
+    Rooftop PV should not be allocated using the utility MEWS generation allocation rule. Rooftop PV is determined by household adoption, not by competition among utility generators.
+
+
+10. Capacity calculation
+------------------------
+Rooftop capacity is recalculated from rooftop generation and rooftop load factor:
+
+    capacity = generation / load_factor / 8766
+
+Reasoning:
+
+    This keeps rooftop generation and capacity internally consistent.
+
+
+11. Removed earlier hard first-year capacity floor
+-------------------------------------------------
+An earlier workaround forced 2023 rooftop capacity not to fall below the previous year.
+
+Implemented change:
+
+    That crude first-year floor was removed and replaced with the more transparent 2023/2024 handoff and calibration logic.
+
+Reasoning:
+
+    A hard capacity floor hides the problem rather than explaining it. The current approach is more defensible because it explicitly handles the transition from historical data to simulation.
+
+
+12. Diagnostics and sample-country checks
+-----------------------------------------
+Several diagnostic plots and CSV outputs were generated under IO_Output, including:
+
+    australia_capacity_generation_literature_rsmx.png
+    sample_country_diagnostics/sample_rooftop_nearterm_calibrated.csv
+    sample_country_diagnostics/sample_rooftop_household_shares_nearterm_calibrated.png
+
+Sample results after the near-term handoff showed no 2023/2024 rooftop collapse in the checked countries. Countries and regions such as Australia, Germany, Italy, Portugal, China, India, Brazil, Latin America, ASEAN, and Rest of World showed smoother trajectories.
+
+The US, UK, and Japan originally had early dips due to either missing/odd near-term rooftop anchors or model transition behaviour. The 2023/2024 handoff floor now prevents artificial early declines.
+
+
+13. EV complementarity: what has NOT been implemented yet
+---------------------------------------------------------
+The EV complementarity mechanism has been discussed and documented, but it is not yet active in the model.
+
+Currently implemented:
+
+    rooftop-vs-grid household choice
+    exogenous RSSC self-consumption
+    fixed no-EV RSMX rooftop ceiling
+    2023/2024 handoff
+    literature-based rooftop ceiling assumptions
+
+Not yet implemented:
+
+    EV adoption increasing RSSC
+    EV adoption increasing effective rooftop ceiling
+    dynamic link from FTT-Transport outputs to rooftop PV adoption
+    separate RSMX_base and RSMX_technical variables
+
+
+14. Proposed EV complementarity methodology
+-------------------------------------------
+The recommended next step is to represent EV complementarity through two mechanisms.
+
+Mechanism A: EVs increase rooftop self-consumption
+
+    EV adoption adds flexible household electricity demand. If EVs charge at home during solar hours, more rooftop PV is consumed behind the meter instead of exported.
+
+    Suggested form:
+
+        RSSC_eff = RSSC_base + alpha * EV_home * EV_flex * (1 - RSSC_base)
+
+    where:
+
+        RSSC_eff  = effective self-consumption rate
+        RSSC_base = baseline no-EV self-consumption
+        EV_home   = share of EV charging available at home
+        EV_flex   = share of charging that can be shifted to solar hours
+        alpha     = strength of self-consumption uplift
+
+    This is the strongest literature-backed mechanism.
+
+
+Mechanism B: EVs increase the effective rooftop ceiling
+
+    EVs can make larger rooftop PV systems more useful because households have more behind-the-meter demand to absorb PV generation.
+
+    Suggested form:
+
+        RSMX_eff = RSMX_base + beta * EV_share * EV_home * EV_flex
+                   * (RSMX_technical - RSMX_base)
+
+    where:
+
+        RSMX_base      = practical no-EV rooftop ceiling
+        RSMX_technical = higher physical/technical rooftop potential
+        EV_share       = EV adoption from FTT-Transport
+        beta           = strength of ceiling uplift
+
+    This mechanism is plausible and defensible as a scenario/sensitivity assumption, but it should be presented more carefully than the RSSC mechanism.
+
+
+15. Literature defensibility of EV complementarity
+-------------------------------------------------
+The literature strongly supports the idea that EV charging can increase PV self-consumption and self-sufficiency, especially with smart or flexible charging.
+
+Relevant literature includes:
+
+    - Studies quantifying PV self-consumption with EV home charging.
+    - Gudmunds et al. (2020), on self-consumption and self-sufficiency for household solar producers when introducing an EV.
+    - Studies on improved PV self-consumption with distributed and centralised smart EV charging.
+    - Reviews of smart EV charging considering PV production and household electricity consumption.
+
+The ceiling-uplift mechanism is not a universal empirical law. It should be framed as a modelled EV-enabled expansion of practical rooftop potential, bounded by technical rooftop potential and tested through sensitivity analysis.
+
+
+16. Recommended thesis scenario design
+--------------------------------------
+For thesis defensibility, the next simulations should compare at least three cases:
+
+    1. No EV coupling
+       RSSC = RSSC_base
+       RSMX = RSMX_base
+
+    2. EV self-consumption coupling only
+       RSSC = RSSC_eff
+       RSMX = RSMX_base
+
+    3. EV self-consumption and ceiling coupling
+       RSSC = RSSC_eff
+       RSMX = RSMX_eff
+
+This structure allows the thesis to show whether EVs materially increase rooftop PV capacity/generation beyond the no-coupling baseline.
+
+
+17. Key thesis interpretation
+-----------------------------
+The current rooftop module is now a plausible baseline small-scale power model. It is not yet the full PhD contribution because the FTT-Transport coupling has not been implemented.
+
+The thesis contribution should be:
+
+    EV uptake creates flexible household electricity demand.
+    Flexible EV charging increases rooftop PV self-consumption.
+    Higher self-consumption improves rooftop PV economics.
+    In some scenarios, EVs also expand the practical rooftop adoption ceiling.
+    This creates a measurable complementarity between transport electrification and small-scale rooftop solar adoption.
+
+The important methodological point is that the no-EV rooftop ceiling must leave room for EV complementarity to matter. If rooftop PV saturates too quickly without EVs, then the coupling has little explanatory power. Therefore, RSMX should be treated as a baseline no-EV practical ceiling, while EV uptake can dynamically increase effective self-consumption and possibly the effective ceiling.
+
+
+18. Remaining work
+------------------
+The main remaining steps are:
+
+    1. Identify FTT-Transport variables that represent EV adoption by region.
+    2. Decide how to estimate home-charging and flexible-charging shares.
+    3. Add RSSC_eff to the rooftop cost calculation.
+    4. Add optional RSMX_eff as a sensitivity/scenario mechanism.
+    5. Run no-coupling, RSSC-only coupling, and RSSC+ceiling coupling scenarios.
+    6. Compare rooftop capacity, generation, household shares, self-consumption, and avoided grid demand.
+    7. Document uncertainty and sensitivity ranges for alpha and beta.
+
