@@ -1,5 +1,5 @@
 # IO CHECK SUMMARY YEAR: 2036
-# Generated: 2026-04-09T17:59:20
+# Generated: 2026-06-03T18:48:14
 # Tech key: '23 Rooftop Solar' (index 22)
 # Iterations: 71
 # Print limits: max_items=20, edge_items=5
@@ -7,783 +7,783 @@
 
 === Iteration 1 ===
 INPUTS
-  Rooftop Solar Capacity: 13,492.7
+  Rooftop Solar Capacity: 6,490.93
   Household Demand: 1,240.98
-  Rooftop Solar Std: 43.0826
+  Rooftop Solar Std: 65.2513
   Household Electricity Price: 5,035.13
 OUTPUTS
-  Shares: rooftop=0.935411, grid=0.0645886
-  Costs:  rooftop=43.0826, grid=432.943
-  Cost Std: rooftop=13.8797, grid=129.883
+  Shares: rooftop=0.449997, grid=0.550003
+  Costs:  rooftop=-1,391.62, grid=0
+  Cost Std: rooftop=15.6918, grid=0
 
 === Iteration 2 ===
 INPUTS
-  Rooftop Solar Capacity: 9,798.77
+  Rooftop Solar Capacity: 2,211.95
   Household Demand: 997.412
-  Rooftop Solar Std: 52.687
+  Rooftop Solar Std: 95.1726
   Household Electricity Price: 3,906.83
 OUTPUTS
-  Shares: rooftop=0.846916, grid=0.153084
-  Costs:  rooftop=52.687, grid=335.658
-  Cost Std: rooftop=17.4377, grid=100.697
+  Shares: rooftop=0.191181, grid=0.808819
+  Costs:  rooftop=53.9758, grid=0
+  Cost Std: rooftop=20.7899, grid=0
 
 === Iteration 3 ===
 INPUTS
-  Rooftop Solar Capacity: 103,240
+  Rooftop Solar Capacity: 60,582.4
   Household Demand: 9,471.73
-  Rooftop Solar Std: 29.1859
+  Rooftop Solar Std: 42.5376
   Household Electricity Price: 6,403.44
 OUTPUTS
-  Shares: rooftop=0.937254, grid=0.0627457
-  Costs:  rooftop=29.1859, grid=550.597
-  Cost Std: rooftop=8.55625, grid=165.179
+  Shares: rooftop=0.549994, grid=0.450006
+  Costs:  rooftop=-2,225.78, grid=0
+  Cost Std: rooftop=9.72376, grid=0
 
 === Iteration 4 ===
 INPUTS
-  Rooftop Solar Capacity: 8,828.45
+  Rooftop Solar Capacity: 8,779.88
   Household Demand: 1,307.05
-  Rooftop Solar Std: 27.6325
+  Rooftop Solar Std: 29.0037
   Household Electricity Price: 3,258.03
 OUTPUTS
-  Shares: rooftop=0.581627, grid=0.418373
-  Costs:  rooftop=27.6325, grid=280.14
-  Cost Std: rooftop=8.36351, grid=84.042
+  Shares: rooftop=0.578427, grid=0.421573
+  Costs:  rooftop=-1,576.16, grid=0
+  Cost Std: rooftop=8.77851, grid=0
 
 === Iteration 5 ===
 INPUTS
-  Rooftop Solar Capacity: 50,463.1
+  Rooftop Solar Capacity: 42,056.7
   Household Demand: 6,093.34
-  Rooftop Solar Std: 22.944
+  Rooftop Solar Std: 24.0835
   Household Electricity Price: 5,731.47
 OUTPUTS
-  Shares: rooftop=0.712287, grid=0.287713
-  Costs:  rooftop=22.944, grid=492.818
-  Cost Std: rooftop=7.12704, grid=147.845
+  Shares: rooftop=0.59363, grid=0.40637
+  Costs:  rooftop=-2,728.48, grid=0
+  Cost Std: rooftop=7.48103, grid=0
 
 === Iteration 6 ===
 INPUTS
-  Rooftop Solar Capacity: 70,453.2
+  Rooftop Solar Capacity: 59,843.9
   Household Demand: 8,653.74
-  Rooftop Solar Std: 29.6422
+  Rooftop Solar Std: 43.782
   Household Electricity Price: 4,247.37
 OUTPUTS
-  Shares: rooftop=0.697098, grid=0.302902
-  Costs:  rooftop=29.6422, grid=365.208
-  Cost Std: rooftop=9.04004, grid=109.563
+  Shares: rooftop=0.592124, grid=0.407876
+  Costs:  rooftop=-1,636.31, grid=0
+  Cost Std: rooftop=10.2682, grid=0
 
 === Iteration 7 ===
 INPUTS
-  Rooftop Solar Capacity: 2,417.31
+  Rooftop Solar Capacity: 1,089.79
   Household Demand: 930.431
-  Rooftop Solar Std: 84.6037
+  Rooftop Solar Std: 155.374
   Household Electricity Price: 3,263.53
 OUTPUTS
-  Shares: rooftop=0.223164, grid=0.776836
-  Costs:  rooftop=84.6037, grid=280.613
-  Cost Std: rooftop=29.0314, grid=84.1838
+  Shares: rooftop=0.100609, grid=0.899391
+  Costs:  rooftop=-579.107, grid=0
+  Cost Std: rooftop=34.5359, grid=0
 
 === Iteration 8 ===
 INPUTS
-  Rooftop Solar Capacity: 67,909
+  Rooftop Solar Capacity: 46,524.2
   Household Demand: 6,169.62
-  Rooftop Solar Std: 28.3051
+  Rooftop Solar Std: 29.7105
   Household Electricity Price: 5,351.62
 OUTPUTS
-  Shares: rooftop=0.948737, grid=0.0512634
-  Costs:  rooftop=28.3051, grid=460.156
-  Cost Std: rooftop=8.87049, grid=138.047
+  Shares: rooftop=0.649976, grid=0.350024
+  Costs:  rooftop=-2,505.21, grid=0
+  Cost Std: rooftop=9.31091, grid=0
 
 === Iteration 9 ===
 INPUTS
-  Rooftop Solar Capacity: 642.423
+  Rooftop Solar Capacity: 245.022
   Household Demand: 59.9874
-  Rooftop Solar Std: 46.9598
+  Rooftop Solar Std: 84.2751
   Household Electricity Price: 5,369.65
 OUTPUTS
-  Shares: rooftop=0.917626, grid=0.0823739
-  Costs:  rooftop=46.9598, grid=461.707
-  Cost Std: rooftop=15.3667, grid=138.512
+  Shares: rooftop=0.349985, grid=0.650015
+  Costs:  rooftop=-1,267.11, grid=0
+  Cost Std: rooftop=18.3308, grid=0
 
 === Iteration 10 ===
 INPUTS
-  Rooftop Solar Capacity: 21,596.7
+  Rooftop Solar Capacity: 13,202.2
   Household Demand: 1,913.46
-  Rooftop Solar Std: 32.1517
+  Rooftop Solar Std: 48.016
   Household Electricity Price: 3,805.99
 OUTPUTS
-  Shares: rooftop=0.972956, grid=0.0270442
-  Costs:  rooftop=32.1517, grid=327.256
-  Cost Std: rooftop=9.86995, grid=98.1769
+  Shares: rooftop=0.594773, grid=0.405227
+  Costs:  rooftop=-1,063.63, grid=0
+  Cost Std: rooftop=11.1212, grid=0
 
 === Iteration 11 ===
 INPUTS
-  Rooftop Solar Capacity: 10,253.5
+  Rooftop Solar Capacity: 6,432.2
   Household Demand: 1,002.78
-  Rooftop Solar Std: 33.7228
+  Rooftop Solar Std: 50.3005
   Household Electricity Price: 5,192.66
 OUTPUTS
-  Shares: rooftop=0.876622, grid=0.123378
-  Costs:  rooftop=33.7228, grid=446.488
-  Cost Std: rooftop=10.5689, grid=133.946
+  Shares: rooftop=0.549921, grid=0.450079
+  Costs:  rooftop=-1,803.14, grid=0
+  Cost Std: rooftop=11.9923, grid=0
 
 === Iteration 12 ===
 INPUTS
-  Rooftop Solar Capacity: 11,837.1
+  Rooftop Solar Capacity: 10,309.9
   Household Demand: 1,278.91
-  Rooftop Solar Std: 26.7627
+  Rooftop Solar Std: 28.0912
   Household Electricity Price: 2,330.82
 OUTPUTS
-  Shares: rooftop=0.79591, grid=0.20409
-  Costs:  rooftop=26.7627, grid=200.415
-  Cost Std: rooftop=8.04835, grid=60.1244
+  Shares: rooftop=0.693222, grid=0.306778
+  Costs:  rooftop=-1,075.65, grid=0
+  Cost Std: rooftop=8.44785, grid=0
 
 === Iteration 13 ===
 INPUTS
-  Rooftop Solar Capacity: 4,038.12
+  Rooftop Solar Capacity: 564.282
   Household Demand: 1,349.85
-  Rooftop Solar Std: 85.3256
+  Rooftop Solar Std: 156.736
   Household Electricity Price: 2,837.04
 OUTPUTS
-  Shares: rooftop=0.256849, grid=0.743151
-  Costs:  rooftop=85.3256, grid=243.941
-  Cost Std: rooftop=29.2943, grid=73.1824
+  Shares: rooftop=0.0358919, grid=0.964108
+  Costs:  rooftop=706.037, grid=0
+  Cost Std: rooftop=34.8488, grid=0
 
 === Iteration 14 ===
 INPUTS
-  Rooftop Solar Capacity: 14,153.5
+  Rooftop Solar Capacity: 1,775.09
   Household Demand: 2,666.63
-  Rooftop Solar Std: 64.1628
+  Rooftop Solar Std: 116.751
   Household Electricity Price: 2,519.01
 OUTPUTS
-  Shares: rooftop=0.455878, grid=0.544122
-  Costs:  rooftop=64.1628, grid=201.372
-  Cost Std: rooftop=21.6122, grid=60.4116
+  Shares: rooftop=0.0571748, grid=0.942825
+  Costs:  rooftop=672.108, grid=0
+  Cost Std: rooftop=25.7382, grid=0
 
 === Iteration 15 ===
 INPUTS
-  Rooftop Solar Capacity: 48,250.3
+  Rooftop Solar Capacity: 26,635.3
   Household Demand: 6,948.76
-  Rooftop Solar Std: 49.8167
+  Rooftop Solar Std: 88.4484
   Household Electricity Price: 3,286.25
 OUTPUTS
-  Shares: rooftop=0.597662, grid=0.402338
-  Costs:  rooftop=49.8167, grid=273.885
-  Cost Std: rooftop=15.9544, grid=82.1654
+  Shares: rooftop=0.329924, grid=0.670076
+  Costs:  rooftop=-675.051, grid=0
+  Cost Std: rooftop=19.0439, grid=0
 
 === Iteration 16 ===
 INPUTS
-  Rooftop Solar Capacity: 7,830.52
+  Rooftop Solar Capacity: 5,911.62
   Household Demand: 1,022.06
-  Rooftop Solar Std: 52.5018
+  Rooftop Solar Std: 55.1149
   Household Electricity Price: 4,887.91
 OUTPUTS
-  Shares: rooftop=0.658065, grid=0.341935
-  Costs:  rooftop=52.5018, grid=414.318
-  Cost Std: rooftop=17.3705, grid=124.295
+  Shares: rooftop=0.496804, grid=0.503196
+  Costs:  rooftop=-1,517.13, grid=0
+  Cost Std: rooftop=18.235, grid=0
 
 === Iteration 17 ===
 INPUTS
-  Rooftop Solar Capacity: 1,663.49
+  Rooftop Solar Capacity: 643.854
   Household Demand: 166.305
-  Rooftop Solar Std: 65.3994
+  Rooftop Solar Std: 100.183
   Household Electricity Price: 2,589.37
 OUTPUTS
-  Shares: rooftop=0.861281, grid=0.138719
-  Costs:  rooftop=65.3994, grid=222.646
-  Cost Std: rooftop=22.0586, grid=66.7937
+  Shares: rooftop=0.333358, grid=0.666642
+  Costs:  rooftop=-103.267, grid=0
+  Cost Std: rooftop=24.9516, grid=0
 
 === Iteration 18 ===
 INPUTS
-  Rooftop Solar Capacity: 2,007.16
+  Rooftop Solar Capacity: 1,742.11
   Household Demand: 188.61
-  Rooftop Solar Std: 37.1556
+  Rooftop Solar Std: 38.9893
   Household Electricity Price: 4,820.68
 OUTPUTS
-  Shares: rooftop=0.917891, grid=0.0821091
-  Costs:  rooftop=37.1556, grid=414.504
-  Cost Std: rooftop=11.8074, grid=124.351
+  Shares: rooftop=0.796682, grid=0.203318
+  Costs:  rooftop=-2,447.89, grid=0
+  Cost Std: rooftop=12.39, grid=0
 
 === Iteration 19 ===
 INPUTS
-  Rooftop Solar Capacity: 551.016
+  Rooftop Solar Capacity: 156.968
   Household Demand: 138.709
-  Rooftop Solar Std: 84.726
+  Rooftop Solar Std: 130.602
   Household Electricity Price: 3,729.21
 OUTPUTS
-  Shares: rooftop=0.341642, grid=0.658358
-  Costs:  rooftop=84.726, grid=323.338
-  Cost Std: rooftop=29.0766, grid=97.0015
+  Shares: rooftop=0.0973234, grid=0.902677
+  Costs:  rooftop=-281.893, grid=0
+  Cost Std: rooftop=32.8664, grid=0
 
 === Iteration 20 ===
 INPUTS
-  Rooftop Solar Capacity: 2,521.36
+  Rooftop Solar Capacity: 983.604
   Household Demand: 282.015
-  Rooftop Solar Std: 81.0202
+  Rooftop Solar Std: 124.78
   Household Electricity Price: 3,705.96
 OUTPUTS
-  Shares: rooftop=0.767716, grid=0.232284
-  Costs:  rooftop=81.0202, grid=318.655
-  Cost Std: rooftop=27.731, grid=95.5966
+  Shares: rooftop=0.299492, grid=0.700508
+  Costs:  rooftop=-261.984, grid=0
+  Cost Std: rooftop=31.3514, grid=0
 
 === Iteration 21 ===
 INPUTS
-  Rooftop Solar Capacity: 8,951.7
+  Rooftop Solar Capacity: 5,985.26
   Household Demand: 858.187
-  Rooftop Solar Std: 51.5021
+  Rooftop Solar Std: 54.0716
   Household Electricity Price: 2,906.29
 OUTPUTS
-  Shares: rooftop=0.897008, grid=0.102992
-  Costs:  rooftop=51.5021, grid=215.874
-  Cost Std: rooftop=17.0092, grid=64.7623
+  Shares: rooftop=0.599755, grid=0.400245
+  Costs:  rooftop=-700.86, grid=0
+  Cost Std: rooftop=17.8578, grid=0
 
 === Iteration 22 ===
 INPUTS
-  Rooftop Solar Capacity: 618.709
+  Rooftop Solar Capacity: 419.669
   Household Demand: 58.2506
-  Rooftop Solar Std: 190.932
+  Rooftop Solar Std: 201.201
   Household Electricity Price: 2,098.78
 OUTPUTS
-  Shares: rooftop=0.911111, grid=0.0888893
-  Costs:  rooftop=190.932, grid=180.462
-  Cost Std: rooftop=63.2809, grid=54.1387
+  Shares: rooftop=0.618004, grid=0.381996
+  Costs:  rooftop=2,696.42, grid=0
+  Cost Std: rooftop=66.6903, grid=0
 
 === Iteration 23 ===
 INPUTS
-  Rooftop Solar Capacity: 35,373
+  Rooftop Solar Capacity: 21,491.6
   Household Demand: 3,363.93
-  Rooftop Solar Std: 39.0884
+  Rooftop Solar Std: 41.0347
   Household Electricity Price: 5,747.48
 OUTPUTS
-  Shares: rooftop=0.905198, grid=0.0948025
-  Costs:  rooftop=39.0884, grid=463.293
-  Cost Std: rooftop=12.5057, grid=138.988
+  Shares: rooftop=0.549973, grid=0.450027
+  Costs:  rooftop=-2,018.7, grid=0
+  Cost Std: rooftop=13.1284, grid=0
 
 === Iteration 24 ===
 INPUTS
-  Rooftop Solar Capacity: 2,675.8
+  Rooftop Solar Capacity: 1,781.64
   Household Demand: 278.389
-  Rooftop Solar Std: 41.1137
+  Rooftop Solar Std: 43.1607
   Household Electricity Price: 2,735.52
 OUTPUTS
-  Shares: rooftop=0.825572, grid=0.174428
-  Costs:  rooftop=41.1137, grid=235.213
-  Cost Std: rooftop=13.2455, grid=70.5638
+  Shares: rooftop=0.549693, grid=0.450307
+  Costs:  rooftop=-1,006.25, grid=0
+  Cost Std: rooftop=13.905, grid=0
 
 === Iteration 25 ===
 INPUTS
-  Rooftop Solar Capacity: 2,041.69
+  Rooftop Solar Capacity: 2,125.73
   Household Demand: 395.678
-  Rooftop Solar Std: 46.5171
+  Rooftop Solar Std: 48.8259
   Household Electricity Price: 4,712.05
 OUTPUTS
-  Shares: rooftop=0.44325, grid=0.55675
-  Costs:  rooftop=46.5171, grid=405.163
-  Cost Std: rooftop=15.2072, grid=121.549
+  Shares: rooftop=0.461494, grid=0.538506
+  Costs:  rooftop=-1,633.69, grid=0
+  Cost Std: rooftop=15.962, grid=0
 
 === Iteration 26 ===
 INPUTS
-  Rooftop Solar Capacity: 5,569.96
+  Rooftop Solar Capacity: 5,513.95
   Household Demand: 767.645
-  Rooftop Solar Std: 39.9736
+  Rooftop Solar Std: 41.9571
   Household Electricity Price: 2,418.77
 OUTPUTS
-  Shares: rooftop=0.621802, grid=0.378198
-  Costs:  rooftop=39.9736, grid=207.956
-  Cost Std: rooftop=12.8331, grid=62.3868
+  Shares: rooftop=0.61555, grid=0.38445
+  Costs:  rooftop=-960.337, grid=0
+  Cost Std: rooftop=13.4698, grid=0
 
 === Iteration 27 ===
 INPUTS
-  Rooftop Solar Capacity: 9,437.49
+  Rooftop Solar Capacity: 9,674
   Household Demand: 1,348.69
-  Rooftop Solar Std: 45.6355
+  Rooftop Solar Std: 47.9004
   Household Electricity Price: 3,490
 OUTPUTS
-  Shares: rooftop=0.601782, grid=0.398218
-  Costs:  rooftop=45.6355, grid=271.596
-  Cost Std: rooftop=14.8888, grid=81.4787
+  Shares: rooftop=0.616863, grid=0.383137
+  Costs:  rooftop=-1,235.24, grid=0
+  Cost Std: rooftop=15.6278, grid=0
 
 === Iteration 28 ===
 INPUTS
-  Rooftop Solar Capacity: 563.652
+  Rooftop Solar Capacity: 173.115
   Household Demand: 2,202.44
-  Rooftop Solar Std: 78.324
+  Rooftop Solar Std: 143.507
   Household Electricity Price: 1,709.24
 OUTPUTS
-  Shares: rooftop=0.0220013, grid=0.977999
-  Costs:  rooftop=78.324, grid=122.576
-  Cost Std: rooftop=26.7526, grid=36.7727
+  Shares: rooftop=0.00675727, grid=0.993243
+  Costs:  rooftop=1,167.79, grid=0
+  Cost Std: rooftop=31.8347, grid=0
 
 === Iteration 29 ===
 INPUTS
-  Rooftop Solar Capacity: 15,712.7
+  Rooftop Solar Capacity: 7,829.04
   Household Demand: 1,496.52
-  Rooftop Solar Std: 35.4004
+  Rooftop Solar Std: 62.4187
   Household Electricity Price: 4,571.69
 OUTPUTS
-  Shares: rooftop=0.903094, grid=0.0969062
-  Costs:  rooftop=35.4004, grid=469.815
-  Cost Std: rooftop=11.176, grid=140.944
+  Shares: rooftop=0.449977, grid=0.550023
+  Costs:  rooftop=-1,405.64, grid=0
+  Cost Std: rooftop=13.3587, grid=0
 
 === Iteration 30 ===
 INPUTS
   Rooftop Solar Capacity: 0
   Household Demand: 112.531
-  Rooftop Solar Std: 92.7633
+  Rooftop Solar Std: 170.788
   Household Electricity Price: 2,170.06
 OUTPUTS
   Shares: rooftop=0, grid=1
-  Costs:  rooftop=92.7633, grid=236.192
-  Cost Std: rooftop=31.9944, grid=70.8576
+  Costs:  rooftop=1,566.87, grid=0
+  Cost Std: rooftop=38.0509, grid=0
 
 === Iteration 31 ===
 INPUTS
-  Rooftop Solar Capacity: 1,370.64
+  Rooftop Solar Capacity: 1,615.61
   Household Demand: 439.228
-  Rooftop Solar Std: 53.6817
+  Rooftop Solar Std: 56.3467
   Household Electricity Price: 2,875.92
 OUTPUTS
-  Shares: rooftop=0.268289, grid=0.731711
-  Costs:  rooftop=53.6817, grid=242.984
-  Cost Std: rooftop=17.8086, grid=72.8951
+  Shares: rooftop=0.316238, grid=0.683762
+  Costs:  rooftop=-986.22, grid=0
+  Cost Std: rooftop=18.6927, grid=0
 
 === Iteration 32 ===
 INPUTS
-  Rooftop Solar Capacity: 18,663.8
+  Rooftop Solar Capacity: 34,040
   Household Demand: 4,945.82
-  Rooftop Solar Std: 32.8867
+  Rooftop Solar Std: 31.3085
   Household Electricity Price: 2,020.11
 OUTPUTS
-  Shares: rooftop=0.325167, grid=0.674833
-  Costs:  rooftop=32.8867, grid=60.757
-  Cost Std: rooftop=11.2125, grid=18.2271
+  Shares: rooftop=0.593055, grid=0.406945
+  Costs:  rooftop=-455.09, grid=0
+  Cost Std: rooftop=11.6222, grid=0
 
 === Iteration 33 ===
 INPUTS
-  Rooftop Solar Capacity: 546.17
+  Rooftop Solar Capacity: 681.442
   Household Demand: 229.227
-  Rooftop Solar Std: 44.4298
+  Rooftop Solar Std: 46.6348
   Household Electricity Price: 3,144.17
 OUTPUTS
-  Shares: rooftop=0.204777, grid=0.795223
-  Costs:  rooftop=44.4298, grid=270.377
-  Cost Std: rooftop=14.4514, grid=81.1131
+  Shares: rooftop=0.255495, grid=0.744505
+  Costs:  rooftop=-1,165.43, grid=0
+  Cost Std: rooftop=15.1686, grid=0
 
 === Iteration 34 ===
 INPUTS
-  Rooftop Solar Capacity: 778,345
+  Rooftop Solar Capacity: 529,035
   Household Demand: 112,801
-  Rooftop Solar Std: 39.6481
+  Rooftop Solar Std: 71.1152
   Household Electricity Price: 2,059.73
 OUTPUTS
-  Shares: rooftop=0.59373, grid=0.40627
-  Costs:  rooftop=39.6481, grid=198.816
-  Cost Std: rooftop=9.84735, grid=59.6448
+  Shares: rooftop=0.403553, grid=0.596447
+  Costs:  rooftop=-571.34, grid=0
+  Cost Std: rooftop=12.6844, grid=0
 
 === Iteration 35 ===
 INPUTS
-  Rooftop Solar Capacity: 218,882
+  Rooftop Solar Capacity: 85,292.8
   Household Demand: 21,144.8
-  Rooftop Solar Std: 71.1426
+  Rooftop Solar Std: 106.051
   Household Electricity Price: 3,320.2
 OUTPUTS
-  Shares: rooftop=0.890785, grid=0.109215
-  Costs:  rooftop=71.1426, grid=254.762
-  Cost Std: rooftop=22.1374, grid=76.4285
+  Shares: rooftop=0.347117, grid=0.652883
+  Costs:  rooftop=-409.958, grid=0
+  Cost Std: rooftop=25.1472, grid=0
 
 === Iteration 36 ===
 INPUTS
-  Rooftop Solar Capacity: 12,481.1
+  Rooftop Solar Capacity: 1,520.01
   Household Demand: 9,379.8
-  Rooftop Solar Std: 50.1835
+  Rooftop Solar Std: 89.9056
   Household Electricity Price: 1,658.1
 OUTPUTS
-  Shares: rooftop=0.114332, grid=0.885668
-  Costs:  rooftop=50.1835, grid=127.25
-  Cost Std: rooftop=16.3766, grid=38.175
+  Shares: rooftop=0.0139239, grid=0.986076
+  Costs:  rooftop=174.763, grid=0
+  Cost Std: rooftop=19.5391, grid=0
 
 === Iteration 37 ===
 INPUTS
-  Rooftop Solar Capacity: 78,772.9
+  Rooftop Solar Capacity: 61,677.1
   Household Demand: 7,115.09
-  Rooftop Solar Std: 15.894
+  Rooftop Solar Std: 23.4496
   Household Electricity Price: 3,239.62
 OUTPUTS
-  Shares: rooftop=0.95766, grid=0.0423398
-  Costs:  rooftop=15.894, grid=254.646
-  Cost Std: rooftop=4.19262, grid=76.3937
+  Shares: rooftop=0.749823, grid=0.250177
+  Costs:  rooftop=-1,688.88, grid=0
+  Cost Std: rooftop=6.49781, grid=0
 
 === Iteration 38 ===
 INPUTS
-  Rooftop Solar Capacity: 6,236.36
+  Rooftop Solar Capacity: 6,362.99
   Household Demand: 1,276.7
-  Rooftop Solar Std: 42.7524
+  Rooftop Solar Std: 44.8751
   Household Electricity Price: 2,858.23
 OUTPUTS
-  Shares: rooftop=0.421739, grid=0.578261
-  Costs:  rooftop=42.7524, grid=264.888
-  Cost Std: rooftop=11.1941, grid=79.4664
+  Shares: rooftop=0.430302, grid=0.569698
+  Costs:  rooftop=-1,035, grid=0
+  Cost Std: rooftop=11.7499, grid=0
 
 === Iteration 39 ===
 INPUTS
-  Rooftop Solar Capacity: 170.857
+  Rooftop Solar Capacity: 424.932
   Household Demand: 17,236.9
-  Rooftop Solar Std: 208.584
+  Rooftop Solar Std: 175.152
   Household Electricity Price: 2,201.61
 OUTPUTS
-  Shares: rooftop=0.000855472, grid=0.999145
-  Costs:  rooftop=208.584, grid=102.978
-  Cost Std: rooftop=74.0476, grid=30.8933
+  Shares: rooftop=0.00212761, grid=0.997872
+  Costs:  rooftop=410.098, grid=0
+  Cost Std: rooftop=77.7242, grid=0
 
 === Iteration 40 ===
 INPUTS
-  Rooftop Solar Capacity: 35.3881
+  Rooftop Solar Capacity: 82.3975
   Household Demand: 526.169
-  Rooftop Solar Std: 113.477
+  Rooftop Solar Std: 175.869
   Household Electricity Price: 1,998.98
 OUTPUTS
-  Shares: rooftop=0.00579305, grid=0.994207
-  Costs:  rooftop=113.477, grid=28.2087
-  Cost Std: rooftop=31.7391, grid=8.46262
+  Shares: rooftop=0.0134885, grid=0.986511
+  Costs:  rooftop=484.762, grid=0
+  Cost Std: rooftop=37.176, grid=0
 
 === Iteration 41 ===
 INPUTS
-  Rooftop Solar Capacity: 1.36992e+06
+  Rooftop Solar Capacity: 903,220
   Household Demand: 141,834
-  Rooftop Solar Std: 20.8445
+  Rooftop Solar Std: 17.9815
   Household Electricity Price: 1,656.93
 OUTPUTS
-  Shares: rooftop=0.833899, grid=0.166101
-  Costs:  rooftop=20.8445, grid=163.664
-  Cost Std: rooftop=6.85022, grid=49.0993
+  Shares: rooftop=0.549808, grid=0.450192
+  Costs:  rooftop=-886.974, grid=0
+  Cost Std: rooftop=7.01274, grid=0
 
 === Iteration 42 ===
 INPUTS
-  Rooftop Solar Capacity: 324,102
+  Rooftop Solar Capacity: 461,114
   Household Demand: 64,115.6
-  Rooftop Solar Std: 28.0615
+  Rooftop Solar Std: 23.9335
   Household Electricity Price: 1,369.8
 OUTPUTS
-  Shares: rooftop=0.438123, grid=0.561877
-  Costs:  rooftop=28.0615, grid=88.4045
-  Cost Std: rooftop=9.62852, grid=26.5214
+  Shares: rooftop=0.623335, grid=0.376665
+  Costs:  rooftop=-527.673, grid=0
+  Cost Std: rooftop=9.86632, grid=0
 
 === Iteration 43 ===
 INPUTS
-  Rooftop Solar Capacity: 13,682.2
+  Rooftop Solar Capacity: 41,940.8
   Household Demand: 6,153.66
-  Rooftop Solar Std: 45.1175
+  Rooftop Solar Std: 43.026
   Household Electricity Price: 1,151.53
 OUTPUTS
-  Shares: rooftop=0.191444, grid=0.808556
-  Costs:  rooftop=45.1175, grid=72.9814
-  Cost Std: rooftop=15.1648, grid=21.8944
+  Shares: rooftop=0.586843, grid=0.413157
+  Costs:  rooftop=-334.391, grid=0
+  Cost Std: rooftop=15.7166, grid=0
 
 === Iteration 44 ===
 INPUTS
-  Rooftop Solar Capacity: 165,818
+  Rooftop Solar Capacity: 137,639
   Household Demand: 18,371.3
-  Rooftop Solar Std: 27.0938
+  Rooftop Solar Std: 25.905
   Household Electricity Price: 2,678.91
 OUTPUTS
-  Shares: rooftop=0.781445, grid=0.218555
-  Costs:  rooftop=27.0938, grid=124.497
-  Cost Std: rooftop=8.90707, grid=37.3492
+  Shares: rooftop=0.648649, grid=0.351351
+  Costs:  rooftop=-946.079, grid=0
+  Cost Std: rooftop=9.22883, grid=0
 
 === Iteration 45 ===
 INPUTS
-  Rooftop Solar Capacity: 1,355.24
+  Rooftop Solar Capacity: 8,839.51
   Household Demand: 6,389
-  Rooftop Solar Std: 71.7348
+  Rooftop Solar Std: 68.2052
   Household Electricity Price: 9,559.29
 OUTPUTS
-  Shares: rooftop=0.0183715, grid=0.981628
-  Costs:  rooftop=71.7348, grid=127.964
-  Cost Std: rooftop=24.727, grid=38.3892
+  Shares: rooftop=0.119828, grid=0.880172
+  Costs:  rooftop=-671.481, grid=0
+  Cost Std: rooftop=25.6341, grid=0
 
 === Iteration 46 ===
 INPUTS
-  Rooftop Solar Capacity: 2,029.38
+  Rooftop Solar Capacity: 2,518.65
   Household Demand: 3,205.59
-  Rooftop Solar Std: 39.4723
+  Rooftop Solar Std: 37.7367
   Household Electricity Price: 2,486.67
 OUTPUTS
-  Shares: rooftop=0.0547836, grid=0.945216
-  Costs:  rooftop=39.4723, grid=154.179
-  Cost Std: rooftop=5.2329, grid=46.2536
+  Shares: rooftop=0.0679916, grid=0.932008
+  Costs:  rooftop=-746.723, grid=0
+  Cost Std: rooftop=5.04125, grid=0
 
 === Iteration 47 ===
 INPUTS
-  Rooftop Solar Capacity: 106,640
+  Rooftop Solar Capacity: 91,729.8
   Household Demand: 13,429.1
-  Rooftop Solar Std: 46.4067
+  Rooftop Solar Std: 44.2393
   Household Electricity Price: 7,716.36
 OUTPUTS
-  Shares: rooftop=0.687101, grid=0.312899
-  Costs:  rooftop=46.4067, grid=663.488
-  Cost Std: rooftop=15.6481, grid=199.046
+  Shares: rooftop=0.591031, grid=0.408969
+  Costs:  rooftop=-3,456.02, grid=0
+  Cost Std: rooftop=16.2181, grid=0
 
 === Iteration 48 ===
 INPUTS
-  Rooftop Solar Capacity: 85,587.5
+  Rooftop Solar Capacity: 34,125.5
   Household Demand: 9,679.3
-  Rooftop Solar Std: 66.0681
+  Rooftop Solar Std: 97.558
   Household Electricity Price: 1,519.54
 OUTPUTS
-  Shares: rooftop=0.765449, grid=0.234551
-  Costs:  rooftop=66.0681, grid=154.077
-  Cost Std: rooftop=19.322, grid=46.223
+  Shares: rooftop=0.3052, grid=0.6948
+  Costs:  rooftop=-67.1612, grid=0
+  Cost Std: rooftop=21.9653, grid=0
 
 === Iteration 49 ===
 INPUTS
-  Rooftop Solar Capacity: 57,279.4
+  Rooftop Solar Capacity: 26,993
   Household Demand: 6,671.88
-  Rooftop Solar Std: 48.3406
+  Rooftop Solar Std: 78.4329
   Household Electricity Price: 1,263.48
 OUTPUTS
-  Shares: rooftop=0.742327, grid=0.257673
-  Costs:  rooftop=48.3406, grid=127.962
-  Cost Std: rooftop=12.3189, grid=38.3885
+  Shares: rooftop=0.349823, grid=0.650177
+  Costs:  rooftop=-335.07, grid=0
+  Cost Std: rooftop=14.8244, grid=0
 
 === Iteration 50 ===
 INPUTS
-  Rooftop Solar Capacity: 853.591
+  Rooftop Solar Capacity: 5,427.79
   Household Demand: 17,315.2
-  Rooftop Solar Std: 49.4209
+  Rooftop Solar Std: 47.2727
   Household Electricity Price: 1,111.02
 OUTPUTS
-  Shares: rooftop=0.00427483, grid=0.995725
-  Costs:  rooftop=49.4209, grid=68.476
-  Cost Std: rooftop=16.1861, grid=20.5428
+  Shares: rooftop=0.0271827, grid=0.972817
+  Costs:  rooftop=-288.819, grid=0
+  Cost Std: rooftop=16.77, grid=0
 
 === Iteration 51 ===
 INPUTS
-  Rooftop Solar Capacity: 234,030
+  Rooftop Solar Capacity: 170,116
   Household Demand: 26,858.5
-  Rooftop Solar Std: 33.4279
+  Rooftop Solar Std: 32.2187
   Household Electricity Price: 1,625.09
 OUTPUTS
-  Shares: rooftop=0.755441, grid=0.244559
-  Costs:  rooftop=33.4279, grid=139.732
-  Cost Std: rooftop=4.56383, grid=41.9197
+  Shares: rooftop=0.54913, grid=0.45087
+  Costs:  rooftop=-796.943, grid=0
+  Cost Std: rooftop=4.45125, grid=0
 
 === Iteration 52 ===
 INPUTS
-  Rooftop Solar Capacity: 1,123.72
+  Rooftop Solar Capacity: 5,255.53
   Household Demand: 20,347
-  Rooftop Solar Std: 73.2505
+  Rooftop Solar Std: 76.8875
   Household Electricity Price: 1,706.04
 OUTPUTS
-  Shares: rooftop=0.00478177, grid=0.995218
-  Costs:  rooftop=73.2505, grid=146.693
-  Cost Std: rooftop=20.0514, grid=44.0078
+  Shares: rooftop=0.0223638, grid=0.977636
+  Costs:  rooftop=-738.343, grid=0
+  Cost Std: rooftop=21.047, grid=0
 
 === Iteration 53 ===
 INPUTS
-  Rooftop Solar Capacity: 132,454
+  Rooftop Solar Capacity: 119,872
   Household Demand: 23,381.7
-  Rooftop Solar Std: 31.0665
+  Rooftop Solar Std: 32.609
   Household Electricity Price: 1,641.56
 OUTPUTS
-  Shares: rooftop=0.489154, grid=0.510846
-  Costs:  rooftop=31.0665, grid=141.149
-  Cost Std: rooftop=7.97525, grid=42.3447
+  Shares: rooftop=0.442687, grid=0.557313
+  Costs:  rooftop=-706.477, grid=0
+  Cost Std: rooftop=8.37124, grid=0
 
 === Iteration 54 ===
 INPUTS
-  Rooftop Solar Capacity: 3,759.39
+  Rooftop Solar Capacity: 16,792.4
   Household Demand: 3,469.67
-  Rooftop Solar Std: 108.804
+  Rooftop Solar Std: 114.204
   Household Electricity Price: 1,354.45
 OUTPUTS
-  Shares: rooftop=0.0933283, grid=0.906672
-  Costs:  rooftop=108.804, grid=38.1418
-  Cost Std: rooftop=37.8181, grid=11.4425
+  Shares: rooftop=0.416879, grid=0.583121
+  Costs:  rooftop=-123.942, grid=0
+  Cost Std: rooftop=39.6952, grid=0
 
 === Iteration 55 ===
 INPUTS
-  Rooftop Solar Capacity: 11,021.8
+  Rooftop Solar Capacity: 21,290.5
   Household Demand: 19,072.2
-  Rooftop Solar Std: 33.3999
+  Rooftop Solar Std: 35.0582
   Household Electricity Price: 808.891
 OUTPUTS
-  Shares: rooftop=0.0500568, grid=0.949943
-  Costs:  rooftop=33.3999, grid=78.0695
-  Cost Std: rooftop=10.4533, grid=23.4208
+  Shares: rooftop=0.0966929, grid=0.903307
+  Costs:  rooftop=-342.815, grid=0
+  Cost Std: rooftop=10.9723, grid=0
 
 === Iteration 56 ===
 INPUTS
-  Rooftop Solar Capacity: 1,944.12
+  Rooftop Solar Capacity: 3,115.08
   Household Demand: 2,570.23
-  Rooftop Solar Std: 42.1476
+  Rooftop Solar Std: 40.3758
   Household Electricity Price: 3,046.19
 OUTPUTS
-  Shares: rooftop=0.0657014, grid=0.934299
-  Costs:  rooftop=42.1476, grid=144.383
-  Cost Std: rooftop=11.0191, grid=43.3149
+  Shares: rooftop=0.105274, grid=0.894726
+  Costs:  rooftop=-763.717, grid=0
+  Cost Std: rooftop=11.3341, grid=0
 
 === Iteration 57 ===
 INPUTS
-  Rooftop Solar Capacity: 10,773.7
+  Rooftop Solar Capacity: 22,868.7
   Household Demand: 6,968.12
-  Rooftop Solar Std: 43.867
+  Rooftop Solar Std: 41.8303
   Household Electricity Price: 1,625.32
 OUTPUTS
-  Shares: rooftop=0.134181, grid=0.865819
-  Costs:  rooftop=43.867, grid=86.7866
-  Cost Std: rooftop=14.7536, grid=26.036
+  Shares: rooftop=0.284817, grid=0.715183
+  Costs:  rooftop=-377.671, grid=0
+  Cost Std: rooftop=15.2905, grid=0
 
 === Iteration 58 ===
 INPUTS
-  Rooftop Solar Capacity: 1,182.22
+  Rooftop Solar Capacity: 3,945.36
   Household Demand: 5,602.51
-  Rooftop Solar Std: 59.5847
+  Rooftop Solar Std: 62.5431
   Household Electricity Price: 1,695.3
 OUTPUTS
-  Shares: rooftop=0.0183259, grid=0.981674
-  Costs:  rooftop=59.5847, grid=145.77
-  Cost Std: rooftop=16.0818, grid=43.7309
+  Shares: rooftop=0.0611581, grid=0.938842
+  Costs:  rooftop=-738.16, grid=0
+  Cost Std: rooftop=16.8802, grid=0
 
 === Iteration 59 ===
 INPUTS
-  Rooftop Solar Capacity: 6,998.33
+  Rooftop Solar Capacity: 7,123.54
   Household Demand: 1,303.58
-  Rooftop Solar Std: 40.4807
+  Rooftop Solar Std: 42.4906
   Household Electricity Price: 2,014.82
 OUTPUTS
-  Shares: rooftop=0.466644, grid=0.533356
-  Costs:  rooftop=40.4807, grid=173.243
-  Cost Std: rooftop=10.5355, grid=51.973
+  Shares: rooftop=0.474993, grid=0.525007
+  Costs:  rooftop=-924.986, grid=0
+  Cost Std: rooftop=11.0586, grid=0
 
 === Iteration 60 ===
 INPUTS
-  Rooftop Solar Capacity: 11,559.9
+  Rooftop Solar Capacity: 27,305.3
   Household Demand: 5,234.27
-  Rooftop Solar Std: 34.1715
+  Rooftop Solar Std: 32.8283
   Household Electricity Price: 935.122
 OUTPUTS
-  Shares: rooftop=0.191529, grid=0.808471
-  Costs:  rooftop=34.1715, grid=72.0549
-  Cost Std: rooftop=5.1487, grid=21.6165
+  Shares: rooftop=0.452404, grid=0.547596
+  Costs:  rooftop=-435.841, grid=0
+  Cost Std: rooftop=5.08131, grid=0
 
 === Iteration 61 ===
 INPUTS
-  Rooftop Solar Capacity: 219.136
+  Rooftop Solar Capacity: 816.163
   Household Demand: 2,121.23
-  Rooftop Solar Std: 52.4485
+  Rooftop Solar Std: 50.1069
   Household Electricity Price: 679.596
 OUTPUTS
-  Shares: rooftop=0.00891745, grid=0.991083
-  Costs:  rooftop=52.4485, grid=28.0424
-  Cost Std: rooftop=14.0089, grid=8.41272
+  Shares: rooftop=0.0332127, grid=0.966787
+  Costs:  rooftop=-6.42448, grid=0
+  Cost Std: rooftop=14.4141, grid=0
 
 === Iteration 62 ===
 INPUTS
-  Rooftop Solar Capacity: 11,340.9
+  Rooftop Solar Capacity: 11,522.4
   Household Demand: 3,483.44
-  Rooftop Solar Std: 43.1414
+  Rooftop Solar Std: 41.3146
   Household Electricity Price: 35,100
 OUTPUTS
-  Shares: rooftop=0.283126, grid=0.716874
-  Costs:  rooftop=43.1414, grid=3,018.06
-  Cost Std: rooftop=11.3075, grid=905.417
+  Shares: rooftop=0.287656, grid=0.712344
+  Costs:  rooftop=-17,290.7, grid=0
+  Cost Std: rooftop=11.6312, grid=0
 
 === Iteration 63 ===
 INPUTS
-  Rooftop Solar Capacity: 789.314
+  Rooftop Solar Capacity: 1,103.67
   Household Demand: 224.199
-  Rooftop Solar Std: 40.4805
+  Rooftop Solar Std: 38.8009
   Household Electricity Price: 1,523.96
 OUTPUTS
-  Shares: rooftop=0.305739, grid=0.694261
-  Costs:  rooftop=40.4805, grid=131.037
-  Cost Std: rooftop=10.5355, grid=39.311
+  Shares: rooftop=0.427504, grid=0.572496
+  Costs:  rooftop=-642.794, grid=0
+  Cost Std: rooftop=10.8359, grid=0
 
 === Iteration 64 ===
 INPUTS
-  Rooftop Solar Capacity: 13,750.9
+  Rooftop Solar Capacity: 12,749.4
   Household Demand: 2,050.6
-  Rooftop Solar Std: 43.4041
+  Rooftop Solar Std: 41.4522
   Household Electricity Price: 2,187.62
 OUTPUTS
-  Shares: rooftop=0.582392, grid=0.417608
-  Costs:  rooftop=43.4041, grid=188.102
-  Cost Std: rooftop=5.8072, grid=56.4305
+  Shares: rooftop=0.539975, grid=0.460025
+  Costs:  rooftop=-966.287, grid=0
+  Cost Std: rooftop=5.59879, grid=0
 
 === Iteration 65 ===
 INPUTS
-  Rooftop Solar Capacity: 2,103.59
+  Rooftop Solar Capacity: 6,701.87
   Household Demand: 1,415.84
-  Rooftop Solar Std: 107.181
+  Rooftop Solar Std: 102.184
   Household Electricity Price: 2,143.32
 OUTPUTS
-  Shares: rooftop=0.129031, grid=0.870969
-  Costs:  rooftop=107.181, grid=184.292
-  Cost Std: rooftop=28.5503, grid=55.2877
+  Shares: rooftop=0.411085, grid=0.588915
+  Costs:  rooftop=-683.398, grid=0
+  Cost Std: rooftop=29.3609, grid=0
 
 === Iteration 66 ===
 INPUTS
-  Rooftop Solar Capacity: 10,282.5
+  Rooftop Solar Capacity: 10,224.2
   Household Demand: 1,652.68
-  Rooftop Solar Std: 24.8168
+  Rooftop Solar Std: 23.5513
   Household Electricity Price: 2,769.92
 OUTPUTS
-  Shares: rooftop=0.540338, grid=0.459662
-  Costs:  rooftop=24.8168, grid=238.17
-  Cost Std: rooftop=6.84738, grid=71.451
+  Shares: rooftop=0.537273, grid=0.462727
+  Costs:  rooftop=-1,339.85, grid=0
+  Cost Std: rooftop=7.04588, grid=0
 
 === Iteration 67 ===
 INPUTS
-  Rooftop Solar Capacity: 113.053
+  Rooftop Solar Capacity: 609.025
   Household Demand: 11,445.9
-  Rooftop Solar Std: 55.0572
+  Rooftop Solar Std: 52.5714
   Household Electricity Price: 1,127.54
 OUTPUTS
-  Shares: rooftop=0.000858023, grid=0.999142
-  Costs:  rooftop=55.0572, grid=30.6779
-  Cost Std: rooftop=14.7664, grid=9.20336
+  Shares: rooftop=0.00462225, grid=0.995378
+  Costs:  rooftop=-46.9957, grid=0
+  Cost Std: rooftop=15.1946, grid=0
 
 === Iteration 68 ===
 INPUTS
-  Rooftop Solar Capacity: 205.838
+  Rooftop Solar Capacity: 590.97
   Household Demand: 404.292
-  Rooftop Solar Std: 42.1455
+  Rooftop Solar Std: 40.3737
   Household Electricity Price: 1,724.5
 OUTPUTS
-  Shares: rooftop=0.0442159, grid=0.955784
-  Costs:  rooftop=42.1455, grid=82.792
-  Cost Std: rooftop=11.0185, grid=24.8376
+  Shares: rooftop=0.126946, grid=0.873054
+  Costs:  rooftop=-348.104, grid=0
+  Cost Std: rooftop=11.3335, grid=0
 
 === Iteration 69 ===
 INPUTS
-  Rooftop Solar Capacity: 2,090.3
+  Rooftop Solar Capacity: 2,890.05
   Household Demand: 481.499
-  Rooftop Solar Std: 76.7522
+  Rooftop Solar Std: 73.2347
   Household Electricity Price: 2,544.25
 OUTPUTS
-  Shares: rooftop=0.377025, grid=0.622975
-  Costs:  rooftop=76.7522, grid=171.111
-  Cost Std: rooftop=10.8004, grid=51.3334
+  Shares: rooftop=0.521276, grid=0.478724
+  Costs:  rooftop=-804.191, grid=0
+  Cost Std: rooftop=10.4975, grid=0
 
 === Iteration 70 ===
 INPUTS
-  Rooftop Solar Capacity: 25,408.1
+  Rooftop Solar Capacity: 26,262.2
   Household Demand: 4,811.04
-  Rooftop Solar Std: 25.9854
+  Rooftop Solar Std: 27.2735
   Household Electricity Price: 1,913.82
 OUTPUTS
-  Shares: rooftop=0.457777, grid=0.542223
-  Costs:  rooftop=25.9854, grid=164.575
-  Cost Std: rooftop=8.13332, grid=49.3726
+  Shares: rooftop=0.473165, grid=0.526835
+  Costs:  rooftop=-1,022.07, grid=0
+  Cost Std: rooftop=8.53644, grid=0
 
 === Iteration 71 ===
 INPUTS
-  Rooftop Solar Capacity: 70,515.1
+  Rooftop Solar Capacity: 98,131
   Household Demand: 14,649.9
-  Rooftop Solar Std: 48.8348
+  Rooftop Solar Std: 42.1261
   Household Electricity Price: 2,771.5
 OUTPUTS
-  Shares: rooftop=0.4188, grid=0.5812
-  Costs:  rooftop=48.8348, grid=166.647
-  Cost Std: rooftop=12.9606, grid=49.9942
+  Shares: rooftop=0.582815, grid=0.417185
+  Costs:  rooftop=-931.477, grid=0
+  Cost Std: rooftop=13.0845, grid=0
 
 # End of report

@@ -393,3 +393,5 @@ SectorCouplingAssumps,Assumptions for sector coupling,,NA,SCA,NA,NA,General,-,-,
 Battery cap additions,Capacity additions per timestep per model,GWh,models_w_batteries,noit,NA,TIME,General,-,-,2020,-,-,-
 Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-,-,-
 Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,General,2018,2023,2018,,,
+RSSC,FTT- Rooftop solar self-consumption rate,%,RTI,NA,NA,TIME,FTT-P,,,2010,,,
+RSFT,FTT- Rooftop solar feed-in-tariff,USD/kWh,RTI,NA,NA,TIME,FTT-P,,,2010,,,

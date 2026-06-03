@@ -10,9 +10,25 @@ from SourceCode.support.divide import divide
 def get_gen_share(data, r):
     "Compute share of solar PV and share of onshore + offshore wind"
     
-    solar_share =  data["MEWG"][r, 18] / np.sum(data["MEWG"][r])
-    wind_share = wind_share = np.sum(data["MEWG"][r, 16:18]) / np.sum(data["MEWG"][r])
+    # solar_share =  data["MEWG"][r, 18] / np.sum(data["MEWG"][r])
+    # wind_share = wind_share = np.sum(data["MEWG"][r, 16:18]) / np.sum(data["MEWG"][r])
     
+    # return solar_share, wind_share
+
+    # Ensure we select the scalar (latest timestep) along the third axis
+    # total_gen = np.sum(data["MEWG"][r, :, 0])
+    region_gen = np.asarray(data["MEWG"][r, :, 0], dtype=float)
+    total_gen = float(np.sum(region_gen))
+    total_gen = np.sum(data["MEWG"][r, :, 0])
+    if total_gen == 0.0:
+        return 0.0, 0.0
+
+    # solar_share = data["MEWG"][r, 18, 0] / total_gen
+    # wind_share = np.sum(data["MEWG"][r, 16:18, 0]) / total_gen
+    solar_share = float(region_gen[18] / total_gen)
+    wind_share = float(np.sum(region_gen[16:18]) / total_gen)
+
+    # return float(solar_share), float(wind_share)
     return solar_share, wind_share
 
 def add_balancing_costs(solar_share, wind_share, r):
@@ -31,8 +47,8 @@ def add_balancing_costs(solar_share, wind_share, r):
     balancing_costs_wind = min_costs + (max_costs - min_costs) * wind_share_scaled
 
     balancing_costs = balancing_costs_solar * solar_share + balancing_costs_wind * wind_share
-    
-    return balancing_costs
+
+    return float(balancing_costs)
 
 def add_grid_integration_costs(solar_share, wind_share, r):
     """Add grid integration costs. These go linearly to 7.5 EUR/MWh (2013 values).
@@ -48,8 +64,8 @@ def add_grid_integration_costs(solar_share, wind_share, r):
     grid_costs_wind = max_costs * wind_share_scaled
     
     grid_integration_costs = grid_costs_solar * solar_share + grid_costs_wind * wind_share
-    
-    return grid_integration_costs
+
+    return float(grid_integration_costs)
     
     
 def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
@@ -155,7 +171,8 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, glb3):
             # Above 40% VRE penetration, we assume that at certain moments
             # electricity prices are completely determined by VRE technologies.
             
-            share_VRE = np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :])
+            # share_VRE = np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :])
+            share_VRE = np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / np.sum(data["MEWG"][r, :, 0])
             if share_VRE > 0.40:
                 vre_weight[r] = (1.0 / 0.6) * share_VRE - 2.0 / 3.0
     

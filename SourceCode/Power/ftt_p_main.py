@@ -58,6 +58,7 @@ Functions included:
 """
 
 # Third party imports
+import csv
 import numpy as np
 
 # Local library imports
@@ -81,6 +82,129 @@ from SourceCode.sector_coupling.battery_lbd import quarterly_bat_add_power
 
 from SourceCode.Power.io_debug_export import export_io_summary
 from SourceCode.Power.io_debug_export import export_rooftop_trace
+
+
+_SMALLSCALE_GAMMA = None
+_SMALLSCALE_MAX_ROOFTOP_SHARE = None
+
+
+def _simulate_household_share(initial_share, roof_cost, grid_cost, roof_std,
+                              grid_std, subst_row, dt, no_it,
+                              max_rooftop_share=1.0):
+    """Run the two-option household share equation for one region."""
+    shares_local = np.zeros((1, 2, 1))
+    shares_local[0, :, 0] = initial_share
+    costs_local = np.zeros((1, 2, 1))
+    costs_local[0, :, 0] = [roof_cost, grid_cost]
+    std_local = np.zeros((1, 2, 1))
+    std_local[0, :, 0] = [roof_std, grid_std]
+    subst_local = np.zeros((1, 2, 2))
+    subst_local[0, :, :] = subst_row
+    upper_limit = np.ones((1, 2, 1))
+    lower_limit = np.zeros((1, 2, 1))
+    upper_limit[0, 0, 0] = max_rooftop_share
+
+    for _ in range(no_it):
+        change = shares_change(
+            dt=dt,
+            regions=np.array([0]),
+            shares_dt=shares_local,
+            costs=costs_local,
+            costs_sd=std_local,
+            subst=subst_local,
+            reg_constr=np.zeros((1, 2)),
+            num_regions=1,
+            num_techs=2,
+            upper_limit=upper_limit,
+            lower_limit=lower_limit,
+            limits_active=True
+        )
+        shares_local[:, :, 0] = np.clip(shares_local[:, :, 0] + change, 0.0, 1.0)
+        shares_local[0, 0, 0] = min(shares_local[0, 0, 0], max_rooftop_share)
+        shares_local[0, 1, 0] = 1.0 - shares_local[0, 0, 0]
+        row_sum = shares_local[0, :, 0].sum()
+        if row_sum > 0.0:
+            shares_local[0, :, 0] /= row_sum
+
+    return shares_local[0, 0, 0]
+
+
+def _calibrate_rooftop_gamma(initial_shares, target_rooftop_share, costs,
+                             costs_std, subst, dt, no_it, valid_target,
+                             max_rooftop_share):
+    """Calibrate rooftop perceived-cost offsets to match the first observed step."""
+    gamma = np.zeros(initial_shares.shape[0])
+
+    for r in np.where(valid_target)[0]:
+        initial_share = initial_shares[r, :, 0]
+        if initial_share.sum() <= 0.0 or not np.all(np.isfinite(initial_share)):
+            continue
+
+        target = float(np.clip(target_rooftop_share[r], 0.0, max_rooftop_share[r]))
+        low, high = -1.0e5, 1.0e5
+        low_share = _simulate_household_share(
+            initial_share, costs[r, 0, 0] + low, costs[r, 1, 0],
+            costs_std[r, 0, 0], costs_std[r, 1, 0], subst[r], dt, no_it,
+            max_rooftop_share[r])
+        high_share = _simulate_household_share(
+            initial_share, costs[r, 0, 0] + high, costs[r, 1, 0],
+            costs_std[r, 0, 0], costs_std[r, 1, 0], subst[r], dt, no_it,
+            max_rooftop_share[r])
+
+        if not (high_share <= target <= low_share):
+            continue
+
+        for _ in range(60):
+            mid = 0.5 * (low + high)
+            mid_share = _simulate_household_share(
+                initial_share, costs[r, 0, 0] + mid, costs[r, 1, 0],
+                costs_std[r, 0, 0], costs_std[r, 1, 0], subst[r], dt, no_it,
+                max_rooftop_share[r])
+            if mid_share > target:
+                low = mid
+            else:
+                high = mid
+
+        gamma[r] = 0.5 * (low + high)
+
+    return gamma
+
+
+def _estimate_max_rooftop_share(initial_rooftop_share, observed_rooftop_share,
+                                valid_target):
+    """Estimate a country-specific rooftop ceiling until roof-space data exists."""
+    reference_share = np.maximum(initial_rooftop_share, observed_rooftop_share * valid_target)
+    max_share = 0.25 + 1.2 * reference_share
+    return np.clip(max_share, 0.15, 0.85)
+
+
+def _load_max_rooftop_share(titles, initial_rooftop_share, observed_rooftop_share,
+                            valid_target):
+    """Load country rooftop ceilings, with observed-data consistency checks."""
+    fallback = _estimate_max_rooftop_share(
+        initial_rooftop_share, observed_rooftop_share, valid_target)
+    ceiling = fallback.copy()
+    path = "Inputs/_Assumptions/RSMX.csv"
+
+    try:
+        with open(path, newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            values = {
+                row["region"].strip(): float(row["max_rooftop_share"])
+                for row in reader
+                if row.get("region") and row.get("max_rooftop_share")
+            }
+    except FileNotFoundError:
+        print(f"{path} not found; using inferred rooftop ceilings.")
+        values = {}
+
+    for r, region_code in enumerate(titles["RTI_short"]):
+        if region_code in values:
+            ceiling[r] = values[region_code]
+
+    min_required = np.maximum(initial_rooftop_share, observed_rooftop_share * valid_target)
+    ceiling = np.maximum(ceiling, np.minimum(min_required + 0.05, 0.95))
+    return np.clip(ceiling, 0.05, 0.95)
 
 
 
@@ -120,8 +244,10 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
     Notes
     ---------
-    survival_function is currently unused.
+        survival_function is currently unused.
     """
+
+    global _SMALLSCALE_GAMMA, _SMALLSCALE_MAX_ROOFTOP_SHARE
     
     sector = 'power'
     # Categories for the cost matrix (BCET)
@@ -608,31 +734,128 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
 
         # Start the computation of shares
 
-        # ------------------------ MY ALTERATIONS ---------------------------------
-        # Initialise household_shares once per year from MEWG/MEWDH, but only when
-        # the persisted values from time_lag are still uninitialized (all zeros).
-        # In subsequent years and sub-iterations the correct value is carried in
-        # data_dt['household_shares'] via the domain update at the foot of the loop.
-        if not np.any(data_dt['household_shares'] > 0):
-            data_dt['household_shares'][:, 0] = (
-                data_dt['MEWG'][:, t2ti['23 Rooftop Solar']] /
-                (data_dt['MEWDH'][:, :, 0] * 11.63)
-            )
-            data_dt['household_shares'][:, 1] = 1 - data_dt['household_shares'][:, 0]
-        # --------------------------------------------------------------------------
+        # Initialise household_shares per region when they are invalid/uninitialised.
+        # A global check can leave some regions at [0, 0], which then creates
+        # region-specific random drops near the simulation boundary.
+        rooftop_idx = t2ti['23 Rooftop Solar']
+        observed_rooftop_gen = np.copy(data['MEWG'][:, rooftop_idx, 0])
+        observed_household_demand = data['MEWDH'][:, 0, 0] * 11.63
+        observed_rooftop_share = np.zeros(num_regions)
+        np.divide(
+            observed_rooftop_gen,
+            observed_household_demand,
+            out=observed_rooftop_share,
+            where=observed_household_demand > 0.0
+        )
+        observed_rooftop_share = np.clip(observed_rooftop_share, 0.0, 1.0)
+        near_term_calibration_year = year <= histend['MEWG'] + 2
+        valid_rooftop_target = (
+            near_term_calibration_year &
+            (observed_rooftop_gen > 0.0) &
+            (observed_household_demand > 0.0)
+        )
 
+        hh_prev = np.copy(data_dt['household_shares'][:, :, 0])
+        hh_sum = np.sum(hh_prev, axis=1)
+        invalid_hh = np.any(~np.isfinite(hh_prev), axis=1) | (hh_sum <= 0.0)
+
+        demand_gwh = data_dt['MEWDH'][:, 0, 0] * 11.63
+        rooftop_share_init = np.zeros(num_regions)
+        np.divide(
+            data_dt['MEWG'][:, rooftop_idx, 0],
+            demand_gwh,
+            out=rooftop_share_init,
+            where=demand_gwh > 0.0
+        )
+        rooftop_share_init = np.clip(rooftop_share_init, 0.0, 1.0)
+
+        if np.any(invalid_hh):
+            hh_prev[invalid_hh, 0] = rooftop_share_init[invalid_hh]
+            hh_prev[invalid_hh, 1] = 1.0 - rooftop_share_init[invalid_hh]
+
+        # Keep all regions numerically well-formed: [0, 1] and row sum = 1.
+        hh_prev = np.clip(hh_prev, 0.0, 1.0)
+        hh_sum = np.sum(hh_prev, axis=1)
+        valid_hh = hh_sum > 0.0
+        hh_prev[valid_hh, :] = hh_prev[valid_hh, :] / hh_sum[valid_hh, np.newaxis]
+        hh_prev[~valid_hh, 0] = rooftop_share_init[~valid_hh]
+        hh_prev[~valid_hh, 1] = 1.0 - rooftop_share_init[~valid_hh]
+
+        data_dt['household_shares'][:, :, 0] = hh_prev
+        if (year == histend['MEWG'] + 1 or
+                _SMALLSCALE_MAX_ROOFTOP_SHARE is None or
+                len(_SMALLSCALE_MAX_ROOFTOP_SHARE) != num_regions):
+            _SMALLSCALE_MAX_ROOFTOP_SHARE = _load_max_rooftop_share(
+                titles,
+                data_dt['household_shares'][:, 0, 0],
+                observed_rooftop_share,
+                valid_rooftop_target
+        )
+        max_rooftop_share = _SMALLSCALE_MAX_ROOFTOP_SHARE
+
+        # Near-term rooftop observations are used as calibration anchors, but
+        # rooftop PV should not be forced to decline at the simulation boundary.
+        # If the 2023-2024 input value is lower than the previous simulated year,
+        # hold the previous generation level and let FTT dynamics resume after 2024.
+        calibration_target_gen = np.maximum(
+            observed_rooftop_gen,
+            time_lag['MEWG'][:, rooftop_idx, 0]
+        )
+        calibration_target_share = np.zeros(num_regions)
+        np.divide(
+            calibration_target_gen,
+            observed_household_demand,
+            out=calibration_target_share,
+            where=observed_household_demand > 0.0
+        )
+        calibration_target_share = np.minimum(calibration_target_share, max_rooftop_share)
+
+        if (_SMALLSCALE_GAMMA is None or len(_SMALLSCALE_GAMMA) != num_regions):
+            _SMALLSCALE_GAMMA = np.zeros(num_regions)
+        smallscale_gamma = _SMALLSCALE_GAMMA
+        household_start_share = np.copy(data_dt['household_shares'][:, 0, 0])
         for t in range(1, no_it + 1):
-            
-            # ------------------------ MY ALTERATIONS ---------------------------------
-            
-            # To pass the information for costs (calculate de LCOE)
+
+            # Household electricity price from the grid: USD/MWh
+            price_grid = data_dt['PRICH'][:, 0, 0] / 11.63 / data_dt['EXX'][:, 0, 0]
+
+            # Self-consumption: %
+            # Start with an exogenous/fixed value; later make it dynamic with EV uptake.
+            self_consumption_rate = data_dt['RSSC'][:, 0, 0]
+
+            # Levelized export price / feed-in tariff: convert USD/kWh to USD/MWh.
+            price_export = data_dt['RSFT'][:, 0, 0] * 1000.0
+
+            # Annual benefit for rooftop solar (USD/MWh)
+            annual_benefit = (self_consumption_rate * price_grid) + ((1-self_consumption_rate) * price_export)
+
+            # Investment cost for rooftop solar (USD/kW)
+            investment_per_kw = data_dt['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['3 Investment ($/kW)']]
+
+            # Capacity needed to generate 1 MWh/year
+            # 1 kW produces load_factor * 8.766 MWh/year
+            pv_size_kw = 1 / (data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']] * 8.766)
+            inv_cost_pv = investment_per_kw * pv_size_kw
+
+            # Discounted benefit
+            discount_rate = 0.1
+            elec_price_growth = 0.02
+
+            lifetime_pv = data_dt['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['9 Lifetime (years)']]
+            disc_factor_benefit = ((1.0 - ((1.0 + elec_price_growth) / (1.0 + discount_rate)) ** lifetime_pv)/ (discount_rate - elec_price_growth))
+            disc_benefit_pv = annual_benefit * disc_factor_benefit
+
+            # Net Present Cost of rooftop solar (USD/MWh)
+            npc_pv = inv_cost_pv - disc_benefit_pv
+
+            # Build household cost matrix
             data_dt['costs_household'] = np.zeros((num_regions, 2, 1))
-            data_dt['costs_household'][:, 0] = data_dt['METC'][:, t2ti['23 Rooftop Solar']]
-            
-            # Convert from EUR/toe to USD/MWh for consistent comparison with METC.
-            data_dt['costs_household'][:, 1] = (
-                data_dt['PRICH'][:, :, 0] / 11.63 / data_dt['EXX'][:, 0, 0][:, np.newaxis]
-            )
+
+            # Rooftop PV: NPC per useful self-consumed MWh
+            data_dt['costs_household'][:, 0, 0] = npc_pv
+
+            # Grid baseline is zero because avoided grid purchases are included in the PV benefit.
+            data_dt['costs_household'][:, 1, 0] = 0.0
             
             # Std deviation for costs households
             data_dt['costs_household_std'] = np.zeros((num_regions, 2, 1))
@@ -643,12 +866,30 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             data['costs_household'] = np.copy(data_dt['costs_household'])
             data['costs_household_std'] = np.copy(data_dt['costs_household_std'])
             
-            # initial substitution matrix -> defined as 1 
-            # subst_households = np.ones((71, 2, 2))
             # Assuming 4 years for the decision of people going grid -> solar and 30 years for solar -> grid
-            subst_households = np.zeros((71, 2, 2))
+            subst_households = np.zeros((num_regions, 2, 2))
             subst_households[:, 0, 1] = 1/4   # above diagonal
             subst_households[:, 1, 0] = 1/15  # below diagonal
+
+            if t == 1 and np.any(valid_rooftop_target):
+                _SMALLSCALE_GAMMA = _calibrate_rooftop_gamma(
+                    data_dt['household_shares'],
+                    calibration_target_share,
+                    data_dt['costs_household'],
+                    data_dt['costs_household_std'],
+                    subst_households,
+                    dt,
+                    no_it,
+                    valid_rooftop_target,
+                    max_rooftop_share
+                )
+                smallscale_gamma = _SMALLSCALE_GAMMA
+
+            data_dt['costs_household'][:, 0, 0] += smallscale_gamma
+
+            upper_limit_households = np.ones((num_regions, 2, 1))
+            upper_limit_households[:, 0, 0] = max_rooftop_share
+            lower_limit_households = np.zeros((num_regions, 2, 1))
 
             change_in_shares = shares_change(
                      dt=dt,
@@ -659,13 +900,27 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
                      subst=subst_households,                       # Substitution turnover rates
                      reg_constr=np.zeros((num_regions, 2)),     # Constraint due to regulation
                      num_regions=num_regions,                      # Number of regions
-                     num_techs=2)             
-            
+                     num_techs=2,
+                     upper_limit=upper_limit_households,
+                     lower_limit=lower_limit_households,
+                     limits_active=True)
+
             data['household_shares'][:, :, 0] = data_dt['household_shares'][:, :, 0] + change_in_shares
+            data['household_shares'][:, 0, 0] = np.minimum(
+                data['household_shares'][:, 0, 0], max_rooftop_share)
+            data['household_shares'][:, 0, 0] = np.maximum(data['household_shares'][:, 0, 0], 0.0)
+            data['household_shares'][:, 1, 0] = 1.0 - data['household_shares'][:, 0, 0]
+
+            if np.any(valid_rooftop_target):
+                near_term_path = (
+                    household_start_share
+                    + (calibration_target_share - household_start_share) * t / no_it
+                )
+                data['household_shares'][valid_rooftop_target, 0, 0] = near_term_path[valid_rooftop_target]
+                data['household_shares'][valid_rooftop_target, 1, 0] = (
+                    1.0 - data['household_shares'][valid_rooftop_target, 0, 0]
+                )
                                                                 
-            # Wrong - MEWS is market shares capacity - total value has to sum 1
-            # data['MEWS'][:, -1] = data['household_shares'][:, 0]
-            
             # Get the power load factor for rooftop solar
             data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
 
@@ -829,33 +1084,57 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):
             # Total additional electricity that needs to be generated
             data['MADG'][:,0,0] = data['MCGA'][:,0,0] - data['MCNA'][:, 0, 0] + data['MSSG'][:,0,0]
             
-            # Update generation
-            denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
-            data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
-                                           denominator) 
+            # Allocate utility generation on residual demand after household rooftop
+            # production is accounted for.
+            apply_rooftop_residual_demand = True
 
-            # Restore rooftop solar generation from the household model.
-            # The general generation update above uses total-grid MEWS (a tiny fraction
-            # of total capacity) which gives a value incompatible with the household
-            # shares model.  Overwrite with the household-derived value so that
-            # data_dt['MEWG'][:, -1] stays consistent going into the next sub-iteration.
-            data['MEWG'][:, -1, 0] = data['household_shares'][:, 0, 0] * (MEWDHt * 11.63)
+            updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
+
+            household_rooftop_gen = data['household_shares'][:, 0, 0] * (MEWDHt * 11.63)
+
+            if near_term_calibration_year:
+                household_rooftop_gen = np.maximum(
+                    household_rooftop_gen,
+                    time_lag['MEWG'][:, rooftop_idx, 0]
+                )
+                rooftop_share_from_gen = np.zeros(num_regions)
+                np.divide(
+                    household_rooftop_gen,
+                    MEWDHt * 11.63,
+                    out=rooftop_share_from_gen,
+                    where=MEWDHt > 0.0
+                )
+                data['household_shares'][:, 0, 0] = np.minimum(
+                    rooftop_share_from_gen,
+                    max_rooftop_share
+                )
+                data['household_shares'][:, 1, 0] = 1.0 - data['household_shares'][:, 0, 0]
+                household_rooftop_gen = data['household_shares'][:, 0, 0] * (MEWDHt * 11.63)
+
+            if apply_rooftop_residual_demand:
+                utility_mews = data['MEWS'][:, :-1, 0]
+                utility_mewl = data['MEWL'][:, :-1, 0]
+                utility_denominator = np.sum(utility_mews * utility_mewl, axis=1)[:, np.newaxis]
+                residual_e_sup = np.maximum(updated_e_sup - household_rooftop_gen, 0.0)
+
+                data['MEWG'][:, :-1, 0] = divide(
+                    utility_mews * residual_e_sup[:, np.newaxis] * utility_mewl,
+                    utility_denominator
+                )
+                data['MEWG'][:, -1, 0] = household_rooftop_gen
+            else:
+                denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
+                data['MEWG'][:, :, 0] = divide(
+                    data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
+                    denominator
+                )
+                data['MEWG'][:, -1, 0] = household_rooftop_gen
 
             # Keep rooftop-solar accounting aligned with the household model.
             data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
 
             # Update capacities
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-            rooftop_idx = t2ti['23 Rooftop Solar']
-            if year == (histend['MEWG'] + 1):
-                data['MEWK'][:, rooftop_idx, 0] = np.maximum(
-                    data['MEWK'][:, rooftop_idx, 0],
-                    time_lag['MEWK'][:, rooftop_idx, 0]
-                )
-                data['MEWG'][:, rooftop_idx, 0] = (
-                    data['MEWK'][:, rooftop_idx, 0] * data['MEWL'][:, rooftop_idx, 0] * 8766
-                )
             data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
             # Update emissions
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6

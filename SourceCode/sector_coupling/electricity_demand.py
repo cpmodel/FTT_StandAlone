@@ -41,7 +41,7 @@ def electricity_demand_feedback(data, data_baseline, year, titles, units):
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
         data["MEWDX"][:, elec_index, 0] += elec_change
-  
+        data["MEWDH"][:, 0, 0] += elec_change
         
     return data
 

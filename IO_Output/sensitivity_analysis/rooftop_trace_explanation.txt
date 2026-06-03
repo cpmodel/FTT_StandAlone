@@ -1,0 +1,63 @@
+Australia Rooftop Sensitivity Analysis
+====================================
+
+Scope
+-----
+This report is generated from rooftop_trace_au.txt files in IO_Output/sensitivity_runs.
+It compares each sensitivity test against the base run and explains the observed behavior.
+
+What each metric means
+----------------------
+share: household choice share from the two-option household rooftop choice block.
+  In this setup it is effectively the fraction of household demand choosing rooftop over the grid comparator.
+rooftop_cap_share: system-wide capacity share = rooftop_capacity / total_power_capacity.
+  This is a power-system metric, not only a household rooftop-choice metric.
+
+Why share can be high while rooftop_cap_share is low
+----------------------------------------------------
+1) Different denominators:
+   share compares rooftop vs household grid option in the household block.
+   rooftop_cap_share compares rooftop vs ALL generation technologies in the system.
+2) Denominator effect after 2030:
+   In the base run, rooftop MEWK grows from 49.564200 to 98.954300, but non-rooftop capacity grows faster from 127.070000 to 623.856000.
+   Therefore total capacity expands strongly, diluting rooftop's fraction even when rooftop adoption remains strong.
+3) Cost signal remains strongly pro-rooftop:
+   cost_roof stays very favorable (more negative) from -1221.130000 to -2302.280000, and share rises from 0.846134 to 0.998776.
+   So the decline in rooftop_cap_share is not caused by rooftop becoming unattractive.
+   It is mainly a composition effect in a rapidly growing system.
+
+Sensitivity tests and differences
+---------------------------------
+base: peak_cap_share=0.283544 (year 2028), cap_share_2030=0.280604, cap_share_2050=0.136902, delta_2030_to_2050=-0.143702
+discount_high: peak_cap_share=0.283358 (year 2028), cap_share_2030=0.280261, cap_share_2050=0.139429, delta_2030_to_2050=-0.140832
+discount_low: peak_cap_share=0.283358 (year 2028), cap_share_2030=0.280261, cap_share_2050=0.139429, delta_2030_to_2050=-0.140832
+export_0.8: peak_cap_share=0.283544 (year 2028), cap_share_2030=0.280605, cap_share_2050=0.136900, delta_2030_to_2050=-0.143705
+export_1.2: peak_cap_share=0.283544 (year 2028), cap_share_2030=0.280604, cap_share_2050=0.136904, delta_2030_to_2050=-0.143700
+selfcons_minus: peak_cap_share=0.283647 (year 2028), cap_share_2030=0.280808, cap_share_2050=0.135536, delta_2030_to_2050=-0.145272
+selfcons_plus: peak_cap_share=0.283455 (year 2028), cap_share_2030=0.280437, cap_share_2050=0.138085, delta_2030_to_2050=-0.142352
+
+Interpretation by test type
+---------------------------
+discount_low / discount_high:
+  These alter discounting and therefore the present value of rooftop savings.
+  Lower discount rates should make future savings more valuable and typically improve rooftop economics.
+  Higher discount rates do the opposite.
+export_0.8 / export_1.2:
+  These scale export compensation (value of exported PV electricity).
+  Higher export value generally improves rooftop annual benefit and lowers NPC further.
+selfcons_minus / selfcons_plus:
+  These adjust self-consumption. Higher self-consumption monetizes more generation at retail price,
+  improving rooftop economics; lower self-consumption does the opposite.
+
+Main conclusion
+---------------
+Across all tested sensitivities, rooftop_cap_share peaks around the late 2020s and declines afterward, while share continues to increase toward 1.0.
+This pattern is consistent with a plausible model mechanism: rooftop remains attractive for households, but utility-scale and other non-rooftop capacity grows faster in absolute terms, reducing rooftop's share of total system capacity by 2050.
+
+Exported artifacts
+------------------
+- all_runs_timeseries.csv
+- run_summary.csv
+- rooftop_cap_share_comparison.png
+- base_share_vs_rooftop_cap_share.png
+- base_denominator_effect.png

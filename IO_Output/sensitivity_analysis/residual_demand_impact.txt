@@ -1,0 +1,26 @@
+Residual-Demand Allocation Impact (Australia Rooftop)
+===================================================
+
+Interpretation
+--------------
+The new run allocates utility generation to residual demand after household rooftop
+generation is deducted. This reduces denominator inflation in total system capacity.
+
+Key numbers
+-----------
+Old base rooftop_cap_share 2030: 0.280604
+Old base rooftop_cap_share 2050: 0.136902
+Old base change 2030->2050: -0.143702
+
+New base rooftop_cap_share 2030: 0.286356
+New base rooftop_cap_share 2050: 0.140332
+New base change 2030->2050: -0.146024
+
+2050 improvement in rooftop_cap_share: 0.003430
+Reduction in decline magnitude: -0.002322
+
+Conclusion
+----------
+If the decline becomes visibly less steep in the new run, that supports the hypothesis
+that the previous drop was dominated by system denominator growth rather than only
+household rooftop saturation.
