@@ -5,7 +5,7 @@ on:
 
 jobs:
   integration:
-    name: No NaNs in output (2030, noit=4)
+    name: Integration tests (2030, noit=4)
     runs-on: ubuntu-latest
 
     steps:
