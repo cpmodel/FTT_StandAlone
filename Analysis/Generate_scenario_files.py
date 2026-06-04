@@ -126,7 +126,9 @@ def policy_change(df, policy):
         case "EV mandate regulation":
             df.iloc[:15, 35:] = 0
         case "EV mandate":
-            df.iloc[0, 1] = 1       # The EV mandates are coded as a function; this switch turns it on
+            df.iloc[:, 3] = 2026       # Start year EV mandate
+            df.iloc[:, 3] = 2035       # End year EV mandate
+            df.iloc[:, 3] = 1          # Maximum EV mandate
         case "EV mandate half":
             df.iloc[0, 1] = 2045    # Half the speed of the mandate
         case "Transport REPP":
@@ -153,10 +155,13 @@ def policy_change(df, policy):
         case "EV truck mandate regulation":
             df.iloc[list(range(25)), 23:] = 0
         case "EV truck mandate":
-            df.iloc[:, 1] = 2040       # The EV mandates are coded as a function; this switch turns it on
+            df.iloc[:, 1] = 2026
+            df.iloc[:, 2] = 2040       # The EV mandates are coded as a function; this switch turns it on
+            df.iloc[:, 3] = 1       # The EV mandates are coded as a function; this switch turns it on
         case "EV truck mandate half":
-            
-            df.iloc[:, 1] = 2055       # The EV mandates are coded as a function; this switch turns it on
+            df.iloc[:, 1] = 2026
+            df.iloc[:, 2] = 2040       # The EV mandates are coded as a function; this switch turns it on
+            df.iloc[:, 3] = 0.5       # The EV mandates are coded as a function; this switch turns it on
         case "Freight REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
@@ -203,7 +208,9 @@ def policy_change(df, policy):
             df.iloc[:4, 35:] = 0
             df.iloc[6, 35:] = 0
         case "Heat pump mandate":
-            df.iloc[0, 1] = 1       # The heat pump mandates are coded as a function; this switch turns it on
+            df.iloc[:, 2] = 2026       # Start heat pump mandate
+            df.iloc[:, 2] = 2035       # End heat pump mandate
+            df.iloc[:, 3] = 1           # Maximum heat pump mandate
         case "Heat pump mandate half":
             df.iloc[:, 1] = df.iloc[:, 1].astype(float)
             df.iloc[0, 1] = 2045       # The heat pump mandates are coded as a function; this switch turns it on
