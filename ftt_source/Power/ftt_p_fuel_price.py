@@ -188,6 +188,9 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices):
     data["MEWP"][:, hard_coal_jti, 0]      = data["MERC"][:, coal_erti, 0]
     data["MEWP"][:, other_coal_jti, 0]     = data["MERC"][:, coal_erti, 0]
     data["MEWP"][:, crude_oil_jti, 0]      = data["MERC"][:, oil_erti, 0]
+    # NOTE: heavy fuel oil is priced at the gas resource rate. This preserves the
+    # original hardcoded mapping (MEWP[:,3,0] = MERC[:,3,0]) where JTI[3] was
+    # labelled "Natural gas". Flag for future review.
     data["MEWP"][:, heavy_fuel_oil_jti, 0] = data["MERC"][:, gas_erti, 0]
     data["MEWP"][:, biofuels_jti, 0]       = data["MERC"][:, biomass_erti, 0]
 
