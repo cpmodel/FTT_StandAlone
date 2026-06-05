@@ -54,9 +54,6 @@ Functions included:
         Main solution function for the module
 """
 
-# Standard library imports
-import configparser
-
 # Third party imports
 import numpy as np
 
@@ -69,7 +66,6 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from ftt_source.paths import _PACKAGE_ROOT
 from ftt_source.Power.ftt_p_rldc import rldc, get_wind_solar_indices
 from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from ftt_source.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
@@ -87,11 +83,46 @@ from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt
 
 
 
+def build_power_settings(titles, config):
+    """Build the dict of FTT:Power constants computed once per run.
+
+    Parameters
+    ----------
+    titles : dict of lists
+        Dimension titles loaded by RunFTT.
+    config : configparser.ConfigParser
+        Already-read settings, e.g. from RunFTT.__init__.
+    """
+    prsc_base_year     = int(config.get('settings', 'prsc_base_year',     fallback='2013'))
+    ex_base_year       = int(config.get('settings', 'ex_base_year',       fallback='2013'))
+    usd_exchange_region = config.get('settings', 'usd_exchange_region',   fallback='34 USA (US)')
+    return {
+        'tech_to_resource':           get_tech_to_resource(titles),
+        'erti_jti_map':               get_erti_jti_map(titles),
+        'cf_multipliers':             get_cf_multipliers(titles),
+        'wind_solar_indices':         get_wind_solar_indices(titles),
+        'gen_tech_indices':           get_gen_tech_indices(titles),
+        'storage_learning_base_year': int(config.get('settings', 'storage_learning_base_year', fallback='2022')),
+        'prsc_base_year':             prsc_base_year,
+        'rldc_start_year':            int(config.get('settings', 'rldc_start_year',            fallback='2013')),
+        'bcet_copy_range_end':        int(config.get('settings', 'bcet_copy_range_end',        fallback='22')),
+        'gamma_mode':                 config.get('settings', 'gamma_mode',                     fallback='multiplicative'),
+        'sector_coupling':            config.getboolean('settings', 'sector_coupling',         fallback=True),
+        'mset_coupling':              config.getboolean('settings', 'mset_coupling',           fallback=False),
+        'elec_idx':   list(titles['JTI']).index('8 Electricity'),
+        'prsc_var':   f"PRSC{str(prsc_base_year)[2:]}",
+        'ex_var':     f"EX{str(ex_base_year)[2:]}",
+        'rex_var':    f"REX{str(ex_base_year)[2:]}",
+        'usd_idx':    list(titles['RTI']).index(usd_exchange_region),
+        'nuclear_idx': list(titles['T2TI']).index('1 Nuclear'),
+    }
+
+
 # %% main function
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
+def solve(data, time_lag, titles, histend, year, domain, power_settings):
     """
     Main solution function for the module.
 
@@ -127,28 +158,24 @@ def solve(data, time_lag, titles, histend, year, domain, settings_path=None):
     num_techs = len(titles['T2TI'])
     num_resources = len(titles['ERTI'])
     num_loadbands = len(titles['LBTI'])
-    tech_to_resource = get_tech_to_resource(titles)
-    erti_jti_map = get_erti_jti_map(titles)
-    cf_multipliers = get_cf_multipliers(titles)
-    wind_solar_indices = get_wind_solar_indices(titles)
-    _config = configparser.ConfigParser()
-    _config.read(str(settings_path if settings_path is not None else _PACKAGE_ROOT / "settings.ini"))
-    storage_learning_base_year = int(_config.get('settings', 'storage_learning_base_year', fallback='2022'))
-    prsc_base_year = int(_config.get('settings', 'prsc_base_year', fallback='2013'))
-    ex_base_year = int(_config.get('settings', 'ex_base_year', fallback='2013'))
-    rldc_start_year = int(_config.get('settings', 'rldc_start_year', fallback='2013'))
-    usd_exchange_region = _config.get('settings', 'usd_exchange_region', fallback='34 USA (US)')
-    bcet_copy_range_end = int(_config.get('settings', 'bcet_copy_range_end', fallback='22'))
-    elec_idx = list(titles['JTI']).index('8 Electricity')
-    prsc_var = f"PRSC{str(prsc_base_year)[2:]}"
-    ex_var = f"EX{str(ex_base_year)[2:]}"
-    rex_var = f"REX{str(ex_base_year)[2:]}"
-    usd_idx = list(titles['RTI']).index(usd_exchange_region)
-    gamma_mode = _config.get('settings', 'gamma_mode', fallback='multiplicative')
-    nuclear_idx = list(titles['T2TI']).index('1 Nuclear')
-    gen_tech_indices = get_gen_tech_indices(titles)
-    sector_coupling  = _config.getboolean('settings', 'sector_coupling',  fallback=True)
-    mset_coupling    = _config.getboolean('settings', 'mset_coupling',    fallback=False)
+    tech_to_resource           = power_settings['tech_to_resource']
+    erti_jti_map               = power_settings['erti_jti_map']
+    cf_multipliers             = power_settings['cf_multipliers']
+    wind_solar_indices         = power_settings['wind_solar_indices']
+    gen_tech_indices           = power_settings['gen_tech_indices']
+    storage_learning_base_year = power_settings['storage_learning_base_year']
+    prsc_base_year             = power_settings['prsc_base_year']
+    rldc_start_year            = power_settings['rldc_start_year']
+    bcet_copy_range_end        = power_settings['bcet_copy_range_end']
+    elec_idx                   = power_settings['elec_idx']
+    prsc_var                   = power_settings['prsc_var']
+    ex_var                     = power_settings['ex_var']
+    rex_var                    = power_settings['rex_var']
+    usd_idx                    = power_settings['usd_idx']
+    gamma_mode                 = power_settings['gamma_mode']
+    nuclear_idx                = power_settings['nuclear_idx']
+    sector_coupling            = power_settings['sector_coupling']
+    mset_coupling              = power_settings['mset_coupling']
 
 
     # Conditional vector concerning technology properties

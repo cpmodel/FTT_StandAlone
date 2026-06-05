@@ -181,6 +181,10 @@ class RunFTT:
         # Load classification titles
         self.titles = titles_f.load_titles()
 
+        # Pre-compute FTT:Power constants (CSV lookups + config values) once per run
+        if "FTT-P" in self.ftt_modules:
+            self.power_settings = ftt_p.build_power_settings(self.titles, config)
+
         # Load variable dimensions
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
@@ -318,7 +322,7 @@ class RunFTT:
             if "FTT-P" in self.ftt_modules:
                 variables = ftt_p.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
-                                        self.domain)
+                                        self.domain, self.power_settings)
 
             # 4. Electricity price feedback (updates costs for next timestep)
             if "FTT-P" in self.ftt_modules:
