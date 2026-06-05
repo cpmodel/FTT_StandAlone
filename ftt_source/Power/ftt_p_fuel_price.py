@@ -122,7 +122,7 @@ def add_grid_integration_costs(solar_share, wind_share, r):
     return grid_integration_costs
 
 
-def get_marginal_fuel_prices_mewp(data, titles, Svar):
+def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices):
     """Compute marginal fuel prices MEWP based on development within FTT:Power.
 
     This function calculates electricity prices (MEWP index 7) using either:
@@ -151,18 +151,20 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
         - MWMC: Marginal costs
         - MLBP: Load band prices (output for MPRI==2)
     titles : dict
-        Dimension titles, requires 'RTI', 'JTI', 'ERTI', 'T2TI'
+        Dimension titles, requires 'RTI', 'JTI', 'ERTI'
     Svar : ndarray
         Variable technology indicator (1 for VRE, 0 for dispatchable)
+    wind_solar_indices : dict
+        Pre-computed T2TI indices from get_wind_solar_indices(), with keys
+        'wind' (list of int) and 'solar' (int).
 
     Returns
     -------
     data : dict
         Updated with MEWP values
     """
-    jti = list(titles['JTI'])
+    jti  = list(titles['JTI'])
     erti = list(titles['ERTI'])
-    t2ti = list(titles['T2TI'])
 
     hard_coal_jti      = jti.index('1 Hard coal')
     other_coal_jti     = jti.index('2 Other coal etc')
@@ -176,8 +178,8 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
     gas_erti     = erti.index('4 Gas')
     biomass_erti = erti.index('5 Biomass')
 
-    solar_t2ti = t2ti.index('19 Solar PV')
-    wind_t2ti  = [t2ti.index('17 Onshore'), t2ti.index('18 Offshore')]
+    solar_t2ti = wind_solar_indices['solar']
+    wind_t2ti  = wind_solar_indices['wind']
 
     # Set pricing mode to 1 (weighted LCOE) for all regions
     data["MPRI"][:] = 1

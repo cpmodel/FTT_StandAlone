@@ -61,7 +61,7 @@ def get_grid_integration_costs(solar_share, wind_share):
     return grid_integration_costs
 
 
-def add_vre_integration_costs(data, titles):
+def add_vre_integration_costs(data, titles, wind_solar_indices):
     """
     Add VRE integration costs to the generalized cost (METC).
 
@@ -75,15 +75,17 @@ def add_vre_integration_costs(data, titles):
         Model variables
     titles : dict
         Title classifications
+    wind_solar_indices : dict
+        Pre-computed T2TI indices from get_wind_solar_indices(), with keys
+        'wind' (list of int) and 'solar' (int).
 
     Returns
     -------
     data : dict
         Updated with integration costs added to METC (generalized costs)
     """
-    t2ti = list(titles['T2TI'])
-    solar_t2ti = t2ti.index('19 Solar PV')
-    wind_t2ti = [t2ti.index('17 Onshore'), t2ti.index('18 Offshore')]
+    solar_t2ti = wind_solar_indices['solar']
+    wind_t2ti  = wind_solar_indices['wind']
 
     for r in range(len(titles['RTI'])):
         solar_share, wind_share = get_vre_shares(data, r, solar_t2ti, wind_t2ti)

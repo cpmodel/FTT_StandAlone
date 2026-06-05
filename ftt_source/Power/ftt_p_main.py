@@ -221,7 +221,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
 
         data = get_lcoe(data, titles, gamma_mode)
         if not mset_coupling:
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices)
 
         data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
                     wind_solar_indices, storage_learning_base_year, sector_coupling)
@@ -259,7 +259,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
 
         data = get_lcoe(data, titles, gamma_mode)
         if not mset_coupling:
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices)
 
 
     #%%
@@ -434,7 +434,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # =====================================================================
             data = get_lcoe(data, titles, gamma_mode)
             if not mset_coupling:
-                data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+                data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices)
 
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
@@ -742,7 +742,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
                 data_dt[var] = np.copy(data[var])
         
         if not mset_coupling:
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar)
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices)
 
         # Investment
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
