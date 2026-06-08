@@ -12,14 +12,14 @@ Reference: https://www.sciencedirect.com/science/article/pii/S0360544213009390
 import numpy as np
 
 
-def get_vre_shares(data, r, solar_t2ti, wind_t2ti):
+def get_vre_shares(data, r, solar_tech_idx, wind_tech_indices):
     """Compute share of solar PV and share of onshore + offshore wind."""
     total_gen = np.sum(data["MEWG"][r, :, 0])
     if total_gen == 0:
         return 0.0, 0.0
 
-    solar_share = data["MEWG"][r, solar_t2ti, 0] / total_gen
-    wind_share = np.sum(data["MEWG"][r, wind_t2ti, 0]) / total_gen
+    solar_share = data["MEWG"][r, solar_tech_idx, 0] / total_gen
+    wind_share = np.sum(data["MEWG"][r, wind_tech_indices, 0]) / total_gen
 
     return solar_share, wind_share
 
@@ -84,11 +84,11 @@ def add_vre_integration_costs(data, titles, wind_solar_indices):
     data : dict
         Updated with integration costs added to METC (generalized costs)
     """
-    solar_t2ti = wind_solar_indices['solar']
-    wind_t2ti  = wind_solar_indices['wind']
+    solar_tech_idx = wind_solar_indices['solar']
+    wind_tech_indices = wind_solar_indices['wind']
 
     for r in range(len(titles['RTI'])):
-        solar_share, wind_share = get_vre_shares(data, r, solar_t2ti, wind_t2ti)
+        solar_share, wind_share = get_vre_shares(data, r, solar_tech_idx, wind_tech_indices)
 
         balancing = get_balancing_costs(solar_share, wind_share)
         grid_costs = get_grid_integration_costs(solar_share, wind_share)
@@ -96,12 +96,12 @@ def add_vre_integration_costs(data, titles, wind_solar_indices):
 
         # METC is in log space; convert out, add cost, convert back.
         # This makes solar/wind more expensive as their share grows.
-        if solar_share > 0 and data['METC'][r, solar_t2ti, 0] != 0:
-            current_cost = np.exp(data['METC'][r, solar_t2ti, 0])
-            data['METC'][r, solar_t2ti, 0] = np.log(current_cost + total_integration_cost)
+        if solar_share > 0 and data['METC'][r, solar_tech_idx, 0] != 0:
+            current_cost = np.exp(data['METC'][r, solar_tech_idx, 0])
+            data['METC'][r, solar_tech_idx, 0] = np.log(current_cost + total_integration_cost)
 
         if wind_share > 0:
-            for w_idx in wind_t2ti:
+            for w_idx in wind_tech_indices:
                 if data['METC'][r, w_idx, 0] != 0:
                     current_cost = np.exp(data['METC'][r, w_idx, 0])
                     data['METC'][r, w_idx, 0] = np.log(current_cost + total_integration_cost)
