@@ -1,6 +1,7 @@
-﻿,1 Investment ,2 std ,3 O&M (fixed),4 std ,5 O&M (variable),6 std ,7 Lifetime ,8 Lead time,9 Efficiency ,10 Capacity factor,11 Baseline capacity,12 Capture/production rates  ,13 Eff learning,14 Inv learning,15 OPEX learning
-1 DAC,,,,,,,20,,4.01,0.9,,,-0.05,-0.12,-0.075
-2 DOC,,,,,,,15,,7.2,0.9,,,,,
-3 Electrolyser,,,,,,,8,,50,0.9,,,-0.02,-0.18,-0.18
-4 Methanation,,,,,,,,,,0.9,,,,,
-5 CCS,,,,,,,,,,,,,,,
+﻿,Investment ,std ,O&M,std ,Lifetime ,Lead time,Efficiency ,Capacity factor,Baseline capacity,Capture/production rates  ,Eff learning,Inv learning,OPEX learning,Discount rate,Storage costs
+DAC,,,,,20,,4.01,0.9,,,-0.05,-0.12,-0.075,0.05,
+DOC,,,8,1,15,,7.2,0.9,,,,,,0.05,
+Electrolyser,,,,,8,,50,0.9,,,-0.02,-0.18,-0.18,0.05,
+Methanation,,,,,,,,0.9,,,,,,0.05,
+Electrical CCS,,,,,,,,,,,,,,0.05,
+Heat CCS,,,,,,,,,,,,,,,
