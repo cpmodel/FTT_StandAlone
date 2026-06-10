@@ -47,7 +47,7 @@ MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,
 MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MLSF,FTT:Power long-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MLSE,Long-term storage round-trip efficiency,%,RTI,NA,NA,TIME,FTT-P,,,2010,
-MLSC_histend,FTT:Power long-term storage capacity (GW) in 2020,GW,NA,NA,NA,TIME,FTT-P,-,-,2001,-
+MLSC_histend,FTT:Power long-term storage capacity (GW) in 2020,GW,NA,NA,NA,TIME,FTT-P,-,2023,2001,Double check end year before commit
 MLSC,FTT:Power long-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MLLB,FTT:Power load factors (%) by tech x load band,%,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
 Gen_by_lb,Generation by technology and load band,GWh,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-

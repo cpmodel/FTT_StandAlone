@@ -52,7 +52,7 @@ def get_wind_solar_indices(titles):
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
 def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-         wind_solar_indices, storage_learning_base_year, sector_coupling=True):
+         wind_solar_indices, sector_coupling=True):
     """
     Calculate RLDCs.
 
@@ -275,7 +275,7 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     
     # Bool to indicate which tech is VRE and which is not
     Svar = data['MWDD'][0, :, 5]
-    Snotvar = 1 - data['MWDD'][0, :, 5]
+    S_not_var = 1 - data['MWDD'][0, :, 5]
 
     # Sector coupling: update battery costs based on cumulative capacity
     # Only when FTT:Transport is coupled (SCA dimension present AND sector_coupling enabled)
@@ -353,7 +353,7 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         # Normalise MKLB[r, :5] by using non-VRE MEWS (they have to sum to the same amount)
         # Given that MEWS adds to 1, so should MKLB do now 
         data['MKLB'][r, :5, 0] = data['MLB1'][r,:5,0] / data['MLB1'][r, :5, 0].sum()
-        data['MKLB'][r, :5, 0] = data['MKLB'][r,:5,0] * np.sum(Snotvar*data['MEWS'][r,:,0])
+        data['MKLB'][r, :5, 0] = data['MKLB'][r,:5,0] * np.sum(S_not_var*data['MEWS'][r,:,0])
         data['MKLB'][r, 5, 0] = np.sum(Svar * data['MEWS'][r,:,0])
         
         if abs(data['MKLB'][r, :, 0].sum() - 1.0) > 1e-5:       # MKLB should sum to ~1
@@ -385,14 +385,14 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         Hp = data['MLB0'][r, 4, 0]
         
         # Non-VRE capacity (or firm capacity)
-        cap_notvre = np.sum(Snotvar*data['MEWK'][r, :, 0])
+        cap_notvre = np.sum(S_not_var * data['MEWK'][r, :, 0])
         
         # Hp, peak height, is equal to residual peak load (without LT storage)
         # For LT storage to fill this in, we need MLSC = Hp*(tot_peak_load) - MEWK_non_vre
         cap_needed_0 = Hp * e_dem[r] * 0.175e-3                # 0.175e-3 is a rough estimate to find out peak-load based on demand (MEWD)
         cap_needed_1 = cap_notvre                              # Installed capacity of non-VRE technologies.
         # Smoothing function
-        smoothing_fn = 0.5*np.tanh(15*(Hp-1.0))
+        smoothing_fn = 0.5 * np.tanh(15 * (Hp - 1.0))
         # Firm capacity needed (= non-VRE capacity + long-term storage)
         # Apply smoothing here
         cap_needed = (0.5 + smoothing_fn) * cap_needed_1 + (0.5 - smoothing_fn) * cap_needed_0
@@ -501,14 +501,14 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         
         
         # Storage cost are overwritten here:
-        if year >= storage_learning_base_year:
-
+        if year >= histend["MSSC_histend"]:
+            # Apply learning rate to levelised cost of storage (MSCC)
             #data['MSSC_histend'] = time_lag['MSSC_histend'].copy()
+            data['MSCC'][:, 0, 0] = data['Battery price'][:, 0, 0] / 1000 * 1.25 * 1e6  # Times 1.25 based on BNEF LCOS calculations vs battery pack price
+            
+        if year > histend["MLSC_histend"]:
+            data['MLCC'][:, 0, 0] = 0.32 * 1e6 * ( data_dt['MLSC'][:, 0, 0].sum() / time_lag['MLSC_histend'] ) ** learning_exp_ls
             data['MLSC_histend'] = time_lag['MLSC_histend'].copy()
-
-            # Apply learning rate to levelised cost of storage (MSCC and MLCC)
-            data['MSCC'][:,0,0] = data['Battery price'][:, 0, 0] / 1000 * 1.25 * 1e6  # Times 1.25 based on BNEF LCOS calculations vs battery pack price
-            data['MLCC'][:,0,0] = 0.32 * 1e6 * ( data_dt['MLSC'][:, 0, 0].sum() / data['MLSC_histend'] ) ** learning_exp_ls
         
         
         # in reality the capacity/energy discharged ratio changes due to demand-supply mismatches.
@@ -644,6 +644,8 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     # Store the storage capacities in last historical year
     if year <= histend["MSSC_histend"]:
         data['MSSC_histend'] = np.sum(data['MSSC']).copy()
+        
+    if year <= histend["MLSC_histend"]:    
         data['MLSC_histend']  = np.sum(data['MLSC']).copy()
 
     return data

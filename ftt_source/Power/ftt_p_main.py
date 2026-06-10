@@ -102,7 +102,6 @@ def build_power_settings(titles, config):
         'cf_multipliers':             get_cf_multipliers(titles),
         'wind_solar_indices':         get_wind_solar_indices(titles),
         'gen_tech_indices':           get_gen_tech_indices(titles),
-        'storage_learning_base_year': int(config.get('settings', 'storage_learning_base_year', fallback='2022')),
         'prsc_base_year':             prsc_base_year,
         'rldc_start_year':            int(config.get('settings', 'rldc_start_year',            fallback='2013')),
         'bcet_copy_range_end':        int(config.get('settings', 'bcet_copy_range_end',        fallback='22')),
@@ -163,7 +162,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     cf_multipliers             = power_settings['cf_multipliers']
     wind_solar_indices         = power_settings['wind_solar_indices']
     gen_tech_indices           = power_settings['gen_tech_indices']
-    storage_learning_base_year = power_settings['storage_learning_base_year']
     prsc_base_year             = power_settings['prsc_base_year']
     rldc_start_year            = power_settings['rldc_start_year']
     bcet_copy_range_end        = power_settings['bcet_copy_range_end']
@@ -222,7 +220,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices)
 
         data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                    wind_solar_indices, storage_learning_base_year, sector_coupling)
+                    wind_solar_indices, sector_coupling)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
                                    data['MEWL'], data['MWMC'], data['MMCD'],
                                    num_regions, num_techs, num_loadbands, nuclear_idx)
@@ -298,7 +296,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
 
             # 1 and 2 -- Estimate RLDC and storage parameters
             data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                    wind_solar_indices, storage_learning_base_year, sector_coupling)
+                    wind_solar_indices, sector_coupling)
 
             # 3--- Call dispatch routine to connect market shares to load bands
             # Call DSPCH function to dispatch flexible capacity based on MC
@@ -580,7 +578,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-                        wind_solar_indices, storage_learning_base_year, sector_coupling)
+                        wind_solar_indices, sector_coupling)
 
             # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
             data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
