@@ -1,4 +1,4 @@
-﻿,Investment,std,Fuel,std,O&M,std,Lifetime,Lead time,Efficiency,Emissions,Learning exp,Discount rate
-CCGT,782.33,312.932,45.994,18.398,5.642,1.653,25,3,0.623,370,-0.058893689,0.05
-CCGT with electrical CCS,,,,,,,,,0.623,3.7,,0.05
-CCGT with heat CCS,,,,,,,,,0.543,5.55,,0.05
+﻿,Investment,std,Fuel,std,O&M,std,Lifetime,Lead time,Capacity factor,Efficiency,Emissions,Learning exp,Discount rate
+CCGT,782.33,312.932,45.994,18.398,5.642,1.653,25,3,0.3,0.623,370,-0.058893689,0.05
+CCGT with electrical CCS,,,,,,,20,,0.3,0.623,3.7,,0.05
+CCGT with heat CCS,,,,,,,20,,0.3,0.543,5.55,,0.05
