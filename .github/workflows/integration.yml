@@ -3,6 +3,9 @@ name: Integration Check
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   integration:
     name: Integration tests (2030, noit=4)
