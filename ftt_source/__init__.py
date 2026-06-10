@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-FTT Stand-alone – ftt_source package
+Future Technology Transformation – ftt_source package
 =====================================
 Internal package containing all FTT model source code.
 
