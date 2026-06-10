@@ -198,10 +198,8 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         data[rex_var] = np.copy(data['REXX'])
 
         data['MEWL'][:, :, 0] = data["MWLO"][:, :, 0]
-        data['MEWK'][:, :, 0] = np.divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0],
-                              where=data['MEWL'][:, :, 0] > 0.0) / 8766
-        data['MEWS'][:, :, 0] = np.divide(data['MEWK'][:,:,0], data['MEWK'][:,:,0].sum(axis=1)[:,np.newaxis],
-                                          where=data['MEWK'][:, :, 0].sum(axis=1)[:,np.newaxis] > 0.0)
+        data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
+        data['MEWS'][:, :, 0] = divide(data['MEWK'][:, :, 0], data['MEWK'][:, :, 0].sum(axis=1)[:, np.newaxis])
 
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],

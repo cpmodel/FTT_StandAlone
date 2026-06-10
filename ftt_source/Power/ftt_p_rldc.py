@@ -208,12 +208,10 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         
 
     # Gross (pre-curtailment) wind and solar shares for all regions
-    Sw = np.divide(np.sum(data['MEWG'][:, wind_indices, 0] / (1 - data_dt['MCTN'][:, wind_indices, 0]), axis=1),
-                   e_dem[:],
-                   where=e_dem != 0)
-    Ss = np.divide(data['MEWG'][:, solar_idx, 0] / (1 - data_dt["MCTN"][:, solar_idx, 0]),
-                   e_dem[:],
-                   where=e_dem != 0)
+    Sw = divide(np.sum(data['MEWG'][:, wind_indices, 0] / (1 - data_dt['MCTN'][:, wind_indices, 0]), axis=1),
+                   e_dem[:])
+    Ss = divide(data['MEWG'][:, solar_idx, 0] / (1 - data_dt["MCTN"][:, solar_idx, 0]),
+                   e_dem[:])
 
     Sw = np.minimum(1.3, Sw)   # Only calibrated until roughly 120%, odd behaviour above
     Ss = np.minimum(1.3, Ss)   # Only calibrated until roughly 120%, odd behaviour above

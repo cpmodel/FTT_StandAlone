@@ -84,7 +84,7 @@ def add_balancing_costs(solar_share, wind_share, r):
 
     balancing_costs = balancing_costs_solar * solar_share + balancing_costs_wind * wind_share
 
-    return balancing_costs[0]
+    return balancing_costs
 
 
 def add_grid_integration_costs(solar_share, wind_share, r):
@@ -119,7 +119,7 @@ def add_grid_integration_costs(solar_share, wind_share, r):
 
     grid_integration_costs = grid_costs_solar * solar_share + grid_costs_wind * wind_share
 
-    return grid_integration_costs[0]
+    return grid_integration_costs
 
 
 def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices):
