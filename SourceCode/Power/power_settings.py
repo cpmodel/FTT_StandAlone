@@ -41,6 +41,8 @@ def _title_index(titles, dimension, label):
 
 
 def _year_suffix(year):
+    if year < 2000 or year > 2099:
+        raise ValueError(f"Unsupported power base year: {year}")
     return f"{year % 100:02d}"
 
 

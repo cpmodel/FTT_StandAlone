@@ -28,6 +28,8 @@ CF_COLUMN_INDEX = 10
 TIME_INDEX = 0
 DEFAULT_CSP_TECH_INDEX = 19
 # The default 22-tech schema treats CSP as twice as efficient as Solar PV.
+# This fallback is kept for backward compatibility when cost_curves is used
+# without the precomputed PowerSettings lookups.
 DEFAULT_CF_MULTIPLIERS = {DEFAULT_CSP_TECH_INDEX: 2.0}
 
 
