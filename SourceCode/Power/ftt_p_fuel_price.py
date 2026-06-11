@@ -49,7 +49,7 @@ def get_gen_share(data, r, wind_solar_indices=None):
         solar_tech_idx = wind_solar_indices["solar"]
 
     solar_share = data["MEWG"][r, solar_tech_idx] / total_gen
-    wind_share = np.sum(data["MEWG"][r, list(wind_tech_indices)]) / total_gen
+    wind_share = np.sum(data["MEWG"][r, wind_tech_indices]) / total_gen
 
     return solar_share, wind_share
 

@@ -131,6 +131,16 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings: PowerSe
     # (same for all regions)
     Svar = data['BCET'][:, :, c2ti['18 Variable (0 or 1)']]
 
+    def maybe_update_marginal_fuel_prices(power_data):
+        if power_settings.mset_coupling:
+            return power_data
+        return get_marginal_fuel_prices_mewp(
+            power_data,
+            titles,
+            Svar,
+            wind_solar_indices=power_settings.wind_solar_indices
+        )
+
     # Copy over PRSC/EX values
 
     data[power_settings.prsc_var] = np.copy(time_lag[power_settings.prsc_var])
@@ -170,10 +180,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings: PowerSe
         data['MRES'] = mres
         
         data = get_lcoe(data, titles, power_settings.gamma_mode)
-        if not power_settings.mset_coupling:
-            data = get_marginal_fuel_prices_mewp(
-                data, titles, Svar, wind_solar_indices=power_settings.wind_solar_indices
-            )
+        data = maybe_update_marginal_fuel_prices(data)
 
         data = rldc(data, data["MEWDX"][:, power_settings.elec_idx, 0], time_lag, time_lag, year, 1, titles, histend)
         mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
@@ -209,10 +216,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings: PowerSe
         data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
 
         data = get_lcoe(data, titles, power_settings.gamma_mode)
-        if not power_settings.mset_coupling:
-            data = get_marginal_fuel_prices_mewp(
-                data, titles, Svar, wind_solar_indices=power_settings.wind_solar_indices
-            )
+        data = maybe_update_marginal_fuel_prices(data)
 
 
     #%%
@@ -389,10 +393,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings: PowerSe
             # Initialise the LCOE variables
             # =====================================================================
             data = get_lcoe(data, titles, power_settings.gamma_mode)
-            if not power_settings.mset_coupling:
-                data = get_marginal_fuel_prices_mewp(
-                    data, titles, Svar, wind_solar_indices=power_settings.wind_solar_indices
-                )
+            data = maybe_update_marginal_fuel_prices(data)
 
             # Historical differences between demand and supply.
             # This variable covers transmission losses and net exports
@@ -702,10 +703,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings: PowerSe
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
         
-        if not power_settings.mset_coupling:
-            data = get_marginal_fuel_prices_mewp(
-                data, titles, Svar, wind_solar_indices=power_settings.wind_solar_indices
-            )
+        data = maybe_update_marginal_fuel_prices(data)
 
         # Investment
         data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]

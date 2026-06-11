@@ -24,6 +24,10 @@ Functions included:
 # Third party imports
 import numpy as np
 
+CF_COLUMN_INDEX = 10
+TIME_INDEX = 0
+# 19 is the default 22-tech-schema index of CSP, which keeps the original
+# "CSP is twice as efficient as Solar PV" behaviour when no settings are passed.
 DEFAULT_CF_MULTIPLIERS = {19: 2.0}
 
 
@@ -214,8 +218,8 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
                                        MEWL[regions, techs, 0])
     
     for tech_idx, multiplier in (cf_multipliers or DEFAULT_CF_MULTIPLIERS).items():
-        BCET[:, tech_idx, 10] *= multiplier
-        MEWL[:, tech_idx, 0] *= multiplier
+        BCET[:, tech_idx, CF_COLUMN_INDEX] *= multiplier
+        MEWL[:, tech_idx, TIME_INDEX] *= multiplier
     
     return BCET, MEWL, MERC
 

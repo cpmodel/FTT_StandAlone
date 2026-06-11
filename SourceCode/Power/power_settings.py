@@ -7,6 +7,7 @@ for every simulation year.
 """
 
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Mapping
 
 
@@ -199,8 +200,8 @@ def load_power_settings(titles, config):
         ex_var=f"EX{str(ex_base_year)[2:]}",
         rex_var=f"REX{str(ex_base_year)[2:]}",
         tech_to_resource=_build_tech_to_resource(titles),
-        erti_jti_map=_build_erti_jti_map(titles),
-        cf_multipliers=_build_cf_multipliers(titles),
-        wind_solar_indices=_build_wind_solar_indices(titles),
-        gen_tech_indices=_build_gen_tech_indices(titles),
+        erti_jti_map=MappingProxyType(_build_erti_jti_map(titles)),
+        cf_multipliers=MappingProxyType(_build_cf_multipliers(titles)),
+        wind_solar_indices=MappingProxyType(_build_wind_solar_indices(titles)),
+        gen_tech_indices=MappingProxyType(_build_gen_tech_indices(titles)),
     )
