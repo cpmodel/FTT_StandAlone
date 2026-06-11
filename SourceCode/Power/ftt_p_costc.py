@@ -178,7 +178,8 @@ def update_fuel_costs(BCET, MERC, MRCL, tech_to_resource, fuel_type_mask):
     return BCET
 
 
-def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask):
+def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask,
+                            cf_multipliers=None):
     """New capacity factor method. Much less strict that the previous version
     based on work by Rishi Sahastrabuddhe."""
     
@@ -210,9 +211,9 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
                                        starting_CF * 0.8,
                                        MEWL[regions, techs, 0])
     
-    # CSP is twice as efficient as solar power typically
-    BCET[:, 19, 10] = BCET[:, 18, 10] * 2.0
-    MEWL[:, 19, 0] = MEWL[:, 18, 0] * 2.0
+    for tech_idx, multiplier in (cf_multipliers or {19: 2.0}).items():
+        BCET[:, tech_idx, 10] *= multiplier
+        MEWL[:, tech_idx, 0] *= multiplier
     
     return BCET, MEWL, MERC
 
@@ -284,7 +285,8 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
 
 
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
-                num_regions, num_techs, num_resources, year, dt):
+                num_regions, num_techs, num_resources, year, dt, tech_to_resource=None,
+                cf_multipliers=None):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
@@ -353,7 +355,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Resources classification:
     # Correspondence vector between techs and resources
-    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 6, 6]
+    if tech_to_resource is None:
+        tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 6, 6]
 
     # BCSC is natural resource data with dimensions num_resources x num_techs x length of cost axis L
 
@@ -404,7 +407,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
         
     # Type 2: New variable renewables cost curves (reduced capacity factors)
     BCET, MEWL, MERC = update_capacity_factors(
-        BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask
+        BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, loadfactor_type_mask,
+        cf_multipliers=cf_multipliers
         )
     
     # Type 3: Investment cost type of cost-supply curve

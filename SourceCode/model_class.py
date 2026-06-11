@@ -34,6 +34,7 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
+from SourceCode.Power.power_settings import load_power_settings
 from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
 from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
 
@@ -190,6 +191,12 @@ class RunFTT:
 
         # Load classification titles
         self.titles = titles_f.load_titles()
+
+        self.power_settings = None
+        if "FTT-P" in self.ftt_modules:
+            # Build Power settings/lookups once per model run so solve() can reuse
+            # them without rebuilding static metadata every simulation year.
+            self.power_settings = load_power_settings(self.titles, config)
 
         # Load variable dimensions
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
@@ -354,7 +361,7 @@ class RunFTT:
             if "FTT-P" in self.ftt_modules:
                 variables = ftt_p.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
-                                        self.domain)
+                                        self.domain, self.power_settings)
 
             # 4. Electricity price feedback (updates costs for next timestep)
             if "FTT-P" in self.ftt_modules:

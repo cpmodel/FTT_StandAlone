@@ -22,7 +22,7 @@ import numpy as np
 from SourceCode.support.divide import divide
 
 
-def get_gen_share(data, r):
+def get_gen_share(data, r, wind_solar_indices=None):
     """Compute share of solar PV and share of onshore + offshore wind.
 
     Parameters
@@ -41,8 +41,15 @@ def get_gen_share(data, r):
     if total_gen <= 0:
         return 0.0, 0.0
 
-    solar_share = data["MEWG"][r, 18] / total_gen
-    wind_share = np.sum(data["MEWG"][r, 16:18]) / total_gen
+    if wind_solar_indices is None:
+        wind_tech_indices = (16, 17)
+        solar_tech_idx = 18
+    else:
+        wind_tech_indices = tuple(wind_solar_indices["wind"])
+        solar_tech_idx = wind_solar_indices["solar"]
+
+    solar_share = data["MEWG"][r, solar_tech_idx] / total_gen
+    wind_share = np.sum(data["MEWG"][r, list(wind_tech_indices)]) / total_gen
 
     return solar_share, wind_share
 
@@ -118,7 +125,7 @@ def add_grid_integration_costs(solar_share, wind_share, r):
     return grid_integration_costs[0]
 
 
-def get_marginal_fuel_prices_mewp(data, titles, Svar):
+def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices=None):
     """Compute marginal fuel prices MEWP based on development within FTT:Power.
 
     This function calculates electricity prices (MEWP index 7) using either:
@@ -210,7 +217,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
             data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
 
             # Add grid and balancing costs based on VRE share
-            solar_share, wind_share = get_gen_share(data, r)
+            solar_share, wind_share = get_gen_share(data, r, wind_solar_indices=wind_solar_indices)
             data["MEWP"][r, 7, 0] += add_balancing_costs(solar_share, wind_share, r)
             data["MEWP"][r, 7, 0] += add_grid_integration_costs(solar_share, wind_share, r)
 
