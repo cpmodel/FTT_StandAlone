@@ -73,6 +73,9 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
+    gamma_mode = gamma_mode.lower()
+    if gamma_mode not in {'additive', 'multiplicative'}:
+        raise ValueError(f"Unsupported gamma_mode: {gamma_mode}")
 
     # Cost matrix
     bcet = data['BCET']

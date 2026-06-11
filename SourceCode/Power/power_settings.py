@@ -40,6 +40,10 @@ def _title_index(titles, dimension, label):
     return list(titles[dimension]).index(label)
 
 
+def _year_suffix(year):
+    return f"{year % 100:02d}"
+
+
 def _build_tech_to_resource(titles):
     tech_resource_labels = (
         ("1 Nuclear", "1 Nuclear"),
@@ -196,9 +200,9 @@ def load_power_settings(titles, config):
         elec_idx=_title_index(titles, "JTI", "8 Electricity"),
         usd_idx=_title_index(titles, "RTI", usd_exchange_region),
         nuclear_tech_idx=_title_index(titles, "T2TI", "1 Nuclear"),
-        prsc_var=f"PRSC{str(prsc_base_year)[2:]}",
-        ex_var=f"EX{str(ex_base_year)[2:]}",
-        rex_var=f"REX{str(ex_base_year)[2:]}",
+        prsc_var=f"PRSC{_year_suffix(prsc_base_year)}",
+        ex_var=f"EX{_year_suffix(ex_base_year)}",
+        rex_var=f"REX{_year_suffix(ex_base_year)}",
         tech_to_resource=_build_tech_to_resource(titles),
         erti_jti_map=MappingProxyType(_build_erti_jti_map(titles)),
         cf_multipliers=MappingProxyType(_build_cf_multipliers(titles)),

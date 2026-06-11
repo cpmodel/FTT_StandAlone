@@ -45,7 +45,7 @@ def get_gen_share(data, r, wind_solar_indices=None):
         wind_tech_indices = (16, 17)
         solar_tech_idx = 18
     else:
-        wind_tech_indices = tuple(wind_solar_indices["wind"])
+        wind_tech_indices = wind_solar_indices["wind"]
         solar_tech_idx = wind_solar_indices["solar"]
 
     solar_share = data["MEWG"][r, solar_tech_idx] / total_gen
