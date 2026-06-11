@@ -24,6 +24,8 @@ Functions included:
 # Third party imports
 import numpy as np
 
+DEFAULT_CF_MULTIPLIERS = {19: 2.0}
+
 
 # %% marginal cost of production of non renewable resources
 # -----------------------------------------------------------------------------
@@ -211,7 +213,7 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource, load
                                        starting_CF * 0.8,
                                        MEWL[regions, techs, 0])
     
-    for tech_idx, multiplier in (cf_multipliers or {19: 2.0}).items():
+    for tech_idx, multiplier in (cf_multipliers or DEFAULT_CF_MULTIPLIERS).items():
         BCET[:, tech_idx, 10] *= multiplier
         MEWL[:, tech_idx, 0] *= multiplier
     

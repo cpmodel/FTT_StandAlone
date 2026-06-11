@@ -204,6 +204,3 @@ def load_power_settings(titles, config):
         wind_solar_indices=_build_wind_solar_indices(titles),
         gen_tech_indices=_build_gen_tech_indices(titles),
     )
-
-
-build_power_settings = load_power_settings
