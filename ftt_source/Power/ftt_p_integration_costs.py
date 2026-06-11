@@ -94,16 +94,13 @@ def add_vre_integration_costs(data, titles, wind_solar_indices):
         grid_costs = get_grid_integration_costs(solar_share, wind_share)
         total_integration_cost = balancing + grid_costs
 
-        # METC is in log space; convert out, add cost, convert back.
         # This makes solar/wind more expensive as their share grows.
         if solar_share > 0 and data['METC'][r, solar_tech_idx, 0] != 0:
-            current_cost = np.exp(data['METC'][r, solar_tech_idx, 0])
-            data['METC'][r, solar_tech_idx, 0] = np.log(current_cost + total_integration_cost)
+            data['METC'][r, solar_tech_idx, 0] = data['METC'][r, solar_tech_idx, 0] + total_integration_cost
 
         if wind_share > 0:
             for w_idx in wind_tech_indices:
                 if data['METC'][r, w_idx, 0] != 0:
-                    current_cost = np.exp(data['METC'][r, w_idx, 0])
-                    data['METC'][r, w_idx, 0] = np.log(current_cost + total_integration_cost)
+                    data['METC'][r, w_idx, 0] = data['METC'][r, w_idx, 0] + total_integration_cost
 
     return data
