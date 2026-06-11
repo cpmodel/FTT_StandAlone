@@ -26,9 +26,9 @@ import numpy as np
 
 CF_COLUMN_INDEX = 10
 TIME_INDEX = 0
-# 19 is the default 22-tech-schema index of CSP, which keeps the original
-# "CSP is twice as efficient as Solar PV" behaviour when no settings are passed.
-DEFAULT_CF_MULTIPLIERS = {19: 2.0}
+DEFAULT_CSP_TECH_INDEX = 19
+# The default 22-tech schema treats CSP as twice as efficient as Solar PV.
+DEFAULT_CF_MULTIPLIERS = {DEFAULT_CSP_TECH_INDEX: 2.0}
 
 
 # %% marginal cost of production of non renewable resources
