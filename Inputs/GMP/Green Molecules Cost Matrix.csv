@@ -1,7 +1,8 @@
 ﻿,Investment ,std ,O&M,std ,Lifetime ,Lead time,Efficiency ,Capacity factor,Baseline capacity,Capture/production rates  ,Eff learning,Inv learning,OPEX learning,Discount rate,Storage costs
-DAC,,,,,20,,4.01,0.9,,,-0.05,-0.12,-0.075,0.05,
-DOC,,,8,1,15,,7.2,0.9,,,,,,0.05,
-Hydrogen,2.771003688,,0.181838,,8,,50,0.9,,,-0.02,-0.18,-0.18,0.05,
+DAC,,,356,106,20,2,4.01,0.9,,,-0.05,-0.12,-0.075,0.05,
+DOC,,,8,1,15,2,7.2,0.9,,,-0.05,-0.12,0,0.05,
+H2 plant,,,,,20,3,50,0.9,,,-0.02,-0.18,-0.18,0.05,
+H2 Stacks,,,0,0,10,0,0,0,0,0,0,0,0,0.05,0
 Methanation,,,,,,,,0.9,,,,,,0.05,
 Electrical CCS,,,,,,,,,,,,,,0.05,
-Heat CCS,,,,,,,,,,,,,,,
+Heat CCS,,,,,,,,,,,,,,0.05,
