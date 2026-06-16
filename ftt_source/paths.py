@@ -3,11 +3,11 @@
 =========================================
 paths.py
 =========================================
-Centralized path configuration for FTT Stand-alone.
+Centralized path configuration for FTT
 
 This module provides a single place to configure the data directories used by
 the model (Inputs and Utilities). Override the defaults before instantiating
-:class:`~ftt_source.model_class.RunFTT` when using FTT Stand-alone as an
+:class:`~ftt_source.model_class.RunFTT` when using FTT as an
 imported package with local data.
 
 Example usage
