@@ -87,19 +87,10 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     solar_idx = wind_solar_indices['solar']
     csp_idx = wind_solar_indices['csp']
 
-    has_lat_input = 'LAT' in data and data['LAT'].shape[0] == len(titles['RTI'])
-    has_rldc_map_input = 'RLDCMAP' in data and data['RLDCMAP'].shape[0] == len(titles['RTI'])
-    use_legacy_defaults = (
-        len(titles['RTI']) == 71
-        and has_lat_input
-        and has_rldc_map_input
-        and np.allclose(data['LAT'][:, 0, 0], 0.0)
-        and np.all(data['RLDCMAP'][:, 0, 0] == 0)
-    )
-
-    # Prefer LAT input. For legacy standalone runs where both LAT and RLDCMAP are
-    # present but unpopulated (all zeros), fallback to historic hardcoded defaults.
-    if has_lat_input and not use_legacy_defaults:
+    # Prefer LAT input; fallback to legacy hardcoded values to preserve
+    # standalone behaviour when LAT is missing/unpopulated.
+    has_lat_input = 'LAT' in data and np.any(np.abs(data['LAT'][:, 0, 0]) > 0)
+    if has_lat_input:
         latitude = data['LAT'][:, 0, 0]
     elif len(titles['RTI']) == 71:
         latitude = np.asarray([50.6, 64.0, 51.0, 39.0, 40.3, 39.6, 53.2, 42.6, 49.8, 52.3,
@@ -117,7 +108,8 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
 
     # Mapping of RTI world regions to 8 available RLDC regions:
     # 0 = Europe, 1 = Latin America, 2 = India, 3 = USA, 4 = Japan, 5 = MENA, 6 = SSA, 7 = China
-    if has_rldc_map_input and not use_legacy_defaults:
+    has_rldc_map_input = 'RLDCMAP' in data and np.any(np.abs(data['RLDCMAP'][:, 0, 0]) > 0)
+    if has_rldc_map_input:
         rldc_regmap = data['RLDCMAP'][:, 0, 0].astype(np.int64)
     elif len(titles['RTI']) == 71:
         rldc_regmap = np.zeros(len(titles['RTI']), dtype=int)
@@ -549,16 +541,12 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         
         
         # Storage cost are overwritten here:
-        mlsc_histend_year = histend.get("MLSC_histend")
-        has_numeric_mlsc_histend = isinstance(mlsc_histend_year, (int, np.integer, float))
-        mlsc_learning_start_year = int(mlsc_histend_year) if has_numeric_mlsc_histend else histend["MSSC_histend"]
-        if year >= mlsc_learning_start_year:
+        if year >= histend["MSSC_histend"]:
             data['MLSC_histend'] = time_lag['MLSC_histend'].copy()
 
             # Apply learning rate to levelised cost of storage (MSCC and MLCC)
             data['MSCC'][:, 0, 0] = data['Battery price'][:, 0, 0] / 1000 * 1.25 * 1e6  # Times 1.25 based on BNEF LCOS calculations vs battery pack price
-            mlsc_histend_safe = np.maximum(time_lag['MLSC_histend'], 1e-12)
-            data['MLCC'][:, 0, 0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / mlsc_histend_safe) ** learning_exp_ls
+            data['MLCC'][:, 0, 0] = 0.32 * 1e6 * (data_dt['MLSC'][:, 0, 0].sum() / data['MLSC_histend']) ** learning_exp_ls
         
         
         # in reality the capacity/energy discharged ratio changes due to demand-supply mismatches.
@@ -692,15 +680,8 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         data = update_costs_from_transport_batteries(data, storage_ratio, year, titles)
 
     # Store the storage capacities in last historical year
-    mlsc_histend_year = histend.get("MLSC_histend")
-    has_numeric_mlsc_histend = isinstance(mlsc_histend_year, (int, np.integer, float))
     if year <= histend["MSSC_histend"]:
         data['MSSC_histend'] = np.sum(data['MSSC']).copy()
-
-    if has_numeric_mlsc_histend:
-        if year <= int(mlsc_histend_year):
-            data['MLSC_histend'] = np.sum(data['MLSC']).copy()
-    elif year <= histend["MSSC_histend"]:
         data['MLSC_histend'] = np.sum(data['MLSC']).copy()
 
     return data
