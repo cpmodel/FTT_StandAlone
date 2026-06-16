@@ -34,6 +34,8 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
+import SourceCode.Green_Molecules.ftt_gmp_main as ftt_gmp
+
 from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
 from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
 
@@ -74,7 +76,8 @@ class RunFTT:
             Industrial heat - non-metallic minerals FTT module
         - `FTT: IndHe OIS <ftt_ois_main.html>`__
             Industrial heat - other sectors FTT module
-
+        - `FTT: Green Molecules <ftt_gmp_main.html>`__
+            Green molecule project FTT 
 
         Support functions:
 
@@ -297,7 +300,7 @@ class RunFTT:
 
         # define modules list in for possible setting.ini selection
         modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
-                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
+                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS", "FTT-GMP"]
         
         # Iteration loop here
         for itereration in range(max_iter):
@@ -342,7 +345,12 @@ class RunFTT:
                 variables = ftt_indhe_ois.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-
+                
+            if "FTT-GMP" in self.ftt_modules:
+                ftt_gmp.solve(variables, time_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+            
             # 2. Electricity demand feedback (aggregates demand from all sectors)
             if scenario != "S0":
                 if tl[y] > self.histend['MEWG']:
