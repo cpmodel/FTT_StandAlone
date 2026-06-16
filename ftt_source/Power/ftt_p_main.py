@@ -265,8 +265,11 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             data['PRSC15'] = np.copy(data['PRSCX'])
 
 
-        # Carry over resource marginal costs; set unavailable carriers to a small floor
-        data['MERC'][:, :4, 0] = time_lag['MERC'][:, :4, 0]
+        # Set starting values for marginal costs of resources (matches default FTT run)
+        data['MERC'][:, 0, 0] = 0.255
+        data['MERC'][:, 1, 0] = 5.689
+        data['MERC'][:, 2, 0] = 0.4246
+        data['MERC'][:, 3, 0] = 3.374
         data['MERC'][:, 4, 0] = 0.001
         data['MERC'][:, 7, 0] = 0.001
 
