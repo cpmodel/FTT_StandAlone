@@ -154,10 +154,6 @@ class RunFTT:
             Optional callback ``log_callback(message)`` used by GUI wrappers
             for status messages.
         """
-        # Store callbacks
-        self.progress_callback = progress_callback
-        self.log_callback = log_callback
-
         # Configure data paths before any data-loading calls.
         from SourceCode.paths import set_paths, _PACKAGE_ROOT
         set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
@@ -195,13 +191,11 @@ class RunFTT:
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Retrieve inputs
-        if self.log_callback:
-            self.log_callback("Loading model inputs...")
         self.input = data_loading.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
                                     self.forstart,
-                                    progress_callback=self.progress_callback,
-                                    log_callback=self.log_callback)
+                                    progress_callback=progress_callback,
+                                    log_callback=log_callback)
 
 
         # Initialize remaining attributes
@@ -222,28 +216,17 @@ class RunFTT:
         # Define output container
         self.output = {scen: {var: np.full_like(self.input[scen][var], 0) 
                               for var in self.input[scen]} for scen in self.input}
-        # Calculate total steps for progress tracking
-        num_scenarios = len(self.input)
-        years_per_scenario = len(self.timeline)
-        total_steps = num_scenarios * years_per_scenario
-        current_step = 0
-        
-        # Data loading used 20% of progress (0-200 out of 1000)
-        # Solving will use remaining 80% (200-1000 out of 1000)
-        progress_offset = 200  # Starting point after data loading
 
         # Clear any previous instances of the progress bar
         try:
             tqdm._instances.clear()
         except AttributeError:
             pass
-            
-        for scen_idx, scen in enumerate(self.input):
-            if self.log_callback:
-                self.log_callback(f'Solving scenario: {scen} ({scen_idx + 1}/{num_scenarios})')
+        
+        for scen in self.input:
 
             # Create progress bar:
-            with tqdm(self.timeline, disable=self.progress_callback is not None) as pbar:
+            with tqdm(self.timeline) as pbar:
 
             # Call solve_year method for each year of the simulation period
 #                for year_index, year in enumerate(self.timeline):
@@ -259,13 +242,6 @@ class RunFTT:
 
                     # Increment the progress bar by one step
                     pbar.update(1)
-                    
-                    # Update progress callback (map to 20%-100% range)
-                    current_step += 1
-                    if self.progress_callback:
-                        # Map current_step/total_steps to 200-1000 range (20%-100%)
-                        progress_value = progress_offset + int((current_step / total_steps) * 800)
-                        self.progress_callback(progress_value, 1000)
 
                     # Populate output container
                     for var in self.variables:
@@ -276,11 +252,7 @@ class RunFTT:
             
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
-            elapsed = time.time() - start_time
-            if self.log_callback:
-                self.log_callback(f'Scenario {scen} completed in {elapsed:.2f} seconds')
-            else:
-                print(f'Elapsed time is {elapsed:.2f} seconds')
+            print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
 
 
     def solve_year(self, year, y, scenario, max_iter=1):
