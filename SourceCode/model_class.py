@@ -191,11 +191,11 @@ class RunFTT:
         self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Retrieve inputs
+        if log_callback:
+            log_callback("Loading model inputs...")
         self.input = data_loading.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
-                                    self.forstart,
-                                    progress_callback=progress_callback,
-                                    log_callback=log_callback)
+                                    self.forstart)
 
 
         # Initialize remaining attributes
