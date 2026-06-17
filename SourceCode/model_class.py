@@ -331,7 +331,7 @@ class RunFTT:
                     variables = electricity_price_feedback(variables, time_lags)
 
             if not any(True for x in modules_list if x in self.ftt_modules):
-                print("Incorrect selection of models. Check settings.ini")
+                raise ValueError("Incorrect selection of models. Check settings.ini")
 
            
         return variables, time_lags
