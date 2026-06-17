@@ -288,12 +288,22 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 # Core functions for the main programme
 def directories_setup():
     """ Set up directory masterfile and the general input directory"""
+    
+    dir_file = os.path.dirname(os.path.realpath(__file__))
+    dir_root = Path(dir_file).parents[1] 
+    dir_inputs = os.path.join(dir_root, "Inputs")
 
-    from SourceCode.paths import get_inputs_path
-    inputs = get_inputs_path()
-    dir_inputs = str(inputs)
-    dir_masterfiles = str(inputs / "_MasterFiles")
-
+    # Keep writing csv outputs to Inputs/, but allow masterfiles to live in
+    # Inputs_existing/ after migration to the new format.
+    candidate_master_dirs = [
+        os.path.join(dir_root, "Inputs_existing", "_MasterFiles"),
+        os.path.join(dir_root, "Inputs", "_MasterFiles"),
+    ]
+    dir_masterfiles = next(
+        (path for path in candidate_master_dirs if os.path.isdir(path)),
+        candidate_master_dirs[-1],
+    )
+    
     return dir_inputs, dir_masterfiles
 
 
