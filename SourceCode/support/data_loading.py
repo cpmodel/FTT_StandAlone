@@ -28,6 +28,7 @@ Scalar / 1-D variables (all trailing dims == 'NA'):
 # Standard library imports
 import csv
 import os
+import warnings
 
 # Third party imports
 import numpy as np
@@ -129,7 +130,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                     null_values=['', 'NA', 'nan'],
                 )
             except Exception as exc:
-                import warnings
                 warnings.warn(
                     f'Could not read {file_path}: {exc}'
                 )
@@ -145,6 +145,32 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
             loaded_vars.add(var)
 
         return loaded_vars
+
+    # Warn about scenarios that have no input files at all.
+    empty_scenarios = []
+    for scen in scenario_list:
+        if scen == 'S0':
+            continue
+        has_files = any(
+            os.path.isdir(os.path.join('Inputs', scen, module))
+            and any(f.endswith('.csv') for f in os.listdir(os.path.join('Inputs', scen, module)))
+            for module in models_to_load
+        )
+        if not has_files:
+            empty_scenarios.append(scen)
+
+    if empty_scenarios:
+        msg = (
+            f"Warning: no input files found for scenario(s): {', '.join(empty_scenarios)}.\n "
+            "These scenarios will not be run."
+        )
+        if log_callback is not None:
+            log_callback(msg)
+        else:
+            warnings.warn(msg)
+        for scen in empty_scenarios:
+            del data[scen]
+        scenario_list = [s for s in scenario_list if s not in empty_scenarios]
 
     for module in models_to_load:
         check_vars_exist(module)

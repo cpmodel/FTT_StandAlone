@@ -195,7 +195,8 @@ class RunFTT:
             log_callback("Loading model inputs...")
         self.input = data_loading.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
-                                    self.forstart)
+                                    self.forstart,
+                                    log_callback=log_callback)
 
 
         # Initialize remaining attributes
