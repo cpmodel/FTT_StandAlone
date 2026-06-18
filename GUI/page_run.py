@@ -107,6 +107,7 @@ def render_run_page():
             ui.notify('Run Complete', type='positive')
             
         except Exception as e:
+            await update_from_queues()  # flush any pending log messages first
             log_console.push("-" * 40)
             log_console.push(f"CRITICAL ERROR: {str(e)}")
             ui.notify('Error', type='negative')

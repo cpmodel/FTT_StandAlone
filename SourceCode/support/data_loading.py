@@ -33,6 +33,9 @@ import os
 import numpy as np
 import polars as pl
 
+# Local imports
+from SourceCode.support.check_input_files import check_var_dims, check_vars_exist
+
 
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
               progress_callback=None, log_callback=None):
@@ -72,7 +75,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
     titles['TIME'] = timeline
 
     models_enabled = [m.strip() for m in ftt_modules.split(',') if m.strip()]
-    # TODO: avoid hardcoding models here
     supported_models = get_valid_ftt_models()
     # if any models enabled are not supported, show warning
     if any(m not in supported_models for m in models_enabled):
@@ -115,7 +117,6 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
         for filename in os.listdir(directory):
             if not filename.endswith('.csv'):
                 continue
-
             var = filename[:-4]  # strip '.csv'
             if var not in dimensions or var not in data[scen]:
                 continue
@@ -134,6 +135,9 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                 )
                 continue
 
+            if scen == 'S0':
+                check_var_dims(var, df, titles, dimensions)
+
             _fill_from_input_df(
                 df, var, dimensions, titles, timeline, tl_idx, forstart,
                 data[scen][var],
@@ -143,6 +147,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
         return loaded_vars
 
     for module in models_to_load:
+        check_vars_exist(module)
         s0_directory = os.path.join('Inputs', 'S0', module)
         module_vars = _read_and_fill_module_folder('S0', module, s0_directory)
 
