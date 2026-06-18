@@ -79,7 +79,7 @@ FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,
 MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,Y
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,Y
-PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,Y
+PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,FTT-P,-,-,2010,Y
 RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,Y
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
