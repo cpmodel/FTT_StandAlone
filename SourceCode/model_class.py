@@ -34,7 +34,7 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
-from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
+from SourceCode.sector_coupling.electricity_price import electricity_price_feedback, TOU_price_feedback
 from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
 
 
@@ -272,7 +272,11 @@ class RunFTT:
                     # Populate output container
                     for var in self.variables:
                         if 'TIME' in self.dims[var]:
-                            self.output[scen][var][:, :, :, y] = self.variables[var]
+                            try:
+                                self.output[scen][var][:, :, :, y] = self.variables[var]
+                            except ValueError:
+                                print(f'{var} and {scen}')
+                                raise
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
             
@@ -359,6 +363,8 @@ class RunFTT:
             if "FTT-P" in self.ftt_modules:
                 if tl[y] > self.histend['MEWG']:
                     variables = electricity_price_feedback(variables, time_lags)
+                if tl[y] > min(self.histend['TOU tariff uptake'], self.histend['Smart meter uptake']):
+                    variables = TOU_price_feedback(variables, time_lags)
 
             if not any(True for x in modules_list if x in self.ftt_modules):
                 print("Incorrect selection of models. Check settings.ini")

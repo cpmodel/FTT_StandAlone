@@ -248,7 +248,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                         elif dims_length[2] == 1 and var != 'SectorCouplingAssumps':
                             try:
                                 data[scen][var][0, :, 0, var_tl_inds[0]:var_tl_inds[-1]+1] = read.iloc[:][var_tl_fit]
-                            except (IndexError, ValueError, KeyError) as e:
+                            except (IndexError, ValueError, KeyError):
                                 input_functions_message(scen, var, dims, read, timeline=var_tl_fit)
                                 raise
                             except KeyError:
