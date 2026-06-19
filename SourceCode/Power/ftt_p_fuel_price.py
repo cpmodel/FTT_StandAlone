@@ -157,7 +157,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
         Updated with MEWP values
     """
     # Set pricing mode to 1 (weighted LCOE) for all regions
-    data["MPRI"][:] = 1
+    data["MPRI"][:] = 2
 
     # Set fuel prices for specific fuels
     data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]   # Hard coal

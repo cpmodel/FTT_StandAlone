@@ -52,7 +52,7 @@ MLSC,FTT:Power long-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,
 MLLB,FTT:Power load factors (%) by tech x load band,%,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
 Gen_by_lb,Generation by technology and load band,GWh,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
 MLCC,Long-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2012,
-MLBP,FTT:Power Maximum marginal costs per load band (serves as the price),,RTI,LBTI,NA,TIME,FTT-P,,,2001,
+MLBP,FTT:Power Marginal costs per load band (serves as the price),$/MWh,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB1,Normalised residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB0,Cumulative residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-
