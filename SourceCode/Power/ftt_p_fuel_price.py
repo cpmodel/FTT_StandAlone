@@ -235,10 +235,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
 
                 # Only select technologies with non-zero generation
                 where_condition = gen_by_lb[:, LB] > 0.0
-                mc_tech_by_lb[where_condition] = (
-                    data["MWMC"][r, :, 0][where_condition]
-                    - data["BCET"][r, :, 0][where_condition]
-                )
+                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition]
 
                 # Weighted average marginal cost
                 if np.sum(gen_by_lb[:, LB]) > 0.0:
