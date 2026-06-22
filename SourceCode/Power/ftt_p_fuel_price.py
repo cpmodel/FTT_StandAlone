@@ -235,10 +235,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
 
                 # Only select technologies with non-zero generation
                 where_condition = gen_by_lb[:, LB] > 0.0
-                mc_tech_by_lb[where_condition] = (
-                    data["MWMC"][r, :, 0][where_condition]
-                    - data["BCET"][r, :, 0][where_condition]
-                )
+                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition]
 
                 # Weighted average marginal cost
                 if np.sum(gen_by_lb[:, LB]) > 0.0:
@@ -249,12 +246,12 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
                     # Adjust prices for higher transmission costs
                     data["MLBP"][r, LB, 0] *= 1.3
                 
-                # Smooth the baseload price trajectory towards VRE when baseload under 5% height 
-                if data['MLB1'][r, 0, 0] < 0.05:
-                    baseload_weight = data['MLB1'][r, 0, 0] / 0.05
-                    vre_weight = 1 - baseload_weight
-                    data["MLBP"][r, 0, 0] = (data["MLBP"][r, 0, 0] * baseload_weight
-                                             + np.max(data["MWMC"][r, :, 0] * Svar[r, :]) * vre_weight)  
+            # Smooth the baseload price trajectory towards VRE when baseload under 5% height 
+            if data['MLB1'][r, 0, 0] < 0.05:
+                baseload_weight = data['MLB1'][r, 0, 0] / 0.05
+                vre_weight = 1 - baseload_weight
+                data["MLBP"][r, 0, 0] = (data["MLBP"][r, 0, 0] * baseload_weight
+                                         + np.max(data["MWMC"][r, :, 0] * Svar[r, :]) * vre_weight)  
             
             # Adjust load band prices for start-up costs, and low efficiency in peak load bands
             data["MLBP"][r, 4, 0] *= 1.35  # Back-up reserves - highest start-up costs
