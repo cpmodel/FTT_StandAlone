@@ -145,8 +145,8 @@ def price_by_loadband(data, titles, Svar):
                data["MLBP"][r, LB, 0] *= 1.3
            
        # Smooth the baseload price trajectory towards VRE when baseload under 5% height 
-       if data['MLB1'][r, 0, 0] < 0.05:
-           baseload_weight = data['MLB1'][r, 0, 0] / 0.05
+       if data['MLB1'][r, 0, 0] < 0.06:
+           baseload_weight = data['MLB1'][r, 0, 0] / 0.06
            vre_weight = 1 - baseload_weight
            data["MLBP"][r, 0, 0] = (data["MLBP"][r, 0, 0] * baseload_weight
                                     + np.max(data["MWMC"][r, :, 0] * Svar[r, :]) * vre_weight)  
