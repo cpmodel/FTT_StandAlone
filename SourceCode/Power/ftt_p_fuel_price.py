@@ -118,6 +118,47 @@ def add_grid_integration_costs(solar_share, wind_share, r):
     return grid_integration_costs[0]
 
 
+def price_by_loadband(data, titles, Svar):
+    
+    for r in range(len(titles['RTI'])):
+        
+       # Load band weights
+       n_loadbands = 6
+       
+       gen_by_lb = data['Gen_by_lb'][r]
+
+       # Loop over load bands
+       for LB in range(n_loadbands):
+           mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])
+
+           # Only select technologies with non-zero generation
+           where_condition = gen_by_lb[:, LB] > 0.0
+           mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition]
+
+           # Weighted average marginal cost
+           if np.sum(gen_by_lb[:, LB]) > 0.0:
+               data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * gen_by_lb[:, LB]) / np.sum(gen_by_lb[:, LB])
+           # If the load band is now empty, set the price to variable renewables
+           else:
+               data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
+               # Adjust prices for higher transmission costs
+               data["MLBP"][r, LB, 0] *= 1.3
+           
+       # Smooth the baseload price trajectory towards VRE when baseload under 5% height 
+       if data['MLB1'][r, 0, 0] < 0.05:
+           baseload_weight = data['MLB1'][r, 0, 0] / 0.05
+           vre_weight = 1 - baseload_weight
+           data["MLBP"][r, 0, 0] = (data["MLBP"][r, 0, 0] * baseload_weight
+                                    + np.max(data["MWMC"][r, :, 0] * Svar[r, :]) * vre_weight)  
+       
+       # Adjust load band prices for start-up costs, and low efficiency in peak load bands
+       data["MLBP"][r, 4, 0] *= 1.35  # Back-up reserves - highest start-up costs
+       data["MLBP"][r, 3, 0] *= 1.2
+       data["MLBP"][r, 2, 0] *= 1.05
+       
+    return data
+
+
 def get_marginal_fuel_prices_mewp(data, titles, Svar):
     """Compute marginal fuel prices MEWP based on development within FTT:Power.
 
@@ -157,7 +198,7 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
         Updated with MEWP values
     """
     # Set pricing mode to 1 (weighted LCOE) for all regions
-    data["MPRI"][:] = 2
+    data["MPRI"][:] = 1
 
     # Set fuel prices for specific fuels
     data["MEWP"][:, 0, 0] = data["MERC"][:, 2, 0]   # Hard coal
@@ -165,6 +206,8 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
     data["MEWP"][:, 2, 0] = data["MERC"][:, 1, 0]   # Crude oil
     data["MEWP"][:, 3, 0] = data["MERC"][:, 3, 0]   # Natural gas
     data["MEWP"][:, 10, 0] = data["MERC"][:, 4, 0]  # Biomass
+    
+    data = price_by_loadband(data, titles, Svar)
 
     # For each region
     for r in range(len(titles['RTI'])):
@@ -209,16 +252,10 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
             # Combined electricity price
             data["MEWP"][r, 7, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
 
-            # Add grid and balancing costs based on VRE share
-            solar_share, wind_share = get_gen_share(data, r)
-            data["MEWP"][r, 7, 0] += add_balancing_costs(solar_share, wind_share, r)
-            data["MEWP"][r, 7, 0] += add_grid_integration_costs(solar_share, wind_share, r)
-
 
         # MPRI == 2: Merit order approach (not used by default)
         elif data["MPRI"][r] == 2:
                         
-            # Load band weights
             n_loadbands = 6
             non_vre_lb_weight = [0] * 5
             non_vre_lb_weight[4] = 80.0 / 8766.0
@@ -227,38 +264,13 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
             non_vre_lb_weight[1] = (4400.0 - 2200.0) / 8766.0
             non_vre_lb_weight[0] = (8766.0 - 4400.0) / 8766.0
             
-            gen_by_lb = data['Gen_by_lb'][r]
-
-            # Loop over load bands
-            for LB in range(n_loadbands):
-                mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])
-
-                # Only select technologies with non-zero generation
-                where_condition = gen_by_lb[:, LB] > 0.0
-                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition]
-
-                # Weighted average marginal cost
-                if np.sum(gen_by_lb[:, LB]) > 0.0:
-                    data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * gen_by_lb[:, LB]) / np.sum(gen_by_lb[:, LB])
-                # If the load band is now empty, set the price to variable renewables
-                else:
-                    data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
-                    # Adjust prices for higher transmission costs
-                    data["MLBP"][r, LB, 0] *= 1.3
-                
-            # Smooth the baseload price trajectory towards VRE when baseload under 5% height 
-            if data['MLB1'][r, 0, 0] < 0.05:
-                baseload_weight = data['MLB1'][r, 0, 0] / 0.05
-                vre_weight = 1 - baseload_weight
-                data["MLBP"][r, 0, 0] = (data["MLBP"][r, 0, 0] * baseload_weight
-                                         + np.max(data["MWMC"][r, :, 0] * Svar[r, :]) * vre_weight)  
-            
-            # Adjust load band prices for start-up costs, and low efficiency in peak load bands
-            data["MLBP"][r, 4, 0] *= 1.35  # Back-up reserves - highest start-up costs
-            data["MLBP"][r, 3, 0] *= 1.2
-            data["MLBP"][r, 2, 0] *= 1.05
-           
             data["MEWP"][r, 7, 0] = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
+            
+        
+        # Add grid and balancing costs based on VRE share (both pricing systems)
+        solar_share, wind_share = get_gen_share(data, r)
+        data["MEWP"][r, 7, 0] += add_balancing_costs(solar_share, wind_share, r)
+        data["MEWP"][r, 7, 0] += add_grid_integration_costs(solar_share, wind_share, r)
 
 
     return data
