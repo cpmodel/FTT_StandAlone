@@ -640,12 +640,13 @@ def solve(data, time_lag, titles, histend, year, domain):
                     data['BCET'][:, tech, c2ti['4 std ($/MWh)']] = (
                             data_dt['BCET'][:, tech, c2ti['4 std ($/MWh)']] 
                              *  (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
+                    # Assume learning rate half for O&M costs
                     data['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] = (
                             data_dt['BCET'][:, tech, c2ti['7 O&M ($/MWh)']] 
-                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
+                             * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * 0.4 * dw[tech]/data['MEWW'][0, tech, 0]))
                     data['BCET'][:, tech, c2ti['8 std ($/MWh)']] = (
                             data_dt['BCET'][:, tech, c2ti['8 std ($/MWh)']]
-                            * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * dw[tech]/data['MEWW'][0, tech, 0]))
+                            * (1.0 + data['BCET'][:, tech, c2ti['16 Learning exp']] * 0.4 * dw[tech]/data['MEWW'][0, tech, 0]))
 
 
             
