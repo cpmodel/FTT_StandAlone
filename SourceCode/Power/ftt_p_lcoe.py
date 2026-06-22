@@ -194,6 +194,20 @@ def get_lcoe(data, titles):
     # Formula: METC = lcoe_mu_all_policies * (1 + Gamma) / ValueFactor
     # This properly accounts for VRE intermittency (value factor < 1 for solar/wind)
     gamma = bcet[:, :, c2ti['22 Gamma']]
+    
+    
+    
+    # Rows corresponding to renewable technologies
+    renew_rows = [16, 17, 18]
+    
+    # Determine change in market shares since last time step
+    shares_renew = data['MEWG share'][:, renew_rows, 0]
+
+    # Adjust value factor based on cannibalisation factor and change in shares
+    cann_adjustment = shares_renew * bcet[:, renew_rows, c2ti['24 Cannibalisation factor']]
+    value_factor = np.maximum(0.6, bcet[:, renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment))
+    bcet[:, renew_rows, c2ti['23 Value factor']] = value_factor
+    
     value_factor = bcet[:, :, c2ti['23 Value factor']]
     # Guard against division by zero (value_factor should never be 0, but be safe)
     value_factor = np.where(value_factor < 0.01, 1.0, value_factor)

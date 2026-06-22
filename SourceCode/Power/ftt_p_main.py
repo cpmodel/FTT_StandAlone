@@ -188,6 +188,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         # Update market shares (safe divide to avoid inf when capacity sum is zero)
         data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
         
+        data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
+
+        
 
 
         for r in range(len(titles['RTI'])):
@@ -237,7 +240,8 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Update market shares (safe divide to avoid inf when capacity sum is zero)
         data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
-
+        data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
+        
         # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
         if not time_lag['MMCD'][:, :, 0].any():
             time_lag = get_lcoe(data, titles)
@@ -312,6 +316,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
             # Safe divide to avoid inf when capacity sum is zero
             data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
+            
+            data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
 
             # Compute early scrapping costs
             # TODO: check it makes sense. It does not seem to be used elsewhere
@@ -507,11 +513,13 @@ def solve(data, time_lag, titles, histend, year, domain):
             # New generation and capacity
             mewg = mews * e_demand[:, None] * mewl_dt / np.sum(mews * mewl_dt, axis=1)[:, None]
             mewk = mewg / mewl_dt / 8766
+            mewg_share = mewg / mewg.sum(axis=1, keepdims=True)
             
             data['MEWS'] = mews[:, :, None]
             data['MEWL'] = mewl_dt[:, :, None]
             data['MEWG'] = mewg[:, :, None]
             data['MEWK'] = mewk[:, :, None]
+            data['MEWG share'] = mewg_share[:, :, None]
 
             # Raise error if there are negative values 
             # or regional market shares do not add up to one
@@ -582,8 +590,10 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup,
                                            denominator[:, :, None]) 
 
+
             # Update capacities and emissions
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+            data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
             
