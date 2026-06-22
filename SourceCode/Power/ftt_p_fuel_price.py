@@ -249,13 +249,13 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
                     # Adjust prices for higher transmission costs
                     data["MLBP"][r, LB, 0] *= 1.3
                 
-                # Smooth the baseload price trajectory towards VRE when baseload under 5% height 
-                if data['MLB1'][r, 0, 0] < 0.05:
-                    baseload_weight = data['MLB1'][r, 0, 0] / 0.05
-                    vre_weight = 1 - baseload_weight
-                    data["MLBP"][r, 0, 0] = (data["MLBP"][r, 0, 0] * baseload_weight
-                                             + np.max(data["MWMC"][r, :, 0] * Svar[r, :]) * vre_weight)  
-            
+            # Smooth the baseload price trajectory towards VRE when baseload under 5% height
+            if data["MLB1"][r, 0, 0] < 0.05:
+                baseload_weight = np.clip(data["MLB1"][r, 0, 0] / 0.05, 0.0, 1.0)
+                vre_weight = 1.0 - baseload_weight
+                vre_price = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
+                data["MLBP"][r, 0, 0] = data["MLBP"][r, 0, 0] * baseload_weight + vre_price * vre_weight
+
             # Adjust load band prices for start-up costs, and low efficiency in peak load bands
             data["MLBP"][r, 4, 0] *= 1.35  # Back-up reserves - highest start-up costs
             data["MLBP"][r, 3, 0] *= 1.2
