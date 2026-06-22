@@ -203,9 +203,14 @@ def TOU_price_feedback(data, time_lag):
     data = smart_meter_uptake(data, time_lag)
     data = TOU_uptake_feedback(data, time_lag)
     dTOU = data['TOU tariff uptake'] - time_lag['TOU tariff uptake']
-
-    # Max discount under full TOU tariff uptake adoption
-    max_discount = 0.15
+ 
+    data['Elec price volatility'][:, 0, 0] = (
+        np.clip((data["MLBP"][:, 2, 0] - data["MLBP"][:, 0, 0]) / data['MEWP'][:, 7, 0], 0, 0.8)
+        )
+    
+    # Max discount under full TOU tariff uptake adoption. We assume that utilities
+    # will pass half of discounts on to consumers
+    max_discount = data['Elec price volatility'] * 0.5
 
     dprice_factor = max_discount * dTOU
 
