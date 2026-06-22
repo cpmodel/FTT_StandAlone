@@ -90,33 +90,98 @@ def _compute_vre_share(data, time_lag):
     return vre_share
 
 
-# =========================================================
-# 4. Time-of-use tariff diffusion
-# =========================================================
-def TOU_uptake_feedback(data, time_lag,
-                        alpha_TOU=0.01,
-                        beta_VRE=0.05,
-                        p=0.001):
+# # =========================================================
+# # 4. Time-of-use tariff diffusion
+# # =========================================================
+# def TOU_uptake_feedback(data, time_lag,
+#                         alpha_TOU=0.01,
+#                         beta_VRE=0.05,
+#                         p=0.001):
+#     """
+#     Diffusion of TOU tariff uptake tariffs driven by:
+#     - VRE penetration (need for encouraging TOU)
+#     - Smart meter penetration (enabling infrastructure)
+
+#     Logistic bounded diffusion process.
+#     """
+
+#     vre_share = _compute_vre_share(data, time_lag)
+#     sm = data["Smart meter uptake"]
+
+#     u = time_lag["TOU tariff uptake"]
+
+#     du = (p + beta_VRE * vre_share[:, None, None]) * (sm - u) + alpha_TOU * u * (sm - u)
+
+#     data["TOU tariff uptake"] = np.clip(u + du, 0.0, 1.0)
+    
+#     print(f'TOU taiff uptake Be is: {data["TOU tariff uptake"][[0, 41], 0, 0]}')
+    
+#     return data
+
+
+
+
+# def TOU_uptake_feedback(data, time_lag,
+#                         r0=0.006,
+#                         r_vre=0.25,
+#                         k=5.0):
+#     """
+#     TOU diffusion constrained by smart meter penetration.
+
+#     u_{t+1} = u_t + r(V) * u_t * (1 - u_t / S_t)
+#     """
+
+#     vre_share = _compute_vre_share(data, time_lag)
+
+#     sm = np.clip(data["Smart meter uptake"], 1e-6, 1.0)
+#     u = time_lag["TOU tariff uptake"]
+
+#     # VRE-driven adoption speed (nonlinear sensitivity)
+#     vre_effect = 1.0 / (1.0 + np.exp(-k * (vre_share - 0.3)))
+
+#     r = r0 + r_vre * vre_effect
+
+#     du = r[:, None, None] * u * (1.0 - u / sm)
+
+#     data["TOU tariff uptake"] = np.clip(u + du, 0.0, sm)
+    
+#     print(f'TOU taiff uptake BE/IN is: {data["TOU tariff uptake"][[0, 41], 0, 0]}')
+
+#     return data
+
+
+
+def TOU_uptake_feedback(data, time_lag):
     """
-    Diffusion of TOU tariff uptake tariffs driven by:
-    - VRE penetration (need for encouraging TOU)
-    - Smart meter penetration (enabling infrastructure)
+    Minimal logistic TOU diffusion model.
 
-    Logistic bounded diffusion process.
+    No calibration parameters:
+    - smart meters = carrying capacity
+    - VRE = speed modifier
+    - lambda fixed by diffusion timescale
     """
 
-    vre_share = _compute_vre_share(data, time_lag)
-    sm = data["Smart meter uptake"]
+    vre = _compute_vre_share(data, time_lag)
 
+    sm = np.clip(data["Smart meter uptake"], 1e-6, 1.0)
     u = time_lag["TOU tariff uptake"]
 
-    du = (p + beta_VRE * vre_share[:, None, None]) * (sm - u) + alpha_TOU * u * (sm - u)
+    # fixed diffusion timescale (doubling ~12 years)
+    lam = np.log(2) / 12.0
 
-    data["TOU tariff uptake"] = np.clip(u + du, 0.0, 1.0)
+    # VRE effect (bounded multiplier, no extra parameters)
+    r_eff = lam * vre
+
+    du = r_eff[:, None, None] * u * (1.0 - u / sm)
+
+    data["TOU tariff uptake"] = np.clip(u + du, 0.0, sm)
     
-    print(f'TOU taiff uptake Be is: {data["TOU tariff uptake"][[0, 41], 0, 0]}')
-    
+    print(f'TOU tariff uptake BE/IN is: {data["TOU tariff uptake"][[0, 41], 0, 0]}')
+
+
     return data
+
+
 
 
 # =========================================================
