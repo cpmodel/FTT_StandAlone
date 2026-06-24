@@ -284,52 +284,11 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
 
 
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
-                num_regions, num_techs, num_resources, year, dt):
+                num_regions, num_techs, num_resources, year, dt, MWLO):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
     '''
-
-    L = 990
-    lmo = np.arange(L)          # This will have length 990, from 0 to 989
-    CSC_Q = np.zeros([71, 14, L])
-    HistC = np.zeros([14, L])
-    #HistQ = np.zeros([14, 990])
-    X = np.zeros([990])
-    Y = np.zeros([990])
-    Ind = 0
-    CFvar = np.zeros([990])
-
-    # Resources classification:
-    # Correspondence vector between NT2 and NER (Technologies and resources: if I = Tech, II(I) = resource)
-    # Setting storage to biomass, as it's turned off
-    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 4, 4]
-
-    # BCSC is natural resource data with dimensions NER NR and length of cost axis k
-
-    # Unpack histograms
-    # First 4 values in each BCSC(I, J, :) vectors are:
-    # Parameters: (1) Type (2) Min (3) Max (4) Number of data points
-    # Resource data type: (0) Capacity Factor reduction (1) Histogram, (2) Fuel cost, (3) Investment cost 
-
-    for i in range(len(erti)): # Resource classification
-        # if the data type contained in k=0 (k=1 in fortran) is a histogram (same for all regions)
-        if BCSC[0, i, 0] == 1:
-
-            HistC[i, :] = BCSC[0, i, 1]  \
-                        + lmo * (BCSC[0, i, 2] - BCSC[0, i, 1]) / (BCSC[0, i, 3]-1)
-            # BCSC goes up to L+4, Hist goes up to L
-            #HistQ[j, :] = HistQ[j, :] + sum(BCSC[:, j, 4:], axis=0) #actual histograms, adds up regions, after 4 k is PJ/bin size (PJ/dollar), units sorted into bins are PJs of energy
-
-        # resource type not histogram
-        else:
-
-            for j in range(len(rti)):
-
-                #QuantityAxis(K) = min(Q) + (K-1) * (max(Q)-min(Q))/(N data points -1) # We don't need this loop either I believe
-                CSC_Q[j, i, :] = BCSC[j, i, 1] \
-                            + lmo * (BCSC[j, i, 2] - BCSC[j, i, 1]) / (BCSC[j, i, 3] - 1)
-
 
     # Calculate non-renewable resource use
     # Non renewable resource use (treated global <=> identical for all regions)
@@ -397,7 +356,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Resources classification:
     # Correspondence vector between techs and resources
-    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 6, 6]
+    tech_to_resource = [0, 1, 2, 2, 5, 5, 3, 3, 3, 3, 4, 4, 8, 8, 12, 7, 9, 10, 11, 11, 6, 6, 11]
 
     # BCSC is natural resource data with dimensions num_resources x num_techs x length of cost axis L
 

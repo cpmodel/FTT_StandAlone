@@ -395,3 +395,6 @@ Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA
 Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,General,2018,2023,2018,,,
 RSSC,FTT- Rooftop solar self-consumption rate,%,RTI,NA,NA,TIME,FTT-P,,,2010,,,
 RSFT,FTT- Rooftop solar feed-in-tariff,USD/kWh,RTI,NA,NA,TIME,FTT-P,,,2010,,,
+Gen_by_lb,Generation by technology and load band,GWh,RTI,T2TI,LBTI,TIME,FTT-P,,,2001,,,
+CO2taxP,FTT:P regional emission permit price,USD(2023)/tCO2,RTI,NA,NA,TIME,FTT-P,,,2010,,,
+MEWG share,FTT-P Generation by technology shares,,RTI,T2TI,NA,TIME,FTT-P,,2022,2001,,,

@@ -1,198 +1,198 @@
-# Rooftop trace generated 2026-06-03T18:47:54
+# Rooftop trace generated 2026-06-24T17:32:18
 
 Year 2023 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,313.52 | PRICH=2,466.49 | METC=42.783 | MTCD=11.855
-  cost_roof=-981.762 | cost_grid=0 | std_roof=11.9807 | std_grid=0
-  share=0.493322 | MEWG=30,485.4 | MEWL=0.139056 | MEWK=25.0094 | MEWS=0.245292
-  total_cap=101.957 | non_rooftop_cap=76.948 | rooftop_cap_share=0.245292
-  top_capacity_techs: 23 Rooftop Solar=25.0094, 19 Solar PV=23.6808, 7 CCGT=18.2089
+  MEWDH=5,313.52 | PRICH=2,466.49 | METC=34.6175 | MTCD=9.25524
+  cost_roof=-1,119.59 | cost_grid=0 | std_roof=9.26085 | std_grid=0
+  share=0.493322 | MEWG=27,457.4 | MEWL=0.188719 | MEWK=16.5976 | MEWS=0.186027
+  total_cap=89.2215 | non_rooftop_cap=72.6239 | rooftop_cap_share=0.186027
+  top_capacity_techs: 19 Solar PV=22.3622, 7 CCGT=17.1949, 23 Rooftop Solar=16.5976
 
 Year 2024 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,363.22 | PRICH=2,540 | METC=39.2038 | MTCD=10.8633
-  cost_roof=-1,073.77 | cost_grid=0 | std_roof=10.9611 | std_grid=0
-  share=0.555196 | MEWG=34,629.9 | MEWL=0.139056 | MEWK=28.4095 | MEWS=0.26956
-  total_cap=105.392 | non_rooftop_cap=76.9828 | rooftop_cap_share=0.26956
-  top_capacity_techs: 23 Rooftop Solar=28.4095, 19 Solar PV=27.9857, 7 CCGT=15.8849
+  MEWDH=5,363.22 | PRICH=2,540 | METC=33.266 | MTCD=8.89393
+  cost_roof=-1,179.18 | cost_grid=0 | std_roof=8.89975 | std_grid=0
+  share=0.493322 | MEWG=27,838.9 | MEWL=0.188718 | MEWK=16.8283 | MEWS=0.175844
+  total_cap=95.6997 | non_rooftop_cap=78.8715 | rooftop_cap_share=0.175844
+  top_capacity_techs: 19 Solar PV=28.2109, 23 Rooftop Solar=16.8283, 7 CCGT=16.2214
 
 Year 2025 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,433.17 | PRICH=2,611.02 | METC=37.1383 | MTCD=10.2909
-  cost_roof=-1,139.58 | cost_grid=0 | std_roof=10.3675 | std_grid=0
-  share=0.614077 | MEWG=38,802.1 | MEWL=0.139055 | MEWK=31.8324 | MEWS=0.277185
-  total_cap=114.842 | non_rooftop_cap=83.0095 | rooftop_cap_share=0.277185
-  top_capacity_techs: 19 Solar PV=34.8733, 23 Rooftop Solar=31.8324, 3 Coal=15.0174
+  MEWDH=5,433.17 | PRICH=2,611.02 | METC=32.0727 | MTCD=8.57487
+  cost_roof=-1,231.5 | cost_grid=0 | std_roof=8.57811 | std_grid=0
+  share=0.493322 | MEWG=28,249 | MEWL=0.188718 | MEWK=17.0762 | MEWS=0.165701
+  total_cap=103.054 | non_rooftop_cap=85.9781 | rooftop_cap_share=0.165701
+  top_capacity_techs: 19 Solar PV=34.8872, 23 Rooftop Solar=17.0762, 3 Coal=15.5644
 
 Year 2026 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,540.59 | PRICH=2,672.96 | METC=35.2358 | MTCD=9.76373
-  cost_roof=-1,201.09 | cost_grid=0 | std_roof=9.83519 | std_grid=0
-  share=0.665256 | MEWG=42,867.1 | MEWL=0.139055 | MEWK=35.1674 | MEWS=0.281341
-  total_cap=124.999 | non_rooftop_cap=89.8318 | rooftop_cap_share=0.281341
-  top_capacity_techs: 19 Solar PV=42.7756, 23 Rooftop Solar=35.1674, 3 Coal=14.55
+  MEWDH=5,540.59 | PRICH=2,672.96 | METC=31.0075 | MTCD=8.29009
+  cost_roof=-1,280.76 | cost_grid=0 | std_roof=8.29314 | std_grid=0
+  share=0.493322 | MEWG=28,840 | MEWL=0.188718 | MEWK=17.4336 | MEWS=0.157068
+  total_cap=110.994 | non_rooftop_cap=93.56 | rooftop_cap_share=0.157068
+  top_capacity_techs: 19 Solar PV=41.9135, 23 Rooftop Solar=17.4336, 3 Coal=15.2396
 
 Year 2027 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,666.81 | PRICH=2,726.18 | METC=33.4499 | MTCD=9.26887
-  cost_roof=-1,256 | cost_grid=0 | std_roof=9.33621 | std_grid=0
-  share=0.702699 | MEWG=46,311.4 | MEWL=0.139055 | MEWK=37.9931 | MEWS=0.279995
-  total_cap=135.692 | non_rooftop_cap=97.6991 | rooftop_cap_share=0.279995
-  top_capacity_techs: 19 Solar PV=51.508, 23 Rooftop Solar=37.9931, 3 Coal=14.0458
+  MEWDH=5,666.81 | PRICH=2,726.18 | METC=30.0615 | MTCD=8.03718
+  cost_roof=-1,323.5 | cost_grid=0 | std_roof=8.04 | std_grid=0
+  share=0.493322 | MEWG=29,525.5 | MEWL=0.188717 | MEWK=17.848 | MEWS=0.149752
+  total_cap=119.183 | non_rooftop_cap=101.335 | rooftop_cap_share=0.149752
+  top_capacity_techs: 19 Solar PV=48.5945, 23 Rooftop Solar=17.848, 17 Onshore=16.7191
 
 Year 2028 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,808.87 | PRICH=2,772.92 | METC=31.8151 | MTCD=8.81587
-  cost_roof=-1,305.26 | cost_grid=0 | std_roof=8.87655 | std_grid=0
-  share=0.725064 | MEWG=48,983.3 | MEWL=0.139055 | MEWK=40.1853 | MEWS=0.273845
-  total_cap=146.745 | non_rooftop_cap=106.559 | rooftop_cap_share=0.273845
-  top_capacity_techs: 19 Solar PV=60.932, 23 Rooftop Solar=40.1853, 3 Coal=13.5228
+  MEWDH=5,808.87 | PRICH=2,772.92 | METC=29.1808 | MTCD=7.8017
+  cost_roof=-1,361.67 | cost_grid=0 | std_roof=7.80431 | std_grid=0
+  share=0.493322 | MEWG=30,290.8 | MEWL=0.188717 | MEWK=18.3106 | MEWS=0.143673
+  total_cap=127.447 | non_rooftop_cap=109.136 | rooftop_cap_share=0.143673
+  top_capacity_techs: 19 Solar PV=54.8127, 17 Onshore=19.8829, 23 Rooftop Solar=18.3106
 
 Year 2029 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=5,966.46 | PRICH=2,818.64 | METC=30.3337 | MTCD=8.40538
-  cost_roof=-1,351.98 | cost_grid=0 | std_roof=8.45692 | std_grid=0
-  share=0.736986 | MEWG=51,139.4 | MEWL=0.139054 | MEWK=41.9543 | MEWS=0.265028
-  total_cap=158.301 | non_rooftop_cap=116.347 | rooftop_cap_share=0.265028
-  top_capacity_techs: 19 Solar PV=71.1631, 23 Rooftop Solar=41.9543, 17 Onshore=13.7151
+  MEWDH=5,966.46 | PRICH=2,818.64 | METC=28.3618 | MTCD=7.58275
+  cost_roof=-1,398.47 | cost_grid=0 | std_roof=7.58516 | std_grid=0
+  share=0.493322 | MEWG=31,135.1 | MEWL=0.188717 | MEWK=18.8211 | MEWS=0.138436
+  total_cap=135.955 | non_rooftop_cap=117.134 | rooftop_cap_share=0.138436
+  top_capacity_techs: 19 Solar PV=60.907, 17 Onshore=23.4998, 23 Rooftop Solar=18.8211
 
 Year 2030 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=6,139.39 | PRICH=2,864.39 | METC=28.9657 | MTCD=8.0263
-  cost_roof=-1,397.2 | cost_grid=0 | std_roof=8.06846 | std_grid=0
-  share=0.743177 | MEWG=53,063.7 | MEWL=0.139054 | MEWK=43.5333 | MEWS=0.25527
-  total_cap=170.538 | non_rooftop_cap=127.005 | rooftop_cap_share=0.25527
-  top_capacity_techs: 19 Solar PV=82.311, 23 Rooftop Solar=43.5333, 17 Onshore=14.6225
+  MEWDH=6,139.39 | PRICH=2,864.39 | METC=27.5982 | MTCD=7.37858
+  cost_roof=-1,434.56 | cost_grid=0 | std_roof=7.38082 | std_grid=0
+  share=0.493322 | MEWG=32,057.3 | MEWL=0.188717 | MEWK=19.3786 | MEWS=0.133994
+  total_cap=144.623 | non_rooftop_cap=125.244 | rooftop_cap_share=0.133994
+  top_capacity_techs: 19 Solar PV=66.8002, 17 Onshore=27.5192, 23 Rooftop Solar=19.3786
 
 Year 2031 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=6,278.37 | PRICH=2,910.51 | METC=27.7795 | MTCD=7.69761
-  cost_roof=-1,440.12 | cost_grid=0 | std_roof=7.73097 | std_grid=0
-  share=0.746404 | MEWG=54,500.5 | MEWL=0.139053 | MEWK=44.7122 | MEWS=0.245304
-  total_cap=182.273 | non_rooftop_cap=137.56 | rooftop_cap_share=0.245304
-  top_capacity_techs: 19 Solar PV=93.7366, 23 Rooftop Solar=44.7122, 17 Onshore=15.2389
+  MEWDH=6,278.37 | PRICH=2,910.51 | METC=26.9007 | MTCD=7.1921
+  cost_roof=-1,470.01 | cost_grid=0 | std_roof=7.19393 | std_grid=0
+  share=0.493322 | MEWG=32,803.3 | MEWL=0.188716 | MEWK=19.8296 | MEWS=0.130311
+  total_cap=152.171 | non_rooftop_cap=132.341 | rooftop_cap_share=0.130311
+  top_capacity_techs: 19 Solar PV=71.7263, 17 Onshore=31.6809, 23 Rooftop Solar=19.8296
 
 Year 2032 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=6,428.74 | PRICH=2,972.66 | METC=26.7094 | MTCD=7.40109
-  cost_roof=-1,490.38 | cost_grid=0 | std_roof=7.43111 | std_grid=0
-  share=0.748098 | MEWG=55,932.4 | MEWL=0.139053 | MEWK=45.8873 | MEWS=0.23584
-  total_cap=194.57 | non_rooftop_cap=148.683 | rooftop_cap_share=0.23584
-  top_capacity_techs: 19 Solar PV=105.81, 23 Rooftop Solar=45.8873, 17 Onshore=15.6641
+  MEWDH=6,428.74 | PRICH=2,972.66 | METC=26.28 | MTCD=7.02615
+  cost_roof=-1,513.63 | cost_grid=0 | std_roof=7.02788 | std_grid=0
+  share=0.493322 | MEWG=33,607.9 | MEWL=0.188716 | MEWK=20.316 | MEWS=0.127462
+  total_cap=159.388 | non_rooftop_cap=139.072 | rooftop_cap_share=0.127462
+  top_capacity_techs: 19 Solar PV=75.9486, 17 Onshore=36.09, 23 Rooftop Solar=20.316
 
 Year 2033 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=6,590.22 | PRICH=3,036.87 | METC=25.744 | MTCD=7.13359
-  cost_roof=-1,540.39 | cost_grid=0 | std_roof=7.16031 | std_grid=0
-  share=0.748992 | MEWG=57,405.9 | MEWL=0.139053 | MEWK=47.0964 | MEWS=0.227049
-  total_cap=207.429 | non_rooftop_cap=160.332 | rooftop_cap_share=0.227049
-  top_capacity_techs: 19 Solar PV=118.47, 23 Rooftop Solar=47.0964, 17 Onshore=15.9299
+  MEWDH=6,590.22 | PRICH=3,036.87 | METC=25.6976 | MTCD=6.87044
+  cost_roof=-1,557.94 | cost_grid=0 | std_roof=6.87207 | std_grid=0
+  share=0.493322 | MEWG=34,469.6 | MEWL=0.188716 | MEWK=20.837 | MEWS=0.125344
+  total_cap=166.238 | non_rooftop_cap=145.401 | rooftop_cap_share=0.125344
+  top_capacity_techs: 19 Solar PV=79.4529, 17 Onshore=40.6991, 23 Rooftop Solar=20.837
 
 Year 2034 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=6,762.56 | PRICH=3,102.89 | METC=24.8715 | MTCD=6.89183
-  cost_roof=-1,590.16 | cost_grid=0 | std_roof=6.91573 | std_grid=0
-  share=0.749465 | MEWG=58,944.3 | MEWL=0.139052 | MEWK=48.3588 | MEWS=0.218958
-  total_cap=220.859 | non_rooftop_cap=172.5 | rooftop_cap_share=0.218958
-  top_capacity_techs: 19 Solar PV=131.689, 23 Rooftop Solar=48.3588, 17 Onshore=16.0671
+  MEWDH=6,762.56 | PRICH=3,102.89 | METC=25.1531 | MTCD=6.72489
+  cost_roof=-1,602.79 | cost_grid=0 | std_roof=6.72643 | std_grid=0
+  share=0.493322 | MEWG=35,387.6 | MEWL=0.188716 | MEWK=21.3919 | MEWS=0.123823
+  total_cap=172.763 | non_rooftop_cap=151.371 | rooftop_cap_share=0.123823
+  top_capacity_techs: 19 Solar PV=82.3207, 17 Onshore=45.458, 23 Rooftop Solar=21.3919
 
 Year 2035 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=6,945.54 | PRICH=3,170.46 | METC=24.0792 | MTCD=6.67228
-  cost_roof=-1,639.71 | cost_grid=0 | std_roof=6.69357 | std_grid=0
-  share=0.749716 | MEWG=60,559.6 | MEWL=0.139052 | MEWK=49.6843 | MEWS=0.211508
-  total_cap=234.905 | non_rooftop_cap=185.22 | rooftop_cap_share=0.211508
-  top_capacity_techs: 19 Solar PV=145.494, 23 Rooftop Solar=49.6843, 17 Onshore=16.09
+  MEWDH=6,945.54 | PRICH=3,170.46 | METC=24.6115 | MTCD=6.58008
+  cost_roof=-1,648.48 | cost_grid=0 | std_roof=6.58157 | std_grid=0
+  share=0.493322 | MEWG=36,361 | MEWL=0.188716 | MEWK=21.9804 | MEWS=0.122756
+  total_cap=179.058 | non_rooftop_cap=157.077 | rooftop_cap_share=0.122756
+  top_capacity_techs: 19 Solar PV=84.7047, 17 Onshore=50.3057, 23 Rooftop Solar=21.9804
 
 Year 2036 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=7,115.09 | PRICH=3,239.62 | METC=23.3827 | MTCD=6.47927
-  cost_roof=-1,688.88 | cost_grid=0 | std_roof=6.49781 | std_grid=0
-  share=0.749849 | MEWG=62,048.9 | MEWL=0.139051 | MEWK=50.9065 | MEWS=0.204603
-  total_cap=248.806 | non_rooftop_cap=197.9 | rooftop_cap_share=0.204603
-  top_capacity_techs: 19 Solar PV=159.401, 23 Rooftop Solar=50.9065, 17 Onshore=15.9684
+  MEWDH=7,115.09 | PRICH=3,239.62 | METC=24.1246 | MTCD=6.44989
+  cost_roof=-1,694.38 | cost_grid=0 | std_roof=6.45129 | std_grid=0
+  share=0.493322 | MEWG=37,257.3 | MEWL=0.188716 | MEWK=22.5222 | MEWS=0.122013
+  total_cap=184.588 | non_rooftop_cap=162.065 | rooftop_cap_share=0.122013
+  top_capacity_techs: 19 Solar PV=86.491, 17 Onshore=54.9735, 23 Rooftop Solar=22.5222
 
 Year 2037 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=7,293.48 | PRICH=3,310.73 | METC=22.7359 | MTCD=6.30004
-  cost_roof=-1,738.46 | cost_grid=0 | std_roof=6.31647 | std_grid=0
-  share=0.74992 | MEWG=63,610.6 | MEWL=0.139051 | MEWK=52.1881 | MEWS=0.198402
-  total_cap=263.042 | non_rooftop_cap=210.854 | rooftop_cap_share=0.198402
-  top_capacity_techs: 19 Solar PV=173.598, 23 Rooftop Solar=52.1881, 17 Onshore=15.7824
+  MEWDH=7,293.48 | PRICH=3,310.73 | METC=23.6585 | MTCD=6.32528
+  cost_roof=-1,741.12 | cost_grid=0 | std_roof=6.32668 | std_grid=0
+  share=0.493322 | MEWG=38,191.1 | MEWL=0.188716 | MEWK=23.0867 | MEWS=0.121627
+  total_cap=189.816 | non_rooftop_cap=166.729 | rooftop_cap_share=0.121627
+  top_capacity_techs: 19 Solar PV=88.0941, 17 Onshore=59.3938, 23 Rooftop Solar=23.0867
 
 Year 2038 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=7,480.55 | PRICH=3,383.65 | METC=22.1476 | MTCD=6.13704
-  cost_roof=-1,788.29 | cost_grid=0 | std_roof=6.15128 | std_grid=0
-  share=0.749957 | MEWG=65,245.4 | MEWL=0.139051 | MEWK=53.5296 | MEWS=0.192377
-  total_cap=278.254 | non_rooftop_cap=224.724 | rooftop_cap_share=0.192377
-  top_capacity_techs: 19 Solar PV=188.557, 23 Rooftop Solar=53.5296, 17 Onshore=15.6413
+  MEWDH=7,480.55 | PRICH=3,383.65 | METC=23.2074 | MTCD=6.20467
+  cost_roof=-1,788.71 | cost_grid=0 | std_roof=6.20608 | std_grid=0
+  share=0.493322 | MEWG=39,174.4 | MEWL=0.188716 | MEWK=23.6811 | MEWS=0.121348
+  total_cap=195.151 | non_rooftop_cap=171.47 | rooftop_cap_share=0.121348
+  top_capacity_techs: 19 Solar PV=89.9103, 17 Onshore=63.5502, 23 Rooftop Solar=23.6811
 
 Year 2039 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=7,676.16 | PRICH=3,458.17 | METC=21.6029 | MTCD=5.98611
-  cost_roof=-1,838.43 | cost_grid=0 | std_roof=5.99851 | std_grid=0
-  share=0.749977 | MEWG=66,953.3 | MEWL=0.13905 | MEWK=54.9312 | MEWS=0.18657
-  total_cap=294.427 | non_rooftop_cap=239.496 | rooftop_cap_share=0.18657
-  top_capacity_techs: 19 Solar PV=204.258, 23 Rooftop Solar=54.9312, 17 Onshore=15.5651
+  MEWDH=7,676.16 | PRICH=3,458.17 | METC=22.767 | MTCD=6.08694
+  cost_roof=-1,837.06 | cost_grid=0 | std_roof=6.08838 | std_grid=0
+  share=0.493322 | MEWG=40,206.9 | MEWL=0.188716 | MEWK=24.3053 | MEWS=0.121194
+  total_cap=200.549 | non_rooftop_cap=176.244 | rooftop_cap_share=0.121194
+  top_capacity_techs: 19 Solar PV=92.0511, 17 Onshore=67.3303, 23 Rooftop Solar=24.3053
 
 Year 2040 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=7,880.21 | PRICH=3,534.68 | METC=21.0905 | MTCD=5.84411
-  cost_roof=-1,889.24 | cost_grid=0 | std_roof=5.85525 | std_grid=0
-  share=0.749988 | MEWG=68,734 | MEWL=0.13905 | MEWK=56.3925 | MEWS=0.180999
-  total_cap=311.563 | non_rooftop_cap=255.171 | rooftop_cap_share=0.180999
-  top_capacity_techs: 19 Solar PV=220.719, 23 Rooftop Solar=56.3925, 17 Onshore=15.5492
+  MEWDH=7,880.21 | PRICH=3,534.68 | METC=22.3342 | MTCD=5.97123
+  cost_roof=-1,886.46 | cost_grid=0 | std_roof=5.97274 | std_grid=0
+  share=0.493322 | MEWG=41,283.8 | MEWL=0.188715 | MEWK=24.9563 | MEWS=0.120845
+  total_cap=206.515 | non_rooftop_cap=181.559 | rooftop_cap_share=0.120845
+  top_capacity_techs: 19 Solar PV=94.8394, 17 Onshore=70.8875, 23 Rooftop Solar=24.9563
 
 Year 2041 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=8,092.63 | PRICH=3,613.16 | METC=20.6043 | MTCD=5.7094
-  cost_roof=-1,940.8 | cost_grid=0 | std_roof=5.71961 | std_grid=0
-  share=0.749994 | MEWG=70,587.4 | MEWL=0.139049 | MEWK=57.9135 | MEWS=0.175785
-  total_cap=329.457 | non_rooftop_cap=271.543 | rooftop_cap_share=0.175785
-  top_capacity_techs: 19 Solar PV=237.771, 23 Rooftop Solar=57.9135, 17 Onshore=15.581
+  MEWDH=8,092.63 | PRICH=3,613.16 | METC=21.9015 | MTCD=5.85553
+  cost_roof=-1,936.99 | cost_grid=0 | std_roof=5.85716 | std_grid=0
+  share=0.493322 | MEWG=42,404.7 | MEWL=0.188715 | MEWK=25.6339 | MEWS=0.120346
+  total_cap=213.001 | non_rooftop_cap=187.367 | rooftop_cap_share=0.120346
+  top_capacity_techs: 19 Solar PV=98.2259, 17 Onshore=74.2455, 23 Rooftop Solar=25.6339
 
 Year 2042 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=8,313.37 | PRICH=3,693.49 | METC=20.1218 | MTCD=5.57571
-  cost_roof=-1,993.35 | cost_grid=0 | std_roof=5.58539 | std_grid=0
-  share=0.749997 | MEWG=72,513 | MEWL=0.139049 | MEWK=59.4937 | MEWS=0.17078
-  total_cap=348.365 | non_rooftop_cap=288.872 | rooftop_cap_share=0.17078
-  top_capacity_techs: 19 Solar PV=255.657, 23 Rooftop Solar=59.4937, 17 Onshore=15.6619
+  MEWDH=8,313.37 | PRICH=3,693.49 | METC=21.4616 | MTCD=5.73792
+  cost_roof=-1,988.66 | cost_grid=0 | std_roof=5.73964 | std_grid=0
+  share=0.493322 | MEWG=43,568.8 | MEWL=0.188715 | MEWK=26.3377 | MEWS=0.119757
+  total_cap=219.926 | non_rooftop_cap=193.589 | rooftop_cap_share=0.119757
+  top_capacity_techs: 19 Solar PV=102.092, 17 Onshore=77.4607, 23 Rooftop Solar=26.3377
 
 Year 2043 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=8,542.41 | PRICH=3,775.66 | METC=19.6423 | MTCD=5.44281
-  cost_roof=-2,046.91 | cost_grid=0 | std_roof=5.45195 | std_grid=0
-  share=0.749998 | MEWG=74,511 | MEWL=0.139048 | MEWK=61.1333 | MEWS=0.165804
-  total_cap=368.709 | non_rooftop_cap=307.575 | rooftop_cap_share=0.165804
-  top_capacity_techs: 19 Solar PV=274.774, 23 Rooftop Solar=61.1333, 17 Onshore=15.8013
+  MEWDH=8,542.41 | PRICH=3,775.66 | METC=21.0262 | MTCD=5.62152
+  cost_roof=-2,041.34 | cost_grid=0 | std_roof=5.62315 | std_grid=0
+  share=0.493322 | MEWG=44,775.6 | MEWL=0.188715 | MEWK=27.0672 | MEWS=0.119137
+  total_cap=227.195 | non_rooftop_cap=200.128 | rooftop_cap_share=0.119137
+  top_capacity_techs: 19 Solar PV=106.322, 17 Onshore=80.5688, 23 Rooftop Solar=27.0672
 
 Year 2044 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=8,779.88 | PRICH=3,860.23 | METC=19.2314 | MTCD=5.32897
-  cost_roof=-2,100.93 | cost_grid=0 | std_roof=5.33745 | std_grid=0
-  share=0.749999 | MEWG=76,582.4 | MEWL=0.139048 | MEWK=62.8331 | MEWS=0.160664
-  total_cap=391.084 | non_rooftop_cap=328.251 | rooftop_cap_share=0.160664
-  top_capacity_techs: 19 Solar PV=295.671, 23 Rooftop Solar=62.8331, 17 Onshore=16.0281
+  MEWDH=8,779.88 | PRICH=3,860.23 | METC=20.5637 | MTCD=5.49788
+  cost_roof=-2,095.75 | cost_grid=0 | std_roof=5.49928 | std_grid=0
+  share=0.493322 | MEWG=46,025.1 | MEWL=0.188715 | MEWK=27.8226 | MEWS=0.118528
+  total_cap=234.734 | non_rooftop_cap=206.912 | rooftop_cap_share=0.118528
+  top_capacity_techs: 19 Solar PV=110.814, 17 Onshore=83.6102, 23 Rooftop Solar=27.8226
 
 Year 2045 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=9,025.7 | PRICH=3,946.67 | METC=18.8315 | MTCD=5.21817
-  cost_roof=-2,155.86 | cost_grid=0 | std_roof=5.22604 | std_grid=0
-  share=0.749999 | MEWG=78,726.6 | MEWL=0.139048 | MEWK=64.5928 | MEWS=0.155173
-  total_cap=416.263 | non_rooftop_cap=351.67 | rooftop_cap_share=0.155173
-  top_capacity_techs: 19 Solar PV=319.093, 23 Rooftop Solar=64.5928, 17 Onshore=16.3499
+  MEWDH=9,025.7 | PRICH=3,946.67 | METC=20.0633 | MTCD=5.36409
+  cost_roof=-2,151.72 | cost_grid=0 | std_roof=5.36528 | std_grid=0
+  share=0.493322 | MEWG=47,316.4 | MEWL=0.188715 | MEWK=28.6033 | MEWS=0.117968
+  total_cap=242.466 | non_rooftop_cap=213.863 | rooftop_cap_share=0.117968
+  top_capacity_techs: 19 Solar PV=115.469, 17 Onshore=86.6139, 23 Rooftop Solar=28.6033
 
 Year 2046 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=9,279.92 | PRICH=4,035.35 | METC=18.452 | MTCD=5.11298
-  cost_roof=-2,211.8 | cost_grid=0 | std_roof=5.12017 | std_grid=0
-  share=0.75 | MEWG=80,944.1 | MEWL=0.139047 | MEWK=66.4125 | MEWS=0.148339
-  total_cap=447.709 | non_rooftop_cap=381.296 | rooftop_cap_share=0.148339
-  top_capacity_techs: 19 Solar PV=348.238, 23 Rooftop Solar=66.4125, 17 Onshore=16.9144
+  MEWDH=9,279.92 | PRICH=4,035.35 | METC=19.6417 | MTCD=5.25136
+  cost_roof=-2,207.94 | cost_grid=0 | std_roof=5.25246 | std_grid=0
+  share=0.493322 | MEWG=48,649.1 | MEWL=0.188714 | MEWK=29.4091 | MEWS=0.117481
+  total_cap=250.331 | non_rooftop_cap=220.922 | rooftop_cap_share=0.117481
+  top_capacity_techs: 19 Solar PV=120.22, 17 Onshore=89.5932, 23 Rooftop Solar=29.4091
 
 Year 2047 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=9,542.64 | PRICH=4,126.24 | METC=18.0886 | MTCD=5.01231
-  cost_roof=-2,268.78 | cost_grid=0 | std_roof=5.01887 | std_grid=0
-  share=0.75 | MEWG=83,235.7 | MEWL=0.139047 | MEWK=68.2928 | MEWS=0.133895
-  total_cap=510.048 | non_rooftop_cap=441.755 | rooftop_cap_share=0.133895
-  top_capacity_techs: 19 Solar PV=405.768, 23 Rooftop Solar=68.2928, 17 Onshore=18.7783
+  MEWDH=9,542.64 | PRICH=4,126.24 | METC=19.1665 | MTCD=5.12433
+  cost_roof=-2,266.14 | cost_grid=0 | std_roof=5.12521 | std_grid=0
+  share=0.493322 | MEWG=50,023.6 | MEWL=0.188714 | MEWK=30.24 | MEWS=0.117073
+  total_cap=258.301 | non_rooftop_cap=228.061 | rooftop_cap_share=0.117073
+  top_capacity_techs: 19 Solar PV=125.033, 17 Onshore=92.5573, 23 Rooftop Solar=30.24
 
 Year 2048 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=9,813.96 | PRICH=4,219.45 | METC=17.6946 | MTCD=4.90313
-  cost_roof=-2,327.5 | cost_grid=0 | std_roof=4.90923 | std_grid=0
-  share=0.75 | MEWG=85,602.2 | MEWL=0.139048 | MEWK=70.2342 | MEWS=0.104355
-  total_cap=673.029 | non_rooftop_cap=602.795 | rooftop_cap_share=0.104355
-  top_capacity_techs: 19 Solar PV=555.888, 23 Rooftop Solar=70.2342, 17 Onshore=25.2475
+  MEWDH=9,813.96 | PRICH=4,219.45 | METC=18.7048 | MTCD=5.00087
+  cost_roof=-2,325.47 | cost_grid=0 | std_roof=5.00163 | std_grid=0
+  share=0.493322 | MEWG=51,440.4 | MEWL=0.188714 | MEWK=31.0965 | MEWS=0.116732
+  total_cap=266.392 | non_rooftop_cap=235.295 | rooftop_cap_share=0.116732
+  top_capacity_techs: 19 Solar PV=129.913, 17 Onshore=95.5157, 23 Rooftop Solar=31.0965
 
 Year 2049 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=10,094 | PRICH=4,315.13 | METC=17.2529 | MTCD=4.78072
-  cost_roof=-2,388.28 | cost_grid=0 | std_roof=4.78639 | std_grid=0
-  share=0.75 | MEWG=88,045 | MEWL=0.139047 | MEWK=72.2387 | MEWS=0.103692
-  total_cap=696.667 | non_rooftop_cap=624.428 | rooftop_cap_share=0.103692
-  top_capacity_techs: 19 Solar PV=577.78, 23 Rooftop Solar=72.2387, 17 Onshore=25.9113
+  MEWDH=10,094 | PRICH=4,315.13 | METC=18.2509 | MTCD=4.87953
+  cost_roof=-2,386.12 | cost_grid=0 | std_roof=4.88026 | std_grid=0
+  share=0.493322 | MEWG=52,899.6 | MEWL=0.188714 | MEWK=31.9787 | MEWS=0.116471
+  total_cap=274.563 | non_rooftop_cap=242.585 | rooftop_cap_share=0.116471
+  top_capacity_techs: 19 Solar PV=134.836, 17 Onshore=98.455, 23 Rooftop Solar=31.9787
 
 Year 2050 | Region 37 Australia (AU) | Tech 23 Rooftop Solar
-  MEWDH=10,382.9 | PRICH=4,413.15 | METC=16.8652 | MTCD=4.6733
-  cost_roof=-2,449.67 | cost_grid=0 | std_roof=4.67861 | std_grid=0
-  share=0.75 | MEWG=90,565.2 | MEWL=0.139047 | MEWK=74.3068 | MEWS=0.104477
-  total_cap=711.227 | non_rooftop_cap=636.92 | rooftop_cap_share=0.104477
-  top_capacity_techs: 19 Solar PV=591.203, 23 Rooftop Solar=74.3068, 17 Onshore=26.132
+  MEWDH=10,382.9 | PRICH=4,413.15 | METC=17.8126 | MTCD=4.76233
+  cost_roof=-2,447.91 | cost_grid=0 | std_roof=4.76302 | std_grid=0
+  share=0.493322 | MEWG=54,401.8 | MEWL=0.188714 | MEWK=32.8869 | MEWS=0.116292
+  total_cap=282.795 | non_rooftop_cap=249.908 | rooftop_cap_share=0.116292
+  top_capacity_techs: 19 Solar PV=139.785, 17 Onshore=101.374, 23 Rooftop Solar=32.8869
 

@@ -233,6 +233,7 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend):
     # and wind
 
     solar_ind = [18, 22]
+
     vre_gr_sol = 0.005 * np.ones(len(titles['RTI']))
     vre_gr_sol = np.maximum((divide(np.sum(data['MEWS'][:, solar_ind, 0] * data['MEWL'][:, solar_ind, 0], axis=1),
                                  np.sum(time_lag['MEWS'][:, solar_ind, 0] * time_lag['MEWL'][:, solar_ind, 0], axis=1))

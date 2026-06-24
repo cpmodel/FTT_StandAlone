@@ -883,7 +883,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Correction for regulation when demand is growing; main effect in shares equation
             dcap_reg_corr = regulation_correction(
-                endo_capacity, endo_shares, np.sum(data_dt['MEWK'][:, :-1], axis=1), reg_constr)
+                endo_capacity, endo_shares, np.sum(data_dt['MEWK'][:, :-1], axis=1), reg_constr[:, :-1])
             
             # Changes to capacity from exogenous capacity
             dcap_exog_cap = exogenous_capacity(
@@ -899,15 +899,15 @@ def solve(data, time_lag, titles, histend, year, domain):
             mewg = mews * e_demand[:, None] * mewl_dt / np.sum(mews * mewl_dt, axis=1)[:, None]
             mewk = mewg / mewl_dt / 8766
             
-            data['MEWS'] = mews[:, :, None]
-            data['MEWL'] = mewl_dt[:, :, None]
-            data['MEWG'] = mewg[:, :, None]
-            data['MEWK'] = mewk[:, :, None]
+            data['MEWS'][:, :-1] = mews[:, :, None]
+            data['MEWL'][:, :-1] = mewl_dt[:, :, None]
+            data['MEWG'][:, :-1] = mewg[:, :, None]
+            data['MEWK'][:, :-1] = mewk[:, :, None]
 
             # Updated market shares for technologies together with rooftop solar
             # data['MEWS'][:, -1] = data['MEWK'][:, -1] / data['MEWK'][:, -1].sum()
             # data['MEWS'] = data['MEWK'] / data['MEWK'].sum()
-            # data['MEWS'] = data['MEWK'] / data['MEWK'].sum(axis=1, keepdims=True)  
+            data['MEWS'] = data['MEWK'] / data['MEWK'].sum(axis=1, keepdims=True)  
             
             export_io_summary(data_dt, t2ti, year, tech_key="23 Rooftop Solar", outfile="io_check.txt")
 
@@ -973,57 +973,16 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Total additional electricity that needs to be generated
             data['MADG'] = data['MCGA'] - data['MCNA'] + data['MSSG']
             
-            # Allocate utility generation on residual demand after household rooftop
-            # production is accounted for.
-            apply_rooftop_residual_demand = True
-
             # Update generation
-            denominator = np.sum(data['MEWS'][:, :, 0] * data['MEWL'][:, :, 0], axis=1)[:, np.newaxis]
-            updated_e_sup = e_demand[:] + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
-            data['MEWG'][:, :, 0] = divide(data['MEWS'][:, :, 0] * updated_e_sup[:, np.newaxis] * data['MEWL'][:, :, 0],
-                                           denominator) 
+            denominator = np.sum(data['MEWS'] * data['MEWL'], axis=1)
+            updated_e_sup = e_demand[:, None, None] + data['MADG'] - data_dt['MADG']
 
-            # Update capacities
-            data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-            data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
-            # Update emissions
-            data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
-            
-            # Update investment. Note that sum(mewi_t) not exactly mewi
-            _, mewi_t = get_sales(
-                data["MEWK"], data_dt["MEWK"], time_lag["MEWK"], data["MEWI"],
-                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt)
-            
-            data["MEWI"] = get_sales_yearly(
-                data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], year)
-            
-
-            earlysc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-            lifetsc = np.zeros([len(titles['RTI']), len(titles['T2TI'])])
-
-            for r in range(len(titles['RTI'])):
-            # TODO: Clean this up - for now just an ugly loop
-                for tech in range(len(titles['T2TI'])):
-
-                    if data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0] >= 0.0:
-
-                        earlysc[r, tech] = 0.0
-                        lifetsc[r, tech] = data_dt['BCET'][r, tech, c2ti['9 Lifetime (years)']]
-                        data['MESC'][r, tech, 0] = 0.0
-
-                    else:
-
-                        earlysc[r, tech] = data['MEWK'][r, tech, 0] - data_dt['MEWK'][r, tech, 0]
-                        lifetsc[r, tech] = ((1.0 - data['MEWK'][r, tech, 0]/np.sum(data['MEWK'][r, :, 0])) 
-                                            * (data['MEWK'][r, tech, 0] / earlysc[r, tech]) * 5 )
-
-            # Keep rooftop-solar accounting aligned with the household model.
-            data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
+            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup,
+                                           denominator[:, :, None]) 
 
             # Update capacities and emissions
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-            # Update emissions
+            data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
             
