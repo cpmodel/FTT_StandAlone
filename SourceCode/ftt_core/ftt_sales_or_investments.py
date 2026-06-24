@@ -84,7 +84,7 @@ def get_sales(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
     return sales_or_investment, sales_dt
 
 
-def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales, year):
+def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales):
     """
     Calculate new sales/investments for all FTT models before simulation starts (e.g. TEWI)
 
@@ -92,7 +92,7 @@ def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales, year):
        old.
     2. The amount of existing capacity that is depreciated (retired) as it
        reaches its end of life.
-    
+
     Capacity depreciation is based on the technology lifetime in the
     cost matrix. 1/lifetime is depreciated each year.
 
@@ -109,9 +109,9 @@ def get_sales_yearly(cap, cap_lag, sales_or_investment_in, timescales, year):
     ----------
     investment_or_sales: np.array
         investment or sales up to and including time t
-    
+
     """
-    # Find capacity  growth since last year
+    # Find capacity growth since last year
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
 
     # Calculate capacity depreciation

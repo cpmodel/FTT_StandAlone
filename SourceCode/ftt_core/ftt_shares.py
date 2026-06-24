@@ -4,7 +4,7 @@ Created on Thu Jul 24 08:36:58 2025
 
 @author: Femke Nijsse
 
-Two versions of the shares equation are included in the file.
+Two versions of the shares equation are included
 1. The normal shares equation as described by Mercure (2012)
 2. The shares equation for premature replacements as described in Knobloch (2017)
 """
@@ -17,16 +17,21 @@ from numba import njit
 # Parameter to approximate the cumulative distribution function of the cost comparison
 CDF_APPROX = 1.25 / sqrt(2) 
 
-# CALL THIS FUNCTION TO CALCULATE THE SHARES
 def shares_change(
     dt, regions,
     shares_dt,
     costs, costs_sd,
     subst, reg_constr, num_regions, num_techs,
-    upper_limit=None, lower_limit=None, limits_active=False
+    upper_limit=None, lower_limit=None, limits_active=False,
+    T_Scal=1.0
     ):
-    '''This is a wrapper function for the jitted shares function. We want
-    to always give the same types into the function for rapid compile'''
+    '''
+    Wrapper for the jitted shares function. Ensures consistent input types
+    to enable faster compilation.
+
+    T_Scal: Time scaling factor. Default 1.0 (no scaling). Power uses 10.0.
+    Applied AFTER RK4 integration to match Cascading branch behavior.
+    '''
 
     if not limits_active:
         upper_limit = np.empty((num_regions, num_techs, 1))
@@ -34,33 +39,34 @@ def shares_change(
 
     change_in_shares = shares_change_jitted(dt, regions, shares_dt, costs, costs_sd,
                subst, reg_constr, num_regions, num_techs,
-               upper_limit, lower_limit, limits_active)
+               upper_limit, lower_limit, limits_active, T_Scal)
 
     return change_in_shares
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
-# @njit(fastmath=True, cache=True)
+@njit(fastmath=True, cache=True)
 def shares_change_jitted(
     dt, regions,
     shares_dt,
     costs, costs_sd,
     subst, reg_constr,
     num_regions, num_techs,
-    upper_limit, lower_limit, limits_active=False
+    upper_limit, lower_limit, limits_active=False,
+    T_Scal=1.0
     ):
 
     """
-    Function to calculate change in market shares, based on previous
-    market shares, substitution rates and costs
-     
+    Calculates change in market shares, based on previous market shares,
+    substitution rates and costs
+
     Parameters
     ----------
     dt : float
         Time step size
     shares_dt, costs, costs_sd : ndarray
         Shares, costs and standard deviation of costs at previous timestep
-    subst, 
+    subst,
         Substitution matrix (determines speed), called Aij in paper
     reg_constr : ndarray
         Regulatory constraints: stops share changes to this tech
@@ -70,23 +76,18 @@ def shares_change_jitted(
         Any minimum and maximum limits (e.g. for grid stability)
     limits_active : bool
         Whether limits are active or not
-    
+    T_Scal : float
+        Time scaling factor. Default 1.0 (no scaling). Power uses 10.0.
+
     Returns
     -------
     ndarray
-        The change in shares, taking into account regulation and endogenous limits (optional)
-        
+        Change in shares, taking into account regulation and endogenous limits (optional)
+
     Notes
     -----
-    This function is decorated with `@njit(fastmath=True)` for performance optimization.
+    Decorated with `@njit(fastmath=True)` for performance optimization.
     """
-    
-    # USE THIS PART HERE
-    # REMEMBER TO SET num_techs = 2
-    # PASS THE SUBSTITUTION MATRIX AS 1 IN ALL [[]] - the matrix should be a 2 x 2 matrix
-    # LOOK AT THE INPUT IN THE DEBUG MODE TO CHECK THE NUMBER OF DIMENSIONS - Maybe a third empty dimension is required
-    #  reg_constr -> PASS AN ARRAY OF ZEROS
-    # DONT NEED TO PASS ANY INFORMATION ON UPPER AND LOWER LIMITS -> THE DEFAULT IS FALSE
 
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
 
@@ -107,7 +108,7 @@ def shares_change_jitted(
 
             S_i = shares_dt[r, tech_i, 0]
             if not (S_i > 0.0 and
-                    np.isfinite(costs[r, tech_i, 0])):
+                    costs[r, tech_i, 0] != 0.0):
                 continue
             
             if limits_active:
@@ -118,7 +119,7 @@ def shares_change_jitted(
                 
                 S_j = shares_dt[r, tech_j, 0]
                 if not (S_j > 0.0 and
-                        np.isfinite(costs[r, tech_j, 0])):
+                        costs[r, tech_j, 0] != 0.0):
                     continue
 
                 # Propagating width of variations in perceived costs
@@ -140,15 +141,15 @@ def shares_change_jitted(
                 else:
                     delta_AFG =  (subst[r, tech_i, tech_j] * F[tech_j, tech_i]
                                 - subst[r, tech_j, tech_i] * F[tech_i, tech_j])
-                
+
                 # Change in shares = S_i * S_j * delta_AFG
-                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt)
+                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt, T_Scal)
                 dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
-        
+
         dSij_all[r] = dSij
-    
+
     dSij_sum = np.sum(dSij_all, axis=2)
-    
+
     return dSij_sum
 
 
@@ -194,18 +195,22 @@ def _apply_regulation_adjustment(Fij, Fji, reg_constr_i, reg_constr_j):
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True)
 def _rk4_integration(
-    S_i, S_j, delta_AFG, dt
+    S_i, S_j, delta_AFG, dt, T_Scal=1.0
     ):
-    """Helper function for RK4 calculation.
-    
-    We assume that within a timestep, the costs and the limits do not change"""
-    
+    """
+    Helper function for RK4 calculation.
+    We assume that within a timestep, the costs and the limits do not change.
+
+    T_Scal applied AFTER RK4 integration (matching Cascading branch).
+    Default 1.0 means no scaling (for Heat/Transport). Power uses 10.0.
+    """
+
     k_1 = S_i * S_j * delta_AFG
     k_2 = (S_i + dt * k_1/2) * (S_j - dt * k_1 / 2) * delta_AFG
     k_3 = (S_i + dt * k_2/2) * (S_j - dt * k_2 / 2) * delta_AFG
     k_4 = (S_i + dt * k_3) * (S_j - dt * k_3) * delta_AFG
-    
-    return (k_1 + 2 * k_2 + 2 * k_3 + k_4) * dt / 6
+
+    return (k_1 + 2 * k_2 + 2 * k_3 + k_4) * dt / T_Scal / 6
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
@@ -220,8 +225,8 @@ def shares_change_premature(
     ):
     
     """
-    Function to calculate change in market shares due to premature replacements,
-    based on previous market shares, substitution rates and various costs
+    Calculates change in market shares due to premature replacements, based on
+    previous market shares, substitution rates and various costs
      
     Parameters
     ----------
@@ -248,7 +253,7 @@ def shares_change_premature(
         
     Notes
     -----
-    This function is decorated with `@njit(fastmath=True)` for performance optimization.
+    Decorated with `@njit(fastmath=True)` for performance optimization.
     """
     
     dSij_all = np.zeros((num_regions, num_techs, num_techs))

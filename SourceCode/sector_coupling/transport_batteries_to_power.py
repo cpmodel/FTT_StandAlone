@@ -10,6 +10,9 @@ Second-hand batteries repurposing module
 
 import numpy as np 
 
+# EV indices used when summing over electric vehicle categories in BTTC/TEWK
+EV_INDICES = [18, 19, 20]
+
 def get_sector_coupling_dict(data, titles):
     sector_coupling_assumps = dict(zip(
                 list(titles['SCA']),
@@ -18,7 +21,7 @@ def get_sector_coupling_dict(data, titles):
     return sector_coupling_assumps
 
     
-def second_hand_batteries(data, time_lag, iter_lag, year, titles):
+def second_hand_batteries(data, time_lag, year, titles):
     """
     This function estimates the size of the second-hand battery market
     based on scrappage of electric vehicles from FTT:Tr. We use batteries
@@ -33,10 +36,18 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     Returns:
         data dictionary with updated battery capacity in GWh
         # Todo: check if units still correct
+
+    Mutates:
+        Updates `data` in-place: keys 'Second-hand batteries by age'
+        and 'Second-hand battery stock' are modified.
         
     """
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
     
+    # Skip if V2G interaction is turned off
+    if not sector_coupling_assumps["V2G interaction"]:
+        return data
+
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
@@ -61,7 +72,7 @@ def second_hand_batteries(data, time_lag, iter_lag, year, titles):
     # Add newly scrapped vehicle batteries to tracking matrix
     data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
     
-    # All all batteries together
+    # All batteries together
     data['Second-hand battery stock'] = \
             np.sum(data['Second-hand batteries by age'], axis=1, keepdims=True)
                         
@@ -73,34 +84,35 @@ def share_transport_batteries(data, titles):
     Estimate the battery needs in power from GW to GWh, and compute ratio with transport.
     The original Ueckerdt paper does not contain this information. We therefore estimate
     this from key numbers in the https://energy.mit.edu/research/future-of-energy-storage/
-    
+
     In table 6.13, in 5 gCO2 scenario, there is a factor 3.8 between the two.
     In table C12, in the 5 gCO2 scenario, there is a factor 4.8. Average is
-    4.3. 
+    4.3.
 
     Returns
     -------
     Share repurposed batteries compared to short-term storage needs
-    
+
     """
-    
+
     sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+
+    # Skip if V2G interaction is turned off
+    if not sector_coupling_assumps["V2G interaction"]:
+        return 0
 
     # Convert GW to GWh (estimate)
     capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
-    
+
     # Share of either repurposed or V2G batteries
     with np.errstate(divide='ignore', invalid='ignore'):
         storage_ratio = ( (data["Second-hand battery stock"] + data["V2G battery stock"])
                         / capacity_batteries_power )
-    
-    # Capture divide by zero
-    mean_storage_ratio = np.nanmean(storage_ratio)
-    storage_ratio = np.where(np.isnan(storage_ratio), mean_storage_ratio, storage_ratio)
-    
-    return storage_ratio
-    
-    
+
+    # Capture divide by zero and inf values - use 0 as safe default
+    # (0 means no transport batteries contributing to storage)
+    storage_ratio = np.where(np.isfinite(storage_ratio), storage_ratio, 0.0)
+
     return storage_ratio
 
 def update_costs_from_transport_batteries(data, storage_ratio, year, titles):
@@ -135,13 +147,17 @@ def vehicle_to_grid(data, time_lag, year, titles):
     participation = sector_coupling_assumps["V2G participation rate"]
     availability = sector_coupling_assumps["V2G available fraction"]
     
+    # Skip if V2G interaction is turned off
+    if not sector_coupling_assumps["V2G interaction"]:
+        return data
+
     # Assume linearly increasing share cars are suitable
     if year < 2025:
         tech_readiness = 0
     elif year > 2040:
         tech_readiness = 1
     else:
-        tech_readiness = (year-2024) * 1/15
+        tech_readiness = (year - 2024) * 1/15
     
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
@@ -150,8 +166,8 @@ def vehicle_to_grid(data, time_lag, year, titles):
     total_batteries = time_lag["TEWK"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
     
     
-    # Sum over the EVs only (assume PHEV too small per Xu et al. )
-    batteries_EVs_only = np.sum(total_batteries[:, [18, 19, 20], :], axis=1, keepdims=True)
+    # Sum over the EVs only (assume PHEV too small per Xu et al.)
+    batteries_EVs_only = np.sum(total_batteries[:, EV_INDICES, :], axis=1, keepdims=True)
     
     # Available batteries
     available_batteries = ( batteries_EVs_only
@@ -160,7 +176,7 @@ def vehicle_to_grid(data, time_lag, year, titles):
     # Convert to GWh (TEWK in 1000 cars, battery capacity in kWh)
     available_batteries = available_batteries / 1000
     
-    # All all batteries together
+    # All batteries together
     data['V2G battery stock'] = available_batteries
     
     return data
