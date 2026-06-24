@@ -7,6 +7,8 @@ from queue import Queue
 from .shared import shared_layout
 from .state import state
 
+from SourceCode.support.data_loading import get_valid_ftt_models
+
 def render_run_page():
     # Add shared layout (header, footer, etc.)
     shared_layout()
@@ -20,7 +22,7 @@ def render_run_page():
                 
                 # Layout grid for inputs inside the card to look cleaner
                 with ui.grid(columns=2).classes('w-full gap-4'):
-                    available_models = get_available_models()
+                    available_models = get_valid_ftt_models()
                     model_select = ui.select(available_models, value=['FTT-P'], label='Model(s) to run', multiple=True)
 
                     available_scenarios = get_available_scenarios()
@@ -105,6 +107,7 @@ def render_run_page():
             ui.notify('Run Complete', type='positive')
             
         except Exception as e:
+            await update_from_queues()  # flush any pending log messages first
             log_console.push("-" * 40)
             log_console.push(f"CRITICAL ERROR: {str(e)}")
             ui.notify('Error', type='negative')
@@ -185,17 +188,3 @@ def get_available_scenarios():
         return []
     scenario_list = [folder.name for folder in input_path.iterdir() if folder.is_dir() and not folder.name.startswith('_')]
     return scenario_list
-
-def get_available_models():
-    """
-    Returns a list of available model names based on the folders located in 
-    Inputs/_MasterFiles
-
-    Returns:
-        model_list: List of available model names
-    """
-    source_path = Path('Inputs/_MasterFiles')
-    if not source_path.exists():
-        return []
-    model_list = [folder.name for folder in source_path.iterdir() if folder.is_dir()]
-    return model_list
