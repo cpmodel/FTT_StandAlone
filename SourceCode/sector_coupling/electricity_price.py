@@ -205,7 +205,7 @@ def TOU_price_feedback(data, time_lag):
     dTOU = data['TOU tariff uptake'] - time_lag['TOU tariff uptake']
  
     data['Elec price volatility'][:, 0, 0] = (
-        np.clip((data["MLBP"][:, 2, 0] - data["MLBP"][:, 0, 0]) / data['MEWP'][:, 7, 0], 0, 0.8)
+        np.clip((data["MLBP"][:, 3, 0] - data["MLBP"][:, 0, 0]) / data["MLBP"][:, 3, 0], 0, 1.0)
         )
     
     # Max discount under full TOU tariff uptake adoption. We assume that utilities
