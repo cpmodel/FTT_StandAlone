@@ -395,7 +395,9 @@ def solve(data, time_lag, titles, histend, year, domain):
     #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
             data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
             
-
+            if year == histend['MEWG']:
+                data['MEWR'][:, 12, 0] = data['MEWK'][:, 12, 0]
+        
 # %% Simulation of stock and energy specs
     
     # Stock based solutions first
@@ -413,9 +415,12 @@ def solve(data, time_lag, titles, histend, year, domain):
         vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-P')
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
-
+            
+        # Restrict large hydro growth to max 1.5% per year
+        data['MEWR'][:, 12, 0] = time_lag['MEWR'][:, 12, 0] * 1.015
+        
         # Create the regulation variable
-        relative_excess = np.zeros_like(data_dt['MEWR'][:, :, 0])
+        relative_excess = np.zeros_like(data['MEWR'][:, :, 0])
         np.divide((data_dt['MEWK'][:, :, 0] - data['MEWR'][:, :, 0]), data['MEWR'][:, :, 0],
                   out=relative_excess, where=data['MEWR'][:, :, 0] > 0)
         reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
@@ -423,6 +428,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         reg_constr[data['MEWR'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['MEWR'][:, :, 0] == -1.0] = 0.0
+        
 
         # Call the survival function routine.
 #        data = survival_function(data, time_lag, histend, year, titles)
