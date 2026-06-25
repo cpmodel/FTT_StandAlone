@@ -21,6 +21,7 @@ MWFC,FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MWDT,Matrix of tech top load band NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-
 MWDD,Matrix of load band tech suitability NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-
 MTCD,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+Value factor,Price for electricity by technology compared to average,,RTI,T2TI,NA,TIME,FTT-P,,,2001,
 MSSR,FTT:Power short-term storage raw costs (2013$/GWh),2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2001,
 MSSPX,Exogenous MSSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results
 MSSP,FTT:Power short-term storage costs (2013$/GWh) ,$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
