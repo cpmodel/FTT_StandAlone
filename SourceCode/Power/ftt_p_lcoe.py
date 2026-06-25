@@ -196,7 +196,6 @@ def get_lcoe(data, titles):
     gamma = bcet[:, :, c2ti['22 Gamma']]
     
     
-    
     # Rows corresponding to renewable technologies
     renew_rows = [16, 17, 18]
     
@@ -205,13 +204,13 @@ def get_lcoe(data, titles):
 
     # Adjust value factor based on cannibalisation factor and change in shares
     cann_adjustment = shares_renew * bcet[:, renew_rows, c2ti['24 Cannibalisation factor']]
-    value_factor_renew = np.maximum(0.5, bcet[:, renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment))
-    bcet[:, renew_rows, c2ti['23 Value factor']] = value_factor_renew
+    value_factors = bcet[:, :, c2ti['23 Value factor']].copy()
+    value_factors[:, renew_rows] = np.maximum(0.5, bcet[:, renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment))
+    data['Value factor'][:, :, 0] = value_factors
     
-    value_factor = bcet[:, :, c2ti['23 Value factor']]
+    
     # Guard against division by zero (value_factor should never be 0, but be safe)
-    value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
-    lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factor
+    lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factors
 
     # Pass to variables that are stored outside.
     data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes
