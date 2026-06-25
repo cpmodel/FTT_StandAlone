@@ -205,8 +205,8 @@ def get_lcoe(data, titles):
 
     # Adjust value factor based on cannibalisation factor and change in shares
     cann_adjustment = shares_renew * bcet[:, renew_rows, c2ti['24 Cannibalisation factor']]
-    value_factor = np.maximum(0.6, bcet[:, renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment))
-    bcet[:, renew_rows, c2ti['23 Value factor']] = value_factor
+    value_factor_renew = np.maximum(0.5, bcet[:, renew_rows, c2ti['23 Value factor']] * (1 + cann_adjustment))
+    bcet[:, renew_rows, c2ti['23 Value factor']] = value_factor_renew
     
     value_factor = bcet[:, :, c2ti['23 Value factor']]
     # Guard against division by zero (value_factor should never be 0, but be safe)
