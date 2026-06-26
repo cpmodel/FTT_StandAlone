@@ -72,17 +72,19 @@ def get_resource_to_fuel_map(titles):
 
 
 def get_cf_multipliers(titles):
-    """Read T2TI_CF_multiplier.csv and return a dict of tech_idx -> multiplier.
+    """Read T2TI_CF_multiplier.csv and return a dict of tech_idx -> (source_tech_idx, multiplier).
 
     Technologies absent from the CSV are not included (treat as multiplier=1).
-    Used to apply technology-specific corrections to capacity factors computed
-    from cost-supply curves (e.g. CSP is twice as efficient as Solar PV).
+    Used to derive a technology's capacity factor from another technology's
+    freshly-computed capacity factor (e.g. CSP = 2x Solar PV's CF). The target
+    is always set from the source's value, never from its own prior value, so
+    repeated calls within the same year stay idempotent rather than compounding.
     """
     csv_path = get_utilities_path() / 'titles' / 'T2TI_CF_multiplier.csv'
     df = pd.read_csv(csv_path, keep_default_na=False)
 
     t2ti = list(titles['T2TI'])
-    return {t2ti.index(row['T2TI']): float(row['CF_multiplier'])
+    return {t2ti.index(row['T2TI']): (t2ti.index(row['source_T2TI']), float(row['CF_multiplier']))
             for _, row in df.iterrows()}
 
 
@@ -351,10 +353,12 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource,
                                        starting_CF * 0.8,
                                        MEWL[regions, techs, 0])
 
-    # Apply per-technology CF multipliers (e.g. CSP is more efficient than Solar PV)
-    for j, multiplier in cf_multipliers.items():
-        BCET[:, j, 10] *= multiplier
-        MEWL[:, j, 0] *= multiplier
+    # Apply per-technology CF multipliers (e.g. CSP is more efficient than Solar PV).
+    # Derived from the source tech's value, not the target's own prior value, so
+    # repeated calls within the same year don't compound the multiplier.
+    for j, (source_idx, multiplier) in cf_multipliers.items():
+        BCET[:, j, 10] = BCET[:, source_idx, 10] * multiplier
+        MEWL[:, j, 0] = MEWL[:, source_idx, 0] * multiplier
 
     return BCET, MEWL, MERC
 
@@ -384,7 +388,8 @@ def update_capacity_factors_original(BCET, MEWG, MEWL, BCSC, CSC_Q, MEPD, MERC,
                     BCET[r, j, 10] = 1.0/(Y0 + 0.000001)         # We use an inverse here
 
                     if j in cf_multipliers:
-                        BCET[r, j, 10] *= cf_multipliers[j]
+                        source_idx, multiplier = cf_multipliers[j]
+                        BCET[r, j, 10] = BCET[r, source_idx, 10] * multiplier
 
                     if(MEWG[r, j, 0] > 0.01 and X0 > 0):
 
@@ -395,7 +400,8 @@ def update_capacity_factors_original(BCET, MEWG, MEWL, BCSC, CSC_Q, MEPD, MERC,
                             MEWL[r, j, 0] = CFvar
 
                         if j in cf_multipliers:
-                            MEWL[r, j, 0] *= cf_multipliers[j]
+                            source_idx, multiplier = cf_multipliers[j]
+                            MEWL[r, j, 0] = MEWL[r, source_idx, 0] * multiplier
 
         return BCET, MEWL, MERC
 

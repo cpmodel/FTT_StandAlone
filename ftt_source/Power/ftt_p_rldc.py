@@ -506,7 +506,8 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         
         
         # Storage cost are overwritten here:
-        if year >= histend["MSSC_histend"]:
+        # TODO: this is hardcoded as 2022
+        if year >= 2022:
             data['MLSC_histend'] = time_lag['MLSC_histend'].copy()
 
             # Apply learning rate to levelised cost of storage (MSCC and MLCC)
