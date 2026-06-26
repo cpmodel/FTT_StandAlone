@@ -12,6 +12,7 @@ CSV-driven mappings) from the per-year solve loop in ftt_p_main.py.
 from ftt_source.Power.ftt_p_costc import (get_tech_to_resource, get_erti_jti_map,
                                           get_cf_multipliers, get_gen_tech_indices)
 from ftt_source.Power.ftt_p_rldc import get_wind_solar_indices
+from ftt_source.Power.ftt_p_fuel_price import get_fuel_price_indices
 
 
 def build_power_settings(titles, config):
@@ -32,6 +33,7 @@ def build_power_settings(titles, config):
         'erti_jti_map':               get_erti_jti_map(titles),
         'cf_multipliers':             get_cf_multipliers(titles),
         'wind_solar_indices':         get_wind_solar_indices(titles),
+        'fuel_price_indices':         get_fuel_price_indices(titles),
         'gen_tech_indices':           get_gen_tech_indices(titles),
         'prsc_base_year':             prsc_base_year,
         'rldc_start_year':            int(config.get('settings', 'rldc_start_year',            fallback='2013')),

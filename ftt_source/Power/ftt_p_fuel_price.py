@@ -122,7 +122,30 @@ def add_grid_integration_costs(solar_share, wind_share, r):
     return grid_integration_costs
 
 
-def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices):
+def get_fuel_price_indices(titles):
+    """Pre-compute the JTI/ERTI indices used by `get_marginal_fuel_prices_mewp`.
+
+    These depend only on `titles` (fixed for the whole run), so this should be
+    called once (e.g. as part of `build_power_settings`) rather than re-derived
+    on every call.
+    """
+    jti = list(titles['JTI'])
+    erti = list(titles['ERTI'])
+    return {
+        'hard_coal_fuel_idx': jti.index('1 Hard coal'),
+        'other_coal_fuel_idx': jti.index('2 Other coal etc'),
+        'crude_oil_fuel_idx': jti.index('3 Crude oil etc'),
+        'heavy_fuel_oil_fuel_idx': jti.index('4 Heavy fuel oil'),
+        'biofuels_fuel_idx': jti.index('11 Biofuels'),
+        'electricity_fuel_idx': jti.index('8 Electricity'),
+        'oil_res_idx': erti.index('2 Oil'),
+        'coal_res_idx': erti.index('3 Coal'),
+        'gas_res_idx': erti.index('4 Gas'),
+        'biomass_res_idx': erti.index('5 Biomass'),
+    }
+
+
+def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices):
     """Compute marginal fuel prices MEWP based on development within FTT:Power.
 
     This function calculates electricity prices (MEWP index 7) using either:
@@ -157,26 +180,26 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices):
     wind_solar_indices : dict
         Pre-computed T2TI indices from get_wind_solar_indices(), with keys
         'wind' (list of int) and 'solar' (int).
+    fuel_price_indices : dict
+        Pre-computed JTI/ERTI indices from get_fuel_price_indices(titles),
+        computed once per run rather than re-derived on every call.
 
     Returns
     -------
     data : dict
         Updated with MEWP values
     """
-    jti  = list(titles['JTI'])
-    erti = list(titles['ERTI'])
+    hard_coal_fuel_idx = fuel_price_indices['hard_coal_fuel_idx']
+    other_coal_fuel_idx = fuel_price_indices['other_coal_fuel_idx']
+    crude_oil_fuel_idx = fuel_price_indices['crude_oil_fuel_idx']
+    heavy_fuel_oil_fuel_idx = fuel_price_indices['heavy_fuel_oil_fuel_idx']
+    biofuels_fuel_idx = fuel_price_indices['biofuels_fuel_idx']
+    electricity_fuel_idx = fuel_price_indices['electricity_fuel_idx']
 
-    hard_coal_fuel_idx = jti.index('1 Hard coal')
-    other_coal_fuel_idx = jti.index('2 Other coal etc')
-    crude_oil_fuel_idx = jti.index('3 Crude oil etc')
-    heavy_fuel_oil_fuel_idx = jti.index('4 Heavy fuel oil')
-    biofuels_fuel_idx = jti.index('11 Biofuels')
-    electricity_fuel_idx = jti.index('8 Electricity')
-
-    oil_res_idx = erti.index('2 Oil')
-    coal_res_idx = erti.index('3 Coal')
-    gas_res_idx = erti.index('4 Gas')
-    biomass_res_idx = erti.index('5 Biomass')
+    oil_res_idx = fuel_price_indices['oil_res_idx']
+    coal_res_idx = fuel_price_indices['coal_res_idx']
+    gas_res_idx = fuel_price_indices['gas_res_idx']
+    biomass_res_idx = fuel_price_indices['biomass_res_idx']
 
     solar_tech_idx = wind_solar_indices['solar']
     wind_tech_indices = wind_solar_indices['wind']

@@ -227,14 +227,19 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
     return MSLB, MLLB, MES1, MES2
 
 
-def calculate_load_factors_from_dispatch(data, titles):
+def calculate_load_factors_from_dispatch(data, titles, elec_idx):
     """
     Calculate technology load factors from dispatch results across load bands.
 
     Updates data['MEWL'] and data['Gen_by_lb'] in place.
+
+    Parameters
+    ----------
+    elec_idx : int
+        Pre-computed JTI index for '8 Electricity' (avoids re-deriving it
+        via list(titles['JTI']).index(...) on every call).
     """
 
-    elec_idx = list(titles['JTI']).index('8 Electricity')
     # Total electricity demand, convert from PJ to GWh
     tot_elec_dem = data['MEWDX'][:, elec_idx, 0] * 1000/3.6
 
