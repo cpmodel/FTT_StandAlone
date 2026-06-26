@@ -87,54 +87,19 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     solar_idx = wind_solar_indices['solar']
     csp_idx = wind_solar_indices['csp']
 
-    # Prefer LAT input; fallback to legacy hardcoded values to preserve
-    # standalone behaviour when LAT is missing/unpopulated.
     has_lat_input = 'LAT' in data and np.any(np.abs(data['LAT'][:, 0, 0]) > 0)
-    if has_lat_input:
-        latitude = data['LAT'][:, 0, 0]
-    elif len(titles['RTI']) == 71:
-        latitude = np.asarray([50.6, 64.0, 51.0, 39.0, 40.3, 39.6, 53.2, 42.6, 49.8, 52.3,
-                               47.6, 39.6, 64.1, 62.2, 53.7, 49.8, 58.6, 35.1, 56.8, 55.3,
-                               47.2, 35.9, 52.1, 46.1, 48.7, 42.7, 45.8, 65.6, 46.8, 65.0,
-                               45.0, 39.0, 41.6, 42.1, 37.4, 57.6, 25.3, 41.4, 59.6, 53.5,
-                               35.6, 22.6, 23.7, 10.4, 34.4, 3.9,  15.6, 36.4, 23.7, 2.2,
-                               14.3, 24.5, 32.3, 49.1, 24.0, 9.5,  28.8, 27.4, 3.8,  3.7,
-                               47.9, 24.8, 9.1,  11.2, 9.0, 20.6, 26.4, 2.8 , 0.6, 23.9,
-                               29.8])
-    else:
-        raise ValueError("LAT input is required for non-71-region runs.")
+    if not has_lat_input:
+        raise ValueError("LAT input is required (missing or all-zero in data['LAT']).")
+    latitude = data['LAT'][:, 0, 0]
     seasonality_index = latitude / 60  # Used to divide the capacity constraint between long and short-term storage needs
     seasonality_index = np.minimum(seasonality_index, 1.0)
 
     # Mapping of RTI world regions to 8 available RLDC regions:
     # 0 = Europe, 1 = Latin America, 2 = India, 3 = USA, 4 = Japan, 5 = MENA, 6 = SSA, 7 = China
     has_rldc_map_input = 'RLDCMAP' in data and np.any(np.abs(data['RLDCMAP'][:, 0, 0]) > 0)
-    if has_rldc_map_input:
-        rldc_regmap = data['RLDCMAP'][:, 0, 0].astype(np.int64)
-    elif len(titles['RTI']) == 71:
-        rldc_regmap = np.zeros(len(titles['RTI']), dtype=int)
-        rldc_regmap[0:33] = 0  # Europe
-        rldc_regmap[33] = 3  # USA
-        rldc_regmap[34] = 4  # Japan
-        rldc_regmap[35:38] = 3  # Canada, Australia, New Zealand
-        rldc_regmap[38:40] = 0  # Russia, Rest of Annex I
-        rldc_regmap[40] = 7  # China
-        rldc_regmap[41] = 2  # India
-        rldc_regmap[42:47] = 1  # Latin America
-        rldc_regmap[47:49] = 4  # Korea, Taiwan
-        rldc_regmap[49:51] = 2  # Indonesia, Rest of ASEAN
-        rldc_regmap[51] = 5  # OPEC excl Venezuela
-        rldc_regmap[52] = 6  # Rest of world
-        rldc_regmap[53] = 0  # Ukraine
-        rldc_regmap[54] = 5  # Saudi
-        rldc_regmap[55:57] = 6  # Nigeria, South Africa
-        rldc_regmap[57:59] = 5  # Africa OPEC
-        rldc_regmap[59:61] = 2  # Malaysia, Kazakhstan
-        rldc_regmap[61:69] = 6  # Rest of Africa
-        rldc_regmap[69] = 5  # UAE
-        rldc_regmap[70] = 5  # Pakistan
-    else:
-        raise ValueError("RLDCMAP input is required for non-71-region runs.")
+    if not has_rldc_map_input:
+        raise ValueError("RLDCMAP input is required (missing or all-zero in data['RLDCMAP']).")
+    rldc_regmap = data['RLDCMAP'][:, 0, 0].astype(np.int64)
 
     # Define matrices with polynomial coefficients for 8 RLDC regions
     # 10 input parameters (shares of generation of wind and solar in a
