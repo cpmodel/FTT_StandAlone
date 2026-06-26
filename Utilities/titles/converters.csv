@@ -1,0 +1,23 @@
+T2TI,ERTI
+1 Nuclear,1 Nuclear
+2 Oil,2 Oil
+3 Coal,3 Coal
+4 Coal + CCS,3 Coal
+5 Waste,6 Biogas
+6 Waste + CCS,6 Biogas
+7 CCGT,4 Gas
+8 CCGT + CCS,4 Gas
+9 OCGT,4 Gas
+10 OCGT + CCS,4 Gas
+11 Biomass,5 Biomass
+12 Biomass + CCS,5 Biomass
+13 Large Hydro,9 Large Hydro
+14 Pumped Hydro,9 Large Hydro
+15 Geothermal,13 Geothermal
+16 Marine,8 Tidal
+17 Onshore,10 Onshore
+18 Offshore,11 Offshore
+19 Solar PV,12 Solar PV
+20 CSP,12 Solar PV
+21 Fuel cells / Turbine,7 None (storage)
+22 Lithium-ion,7 None (storage)

@@ -22,14 +22,14 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-# Add the workspace root to sys.path so SourceCode is importable when pytest
+# Add the workspace root to sys.path so ftt_source is importable when pytest
 # is invoked from a different directory (e.g. the repository root in CI).
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 BASELINE_FILE = Path(__file__).parent / "runtime_baseline.json"
 
 sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from SourceCode.model_class import RunFTT 
+from ftt_source.model_class import RunFTT 
 
 
 @pytest.fixture(scope="session")
