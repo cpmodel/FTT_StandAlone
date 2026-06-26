@@ -66,55 +66,19 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from ftt_source.Power.ftt_p_rldc import rldc, get_wind_solar_indices
+from ftt_source.Power.ftt_p_rldc import rldc
 from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from ftt_source.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
 from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
 #from ftt_source.Power.ftt_p_surv import survival_function
-from ftt_source.Power.ftt_p_costc import (cost_curves, get_tech_to_resource,
-                                          get_erti_jti_map, get_cf_multipliers,
-                                          get_gen_tech_indices)
+from ftt_source.Power.ftt_p_costc import cost_curves
 from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
+from ftt_source.Power.ftt_p_initialisation import build_power_settings
 
 from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries
 from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt
-
-
-
-def build_power_settings(titles, config):
-    """Build the dict of FTT:Power constants computed once per run.
-
-    Parameters
-    ----------
-    titles : dict of lists
-        Dimension titles loaded by RunFTT.
-    config : configparser.ConfigParser
-        Already-read settings, e.g. from RunFTT.__init__.
-    """
-    prsc_base_year     = int(config.get('settings', 'prsc_base_year',     fallback='2013'))
-    ex_base_year       = int(config.get('settings', 'ex_base_year',       fallback='2013'))
-    usd_exchange_region = config.get('settings', 'usd_exchange_region',   fallback='34 USA (US)')
-    return {
-        'tech_to_resource':           get_tech_to_resource(titles),
-        'erti_jti_map':               get_erti_jti_map(titles),
-        'cf_multipliers':             get_cf_multipliers(titles),
-        'wind_solar_indices':         get_wind_solar_indices(titles),
-        'gen_tech_indices':           get_gen_tech_indices(titles),
-        'prsc_base_year':             prsc_base_year,
-        'rldc_start_year':            int(config.get('settings', 'rldc_start_year',            fallback='2013')),
-        'bcet_copy_range_end':        int(config.get('settings', 'bcet_copy_range_end',        fallback='22')),
-        'gamma_mode':                 config.get('settings', 'gamma_mode',                     fallback='multiplicative'),
-        'sector_coupling':            config.getboolean('settings', 'sector_coupling',         fallback=True),
-        'mset_coupling':              config.getboolean('settings', 'mset_coupling',           fallback=False),
-        'elec_idx':   list(titles['JTI']).index('8 Electricity'),
-        'prsc_var':   f"PRSC{str(prsc_base_year)[2:]}",
-        'ex_var':     f"EX{str(ex_base_year)[2:]}",
-        'rex_var':    f"REX{str(ex_base_year)[2:]}",
-        'usd_idx':    list(titles['RTI']).index(usd_exchange_region),
-        'nuclear_idx': list(titles['T2TI']).index('1 Nuclear'),
-    }
 
 
 # %% main function
