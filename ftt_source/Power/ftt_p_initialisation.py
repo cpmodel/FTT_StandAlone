@@ -28,6 +28,10 @@ def build_power_settings(titles, config):
     prsc_base_year     = int(config.get('settings', 'prsc_base_year',     fallback='2013'))
     ex_base_year       = int(config.get('settings', 'ex_base_year',       fallback='2013'))
     usd_exchange_region = config.get('settings', 'usd_exchange_region',   fallback='34 USA (US)')
+    # Year the model bootstraps its first-year state (cost curves, LCOE, dispatch, ...).
+    # Coincides with prsc_base_year by convention (FTT:Power's base year is 2013), but is
+    # conceptually independent: changing prsc_base_year must not move the init year.
+    model_init_year    = int(config.get('settings', 'model_init_year',    fallback='2013'))
     return {
         'tech_to_resource':           get_tech_to_resource(titles),
         'resource_to_fuel_map':       get_resource_to_fuel_map(titles),  # ERTI resource idx -> [JTI fuel idx, ...]
@@ -36,6 +40,7 @@ def build_power_settings(titles, config):
         'fuel_price_indices':         get_fuel_price_indices(titles),
         'gen_tech_indices':           get_gen_tech_indices(titles),
         'prsc_base_year':             prsc_base_year,
+        'model_init_year':            model_init_year,
         'rldc_start_year':            int(config.get('settings', 'rldc_start_year',            fallback='2013')),
         'bcet_copy_range_end':        int(config.get('settings', 'bcet_copy_range_end',        fallback='22')),
         'gamma_mode':                 config.get('settings', 'gamma_mode',                     fallback='multiplicative'),

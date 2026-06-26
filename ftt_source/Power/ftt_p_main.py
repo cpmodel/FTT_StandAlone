@@ -128,6 +128,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     fuel_price_indices         = power_settings['fuel_price_indices']
     gen_tech_indices           = power_settings['gen_tech_indices']
     prsc_base_year             = power_settings['prsc_base_year']
+    model_init_year            = power_settings['model_init_year']
     rldc_start_year            = power_settings['rldc_start_year']
     bcet_copy_range_end        = power_settings['bcet_copy_range_end']
     elec_idx                   = power_settings['elec_idx']
@@ -151,15 +152,17 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     data[ex_var] = np.copy(time_lag[ex_var])
     data['PRSC15'] = np.copy(time_lag['PRSC15'])
     data[rex_var] = np.copy(time_lag[rex_var])
-    
-    # %% First initialise if necessary
 
-    # Initialisation
+    # Snapshot the base-year price/exchange rate, independent of model_init_year below
     if year == prsc_base_year:
         data[prsc_var] = np.copy(data['PRSCX'])
         data[ex_var] = np.copy(data['EXX'])
         data[rex_var] = np.copy(data['REXX'])
 
+    # %% First initialise if necessary
+
+    # Initialisation
+    if year == model_init_year:
         data['MEWL'][:, :, 0] = data["MWLO"][:, :, 0]
         data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
         data['MEWS'][:, :, 0] = divide(data['MEWK'][:, :, 0], data['MEWK'][:, :, 0].sum(axis=1)[:, np.newaxis])
@@ -239,7 +242,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         data['MERC'][:, 7, 0] = 0.001
 
 
-        if year > prsc_base_year:
+        if year > model_init_year:
             data['MEWL'] = time_lag['MEWL'].copy()
 
         data['MEWL'] = np.where((data['MEWL'] < 0.01) & (data['MWLO'] > 0.0),
