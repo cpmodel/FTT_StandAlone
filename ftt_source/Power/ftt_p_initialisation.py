@@ -9,7 +9,7 @@ This separates run-level configuration (read from settings.ini and the
 CSV-driven mappings) from the per-year solve loop in ftt_p_main.py.
 """
 
-from ftt_source.Power.ftt_p_costc import (get_tech_to_resource, get_erti_jti_map,
+from ftt_source.Power.ftt_p_costc import (get_tech_to_resource, get_resource_to_fuel_map,
                                           get_cf_multipliers, get_gen_tech_indices)
 from ftt_source.Power.ftt_p_rldc import get_wind_solar_indices
 from ftt_source.Power.ftt_p_fuel_price import get_fuel_price_indices
@@ -30,7 +30,7 @@ def build_power_settings(titles, config):
     usd_exchange_region = config.get('settings', 'usd_exchange_region',   fallback='34 USA (US)')
     return {
         'tech_to_resource':           get_tech_to_resource(titles),
-        'erti_jti_map':               get_erti_jti_map(titles),
+        'resource_to_fuel_map':       get_resource_to_fuel_map(titles),  # ERTI resource idx -> [JTI fuel idx, ...]
         'cf_multipliers':             get_cf_multipliers(titles),
         'wind_solar_indices':         get_wind_solar_indices(titles),
         'fuel_price_indices':         get_fuel_price_indices(titles),

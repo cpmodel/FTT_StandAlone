@@ -122,7 +122,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     num_resources = len(titles['ERTI'])
     num_loadbands = len(titles['LBTI'])
     tech_to_resource           = power_settings['tech_to_resource']
-    erti_jti_map               = power_settings['erti_jti_map']
+    resource_to_fuel_map       = power_settings['resource_to_fuel_map']  # ERTI resource idx -> [JTI fuel idx, ...]
     cf_multipliers             = power_settings['cf_multipliers']
     wind_solar_indices         = power_settings['wind_solar_indices']
     fuel_price_indices         = power_settings['fuel_price_indices']
@@ -168,7 +168,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
                 num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
-                erti_jti_map, cf_multipliers, gen_tech_indices
+                resource_to_fuel_map, cf_multipliers, gen_tech_indices
                 )
 
         data['BCET'] = bcet
@@ -377,7 +377,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
                 num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
-                erti_jti_map, cf_multipliers, gen_tech_indices
+                resource_to_fuel_map, cf_multipliers, gen_tech_indices
                 )
 
             data['BCET'] = bcet
@@ -677,7 +677,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
                 data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
                 data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
                 num_regions, num_techs, num_resources, year, dt, tech_to_resource,
-                erti_jti_map, cf_multipliers, gen_tech_indices
+                resource_to_fuel_map, cf_multipliers, gen_tech_indices
                 )
 
             data['BCET'] = bcet

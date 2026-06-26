@@ -52,7 +52,7 @@ def get_tech_to_resource(titles):
     return [erti.index(tech_resource_map[tech]) for tech in t2ti]
 
 
-def get_erti_jti_map(titles):
+def get_resource_to_fuel_map(titles):
     """Read ERTI_JTI_map.csv and return a dict of erti_idx -> [jti_idx, ...].
 
     Used to sum non-power fuel demand (MEWD) into resource demand (MEPD) for
@@ -423,7 +423,7 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
 
 def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
                 num_regions, num_techs, num_resources, year, dt, tech_to_resource,
-                erti_jti_map, cf_multipliers, gen_tech_indices):
+                resource_to_fuel_map, cf_multipliers, gen_tech_indices):
     '''
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
@@ -436,7 +436,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     nuclear_tech_idx, uranium_res_idx = gen_tech_indices['nuclear']
     MEPD[:, uranium_res_idx, 0] = MEWG[:, nuclear_tech_idx, 0] / BCET[:, nuclear_tech_idx, 13] * 3.6e-3
     # Fossil fuels: sum MEWD carrier demands into resource demand using CSV-driven mapping
-    for erti_idx, jti_indices in erti_jti_map.items():
+    # resource_to_fuel_map maps an ERTI resource index to its list of JTI fuel-carrier indices
+    for erti_idx, jti_indices in resource_to_fuel_map.items():
         MEPD[:, erti_idx, 0] = sum(MEWD[:, j, 0] for j in jti_indices)
 
     # Renewable resource use is local, so equal to total resource demand MEPD
