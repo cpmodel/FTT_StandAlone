@@ -433,8 +433,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # RERY is set in FTTinvP for fossil fuels
 
     # Uranium
-    n_t, n_e = gen_tech_indices['nuclear']
-    MEPD[:, n_e, 0] = MEWG[:, n_t, 0] / BCET[:, n_t, 13] * 3.6e-3
+    nuclear_tech_idx, uranium_res_idx = gen_tech_indices['nuclear']
+    MEPD[:, uranium_res_idx, 0] = MEWG[:, nuclear_tech_idx, 0] / BCET[:, nuclear_tech_idx, 13] * 3.6e-3
     # Fossil fuels: sum MEWD carrier demands into resource demand using CSV-driven mapping
     for erti_idx, jti_indices in erti_jti_map.items():
         MEPD[:, erti_idx, 0] = sum(MEWD[:, j, 0] for j in jti_indices)
@@ -442,38 +442,38 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
-    b_ts, b_e = gen_tech_indices['biomass']
-    MEPD[:, b_e, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in b_ts) * 3.6e-3
-    RERY[:, b_e, 0] = MEPD[:, b_e, 0]
+    biomass_tech_idxs, biomass_res_idx = gen_tech_indices['biomass']
+    MEPD[:, biomass_res_idx, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in biomass_tech_idxs) * 3.6e-3
+    RERY[:, biomass_res_idx, 0] = MEPD[:, biomass_res_idx, 0]
     # Biogas (which comes mostly from waste) (From here onwards cost curves are in TWh)
-    bg_ts, bg_e = gen_tech_indices['biogas']
-    MEPD[:, bg_e, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in bg_ts) * 3.6e-3
-    RERY[:, bg_e, 0] = MEPD[:, bg_e, 0]
+    biogas_tech_idxs, biogas_res_idx = gen_tech_indices['biogas']
+    MEPD[:, biogas_res_idx, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in biogas_tech_idxs) * 3.6e-3
+    RERY[:, biogas_res_idx, 0] = MEPD[:, biogas_res_idx, 0]
 
     # Tidal
-    td_t, td_e = gen_tech_indices['tidal']
-    MEPD[:, td_e, 0] = MEWG[:, td_t, 0] * 3.6e-3
-    RERY[:, td_e, 0] = MEPD[:, td_e, 0]
+    tidal_tech_idx, tidal_res_idx = gen_tech_indices['tidal']
+    MEPD[:, tidal_res_idx, 0] = MEWG[:, tidal_tech_idx, 0] * 3.6e-3
+    RERY[:, tidal_res_idx, 0] = MEPD[:, tidal_res_idx, 0]
     # Hydro
-    hy_ts, hy_e = gen_tech_indices['hydro']
-    MEPD[:, hy_e, 0] = sum(MEWG[:, t, 0] for t in hy_ts) * 3.6e-3
-    RERY[:, hy_e, 0] = MEPD[:, hy_e, 0]
+    hydro_tech_idxs, hydro_res_idx = gen_tech_indices['hydro']
+    MEPD[:, hydro_res_idx, 0] = sum(MEWG[:, t, 0] for t in hydro_tech_idxs) * 3.6e-3
+    RERY[:, hydro_res_idx, 0] = MEPD[:, hydro_res_idx, 0]
     # Onshore
-    on_t, on_e = gen_tech_indices['onshore']
-    MEPD[:, on_e, 0] = MEWG[:, on_t, 0] * 3.6e-3
-    RERY[:, on_e, 0] = MEPD[:, on_e, 0]
+    onshore_tech_idx, onshore_res_idx = gen_tech_indices['onshore']
+    MEPD[:, onshore_res_idx, 0] = MEWG[:, onshore_tech_idx, 0] * 3.6e-3
+    RERY[:, onshore_res_idx, 0] = MEPD[:, onshore_res_idx, 0]
     # Offshore
-    off_t, off_e = gen_tech_indices['offshore']
-    MEPD[:, off_e, 0] = MEWG[:, off_t, 0] * 3.6e-3
-    RERY[:, off_e, 0] = MEPD[:, off_e, 0]
+    offshore_tech_idx, offshore_res_idx = gen_tech_indices['offshore']
+    MEPD[:, offshore_res_idx, 0] = MEWG[:, offshore_tech_idx, 0] * 3.6e-3
+    RERY[:, offshore_res_idx, 0] = MEPD[:, offshore_res_idx, 0]
     # Solar (PV + CSP)
-    sl_ts, sl_e = gen_tech_indices['solar']
-    MEPD[:, sl_e, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in sl_ts) * 3.6e-3
-    RERY[:, sl_e, 0] = MEPD[:, sl_e, 0]
+    solar_tech_idxs, solar_res_idx = gen_tech_indices['solar']
+    MEPD[:, solar_res_idx, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in solar_tech_idxs) * 3.6e-3
+    RERY[:, solar_res_idx, 0] = MEPD[:, solar_res_idx, 0]
     # Geothermal
-    geo_t, geo_e = gen_tech_indices['geothermal']
-    MEPD[:, geo_e, 0] = MEWG[:, geo_t, 0] * 3.6e-3
-    RERY[:, geo_e, 0] = MEPD[:, geo_e, 0]
+    geothermal_tech_idx, geothermal_res_idx = gen_tech_indices['geothermal']
+    MEPD[:, geothermal_res_idx, 0] = MEWG[:, geothermal_tech_idx, 0] * 3.6e-3
+    RERY[:, geothermal_res_idx, 0] = MEPD[:, geothermal_res_idx, 0]
 
 
     # All regions have the same information
