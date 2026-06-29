@@ -45,5 +45,7 @@ class GUIState:
         self.result_type = "levels"  # Options: "levels", "absolute_diff", "relative_diff"
         self.dim_selections = [{} for _ in range(4)]
         self.dim_aggregate = [False, False, False, False]
+        self.dim_selection_cache = {}
+        self.dim_aggregate_cache = {}
 
 state = GUIState()

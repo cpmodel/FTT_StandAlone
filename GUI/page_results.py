@@ -316,13 +316,6 @@ def render_results_page():
         nonlocal result_type_selector, result_type_hint
         _baseline_hint = 'Select a baseline and ≥1 other scenario to enable comparison.'
         dimension_container.clear()
-        # Store selections by classification so shared dimensions are remembered
-        # when switching variables, e.g. RTI region or T2TI technology.
-        if not hasattr(state, 'dim_selection_cache'):
-            state.dim_selection_cache = {}
-        if not hasattr(state, 'dim_aggregate_cache'):
-            state.dim_aggregate_cache = {}
-
         # Reset position-based selections before rebuilding them for this variable.
         state.dim_selections = [{} for _ in range(4)]
         state.dim_aggregate = [False, False, False, False]
@@ -398,15 +391,14 @@ def render_results_page():
                         dim_select.value = [dim_values[0]]
                     state.dim_selections[i][selection_key] = list(dim_select.value or [])
 
-                    def make_select_handler(idx, dim_key):
+                    def make_select_handler(idx, dim_key, all_checkbox, vals):
                         def handler(e):
                             selected_values = list(e.sender.value or [])
                             state.dim_selections[idx][f'dim{idx}_values'] = selected_values
                             state.dim_selection_cache[dim_key] = selected_values
+                            all_checkbox.value = bool(vals) and set(selected_values) == set(vals)
                             update_plot()
                         return handler
-
-                    dim_select.on_value_change(make_select_handler(i, dim_name))
 
                     # Checkboxes (Select All and Sum)
                     with ui.row().classes('w-full gap-4'):
@@ -416,16 +408,14 @@ def render_results_page():
                         def make_select_all_handler(idx, dim_key, selector, vals):
                             def handler(e):
                                 selected_values = list(vals) if e.value else []
-                                if e.value:
-                                    selector.value = selected_values
-                                else:
-                                    selector.value = selected_values
+                                selector.value = selected_values
                                 state.dim_selections[idx][f'dim{idx}_values'] = selected_values
                                 state.dim_selection_cache[dim_key] = selected_values
                                 update_plot()
                             return handler
 
                         select_all.on_value_change(make_select_all_handler(i, dim_name, dim_select, dim_values))
+                        dim_select.on_value_change(make_select_handler(i, dim_name, select_all, dim_values))
 
                         # Aggregate checkbox
                         agg_check = ui.checkbox('Sum').props('dense')
