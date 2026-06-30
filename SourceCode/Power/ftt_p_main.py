@@ -810,6 +810,19 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Get the power load factor for rooftop solar
             data['MEWL'][:, -1, 0] = data['BCET'][:, t2ti['23 Rooftop Solar'], c2ti['11 Decision Load Factor']]
 
+            previous_rooftop_lf = np.zeros(num_regions)
+            np.divide(
+                time_lag['MEWG'][:, rooftop_idx, 0],
+                time_lag['MEWK'][:, rooftop_idx, 0] * 8766,
+                out=previous_rooftop_lf,
+                where=time_lag['MEWK'][:, rooftop_idx, 0] > 0.0
+            )
+            data['MEWL'][:, rooftop_idx, 0] = np.where(
+                previous_rooftop_lf > 0.0,
+                previous_rooftop_lf,
+                data['MEWL'][:, rooftop_idx, 0]
+            )
+
             # Interpolate household demand within the year, analogous to grid demand.
             MEWDHt = time_lag['MEWDH'][:, 0, 0] + (data['MEWDH'][:, 0, 0] - time_lag['MEWDH'][:, 0, 0]) * t/no_it
                
@@ -878,7 +891,13 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Grid operators guess expected generation based on load factors last time step
             mewl_dt = data_dt['MEWL'][:, :-1, 0]           
             
-            endo_gen = endo_shares * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
+            rooftop_gen = data['MEWG'][:, rooftop_idx, 0]
+            residual_e_demand = np.maximum(e_demand - rooftop_gen, 0.0)
+
+            endo_gen = (
+                endo_shares * residual_e_demand[:, None] * mewl_dt
+                / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
+            )
             endo_capacity = endo_gen / mewl_dt / 8766
             
             # Correction for regulation when demand is growing; main effect in shares equation
@@ -896,10 +915,13 @@ def solve(data, time_lag, titles, histend, year, domain):
             mews = divide(endo_capacity + dcap_total, total_capacity[:, None])
            
             # New generation and capacity
-            mewg = mews * e_demand[:, None] * mewl_dt / np.sum(mews * mewl_dt, axis=1)[:, None]
+            mewg = (
+                mews * residual_e_demand[:, None] * mewl_dt
+                / np.sum(mews * mewl_dt, axis=1)[:, None]
+            )
             mewk = mewg / mewl_dt / 8766
             
-            data['MEWS'][:, :-1] = mews[:, :, None]
+            # data['MEWS'][:, :-1] = mews[:, :, None]
             data['MEWL'][:, :-1] = mewl_dt[:, :, None]
             data['MEWG'][:, :-1] = mewg[:, :, None]
             data['MEWK'][:, :-1] = mewk[:, :, None]
@@ -973,16 +995,83 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Total additional electricity that needs to be generated
             data['MADG'] = data['MCGA'] - data['MCNA'] + data['MSSG']
             
-            # Update generation
-            denominator = np.sum(data['MEWS'] * data['MEWL'], axis=1)
-            updated_e_sup = e_demand[:, None, None] + data['MADG'] - data_dt['MADG']
+            # Update generation. Rooftop solar is set by the household model,
+            # so dispatchable/utility technologies should supply the residual
+            # grid demand after rooftop output is accounted for.
+            updated_e_sup = e_demand + data['MADG'][:, 0, 0] - data_dt['MADG'][:, 0, 0]
+            household_rooftop_gen = data['household_shares'][:, 0, 0] * (MEWDHt * 11.63)
 
-            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup,
-                                           denominator[:, :, None]) 
+            if near_term_calibration_year:
+                household_rooftop_gen = np.maximum(
+                    household_rooftop_gen,
+                    time_lag['MEWG'][:, rooftop_idx, 0]
+                )
+                rooftop_share_from_gen = np.zeros(num_regions)
+                np.divide(
+                    household_rooftop_gen,
+                    MEWDHt * 11.63,
+                    out=rooftop_share_from_gen,
+                    where=MEWDHt > 0.0
+                )
+                data['household_shares'][:, 0, 0] = np.minimum(
+                    rooftop_share_from_gen,
+                    max_rooftop_share
+                )
+                data['household_shares'][:, 1, 0] = 1.0 - data['household_shares'][:, 0, 0]
+                household_rooftop_gen = data['household_shares'][:, 0, 0] * (MEWDHt * 11.63)
+
+            utility_mews = data['MEWS'][:, :-1, 0]
+            utility_mewl = data['MEWL'][:, :-1, 0]
+            utility_denominator = np.sum(utility_mews * utility_mewl, axis=1)[:, np.newaxis]
+            residual_e_sup = np.maximum(updated_e_sup - household_rooftop_gen, 0.0)
+
+            data['MEWG'][:, :-1, 0] = divide(
+                utility_mews * residual_e_sup[:, np.newaxis] * utility_mewl,
+                utility_denominator
+            )
+            data['MEWG'][:, rooftop_idx, 0] = household_rooftop_gen
+
+            # Keep rooftop-solar accounting aligned with the household model.
+            data['MEWL'][:, rooftop_idx, 0] = data['BCET'][
+                :, rooftop_idx, c2ti['11 Decision Load Factor']]
+            previous_rooftop_lf = np.zeros(num_regions)
+            np.divide(
+                time_lag['MEWG'][:, rooftop_idx, 0],
+                time_lag['MEWK'][:, rooftop_idx, 0] * 8766,
+                out=previous_rooftop_lf,
+                where=time_lag['MEWK'][:, rooftop_idx, 0] > 0.0
+            )
+            data['MEWL'][:, rooftop_idx, 0] = np.where(
+                previous_rooftop_lf > 0.0,
+                previous_rooftop_lf,
+                data['MEWL'][:, rooftop_idx, 0]
+            )
 
             # Update capacities and emissions
             data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
             data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
+
+            # Rooftop PV is an installed stock. The household choice equation
+            # can reduce useful output, but it should not imply instant early
+            # retirement of panels. Keep previous stock unless new adoption
+            # requires more capacity; lower output appears as lower effective
+            # utilisation instead of a physical capacity cliff.
+            rooftop_capacity_floor = time_lag['MEWK'][:, rooftop_idx, 0]
+            data['MEWK'][:, rooftop_idx, 0] = np.maximum(
+                data['MEWK'][:, rooftop_idx, 0], rooftop_capacity_floor)
+            rooftop_effective_lf = np.zeros(num_regions)
+            np.divide(
+                data['MEWG'][:, rooftop_idx, 0],
+                data['MEWK'][:, rooftop_idx, 0] * 8766,
+                out=rooftop_effective_lf,
+                where=data['MEWK'][:, rooftop_idx, 0] > 0.0
+            )
+            data['MEWL'][:, rooftop_idx, 0] = np.minimum(
+                data['MEWL'][:, rooftop_idx, 0],
+                rooftop_effective_lf
+            )
+            data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
+
             data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
             
             
@@ -1071,6 +1160,19 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Take into account curtailment, computed above:
             data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
             data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
+
+            # Cost-supply and curtailment updates can overwrite the rooftop
+            # effective load factor set above. Re-apply the stock/output
+            # consistency condition before copying the timestep state forward.
+            rooftop_effective_lf = np.zeros(num_regions)
+            np.divide(
+                data['MEWG'][:, rooftop_idx, 0],
+                data['MEWK'][:, rooftop_idx, 0] * 8766,
+                out=rooftop_effective_lf,
+                where=data['MEWK'][:, rooftop_idx, 0] > 0.0
+            )
+            data['MEWL'][:, rooftop_idx, 0] = rooftop_effective_lf
+            data['BCET'][:, rooftop_idx, c2ti['11 Decision Load Factor']] = rooftop_effective_lf
             
             
             # Calculate levelised cost again

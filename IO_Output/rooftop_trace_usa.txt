@@ -1,198 +1,198 @@
-# Rooftop trace generated 2026-06-24T17:32:18
+# Rooftop trace generated 2026-06-30T23:30:11
 
 Year 2023 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=120,545 | PRICH=1,411.98 | METC=97.9734 | MTCD=17.241
-  cost_roof=-20.6821 | cost_grid=0 | std_roof=17.2515 | std_grid=0
-  share=0.0527675 | MEWG=72,702.2 | MEWL=0.211562 | MEWK=39.2025 | MEWS=0.0372186
-  total_cap=1,053.3 | non_rooftop_cap=1,014.1 | rooftop_cap_share=0.0372186
-  top_capacity_techs: 7 CCGT=421.944, 3 Coal=150.624, 17 Onshore=122.828
+  MEWDH=120,545 | PRICH=1,411.98 | METC=99.0363 | MTCD=17.4282
+  cost_roof=-7.54269 | cost_grid=0 | std_roof=17.4759 | std_grid=0
+  share=0.0554877 | MEWG=77,790.2 | MEWL=0.211563 | MEWK=41.9453 | MEWS=0.0398113
+  total_cap=1,053.6 | non_rooftop_cap=1,011.66 | rooftop_cap_share=0.0398113
+  top_capacity_techs: 7 CCGT=420.934, 3 Coal=150.263, 17 Onshore=122.534
 
 Year 2024 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=118,062 | PRICH=1,500.81 | METC=94.1484 | MTCD=16.5679
-  cost_roof=-100.423 | cost_grid=0 | std_roof=16.5788 | std_grid=0
-  share=0.0527675 | MEWG=71,645.6 | MEWL=0.211562 | MEWK=38.6328 | MEWS=0.035906
-  total_cap=1,075.94 | non_rooftop_cap=1,037.31 | rooftop_cap_share=0.035906
-  top_capacity_techs: 7 CCGT=446.215, 3 Coal=146.171, 17 Onshore=144.596
+  MEWDH=118,062 | PRICH=1,500.81 | METC=93.6058 | MTCD=16.4725
+  cost_roof=-103.971 | cost_grid=0 | std_roof=16.5183 | std_grid=0
+  share=0.0693869 | MEWG=95,272.4 | MEWL=0.211563 | MEWK=51.3719 | MEWS=0.0475135
+  total_cap=1,081.21 | non_rooftop_cap=1,029.83 | rooftop_cap_share=0.0475135
+  top_capacity_techs: 7 CCGT=442.953, 3 Coal=145.108, 17 Onshore=143.484
 
 Year 2025 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=115,930 | PRICH=1,579.32 | METC=90.7707 | MTCD=15.9735
-  cost_roof=-171.171 | cost_grid=0 | std_roof=15.9796 | std_grid=0
-  share=0.0527675 | MEWG=70,064.4 | MEWL=0.211562 | MEWK=37.7802 | MEWS=0.0346508
-  total_cap=1,090.31 | non_rooftop_cap=1,052.53 | rooftop_cap_share=0.0346508
-  top_capacity_techs: 7 CCGT=455.559, 17 Onshore=168.249, 3 Coal=137.852
+  MEWDH=115,930 | PRICH=1,579.32 | METC=88.5512 | MTCD=15.583
+  cost_roof=-191.931 | cost_grid=0 | std_roof=15.6252 | std_grid=0
+  share=0.0862245 | MEWG=116,253 | MEWL=0.211563 | MEWK=62.685 | MEWS=0.0569175
+  total_cap=1,101.33 | non_rooftop_cap=1,038.65 | rooftop_cap_share=0.0569175
+  top_capacity_techs: 7 CCGT=449.483, 17 Onshore=165.634, 3 Coal=136.011
 
 Year 2026 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=114,693 | PRICH=1,644.49 | METC=87.7559 | MTCD=15.443
-  cost_roof=-231.866 | cost_grid=0 | std_roof=15.4487 | std_grid=0
-  share=0.0527675 | MEWG=69,344.2 | MEWL=0.211562 | MEWK=37.3918 | MEWS=0.0336279
-  total_cap=1,111.93 | non_rooftop_cap=1,074.54 | rooftop_cap_share=0.0336279
-  top_capacity_techs: 7 CCGT=461.789, 17 Onshore=198.435, 3 Coal=130.109
+  MEWDH=114,693 | PRICH=1,644.49 | METC=83.9389 | MTCD=14.7714
+  cost_roof=-269.295 | cost_grid=0 | std_roof=14.8097 | std_grid=0
+  share=0.106643 | MEWG=142,249 | MEWL=0.211563 | MEWK=76.702 | MEWS=0.0679326
+  total_cap=1,129.09 | non_rooftop_cap=1,052.39 | rooftop_cap_share=0.0679326
+  top_capacity_techs: 7 CCGT=452.417, 17 Onshore=193.191, 3 Coal=127.402
 
 Year 2027 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=113,748 | PRICH=1,694.84 | METC=85.0784 | MTCD=14.9718
-  cost_roof=-282.351 | cost_grid=0 | std_roof=14.9771 | std_grid=0
-  share=0.0527675 | MEWG=68,803.8 | MEWL=0.211562 | MEWK=37.1004 | MEWS=0.0325396
-  total_cap=1,140.16 | non_rooftop_cap=1,103.06 | rooftop_cap_share=0.0325396
-  top_capacity_techs: 7 CCGT=462.556, 17 Onshore=237.224, 3 Coal=122.795
+  MEWDH=113,748 | PRICH=1,694.84 | METC=79.7392 | MTCD=14.0323
+  cost_roof=-335.654 | cost_grid=0 | std_roof=14.0671 | std_grid=0
+  share=0.131676 | MEWG=174,192 | MEWL=0.211563 | MEWK=93.9264 | MEWS=0.0807087
+  total_cap=1,163.77 | non_rooftop_cap=1,069.84 | rooftop_cap_share=0.0807087
+  top_capacity_techs: 7 CCGT=449.44, 17 Onshore=227.446, 19 Solar PV=120.203
 
 Year 2028 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=113,070 | PRICH=1,727.83 | METC=82.5856 | MTCD=14.5331
-  cost_roof=-323.054 | cost_grid=0 | std_roof=14.538 | std_grid=0
-  share=0.0527675 | MEWG=68,424.7 | MEWL=0.211562 | MEWK=36.8961 | MEWS=0.0313764
-  total_cap=1,175.92 | non_rooftop_cap=1,139.02 | rooftop_cap_share=0.0313764
-  top_capacity_techs: 7 CCGT=455.695, 17 Onshore=287.356, 19 Solar PV=128.378
+  MEWDH=113,070 | PRICH=1,727.83 | METC=75.9287 | MTCD=13.3618
+  cost_roof=-390.128 | cost_grid=0 | std_roof=13.3929 | std_grid=0
+  share=0.162979 | MEWG=214,318 | MEWL=0.211563 | MEWK=115.562 | MEWS=0.0958119
+  total_cap=1,206.14 | non_rooftop_cap=1,090.58 | rooftop_cap_share=0.0958119
+  top_capacity_techs: 7 CCGT=438.456, 17 Onshore=270.042, 19 Solar PV=125.779
 
 Year 2029 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,623 | PRICH=1,760.12 | METC=80.2678 | MTCD=14.1253
-  cost_roof=-361.627 | cost_grid=0 | std_roof=14.1297 | std_grid=0
-  share=0.0527675 | MEWG=68,186.4 | MEWL=0.211562 | MEWK=36.7677 | MEWS=0.0301407
-  total_cap=1,219.87 | non_rooftop_cap=1,183.1 | rooftop_cap_share=0.0301407
-  top_capacity_techs: 7 CCGT=439.087, 17 Onshore=351.551, 19 Solar PV=137.544
+  MEWDH=112,623 | PRICH=1,760.12 | METC=72.549 | MTCD=12.767
+  cost_roof=-439.854 | cost_grid=0 | std_roof=12.7942 | std_grid=0
+  share=0.200008 | MEWG=261,972 | MEWL=0.211563 | MEWK=141.258 | MEWS=0.112479
+  total_cap=1,255.86 | non_rooftop_cap=1,114.6 | rooftop_cap_share=0.112479
+  top_capacity_techs: 7 CCGT=417.848, 17 Onshore=322.556, 23 Rooftop Solar=141.258
 
 Year 2030 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,375 | PRICH=1,793.03 | METC=78.1065 | MTCD=13.7449
-  cost_roof=-398.869 | cost_grid=0 | std_roof=13.7491 | std_grid=0
-  share=0.0527675 | MEWG=68,062.7 | MEWL=0.211561 | MEWK=36.701 | MEWS=0.0288837
-  total_cap=1,270.65 | non_rooftop_cap=1,233.95 | rooftop_cap_share=0.0288837
-  top_capacity_techs: 17 Onshore=430.176, 7 CCGT=411.845, 19 Solar PV=149.33
+  MEWDH=112,375 | PRICH=1,793.03 | METC=69.6421 | MTCD=12.2555
+  cost_roof=-484.991 | cost_grid=0 | std_roof=12.2788 | std_grid=0
+  share=0.243003 | MEWG=317,587 | MEWL=0.211563 | MEWK=171.246 | MEWS=0.130588
+  total_cap=1,311.35 | non_rooftop_cap=1,140.1 | rooftop_cap_share=0.130588
+  top_capacity_techs: 7 CCGT=386.529, 17 Onshore=385.023, 23 Rooftop Solar=171.246
 
 Year 2031 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,152 | PRICH=1,826.13 | METC=76.1326 | MTCD=13.3975
-  cost_roof=-434.293 | cost_grid=0 | std_roof=13.4009 | std_grid=0
-  share=0.0527675 | MEWG=67,936.9 | MEWL=0.211561 | MEWK=36.6333 | MEWS=0.0276988
-  total_cap=1,322.56 | non_rooftop_cap=1,285.93 | rooftop_cap_share=0.0276988
-  top_capacity_techs: 17 Onshore=516.895, 7 CCGT=376.55, 19 Solar PV=162.658
+  MEWDH=112,152 | PRICH=1,826.13 | METC=67.2371 | MTCD=11.8322
+  cost_roof=-525.011 | cost_grid=0 | std_roof=11.8522 | std_grid=0
+  share=0.291852 | MEWG=380,670 | MEWL=0.211563 | MEWK=205.261 | MEWS=0.150058
+  total_cap=1,367.88 | non_rooftop_cap=1,162.62 | rooftop_cap_share=0.150058
+  top_capacity_techs: 17 Onshore=453.907, 7 CCGT=345.313, 23 Rooftop Solar=205.261
 
 Year 2032 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,071 | PRICH=1,870.61 | METC=74.376 | MTCD=13.0884
-  cost_roof=-472.607 | cost_grid=0 | std_roof=13.0916 | std_grid=0
-  share=0.0527675 | MEWG=67,881.7 | MEWL=0.211561 | MEWK=36.6036 | MEWS=0.0267207
-  total_cap=1,369.86 | non_rooftop_cap=1,333.25 | rooftop_cap_share=0.0267207
-  top_capacity_techs: 17 Onshore=598.855, 7 CCGT=340.001, 19 Solar PV=177.413
+  MEWDH=112,071 | PRICH=1,870.61 | METC=65.0355 | MTCD=11.4448
+  cost_roof=-568.011 | cost_grid=0 | std_roof=11.4628 | std_grid=0
+  share=0.345956 | MEWG=450,914 | MEWL=0.211563 | MEWK=243.138 | MEWS=0.17101
+  total_cap=1,421.77 | non_rooftop_cap=1,178.64 | rooftop_cap_share=0.17101
+  top_capacity_techs: 17 Onshore=522.211, 7 CCGT=298.42, 23 Rooftop Solar=243.138
 
 Year 2033 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,111 | PRICH=1,916.01 | METC=72.7278 | MTCD=12.7984
-  cost_roof=-510.226 | cost_grid=0 | std_roof=12.8014 | std_grid=0
-  share=0.0527675 | MEWG=67,889.2 | MEWL=0.21156 | MEWK=36.6078 | MEWS=0.0259443
-  total_cap=1,411.02 | non_rooftop_cap=1,374.41 | rooftop_cap_share=0.0259443
-  top_capacity_techs: 17 Onshore=664.621, 7 CCGT=308.194, 19 Solar PV=196.77
+  MEWDH=112,111 | PRICH=1,916.01 | METC=63.083 | MTCD=11.1012
+  cost_roof=-608.882 | cost_grid=0 | std_roof=11.1171 | std_grid=0
+  share=0.404021 | MEWG=526,784 | MEWL=0.211563 | MEWK=284.047 | MEWS=0.193206
+  total_cap=1,470.18 | non_rooftop_cap=1,186.13 | rooftop_cap_share=0.193206
+  top_capacity_techs: 17 Onshore=581.434, 23 Rooftop Solar=284.047, 7 CCGT=251.612
 
 Year 2034 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,253 | PRICH=1,962.66 | METC=71.1873 | MTCD=12.5273
-  cost_roof=-547.297 | cost_grid=0 | std_roof=12.5301 | std_grid=0
-  share=0.0527675 | MEWG=67,971.3 | MEWL=0.21156 | MEWK=36.6523 | MEWS=0.0251985
-  total_cap=1,454.54 | non_rooftop_cap=1,417.89 | rooftop_cap_share=0.0251985
-  top_capacity_techs: 17 Onshore=711.603, 7 CCGT=285.534, 19 Solar PV=226.106
+  MEWDH=112,253 | PRICH=1,962.66 | METC=61.3715 | MTCD=10.8
+  cost_roof=-647.827 | cost_grid=0 | std_roof=10.8139 | std_grid=0
+  share=0.463354 | MEWG=604,910 | MEWL=0.211563 | MEWK=326.174 | MEWS=0.215533
+  total_cap=1,513.34 | non_rooftop_cap=1,187.16 | rooftop_cap_share=0.215533
+  top_capacity_techs: 17 Onshore=626.246, 23 Rooftop Solar=326.174, 7 CCGT=209.699
 
 Year 2035 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,480 | PRICH=2,010.52 | METC=69.6549 | MTCD=12.2576
-  cost_roof=-584.834 | cost_grid=0 | std_roof=12.2603 | std_grid=0
-  share=0.0527675 | MEWG=68,063.4 | MEWL=0.211559 | MEWK=36.7022 | MEWS=0.0246876
-  total_cap=1,486.66 | non_rooftop_cap=1,449.96 | rooftop_cap_share=0.0246876
-  top_capacity_techs: 17 Onshore=731.726, 7 CCGT=269.771, 19 Solar PV=264.233
+  MEWDH=112,480 | PRICH=2,010.52 | METC=59.8879 | MTCD=10.5389
+  cost_roof=-684.968 | cost_grid=0 | std_roof=10.5509 | std_grid=0
+  share=0.517781 | MEWG=677,334 | MEWL=0.211563 | MEWK=365.226 | MEWS=0.234799
+  total_cap=1,555.48 | non_rooftop_cap=1,190.26 | rooftop_cap_share=0.234799
+  top_capacity_techs: 17 Onshore=657.319, 23 Rooftop Solar=365.226, 19 Solar PV=212.883
 
 Year 2036 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=112,801 | PRICH=2,059.73 | METC=68.2772 | MTCD=12.0151
-  cost_roof=-621.393 | cost_grid=0 | std_roof=12.0177 | std_grid=0
-  share=0.0527675 | MEWG=68,262.7 | MEWL=0.211558 | MEWK=36.81 | MEWS=0.0241817
-  total_cap=1,522.22 | non_rooftop_cap=1,485.41 | rooftop_cap_share=0.0241817
-  top_capacity_techs: 17 Onshore=737.874, 19 Solar PV=311.675, 7 CCGT=260.804
+  MEWDH=112,801 | PRICH=2,059.73 | METC=58.6596 | MTCD=10.3228
+  cost_roof=-720.105 | cost_grid=0 | std_roof=10.3325 | std_grid=0
+  share=0.557559 | MEWG=731,447 | MEWL=0.211563 | MEWK=394.404 | MEWS=0.246619
+  total_cap=1,599.24 | non_rooftop_cap=1,204.84 | rooftop_cap_share=0.246619
+  top_capacity_techs: 17 Onshore=675.78, 23 Rooftop Solar=394.404, 19 Solar PV=244.103
 
 Year 2037 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=113,182 | PRICH=2,109.43 | METC=66.9588 | MTCD=11.7831
-  cost_roof=-657.552 | cost_grid=0 | std_roof=11.7857 | std_grid=0
-  share=0.0527675 | MEWG=68,500.1 | MEWL=0.211557 | MEWK=36.9385 | MEWS=0.0236169
-  total_cap=1,564.07 | non_rooftop_cap=1,527.13 | rooftop_cap_share=0.0236169
-  top_capacity_techs: 17 Onshore=736.102, 19 Solar PV=368.027, 7 CCGT=255.697
+  MEWDH=113,182 | PRICH=2,109.43 | METC=57.6253 | MTCD=10.1408
+  cost_roof=-753.419 | cost_grid=0 | std_roof=10.1491 | std_grid=0
+  share=0.57981 | MEWG=763,208 | MEWL=0.211563 | MEWK=411.53 | MEWS=0.25038
+  total_cap=1,643.63 | non_rooftop_cap=1,232.1 | rooftop_cap_share=0.25038
+  top_capacity_techs: 17 Onshore=680.866, 23 Rooftop Solar=411.53, 19 Solar PV=288.344
 
 Year 2038 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=113,615 | PRICH=2,160.96 | METC=65.6827 | MTCD=11.5585
-  cost_roof=-694.103 | cost_grid=0 | std_roof=11.5611 | std_grid=0
-  share=0.0527675 | MEWG=68,770 | MEWL=0.211556 | MEWK=37.0845 | MEWS=0.0230243
-  total_cap=1,610.67 | non_rooftop_cap=1,573.58 | rooftop_cap_share=0.0230243
-  top_capacity_techs: 17 Onshore=729.524, 19 Solar PV=431.908, 7 CCGT=251.571
+  MEWDH=113,615 | PRICH=2,160.96 | METC=56.7183 | MTCD=9.98114
+  cost_roof=-786.218 | cost_grid=0 | std_roof=9.98866 | std_grid=0
+  share=0.590597 | MEWG=780,378 | MEWL=0.211563 | MEWK=420.788 | MEWS=0.248851
+  total_cap=1,690.92 | non_rooftop_cap=1,270.13 | rooftop_cap_share=0.248851
+  top_capacity_techs: 17 Onshore=673.922, 23 Rooftop Solar=420.788, 19 Solar PV=344.381
 
 Year 2039 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=114,090 | PRICH=2,214.25 | METC=64.4372 | MTCD=11.3393
-  cost_roof=-731.137 | cost_grid=0 | std_roof=11.342 | std_grid=0
-  share=0.0527675 | MEWG=69,067.2 | MEWL=0.211554 | MEWK=37.2452 | MEWS=0.0224399
-  total_cap=1,659.77 | non_rooftop_cap=1,622.53 | rooftop_cap_share=0.0224399
-  top_capacity_techs: 17 Onshore=721.801, 19 Solar PV=499.44, 7 CCGT=246.748
+  MEWDH=114,090 | PRICH=2,214.25 | METC=55.8801 | MTCD=9.83364
+  cost_roof=-819.081 | cost_grid=0 | std_roof=9.84074 | std_grid=0
+  share=0.595631 | MEWG=790,326 | MEWL=0.211563 | MEWK=426.152 | MEWS=0.244735
+  total_cap=1,741.28 | non_rooftop_cap=1,315.13 | rooftop_cap_share=0.244735
+  top_capacity_techs: 17 Onshore=658.849, 23 Rooftop Solar=426.152, 19 Solar PV=409.128
 
 Year 2040 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=114,603 | PRICH=2,267.5 | METC=63.2129 | MTCD=11.1238
-  cost_roof=-767.932 | cost_grid=0 | std_roof=11.1266 | std_grid=0
-  share=0.0527675 | MEWG=69,388.8 | MEWL=0.211553 | MEWK=37.4191 | MEWS=0.02193
-  total_cap=1,706.3 | non_rooftop_cap=1,668.88 | rooftop_cap_share=0.02193
-  top_capacity_techs: 17 Onshore=719.229, 19 Solar PV=560.748, 7 CCGT=240.223
+  MEWDH=114,603 | PRICH=2,267.5 | METC=55.0767 | MTCD=9.69226
+  cost_roof=-851.559 | cost_grid=0 | std_roof=9.69914 | std_grid=0
+  share=0.597969 | MEWG=796,990 | MEWL=0.211563 | MEWK=429.745 | MEWS=0.239812
+  total_cap=1,792.01 | non_rooftop_cap=1,362.26 | rooftop_cap_share=0.239812
+  top_capacity_techs: 17 Onshore=642.841, 19 Solar PV=474.137, 23 Rooftop Solar=429.745
 
 Year 2041 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=115,145 | PRICH=2,322.37 | METC=61.9885 | MTCD=10.9083
-  cost_roof=-805.458 | cost_grid=0 | std_roof=10.9114 | std_grid=0
-  share=0.0527675 | MEWG=69,729.1 | MEWL=0.211552 | MEWK=37.603 | MEWS=0.0215541
-  total_cap=1,744.59 | non_rooftop_cap=1,706.99 | rooftop_cap_share=0.0215541
-  top_capacity_techs: 17 Onshore=727.457, 19 Solar PV=605.161, 7 CCGT=231.807
+  MEWDH=115,145 | PRICH=2,322.37 | METC=54.289 | MTCD=9.55366
+  cost_roof=-884.603 | cost_grid=0 | std_roof=9.56044 | std_grid=0
+  share=0.599055 | MEWG=802,218 | MEWL=0.211563 | MEWK=432.565 | MEWS=0.235809
+  total_cap=1,834.39 | non_rooftop_cap=1,401.82 | rooftop_cap_share=0.235809
+  top_capacity_techs: 17 Onshore=638.278, 19 Solar PV=519.868, 23 Rooftop Solar=432.565
 
 Year 2042 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=115,713 | PRICH=2,379.39 | METC=60.7437 | MTCD=10.6893
-  cost_roof=-844.173 | cost_grid=0 | std_roof=10.6925 | std_grid=0
-  share=0.0527675 | MEWG=70,093.4 | MEWL=0.211551 | MEWK=37.7996 | MEWS=0.0212673
-  total_cap=1,777.36 | non_rooftop_cap=1,739.56 | rooftop_cap_share=0.0212673
-  top_capacity_techs: 17 Onshore=744.319, 19 Solar PV=636.4, 7 CCGT=222.338
+  MEWDH=115,713 | PRICH=2,379.39 | METC=53.5133 | MTCD=9.41715
+  cost_roof=-918.499 | cost_grid=0 | std_roof=9.42384 | std_grid=0
+  share=0.59956 | MEWG=806,853 | MEWL=0.211563 | MEWK=435.064 | MEWS=0.232997
+  total_cap=1,867.26 | non_rooftop_cap=1,432.19 | rooftop_cap_share=0.232997
+  top_capacity_techs: 17 Onshore=646.977, 19 Solar PV=544.252, 23 Rooftop Solar=435.064
 
 Year 2043 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=116,302 | PRICH=2,437.52 | METC=59.5116 | MTCD=10.4724
-  cost_roof=-883.281 | cost_grid=0 | std_roof=10.4755 | std_grid=0
-  share=0.0527675 | MEWG=70,459.9 | MEWL=0.211551 | MEWK=37.9975 | MEWS=0.0209715
-  total_cap=1,811.87 | non_rooftop_cap=1,773.87 | rooftop_cap_share=0.0209715
-  top_capacity_techs: 17 Onshore=766.147, 19 Solar PV=664.368, 7 CCGT=212.289
+  MEWDH=116,302 | PRICH=2,437.52 | METC=52.7491 | MTCD=9.28267
+  cost_roof=-952.781 | cost_grid=0 | std_roof=9.28924 | std_grid=0
+  share=0.599795 | MEWG=811,280 | MEWL=0.211563 | MEWK=437.451 | MEWS=0.230598
+  total_cap=1,897.03 | non_rooftop_cap=1,459.58 | rooftop_cap_share=0.230598
+  top_capacity_techs: 17 Onshore=660.557, 19 Solar PV=561.581, 23 Rooftop Solar=437.451
 
 Year 2044 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=116,913 | PRICH=2,496.94 | METC=58.2029 | MTCD=10.2421
-  cost_roof=-923.783 | cost_grid=0 | std_roof=10.2447 | std_grid=0
-  share=0.0527675 | MEWG=70,836.9 | MEWL=0.21155 | MEWK=38.201 | MEWS=0.0207085
-  total_cap=1,844.7 | non_rooftop_cap=1,806.5 | rooftop_cap_share=0.0207085
-  top_capacity_techs: 17 Onshore=788.233, 19 Solar PV=691.089, 7 CCGT=201.191
+  MEWDH=116,913 | PRICH=2,496.94 | METC=52.0032 | MTCD=9.1514
+  cost_roof=-987.47 | cost_grid=0 | std_roof=9.15777 | std_grid=0
+  share=0.599905 | MEWG=815,689 | MEWL=0.211563 | MEWK=439.828 | MEWS=0.228891
+  total_cap=1,921.56 | non_rooftop_cap=1,481.73 | rooftop_cap_share=0.228891
+  top_capacity_techs: 17 Onshore=673.244, 19 Solar PV=575.655, 23 Rooftop Solar=439.828
 
 Year 2045 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=117,539 | PRICH=2,557.38 | METC=56.7866 | MTCD=9.99289
-  cost_roof=-965.852 | cost_grid=0 | std_roof=9.99511 | std_grid=0
-  share=0.0527675 | MEWG=71,222.2 | MEWL=0.21155 | MEWK=38.409 | MEWS=0.0204787
-  total_cap=1,875.56 | non_rooftop_cap=1,837.15 | rooftop_cap_share=0.0204787
-  top_capacity_techs: 17 Onshore=809.615, 19 Solar PV=716.885, 7 CCGT=189.361
+  MEWDH=117,539 | PRICH=2,557.38 | METC=51.2812 | MTCD=9.02435
+  cost_roof=-1,022.37 | cost_grid=0 | std_roof=9.03052 | std_grid=0
+  share=0.599956 | MEWG=820,126 | MEWL=0.211563 | MEWK=442.221 | MEWS=0.227678
+  total_cap=1,942.31 | non_rooftop_cap=1,500.08 | rooftop_cap_share=0.227678
+  top_capacity_techs: 17 Onshore=684.523, 19 Solar PV=587.8, 23 Rooftop Solar=442.221
 
 Year 2046 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=118,178 | PRICH=2,620.45 | METC=55.5934 | MTCD=9.78291
-  cost_roof=-1,006.8 | cost_grid=0 | std_roof=9.78496 | std_grid=0
-  share=0.0527675 | MEWG=71,614 | MEWL=0.211549 | MEWK=38.6205 | MEWS=0.0202845
-  total_cap=1,903.94 | non_rooftop_cap=1,865.32 | rooftop_cap_share=0.0202845
-  top_capacity_techs: 17 Onshore=829.816, 19 Solar PV=741.432, 7 CCGT=177.098
+  MEWDH=118,178 | PRICH=2,620.45 | METC=50.5867 | MTCD=8.90213
+  cost_roof=-1,058.19 | cost_grid=0 | std_roof=8.90806 | std_grid=0
+  share=0.599979 | MEWG=824,614 | MEWL=0.211563 | MEWK=444.641 | MEWS=0.226765
+  total_cap=1,960.8 | non_rooftop_cap=1,516.16 | rooftop_cap_share=0.226765
+  top_capacity_techs: 17 Onshore=694.731, 19 Solar PV=598.759, 23 Rooftop Solar=444.641
 
 Year 2047 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=118,827 | PRICH=2,685.28 | METC=54.2487 | MTCD=9.54627
-  cost_roof=-1,050.13 | cost_grid=0 | std_roof=9.54792 | std_grid=0
-  share=0.0527675 | MEWG=72,011.1 | MEWL=0.211549 | MEWK=38.8348 | MEWS=0.0201279
-  total_cap=1,929.4 | non_rooftop_cap=1,890.57 | rooftop_cap_share=0.0201279
-  top_capacity_techs: 17 Onshore=848.514, 19 Solar PV=764.312, 7 CCGT=164.657
+  MEWDH=118,827 | PRICH=2,685.28 | METC=49.9165 | MTCD=8.78419
+  cost_roof=-1,094.55 | cost_grid=0 | std_roof=8.78989 | std_grid=0
+  share=0.59999 | MEWG=829,160 | MEWL=0.211563 | MEWK=447.092 | MEWS=0.226157
+  total_cap=1,976.91 | non_rooftop_cap=1,529.82 | rooftop_cap_share=0.226157
+  top_capacity_techs: 17 Onshore=703.668, 19 Solar PV=608.414, 23 Rooftop Solar=447.092
 
 Year 2048 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=119,485 | PRICH=2,750.85 | METC=52.9418 | MTCD=9.31628
-  cost_roof=-1,093.39 | cost_grid=0 | std_roof=9.31771 | std_grid=0
-  share=0.0527675 | MEWG=72,412.6 | MEWL=0.211548 | MEWK=39.0514 | MEWS=0.0200095
-  total_cap=1,951.64 | non_rooftop_cap=1,912.59 | rooftop_cap_share=0.0200095
-  top_capacity_techs: 17 Onshore=865.391, 19 Solar PV=785.266, 7 CCGT=152.296
+  MEWDH=119,485 | PRICH=2,750.85 | METC=49.2727 | MTCD=8.6709
+  cost_roof=-1,130.98 | cost_grid=0 | std_roof=8.67638 | std_grid=0
+  share=0.599996 | MEWG=833,761 | MEWL=0.211563 | MEWK=449.573 | MEWS=0.225876
+  total_cap=1,990.36 | non_rooftop_cap=1,540.78 | rooftop_cap_share=0.225876
+  top_capacity_techs: 17 Onshore=711.11, 19 Solar PV=616.532, 23 Rooftop Solar=449.573
 
 Year 2049 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=120,151 | PRICH=2,818.86 | METC=51.6573 | MTCD=9.09025
-  cost_roof=-1,137.52 | cost_grid=0 | std_roof=9.09159 | std_grid=0
-  share=0.0527675 | MEWG=72,817.2 | MEWL=0.211548 | MEWK=39.2698 | MEWS=0.0199312
-  total_cap=1,970.27 | non_rooftop_cap=1,931 | rooftop_cap_share=0.0199312
-  top_capacity_techs: 17 Onshore=880.184, 19 Solar PV=803.941, 7 CCGT=140.207
+  MEWDH=120,151 | PRICH=2,818.86 | METC=48.6523 | MTCD=8.56172
+  cost_roof=-1,168.27 | cost_grid=0 | std_roof=8.56701 | std_grid=0
+  share=0.599998 | MEWG=838,412 | MEWL=0.211563 | MEWK=452.081 | MEWS=0.22594
+  total_cap=2,000.89 | non_rooftop_cap=1,548.81 | rooftop_cap_share=0.22594
+  top_capacity_techs: 17 Onshore=716.854, 19 Solar PV=622.896, 23 Rooftop Solar=452.081
 
 Year 2050 | Region 34 USA (US) | Tech 23 Rooftop Solar
-  MEWDH=120,824 | PRICH=2,888.64 | METC=50.4166 | MTCD=8.87191
-  cost_roof=-1,182 | cost_grid=0 | std_roof=8.8732 | std_grid=0
-  share=0.0527675 | MEWG=73,225 | MEWL=0.211548 | MEWK=39.4899 | MEWS=0.019891
-  total_cap=1,985.32 | non_rooftop_cap=1,945.83 | rooftop_cap_share=0.019891
-  top_capacity_techs: 17 Onshore=892.781, 19 Solar PV=820.234, 7 CCGT=128.581
+  MEWDH=120,824 | PRICH=2,888.64 | METC=48.0536 | MTCD=8.45637
+  cost_roof=-1,206.14 | cost_grid=0 | std_roof=8.46147 | std_grid=0
+  share=0.599999 | MEWG=843,107 | MEWL=0.211563 | MEWK=454.613 | MEWS=0.226333
+  total_cap=2,008.6 | non_rooftop_cap=1,553.99 | rooftop_cap_share=0.226333
+  top_capacity_techs: 17 Onshore=720.861, 19 Solar PV=627.469, 23 Rooftop Solar=454.613
 

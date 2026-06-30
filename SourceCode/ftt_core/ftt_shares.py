@@ -108,7 +108,7 @@ def shares_change_jitted(
 
             S_i = shares_dt[r, tech_i, 0]
             if not (S_i > 0.0 and
-                    costs[r, tech_i, 0] != 0.0):
+                    np.isfinite(costs[r, tech_i, 0])):
                 continue
             
             if limits_active:
@@ -119,7 +119,7 @@ def shares_change_jitted(
                 
                 S_j = shares_dt[r, tech_j, 0]
                 if not (S_j > 0.0 and
-                        costs[r, tech_j, 0] != 0.0):
+                        np.isfinite(costs[r, tech_j, 0])):
                     continue
 
                 # Propagating width of variations in perceived costs
