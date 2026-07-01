@@ -135,8 +135,11 @@ def render_results_page():
                                         for models_tuple, scen_list in sorted(
                                             models_by_scenario.items(), key=lambda x: (-len(x[0]), x[0])
                                         ):
+                                            # shorten long scenario lists for display if too many
+                                            if len(scen_list) > 3:
+                                                scen_list = scen_list[:3] + ['...']
                                             if models_tuple:
-                                                with ui.row().classes('w-full h-full gap-2 items-center'):
+                                                with ui.row().classes('w-full h-full gap-2 overflow-auto'):
                                                     for model in models_tuple:
                                                         color = model_colors.get(model, 'gray')
                                                         ui.badge(model).props(f'color={color}').classes('text-sm')
@@ -145,7 +148,7 @@ def render_results_page():
                                                 ui.badge('No models').props('color=red').classes('text-sm')
                             
                                 # Models run display
-                                models_container = ui.column().classes('w-full overflow-y-auto gap-2 px-1 py-2 max-h-48')
+                                models_container = ui.column().classes('w-[calc(50vw-8rem)] overflow-y-auto gap-2 px-1 py-2 max-h-48')
 
                             # Right side: Scenario section
                             with ui.column().classes('flex-1 items-start overflow-y-auto'):
