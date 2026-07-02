@@ -53,6 +53,7 @@ MLLB,FTT:Power load factors (%) by tech x load band,%,RTI,T2TI,LBTI,TIME,FTT-P,-
 Gen_by_lb,Generation by technology and load band,GWh,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
 MLCC,Long-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2012,
 MLBP,FTT:Power Average marginal costs per load band (serves as the price),$/MWh,RTI,LBTI,NA,TIME,FTT-P,,,2001,
+MLBP,FTT:Power Marginal costs per load band (serves as the price),$/MWh,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB1,Normalised residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB0,Cumulative residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-
@@ -379,3 +380,5 @@ Battery cap additions,Capacity additions per timestep per model,GWh,models_w_bat
 Cumulative total batcap,Cumulative capacity over batteries across sectors,GWh,NA,NA,NA,TIME,General,-,-,2020,-
 ZEVC,Starting non-battery costs of a truck,USD/veh,RTI,FTTI,NA,TIME,FTT-Fr,,,2001,
 Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,General,2018,2023,2018,
+Smart meter uptake,Fraction of households with smart meters,,RTI,NA,NA,TIME,General,2018,2022,2018,
+TOU tariff uptake,Fraction of households with EVs or HPs that have TOU tariffs,,RTI,NA,NA,TIME,General,2018,2023,2018,
