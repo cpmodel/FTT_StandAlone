@@ -316,8 +316,7 @@ def render_results_page():
         nonlocal result_type_selector, result_type_hint
         _baseline_hint = 'Select a baseline and ≥1 other scenario to enable comparison.'
         dimension_container.clear()
-        # Reset dimension selections when the variable changes to avoid stale
-        # position-based selections from a previous variable bleeding through.
+        # Reset position-based selections before rebuilding them for this variable.
         state.dim_selections = [{} for _ in range(4)]
         state.dim_aggregate = [False, False, False, False]
 
@@ -380,43 +379,55 @@ def render_results_page():
                         clearable=True
                     ).classes('w-full h-full overflow-auto').props('dense use-chips options-dense')
 
-                    # Initialize with first value if not set
-                    if dim_values and f'dim{i}_values' not in state.dim_selections[i]:
+                    # Initialize from stored selection for matching classifications,
+                    # or fall back to the first available value.
+                    selection_key = f'dim{i}_values'
+                    if dim_name in state.dim_selection_cache:
+                        dim_select.value = [
+                            value for value in state.dim_selection_cache[dim_name]
+                            if value in dim_values
+                        ]
+                    elif dim_values:
                         dim_select.value = [dim_values[0]]
-                    elif f'dim{i}_values' in state.dim_selections[i]:
-                        dim_select.value = state.dim_selections[i][f'dim{i}_values']
+                    state.dim_selections[i][selection_key] = list(dim_select.value or [])
 
-                    def make_select_handler(idx):
+                    def make_select_handler(idx, dim_key, all_checkbox, vals):
                         def handler(e):
-                            state.dim_selections[idx][f'dim{idx}_values'] = e.sender.value
+                            selected_values = list(e.sender.value or [])
+                            state.dim_selections[idx][f'dim{idx}_values'] = selected_values
+                            state.dim_selection_cache[dim_key] = selected_values
+                            all_checkbox.value = bool(vals) and set(selected_values) == set(vals)
                             update_plot()
                         return handler
-
-                    dim_select.on_value_change(make_select_handler(i))
 
                     # Checkboxes (Select All and Sum)
                     with ui.row().classes('w-full gap-4'):
                         # Select All checkbox
                         select_all = ui.checkbox('All').props('dense')
-                        def make_select_all_handler(idx, selector, vals):
+                        select_all.value = bool(dim_values) and set(dim_select.value or []) == set(dim_values)
+                        def make_select_all_handler(idx, dim_key, selector, vals):
                             def handler(e):
-                                if e.value:
-                                    selector.value = vals
-                                else:
-                                    selector.value = []
+                                selected_values = list(vals) if e.value else []
+                                selector.value = selected_values
+                                state.dim_selections[idx][f'dim{idx}_values'] = selected_values
+                                state.dim_selection_cache[dim_key] = selected_values
+                                update_plot()
                             return handler
 
-                        select_all.on_value_change(make_select_all_handler(i, dim_select, dim_values))
+                        select_all.on_value_change(make_select_all_handler(i, dim_name, dim_select, dim_values))
+                        dim_select.on_value_change(make_select_handler(i, dim_name, select_all, dim_values))
 
                         # Aggregate checkbox
                         agg_check = ui.checkbox('Sum').props('dense')
-                        agg_check.value = state.dim_aggregate[i]
-                        def make_agg_handler(idx):
+                        agg_check.value = state.dim_aggregate_cache.get(dim_name, False)
+                        state.dim_aggregate[i] = agg_check.value
+                        def make_agg_handler(idx, dim_key):
                             def handler(e):
                                 state.dim_aggregate[idx] = e.value
+                                state.dim_aggregate_cache[dim_key] = e.value
                                 update_plot()
                             return handler
-                        agg_check.on_value_change(make_agg_handler(i))
+                        agg_check.on_value_change(make_agg_handler(i, dim_name))
         
         # Add result type selector to the right of dimension selectors
         with dimension_container:
