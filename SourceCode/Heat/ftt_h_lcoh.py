@@ -41,6 +41,7 @@ import numpy as np
 
 # Local library imports
 from SourceCode.support.divide import divide
+from SourceCode.sector_coupling.electricity_price import fuel_cost_with_TOU
 
 def set_carbon_tax(data, c4ti):
     '''
@@ -87,7 +88,7 @@ def get_lcoh(data, titles, carbon_costs):
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     
     # Cost matrix
-    bhtc = data['BHTC']
+    bhtc = data['BHTC'].copy()
     
     # Heating device lifetimes and build time
     lt = bhtc[:, :, c4ti['5 Lifetime']]
@@ -122,7 +123,9 @@ def get_lcoh(data, titles, carbon_costs):
     domt = get_cost_component(bhtc[:, :, c4ti['4 O&M SD']], conv_cf, lt_mask)
     
     # Fuel costs and carbon costs
-    ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
+    fuel_costs_before = bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']]
+    fuel_costs = fuel_cost_with_TOU(fuel_costs_before, 'FTT-H')
+    ft = get_cost_component(fuel_costs * data['HEWP'][:, :, 0], conv_ce, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
     

@@ -202,7 +202,6 @@ def TOU_price_feedback(data, time_lag):
     
     data = smart_meter_uptake(data, time_lag)
     data = TOU_uptake_feedback(data, time_lag)
-    dTOU = data['TOU tariff uptake'] - time_lag['TOU tariff uptake']
  
     data['Elec price volatility'][:, 0, 0] = (
         np.clip((data["MLBP"][:, 3, 0] - data["MLBP"][:, 0, 0]) / data["MLBP"][:, 3, 0] - 0.25, 0, 1.0)
@@ -210,24 +209,27 @@ def TOU_price_feedback(data, time_lag):
     
     # Max discount under full TOU tariff uptake adoption. We assume that utilities
     # will pass half of discounts on to consumers
-    max_discount = data['Elec price volatility'] * 0.5
+    max_discount = data['Elec price volatility'] * 0.8
+    
+    data['TOU discount'] = max_discount * data['TOU tariff uptake']
+    
 
-    dprice_factor = max_discount * dTOU
+    return data
 
+def fuel_cost_with_TOU(fuel_cost, model_tou_discount):
+    
     elec_map = pd.read_csv(
         os.path.join("Utilities", "mappings", "Electricity_cost_mapping.csv"),
         index_col=0
     )
-
+    
     # Apply to all electricity cost variables already in the system
     for model in elec_map.index:
         elec_index = [
             int(x) for x in elec_map.loc[model, "Electricity_index"].split(",")
         ]
-        cost_var = elec_map.loc[model, "Cost_var"]
-        cost_index = elec_map.loc[model, "Cost index"]
 
-        # apply TOU tariff uptake discount to lagged-updated cost
-        data[cost_var][:, elec_index, cost_index] *= (1 - dprice_factor[:, :, 0])
+    fuel_cost[:, elec_index] *= model_tou_discount
+    # apply TOU tariff uptake discount to lagged-updated cost
 
-    return data
+    return fuel_cost

@@ -384,3 +384,4 @@ Battery price,Battery prices for transport and freight,USD/kWh,RTI,NA,NA,TIME,Ge
 Smart meter uptake,Fraction of households with smart meters,,RTI,NA,NA,TIME,General,2018,2022,2018,
 TOU tariff uptake,Fraction of households with EVs or HPs that have TOU tariffs,,RTI,NA,NA,TIME,General,2018,2023,2018,
 Elec price volatility,The relative difference between price in the upper mid load band and the baseline or VRE loadband,,RTI,NA,NA,TIME,General,,,2018,
+TOU discount,How much cheaper is electricity for each sector given TOU uptake and ability to shift,,RTI,Models,NA,TIME,General,,,,
