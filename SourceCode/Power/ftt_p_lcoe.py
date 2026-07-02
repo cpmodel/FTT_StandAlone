@@ -217,7 +217,7 @@ def get_lcoe(data, titles):
     data['MECW'][:, :, 0] = lcoeco2         # The real bare LCOE with CO2 costs
     data['MECC'][:, :, 0] = lcoe_all_but_co2  # LCOE with policy, without CO2 (matches cascading)
     data['METC'][:, :, 0] = lcoe_mu_gamma   # As seen by consumer (generalised cost with value factor)
-    data['MTCD'][:, :, 0] = dlcoe           # Variation on the LCOE distribution
+    data['MTCD'][:, :, 0] = dlcoe / value_factors       # Variation on the LCOE distribution
     data['MECW battery only'][:, :, 0] = lcoe_battery_only  # LCOE with only short-term storage
 
     # Additional LCOE variants for MEWP electricity pricing
