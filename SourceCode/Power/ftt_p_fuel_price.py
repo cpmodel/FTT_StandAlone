@@ -235,35 +235,30 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar):
 
                 # Only select technologies with non-zero generation
                 where_condition = gen_by_lb[:, LB] > 0.0
-                mc_tech_by_lb[where_condition] = (
-                    data["MWMC"][r, :, 0][where_condition]
-                    - data["BCET"][r, :, 0][where_condition]
-                )
+                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition]
 
                 # Weighted average marginal cost
                 if np.sum(gen_by_lb[:, LB]) > 0.0:
                     data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * gen_by_lb[:, LB]) / np.sum(gen_by_lb[:, LB])
+                # If the load band is now empty, set the price to variable renewables
                 else:
                     data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
+                    # Adjust prices for higher transmission costs
+                    data["MLBP"][r, LB, 0] *= 1.3
+                
+            # Smooth the baseload price trajectory towards VRE when baseload under 5% height
+            if data["MLB1"][r, 0, 0] < 0.05:
+                baseload_weight = np.clip(data["MLB1"][r, 0, 0] / 0.05, 0.0, 1.0)
+                vre_weight = 1.0 - baseload_weight
+                vre_price = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
+                data["MLBP"][r, 0, 0] = data["MLBP"][r, 0, 0] * baseload_weight + vre_price * vre_weight
 
-            # Adjust load band prices for start-up costs and VRE transmission
-            data["MLBP"][r, 4, 0] *= 1.25  # Peak load - highest start-up costs
-            data["MLBP"][r, 3, 0] *= 1.1
+            # Adjust load band prices for start-up costs, and low efficiency in peak load bands
+            data["MLBP"][r, 4, 0] *= 1.35  # Back-up reserves - highest start-up costs
+            data["MLBP"][r, 3, 0] *= 1.2
             data["MLBP"][r, 2, 0] *= 1.05
-            data["MLBP"][r, 5, 0] *= 1.3   # VRE - higher transmission costs
-
-            vre_weight = 0.0
-            non_vre_price = 0.0
-
-            # VRE weight increases above 40% penetration
-            share_VRE = np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / max(np.sum(data["MEWG"][r, :]), 1e-10)
-            if share_VRE > 0.40:
-                vre_weight = (1.0 / 0.6) * share_VRE - 2.0 / 3.0
-
-            if np.sum(np.array([gen_by_lb[:, LB] for LB in range(n_loadbands - 1)])) > 0.0:
-                non_vre_price = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
-
-            data["MEWP"][r, 7, 0] = vre_weight * data["MLBP"][r, 5, 0] + (1.0 - vre_weight) * non_vre_price
+           
+            data["MEWP"][r, 7, 0] = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
 
 
     return data
