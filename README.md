@@ -43,7 +43,7 @@ Alternatively, you can download ftt by clicking the green `Code` button in the t
 ## How to contribute
 We welcome contributions from everyone. You can report issues, fix bugs, improve the documentation, or write and propose model changes and provide updated data. 
 1. New contributors can fork the repository to open pull requests with suggested code improvements
-2. Join our [Open community meetings](https://teams.microsoft.com/l/meetup-join/19%3ameeting_NTA1YmM0MGUtN2JmMS00ZjQ3LWFiM2UtNDkzNTM3OTFhMjNh%40thread.v2/0?context=%7b%22Tid%22%3a%22912a5d77-fb98-4eee-af32-1334d8f04a53%22%2c%22Oid%22%3a%222273eeaa-a79f-4eff-a90d-3083812f1175%22%7d), typically on the last Friday of the month.
+2. Join our Discord and Open Community meetings, typically on the last Friday of the month; send an email for the invites.
 3. When you have questions, ask them on GitHub, so other people can benefit from the answers. Bugs and feature requests should be raised in [GitHub Issues](https://github.com/cpmodel/FTT_StandAlone/issues). Questions should be posted at the GitHub Discussions tab.
 4. Whether you open a PR or ask questions, ensure that you're using the latest version of the code. Rebase your branch before you open a PR.
 
