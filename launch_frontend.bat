@@ -8,7 +8,7 @@ if %errorlevel%==0 (
 python run_frontend.py
 
 if %errorlevel% neq 0 (
-    py run_frontend.py
+    python run_frontend.py
 )
 
 pause
