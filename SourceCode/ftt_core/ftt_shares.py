@@ -22,11 +22,15 @@ def shares_change(
     shares_dt,
     costs, costs_sd,
     subst, reg_constr, num_regions, num_techs,
-    upper_limit=None, lower_limit=None, limits_active=False
+    upper_limit=None, lower_limit=None, limits_active=False,
+    T_Scal=1.0
     ):
     '''
     Wrapper for the jitted shares function. Ensures consistent input types
     to enable faster compilation.
+
+    T_Scal: Time scaling factor. Default 1.0 (no scaling). Power uses 10.0.
+    Applied AFTER RK4 integration to match Cascading branch behavior.
     '''
 
     if not limits_active:
@@ -35,7 +39,7 @@ def shares_change(
 
     change_in_shares = shares_change_jitted(dt, regions, shares_dt, costs, costs_sd,
                subst, reg_constr, num_regions, num_techs,
-               upper_limit, lower_limit, limits_active)
+               upper_limit, lower_limit, limits_active, T_Scal)
 
     return change_in_shares
 
@@ -48,20 +52,21 @@ def shares_change_jitted(
     costs, costs_sd,
     subst, reg_constr,
     num_regions, num_techs,
-    upper_limit, lower_limit, limits_active=False
+    upper_limit, lower_limit, limits_active=False,
+    T_Scal=1.0
     ):
 
     """
     Calculates change in market shares, based on previous market shares,
     substitution rates and costs
-     
+
     Parameters
     ----------
     dt : float
         Time step size
     shares_dt, costs, costs_sd : ndarray
         Shares, costs and standard deviation of costs at previous timestep
-    subst, 
+    subst,
         Substitution matrix (determines speed), called Aij in paper
     reg_constr : ndarray
         Regulatory constraints: stops share changes to this tech
@@ -71,12 +76,14 @@ def shares_change_jitted(
         Any minimum and maximum limits (e.g. for grid stability)
     limits_active : bool
         Whether limits are active or not
-    
+    T_Scal : float
+        Time scaling factor. Default 1.0 (no scaling). Power uses 10.0.
+
     Returns
     -------
     ndarray
         Change in shares, taking into account regulation and endogenous limits (optional)
-        
+
     Notes
     -----
     Decorated with `@njit(fastmath=True)` for performance optimization.
@@ -134,15 +141,15 @@ def shares_change_jitted(
                 else:
                     delta_AFG =  (subst[r, tech_i, tech_j] * F[tech_j, tech_i]
                                 - subst[r, tech_j, tech_i] * F[tech_i, tech_j])
-                
+
                 # Change in shares = S_i * S_j * delta_AFG
-                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt)
+                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt, T_Scal)
                 dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
-        
+
         dSij_all[r] = dSij
-    
+
     dSij_sum = np.sum(dSij_all, axis=2)
-    
+
     return dSij_sum
 
 
@@ -188,19 +195,22 @@ def _apply_regulation_adjustment(Fij, Fji, reg_constr_i, reg_constr_j):
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True)
 def _rk4_integration(
-    S_i, S_j, delta_AFG, dt
+    S_i, S_j, delta_AFG, dt, T_Scal=1.0
     ):
     """
-    Helper function for RK4 calculation
+    Helper function for RK4 calculation.
     We assume that within a timestep, the costs and the limits do not change.
+
+    T_Scal applied AFTER RK4 integration (matching Cascading branch).
+    Default 1.0 means no scaling (for Heat/Transport). Power uses 10.0.
     """
-    
+
     k_1 = S_i * S_j * delta_AFG
     k_2 = (S_i + dt * k_1/2) * (S_j - dt * k_1 / 2) * delta_AFG
     k_3 = (S_i + dt * k_2/2) * (S_j - dt * k_2 / 2) * delta_AFG
     k_4 = (S_i + dt * k_3) * (S_j - dt * k_3) * delta_AFG
-    
-    return (k_1 + 2 * k_2 + 2 * k_3 + k_4) * dt / 6
+
+    return (k_1 + 2 * k_2 + 2 * k_3 + k_4) * dt / T_Scal / 6
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function

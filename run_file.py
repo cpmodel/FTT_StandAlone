@@ -3,32 +3,32 @@
 =========================================
 run_file.py
 =========================================
-Run file for FTT Stand alone.
 
-
-Programme calls the FTT stand-alone model run class, and executes model run.
+Programme calls the RunFTT class, and executes model run.
 Run this script from Spyder or VS Code directly, 
- or call it from the command line (or terminal) to run FTT Stand Alone.
+ or call it from the command line (or terminal).
 
 Local library imports:
 
     Model Class:
 
-    - `ModelRun <model_class.html>`__
-        Creates a new instance of the ModelRun class
+    - `RunFTT <model_class.html>`__
+        Creates a new instance of the RunFTT class
 
 
 """
 
 # Local library imports
-from SourceCode.model_class import ModelRun
+from SourceCode.model_class import RunFTT
+import pickle
+from pathlib import Path
 
 if __name__ == "__main__":
         
     # Instantiate the run
-    model = ModelRun()
+    model = RunFTT()
 
-    # Fetch ModelRun attributes, for examination
+    # Fetch RunFTT attributes, for examination
     # Titles of the model
     titles = model.titles
     # Dimensions of model variables
@@ -42,9 +42,15 @@ if __name__ == "__main__":
     tl = model.timeline
     scens = model.scenarios
 
-    # Call the 'run' method of the ModelRun class to solve the model
+    # Call the 'run' method of the RunFTT class to solve the model
     model.run()
 
     # Fetch ModelRun attributes, for examination
     # Output of the model
     output_all = model.output
+
+    # Save output to pickle file
+    (Path('.') / 'Output').mkdir(parents=True, exist_ok=True)
+    with open(Path('.') / 'Output' / 'Results.pickle', 'wb') as f:
+        pickle.dump(output_all, f)
+    print("Results saved to Output/Results.pickle")

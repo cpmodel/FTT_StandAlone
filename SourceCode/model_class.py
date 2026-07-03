@@ -13,8 +13,8 @@ ModelRun class: main class for operation of model.
 
 # Standard library imports
 import configparser
-import copy
 import time
+from pathlib import Path
 
 # Third party imports
 import numpy as np
@@ -34,6 +34,8 @@ import SourceCode.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import SourceCode.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import SourceCode.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import SourceCode.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
+from SourceCode.sector_coupling.electricity_price import electricity_price_feedback
+from SourceCode.sector_coupling.electricity_demand import electricity_demand_feedback
 
 
 # Support modules
@@ -44,7 +46,7 @@ from SourceCode.support.cross_section import cross_section as cs
 from SourceCode.initialise_csv_files import initialise_csv_files
 
 
-class ModelRun:
+class RunFTT:
     """
     Class to run the FTT model.
 
@@ -118,20 +120,71 @@ class ModelRun:
 
     """
 
-    def __init__(self):
-        """ Instantiate model run object """
+    def __init__(
+        self,
+        progress_callback=None,
+        log_callback=None,
+        inputs_path=None,
+        utilities_path=None,
+        settings_path=None,
+        settings=None,
+    ):
+        """Instantiate model run object.
+
+        Parameters
+        ----------
+        progress_callback : callable, optional
+            Function(current, total) called to report loading/solving progress.
+        log_callback : callable, optional
+            Function(message) called to report log messages.
+        inputs_path : str or Path, optional
+            Path to the *Inputs* directory.  When omitted the default from
+            :mod:`SourceCode.paths` is used (the repository's own ``Inputs/``
+            folder, or the current working directory as a last resort).
+        utilities_path : str or Path, optional
+            Path to the *Utilities* directory.  Same resolution order as
+            *inputs_path*.
+        settings_path : str or Path, optional
+            Path to a ``settings.ini`` configuration file.  Defaults to the
+            ``settings.ini`` in the package root, then the current working
+            directory.
+        settings : dict, optional
+            Key/value pairs that override individual ``[settings]`` entries in
+            the ini file, e.g. ``{"scenarios": "S0, S1",
+            "simulation_end": "2040"}``.  All values must be strings or be
+            convertible via ``str()``.
+        """
+        # Store callbacks
+        self.progress_callback = progress_callback
+        self.log_callback = log_callback
+
+        # Configure data paths before any data-loading calls.
+        from SourceCode.paths import set_paths, _PACKAGE_ROOT
+        set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
+
+        # Locate settings.ini
+        if settings_path is None:
+            pkg_settings = _PACKAGE_ROOT / "settings.ini"
+            settings_path = str(pkg_settings) if pkg_settings.exists() else "settings.ini"
 
         # Attributes given in settings.ini file
         config = configparser.ConfigParser()
-        config.read('settings.ini')
+        config.read(str(settings_path))
+
+        # Apply any programmatic overrides
+        if settings:
+            if not config.has_section("settings"):
+                config.add_section("settings")
+            for key, value in settings.items():
+                config.set("settings", key, str(value))
         self.name = config.get('settings', 'name')
         self.model_start = int(config.get('settings', 'model_start'))
         self.model_end = int(config.get('settings', 'model_end'))
         self.simulation_start = int(config.get('settings', 'simulation_start'))
         self.simulation_end = int(config.get('settings', 'simulation_end'))
         self.current = self.model_start
-        self.years = np.arange(self.model_start, self.model_end+1)
-        self.timeline = np.arange(self.simulation_start, self.simulation_end+1)
+        self.years = np.arange(self.model_start, self.model_end + 1)
+        self.timeline = np.arange(self.simulation_start, self.simulation_end + 1)
         self.ftt_modules = config.get('settings', 'enable_modules')
         self.scenarios = config.get('settings', 'scenarios')
 
@@ -139,15 +192,19 @@ class ModelRun:
         self.titles = titles_f.load_titles()
 
         # Load variable dimensions
-        self.dims, self.histend, self.domain, self.forstart = dims_f.load_dims()
+        self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
         
         # Set up csv files if they do not exist yet
+        if self.log_callback:
+            self.log_callback('Extracting CSV files...')
         initialise_csv_files(self.ftt_modules, self.scenarios)
         
         # Retrieve inputs
+        if self.log_callback:
+            self.log_callback('Loading input data...')
         self.input = in_f.load_data(self.titles, self.dims, self.timeline,
                                     self.scenarios, self.ftt_modules,
-                                    self.forstart)
+                                    self.forstart, self.progress_callback)
 
 
         # Initialize remaining attributes
@@ -166,25 +223,37 @@ class ModelRun:
         """ Solve model for each year of the simulation period """
 
         # Define output container
-        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) \
+        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) 
                               for var in self.input[scen]} for scen in self.input}
-        # self.output = copy.deepcopy(self.input)
+        # Calculate total steps for progress tracking
+        num_scenarios = len(self.input)
+        years_per_scenario = len(self.timeline)
+        total_steps = num_scenarios * years_per_scenario
+        current_step = 0
+        
+        # Data loading used 20% of progress (0-200 out of 1000)
+        # Solving will use remaining 80% (200-1000 out of 1000)
+        progress_offset = 200  # Starting point after data loading
 
         # Clear any previous instances of the progress bar
         try:
             tqdm._instances.clear()
         except AttributeError:
             pass
-        for scen in self.input:
+            
+        for scen_idx, scen in enumerate(self.input):
+            if self.log_callback:
+                self.log_callback(f'Solving scenario: {scen} ({scen_idx + 1}/{num_scenarios})')
 
             # Create progress bar:
-            with tqdm(self.timeline) as pbar:
+            with tqdm(self.timeline, disable=self.progress_callback is not None) as pbar:
 
             # Call solve_year method for each year of the simulation period
 #                for year_index, year in enumerate(self.timeline):
                 for y, year in enumerate(self.timeline):
                     if y == 0:
                         start_time = time.time()
+
                     
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
@@ -193,6 +262,13 @@ class ModelRun:
 
                     # Increment the progress bar by one step
                     pbar.update(1)
+                    
+                    # Update progress callback (map to 20%-100% range)
+                    current_step += 1
+                    if self.progress_callback:
+                        # Map current_step/total_steps to 200-1000 range (20%-100%)
+                        progress_value = progress_offset + int((current_step / total_steps) * 800)
+                        self.progress_callback(progress_value, 1000)
 
                     # Populate output container
                     for var in self.variables:
@@ -203,16 +279,18 @@ class ModelRun:
             
             # Set the progress bar to say it's complete
             pbar.set_description(f"Model run {self.name} finished")
-            print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
+            elapsed = time.time() - start_time
+            if self.log_callback:
+                self.log_callback(f'Scenario {scen} completed in {elapsed:.2f} seconds')
+            else:
+                print(f'Elapsed time is {elapsed:.2f} seconds')
+
 
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """
 
-        # Need to add a convergence check here in the future
-
         # Run update
         variables, time_lags = self.update(year, y, scenario)
-        iter_lags = copy.deepcopy(time_lags)
 
         # Define whole period
         tl = self.timeline
@@ -220,60 +298,73 @@ class ModelRun:
         # define modules list in for possible setting.ini selection
         modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
                     "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
+        
         # Iteration loop here
         for itereration in range(max_iter):
 
-            if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+            # 1. Run demand sectors FIRST
             if "FTT-Tr" in self.ftt_modules:
-                variables = ftt_tr.solve(variables, time_lags, iter_lags,
+                variables = ftt_tr.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-Fr" in self.ftt_modules:
-                variables = ftt_fr.solve(variables, time_lags, iter_lags,
+                variables = ftt_fr.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-H" in self.ftt_modules:
-                variables = ftt_h.solve(variables, time_lags, iter_lags,
+                variables = ftt_h.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-S" in self.ftt_modules:
                 print("Module needs to be created")
+                
             if "FTT-IH-CHI" in self.ftt_modules:
-                variables = ftt_indhe_chi.solve(variables, time_lags, iter_lags,
+                variables = ftt_indhe_chi.solve(variables, time_lags,
                                         self.titles, self.histend, tl[y],
                                         self.domain)
-                
-            if "FTT-IH-FBT" in self.ftt_modules:
-                variables = ftt_indhe_fbt.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                
-            if "FTT-IH-MTM" in self.ftt_modules:
-                variables = ftt_indhe_mtm.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                
-            if "FTT-IH-NMM" in self.ftt_modules:
-                variables = ftt_indhe_nmm.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                
-            if "FTT-IH-OIS" in self.ftt_modules:
-                variables = ftt_indhe_ois.solve(variables, time_lags, iter_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-                
-            if not any(True for x in modules_list if x in self.ftt_modules):
-                print("Incorrect selection of models. Check settings.ini")
 
-            # Third, solve energy supply
-            # Overwrite iter_lags to be used in the next iteration round
-            iter_lags = copy.deepcopy(variables)
-#        # Print any diagnstics
-#
+            if "FTT-IH-FBT" in self.ftt_modules:
+                variables = ftt_indhe_fbt.solve(variables, time_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            if "FTT-IH-MTM" in self.ftt_modules:
+                variables = ftt_indhe_mtm.solve(variables, time_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            if "FTT-IH-NMM" in self.ftt_modules:
+                variables = ftt_indhe_nmm.solve(variables, time_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            if "FTT-IH-OIS" in self.ftt_modules:
+                variables = ftt_indhe_ois.solve(variables, time_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            # 2. Electricity demand feedback (aggregates demand from all sectors)
+            if scenario != "S0":
+                if tl[y] > self.histend['MEWG']:
+                    variables = electricity_demand_feedback(variables,
+                                        self.output["S0"], y, self.titles,
+                                        self.unit)
+
+            # 3. Run Power sector LAST
+            if "FTT-P" in self.ftt_modules:
+                variables = ftt_p.solve(variables, time_lags,
+                                        self.titles, self.histend, tl[y],
+                                        self.domain)
+
+            # 4. Electricity price feedback (updates costs for next timestep)
+            if "FTT-P" in self.ftt_modules:
+                if tl[y] > self.histend['MEWG']:
+                    variables = electricity_price_feedback(variables, time_lags)
+
+            if not any(True for x in modules_list if x in self.ftt_modules):
+                raise ValueError("Incorrect selection of models. Check settings.ini")
+
+           
         return variables, time_lags
 
     def update(self, year, y, scenario):

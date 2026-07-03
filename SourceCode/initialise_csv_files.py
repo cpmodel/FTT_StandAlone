@@ -13,6 +13,7 @@ import os
 
 # Local library imports
 from SourceCode.support.convert_masterfiles_to_csv import convert_masterfiles_to_csv
+from SourceCode.paths import get_inputs_path
 
 
 def initialise_csv_files(ftt_modules, scenarios):
@@ -54,7 +55,7 @@ def get_masterfile(ftt_module, scenario):
     # The * denotes the regionxtechnologies and last year updated part of the string
     file_pattern = f"{ftt_module}*_{scenario}.xlsx"
     matching_file = list(
-        (Path('Inputs') / '_MasterFiles' / ftt_module).glob(file_pattern)
+        (get_inputs_path() / '_MasterFiles' / ftt_module).glob(file_pattern)
     )
 
     # Printing warnings 1: in case there is no corresponding excel file
@@ -74,11 +75,11 @@ def get_masterfile(ftt_module, scenario):
         base_name = os.path.basename(matching_file[0]) # file name without directory
         end_index = base_name.index(f'_{scenario}.xlsx')
         file_root = base_name[:end_index]
-    except IndexError as e:
+    except IndexError:
         print("An error occurred while finding the masterfile.")
         print(f"the ftt model and scenario: {ftt_module}, {scenario}")
         print(f"The file that triggered the error: {matching_file}")
-        raise e
+        raise
 
 
     return matching_file, file_root

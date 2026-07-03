@@ -211,7 +211,7 @@ def get_lcoih(data, titles, year):
 # -----------------------------------------------------------------------------
 # ----------------------------- Main ------------------------------------------
 # -----------------------------------------------------------------------------
-def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, converter, coefficients):
+def solve(data, time_lag, titles, histend, year, domain):#, #specs, converter, coefficients):
     """
 
     Main solution function for the module.
@@ -223,8 +223,6 @@ def solve(data, time_lag, iter_lag, titles, histend, year, domain):#, #specs, co
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
     time_lag: type
-        Description
-    iter_lag: type
         Description
     titles: dictionary of lists
         Dictionary containing all title classification

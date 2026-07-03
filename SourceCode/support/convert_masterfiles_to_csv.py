@@ -16,26 +16,12 @@ The user can select one or more scenarios to convert from the excel sheet:
 
 from pathlib import Path
 import os
-import sys
 
 import pandas as pd
 import numpy as np
 import datetime
 
-# Get the absolute path of the current script
-current_script_path = os.path.abspath(__file__)
-
-# Get the absolute path of the root directory
-root_directory_path = os.path.dirname(os.path.dirname(os.path.dirname(current_script_path)))
-
-# Path to the 'support' directory
-support_directory_path = os.path.join(root_directory_path, 'SourceCode', 'support')
-
-# Add the 'support' directory to sys.path if it's not already there
-if support_directory_path not in sys.path:
-    sys.path.append(support_directory_path)
-
-from titles_functions import load_titles
+from SourceCode.support.titles_functions import load_titles
 
 #%% Function definitions
 
@@ -193,7 +179,7 @@ def gamma_input_on_overwrite(out_dir, var, gamma_options):
     the user may not want to lose their calibrated gamma values 
     """
     
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "BZTC": "ZGAM"}
     var_gamma = costvar_to_gam_dict[var]
     out_fn = os.path.join(out_dir, f"{var_gamma}_BE.csv")
     
@@ -266,9 +252,9 @@ def costs_to_gam(data, var, reg, timeline_dict, dims, out_dir):
     gamma values are defined for each year.
     """
 
-    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "ZCET": "ZGAM"}
-    gamma_index = {"BTTC": 14, "BHTC": 13, "ZCET": 14}
-    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "ZCET": "FTTI"}
+    costvar_to_gam_dict = {"BTTC": "TGAM", "BHTC": "HGAM", "BZTC": "ZGAM"}
+    gamma_index = {"BTTC": 14, "BHTC": 13, "BZTC": 12}
+    gamma_row_titles = {"BTTC": "VTTI", "BHTC": "HTTI", "BZTC": "FTTI"}
     gamma_var = costvar_to_gam_dict[var]
     gamma_1D = data[gamma_index[var]]
     col_names = timeline_dict[gamma_var]
@@ -302,12 +288,12 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 # Core functions for the main programme
 def directories_setup():
     """ Set up directory masterfile and the general input directory"""
-    
-    dir_file = os.path.dirname(os.path.realpath(__file__))
-    dir_root = Path(dir_file).parents[1] 
-    dir_inputs = os.path.join(dir_root, "Inputs")  
-    dir_masterfiles = os.path.join(dir_root, "Inputs", "_MasterFiles")
-    
+
+    from SourceCode.paths import get_inputs_path
+    inputs = get_inputs_path()
+    dir_inputs = str(inputs)
+    dir_masterfiles = str(inputs / "_MasterFiles")
+
     return dir_inputs, dir_masterfiles
 
 
