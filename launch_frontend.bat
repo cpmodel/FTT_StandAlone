@@ -27,3 +27,4 @@ if "%PY_CMD%"=="" (
 %PY_CMD% run_frontend.py
 
 pause
+
