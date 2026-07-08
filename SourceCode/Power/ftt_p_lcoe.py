@@ -217,10 +217,8 @@ def get_lcoe(data, titles):
     data['MCOC'][:, :, 0] = bcet[:, :, 0]
     data['MCFC'][:, :, 0] = bcet[:, :, c2ti['11 Decision Load Factor']]  # Marginal capacity factor
 
-    mwmc_condition = np.rint(data['MSAL'][:, 0, 0]) > 1
-    data['MWMC'][:, :, 0] = np.where(mwmc_condition[:, None], 
-                                 bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6] + (data['MSSP'][:, :, 0] + data['MLSP'][:, :, 0]) / 1000,
-                                 bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6])
+    # Marginal costs
+    data['MWMC'][:, :, 0] = bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6]
 
     data['MMCD'][:, :, 0] = np.sqrt(bcet[:, :, 1] ** 2 + bcet[:, :, 5] ** 2 + bcet[:, :, 7] ** 2)
 
