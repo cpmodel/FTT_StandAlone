@@ -55,7 +55,7 @@ def render_results_page():
                                 pickle_display_names = list(pickle_files_map.keys())
                                 latest_pickle_file = engine.get_latest_pickle_file()
                                 initial_result_files = state.selected_result_files
-                                if latest_pickle_file and latest_pickle_file not in initial_result_files:
+                                if latest_pickle_file and not initial_result_files:
                                     initial_result_files = [latest_pickle_file]
                                     state.selected_result_files = initial_result_files
                                 

@@ -83,12 +83,20 @@ class ResultsEngine:
         if not output_dir.exists():
             return None
 
-        files = list(output_dir.glob('*.pickle'))
-        if not files:
-            return None
+        latest_file = None
+        latest_mtime = None
 
-        latest_file = max(files, key=lambda f: f.stat().st_mtime)
-        return latest_file.name.replace('.pickle', '')
+        for file in output_dir.glob('*.pickle'):
+            try:
+                mtime = file.stat().st_mtime
+            except OSError:
+                continue
+
+            if latest_mtime is None or mtime > latest_mtime:
+                latest_file = file
+                latest_mtime = mtime
+
+        return latest_file.stem if latest_file else None
     
     def load_pickle_files(self, filenames):
         """
