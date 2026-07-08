@@ -38,7 +38,19 @@ Alternatively, you can download ftt by clicking the green `Code` button in the t
 ## Running the model
 1. You can run the frontend of the model in your browser by either double clicking `open_frontend.bat` or by running `run_frontend.py`. Select the models to run and scenarios and explore the output.
 2. Alternatively, you can run the model from the run_file.py script. Output is saved to a pickle file in the Output folder. Select the models and scenarios from the settings.ini file.
-3. Create new scenarios by adding a new folder in the Inputs folder. Data is read in first from this folder, and missing data is read from the S0 baseline folder. 
+3. Create new scenarios by adding a new folder in the Inputs folder. Data is read in first from this folder, and missing data is read from the S0 baseline folder.
+
+## How to contribute
+We welcome contributions from everyone. You can report issues, fix bugs, improve the documentation, or write and propose model changes and provide updated data. 
+1. New contributors can fork the repository to open pull requests with suggested code improvements
+2. Join our Discord and Open Community meetings, typically on the last Friday of the month; send an email for the invites.
+3. When you have questions, ask them on GitHub, so other people can benefit from the answers. Bugs and feature requests should be raised in [GitHub Issues](https://github.com/cpmodel/FTT_StandAlone/issues). Questions should be posted at the GitHub Discussions tab.
+4. Whether you open a PR or ask questions, ensure that you're using the latest version of the code. Rebase your branch before you open a PR.
+
+### Collaborations and publications
+If you plan to publish work using this codebase, please let us know. Where capacity allows, we are happy to review results or confirm that analyses are consistent with the implementation.
+
+We encourage a community-driven approach. If you need more detailed support, we welcome contributions back to the project through improvements to code, training material or data, to help strengthen the work for everyone.
 
 ## References
 * Heat: Knobloch, F., Pollitt H., Chewpreecha U., Daioglou V. and Mercure J-F. (2018) ‘[Simulating the deep decarbonisation of residential heating for limiting global warming to 1.5°C](https://link.springer.com/article/10.1007/s12053-018-9710-0)’, Energy Efficiency **12**, Issue 2, pp 521–550.
