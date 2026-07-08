@@ -53,13 +53,18 @@ def render_results_page():
                                 # Get available pickle files from engine (dict: display_name -> filename)
                                 pickle_files_map = engine.get_available_pickle_files()
                                 pickle_display_names = list(pickle_files_map.keys())
+                                latest_pickle_file = engine.get_latest_pickle_file()
+                                initial_result_files = state.selected_result_files
+                                if latest_pickle_file and latest_pickle_file not in initial_result_files:
+                                    initial_result_files = [latest_pickle_file]
+                                    state.selected_result_files = initial_result_files
                                 
                                 with ui.column().classes('w-[calc(50vw-8rem)] overflow-auto items-center'):                                    
                                     file_picker = ui.select(
                                         options=pickle_display_names,
                                         label='Available Files',
                                         multiple=True,
-                                        value=state.selected_result_files,
+                                        value=initial_result_files,
                                         with_input=True,
                                         on_change=lambda e: load_pickles()
                                     ).classes('w-full overflow-hidden').props('dense use-chips')
