@@ -76,6 +76,27 @@ class ResultsEngine:
             files = sorted([f.name for f in output_dir.glob('*.pickle')])
             return {f.replace('.pickle', ''): f for f in files}
         return {}
+
+    def get_latest_pickle_file(self):
+        """Get the display name of the most recently modified pickle file."""
+        output_dir = Path('Output')
+        if not output_dir.exists():
+            return None
+
+        latest_file = None
+        latest_mtime = None
+
+        for file in output_dir.glob('*.pickle'):
+            try:
+                mtime = file.stat().st_mtime
+            except OSError:
+                continue
+
+            if latest_mtime is None or mtime > latest_mtime:
+                latest_file = file
+                latest_mtime = mtime
+
+        return latest_file.stem if latest_file else None
     
     def load_pickle_files(self, filenames):
         """
