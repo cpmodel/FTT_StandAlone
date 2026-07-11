@@ -60,6 +60,8 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         variables. Variable names are keys and the values are 3D NumPy arrays.
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
+    gamma_mode: string
+        To be removed later, whether gamma values are additive (old) or multiplicative (new)
 
     Returns
     ----------
