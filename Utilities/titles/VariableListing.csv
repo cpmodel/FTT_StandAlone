@@ -9,23 +9,19 @@ PFRM,Price of middle distillates [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,201
 PFRB,Price of biofuel use (incl taxes) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results
 PFRH,Endogenous energy price with tax [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,1970,2016,2010,From E3ME results
 PRSC13,Price levels in 2013 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
-MWMC,FTT:Power marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MWMC,FTT:Power marginal costs,$2023/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MWLO,FTT:Power optimal/initial load factors,%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MWKA,FTT:Power exogenous capacity levels (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-
 coal phaseout,Switch for a coal phase-out,,NA,NA,NA,NA,FTT_P,-,-,-,-
 MWIY,FTT:Power yearly investment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MWICX,Exogenous FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-
-MWIC,FTT:Power investment cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MWFCX,Exogenous FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-
-MWFC,FTT:Power fuel cost component,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MWIC,FTT:Power investment cost component,$2023/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MWFC,FTT:Power fuel cost component,$2023/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MWDT,Matrix of tech top load band NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-
 MWDD,Matrix of load band tech suitability NETxNLB,na,NA,T2TI,LBTI,NA,FTT-P,-,-,2001,-
-MTCD,METC standard deviation,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MSSR,FTT:Power short-term storage raw costs (2013$/GWh),2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2001,
-MSSPX,Exogenous MSSP (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results
-MSSP,FTT:Power short-term storage costs (2013$/GWh) ,$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MSSMX,Exogenous MSSM (from E3ME run),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,From E3ME results
-MSSM,FTT:Power short-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MTCD,METC standard deviation,$2023/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MSSR,FTT:Power short-term storage raw costs (2013$/GWh),$2023/GWh,RTI,NA,NA,TIME,FTT-P,,,2001,
+MSSP,FTT:Power short-term storage costs (2013$/GWh) ,$2023/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MSSM,FTT:Power short-term storage marginal costs (2013$/GWh),$2023/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MSSI,FTT:Power short-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MSSG,FTT:Power short-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MSSF,FTT:Power short-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
@@ -34,15 +30,15 @@ MSSC_histend,FTT:Power short-term storage capacity (GW) in 2020,GW,RTI,NA,NA,TIM
 MSSC,FTT:Power short-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MSRV,FTT:Power survival function (Created inside code),%,RTI,T2TI,TYTI,NA,FTT-P,-,-,2001,-
 MSLB,FTT:Power shares of capacity by tech x load band,na,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
-MSCC,Short-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2013,
+MSCC,Short-term storage levelised cost estimate,$2023/GWh,RTI,NA,NA,TIME,FTT-P,,,2013,
 MSAL,"Switch for storage cost and investment allocation (0=No, 1=G, 2=C, 3=M)",na,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MRES,Fossil reserves and REN remaining technical potentials (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
 MRED,Natural resources and REN full technical potentials (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
-MPTR,Extraction rate of resources,na,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,From E3ME results
-MMCD,FTT:Power standard deviation of marginal costs,$2013/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MLSR,FTT:Power long-term storage raw costs (2013$/GWh),2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,,
-MLSP,FTT:Power long-term storage costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),$2013/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MPTR,Extraction rate of resources,na,RTI,ERTI,NA,TIME,FTT-P,-,-,2010,
+MMCD,FTT:Power standard deviation of marginal costs,$2023/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MLSR,FTT:Power long-term storage raw costs,$2023/GWh,RTI,NA,NA,TIME,FTT-P,,,,
+MLSP,FTT:Power long-term storage costs (2013$/GWh),$2023/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MLSM,FTT:Power long-term storage marginal costs (2013$/GWh),$2023/GWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MLSI,FTT:Power long-term storage investment (2010 mEuro),meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MLSG,FTT:Power long-term storage additional electricity demand (GWh/y),GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MLSF,FTT:Power long-term storage load factor (-),%,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
@@ -51,14 +47,14 @@ MLSC_histend,FTT:Power long-term storage capacity (GW) in 2020,GW,NA,NA,NA,TIME,
 MLSC,FTT:Power long-term storage capacity (GW),GW,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MLLB,FTT:Power load factors (%) by tech x load band,%,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
 Gen_by_lb,Generation by technology and load band,GWh,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,-
-MLCC,Long-term storage levelised cost estimate,2013$/GWh,RTI,NA,NA,TIME,FTT-P,,,2012,
+MLCC,Long-term storage levelised cost estimate,$2023/GWh,RTI,NA,NA,TIME,FTT-P,,,2012,
 MLBP,FTT:Power Average marginal costs per load band (serves as the price),$/MWh,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB1,Normalised residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB0,Cumulative residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-
 FRET,Energy supply,ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,
 MJET,FTT:Power technology to fuel use conversion matrix excl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,-
-MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
+MJEP,FTT:Power marginal cost of fuels,$2023/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-
@@ -66,7 +62,7 @@ MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MEWP,FTT:Power marginal costs of fuels ($2013/GJ),$2013/GJ,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
+MEWP,FTT:Power marginal costs of fuels,$2023/GJ,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MEWL,FTT:Power load factors (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWK,FTT-P Capacity by technology (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2010,-
 MEWI,FTT-P Installed capacity additions (GW),GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
@@ -76,18 +72,18 @@ MEWDX,Exogenous demand for energy resources,PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,Fr
 MEWD,FTT:Power demand for fuels (PJ),PJ,RTI,JTI,NA,TIME,FTT-P,-,-,2010,-
 MWDL,FTT:Power lagged demand,PJ,RTI,JTI,NA,TIME,FTT-P,,,2010,-
 FR08,Exogenous electricity demand,ktoe,RTI,FUTI,NA,TIME,General,-,-,2003,From E3ME results
-MEWC,"LCOE bare, no policies, no carbon cost (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MEWC,"LCOE bare, no policies, no carbon cost ",$2023/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWB,Spillover learning matrix,%,NA,T2TI,T2TI,NA,FTT-P,-,-,2001,-
 MEWA,Substitution matrix,rate,RTI,T2TI,T2TI,NA,FTT-P,-,-,2001,-
 PMF,Prices of import groups (2010=1),$,NA,MTI,NA,TIME,General,-,-,2010,From E3ME results
 RERY,Primary energy supply before trade,PJ,RTI,ERTI,NA,TIME,General,-,-,2010,From E3ME results
 DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,From E3ME results
-METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT (2013$/MWh)",USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MLCO,Levelised costs of operation,USD/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT",2023$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MLCO,Levelised costs of operation,2023$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MERC,FTT Resource prices or costs (2013$/GJ or 2013$/MWh),2013$/GJ or 2013$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
+MERC,FTT Resource prices or costs (2013$/GJ or 2013$/MWh),2023$/GJ or 2023$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
 MEPD,FTT:Power total primary energy demand by resource type (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
 MELO,"Electricity demand residual (due to imports, losses, ets.)",GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 MELF,FTT:Power lifetime of power equipment,y,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-

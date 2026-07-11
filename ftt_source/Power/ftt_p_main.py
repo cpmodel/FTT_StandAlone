@@ -233,7 +233,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             data['PRSC15'] = np.copy(data['PRSCX'])
 
 
-        # Set starting values for marginal costs of resources (matches default FTT run)
+        # Set starting values for marginal costs of resources (MERC), later adjusted in cost curves
         data['MERC'][:, 0, 0] = 0.255
         data['MERC'][:, 1, 0] = 5.689
         data['MERC'][:, 2, 0] = 0.4246
@@ -284,21 +284,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             data['MES1'] = mes1
             data['MES2'] = mes2
             
-            # Change currency from EUR2015 to USD2013
-            if year >= 2015:
-
-                data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-                data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-                data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-                data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-
-            # TODO: This is not per se correct but it's how it is in E3ME
-            else:
-
-                data['MSSP'][:, :, 0] = 0.0
-                data['MLSP'][:, :, 0] = 0.0
-                data['MSSM'][:, :, 0] = 0.0
-                data['MLSM'][:, :, 0] = 0.0
 
             # Calculate load factor (MEWL) and generation by load-band in place
             calculate_load_factors_from_dispatch(data, titles, elec_idx)
@@ -439,17 +424,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         reg_constr[data['MEWR'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['MEWR'][:, :, 0] == -1.0] = 0.0
 
-        # Call the survival function routine.
-#        data = survival_function(data, time_lag, histend, year, titles)
-
-        # Total number of scrapped techicles:
-#        tot_eol = np.sum(data['MEOL'][:, :, 0], axis=1)
-
-        # Total capacity additions
-#        data['MWIA'][:, 0, 0] = (data['PG_TTC'][:, 0, 0]
-#                                   - time_lag['PG_TTC'][:, 0, 0]
-#                                   + tot_eol)
-#        data['MWIA'][:, 0, 0][data['MEWKA'][:, 0, 0] < 0.0] = 0.0
 
         # Number of timesteps no_it and timestep size dt
         no_it = int(data['noit'][0, 0, 0])
@@ -550,12 +524,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
                         wind_solar_indices, sector_coupling)
-
-            # Change currency from EUR2015 to USD2013 (This is wrong, but in terms of logic and by misstating currency year for storage)
-            data['MSSP'][:, :, 0] = data['MSSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-            data['MLSP'][:, :, 0] = data['MLSP'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-            data['MSSM'][:, :, 0] = data['MSSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
-            data['MLSM'][:, :, 0] = data['MLSM'][:, :, 0] * (data[prsc_var][:, 0, 0, np.newaxis]/data['PRSC15'][:, 0, 0, np.newaxis]) / data[ex_var][usd_idx, 0, 0]
 
 
             # =================================================================
