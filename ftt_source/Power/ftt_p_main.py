@@ -127,8 +127,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     wind_solar_indices         = power_settings['wind_solar_indices']
     fuel_price_indices         = power_settings['fuel_price_indices']
     gen_tech_indices           = power_settings['gen_tech_indices']
-    model_init_year            = power_settings['model_init_year']
-    rldc_start_year            = power_settings['rldc_start_year']
+    power_init_year            = power_settings['power_init_year']
     bcet_copy_range_end        = power_settings['bcet_copy_range_end']
     elec_idx                   = power_settings['elec_idx']
     gamma_mode                 = power_settings['gamma_mode']
@@ -145,17 +144,155 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     # %% First initialise if necessary
 
     # Initialisation
-    if year == model_init_year:
+    if year == power_init_year:
+        
+        # Use historical load factors MWLO for load factor MEWL
         data['MEWL'][:, :, 0] = data["MWLO"][:, :, 0]
-        data['MEWK'][:, :, 0] = divide(data['MEWG'][:, :, 0], data['MEWL'][:, :, 0]) / 8766
-        data['MEWS'][:, :, 0] = divide(data['MEWK'][:, :, 0], data['MEWK'][:, :, 0].sum(axis=1)[:, np.newaxis])
+        
+        # Capacities
+        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+        
+        # Capacity shares
+        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
+        
+        data['MCFC'] = data['MWLO'].copy()
+        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
+        
+        data = get_lcoe(data, titles, gamma_mode)
+        if not mset_coupling:
+            data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices)
+            
+        
+        # Set starting values for marginal costs of resources (MERC), later adjusted in cost curves
+        data['MERC'][:, 0, 0] = 0.255
+        data['MERC'][:, 1, 0] = 5.689
+        data['MERC'][:, 2, 0] = 0.4246
+        data['MERC'][:, 3, 0] = 3.374
+        data['MERC'][:, 4, 0] = 0.001
+        data['MERC'][:, 7, 0] = 0.001
+
+    #%%
+    # Up to the last year of historical market share data
+    elif year <= histend['MEWG'] and year > power_init_year:
+
+
+        data['MEWL'] = time_lag['MEWL'].copy()
+        data['MEWL'] = np.where((data['MEWL'] < 0.01) & (data['MWLO'] > 0.0),
+                                 data['MWLO'], data['MEWL'])
+
+        # Initialise starting capacities
+        # TODO: ensure that MSET version has reliable MWLO values, so that we can use data instead of estimates 
+        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+
+        # Update market shares
+        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
+
+        # If first year, get initial MC, dMC for DSPCH
+        if not time_lag['MMCD'][:, :, 0].any():
+            time_lag = get_lcoe(data, titles, gamma_mode)
+
+        
+        # Call RLDC function for capacity and load factor by LB, and storage costs
+        # 1 and 2 -- Estimate RLDC and storage parameters
+        data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
+                wind_solar_indices, sector_coupling)
+
+        # 3--- Call dispatch routine to connect market shares to load bands
+        # Call DSPCH function to dispatch flexible capacity based on MC
+        mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
+                                data['MEWL'], time_lag['MWMC'], time_lag['MMCD'],
+                                num_regions, num_techs, num_loadbands, nuclear_idx)
+        
+        data['MSLB'] = mslb
+        data['MLLB'] = mllb
+        data['MES1'] = mes1
+        data['MES2'] = mes2
+        
+
+        # Calculate load factor (MEWL) and generation by load-band in place
+        calculate_load_factors_from_dispatch(data, titles, elec_idx)
+
+        for r in range(len(titles['RTI'])):
+
+            
+            # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
+            # Gross Curtailed electricity
+            data['MCGA'][r, 0, 0] = data['MCRT'][r,0,0] * np.sum(Svar[r, :] * data['MEWG'][r,:,0])
+
+            # Net curtailed generation
+            # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
+            # On average 45% of curtailed electricity can be reused for long-term storage:
+            # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
+            data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
+            # Impact of net curtailment on load factors for VRE technologies
+            # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
+            data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * divide(data['MCNA'][r, 0, 0], data['MCGA'][r, 0, 0])
+                            
+            # Total additional electricity that needs to be generated
+            data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r, 0, 0] + data['MSSG'][r,0,0]
+            
+            
+
+        # C02 emissions for carbon costs (MtC02)
+        data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
+
+        
+        # Update capacities MEWK and market shares MEWS
+        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
+        # Safe divide to avoid inf when capacity sum is zero
+        data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
+
+        # Compute early scrapping costs
+        # TODO: check it makes sense. It does not seem to be used elsewhere
+        early_scrapping_costs(data, time_lag, c2ti)
+
+        data["MEWI"] = get_sales_yearly(
+                        data["MEWK"], time_lag["MEWK"], data["MEWI"],
+                        data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
+
+        # =============================================================
+        # Learning-by-doing / cumulative capacity calculations
+        # =============================================================
+
+        # Using a technological spill-over matrix (MEWB) together with capacity
+        # additions (MEWI) we can estimate total global spillover of similar techs
+        
+        if year > histend['MEWW']:
+        
+            mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
+            dw = np.zeros(num_techs)
+            
+            for i in range(num_techs):
+                dw_temp = np.copy(mewi0)
+                dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
+                dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
+    
+            # Cumulative capacity incl. learning spill-over effects
+            data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
+            
+
+        # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
+        data['BCET'][:, :, 1:bcet_copy_range_end] = time_lag['BCET'][:, :, 1:bcet_copy_range_end].copy()
+
+        # Add in carbon costs due to EU ETS
+        data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
+
+        # For dispatchable techs with zero share, set decision load factor at MEWL
+        data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
+
+        # Yearly investment in power technology
+        data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
+
+        # =====================================================================
+        # Cost-supply curve
+        # =====================================================================
 
         bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
-                data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
-                data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
-                resource_to_fuel_map, cf_multipliers, gen_tech_indices
-                )
+            data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
+            data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
+            num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
+            resource_to_fuel_map, cf_multipliers, gen_tech_indices
+            )
 
         data['BCET'] = bcet
         data['MCSC'] = bcsc
@@ -166,214 +303,21 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         data['MRED'] = mred
         data['MRES'] = mres
 
+        # Take into account curtailment again:
+        data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
+        data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
+        
+        # =====================================================================
+        # Initialise the LCOE variables
+        # =====================================================================
         data = get_lcoe(data, titles, gamma_mode)
         if not mset_coupling:
             data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices)
-
-        data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                    wind_solar_indices, sector_coupling)
-        mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
-                                   data['MEWL'], data['MWMC'], data['MMCD'],
-                                   num_regions, num_techs, num_loadbands, nuclear_idx)
-        data['MSLB'] = mslb
-        data['MLLB'] = mllb
-        data['MES1'] = mes1
-        data['MES2'] = mes2
-
-        # Calculate load factor (MEWL) and generation by load-band in place
-        calculate_load_factors_from_dispatch(data, titles, elec_idx)
-
-        # Capacities
-        data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-        
-        # Update market shares (safe divide to avoid inf when capacity sum is zero)
-        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
-        
-
-
-        for r in range(len(titles['RTI'])):
-            cap_diff = data['MEWK'][r, :, 0] - time_lag['MEWK'][r, :, 0]
-            cap_drpctn = time_lag['MEWK'][r, :, 0] / time_lag['BCET'][r, :, c2ti['9 Lifetime (years)']]
-            data['MEWI'][r, :, 0] = np.where(cap_diff > 0.0,
-                                             cap_diff + cap_drpctn,
-                                             cap_drpctn)
-            
-
-       
-        data['MEWL'] = data['MWLO'].copy()
-        data['MCFC'] = data['MWLO'].copy()
-        data['BCET'][:, :, c2ti['11 Decision Load Factor']] = data['MCFC'][:, :, 0].copy()
-
-        data = get_lcoe(data, titles, gamma_mode)
-        if not mset_coupling:
-            data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices)
-
-
-    #%%
-    # Up to the last year of historical market share data
-    elif year <= histend['MEWG']:
-
-
-        # Set starting values for marginal costs of resources (MERC), later adjusted in cost curves
-        data['MERC'][:, 0, 0] = 0.255
-        data['MERC'][:, 1, 0] = 5.689
-        data['MERC'][:, 2, 0] = 0.4246
-        data['MERC'][:, 3, 0] = 3.374
-        data['MERC'][:, 4, 0] = 0.001
-        data['MERC'][:, 7, 0] = 0.001
-
-
-        if year > model_init_year:
-            data['MEWL'] = time_lag['MEWL'].copy()
-
-        data['MEWL'] = np.where((data['MEWL'] < 0.01) & (data['MWLO'] > 0.0),
-                                 data['MWLO'], data['MEWL'])
-
-        # Initialise starting capacities
-        if year <= 2012:
-            data['MEWK'] = divide(data['MEWG'], data['MWLO']) / 8766
-        else:
-            data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-
-        # Update market shares (safe divide to avoid inf when capacity sum is zero)
-        data['MEWS'] = divide(data['MEWK'], np.sum(data['MEWK'], axis=1, keepdims=True))
-
-        # If first year, get initial MC, dMC for DSPCH ( TODO FORTRAN??)
-        if not time_lag['MMCD'][:, :, 0].any():
-            time_lag = get_lcoe(data, titles, gamma_mode)
-
-
-        # Call RLDC function for capacity and load factor by LB, and storage costs
-        if year >= rldc_start_year:
-
-            # 1 and 2 -- Estimate RLDC and storage parameters
-            data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                    wind_solar_indices, sector_coupling)
-
-            # 3--- Call dispatch routine to connect market shares to load bands
-            # Call DSPCH function to dispatch flexible capacity based on MC
-            if year == rldc_start_year:
-                mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
-                                        data['MEWL'], data['MWMC'], data['MMCD'],
-                                        num_regions, num_techs, num_loadbands, nuclear_idx)
-            else:
-                mslb, mllb, mes1, mes2 = dspch(data['MWDD'], data['MEWS'], data['MKLB'], data['MCRT'],
-                                        data['MEWL'], time_lag['MWMC'], time_lag['MMCD'],
-                                        num_regions, num_techs, num_loadbands, nuclear_idx)
-            data['MSLB'] = mslb
-            data['MLLB'] = mllb
-            data['MES1'] = mes1
-            data['MES2'] = mes2
-            
-
-            # Calculate load factor (MEWL) and generation by load-band in place
-            calculate_load_factors_from_dispatch(data, titles, elec_idx)
-
-            for r in range(len(titles['RTI'])):
-
-                
-                # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
-                # Gross Curtailed electricity
-                data['MCGA'][r, 0, 0] = data['MCRT'][r,0,0] * np.sum(Svar[r, :] * data['MEWG'][r,:,0])
-
-                # Net curtailed generation
-                # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
-                # On average 45% of curtailed electricity can be reused for long-term storage:
-                # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-                data['MCNA'][r, 0, 0] = np.maximum(data['MCGA'][r, 0, 0] - 0.45*2*data['MLSG'][r,0,0], 0.55*data['MCGA'][r,0,0])
-                # Impact of net curtailment on load factors for VRE technologies
-                # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-                data['MCTN'][r, :, 0] = data['MCTG'][r, :, 0] * divide(data['MCNA'][r, 0, 0], data['MCGA'][r, 0, 0])
-                                
-                # Total additional electricity that needs to be generated
-                data['MADG'][r,0,0] = data['MCGA'][r,0,0] - data['MCNA'][r, 0, 0] + data['MSSG'][r,0,0]
-                
-                
-
-            # C02 emissions for carbon costs (MtC02)
-            data['MEWE'][:, :, 0] = data['MEWG'][:, :, 0] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6
-
-            
-            # Update capacities MEWK and market shares MEWS
-            data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
-            # Safe divide to avoid inf when capacity sum is zero
-            data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
-
-            # Compute early scrapping costs
-            # TODO: check it makes sense. It does not seem to be used elsewhere
-            early_scrapping_costs(data, time_lag, c2ti)
-
-            data["MEWI"] = get_sales_yearly(
-                            data["MEWK"], time_lag["MEWK"], data["MEWI"],
-                            data['BCET'][:, :, c2ti["9 Lifetime (years)"]])
-
-            # =============================================================
-            # Learning-by-doing
-            # =============================================================
-
-            # Cumulative global learning
-            # Using a technological spill-over matrix (MEWB) together with capacity
-            # additions (MEWI) we can estimate total global spillover of similar techs
-
-            mewi0 = np.sum(data['MEWI'][:, :, 0], axis=0)
-            dw = np.zeros(num_techs)
-            
-            for i in range(num_techs):
-                dw_temp = np.copy(mewi0)
-                dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
-                dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
-
-            # Cumulative capacity incl. learning spill-over effects
-            data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
-
-            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-            data['BCET'][:, :, 1:bcet_copy_range_end] = time_lag['BCET'][:, :, 1:bcet_copy_range_end].copy()
-
-            # Add in carbon costs due to EU ETS
-            data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
-
-            # For dispatchable techs with zero share, set decision load factor at MEWL
-            data['BCET'][Svar==0, c2ti['11 Decision Load Factor']] = data["MEWL"][Svar==0, 0]
-
-            # Yearly investment in power technology
-            data['MWIY'][:, :, 0] = data['MEWI'][:, :, 0] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
-
-            # =====================================================================
-            # Cost-supply curve
-            # =====================================================================
-
-            bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
-                data['BCET'], data['MCSC'], data['MEWDX'], data['MEWG'], data['MEWL'], data['MEPD'],
-                data['MERC'], time_lag['MERC'], data['RERY'], data['MPTR'], data['MRED'], data['MRES'],
-                num_regions, num_techs, num_resources, year, 1.0, tech_to_resource,
-                resource_to_fuel_map, cf_multipliers, gen_tech_indices
-                )
-
-            data['BCET'] = bcet
-            data['MCSC'] = bcsc
-            data['MEWL'] = mewl
-            data['MEPD'] = mepd
-            data['MERC'] = merc
-            data['RERY'] = rery
-            data['MRED'] = mred
-            data['MRES'] = mres
-
-            # Take into account curtailment again:
-            data["MEWL"] = data["MEWL"] * (1 - data["MCTN"])
-            data['BCET'][:, :, c2ti['11 Decision Load Factor']]  *= (1 - data["MCTN"][:, :, 0])
-            
-            # =====================================================================
-            # Initialise the LCOE variables
-            # =====================================================================
-            data = get_lcoe(data, titles, gamma_mode)
-            if not mset_coupling:
-                data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices)
 
             
 
 # %% Simulation of stock and energy specs
     
-    # Stock based solutions first
     elif year > histend['MEWG']:
         # TODO: Implement survival function to get a more accurate depiction of
         # technologies being phased out and to be able to track the age of the fleet.

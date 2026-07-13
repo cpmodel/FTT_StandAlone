@@ -57,7 +57,7 @@ MJEP,FTT:Power marginal cost of fuels,$2023/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,-
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,-
-MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,2013,2001,-
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
@@ -80,8 +80,8 @@ DPAR,Forecast of population groups,th person,RTI,DPTI,NA,TIME,General,-,-,2010,F
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT",2023$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MLCO,Levelised costs of operation,2023$/MWh,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MESC,FTT:Power cost of early scrapping power equipment,meuros2010,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MES2,FTT:Power market share limitation 2,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
-MES1,FTT:Power market share limitation 1,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MES2,FTT:Power market share limitation dispatchables,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
+MES1,FTT:Power market share limitation VRE,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,-
 MERC,FTT Resource prices or costs (2013$/GJ or 2013$/MWh),2023$/GJ or 2023$/MWh,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
 MEPD,FTT:Power total primary energy demand by resource type (PJ),PJ,RTI,ERTI,NA,TIME,FTT-P,-,-,2001,-
 MELO,"Electricity demand residual (due to imports, losses, ets.)",GWh,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
