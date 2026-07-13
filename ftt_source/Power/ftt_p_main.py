@@ -39,8 +39,6 @@ Local library imports:
         Dispatch of capacity
     - `get_lcoe <ftt_p_lcoe.html>`__
         Levelised cost calculation
-    - `survival_function <ftt_p_surv.html>`__
-        Calculate of scrappage, sales, tracking of age, and average efficiency.
     - `cost_curves <ftt_p_costc.html>`__
         Calculates increasing marginal costs of resources
 
@@ -72,7 +70,6 @@ from ftt_source.Power.ftt_p_dspch import dspch, calculate_load_factors_from_disp
 from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
 from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
-#from ftt_source.Power.ftt_p_surv import survival_function
 from ftt_source.Power.ftt_p_costc import cost_curves
 from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
 from ftt_source.Power.ftt_p_initialisation import build_power_settings
@@ -111,9 +108,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     data: dictionary of NumPy arrays
         Model variables for the given year of solution
 
-    Notes
-    ---------
-    survival_function is currently unused.
     """
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
@@ -128,7 +122,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     fuel_price_indices         = power_settings['fuel_price_indices']
     gen_tech_indices           = power_settings['gen_tech_indices']
     power_init_year            = power_settings['power_init_year']
-    bcet_copy_range_end        = power_settings['bcet_copy_range_end']
     elec_idx                   = power_settings['elec_idx']
     gamma_mode                 = power_settings['gamma_mode']
     nuclear_idx                = power_settings['nuclear_idx']
@@ -271,10 +264,10 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             data["MEWW"][0, :, 0] = time_lag['MEWW'][0, :, 0] + dw
             
 
-        # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
-        data['BCET'][:, :, 1:bcet_copy_range_end] = time_lag['BCET'][:, :, 1:bcet_copy_range_end].copy()
+        # Copy over the technology cost categories
+        data['BCET'] = time_lag['BCET'].copy()
 
-        # Add in carbon costs due to EU ETS
+        # Overwrite carbon costs
         data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']]  = set_carbon_tax(data, c2ti, year)
 
         # For dispatchable techs with zero share, set decision load factor at MEWL
@@ -522,8 +515,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
            
 
             # Copy over the technology cost categories. We update the investment and capacity factors below
-            data['BCET'][:, :, 1:bcet_copy_range_end] = time_lag['BCET'][:, :, 1:bcet_copy_range_end].copy()
-
+            data['BCET'] = time_lag['BCET'].copy()
 
             # Add in carbon costs
             data['BCET'][:, :, c2ti['1 Carbon Costs ($/MWh)']] = set_carbon_tax(data, c2ti, year)
