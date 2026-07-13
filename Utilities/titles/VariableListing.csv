@@ -1,6 +1,5 @@
 Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Source/Comment
 PRSCX,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,From E3ME results
-PRSC15,Price levels in 2015 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,-
 RPOP,Population by age and gender,Thousands,RTI,NA,NA,TIME,General,1970,-,2001,-
 PFRE,Price of electricity use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results
 PFRC,Price of coal use [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,From E3ME results

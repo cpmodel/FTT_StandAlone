@@ -127,15 +127,10 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     wind_solar_indices         = power_settings['wind_solar_indices']
     fuel_price_indices         = power_settings['fuel_price_indices']
     gen_tech_indices           = power_settings['gen_tech_indices']
-    prsc_base_year             = power_settings['prsc_base_year']
     model_init_year            = power_settings['model_init_year']
     rldc_start_year            = power_settings['rldc_start_year']
     bcet_copy_range_end        = power_settings['bcet_copy_range_end']
     elec_idx                   = power_settings['elec_idx']
-    prsc_var                   = power_settings['prsc_var']
-    ex_var                     = power_settings['ex_var']
-    rex_var                    = power_settings['rex_var']
-    usd_idx                    = power_settings['usd_idx']
     gamma_mode                 = power_settings['gamma_mode']
     nuclear_idx                = power_settings['nuclear_idx']
     sector_coupling            = power_settings['sector_coupling']
@@ -145,19 +140,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     # Conditional vector concerning technology properties
     # (same for all regions)
     Svar = data['BCET'][:, :, c2ti['18 Variable (0 or 1)']]
-
-    # Copy over PRSC/EX values
-
-    data[prsc_var] = np.copy(time_lag[prsc_var])
-    data[ex_var] = np.copy(time_lag[ex_var])
-    data['PRSC15'] = np.copy(time_lag['PRSC15'])
-    data[rex_var] = np.copy(time_lag[rex_var])
-
-    # Snapshot the base-year price/exchange rate, independent of model_init_year below
-    if year == prsc_base_year:
-        data[prsc_var] = np.copy(data['PRSCX'])
-        data[ex_var] = np.copy(data['EXX'])
-        data[rex_var] = np.copy(data['REXX'])
+  
 
     # %% First initialise if necessary
 
@@ -229,8 +212,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     #%%
     # Up to the last year of historical market share data
     elif year <= histend['MEWG']:
-        if year == 2015: 
-            data['PRSC15'] = np.copy(data['PRSCX'])
 
 
         # Set starting values for marginal costs of resources (MERC), later adjusted in cost curves
@@ -388,12 +369,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             if not mset_coupling:
                 data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices)
 
-            # Historical differences between demand and supply.
-            # This variable covers transmission losses and net exports
-            # Hereafter, the lagged variable will have these values stored
-            # We assume that the values do not change throughout simulation.
-    #        data['MELO'][:, 0, 0] = data['MEWG'][:,:,0].sum(axis=1) - tot_elec_dem
-            data["MWDL"] = time_lag["MEWDX"]        # Save so that you can access twice lagged demand
             
 
 # %% Simulation of stock and energy specs
@@ -429,8 +404,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
-        data["MWDL"] = time_lag["MEWDX"]             # Save so that you can access twice lagged demand
-        growth_rate = 1 + (time_lag["MEWDX"][:, elec_idx, 0] - time_lag["MWDL"][:, elec_idx, 0])/time_lag["MWDL"][:, elec_idx, 0]
         
         # =====================================================================
         # Start of the quarterly time-loop
@@ -439,8 +412,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         # Start the computation of shares
         for t in range(1, no_it + 1):
             
-            # Like in FORTRAN, we estimate the growth of demand from extrapolating last year's demand.
-            # MEWDt = time_lag['MEWDX'][:,elec_idx,0] + (time_lag['MEWDX'][:, elec_idx, 0] * growth_rate - time_lag['MEWDX'][:, elec_idx, 0]) * t/no_it
 
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
             MEWDt = time_lag['MEWDX'][:, elec_idx, 0] + (data['MEWDX'][:, elec_idx, 0] - time_lag['MEWDX'][:, elec_idx, 0]) * t/no_it

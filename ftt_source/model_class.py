@@ -14,7 +14,6 @@ ModelRun class: main class for operation of model.
 # Standard library imports
 import configparser
 import time
-from pathlib import Path
 
 # Third party imports
 import numpy as np
