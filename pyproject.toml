@@ -26,4 +26,4 @@ ftt-run = "future_technology_transformation:run_cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["SourceCode*", "future_technology_transformation*"]
+include = ["SourceCode*", "future_technology_transformation*", "ftt_source*"]
