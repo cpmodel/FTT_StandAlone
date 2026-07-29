@@ -337,7 +337,7 @@ class ResultsEngine:
                     
                     trace_kwargs = {}
                     line_style = self._get_trace_line_style(combo, style_dims)
-                    legend_group = self._get_trace_legend_group(combo, style_dims)
+                    legend_group = self._get_trace_legend_group(scenario, combo, style_dims)
                     if line_style:
                         trace_kwargs['line'] = line_style
                     if legend_group:
