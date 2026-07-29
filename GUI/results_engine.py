@@ -396,7 +396,7 @@ class ResultsEngine:
 
         Only applies when at least two non-aggregated dimensions have multiple
         selected values. The first such dimension controls colour and the second
-        controls line dash.
+        controls line style.
         """
         multi_dims = [
             i for i in range(3)
