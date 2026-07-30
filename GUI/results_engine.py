@@ -420,14 +420,14 @@ class ResultsEngine:
             'dash': self.LINE_DASHES[dash_idx % len(self.LINE_DASHES)]
         }
 
-    def _get_trace_legend_group(self, combo, style_dims):
+    def _get_trace_legend_group(self, scenario, combo, style_dims):
         """Group legend entries by the colour dimension when grouped styling is active."""
         if len(style_dims) < 2:
             return None
 
         color_dim = style_dims[0]
         color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
-        return f'dim-{color_dim}-value-{color_idx}'
+        return f'scenario-{scenario}-dim-{color_dim}-value-{color_idx}'
     
     def _generate_combinations(self, indices_list, aggregate_flags):
         """
