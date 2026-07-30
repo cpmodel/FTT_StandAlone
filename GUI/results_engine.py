@@ -406,6 +406,13 @@ class ResultsEngine:
         ]
         return multi_dims[:2] if len(multi_dims) >= 2 else []
 
+    def _style_position(self, selected_indices, dim_idx, value_idx):
+        """Map a dimension value index to its position in current selection order."""
+        try:
+            return selected_indices[dim_idx].index(value_idx)
+        except ValueError:
+            return value_idx
+
     def _get_trace_line_style(self, combo, style_dims, selected_indices):
         """Return Plotly line styling for grouped multidimensional selections."""
         if len(style_dims) < 2:
@@ -414,10 +421,11 @@ class ResultsEngine:
         color_dim, dash_dim = style_dims
         color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
         dash_idx = combo[dash_dim][0] if isinstance(combo[dash_dim], list) else combo[dash_dim]
-        dash_pos = selected_indices[dash_dim].index(dash_idx) if dash_idx in selected_indices[dash_dim] else dash_idx
+        color_pos = self._style_position(selected_indices, color_dim, color_idx)
+        dash_pos = self._style_position(selected_indices, dash_dim, dash_idx)
 
         return {
-            'color': self.LINE_COLORS[color_idx % len(self.LINE_COLORS)],
+            'color': self.LINE_COLORS[color_pos % len(self.LINE_COLORS)],
             'dash': self.LINE_DASHES[dash_pos % len(self.LINE_DASHES)]
         }
 
