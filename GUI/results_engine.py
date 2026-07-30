@@ -20,6 +20,12 @@ import itertools
 
 class ResultsEngine:
     """Engine for loading and analyzing FTT model results."""
+
+    LINE_COLORS = [
+        '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+        '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'
+    ]
+    LINE_DASHES = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot']
     
     def __init__(self):
         """Initialize the engine with metadata from CSV files."""
@@ -217,6 +223,8 @@ class ResultsEngine:
         
         # Build figure
         fig = go.Figure()
+
+        style_dims = self._get_multidimensional_style_dims(dims, dim_selections, dim_aggregates)
         
         # Extract baseline data if needed
         baseline_data = None
@@ -327,11 +335,20 @@ class ResultsEngine:
                     # Generate x-axis (years) from simulation_start in settings.ini
                     x_values = list(range(self.simulation_start, self.simulation_start + len(y_values)))
                     
+                    trace_kwargs = {}
+                    line_style = self._get_trace_line_style(combo, style_dims, indices)
+                    legend_group = self._get_trace_legend_group(scenario, combo, style_dims)
+                    if line_style:
+                        trace_kwargs['line'] = line_style
+                    if legend_group:
+                        trace_kwargs['legendgroup'] = legend_group
+
                     fig.add_trace(go.Scatter(
                         x=x_values,
                         y=y_values,
                         mode='lines',
-                        name=trace_label
+                        name=trace_label,
+                        **trace_kwargs
                     ))
                 except Exception as e:
                     print(f"ERROR processing combo {combo}: {str(e)}")
@@ -372,6 +389,54 @@ class ResultsEngine:
                 trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
     
         return fig
+
+    def _get_multidimensional_style_dims(self, dims, dim_selections, dim_aggregates):
+        """
+        Choose dimensions for grouped line styling.
+
+        Only applies when at least two non-aggregated dimensions have multiple
+        selected values. The first such dimension controls colour and the second
+        controls line style.
+        """
+        multi_dims = [
+            i for i in range(3)
+            if dims[i] != 'NA'
+            and not dim_aggregates[i]
+            and len(dim_selections.get(i, [])) > 1
+        ]
+        return multi_dims[:2] if len(multi_dims) >= 2 else []
+
+    def _style_position(self, selected_indices, dim_idx, value_idx):
+        """Map a dimension value index to its position in current selection order."""
+        try:
+            return selected_indices[dim_idx].index(value_idx)
+        except ValueError:
+            return value_idx
+
+    def _get_trace_line_style(self, combo, style_dims, selected_indices):
+        """Return Plotly line styling for grouped multidimensional selections."""
+        if len(style_dims) < 2:
+            return None
+
+        color_dim, dash_dim = style_dims
+        color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
+        dash_idx = combo[dash_dim][0] if isinstance(combo[dash_dim], list) else combo[dash_dim]
+        color_pos = self._style_position(selected_indices, color_dim, color_idx)
+        dash_pos = self._style_position(selected_indices, dash_dim, dash_idx)
+
+        return {
+            'color': self.LINE_COLORS[color_pos % len(self.LINE_COLORS)],
+            'dash': self.LINE_DASHES[dash_pos % len(self.LINE_DASHES)]
+        }
+
+    def _get_trace_legend_group(self, scenario, combo, style_dims):
+        """Group legend entries by the colour dimension when grouped styling is active."""
+        if len(style_dims) < 2:
+            return None
+
+        color_dim = style_dims[0]
+        color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
+        return f'scenario-{scenario}-dim-{color_dim}-value-{color_idx}'
     
     def _generate_combinations(self, indices_list, aggregate_flags):
         """
