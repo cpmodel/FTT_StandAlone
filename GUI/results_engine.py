@@ -336,7 +336,7 @@ class ResultsEngine:
                     x_values = list(range(self.simulation_start, self.simulation_start + len(y_values)))
                     
                     trace_kwargs = {}
-                    line_style = self._get_trace_line_style(combo, style_dims)
+                    line_style = self._get_trace_line_style(combo, style_dims, indices)
                     legend_group = self._get_trace_legend_group(scenario, combo, style_dims)
                     if line_style:
                         trace_kwargs['line'] = line_style
@@ -406,7 +406,7 @@ class ResultsEngine:
         ]
         return multi_dims[:2] if len(multi_dims) >= 2 else []
 
-    def _get_trace_line_style(self, combo, style_dims):
+    def _get_trace_line_style(self, combo, style_dims, selected_indices):
         """Return Plotly line styling for grouped multidimensional selections."""
         if len(style_dims) < 2:
             return None
@@ -414,10 +414,11 @@ class ResultsEngine:
         color_dim, dash_dim = style_dims
         color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
         dash_idx = combo[dash_dim][0] if isinstance(combo[dash_dim], list) else combo[dash_dim]
+        dash_pos = selected_indices[dash_dim].index(dash_idx) if dash_idx in selected_indices[dash_dim] else dash_idx
 
         return {
             'color': self.LINE_COLORS[color_idx % len(self.LINE_COLORS)],
-            'dash': self.LINE_DASHES[dash_idx % len(self.LINE_DASHES)]
+            'dash': self.LINE_DASHES[dash_pos % len(self.LINE_DASHES)]
         }
 
     def _get_trace_legend_group(self, scenario, combo, style_dims):
