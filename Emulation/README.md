@@ -1,7 +1,7 @@
 ## Emulation
 This branch is dedicated to emulation and uncertainty analysis as proposed in the working paper:
 'Policy Robustness & Uncertainty in Model-based Decision Support for the Energy Transition'
-Burton, I.J, Njisse, F.J.M.M, Salter, J.M - https://arxiv.org/abs/2510.11177
+Burton, I.J, Njisse, F.J.M.M, Salter, J.M - Ian J Burton (2026) Environ. Res.: Energy 3 035002 - DOI 10.1088/2753-3751/ae7728 - https://iopscience.iop.org/article/10.1088/2753-3751/ae7728
 
 
 Workflow:
@@ -35,7 +35,7 @@ Workflow:
     a.  edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/autobuild_1.R
     b. run autobuild.R
     
-4. Prediciton/Analysis (R)
+4. Prediction/Analysis (R)
     a. Sensitivity analysis
         - edit filepaths and vars in FTT_StandAlone/Emulation/code/emulation_code/sensitivity_analysis_2.R
     b. Prediction
