@@ -10,9 +10,9 @@ This repository contains a family of Future Technology Transformation (FTT) mode
 * FTT:Freight *under construction, update expected in 2024*
 
 ## Emulation
-This branch is dedicated to emulation and uncertainty analysis as proposed in the working paper:
-'Policy Robustness & Uncertainty in Model-based Decision Support for the Energy Transition'
-Burton, I.J, Njisse, F.J.M.M, Salter, J.M - https://arxiv.org/abs/2510.11177
+This branch is dedicated to emulation and uncertainty analysis as proposed in the research paper: 
+'Policy Robustness & Uncertainty in Model-based Decision Support for the Energy Transition' (2026)
+Burton, I.J, Njisse, F.J.M.M, Salter, J.M - Environ. Res.: Energy 3 035002 - https://iopscience.iop.org/article/10.1088/2753-3751/ae7728
 
 ## For more detailed information on performing emulation with this repo please consult the README.md file in the Emulation folder. 
 
