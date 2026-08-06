@@ -25,6 +25,23 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Verify version matches release tag
+        run: |
+          python - <<'PY'
+          import os, tomllib
+
+          tag = os.environ.get("GITHUB_REF_NAME", "")
+          tag = tag[1:] if tag.startswith("v") else tag
+
+          with open("pyproject.toml", "rb") as f:
+              version = tomllib.load(f)["project"]["version"]
+
+          if version != tag:
+              raise SystemExit(
+                  f"pyproject.toml version {version!r} does not match release tag {tag!r}"
+              )
+          PY
+
       - name: Install build tools
         run: python -m pip install --upgrade pip build
 
