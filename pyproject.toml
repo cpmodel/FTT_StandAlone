@@ -12,6 +12,7 @@ license = { text = "MIT" }
 dependencies = [
     "numpy",
     "pandas",
+    "polars",
     "openpyxl",
     "tqdm",
     "numba",

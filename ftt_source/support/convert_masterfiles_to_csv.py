@@ -14,13 +14,13 @@ The user can select one or more scenarios to convert from the excel sheet:
 @author: MM and Femke Nijsse
 """
 
-from pathlib import Path
 import os
 
 import pandas as pd
 import numpy as np
 import datetime
 
+from ftt_source.paths import get_inputs_path
 from ftt_source.support.titles_functions import load_titles
 
 #%% Function definitions
@@ -288,11 +288,19 @@ def convert_1D_var_to_timeline(data, var, row_title, out_dir, timeline_dict):
 # Core functions for the main programme
 def directories_setup():
     """ Set up directory masterfile and the general input directory"""
-
-    from ftt_source.paths import get_inputs_path
     inputs = get_inputs_path()
     dir_inputs = str(inputs)
-    dir_masterfiles = str(inputs / "_MasterFiles")
+
+    # Keep writing csv outputs to Inputs/, but allow masterfiles to live in
+    # Inputs_existing/ after migration to the new format.
+    candidate_master_dirs = [
+        inputs.parent / "Inputs_existing" / "_MasterFiles",
+        inputs / "_MasterFiles",
+    ]
+    dir_masterfiles = str(next(
+        (path for path in candidate_master_dirs if path.is_dir()),
+        candidate_master_dirs[-1],
+    ))
 
     return dir_inputs, dir_masterfiles
 

@@ -73,7 +73,7 @@ API Documentation
    ftt_tr_main
    ftt_tr_survival
    get_vars_to_copy
-   input_functions
+   data_loading
    output_functions
    paths_append
    read_support
@@ -86,7 +86,7 @@ API Documentation
    support.divide
    support.docstring_templates
    support.get_vars_to_copy
-   support.input_functions
+   support.data_loading
    support.output_functions
    support.paths_append
    support.read_support
