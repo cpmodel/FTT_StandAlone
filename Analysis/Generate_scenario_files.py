@@ -7,7 +7,7 @@ It also allows copying the MSAL files around. Note there are types
 @author: Femke
 """
 
-import shutil, os, glob
+import shutil, os
 import os.path
 import numpy as np
 import pandas as pd
@@ -21,19 +21,30 @@ input_dir = os.path.join(top_dir, "Inputs")
 
 
 def create_file_list(variable, source_dir):
-    "Create list of files to be copied from S0 for a specific variable"
-    GLOB_PARMS = f"{variable}*.csv"
-    file_list = glob.glob(os.path.join(source_dir, GLOB_PARMS))
-    return file_list
+    """Create list of source files for one variable.
+
+    New input format stores all countries in a single file named
+    ``<variable>.csv``. Prefer that file when present.
+    """
+
+    combined_file = os.path.join(source_dir, f"{variable}.csv")
+    if os.path.exists(combined_file):
+        return [combined_file]
+    return []
 
 def get_source_dir(input_dir, base_scen, model):
     source_dir = os.path.join(input_dir, "S0", model)
     return source_dir
 
 def copy_csv_files_to_scen(model, variable, scen_name, source_dir):
-    """Copy all country files for a single variable to the new scenario"""
+    """Copy source file(s) for a single variable to the new scenario."""
     file_list = create_file_list(variable, source_dir)
     desti_dir = os.path.join(input_dir, scen_name, model) 
+
+    if not file_list:
+        raise FileNotFoundError(
+            f"No input file found for variable '{variable}' in '{source_dir}'."
+        )
     
     for file in file_list:
         # Create desti_dir if it does not exist
@@ -48,6 +59,8 @@ def save_new_file(model, scen_name, file, df):
     "Create destination directory, and save the file"
     
     desti_dir = os.path.join(input_dir, scen_name, model)
+    if not os.path.exists(desti_dir):
+        os.makedirs(desti_dir)
     # Extract the filename from the original file path
     filename = os.path.basename(file)
     # Create the full destination file path
@@ -58,6 +71,10 @@ def save_new_file(model, scen_name, file, df):
 
 def change_csv_files(model, scen_name, source_dir, variable, policy):
     file_list = create_file_list(variable, source_dir)
+    if not file_list:
+        raise FileNotFoundError(
+            f"No input file found for variable '{variable}' in '{source_dir}'."
+        )
     for file in file_list:
         # Read in file
         df = pd.read_csv(file)
@@ -66,6 +83,33 @@ def change_csv_files(model, scen_name, source_dir, variable, policy):
 
 
 def policy_change(df, policy):
+    def _normalise_row_positions(row_positions):
+        if isinstance(row_positions, slice):
+            start = 0 if row_positions.start is None else row_positions.start
+            stop = len(df) if row_positions.stop is None else row_positions.stop
+            step = 1 if row_positions.step is None else row_positions.step
+            return list(range(start, stop, step))
+        if isinstance(row_positions, range):
+            return list(row_positions)
+        if isinstance(row_positions, (list, tuple, np.ndarray)):
+            return [int(x) for x in row_positions]
+        return [int(row_positions)]
+
+    def _apply_rows_per_country(row_positions, col_selector, value):
+        """Apply row-index policies to each RTI block in consolidated files."""
+        positions = _normalise_row_positions(row_positions)
+
+        if "RTI" not in df.columns:
+            df.iloc[positions, col_selector] = value
+            return
+
+        for _, group in df.groupby("RTI", sort=False):
+            group_idx = group.index.to_numpy()
+            group_len = len(group_idx)
+            valid_local = [p for p in positions if 0 <= p < group_len]
+            if valid_local:
+                df.iloc[group_idx[valid_local], col_selector] = value
+
     carbon_price = 200.0     # Constant €200 per tonne CO2 
     match policy:
         
@@ -100,37 +144,37 @@ def policy_change(df, policy):
         
         # Power sector policies
         case "MEWR strong":     # Completely outregulate fossil technologies from 2024
-            df.iloc[1:10, 24:] = 0
+            _apply_rows_per_country(slice(1, 10), slice(24, None), 0)
         case "MEWT":           # Subsidize all renewables
-            df.iloc[ 12:22, 25:] = -0.3
+            _apply_rows_per_country(slice(12, 22), slice(25, None), -0.3)
         case "MEWT half":           # Subsidize all renewables
-            df.iloc[ 12:22, 25:] = -0.15
+            _apply_rows_per_country(slice(12, 22), slice(25, None), -0.15)
         case "Coal phase-out":
-            df.iloc[0, 1] = 1       # The coal phase-out is coded as a function; this switch turns it on 
+            _apply_rows_per_country(0, 1, 1)       # The coal phase-out is coded as a function; this switch turns it on 
         case "Coal phase-out half":
-            df.iloc[0, 1] = 0.5       # TODO code the phase-out so it can be halved!
+            _apply_rows_per_country(0, 1, 0.5)       # TODO code the phase-out so it can be halved!
       
         
         # Transport policies
         case "TREG strong":
-            df.iloc[:15, 24:] = 0
+            _apply_rows_per_country(slice(0, 15), slice(24, None), 0)
         case "BRR strong tax": 
-            df.iloc[:15, 25:] = 0.3
+            _apply_rows_per_country(slice(0, 15), slice(25, None), 0.3)
         case "BRR strong subsidy":
-            df.iloc[18:21, 25:] = -0.3
+            _apply_rows_per_country(slice(18, 21), slice(25, None), -0.3)
         case "BRR half subsidy":
-            df.iloc[18:21, 25:] = -0.15
+            _apply_rows_per_country(slice(18, 21), slice(25, None), -0.15)
         case "BRR strong combo":
-            df.iloc[:15, 25:] = 0.3
-            df.iloc[18:21, 25:] = -0.3
+            _apply_rows_per_country(slice(0, 15), slice(25, None), 0.3)
+            _apply_rows_per_country(slice(18, 21), slice(25, None), -0.3)
         case "EV mandate regulation":
-            df.iloc[:15, 35:] = 0
+            _apply_rows_per_country(slice(0, 15), slice(35, None), 0)
         case "EV mandate":
             df.iloc[:, 3] = 2026       # Start year EV mandate
             df.iloc[:, 3] = 2035       # End year EV mandate
             df.iloc[:, 3] = 1          # Maximum EV mandate
         case "EV mandate half":
-            df.iloc[0, 1] = 2045    # Half the speed of the mandate
+            _apply_rows_per_country(0, 1, 2045)    # Half the speed of the mandate
         case "Transport REPP":
              df[df.columns[1:]] = df[df.columns[1:]].astype(float)
              df.iloc[:, 15:] = carbon_price * 3.667    
@@ -142,18 +186,18 @@ def policy_change(df, policy):
             
         # Freight policies
         case "ZREG strong":
-            df.iloc[list(range(25)), 7:] = 0
+            _apply_rows_per_country(range(25), slice(7, None), 0)
         case "ZTVT strong tax":
-            df.iloc[list(range(25)), 7:] = 0.3
+            _apply_rows_per_country(range(25), slice(7, None), 0.3)
         case "ZTVT strong subsidy":
-            df.iloc[[31, 32, 33], 8:] = -0.3
+            _apply_rows_per_country([31, 32, 33], slice(8, None), -0.3)
         case "ZTVT half subsidy":
-            df.iloc[[31, 32, 33], 8:] = -0.15
+            _apply_rows_per_country([31, 32, 33], slice(8, None), -0.15)
         case "ZTVT strong combo":
-            df.iloc[list(range(25)), 8:] = 0.3
-            df.iloc[[31, 32, 33], 8:] = -0.3
+            _apply_rows_per_country(range(25), slice(8, None), 0.3)
+            _apply_rows_per_country([31, 32, 33], slice(8, None), -0.3)
         case "EV truck mandate regulation":
-            df.iloc[list(range(25)), 23:] = 0
+            _apply_rows_per_country(range(25), slice(23, None), 0)
         case "EV truck mandate":
             df.iloc[:, 1] = 2026
             df.iloc[:, 2] = 2040       # The EV mandates are coded as a function; this switch turns it on
@@ -181,39 +225,39 @@ def policy_change(df, policy):
             df.iloc[:, start_column_index:end_column_index] = carbon_price * 3.667
             
         case "EV truck mandate before 2027":
-            df.iloc[0, 1] = 2027       # #TODO: Check if this still works with new mandates
+            _apply_rows_per_country(0, 1, 2027)       # #TODO: Check if this still works with new mandates
         case "EV truck mandate before 2030":
-            df.iloc[0, 1] = 2030       # 
+            _apply_rows_per_country(0, 1, 2030)       # 
         case "EV truck mandate before 2035":
-            df.iloc[0, 1] = 2035       # 
+            _apply_rows_per_country(0, 1, 2035)       # 
     
         
             
         # Heat policies
         case "HREG strong":
-            df.iloc[:4, 24:] = 0
-            df.iloc[6, 24:] = 0
+            _apply_rows_per_country(slice(0, 4), slice(24, None), 0)
+            _apply_rows_per_country(6, slice(24, None), 0)
         case "HTVS strong tax": 
-            df.iloc[:4, 24:] = 0.3
-            df.iloc[6, 24:] = 0.3
+            _apply_rows_per_country(slice(0, 4), slice(24, None), 0.3)
+            _apply_rows_per_country(6, slice(24, None), 0.3)
         case "HTVS strong subsidy":
-            df.iloc[9:12, 25:] = -0.3         # 30% subsidy on heat pumps
+            _apply_rows_per_country(slice(9, 12), slice(25, None), -0.3)         # 30% subsidy on heat pumps
         case "HTVS half subsidy":  # half the s tax
-            df.iloc[9:12, 25:] = -0.15         # 30% subsidy on heat pumps
+            _apply_rows_per_country(slice(9, 12), slice(25, None), -0.15)         # 30% subsidy on heat pumps
         case "HTVS strong combo":  # Strong tax
-            df.iloc[:4, 25:] = 0.3
-            df.iloc[6, 25:] = 0.3
-            df.iloc[9:12, 25:] = -0.3         # 30% subsidy on heat pumps
+            _apply_rows_per_country(slice(0, 4), slice(25, None), 0.3)
+            _apply_rows_per_country(6, slice(25, None), 0.3)
+            _apply_rows_per_country(slice(9, 12), slice(25, None), -0.3)         # 30% subsidy on heat pumps
         case "Heat pump mandate 2035 regulation":
-            df.iloc[:4, 35:] = 0
-            df.iloc[6, 35:] = 0
+            _apply_rows_per_country(slice(0, 4), slice(35, None), 0)
+            _apply_rows_per_country(6, slice(35, None), 0)
         case "Heat pump mandate":
             df.iloc[:, 2] = 2026       # Start heat pump mandate
             df.iloc[:, 2] = 2035       # End heat pump mandate
             df.iloc[:, 3] = 1           # Maximum heat pump mandate
         case "Heat pump mandate half":
             df.iloc[:, 1] = df.iloc[:, 1].astype(float)
-            df.iloc[0, 1] = 2045       # The heat pump mandates are coded as a function; this switch turns it on
+            _apply_rows_per_country(0, 1, 2045)       # The heat pump mandates are coded as a function; this switch turns it on
         case "Heat REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             df.iloc[:, 15:] = carbon_price * 3.667 
@@ -221,7 +265,7 @@ def policy_change(df, policy):
         
         # Sector coupling
         case "Sector coupling":
-            df.iloc[3, 1] = 0.5         # 50% cost savings on second-hand batteries
+            _apply_rows_per_country(3, 1, 0.5)         # 50% cost savings on second-hand batteries
             
     return df
         
