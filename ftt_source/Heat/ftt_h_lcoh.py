@@ -42,6 +42,25 @@ import numpy as np
 # Local library imports
 from ftt_source.support.divide import divide
 
+
+def _view2d(arr):
+    """Return a 2D view for either 2D or (..., ..., 1) arrays."""
+    if arr.ndim == 2:
+        return arr
+    if arr.ndim == 3 and arr.shape[2] == 1:
+        return arr[:, :, 0]
+    raise ValueError(f"Expected 2D or 3D singleton-last-axis array, got shape {arr.shape}")
+
+
+def _assign2d(target, values):
+    """Assign 2D values back to a 2D or (..., ..., 1) target array."""
+    if target.ndim == 2:
+        target[:, :] = values
+    elif target.ndim == 3 and target.shape[2] == 1:
+        target[:, :, 0] = values
+    else:
+        raise ValueError(f"Expected 2D or 3D singleton-last-axis target, got shape {target.shape}")
+
 def set_carbon_tax(data, c4ti):
     '''
     Convert the carbon price in REPP from euro / tC to 2020 euros / kWhUD. 
@@ -52,7 +71,9 @@ def set_carbon_tax(data, c4ti):
     '''
  
     
-    carbon_costs = (data["CO2taxH"][:, :, 0]    # Carbon price in USD/tCO2
+    co2_tax_h = _view2d(data["CO2taxH"])[:, 0]
+
+    carbon_costs = (co2_tax_h[:, np.newaxis]    # Carbon price in USD/tCO2
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
                      / 1000 / 1000              # Conversion from C to CO2 and MWh to kWh, kg to tonne 
                      * data['REXX'][33, 0, 0, np.newaxis]  # USD to EUR exchange rate
@@ -122,18 +143,23 @@ def get_lcoh(data, titles, carbon_costs):
     domt = get_cost_component(bhtc[:, :, c4ti['4 O&M SD']], conv_cf, lt_mask)
     
     # Fuel costs and carbon costs
-    ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
+    hewp = _view2d(data['HEWP'])
+    htvs = _view2d(data['HTVS'])
+    htrt = _view2d(data['HTRT'])
+    hefi = _view2d(data['HEFI'])
+
+    ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * hewp, conv_ce, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
     
     # Subsidies or tax on investment costs
-    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * data['HTVS'][:, :, 0], conv_cf, bt_mask)
+    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * htvs, conv_cf, bt_mask)
     
     # Subsidy or tax on fuel use
-    fft = get_cost_component(data['HTRT'][:, :, 0], conv_ce, lt_mask)
+    fft = get_cost_component(htrt, conv_ce, lt_mask)
     
     # Feed-in tariffs
-    fit = get_cost_component(data['HEFI'][:, :, 0], 1, lt_mask)
+    fit = get_cost_component(hefi, 1, lt_mask)
     
     # Discount rate
     dr = data['BHTC'][:, :, c4ti['8 Discount rate'], np.newaxis]
@@ -186,13 +212,13 @@ def get_lcoh(data, titles, carbon_costs):
     tpb = tpb * (1 + data['BHTC'][:, :, c4ti['12 Gamma value']])
     
     # Pass to variables that are stored outside.
-    data['HEWC'][:, :, 0] = lcoh       # The real bare LCOH without taxes
-    data['HETC'][:, :, 0] = tlcoh      # The real bare LCOH with taxes
-    data['HGC1'][:, :, 0] = tlcohg     # As seen by consumer (generalised cost)
-    data['HWCD'][:, :, 0] = dlcoh      # Variation on the LCOH distribution
-    data['HGC2'][:, :, 0] = tmc        # Total marginal costs
-    data['HGD2'][:, :, 0] = dtmc       # SD of Total marginal costs
-    data['HGC3'][:, :, 0] = tpb        # Total payback costs
-    data['HGD3'][:, :, 0] = dtpb       # SD of Total payback costs
+    _assign2d(data['HEWC'], lcoh)       # The real bare LCOH without taxes
+    _assign2d(data['HETC'], tlcoh)      # The real bare LCOH with taxes
+    _assign2d(data['HGC1'], tlcohg)     # As seen by consumer (generalised cost)
+    _assign2d(data['HWCD'], dlcoh)      # Variation on the LCOH distribution
+    _assign2d(data['HGC2'], tmc)        # Total marginal costs
+    _assign2d(data['HGD2'], dtmc)       # SD of Total marginal costs
+    _assign2d(data['HGC3'], tpb)        # Total payback costs
+    _assign2d(data['HGD3'], dtpb)       # SD of Total payback costs
 
     return data

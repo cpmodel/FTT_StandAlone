@@ -24,6 +24,7 @@ from tqdm import tqdm
 import ftt_source.Power.ftt_p_main as ftt_p
 import ftt_source.Transport.ftt_tr_main as ftt_tr
 import ftt_source.Heat.ftt_h_main as ftt_h
+import ftt_source.Heat.ftt_h_main_old as ftt_h_old
 #import ftt_source.Steel.ftt_s_main as ftt_s
 #import ftt_source.Agri.ftt_agri_main as ftt_agri
 import ftt_source.Freight.ftt_fr_main as ftt_fr
@@ -183,6 +184,9 @@ class RunFTT:
         self.timeline = np.arange(self.simulation_start, self.simulation_end + 1)
         self.ftt_modules = config.get('settings', 'enable_modules')
         self.scenarios = config.get('settings', 'scenarios')
+        self.compare_heat_versions = config.getboolean(
+            'settings', 'compare_heat_versions', fallback=True
+        )
 
         # Load classification titles
         self.titles = titles_f.load_titles()
@@ -286,9 +290,50 @@ class RunFTT:
                                         self.titles, self.histend, tl[y],
                                         self.domain)
             if "FTT-H" in self.ftt_modules:
-                variables = ftt_h.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+                if self.compare_heat_versions:
+                    # Run legacy and new Heat modules on isolated copies for direct year-by-year comparison.
+                    variables_old = {
+                        k: (np.copy(v) if isinstance(v, np.ndarray) else v)
+                        for k, v in variables.items()
+                    }
+                    time_lags_old = {
+                        k: (np.copy(v) if isinstance(v, np.ndarray) else v)
+                        for k, v in time_lags.items()
+                    }
+
+                    legacy_out = ftt_h_old.solve(
+                        variables_old, time_lags_old,
+                        self.titles, self.histend, tl[y],
+                        self.domain
+                    )
+
+                    variables = ftt_h.solve(variables, time_lags,
+                                            self.titles, self.histend, tl[y],
+                                            self.domain)
+
+                    max_diff = 0.0
+                    max_diff_var = None
+                    for var in variables:
+                        if var not in legacy_out:
+                            continue
+                        if not (isinstance(variables[var], np.ndarray)
+                                and isinstance(legacy_out[var], np.ndarray)):
+                            continue
+                        if variables[var].shape != legacy_out[var].shape:
+                            continue
+                        diff = np.max(np.abs(variables[var] - legacy_out[var])) if variables[var].size else 0.0
+                        if np.isnan(diff):
+                            continue
+                        if diff > max_diff:
+                            max_diff = float(diff)
+                            max_diff_var = var
+
+                    if max_diff_var is not None and max_diff > 1e-12:
+                        print(f"[Heat compare] Year {tl[y]} max_abs_diff={max_diff:.6e} var={max_diff_var}")
+                else:
+                    variables = ftt_h.solve(variables, time_lags,
+                                            self.titles, self.histend, tl[y],
+                                            self.domain)
             if "FTT-S" in self.ftt_modules:
                 print("Module needs to be created")
                 

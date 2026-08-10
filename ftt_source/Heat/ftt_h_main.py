@@ -96,329 +96,259 @@ def solve(data, time_lag, titles, histend, year, domain):
     if year == 2014:
         data['PRSC14'] = np.copy(data['PRSCX'])
 
+    # Temporarily squeeze singleton 3rd axis for Heat-internal calculations.
+    # Shapes are restored before returning from solve.
+    shared_vars = {'HFFC', 'HJFC', 'RHUD', 'PRSC14', 'PRSCX', 'noit'}
+    squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-H'} | shared_vars
+    squeezed_keys = []
+    for var in squeeze_candidates:
+        if var in data and hasattr(data[var], 'ndim') and data[var].ndim == 3 and data[var].shape[2] == 1:
+            data[var] = data[var][:, :, 0]
+            squeezed_keys.append(var)
 
-    # Calculate the LCOH for each heating technology    
+    # Calculate the LCOH for each heating technology.
     carbon_costs = set_carbon_tax(data, c4ti)
     data = get_lcoh(data, titles, carbon_costs)
 
-
-    # %% First initialise if necessary
-    # Initialise in case of stock solution specification
-    #if np.any(specs[sector]) < 5:
-
     # Up to the last year of historical useful energy demand by boiler
-    # Historical data ends in 2020, so we need to initialise data
-    # when it's 2021 to make sure the model runs.
     if year <= histend['HEWF']:
-        # Useful energy demand by boilers
-        # The historical data contains final energy demand
-        data['HEWG'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
+        data['HEWG'][:, :] = data['HEWF'][:, :] * data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
         for r in range(num_regions):
-
-            # Total useful heat demand
-            # This is the demand driver for FTT:Heat
-            #data['RHUD'][r, 0, 0] = np.sum(data['HEWG'][r, :, 0])
-
-            if data['RHUD'][r, 0, 0] > 0.0:
-
-                # Market shares (based on useful energy demand)
-                data['HEWS'][r, :, 0] = data['HEWG'][r, :, 0] / data['RHUD'][r, 0, 0]
-                # Shares of final energy demand (without electricity)
-                #data['HESR'][:, :, 0] = data['HEWF'][:, :, 0]
-                #data['HESR'][r, :, 0] = data['HEWF'][r, :, 0] * data['BHTC'][r, :, c4ti["19 RES calc"]] / np.sum(data['HEWF'] * data['BHTC'][r, :, c4ti["19 RES calc"]])
+            if data['RHUD'][r, 0] > 0.0:
+                data['HEWS'][r, :] = data['HEWG'][r, :] / data['RHUD'][r, 0]
 
         # CORRECTION TO MARKET SHARES
-        # Sometimes historical market shares do not add up to 1.0
-        hews = data['HEWS'][:, :, 0]
-        region_sums = hews.sum(axis=1)
-        
+        region_sums = data['HEWS'].sum(axis=1)
         needs_correction = (np.abs(region_sums - 1.0) > 1e-9) & (region_sums > 0.0)
-        data['HEWS'][needs_correction, :, 0] /= region_sums[needs_correction, np.newaxis]
-                    
+        data['HEWS'][needs_correction, :] /= region_sums[needs_correction, np.newaxis]
+
         # Normalise HEWG to RHUD
-        data['HEWG'][:, :, 0] = data['HEWS'][:, :, 0] * data['RHUD'][:, :, 0]
-        
+        data['HEWG'][:, :] = data['HEWS'][:, :] * data['RHUD'][:, :]
+
         # Recalculate HEWF based on RHUD
-        data['HEWF'][:, :, 0] = data['HEWG'][:, :, 0] / data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
+        data['HEWF'][:, :] = data['HEWG'][:, :] / data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
 
         # Capacity by boiler
-        # Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
-        data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
-        
+        data['HEWK'][:, :] = divide(data['HEWG'][:, :],
+                                    data['BHTC'][:, :, c4ti["13 Capacity factor mean"]]) / 1000
+
         # Emissions
-        data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]] / 1e6
+        data['HEWE'][:, :] = data['HEWF'][:, :] * data['BHTC'][:, :, c4ti["15 Emission factor"]] / 1e6
 
         for r in range(num_regions):
-            # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
-                # Fuel use for heating
-                data['HJHF'][r, fuel, 0] = np.sum(data['HEWF'][r, :, 0] * data['HJET'][0, :, fuel])
-                # Fuel use for total residential sector
-                # 0.0859 is the conversion factor from GWh to th toe
-                if data['HJFC'][r, fuel, 0] > 0.0:
-                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0] * 0.08598
+                data['HJHF'][r, fuel] = np.sum(data['HEWF'][r, :] * data['HJET'][0, :, fuel])
+                if data['HJFC'][r, fuel] > 0.0:
+                    data['HJEF'][r, fuel] = data['HJHF'][r, fuel] / data['HJFC'][r, fuel] * 0.08598
 
         # Investment (= capacity additions) by technology (in GW/y)
         if year > 2014:
-            data["HEWI"] = get_sales_yearly(data["HEWK"], time_lag["HEWK"],
-                              data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']])
-            
+            hewi_3d = get_sales_yearly(
+                data['HEWK'][:, :, np.newaxis],
+                time_lag['HEWK'],
+                data['HEWI'][:, :, np.newaxis],
+                time_lag['BHTC'][:, :, c4ti['6 Replacetime']]
+            )
+            data['HEWI'][:, :] = hewi_3d[:, :, 0]
+
             bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
-                bi[r,:] = np.matmul(data['HEWB'][0, :, :], data['HEWI'][r, :, 0])
+                bi[r, :] = np.matmul(data['HEWB'][0, :, :], data['HEWI'][r, :])
             dw = np.sum(bi, axis=0)
-            data['HEWW'][0, :, 0] = time_lag['HEWW'][0, :, 0] + dw
+            data['HEWW'][0, :] = time_lag['HEWW'][0, :, 0] + dw
 
     if year == histend['HEWF']:
-        # Historical data ends in 2020, so we need to initialise data
-        # when it's 2021 to make sure the model runs.
-
-        # If switch is set to 1, then an exogenous price rate is used
-        # Otherwise, the price rates are set to endogenous
-
-        #data['HFPR'][:, :, 0] = data['HFFC'][:, :, 0]
-
-        # Now transform price rates by fuel to price rates by boiler
-        #data['HEWP'][:, :, 0] = np.matmul(data['HFFC'][:, :, 0], data['HJET'][0, :, :].T)
-
         for r in range(num_regions):
-
-            # Final energy demand by energy carrier
             for fuel in range(len(titles['JTI'])):
+                data['HJHF'][r, fuel] = np.sum(data['HEWF'][r, :] * data['HJET'][0, :, fuel])
+                if data['HJFC'][r, fuel] > 0.0:
+                    data['HJEF'][r, fuel] = data['HJHF'][r, fuel] / data['HJFC'][r, fuel]
 
-                # Fuel use for heating
-                data['HJHF'][r, fuel, 0] = np.sum(data['HEWF'][r, :, 0] * data['HJET'][0, :, fuel])
-
-                # Fuel use for total residential sector #HFUX is missing
-                if data['HJFC'][r, fuel, 0] > 0.0:
-                    data['HJEF'][r, fuel, 0] = data['HJHF'][r, fuel, 0] / data['HJFC'][r, fuel, 0]
-
-        # Calculate the LCOH for each heating technology.
         carbon_costs = set_carbon_tax(data, c4ti)
         data = get_lcoh(data, titles, carbon_costs)
 
-# %% Simulation of stock and energy specs
-#    t0 = time.time()
-    # Stock based solutions first
-#    if np.any(specs[sector] < 5):
-    # TODO: change this to start year FTT:H (also in update??)
     data["FU14A"] = np.copy(data['HJHF'])
     data['FU14B'] = data["HJEF"] * data["HJFC"]
-    
+
     # Endogenous calculation takes over from here
     if year > histend['HEWF']:
-
-        # Create a local dictionary for timeloop variables
-        # It contains values between timeloop iterations in the FTT core
         data_dt = {}
-
-        # First, fill the time loop variables with the their lagged equivalents
         vars_to_copy = get_domain_vars_to_copy(time_lag, domain, 'FTT-H')
         for var in vars_to_copy:
-            data_dt[var] = np.copy(time_lag[var])
+            if var in squeezed_keys and hasattr(time_lag[var], 'ndim') and time_lag[var].ndim == 3 and time_lag[var].shape[2] == 1:
+                data_dt[var] = np.copy(time_lag[var][:, :, 0])
+            else:
+                data_dt[var] = np.copy(time_lag[var])
 
+        data["FU14A"] = time_lag["FU14A"][:, :, 0]
+        data["FU14B"] = time_lag["FU14B"][:, :, 0]
 
-        # Preserve baseline fuel demand from previous timestep (for output tracking)
-        data["FU14A"] = time_lag["FU14A"]
-        data["FU14B"] = time_lag["FU14B"]
-
-        relative_excess = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :, 0]),
-                           data['HREG'][:, :, 0]) # 0 if dividing by 0
+        relative_excess = divide((time_lag['HEWS'][:, :, 0] - data['HREG'][:, :]), data['HREG'][:, :])
         reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
-        reg_constr[data['HREG'][:, :, 0] == 0.0] = 1.0
-        reg_constr[data['HREG'][:, :, 0] == -1.0] = 0.0
-    
-        # Factor used to create quarterly data from annual figures
-        no_it = int(data['noit'][0, 0, 0])
+        reg_constr[data['HREG'][:, :] == 0.0] = 1.0
+        reg_constr[data['HREG'][:, :] == -1.0] = 0.0
+
+        no_it = int(data['noit'][0, 0])
         dt = 1 / float(no_it)
-        
 
-        ############## Computing new shares ##################
+        for t in range(1, no_it + 1):
+            rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, np.newaxis] - time_lag['RHUD'][:, :, :]) * t * dt
+            rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, np.newaxis] - time_lag['RHUD'][:, :, :]) * (t - 1) * dt
 
-        # Start the computation of shares
-        for t in range(1, no_it+1):
-
-            # Interpolate to prevent staircase profile.
-            rhudt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * t * dt
-            rhudlt = time_lag['RHUD'][:, :, :] + (data['RHUD'][:, :, :] - time_lag['RHUD'][:, :, :]) * (t-1) * dt
-
-            # Get regions with non-zero heat demand
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
-                
-            # The core FTT equations, taking into account old shares, costs and regulations
+
             change_in_shares = shares_change(
                 dt=dt,
                 regions=regions,
-                shares_dt=data_dt["HEWS"],         # Shares at previous t
-                costs=data_dt["HGC1"],             # Costs
-                costs_sd=data_dt["HWCD"],          # Standard deviations costs
-                subst=data["HEWA"] * data["HETR"], # Substitution turnover rates
-                reg_constr=reg_constr,             # Constraint due to regulation
-                num_regions = num_regions,         # Number of regions
-                num_techs = num_techs,             # Number of technologies
+                shares_dt=data_dt["HEWS"][:, :, np.newaxis],
+                costs=data_dt["HGC1"][:, :, np.newaxis],
+                costs_sd=data_dt["HWCD"][:, :, np.newaxis],
+                subst=data["HEWA"] * data["HETR"][:, :, np.newaxis],
+                reg_constr=reg_constr,
+                num_regions=num_regions,
+                num_techs=num_techs,
             )
 
-            # Calculate scrappage rate for all regions
             SR_all = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
                 SR = divide(np.ones(num_techs),
-                            data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :, 0]
-                SR_all[r, :] = np.where(SR<0.0, 0.0, SR)
-            
-            # Premature replacements, use scrappage rate time scales and amended costs
+                            data['BHTC'][r, :, c4ti["16 Payback time, mean"]]) - data['HETR'][r, :]
+                SR_all[r, :] = np.where(SR < 0.0, 0.0, SR)
+
             changes_in_shares_prem_repl = shares_change_premature(
                 dt=dt,
                 regions=regions,
-                shares_dt=data_dt["HEWS"],          # Shares at previous t
-                costs_marg=data_dt["HGC2"],         # Marginal costs (HGC2)
-                costs_marg_sd=data_dt["HGD2"],      # SD Marginal costs (HGD2)
-                costs_payb=data_dt["HGC3"],         # Payback costs (HGC3)
-                costs_payb_sd=data_dt["HGD3"],      # SD Payback costs (HGD3)
-                subst=data["HEWA"] * SR_all[:, :, np.newaxis],  # Substitution turnover rates
-                reg_constr=reg_constr,              # Regulation constraint
-                num_regions=num_regions,            # Number of regions
-                num_techs=num_techs,                # Number of technologies
+                shares_dt=data_dt["HEWS"][:, :, np.newaxis],
+                costs_marg=data_dt["HGC2"][:, :, np.newaxis],
+                costs_marg_sd=data_dt["HGD2"][:, :, np.newaxis],
+                costs_payb=data_dt["HGC3"][:, :, np.newaxis],
+                costs_payb_sd=data_dt["HGD3"][:, :, np.newaxis],
+                subst=data["HEWA"] * SR_all[:, :, np.newaxis],
+                reg_constr=reg_constr,
+                num_regions=num_regions,
+                num_techs=num_techs,
             )
 
-            # Calculate endogenous market shares from both changes
-            endo_shares = data_dt['HEWS'][:, :, 0] + change_in_shares + changes_in_shares_prem_repl
-            endo_gen = endo_shares * rhudt[:, 0]
+            endo_shares = data_dt['HEWS'] + change_in_shares + changes_in_shares_prem_repl
+            endo_gen = endo_shares * rhudt[:, 0, 0][:, np.newaxis]
 
-            
-            #################### Regulatory policies #################
-         
-            # Change in generation from exogenous sales, capped at maximum sales
             dgen_exog_sales = exogenous_sales(
-                data['HWSA'][regions, :, 0] * rhudt[regions, 0, 0][:, None],
-                rhudt[regions, 0, 0], endo_gen[regions],
-                data['HREG'][regions, :, 0] * rhudt[regions, 0, 0][:, None], 
-                no_it, data['BHTC'][regions, :, c4ti['5 Lifetime']]
+                data['HWSA'][regions, :] * rhudt[regions, 0, 0][:, None],
+                rhudt[regions, 0, 0],
+                endo_gen[regions],
+                data['HREG'][regions, :] * rhudt[regions, 0, 0][:, None],
+                no_it,
+                data['BHTC'][regions, :, c4ti['5 Lifetime']]
             )
-            
-            # Correction for regulation when demand is growing; main effect in shares equation
+
             dgen_reg_corr = regulation_correction(
                 endo_gen[regions], endo_shares[regions], rhudlt[regions, 0], reg_constr[regions])
-            
-            # New generation and shares
+
             new_generation = endo_gen[regions] + dgen_exog_sales + dgen_reg_corr
-            total_generation = np.sum(new_generation, axis=1)           
-            data['HEWS'][regions, :, 0] = divide(new_generation, total_generation[:, None])
+            total_generation = np.sum(new_generation, axis=1)
+            data['HEWS'][regions, :] = divide(new_generation, total_generation[:, None])
 
-            # Raise error if any values are negative or market shares do not sum to 1
-            check_market_shares(data['HEWS'], titles, sector, year)
+            check_market_shares(data['HEWS'][:, :, np.newaxis], titles, sector, year)
 
-            ############## Update variables ##################
-            
-            data['HEWG'][:, :, 0] = data['HEWS'][:, :, 0] * rhudt[:, 0, 0, np.newaxis]
-            
-            #Capacity (GW) (13th are capacity factors (MWh/kW=GWh/MW, therefore /1000)
-            data['HEWK'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                    data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
+            data['HEWG'][:, :] = data['HEWS'][:, :] * rhudt[:, 0, 0][:, np.newaxis]
+            data['HEWK'][:, :] = divide(data['HEWG'][:, :],
+                                        data['BHTC'][:, :, c4ti["13 Capacity factor mean"]]) / 1000
 
-            # New additions (HEWI)
-            data['HEWI'], hewi_t = get_sales(
-                  data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
-                  data["HEWI"], data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
-                  dt
-                  )
+            hewi_3d, hewi_t = get_sales(
+                data['HEWK'][:, :, np.newaxis],
+                data_dt['HEWK'][:, :, np.newaxis],
+                time_lag['HEWK'],
+                data['HEWI'][:, :, np.newaxis],
+                data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
+                dt
+            )
+            data['HEWI'][:, :] = hewi_3d[:, :, 0]
 
-            # Seed heat pumps in regions with low adoption (first five years simulation)
-            data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, histend['HEWF'])
+            hewi_3d, hewi_t, hewk_3d = implement_seeding(
+                data['HEWK'][:, :, np.newaxis],
+                data['HEWI'][:, :, np.newaxis],
+                hewi_t,
+                year,
+                GREEN_INDICES_HP,
+                histend['HEWF']
+            )
+            data['HEWI'][:, :] = hewi_3d[:, :, 0]
+            data['HEWK'][:, :] = hewk_3d[:, :, 0]
 
-            # Change capacity and sales after mandate (only runs if hp mandate != 0)
-            data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["HP mandate"])
-            
-            # Calculate HEWG, HEWS and HEWF after mandates  
-            
-            # Useful heat by boiler
-            data['HEWG'][:, :, 0] = data['HEWK'][:, :, 0] * data['BHTC'][:, :, c4ti["13 Capacity factor mean"]] * 1000
-            
-            data['HEWS'][:, :, 0] = data['HEWG'][:, :, 0] / np.sum(data['HEWG'][:, :, 0], axis=1)[:, None]
+            hewi_3d, hewi_t, hewk_3d = implement_mandate(
+                data['HEWK'][:, :, np.newaxis],
+                data['HEWI'][:, :, np.newaxis],
+                hewi_t,
+                year,
+                GREEN_INDICES_HP,
+                data["HP mandate"]
+            )
+            data['HEWI'][:, :] = hewi_3d[:, :, 0]
+            data['HEWK'][:, :] = hewk_3d[:, :, 0]
 
-            # Final energy by boiler
-            data['HEWF'][:, :, 0] = divide(data['HEWG'][:, :, 0],
-                                             data['BHTC'][:, :, c4ti["9 Conversion efficiency"]])
-            
-            # Emissions
-            data['HEWE'][:, :, 0] = data['HEWF'][:, :, 0] * data['BHTC'][:, :, c4ti["15 Emission factor"]]/1e6
-            
-            
-            # Map fuel prices to heating technologies
-            # HFFC indices: 0=hard coal, 4=heavy fuel oil, 6=other gas, 7=natural gas,
-            #               8=electricity, 10=combustible waste/biomass
-            data['HEWP'][:, 0, 0] = data['HFFC'][:, 4, 0]   # Oil boiler -> heavy fuel oil
-            data['HEWP'][:, 1, 0] = data['HFFC'][:, 4, 0]   # Oil condensing -> heavy fuel oil
-            data['HEWP'][:, 2, 0] = data['HFFC'][:, 6, 0]   # Gas boiler -> other gas
-            data['HEWP'][:, 3, 0] = data['HFFC'][:, 6, 0]   # Gas condensing -> other gas
-            data['HEWP'][:, 4, 0] = data['HFFC'][:, 10, 0]  # Wood stove -> biomass
-            data['HEWP'][:, 5, 0] = data['HFFC'][:, 10, 0]  # Wood boiler -> biomass
-            data['HEWP'][:, 6, 0] = data['HFFC'][:, 0, 0]   # Coal -> hard coal
-            data['HEWP'][:, 7, 0] = data['HFFC'][:, 8, 0]   # District heat -> electricity (proxy)
-            data['HEWP'][:, 8, 0] = data['HFFC'][:, 8, 0]   # Electric heating -> electricity
-            data['HEWP'][:, 9, 0] = data['HFFC'][:, 8, 0]   # Heat pump ground -> electricity
-            data['HEWP'][:, 10, 0] = data['HFFC'][:, 8, 0]  # Heat pump air-water -> electricity
-            data['HEWP'][:, 11, 0] = data['HFFC'][:, 8, 0]  # Heat pump air-air -> electricity
+            data['HEWG'][:, :] = data['HEWK'][:, :] * data['BHTC'][:, :, c4ti["13 Capacity factor mean"]] * 1000
+            data['HEWS'][:, :] = data['HEWG'][:, :] / np.sum(data['HEWG'][:, :], axis=1)[:, None]
+            data['HEWF'][:, :] = divide(data['HEWG'][:, :],
+                                        data['BHTC'][:, :, c4ti["9 Conversion efficiency"]])
+            data['HEWE'][:, :] = data['HEWF'][:, :] * data['BHTC'][:, :, c4ti["15 Emission factor"]] / 1e6
 
-            # Final energy demand for heating purposes
-            data['HJHF'][:, :, 0] = np.matmul(data['HEWF'][:, :, 0], data['HJET'][0, :, :])
+            data['HEWP'][:, 0] = data['HFFC'][:, 4]
+            data['HEWP'][:, 1] = data['HFFC'][:, 4]
+            data['HEWP'][:, 2] = data['HFFC'][:, 6]
+            data['HEWP'][:, 3] = data['HFFC'][:, 6]
+            data['HEWP'][:, 4] = data['HFFC'][:, 10]
+            data['HEWP'][:, 5] = data['HFFC'][:, 10]
+            data['HEWP'][:, 6] = data['HFFC'][:, 0]
+            data['HEWP'][:, 7] = data['HFFC'][:, 8]
+            data['HEWP'][:, 8] = data['HFFC'][:, 8]
+            data['HEWP'][:, 9] = data['HFFC'][:, 8]
+            data['HEWP'][:, 10] = data['HFFC'][:, 8]
+            data['HEWP'][:, 11] = data['HFFC'][:, 8]
 
+            data['HJHF'][:, :] = np.matmul(data['HEWF'][:, :], data['HJET'][0, :, :])
 
-            ############## Learning-by-doing ##################
-
-            # Cumulative global learning
-            # Using a technological spill-over matrix (HEWB) together with capacity
-            # additions (HEWI) we can estimate total global spillover of similar
-            # technologies
-            bi = np.zeros((num_regions,num_techs))
+            bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
-                bi[r,:] = np.matmul(data['HEWB'][0, :, :],hewi_t[r, :, 0])
+                bi[r, :] = np.matmul(data['HEWB'][0, :, :], hewi_t[r, :, 0])
             dw = np.sum(bi, axis=0)
 
-            # Cumulative capacity incl. learning spill-over effects
-            data['HEWW'][0, :, 0] = data_dt['HEWW'][0, :, 0] + dw
-
-            # Copy over the technology cost categories that do not change (all except prices which are updated through learning-by-doing below)
+            data['HEWW'][0, :] = data_dt['HEWW'][0, :] + dw
             data['BHTC'] = np.copy(data_dt['BHTC'])
 
-            # Learning-by-doing effects on investment and efficiency
             for b in range(num_techs):
-
-                if data['HEWW'][0, b, 0] > 0.0001:
-
+                if data['HEWW'][0, b] > 0.0001:
                     data['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/kW)']] = (
-                            data_dt['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/kW)']]  
-                            * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b, 0]))
+                        data_dt['BHTC'][:, b, c4ti['1 Inv cost mean (EUR/kW)']]
+                        * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b]))
                     data['BHTC'][:, b, c4ti['2 Inv Cost SD']] = (
-                            data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']] 
-                            * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b, 0]))
+                        data_dt['BHTC'][:, b, c4ti['2 Inv Cost SD']]
+                        * (1.0 + data['BHTC'][:, b, c4ti['7 Investment LR']] * dw[b] / data['HEWW'][0, b]))
                     data['BHTC'][:, b, c4ti['9 Conversion efficiency']] = (
-                            data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']]
-                            * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b]/data['HEWW'][0, b, 0]))
+                        data_dt['BHTC'][:, b, c4ti['9 Conversion efficiency']]
+                        * 1.0 / (1.0 + data['BHTC'][:, b, c4ti['20 Efficiency LR']] * dw[b] / data['HEWW'][0, b]))
 
+            data["HWIC"][:, :] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
+            data["HEFF"][:, :] = data["BHTC"][:, :, c4ti['9 Conversion efficiency']]
 
-            # Save investment cost for front end
-            data["HWIC"][:, :, 0] = data["BHTC"][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
-            # Save efficiency for front end
-            data["HEFF"][:, :, 0] = data["BHTC"][:, :, c4ti['9 Conversion efficiency']]
-
-            # Calculate levelised cost again
             carbon_costs = set_carbon_tax(data, c4ti)
             data = get_lcoh(data, titles, carbon_costs)
 
-
-            # Store heat variables that have changed in data_dt
             for var in vars_to_copy:
-                data_dt[var] = np.copy(data[var])
+                if var in squeezed_keys:
+                    data_dt[var] = np.copy(data[var])
+                else:
+                    data_dt[var] = np.copy(data[var])
 
-        # Total investment in new capacity
-        data['HWIY'][:,:,0] = (data['HEWI'][:,:,0] * data['BHTC'][:,:, c4ti['1 Inv cost mean (EUR/kW)']]
-                           / data['PRSC14'][:, 0, 0, np.newaxis] )
+        data['HWIY'][:, :] = (data['HEWI'][:, :] * data['BHTC'][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
+                              / data['PRSC14'][:, 0][:, np.newaxis])
 
         if year == 2050 and t == no_it:
-            print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12, 0])/10**6:.3f} M GWh")
-            
+            print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12]) / 10**6:.3f} M GWh")
+
+    # Restore singleton 3rd axis for compatibility with the rest of the model.
+    for var in squeezed_keys:
+        if hasattr(data[var], 'ndim') and data[var].ndim == 2:
+            data[var] = data[var][:, :, np.newaxis]
+
     return data
