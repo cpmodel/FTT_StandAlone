@@ -7,7 +7,7 @@ from queue import Queue
 from .shared import shared_layout
 from .state import state
 
-from SourceCode.support.data_loading import get_valid_ftt_models
+from ftt_source.support.data_loading import get_valid_ftt_models
 
 def render_run_page():
     # Add shared layout (header, footer, etc.)
