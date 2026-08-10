@@ -216,20 +216,32 @@ def TOU_price_feedback(data, time_lag):
 
     return data
 
-def fuel_cost_with_TOU(fuel_cost, model_tou_discount):
+def fuel_cost_with_TOU(fuel_cost, model, tou_discount=None):
     
     elec_map = pd.read_csv(
         os.path.join("Utilities", "mappings", "Electricity_cost_mapping.csv"),
         index_col=0
     )
     
-    # Apply to all electricity cost variables already in the system
-    for model in elec_map.index:
-        elec_index = [
-            int(x) for x in elec_map.loc[model, "Electricity_index"].split(",")
-        ]
+    if model not in elec_map.index:
+        return fuel_cost
 
-    fuel_cost[:, elec_index] *= model_tou_discount
-    # apply TOU tariff uptake discount to lagged-updated cost
+    elec_index = [
+        int(x) for x in elec_map.loc[model, "Electricity_index"].split(",")
+    ]
+
+    # If TOU discounts are unavailable, keep baseline fuel costs unchanged.
+    if tou_discount is None:
+        return fuel_cost
+
+    # Apply a multiplicative reduction factor: (1 - discount share).
+    discount = np.asarray(tou_discount)
+    if discount.ndim == 3:
+        discount = discount[:, 0, 0]
+    elif discount.ndim == 2:
+        discount = discount[:, 0]
+
+    discount_factor = np.clip(1.0 - discount, 0.0, 1.0)
+    fuel_cost[:, elec_index] *= discount_factor[:, np.newaxis]
 
     return fuel_cost

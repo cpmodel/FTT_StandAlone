@@ -124,7 +124,8 @@ def get_lcoh(data, titles, carbon_costs):
     
     # Fuel costs and carbon costs
     fuel_costs_before = bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']]
-    fuel_costs = fuel_cost_with_TOU(fuel_costs_before, 'FTT-H')
+    tou_discount = data.get('TOU discount')
+    fuel_costs = fuel_cost_with_TOU(fuel_costs_before, 'FTT-H', tou_discount)
     ft = get_cost_component(fuel_costs * data['HEWP'][:, :, 0], conv_ce, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
