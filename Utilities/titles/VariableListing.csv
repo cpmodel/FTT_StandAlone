@@ -57,12 +57,14 @@ MLB1,Normalised residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MLB0,Cumulative residual load band heights (-),%,RTI,LBTI,NA,TIME,FTT-P,,,2001,
 MKLB,Capacity by load band,GW,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,
 FRET,Energy supply,ktoe,RTI,FUTI,NA,TIME,FTT-P,-,-,2010,
+LAT,Latitude of region centroid,degrees,RTI,NA,NA,NA,FTT-P,-,-,-,Y
+RLDCMAP,RLDC region mapping index (0-7),int,RTI,NA,NA,NA,FTT-P,-,-,-,Y
 MJET,FTT:Power technology to fuel use conversion matrix excl CCS,na,NA,T2TI,JTI,NA,FTT-P,-,-,2001,Y
 MJEP,FTT:Power marginal cost of fuels,$2013/MWh,RTI,JTI,NA,TIME,FTT-P,-,-,2001,
 MJEF,FTT-P Final energy consumption (ktoe),ktoe,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
 MJCO,FTT:Power fuel use that produces emissions incl CCS,ktoe,RTI,JTI,NA,TIME,FTT-P,-,-,2001,
 MGLB,Generation by load band,GWh,RTI,LBTI,NA,TIME,FTT-P,-,-,2001,
-MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,-,2001,Y
+MEWW,FTT-P Cumulative global capacity (GW),GW,NA,T2TI,NA,TIME,FTT-P,-,2013,2001,Y
 MEWT,FTT-P Upfront subsidies (%),%,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
 MEWS,FTT:Power shares of capacity by tech,na,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,
 MEWR,FTT-P regulations on capacity,GW,RTI,T2TI,NA,TIME,FTT-P,-,-,2001,Y

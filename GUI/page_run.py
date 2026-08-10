@@ -152,7 +152,7 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
         config.write(configfile)
     
     # Import RunFTT only when needed (lazy loading for faster GUI startup)
-    from SourceCode.model_class import RunFTT
+    from ftt_source.model_class import RunFTT
     
     # Create model with callbacks
     model = RunFTT(progress_callback=progress_callback, log_callback=log_callback)
