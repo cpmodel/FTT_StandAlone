@@ -11,6 +11,8 @@ import os
 import pandas as pd
 
 
+from ftt_source.paths import get_utilities_path
+
 
 def electricity_demand_feedback(data, data_baseline, y, titles, units):
     """
@@ -21,11 +23,9 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
     elec_index = jti.index("8 Electricity")
     
     # Electricity mapping for each model
-    elec_map = pd.read_csv(os.path.join('Utilities', 'mappings',
-                                        "Electricity_demand_mapping.csv"),
-                           index_col=0)
-    unit_conversion = pd.read_csv(os.path.join('Utilities', 'mappings', "Energy_unit_conversions.csv"),
-                                  index_col=0)
+    mappings_dir = get_utilities_path() / 'mappings'
+    elec_map = pd.read_csv(mappings_dir / "Electricity_demand_mapping.csv", index_col=0)
+    unit_conversion = pd.read_csv(mappings_dir / "Energy_unit_conversions.csv", index_col=0)
     demand_unit = units["MEWD"]
     for model in elec_map.index:
     

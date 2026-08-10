@@ -5,14 +5,12 @@ Creates an electricity price feedback from the power sector into other sectors.
 This was developed for the REFEREE and EEIST II projects.
 
 """
-# Standard library imports
-import os
-
 # Third party imports
 import pandas as pd
 import numpy as np
 
 from ftt_source.support.divide import divide
+from ftt_source.paths import get_utilities_path
 
 def electricity_price_feedback(data, time_lag):
     """    
@@ -25,8 +23,8 @@ def electricity_price_feedback(data, time_lag):
 
 
     # Electricity mapping for each sector (find indices of cost matrix column and technology indices)
-    elec_map = pd.read_csv(os.path.join('Utilities', 'mappings', "Electricity_cost_mapping.csv"),
-                           index_col=0)
+    elec_map_path = get_utilities_path() / 'mappings' / 'Electricity_cost_mapping.csv'
+    elec_map = pd.read_csv(elec_map_path, index_col=0)
     
     # Update each fuel cost variable
     for model in elec_map.index:
