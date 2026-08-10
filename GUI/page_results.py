@@ -53,13 +53,18 @@ def render_results_page():
                                 # Get available pickle files from engine (dict: display_name -> filename)
                                 pickle_files_map = engine.get_available_pickle_files()
                                 pickle_display_names = list(pickle_files_map.keys())
+                                latest_pickle_file = engine.get_latest_pickle_file()
+                                initial_result_files = state.selected_result_files
+                                if latest_pickle_file and not initial_result_files:
+                                    initial_result_files = [latest_pickle_file]
+                                    state.selected_result_files = initial_result_files
                                 
                                 with ui.column().classes('w-[calc(50vw-8rem)] overflow-auto items-center'):                                    
                                     file_picker = ui.select(
                                         options=pickle_display_names,
                                         label='Available Files',
                                         multiple=True,
-                                        value=state.selected_result_files,
+                                        value=initial_result_files,
                                         with_input=True,
                                         on_change=lambda e: load_pickles()
                                     ).classes('w-full overflow-hidden').props('dense use-chips')
@@ -135,8 +140,11 @@ def render_results_page():
                                         for models_tuple, scen_list in sorted(
                                             models_by_scenario.items(), key=lambda x: (-len(x[0]), x[0])
                                         ):
+                                            # shorten long scenario lists for display if too many
+                                            if len(scen_list) > 3:
+                                                scen_list = scen_list[:3] + ['...']
                                             if models_tuple:
-                                                with ui.row().classes('w-full h-full gap-2 items-center'):
+                                                with ui.row().classes('w-full h-full gap-2 overflow-auto'):
                                                     for model in models_tuple:
                                                         color = model_colors.get(model, 'gray')
                                                         ui.badge(model).props(f'color={color}').classes('text-sm')
@@ -145,7 +153,7 @@ def render_results_page():
                                                 ui.badge('No models').props('color=red').classes('text-sm')
                             
                                 # Models run display
-                                models_container = ui.column().classes('w-full overflow-y-auto gap-2 px-1 py-2 max-h-48')
+                                models_container = ui.column().classes('w-[calc(50vw-8rem)] overflow-y-auto gap-2 px-1 py-2 max-h-48')
 
                             # Right side: Scenario section
                             with ui.column().classes('flex-1 items-start overflow-y-auto'):
@@ -319,7 +327,6 @@ def render_results_page():
             state.dim_selection_cache = {}
         if not hasattr(state, 'dim_aggregate_cache'):
             state.dim_aggregate_cache = {}
-
         # Reset position-based selections before rebuilding them for this variable.
         state.dim_selections = [{} for _ in range(4)]
         state.dim_aggregate = [False, False, False, False]
@@ -395,16 +402,14 @@ def render_results_page():
                         dim_select.value = [dim_values[0]]
                     state.dim_selections[i][selection_key] = list(dim_select.value or [])
 
-                    def make_select_handler(idx, dim_key):
+                    def make_select_handler(idx, dim_key, all_checkbox, vals):
                         def handler(e):
                             selected_values = list(e.sender.value or [])
                             state.dim_selections[idx][f'dim{idx}_values'] = selected_values
                             state.dim_selection_cache[dim_key] = selected_values
+                            all_checkbox.value = bool(vals) and set(selected_values) == set(vals)
                             update_plot()
                         return handler
-
-                    dim_select.on_value_change(make_select_handler(i, dim_name))
-
                     # Checkboxes (Select All and Sum)
                     with ui.row().classes('w-full gap-4'):
                         # Select All checkbox
@@ -413,16 +418,18 @@ def render_results_page():
                         def make_select_all_handler(idx, dim_key, selector, vals):
                             def handler(e):
                                 selected_values = list(vals) if e.value else []
-                                if e.value:
-                                    selector.value = selected_values
-                                else:
-                                    selector.value = selected_values
+                                selector.value = selected_values
+                                state.dim_selections[idx][f'dim{idx}_values'] = selected_values
+                                state.dim_selection_cache[dim_key] = selected_values
+                                update_plot()
                                 state.dim_selections[idx][f'dim{idx}_values'] = selected_values
                                 state.dim_selection_cache[dim_key] = selected_values
                                 update_plot()
                             return handler
 
                         select_all.on_value_change(make_select_all_handler(i, dim_name, dim_select, dim_values))
+                        select_all.on_value_change(make_select_all_handler(i, dim_name, dim_select, dim_values))
+                        dim_select.on_value_change(make_select_handler(i, dim_name, select_all, dim_values))
 
                         # Aggregate checkbox
                         agg_check = ui.checkbox('Sum').props('dense')

@@ -19,4 +19,7 @@
 !Smart meter uptake.csv
 !*mandate.csv
 !S0/*/coal phaseout.csv
-!S0/*/CO2tax**.csv!REPPX.csv
+!S0/*/CO2tax**.csv
+!REPPX.csv
+!LAT.csv
+!RLDCMAP.csv

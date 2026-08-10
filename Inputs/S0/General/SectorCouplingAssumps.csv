@@ -1,4 +1,4 @@
-,Mean
+SCA,Mean
 Utilisation rate,0.5
 Yearly decay,0.98
 Starting degradation,0.74
@@ -8,8 +8,9 @@ V2G available fraction,0.24
 V2G participation rate,0.4
 Battery learning exponent,-0.412
 V2G interaction,1
-Dummy,
-Dummy,
-Dummy,
-Dummy,
-Dummy,
+Dummy,0.0
+Dummy,0.0
+Dummy,0.0
+Dummy,0.0
+Dummy,0.0
+Dummy,0.0
