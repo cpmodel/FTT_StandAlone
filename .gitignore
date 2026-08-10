@@ -12,3 +12,4 @@ SourceCode/.DS_Store
 .venv
 *.egg-info/
 build/
+dist/
