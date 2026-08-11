@@ -331,6 +331,12 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
             for col in value_col_headers
             if col.lstrip('-').isdigit() and int(col) in tl_idx and int(col) in expected_years
         }
+        if len(col_to_idx) == 0 and value_col_headers:
+            warnings.warn(
+                f"Time variable '{var}' has no recognized year columns in its input file. "
+                f"Found headers: {list(value_col_headers)}. "
+                f"Expected years between {var_start} and {timeline[-1]}."
+            )
     elif wide_axis is not None:
         wide_dim = variable_dims[wide_axis]
         if wide_dim not in idx_maps:
