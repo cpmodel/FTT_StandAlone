@@ -236,6 +236,9 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         data['MEWK'] = divide(data['MEWG'], data['MEWL']) / 8766
         # Safe divide to avoid inf when capacity sum is zero
         data['MEWS'] = np.divide(data['MEWK'], data['MEWK'].sum(axis=1, keepdims=True))
+        
+        data['MEWG share'] = divide(data['MEWG'], np.sum(data['MEWG'], axis=1, keepdims=True))
+
 
         # Compute early scrapping costs
         # TODO: check it makes sense. It does not seem to be used elsewhere
