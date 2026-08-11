@@ -13,6 +13,9 @@ Functions included:
 """
 
 import numpy as np
+from ftt_source.sector_coupling.electricity_price import fuel_cost_with_TOU
+
+
 
 def set_carbon_tax(data, c6ti):
     '''
@@ -183,7 +186,13 @@ def get_lcof(data, titles, carbon_costs, year):
     RZCOt = get_cost_elem(bztc[:, :, c6ti['12 CO2 emissions (gCO2/km)']] * data['RZCO'][:, 0], 1, bt_mask)
     # Registration taxes, ZTVT is vehicle tax or subsidy (in percentage)
     ItVT = get_cost_elem(It[:, :, 0] * data['ZTVT'][:, :, 0], 1, bt_mask)
-    Ft = get_cost_elem(bztc[:, :, c6ti['3 fuel cost (USD/km)']], 1, lt_mask)
+    
+    # Fuel costs
+    fuel_costs_before = bztc[:, :, c6ti['3 fuel cost (USD/km)']]
+    tou_discount = data.get('TOU discount')
+    fuel_costs = fuel_cost_with_TOU(fuel_costs_before, 'FTT-Fr', tou_discount)
+    
+    Ft = get_cost_elem(fuel_costs, 1, lt_mask)
     dFt = get_cost_elem(bztc[:, :, c6ti['4 std fuel cost']], 1, lt_mask)
     ct = get_cost_elem(carbon_costs, 1, lt_mask)
     # fuel tax/subsidies

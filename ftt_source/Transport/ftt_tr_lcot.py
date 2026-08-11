@@ -23,6 +23,8 @@ ns = number of seats
         
 """
 import numpy as np
+from ftt_source.sector_coupling.electricity_price import fuel_cost_with_TOU
+
 
 
 def set_carbon_tax(data, c3ti, year):
@@ -123,7 +125,12 @@ def get_lcot(data, titles, carbon_costs, year):
                              * conv_full[:, :, 0]
                              + data["Base registration rate"][:, :, 0] * it[:, :, 0]
                             ), 1, bt_mask)
-    ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
+    
+    # Fuel costs and carbon costs
+    fuel_costs_before = bttc[:, :, c3ti['3 fuel cost (USD/km)']]
+    tou_discount = data.get('TOU discount')
+    fuel_costs = fuel_cost_with_TOU(fuel_costs_before, 'FTT-Tr', tou_discount)
+    ft = get_cost_elem(fuel_costs, conv_pkm, lt_mask)
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
     ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
     # Fuel tax costs
