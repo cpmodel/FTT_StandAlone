@@ -189,7 +189,7 @@ def get_lcof(data, titles, carbon_costs, year):
     
     # Fuel costs
     fuel_costs_before = bztc[:, :, c6ti['3 fuel cost (USD/km)']]
-    tou_discount = data.get('TOU discount')
+    tou_discount = data.get('TOU discount') # TODO: ensure that this is either computed earlier, or time_lag is available
     fuel_costs = fuel_cost_with_TOU(fuel_costs_before, 'FTT-Fr', tou_discount)
     
     Ft = get_cost_elem(fuel_costs, 1, lt_mask)
