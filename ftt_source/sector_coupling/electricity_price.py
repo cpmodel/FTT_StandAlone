@@ -155,7 +155,6 @@ def TOU_uptake_feedback(data, time_lag):
     """
     Minimal logistic TOU diffusion model.
 
-    No calibration parameters:
     - smart meters = carrying capacity
     - VRE = speed modifier
     - lambda fixed by diffusion timescale
@@ -169,7 +168,7 @@ def TOU_uptake_feedback(data, time_lag):
     # fixed diffusion timescale (doubling ~12 years)
     lam = np.log(2) / 12.0
 
-    # VRE effect (bounded multiplier, no extra parameters)
+    # VRE effect (bounded multiplier)
     r_eff = lam * vre
 
     du = r_eff[:, None, None] * u * (1.0 - u / sm)
