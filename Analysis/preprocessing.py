@@ -24,8 +24,8 @@ def define_path():
     # Change the current working directory to the project root
     os.chdir(project_root_absolute_path)
     
-    # # Add the SourceCode directory to Python's search path
-    # source_code_path = os.path.join(project_root_absolute_path, 'SourceCode')
+    # # Add the ftt_source directory to Python's search path
+    # source_code_path = os.path.join(project_root_absolute_path, 'ftt_source')
     # sys.path.append(source_code_path)
     
     return project_root_absolute_path
@@ -41,14 +41,14 @@ def get_metadata():
     
     # Attempt to import
     try:
-        from SourceCode.support.titles_functions import load_titles
+        from ftt_source.support.titles_functions import load_titles
         print("Import successful")
     except ModuleNotFoundError as e:
         # Troubleshooting: Use an absolute path
         additional_paths = [
-            r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\FTT_StandAlone\SourceCode",
-            r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone_laptop_repos\FTT_StandAlone\SourceCode",
-            r"C:\Users\Work profile\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\SourceCode"
+            r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\FTT_StandAlone\ftt_source",
+            r"C:\Users\fjmn202\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone_laptop_repos\FTT_StandAlone\ftt_source",
+            r"C:\Users\Work profile\OneDrive - University of Exeter\Documents\GitHub\FTT_StandAlone\ftt_source"
         ]
         for path in additional_paths:
             if path not in sys.path:
