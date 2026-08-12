@@ -306,6 +306,15 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
     if not value_col_headers:
         return  # nothing to fill
 
+    expected_coord_headers = [dim_name for _, dim_name in coord_axes_info]
+    if list(coord_col_headers) != expected_coord_headers:
+        warnings.warn(
+            f"Variable '{var}': coordinate column headers {list(coord_col_headers)} "
+            f"do not match expected headers {expected_coord_headers}. "
+            "The file's columns may not match its variable's schema; "
+            "rows will likely fail to match and be skipped."
+        )
+
     # --- Build index maps: str(label) → array index for each coord dimension ---
     idx_maps = {}
     idx_maps_casefold = {}
@@ -391,7 +400,9 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
         col_indices = None  # scalar
 
     # --- Fill target array row by row ---
-    for row_i in range(coord_np.shape[0]):
+    n_rows = coord_np.shape[0]
+    n_matched_rows = 0
+    for row_i in range(n_rows):
         # Resolve coordinate labels → array indices.
         base_coords = [0, 0, 0, 0]
         valid = True
@@ -411,6 +422,8 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
         if not valid:
             continue
 
+        n_matched_rows += 1
+
         if wide_axis is None:
             # Scalar variable: assign the single 'value' column.
             target[tuple(base_coords)] = value_np[row_i, 0]
@@ -423,6 +436,37 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
                 coords = base_coords.copy()
                 coords[wide_axis] = w_idx
                 target[tuple(coords)] = row_vals[col_j]
+
+    # --- Warn if coordinate labels or wide columns mostly/entirely failed to match ---
+    if n_rows > 0 and n_matched_rows == 0:
+        warnings.warn(
+            f"Variable '{var}': none of the {n_rows} row(s) in the input file matched "
+            f"the expected classification labels for {[d for _, d in coord_axes_info]}. "
+            "The file is likely in the wrong format (wrong columns/labels) — "
+            "all values for this variable will remain zero."
+        )
+    elif n_rows > 0 and n_matched_rows < n_rows:
+        warnings.warn(
+            f"Variable '{var}': only {n_matched_rows} of {n_rows} row(s) matched the "
+            "expected classification labels; the rest were skipped. Check the input "
+            "file's coordinate columns against classification_titles.csv."
+        )
+
+    if wide_axis is not None and not is_time and col_indices is not None:
+        n_matched_cols = sum(1 for w_idx in col_indices if w_idx is not None)
+        if len(col_indices) > 0 and n_matched_cols == 0:
+            warnings.warn(
+                f"Variable '{var}': none of the value column headers "
+                f"{list(value_col_headers)} matched the expected labels for "
+                f"'{variable_dims[wide_axis]}'. The file is likely in the wrong "
+                "format — all values for this variable will remain zero."
+            )
+        elif n_matched_cols < len(col_indices):
+            warnings.warn(
+                f"Variable '{var}': only {n_matched_cols} of {len(col_indices)} value "
+                f"column header(s) {list(value_col_headers)} matched the expected "
+                f"labels for '{variable_dims[wide_axis]}'."
+            )
 
 def get_valid_ftt_models():
     """Return a list of valid FTT module names by checking the Models short 
