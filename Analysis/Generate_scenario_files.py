@@ -150,9 +150,9 @@ def policy_change(df, policy):
         case "MEWT half":           # Subsidize all renewables
             _apply_rows_per_country(slice(12, 22), slice(25, None), -0.15)
         case "Coal phase-out":
-            _apply_rows_per_country(0, 1, 1)       # The coal phase-out is coded as a function; this switch turns it on 
+            _apply_rows_per_country(0, 0, 1)       # The coal phase-out is coded as a function; this switch turns it on 
         case "Coal phase-out half":
-            _apply_rows_per_country(0, 1, 0.5)       # TODO code the phase-out so it can be halved!
+            _apply_rows_per_country(0, 0, 0.5)       # TODO code the phase-out so it can be halved!
       
         
         # Transport policies
