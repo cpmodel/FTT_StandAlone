@@ -3,6 +3,7 @@ import pickle
 import configparser
 from pathlib import Path
 from queue import Queue
+from threading import Event
 
 from .shared import shared_layout
 from .state import state
@@ -40,8 +41,10 @@ def render_run_page():
                                                             lambda value: len(str(value)) > 0})
 
                 ui.separator().classes('my-4')
-                with ui.row().classes('w-full justify-center'):
+                with ui.row().classes('w-full justify-center gap-4'):
                     run_btn = ui.button('Run', on_click=lambda: start_run()).classes('w-30 h-14 text-lg')
+                    stop_btn = ui.button('Stop', on_click=lambda: request_stop(), color='red').classes('w-30 h-14 text-lg')
+                    stop_btn.disable()
 
         # Right col (1/3 width)
         with ui.column().classes('w-1/3'):
@@ -57,6 +60,18 @@ def render_run_page():
     progress_queue = Queue()
     log_queue = Queue()
     update_timer = None
+    stop_event = None
+
+    def set_inputs_enabled(enabled):
+        inputs = [model_select, scenario_select, horizon, output_name]
+        for input_element in inputs:
+            input_element.enable() if enabled else input_element.disable()
+
+    def request_stop():
+        if stop_event and state.is_running:
+            stop_event.set()
+            stop_btn.disable()
+            log_console.push("Stop requested. Waiting for the current safe checkpoint...")
     
     async def update_from_queues():
         """Pull updates from queues and update UI"""
@@ -73,11 +88,14 @@ def render_run_page():
             log_console.push(message)
     
     async def start_run():
-        nonlocal update_timer
+        nonlocal update_timer, stop_event
         
         # Disable run button and set running state (disables navigation buttons)
         run_btn.disable()
+        stop_btn.enable()
+        set_inputs_enabled(False)
         state.is_running = True
+        stop_event = Event()
         progress_bar.set_value(0)
         log_console.clear()
         
@@ -99,7 +117,7 @@ def render_run_page():
             log_console.push("-" * 40)
             
             await run.io_bound(execute_model, models_value, end_year_value,
-                                scenarios_value, output_value, progress_queue, log_queue)
+                                scenarios_value, output_value, progress_queue, log_queue, stop_event)
             
             progress_bar.set_value(1.0)
             log_console.push("-" * 40)
@@ -109,8 +127,12 @@ def render_run_page():
         except Exception as e:
             await update_from_queues()  # flush any pending log messages first
             log_console.push("-" * 40)
-            log_console.push(f"CRITICAL ERROR: {str(e)}")
-            ui.notify('Error', type='negative')
+            if str(e) == "Run cancelled by user":
+                log_console.push("Run cancelled by user.")
+                ui.notify('Run cancelled', type='warning')
+            else:
+                log_console.push(f"CRITICAL ERROR: {str(e)}")
+                ui.notify('Error', type='negative')
         finally:
             # Stop the update timer
             if update_timer:
@@ -118,9 +140,12 @@ def render_run_page():
             # Final update to clear queues
             await update_from_queues()
             run_btn.enable()
+            stop_btn.disable()
+            set_inputs_enabled(True)
             state.is_running = False
+            stop_event = None
 
-def execute_model(models, end_year, scenarios, output_name, progress_queue, log_queue):
+def execute_model(models, end_year, scenarios, output_name, progress_queue, log_queue, stop_event):
     """
     Function to update settings.ini with front end selections,
     call model run, and write output to pickle file.
@@ -141,6 +166,10 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
     def log_callback(message):
         """Called by model to report log messages"""
         log_queue.put(message)
+
+    def stop_callback():
+        """Called by model to check whether the user requested cancellation."""
+        return stop_event.is_set()
     
     config = configparser.ConfigParser()
     config.read('settings.ini')
@@ -155,7 +184,8 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
     from ftt_source.model_class import RunFTT
     
     # Create model with callbacks
-    model = RunFTT(progress_callback=progress_callback, log_callback=log_callback)
+    model = RunFTT(progress_callback=progress_callback, log_callback=log_callback,
+                   stop_callback=stop_callback)
     
     log_queue.put("Running model...")
     model.run()
