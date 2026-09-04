@@ -110,6 +110,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
     # Pre-build a timeline-index lookup once.
     tl_idx = {year: i for i, year in enumerate(timeline)}
 
+    # Casefold lookup so a filename that only differs in case from the variable
+    # name is still matched (and flagged), instead of being silently dropped.
+    var_casefold_map = {var.casefold(): var for var in dimensions}
+
     def _read_and_fill_module_folder(scen, model, directory):
         """Read all csv files in a model folder and fill scenario arrays."""
         loaded_vars = set()
@@ -121,7 +125,19 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                 continue
             var = filename[:-4]  # strip '.csv'
             if var not in dimensions or var not in data[scen]:
-                continue
+                matched_var = var_casefold_map.get(var.casefold())
+                if matched_var is None:
+                    warnings.warn(
+                        f"Skipping '{os.path.join(directory, filename)}': "
+                        f"'{var}' does not match any known variable name."
+                    )
+                    continue
+                warnings.warn(
+                    f"'{os.path.join(directory, filename)}' is named '{var}', "
+                    f"which only matches variable '{matched_var}' by case. "
+                    f"Rename the file to '{matched_var}.csv' to avoid ambiguity."
+                )
+                var = matched_var
 
             file_path = os.path.join(directory, filename)
             try:
