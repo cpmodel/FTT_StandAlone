@@ -36,11 +36,10 @@ import numpy as np
 
 # Local library imports
 from ftt_source.ftt_core.ftt_sales_or_investments import get_sales
-from ftt_source.ftt_core.ftt_shares import shares_change
+from ftt_source.ftt_core.ftt_shares import shares_change, allocate_capacity_growth
 from ftt_source.ftt_core.ftt_mandate import implement_seeding, implement_mandate
 from ftt_source.sector_coupling.battery_lbd import battery_costs
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
-from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
@@ -255,7 +254,14 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             endo_shares = np.zeros((num_regions, num_techs))
             endo_shares[regions] = data_dt['TEWS'][regions, :, 0] + change_in_shares[regions]
-            endo_capacity = endo_shares * rfltt[:, np.newaxis]
+            
+            # Reallocate last period's fleet by updated shares, then allocate demand
+            # growth/decline by sales flow rather than by stock share (avoids stretching)
+            endo_capacity = np.zeros((num_regions, num_techs))
+            endo_capacity[regions] = allocate_capacity_growth(
+                endo_shares[regions], rfllt[regions], rfltt[regions],
+                data_dt['TEWK'][regions], time_lag['TEWK'][regions],
+                data['BTTC'][regions, :, c3ti['8 lifetime']], dt, reg_constr[regions])
                         
             # Change in capacity from exogenous sales, capped at maximum sales
             dcap_exog_sales = exogenous_sales(
@@ -263,12 +269,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                 no_it, data['BTTC'][regions, :, c3ti['8 lifetime']]
             )
             
-            # Correction for regulation (phase-out) when demand is growing; main effect in shares equation
-            dcap_reg_corr = regulation_correction(
-                endo_capacity[regions], endo_shares[regions], rfltt[regions, None], reg_constr[regions])
-            
             # New capacity and shares
-            new_capacity = endo_capacity[regions] + dcap_exog_sales + dcap_reg_corr
+            new_capacity = endo_capacity[regions] + dcap_exog_sales
             total_capacity = np.sum(new_capacity, axis=1)
             data['TEWS'][regions, :, 0] = divide(new_capacity, total_capacity[:, None])
 

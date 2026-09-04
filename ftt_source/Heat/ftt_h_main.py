@@ -36,11 +36,10 @@ import numpy as np
 
 
 # Local library imports
-from ftt_source.ftt_core.ftt_shares import shares_change, shares_change_premature
+from ftt_source.ftt_core.ftt_shares import shares_change, shares_change_premature, allocate_capacity_growth
 from ftt_source.ftt_core.ftt_mandate import implement_mandate, implement_seeding
 from ftt_source.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
-from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
@@ -284,7 +283,16 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # Calculate endogenous market shares from both changes
             endo_shares = data_dt['HEWS'][:, :, 0] + change_in_shares + changes_in_shares_prem_repl
-            endo_gen = endo_shares * rhudt[:, 0]
+            
+            # Shares equation determine what existing generation does. Demand growth
+            # is allocated based on the sales shares (to avoid stretching as before)
+            capacity_factor = data['BHTC'][:, :, c4ti["13 Capacity factor mean"]]
+            endo_gen = allocate_capacity_growth(
+                endo_shares, rhudlt[:, 0, 0], rhudt[:, 0, 0],
+                data_dt['HEWK'], time_lag['HEWK'],
+                data_dt['BHTC'][:, :, c4ti['6 Replacetime']], dt, reg_constr,
+                activity_per_capacity=capacity_factor, capacity_scale=1000,
+                shares_are_capacity_shares=False)
 
             
             #################### Regulatory policies #################
@@ -297,12 +305,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                 no_it, data['BHTC'][regions, :, c4ti['5 Lifetime']]
             )
             
-            # Correction for regulation when demand is growing; main effect in shares equation
-            dgen_reg_corr = regulation_correction(
-                endo_gen[regions], endo_shares[regions], rhudlt[regions, 0], reg_constr[regions])
-            
             # New generation and shares
-            new_generation = endo_gen[regions] + dgen_exog_sales + dgen_reg_corr
+            new_generation = endo_gen[regions] + dgen_exog_sales
             total_generation = np.sum(new_generation, axis=1)           
             data['HEWS'][regions, :, 0] = divide(new_generation, total_generation[:, None])
 

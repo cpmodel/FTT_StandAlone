@@ -32,10 +32,9 @@ import numpy as np
 
 # Local library imports
 from ftt_source.ftt_core.ftt_sales_or_investments import get_sales
-from ftt_source.ftt_core.ftt_shares import shares_change
+from ftt_source.ftt_core.ftt_shares import shares_change, allocate_capacity_growth
 from ftt_source.ftt_core.ftt_mandate import implement_seeding, implement_mandate
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
-from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
@@ -195,6 +194,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Interpolations to avoid staircase profile
             D = time_lag['RVKZ'] + (data['RVKZ'] - time_lag['RVKZ']) * t * dt
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
+            Utot_lag = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * (t-1) * dt
             Utot_reshaped = np.tile(Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1], 1))[:, :, 0] # Reshape to 71 x #tech (duplicate info)
            
             # The core FTT equations, taking into account old shares, costs and regulations
@@ -212,24 +212,25 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Calculate endogenous market shares
             endo_shares = data_dt['ZEWS'][:, :, 0] + change_in_shares
-            endo_capacity = endo_shares * Utot_reshaped
             
-                        # Capacity change due to exogenous sales and regulation correction, per vehicle class
+            # Reallocate last period's fleet by updated shares, then allocate demand
+            # growth/decline by sales flow rather than by stock share (avoids stretching)
+            endo_capacity = np.zeros((num_regions, num_techs))
             dcap_exog_sales = np.zeros_like(endo_capacity)
-            dcap_reg_corr = np.zeros_like(endo_capacity)
             for veh_class in range(n_veh_classes):
                 idx = slice(veh_class, None, n_veh_classes)
+                endo_capacity[:, idx] = allocate_capacity_growth(
+                    endo_shares[:, idx], Utot_lag[:, veh_class, 0], Utot[:, veh_class, 0],
+                    data_dt['ZEWK'][:, idx], time_lag['ZEWK'][:, idx],
+                    data['BZTC'][:, idx, c6ti['8 Lifetime (y)']], dt, reg_constr[:, idx])
+                
                 dcap_exog_sales[:, idx] = exogenous_sales(
                     data['ZWSA'][:, idx, 0], Utot[:, veh_class, 0], endo_capacity[:, idx],
                     data['ZREG'][:, idx, 0], no_it,
                     data['BZTC'][:, idx, c6ti['8 Lifetime (y)']]
                 )
-                dcap_reg_corr[:, idx] = regulation_correction(
-                    endo_capacity[:, idx], endo_shares[:, idx],
-                    Utot[:, veh_class, 0, np.newaxis], reg_constr[:, idx]
-                )
 
-            new_capacity = endo_capacity + dcap_exog_sales + dcap_reg_corr
+            new_capacity = endo_capacity + dcap_exog_sales
             zews = np.zeros((num_regions, num_techs, 1))
             for veh_class in range(n_veh_classes):
                 idx = slice(veh_class, None, n_veh_classes)

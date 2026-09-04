@@ -3,13 +3,11 @@
 =========================================
 ftt_exogenous_capacity.py
 =========================================
-Contains the exogenous capacity and regulation correction policies for FTT modules.
+Contains the exogenous capacity policy for FTT modules.
 
 Functions included:
     - exogenous_capacity
         Calculate change in capacity to reach exogenous capacity targets
-    - regulation_correction
-        Correct for underregulation caused by demand growth (stretching)
 """
 
 import numpy as np
@@ -44,19 +42,3 @@ def exogenous_capacity(
     dcap_exog_cap = np.where(reg_overrides_exog, 0, dcap_exog_cap)
 
     return dcap_exog_cap
-
-
-def regulation_correction(
-        endo_capacity, endo_shares, cap_sum_demand_dt, reg_constr):
-    """
-    Demand growth raises capacities while shares stay the same (stretching).
-    This extra capacity is not yet regulated. Correct for this underregulation.
-    """
-    # First term is with current demand, second with demand at previous t
-    cap_growth_from_stretching = endo_capacity - endo_shares * cap_sum_demand_dt
-    # Apply regulation to excess capacity created by demand growth (rather than shares)
-    dcap_reg_corr = np.where(cap_growth_from_stretching > 0,
-                   -cap_growth_from_stretching * reg_constr,
-                   0)
-
-    return dcap_reg_corr

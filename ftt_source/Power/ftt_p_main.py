@@ -59,8 +59,9 @@ import numpy as np
 
 # Local library imports
 from ftt_source.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
-from ftt_source.ftt_core.ftt_shares import shares_change
-from ftt_source.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regulation_correction
+from ftt_source.ftt_core.ftt_shares import shares_change, shares_change_premature, allocate_capacity_growth
+from ftt_source.ftt_core.ftt_exogenous_capacity import exogenous_capacity
+from ftt_source.ftt_core.dynamic_substitution_matrix import compute_dynamic_subst
 
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
@@ -312,7 +313,9 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         if not mset_coupling:
             data = get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_price_indices)
 
-            
+    # if year == histend['MEWG']:
+    #      # Maximum growth of large hydro is 1.5% per year, so we apply this to the last historical year
+    #      data['MEWR'][:, 12, 0] = data['MEWK'][:, 12, 0] * 1.015   
         
 # %% Simulation of stock and energy specs
     
@@ -331,8 +334,8 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         for var in vars_to_copy:
             data_dt[var] = np.copy(time_lag[var])
             
-        # Restrict large hydro growth to max 1.5% per year
-        data['MEWR'][:, 12, 0] = time_lag['MEWR'][:, 12, 0] * 1.015
+        # # Restrict large hydro growth to max 1.5% per year
+        # data['MEWR'][:, 12, 0] = time_lag['MEWR'][:, 12, 0] * 1.015
         
         # Create the regulation variable
         relative_excess = np.zeros_like(data['MEWR'][:, :, 0])
@@ -374,11 +377,27 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # =================================================================
             data["MWKA"] = set_linear_coal_phase_out(data["coal phaseout"],
                                                      data["MWKA"], time_lag["MWKA"], time_lag["MEWK"], year)
+            
+            # =================================================================
+            # Dynamic substitution matrix
+            # =================================================================
+            
+            lifetimes = data['BCET'][:, :, c2ti["9 Lifetime (years)"]]
+            buildtimes = data['BCET'][:, :, c2ti["10 Lead Time (years)"]]
+
+            
+            MEWA_dynamic = compute_dynamic_subst(
+                lifetimes=lifetimes,
+                buildtimes=buildtimes,
+                shares_dt=data_dt['MEWS'],
+                kappa=3.0,
+                num_regions=num_regions,
+                num_techs=num_techs)
 
             # =================================================================
             # Shares equation
             # =================================================================
-
+            
             # The core FTT equations, taking into account old shares, costs and regulations
             change_in_shares = shares_change(
                 dt=dt,
@@ -386,31 +405,55 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
                 shares_dt=data_dt['MEWS'],       # Shares at previous t
                 costs=data_dt['METC'],           # Costs
                 costs_sd=data_dt['MTCD'],        # Standard deviation costs
-                subst=data['MEWA'],              # Substitution turnover rates
+                subst=MEWA_dynamic,              # Substitution turnover rates
                 reg_constr=reg_constr,           # Constraint due to regulation
                 num_regions=num_regions,         # Number of regions
                 num_techs=num_techs,             # Number of techs
-                upper_limit=data_dt['MES1'],     # Any techs with an opper limit
+                upper_limit=data_dt['MES1'],     # Any techs with an upper limit
                 lower_limit=data_dt['MES2'],     # Any techs with a lower limit
-                limits_active=True,              # Defaults to False
-                T_Scal=10.0)                     # Power time scaling (applied after RK4)
+                limits_active=True)              # Defaults to False
             
-            endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares
+            
+            # Calculate scrappage rate for all regions
+            payback_times = np.ones((num_regions, num_techs)) * 7
+            lifetimes = data['BCET'][:, :, c2ti["9 Lifetime (years)"]]
+            SR = np.maximum(1.0 / payback_times - 1/lifetimes, 0.0)
+            
+            # TODO: define correct payback costs, check substituion rates, add limits
+            # Premature replacements, use scrappage rate time scales and amended costs
+            changes_in_shares_prem_repl = shares_change_premature(
+                dt=dt,
+                regions=valid_regions,
+                shares_dt=data_dt["MEWS"],          # Shares at previous t
+                costs_marg=data_dt["MWMC"],         # Marginal costs (HGC2)
+                costs_marg_sd=data_dt["MMCD"],      # SD Marginal costs (HGD2)
+                costs_payb=data_dt["METC"],         # Payback costs (HGC3)
+                costs_payb_sd=data_dt["MTCD"],      # SD Payback costs (HGD3)
+                subst=MEWA_dynamic * SR[:, :, np.newaxis],  # Substitution turnover rates
+                reg_constr=reg_constr,              # Regulation constraint
+                num_regions=num_regions,            # Number of regions
+                num_techs=num_techs,                # Number of technologies
+            )
+            
+            
+            endo_shares = data_dt['MEWS'][:, :, 0] + change_in_shares + changes_in_shares_prem_repl
             # Grid operators guess expected generation based on load factors last time step
             mewl_dt = data_dt['MEWL'][:, :, 0]           
             
-            endo_gen = endo_shares * e_demand[:, None] * mewl_dt / np.sum(endo_shares * mewl_dt, axis=1)[:, None]
-            endo_capacity = endo_gen / mewl_dt / 8766
-            
-            # Correction for regulation when demand is growing; main effect in shares equation
-            dcap_reg_corr = regulation_correction(
-                endo_capacity, endo_shares, np.sum(data_dt['MEWK'], axis=1), reg_constr)
+            # Reallocate last period's generation by updated shares, then allocate demand
+            # growth/decline by sales flow rather than by stock share (avoids stretching)
+            gen_dt_total = np.sum(data_dt['MEWG'][:, :, 0], axis=1)
+            endo_capacity = allocate_capacity_growth(
+                endo_shares, gen_dt_total, e_demand,
+                data_dt['MEWK'], time_lag['MEWK'],
+                data['BCET'][:, :, c2ti["9 Lifetime (years)"]], dt, reg_constr,
+                activity_per_capacity=mewl_dt, capacity_scale=8766)
             
             # Changes to capacity from exogenous capacity
             dcap_exog_cap = exogenous_capacity(
-                data['MWKA'][:, :, 0], endo_capacity, dcap_reg_corr, data['MEWR'][:, :, 0], t, no_it)
+                data['MWKA'][:, :, 0], endo_capacity, 0, data['MEWR'][:, :, 0], t, no_it)
             
-            dcap_total = dcap_reg_corr + dcap_exog_cap
+            dcap_total = dcap_exog_cap
             
             # New market shares
             total_capacity = np.sum(endo_capacity + dcap_total, axis=1)

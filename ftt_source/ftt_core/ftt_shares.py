@@ -14,6 +14,9 @@ from math import sqrt
 import numpy as np
 from numba import njit
 
+from ftt_source.ftt_core.ftt_sales_or_investments import get_sales
+from ftt_source.support.divide import divide
+
 # Parameter to approximate the cumulative distribution function of the cost comparison
 CDF_APPROX = 1.25 / sqrt(2) 
 
@@ -39,21 +42,20 @@ def shares_change(
 
     change_in_shares = shares_change_jitted(dt, regions, shares_dt, costs, costs_sd,
                subst, reg_constr, num_regions, num_techs,
-               upper_limit, lower_limit, limits_active, T_Scal)
+               upper_limit, lower_limit, limits_active)
 
     return change_in_shares
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
-@njit(fastmath=True, cache=True)
+#@njit(fastmath=True, cache=True)
 def shares_change_jitted(
     dt, regions,
     shares_dt,
     costs, costs_sd,
     subst, reg_constr,
     num_regions, num_techs,
-    upper_limit, lower_limit, limits_active=False,
-    T_Scal=1.0
+    upper_limit, lower_limit, limits_active=False
     ):
 
     """
@@ -113,7 +115,9 @@ def shares_change_jitted(
             
             if limits_active:
                 Gijmax[tech_i] = np.tanh(1.25 * (upper_limit[r, tech_i, 0] - S_i) / 0.1)
-                Gijmin[tech_i] = 0.5 + 0.5 * np.tanh(1.25 * (-lower_limit[r, tech_i, 0] + S_i) / 0.1)
+                # For technologies with no lower limit, we set it to -1000 to avoid artificial effects
+                lower_limit_clean = np.where(lower_limit > 0.0, lower_limit, -1e3)
+                Gijmin[tech_i] = 0.5 + 0.5 * np.tanh(1.25 * (-lower_limit_clean[r, tech_i, 0] + S_i) / 0.1)
           
             for tech_j in range(tech_i):
                 
@@ -143,7 +147,7 @@ def shares_change_jitted(
                                 - subst[r, tech_j, tech_i] * F[tech_i, tech_j])
 
                 # Change in shares = S_i * S_j * delta_AFG
-                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt, T_Scal)
+                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt)
                 dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
 
         dSij_all[r] = dSij
@@ -195,14 +199,10 @@ def _apply_regulation_adjustment(Fij, Fji, reg_constr_i, reg_constr_j):
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True)
 def _rk4_integration(
-    S_i, S_j, delta_AFG, dt, T_Scal=1.0
-    ):
+    S_i, S_j, delta_AFG, dt):
     """
     Helper function for RK4 calculation.
     We assume that within a timestep, the costs and the limits do not change.
-
-    T_Scal applied AFTER RK4 integration (matching Cascading branch).
-    Default 1.0 means no scaling (for Heat/Transport). Power uses 10.0.
     """
 
     k_1 = S_i * S_j * delta_AFG
@@ -210,7 +210,8 @@ def _rk4_integration(
     k_3 = (S_i + dt * k_2/2) * (S_j - dt * k_2 / 2) * delta_AFG
     k_4 = (S_i + dt * k_3) * (S_j - dt * k_3) * delta_AFG
 
-    return (k_1 + 2 * k_2 + 2 * k_3 + k_4) * dt / T_Scal / 6
+    return (k_1 + 2 * k_2 + 2 * k_3 + k_4) * dt / 6
+
 
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
@@ -305,3 +306,83 @@ def shares_change_premature(
     dSij_sum = np.sum(dSij_all, axis=2)
                 
     return dSij_sum
+
+
+def allocate_capacity_growth(
+        endo_shares, total_dt, total_t, cap_dt, cap_lag, lifetimes, dt, reg_constr,
+        activity_per_capacity=1.0, capacity_scale=1.0, shares_are_capacity_shares=True):
+    """
+    Reallocate last period's total activity (generation, distance driven, etc.) across
+    techs using the updated shares (no growth), then distribute the change in total
+    activity (growth or decline) using each tech's provisional sales flow (substitution
+    + eol replacement) as weights, downweighted for regulation-capped techs.
+
+    This replaces stock-share-proportional stretching of capacity to meet demand growth:
+    growth now flows towards techs that are actually gaining sales, instead of boosting
+    every incumbent (including ones that are no longer cost-competitive) in proportion
+    to their existing stock.
+
+    Parameters
+    -----------
+    endo_shares: np.array (regions, techs)
+        Updated shares from the shares equation (may not sum exactly to one).
+    total_dt: np.array (regions,)
+        Total activity at the previous timestep (e.g. previous generation, vehicle-km).
+    total_t: np.array (regions,)
+        Total activity at the current timestep.
+    cap_dt, cap_lag: np.array (regions, techs, 1)
+        Capacity at the previous timestep / previous year, as used by get_sales.
+    lifetimes: np.array (regions, techs)
+        Technology lifetimes, as used by get_sales.
+    dt: float
+        Subannual timestep size (1 / number of iterations).
+    reg_constr: np.array (regions, techs)
+        Regulation constraint (0 = unregulated, 1 = fully capped).
+    activity_per_capacity: np.array (regions, techs) or float
+        Converts a tech's capacity to its activity/output rate (e.g. load factor for
+        FTT-Power). Only used to build a capacity proxy for get_sales when
+        `shares_are_capacity_shares` is False; defaults to 1.0 where capacity units
+        already match activity units (FTT-Transport, FTT-Freight).
+    capacity_scale: float
+        Converts activity units to capacity units (e.g. 8766 hours/year for FTT-Power).
+        Defaults to 1.0 where no unit conversion is required.
+    shares_are_capacity_shares: bool
+        True when `endo_shares` are capacity shares (FTT-Power, FTT-Transport,
+        FTT-Freight), so activity must be reweighted by activity_per_capacity to derive
+        it from capacity shares; the function then returns capacity. False when
+        `endo_shares` are already activity shares (FTT-Heat), so no reweighting is
+        needed and the function returns activity (generation) directly - 
+        activity_per_capacity is then only used to build a capacity proxy for get_sales.
+
+    Returns
+    ----------
+    np.array (regions, techs)
+        Capacity (if shares_are_capacity_shares) or activity, implied by the shares
+        equation plus sales-weighted demand growth/decline.
+    """
+    if shares_are_capacity_shares:
+        weighted_share_sum = np.sum(endo_shares * activity_per_capacity, axis=1)[:, None]
+        flat = endo_shares * total_dt[:, None] / weighted_share_sum / capacity_scale
+        capacity_flat = flat
+    else:
+        flat = endo_shares * total_dt[:, None] / np.sum(endo_shares, axis=1)[:, None]
+        capacity_flat = flat / activity_per_capacity / capacity_scale
+
+    # Provisional sales flow (substitution + eol replacement, no growth) used as allocation weights
+    _, sales_dt_flat = get_sales(
+        capacity_flat[:, :, None], cap_dt, cap_lag,
+        np.zeros_like(cap_dt), lifetimes, dt)
+
+    # Reduce growth allocation to regulation-capped techs, then renormalise
+    growth_weight_raw = sales_dt_flat[:, :, 0] * (1 - reg_constr)
+    growth_weight = divide(growth_weight_raw, np.sum(growth_weight_raw, axis=1)[:, None])
+
+    # Allocate demand growth (or decline) by growth_weight, rather than by stock share
+    demand_gap = total_t - total_dt
+    if shares_are_capacity_shares:
+        growth = growth_weight * demand_gap[:, None] / activity_per_capacity / capacity_scale
+    else:
+        growth = growth_weight * demand_gap[:, None]
+
+    return np.maximum(flat + growth, 0)
+
