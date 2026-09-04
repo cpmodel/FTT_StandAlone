@@ -121,34 +121,34 @@ def policy_change(df, policy):
             price_2023 = price_2024.values.reshape(-1, 1)
             
             # Linearly increase the price from 2023 to 2050 values. 
-            df.iloc[:, 15:42] = ( price_2023 + (price_2050 - price_2024) / 26.0 * np.arange(27) ) * 3.667 
+            df.iloc[:, 15:42] = ( price_2023 + (price_2050 - price_2024) / 26.0 * np.arange(27) ) 
             # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
-            df.iloc[:, 42:] = ( price_2050 + price_2050 / 26.0 * np.arange(1, 21) ) * 3.667      
+            df.iloc[:, 42:] = ( price_2050 + price_2050 / 26.0 * np.arange(1, 21) )      
             
         case "REPP2":  # A linearly increasing price to €200 per tonne CO2, i.e.  
             price_2050 = carbon_price
                         
             # Linearly increase to €200 per tonne CO2 
-            df.iloc[:, 15:42] = (price_2050) / 26.0 * np.arange(27) * 3.667 
+            df.iloc[:, 15:42] = (price_2050) / 26.0 * np.arange(27) 
             # After 2050, continue everywhere with equal yearly increases, equal to price_2050/27
-            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) ) * 3.667       
+            df.iloc[:, 42:] = ( price_2050 + price_2050 / 27.0 * np.arange(1, 21) )       
     
         case "Power REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-            df.iloc[:, 15:] = carbon_price * 3.667 
+            df.iloc[:, 15:] = carbon_price 
             
         case "Power REPP half":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-            df.iloc[:, 15:] = carbon_price * 3.667 / 2
+            df.iloc[:, 15:] = carbon_price / 2
         
         
         # Power sector policies
         case "MEWR strong":     # Completely outregulate fossil technologies from 2024
             _apply_rows_per_country(slice(1, 10), slice(24, None), 0)
         case "MEWT":           # Subsidize all renewables
-            _apply_rows_per_country(slice(12, 22), slice(25, None), -0.3)
+            _apply_rows_per_country(slice(12, 22), slice(26, None), -0.3)
         case "MEWT half":           # Subsidize all renewables
-            _apply_rows_per_country(slice(12, 22), slice(25, None), -0.15)
+            _apply_rows_per_country(slice(12, 22), slice(26, None), -0.15)
         case "Coal phase-out":
             _apply_rows_per_country(0, 0, 1)       # The coal phase-out is coded as a function; this switch turns it on 
         case "Coal phase-out half":
@@ -157,18 +157,18 @@ def policy_change(df, policy):
         
         # Transport policies
         case "TREG strong":
-            _apply_rows_per_country(slice(0, 15), slice(24, None), 0)
+            _apply_rows_per_country(slice(0, 15), slice(26, None), 0)
         case "BRR strong tax": 
-            _apply_rows_per_country(slice(0, 15), slice(25, None), 0.3)
+            _apply_rows_per_country(slice(0, 15), slice(26, None), 0.3)
         case "BRR strong subsidy":
-            _apply_rows_per_country(slice(18, 21), slice(25, None), -0.3)
+            _apply_rows_per_country(slice(18, 21), slice(26, None), -0.3)
         case "BRR half subsidy":
-            _apply_rows_per_country(slice(18, 21), slice(25, None), -0.15)
+            _apply_rows_per_country(slice(18, 21), slice(26, None), -0.15)
         case "BRR strong combo":
-            _apply_rows_per_country(slice(0, 15), slice(25, None), 0.3)
-            _apply_rows_per_country(slice(18, 21), slice(25, None), -0.3)
+            _apply_rows_per_country(slice(0, 15), slice(26, None), 0.3)
+            _apply_rows_per_country(slice(18, 21), slice(26, None), -0.3)
         case "EV mandate regulation":
-            _apply_rows_per_country(slice(0, 15), slice(35, None), 0)
+            _apply_rows_per_country(slice(0, 15), slice(36, None), 0)
         case "EV mandate":
             df.iloc[:, 3] = 2026       # Start year EV mandate
             df.iloc[:, 3] = 2035       # End year EV mandate
@@ -177,10 +177,10 @@ def policy_change(df, policy):
             _apply_rows_per_country(0, 1, 2045)    # Half the speed of the mandate
         case "Transport REPP":
              df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-             df.iloc[:, 15:] = carbon_price * 3.667    
+             df.iloc[:, 15:] = carbon_price    
         case "Transport REPP half":
              df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-             df.iloc[:, 15:] = carbon_price * 3.667 / 2   
+             df.iloc[:, 15:] = carbon_price / 2   
   
                    
             
@@ -197,7 +197,7 @@ def policy_change(df, policy):
             _apply_rows_per_country(range(25), slice(8, None), 0.3)
             _apply_rows_per_country([31, 32, 33], slice(8, None), -0.3)
         case "EV truck mandate regulation":
-            _apply_rows_per_country(range(25), slice(23, None), 0)
+            _apply_rows_per_country(range(25), slice(24, None), 0)
         case "EV truck mandate":
             df.iloc[:, 1] = 2026
             df.iloc[:, 2] = 2040       # The EV mandates are coded as a function; this switch turns it on
@@ -208,17 +208,17 @@ def policy_change(df, policy):
             df.iloc[:, 3] = 0.5       # The EV mandates are coded as a function; this switch turns it on
         case "Freight REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-            df.iloc[:, 15:] = carbon_price * 3.667 
+            df.iloc[:, 15:] = carbon_price 
         case "Freight REPP half":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-            df.iloc[:, 15:] = carbon_price * 3.667 / 2
+            df.iloc[:, 15:] = carbon_price / 2
         
         # Carbon tax with start and end date
         case str(value) if value.startswith("Freight REPP 20"):
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
             years = value.split()[-1]  # Extract the range part, e.g., "2026-2050"
             start_year, end_year = map(int, years.split("-"))  # Extract start and end years
-            base_year = 2025  # Shifted base year for simplicity
+            base_year = 2026  # Shifted base year for simplicity
             base_column_index = 16  # Adjusted to match the base year
             start_column_index = base_column_index + (start_year - base_year)
             end_column_index = base_column_index + (end_year - base_year) + 1
@@ -235,22 +235,22 @@ def policy_change(df, policy):
             
         # Heat policies
         case "HREG strong":
-            _apply_rows_per_country(slice(0, 4), slice(24, None), 0)
-            _apply_rows_per_country(6, slice(24, None), 0)
+            _apply_rows_per_country(slice(0, 4), slice(26, None), 0)
+            _apply_rows_per_country(6, slice(26, None), 0)
         case "HTVS strong tax": 
             _apply_rows_per_country(slice(0, 4), slice(24, None), 0.3)
             _apply_rows_per_country(6, slice(24, None), 0.3)
         case "HTVS strong subsidy":
-            _apply_rows_per_country(slice(9, 12), slice(25, None), -0.3)         # 30% subsidy on heat pumps
+            _apply_rows_per_country(slice(9, 12), slice(26, None), -0.3)         # 30% subsidy on heat pumps
         case "HTVS half subsidy":  # half the s tax
-            _apply_rows_per_country(slice(9, 12), slice(25, None), -0.15)         # 30% subsidy on heat pumps
+            _apply_rows_per_country(slice(9, 12), slice(26, None), -0.15)         # 30% subsidy on heat pumps
         case "HTVS strong combo":  # Strong tax
-            _apply_rows_per_country(slice(0, 4), slice(25, None), 0.3)
-            _apply_rows_per_country(6, slice(25, None), 0.3)
-            _apply_rows_per_country(slice(9, 12), slice(25, None), -0.3)         # 30% subsidy on heat pumps
+            _apply_rows_per_country(slice(0, 4), slice(26, None), 0.3)
+            _apply_rows_per_country(6, slice(26, None), 0.3)
+            _apply_rows_per_country(slice(9, 12), slice(26, None), -0.3)         # 30% subsidy on heat pumps
         case "Heat pump mandate 2035 regulation":
-            _apply_rows_per_country(slice(0, 4), slice(35, None), 0)
-            _apply_rows_per_country(6, slice(35, None), 0)
+            _apply_rows_per_country(slice(0, 4), slice(36, None), 0)
+            _apply_rows_per_country(6, slice(36, None), 0)
         case "Heat pump mandate":
             df.iloc[:, 2] = 2026       # Start heat pump mandate
             df.iloc[:, 2] = 2035       # End heat pump mandate
@@ -260,7 +260,7 @@ def policy_change(df, policy):
             _apply_rows_per_country(0, 1, 2045)       # The heat pump mandates are coded as a function; this switch turns it on
         case "Heat REPP":
             df[df.columns[1:]] = df[df.columns[1:]].astype(float)
-            df.iloc[:, 15:] = carbon_price * 3.667 
+            df.iloc[:, 15:] = carbon_price 
             
         
         # Sector coupling
