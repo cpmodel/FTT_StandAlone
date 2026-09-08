@@ -71,7 +71,8 @@ def render_run_page():
         if stop_event and state.is_running:
             stop_event.set()
             stop_btn.disable()
-            log_console.push("Stop requested. Waiting for the current safe checkpoint...")
+            # Route through log_queue (not a direct push) so it stays in order with backend messages
+            log_queue.put("Stopping run...")
     
     async def update_from_queues():
         """Pull updates from queues and update UI"""
@@ -183,12 +184,16 @@ def execute_model(models, end_year, scenarios, output_name, progress_queue, log_
         config.write(configfile)
     
     # Import RunFTT only when needed (lazy loading for faster GUI startup)
-    from ftt_source.model_class import RunFTT
+    from ftt_source.model_class import RunFTT, RunCancelledError
     
     # Create model with callbacks
     model = RunFTT(progress_callback=progress_callback, log_callback=log_callback,
                    stop_callback=stop_callback)
-    
+
+    # Input loading isn't cancellable, so stop may already have been requested by now
+    if stop_event.is_set():
+        raise RunCancelledError("Run cancelled by user")
+
     log_queue.put("Running model...")
     model.run()
     
