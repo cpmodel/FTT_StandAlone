@@ -44,6 +44,10 @@ import ftt_source.support.dimensions_functions as dims_f
 from ftt_source.support.cross_section import cross_section as cs
 
 
+class RunCancelledError(RuntimeError):
+    """Raised when a model run is cancelled by the frontend."""
+
+
 class RunFTT:
     """
     Class to run the FTT model.
@@ -222,7 +226,7 @@ class RunFTT:
     def _check_stop_requested(self):
         """Stop cleanly when the GUI has requested cancellation."""
         if self.stop_callback and self.stop_callback():
-            raise RuntimeError("Run cancelled by user")
+            raise RunCancelledError("Run cancelled by user")
 
     def solve_all(self):
         """ Solve model for each year of the simulation period """

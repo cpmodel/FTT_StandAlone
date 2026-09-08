@@ -90,12 +90,12 @@ def render_run_page():
     async def start_run():
         nonlocal update_timer, stop_event
         
-        # Disable run button and set running state (disables navigation buttons)
+        # Prepare cancellation state before making the Stop button clickable
         run_btn.disable()
-        stop_btn.enable()
-        set_inputs_enabled(False)
         state.is_running = True
         stop_event = Event()
+        set_inputs_enabled(False)
+        stop_btn.enable()
         progress_bar.set_value(0)
         log_console.clear()
         
@@ -125,9 +125,11 @@ def render_run_page():
             ui.notify('Run Complete', type='positive')
             
         except Exception as e:
+            from ftt_source.model_class import RunCancelledError
+
             await update_from_queues()  # flush any pending log messages first
             log_console.push("-" * 40)
-            if str(e) == "Run cancelled by user":
+            if isinstance(e, RunCancelledError):
                 log_console.push("Run cancelled by user.")
                 ui.notify('Run cancelled', type='warning')
             else:
