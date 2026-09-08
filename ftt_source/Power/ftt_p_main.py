@@ -343,7 +343,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
 
         
         # =====================================================================
-        # Start of the quarterly time-loop
+        # Start of the subannual time-loop
         # =====================================================================
 
         # Start the computation of shares
