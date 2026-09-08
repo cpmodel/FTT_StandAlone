@@ -235,6 +235,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     data['MCFC'][:, :, 0] = bcet[:, :, c2ti['11 Decision Load Factor']]  # Marginal capacity factor
 
     # Marginal costs
+    # TODO: create value-adjusted marginal costs
     data['MWMC'][:, :, 0] = bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6]
 
     data['MMCD'][:, :, 0] = np.sqrt(bcet[:, :, 1] ** 2 + bcet[:, :, 5] ** 2 + bcet[:, :, 7] ** 2)

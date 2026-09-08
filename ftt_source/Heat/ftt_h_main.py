@@ -45,6 +45,10 @@ from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
 GREEN_INDICES_HP = [9, 10, 11]
 
+# Neutral technologies (biomass, district heating, electric, solar thermal):
+# left untouched by the heat pump mandate, which only shifts sales from fossil fuels to heat pumps
+NEUTRAL_INDICES_HP = [4, 5, 7, 8, 12]
+
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
@@ -330,11 +334,13 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # Seed heat pumps in regions with low adoption (first five years simulation)
             data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, histend['HEWF'])
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, histend['HEWF'],
+                neutral_indices=NEUTRAL_INDICES_HP)
 
             # Change capacity and sales after mandate (only runs if hp mandate != 0)
             data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
-                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["HP mandate"])
+                data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["HP mandate"],
+                neutral_indices=NEUTRAL_INDICES_HP)
             
             # Calculate HEWG, HEWS and HEWF after mandates  
             

@@ -48,12 +48,12 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
         return (year + 1 - mandate_start_year) / (mandate_end_year - mandate_start_year) * max_mandate
 
 
-def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
+def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices, neutral_indices=None):
     """
     Apply mandate to sales distribution.
 
     Adjusts sales so that green technologies reach the target mandate share.
-    Non-green sales are reduced proportionally to maintain total sales.
+    Non-green, non-neutral sales are reduced proportionally to maintain total sales.
 
     Parameters
     ----------
@@ -63,8 +63,10 @@ def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
         Target share for green technologies (0.0 to 1.0)
     green_indices : list
         Indices of green technologies
-    regions : list, optional
-        Regions to apply mandate to. If None, applies to all.
+    neutral_indices : list, optional
+        Indices of technologies left untouched by the mandate. If given, only the
+        remaining (non-green, non-neutral) technologies are scaled down to
+        compensate for the growth in green sales.
 
     Returns
     -------
@@ -107,22 +109,29 @@ def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
                 # Equal distribution if no global data
                 sales_after_mandate[r, green_indices, 0] = target_green / len(green_indices)
 
-        # Scale down non-green sales to maintain total
-        non_green_indices = [i for i in range(sales_in.shape[1]) if i not in green_indices]
-        remaining_sales = total_sales - target_green
-        current_non_green = np.sum(sales_in[r, non_green_indices, 0])
+        # Scale down remaining sales to maintain total (neutral technologies are left untouched)
+        if neutral_indices is not None:
+            scalable_indices = [i for i in range(sales_in.shape[1])
+                                 if i not in green_indices and i not in neutral_indices]
+            neutral_sales = np.sum(sales_in[r, neutral_indices, 0])
+        else:
+            scalable_indices = [i for i in range(sales_in.shape[1]) if i not in green_indices]
+            neutral_sales = 0.0
 
-        if current_non_green > 0:
-            scale_factor = remaining_sales / current_non_green
-            sales_after_mandate[r, non_green_indices, 0] *= scale_factor
-        elif len(non_green_indices) > 0:
-            sales_after_mandate[r, non_green_indices, 0] = remaining_sales / len(non_green_indices)
+        remaining_sales = total_sales - target_green - neutral_sales
+        current_scalable = np.sum(sales_in[r, scalable_indices, 0])
+
+        if current_scalable > 0:
+            scale_factor = remaining_sales / current_scalable
+            sales_after_mandate[r, scalable_indices, 0] *= scale_factor
+        elif len(scalable_indices) > 0:
+            sales_after_mandate[r, scalable_indices, 0] = remaining_sales / len(scalable_indices)
 
     return sales_after_mandate
 
 
 def implement_seeding(cap, cum_sales_in, sales_in, year, green_indices,
-                      histend, seeding_years=5, seed_fraction=0.15):
+                      histend, seeding_years=5, seed_fraction=0.15, neutral_indices=None):
     """
     Seed green technologies in low-adoption regions.
 
@@ -148,6 +157,8 @@ def implement_seeding(cap, cum_sales_in, sales_in, year, green_indices,
         Indices of green technologies for this sector
     seed_fraction : float, optional
         Fraction of global green share to use as target (default 0.15) #todo, make sense
+    neutral_indices : list, optional
+        Indices of technologies left untouched by the seeding (not scaled down)
 
     Returns
     -------
@@ -174,14 +185,14 @@ def implement_seeding(cap, cum_sales_in, sales_in, year, green_indices,
     # Seeding works the same as a weak mandate, so reuse mandate function
     cum_sales_after_mandate, sales_after_mandate, cap = implement_mandate(
                     cap, cum_sales_in, sales_in, year, green_indices,
-                                          mandate_info)
+                                          mandate_info, neutral_indices=neutral_indices)
     
     return cum_sales_after_mandate, sales_after_mandate, cap
 
 
 
 def implement_mandate(cap, cum_sales_in, sales_in, year, green_indices,
-                      mandate_info):
+                      mandate_info, neutral_indices=None):
     """
     Implement full green technology mandate.
 
@@ -201,6 +212,10 @@ def implement_mandate(cap, cum_sales_in, sales_in, year, green_indices,
         Indices of green technologies for this sector
     mandate_info:
         Contains start year, end year and share at end year per region
+    neutral_indices : list, optional
+        Indices of technologies left untouched by the mandate. If given, the
+        mandate only reallocates sales between green technologies and the
+        remaining (non-green, non-neutral) technologies.
 
     Returns
     -------
@@ -225,7 +240,8 @@ def implement_mandate(cap, cum_sales_in, sales_in, year, green_indices,
     
     # Compute new sales 
     if (mandate_shares > 0).any():
-        sales_after_mandate = get_new_sales_under_mandate(sales_in, mandate_shares, green_indices)
+        sales_after_mandate = get_new_sales_under_mandate(
+            sales_in, mandate_shares, green_indices, neutral_indices=neutral_indices)
 
         # Update capacity
         sales_difference = sales_after_mandate - sales_in
