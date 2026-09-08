@@ -229,7 +229,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         reg_constr[data['TREG'][:, :, 0] == 0.0] = 1.0
         reg_constr[data['TREG'][:, :, 0] == -1.0] = 0.0
 
-        # Factor used to create quarterly data from annual figures
+        # Factor used to create subannual data from annual figures
         no_it = int(data['noit'][0, 0, 0])
         dt = 1 / float(no_it)
 
