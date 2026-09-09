@@ -44,6 +44,10 @@ import ftt_source.support.dimensions_functions as dims_f
 from ftt_source.support.cross_section import cross_section as cs
 
 
+class RunCancelledError(RuntimeError):
+    """Raised when a model run is cancelled by the frontend."""
+
+
 class RunFTT:
     """
     Class to run the FTT model.
@@ -126,6 +130,7 @@ class RunFTT:
         settings=None,
         progress_callback=None,
         log_callback=None,
+        stop_callback=None,
     ):
         """Instantiate model run object.
 
@@ -153,6 +158,8 @@ class RunFTT:
         log_callback : callable, optional
             Optional callback ``log_callback(message)`` used by GUI wrappers
             for status messages.
+        stop_callback : callable, optional
+            Optional callback returning ``True`` when a GUI run should stop.
         """
         # Configure data paths before any data-loading calls.
         from ftt_source.paths import set_paths, _PACKAGE_ROOT
@@ -183,6 +190,7 @@ class RunFTT:
         self.timeline = np.arange(self.simulation_start, self.simulation_end + 1)
         self.ftt_modules = config.get('settings', 'enable_modules')
         self.scenarios = config.get('settings', 'scenarios')
+        self.stop_callback = stop_callback
 
         # Load classification titles
         self.titles = titles_f.load_titles()
@@ -215,6 +223,11 @@ class RunFTT:
         # Run the solve all method (self.input contains all results)
         self.solve_all()
 
+    def _check_stop_requested(self):
+        """Stop cleanly when the GUI has requested cancellation."""
+        if self.stop_callback and self.stop_callback():
+            raise RunCancelledError("Run cancelled by user")
+
     def solve_all(self):
         """ Solve model for each year of the simulation period """
 
@@ -229,6 +242,7 @@ class RunFTT:
             pass
         
         for scen in self.input:
+            self._check_stop_requested()
 
             # Create progress bar:
             with tqdm(self.timeline) as pbar:
@@ -236,6 +250,7 @@ class RunFTT:
             # Call solve_year method for each year of the simulation period
 #                for year_index, year in enumerate(self.timeline):
                 for y, year in enumerate(self.timeline):
+                    self._check_stop_requested()
                     if y == 0:
                         start_time = time.time()
 
