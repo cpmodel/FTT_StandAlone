@@ -19,8 +19,9 @@ Burton, I.J, Njisse, F.J.M.M, Salter, J.M - Environ. Res.: Energy 3 035002 - htt
 ## For more detailed information on performing emulation with this repo please consult the README.md file in the Emulation folder. 
 
 ## rmu2
-This branch is part of the responsible modelling under uncertainty project (rmu2): https://rmu2.org
+This branch is part of the responsible modelling under uncertainty project rmu2 : https://rmu2.org
 
+rmu2
 
 ## Theoretical background
 The FTT family of models are based on [evolutionary economics](https://en.wikipedia.org/wiki/Evolutionary_economics). The uptake of new technologies typically follows an S-curve, which can be represented well with evolutionary dynamics (Mercure et al, 2012). The core equations for all of the models in the model family are coupled logistic equations of the [Lotka-Volterra family](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations), also known as the predator-prey equations. These equations are used to determine the evolution of the shares of various technologies in the models. Each model contains between ~10 to 25 technologies competing for market share. 
