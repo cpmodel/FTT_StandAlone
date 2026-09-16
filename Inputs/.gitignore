@@ -2,10 +2,5 @@
 *.csv
 *.db1
 *.mre
-!????X*.csv
-!REXX.csv
-!Battery price.csv
-!*mandate.csv
-!S0/*/CO2tax**.csv
-!LAT.csv
-!RLDCMAP.csv
+!S0/**/*.csv
+
