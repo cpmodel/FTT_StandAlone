@@ -1,5 +1,7 @@
 # FTT StandAlone
 
+
+
 ## Future Technology Transformation
 This repository contains a family of Future Technology Transformation (FTT) models. Models that are included are:
 
@@ -15,6 +17,9 @@ This branch is dedicated to emulation and uncertainty analysis as proposed in th
 Burton, I.J, Njisse, F.J.M.M, Salter, J.M - Environ. Res.: Energy 3 035002 - https://iopscience.iop.org/article/10.1088/2753-3751/ae7728
 
 ## For more detailed information on performing emulation with this repo please consult the README.md file in the Emulation folder. 
+
+## rmu2
+This branch is part of the responsible modelling under uncertainty project (rmu2): https://rmu2.org
 
 
 ## Theoretical background
