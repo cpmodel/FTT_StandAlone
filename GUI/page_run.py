@@ -120,6 +120,7 @@ def render_run_page():
             await run.io_bound(execute_model, models_value, end_year_value,
                                 scenarios_value, output_value, progress_queue, log_queue, stop_event)
             
+            await update_from_queues()
             progress_bar.set_value(1.0)
             log_console.push("-" * 40)
             log_console.push("SUCCESS: Results written to pickle.")
