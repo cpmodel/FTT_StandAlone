@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
-from ftt_source.model_class import RunFTT
+from ftt_source.model_class import RunCancelledError, RunFTT
 
 
 def make_model():
@@ -16,6 +16,7 @@ def make_model():
     model.dims = {'value': ['TIME']}
     model.progress_callback = Mock()
     model.log_callback = Mock()
+    model.stop_callback = None
     model.solve_year = Mock(return_value=({'value': np.ones((1, 1, 1))}, {}))
     return model
 
@@ -54,3 +55,16 @@ def test_callbacks_are_optional():
     model.log_callback = None
     model.run()
     assert model.solve_year.call_count == 6
+
+
+def test_stop_request_cancels_before_next_year():
+    model = make_model()
+    model.stop_callback = Mock(side_effect=[False, False, True])
+
+    with pytest.raises(RunCancelledError, match='Run cancelled by user'):
+        model.run()
+
+    model.solve_year.assert_called_once_with(2020, 0, 'S0')
+    assert [call.args for call in model.progress_callback.call_args_list] == [
+        (0, 6), (1, 6)
+    ]
