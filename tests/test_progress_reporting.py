@@ -9,6 +9,7 @@ from ftt_source.model_class import RunCancelledError, RunFTT
 
 
 def make_model():
+    """Create a minimal model whose solver can be inspected without input files."""
     model = RunFTT.__new__(RunFTT)
     model.timeline = [2020, 2021]
     model.input = {scen: {'value': np.zeros((1, 1, 1, 2))}
@@ -22,6 +23,7 @@ def make_model():
 
 
 def test_progress_counts_years_across_scenarios(capsys):
+    """Report cumulative year progress, one line per scenario, and total time."""
     model = make_model()
     model.run()
 
@@ -29,16 +31,18 @@ def test_progress_counts_years_across_scenarios(capsys):
         (completed, 6) for completed in range(7)
     ]
     messages = [call.args[0] for call in model.log_callback.call_args_list]
-    assert len(messages) == 6
-    for index, scenario in enumerate(model.input):
-        assert messages[index * 2] == f'Starting scenario {scenario}'
-        assert messages[index * 2 + 1].startswith(f'Finished scenario {scenario}.')
+    assert messages[:-1] == [
+        f'Running scenario {scenario}' for scenario in model.input
+    ]
+    assert messages[-1].startswith('Total elapsed time is ')
+    for scenario in model.input:
         assert np.all(model.output[scenario]['value'] == 1)
     terminal = capsys.readouterr().out
     assert all(message in terminal for message in messages)
 
 
 def test_failed_year_does_not_report_completion():
+    """Do not advance progress or report total time when a year fails."""
     model = make_model()
     model.solve_year.side_effect = RuntimeError('Solver failed')
 
@@ -46,10 +50,11 @@ def test_failed_year_does_not_report_completion():
         model.run()
 
     model.progress_callback.assert_called_once_with(0, 6)
-    model.log_callback.assert_called_once_with('Starting scenario S0')
+    model.log_callback.assert_called_once_with('Running scenario S0')
 
 
 def test_callbacks_are_optional():
+    """Complete every scenario and year when reporting callbacks are omitted."""
     model = make_model()
     model.progress_callback = None
     model.log_callback = None
@@ -58,6 +63,7 @@ def test_callbacks_are_optional():
 
 
 def test_stop_request_cancels_before_next_year():
+    """Stop at the next year boundary without reporting extra progress."""
     model = make_model()
     model.stop_callback = Mock(side_effect=[False, False, True])
 

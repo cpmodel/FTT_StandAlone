@@ -249,10 +249,10 @@ class RunFTT:
         if self.progress_callback:
             self.progress_callback(0, total_steps)
 
+        run_start_time = time.time()
         for scenario_index, scen in enumerate(self.input):
             self._check_stop_requested()
-            start_time = time.time()
-            message = f'Starting scenario {scen}'
+            message = f'Running scenario {scen}'
             tqdm.write(message)
             if self.log_callback:
                 self.log_callback(message)
@@ -279,11 +279,11 @@ class RunFTT:
                     if self.progress_callback:
                         completed_steps = scenario_index * years_per_scenario + y + 1
                         self.progress_callback(completed_steps, total_steps)
-            
-            message = f'Finished scenario {scen}. Elapsed time is {time.time() - start_time:.2f} seconds'
-            tqdm.write(message)
-            if self.log_callback:
-                self.log_callback(message)
+
+        message = f'Total elapsed time is {time.time() - run_start_time:.2f} seconds'
+        tqdm.write(message)
+        if self.log_callback:
+            self.log_callback(message)
 
 
     def solve_year(self, year, y, scenario, max_iter=1):
