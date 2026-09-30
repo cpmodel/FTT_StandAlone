@@ -154,13 +154,16 @@ class RunFTT:
             convertible via ``str()``.
         progress_callback : callable, optional
             Optional callback ``progress_callback(current, total)`` used by GUI
-            wrappers while loading inputs.
+            wrappers with completed and total scenario-year steps while solving.
         log_callback : callable, optional
             Optional callback ``log_callback(message)`` used by GUI wrappers
             for status messages.
         stop_callback : callable, optional
             Optional callback returning ``True`` when a GUI run should stop.
         """
+        self.progress_callback = progress_callback
+        self.log_callback = log_callback
+
         # Configure data paths before any data-loading calls.
         from ftt_source.paths import set_paths, _PACKAGE_ROOT
         set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
@@ -241,27 +244,29 @@ class RunFTT:
         except AttributeError:
             pass
         
-        for scen in self.input:
+        years_per_scenario = len(self.timeline)
+        total_steps = len(self.input) * years_per_scenario
+        if self.progress_callback:
+            self.progress_callback(0, total_steps)
+
+        run_start_time = time.time()
+        for scenario_index, scen in enumerate(self.input):
             self._check_stop_requested()
+            message = f'Running scenario {scen}'
+            tqdm.write(message)
+            if self.log_callback:
+                self.log_callback(message)
 
             # Create progress bar:
             with tqdm(self.timeline) as pbar:
 
             # Call solve_year method for each year of the simulation period
-#                for year_index, year in enumerate(self.timeline):
                 for y, year in enumerate(self.timeline):
                     self._check_stop_requested()
-                    if y == 0:
-                        start_time = time.time()
-
-                    
                     # Set the description to be the current year
                     pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
 
                     self.variables, self.lags = self.solve_year(year, y, scen)
-
-                    # Increment the progress bar by one step
-                    pbar.update(1)
 
                     # Populate output container
                     for var in self.variables:
@@ -269,10 +274,16 @@ class RunFTT:
                             self.output[scen][var][:, :, :, y] = self.variables[var]
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
-            
-            # Set the progress bar to say it's complete
-            pbar.set_description(f"Model run {self.name} finished")
-            print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
+
+                    pbar.update(1)
+                    if self.progress_callback:
+                        completed_steps = scenario_index * years_per_scenario + y + 1
+                        self.progress_callback(completed_steps, total_steps)
+
+        message = f'Total elapsed time is {time.time() - run_start_time:.2f} seconds'
+        tqdm.write(message)
+        if self.log_callback:
+            self.log_callback(message)
 
 
     def solve_year(self, year, y, scenario, max_iter=1):
