@@ -168,7 +168,7 @@ TEWC,FTT-Transport levelised costs (no taxes),$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,20
 TEWB,FTT-Transport Technology spill-over matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,Y
 TEWA,FTT-Transport Technology substitution matrix,,NA,VTTI,VTTI,NA,FTT-Tr,,,,Y
 PFRG,Price of gas (euros/toe) [E3ME],euros/toe,RTI,FUTI,NA,TIME,General,-,2016,2010,
-TETH,FTT-Transport Efficiency ,,RTI,VYTI,NA,NA,FTT-Tr,,,,Y
+TETH,FTT-Transport Efficiency correction,,RTI,VYTI,NA,NA,FTT-Tr,,,,Y
 TETC,FTT-Transport levelised costs with taxes,$/pkm,RTI,VTTI,NA,TIME,FTT-Tr,,,2017,
 TESH,FTT-Transport Vehicle sales,th-veh,RTI,VYTI,NA,NA,FTT-Tr,,,,Y
 TESF,FTT-Transport Survival function,th-veh,RTI,VYTI,NA,NA,FTT-Tr,,,,Y
