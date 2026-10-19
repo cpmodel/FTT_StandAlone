@@ -13,6 +13,7 @@ ModelRun class: main class for operation of model.
 
 # Standard library imports
 import configparser
+import copy
 import time
 
 # Third party imports
@@ -22,12 +23,15 @@ from tqdm import tqdm
 # Local library imports
 # Separate FTT modules
 import ftt_source.Power.ftt_p_main as ftt_p
+import ftt_source.Power.ftt_p_main_old as ftt_p_old
 import ftt_source.Transport.ftt_tr_main as ftt_tr
+import ftt_source.Transport.ftt_tr_main_old as ftt_tr_old
 import ftt_source.Heat.ftt_h_main as ftt_h
 import ftt_source.Heat.ftt_h_main_old as ftt_h_old
 #import ftt_source.Steel.ftt_s_main as ftt_s
 #import ftt_source.Agri.ftt_agri_main as ftt_agri
 import ftt_source.Freight.ftt_fr_main as ftt_fr
+import ftt_source.Freight.ftt_fr_main_old as ftt_fr_old
 #import ftt_source.Hydrogen.ftt_h2_main as ftt_h2
 import ftt_source.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
 import ftt_source.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
@@ -187,6 +191,11 @@ class RunFTT:
         self.compare_heat_versions = config.getboolean(
             'settings', 'compare_heat_versions', fallback=True
         )
+        self.compare_sector_versions = config.getboolean(
+            'settings',
+            'compare_sector_versions',
+            fallback=self.compare_heat_versions,
+        )
 
         # Load classification titles
         self.titles = titles_f.load_titles()
@@ -263,7 +272,22 @@ class RunFTT:
             pbar.set_description(f"Model run {self.name} finished")
             print(f'Elapsed time is {time.time() - start_time:.2f} seconds')
 
-
+        if self.compare_sector_versions:
+            compared_sectors = [
+                sector
+                for sector, module in (
+                    ("Transport", "FTT-Tr"),
+                    ("Freight", "FTT-Fr"),
+                    ("Heat", "FTT-H"),
+                    ("Power", "FTT-P"),
+                )
+                if module in self.ftt_modules
+            ]
+            if compared_sectors:
+                print(
+                    "[Sector comparison] New and legacy solvers matched "
+                    f"throughout the model run: {', '.join(compared_sectors)}."
+                )
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """
 
@@ -282,54 +306,58 @@ class RunFTT:
 
             # 1. Run demand sectors FIRST
             if "FTT-Tr" in self.ftt_modules:
-                variables = ftt_tr.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+                if self.compare_sector_versions:
+                    legacy_out = ftt_tr_old.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y], self.domain,
+                    )
+                    variables = ftt_tr.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y], self.domain,
+                    )
+                    self._assert_model_outputs_match(
+                        "Transport", variables, legacy_out, tl[y]
+                    )
+                else:
+                    variables = ftt_tr.solve(
+                        variables, time_lags, self.titles, self.histend, tl[y],
+                        self.domain,
+                    )
             if "FTT-Fr" in self.ftt_modules:
-                variables = ftt_fr.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
+                if self.compare_sector_versions:
+                    legacy_out = ftt_fr_old.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y], self.domain,
+                    )
+                    variables = ftt_fr.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y], self.domain,
+                    )
+                    self._assert_model_outputs_match(
+                        "Freight", variables, legacy_out, tl[y]
+                    )
+                else:
+                    variables = ftt_fr.solve(
+                        variables, time_lags, self.titles, self.histend, tl[y],
+                        self.domain,
+                    )
             if "FTT-H" in self.ftt_modules:
-                if self.compare_heat_versions:
-                    # Run legacy and new Heat modules on isolated copies for direct year-by-year comparison.
-                    variables_old = {
-                        k: (np.copy(v) if isinstance(v, np.ndarray) else v)
-                        for k, v in variables.items()
-                    }
-                    time_lags_old = {
-                        k: (np.copy(v) if isinstance(v, np.ndarray) else v)
-                        for k, v in time_lags.items()
-                    }
-
+                if self.compare_sector_versions:
                     legacy_out = ftt_h_old.solve(
-                        variables_old, time_lags_old,
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
                         self.titles, self.histend, tl[y],
                         self.domain
                     )
 
-                    variables = ftt_h.solve(variables, time_lags,
-                                            self.titles, self.histend, tl[y],
-                                            self.domain)
+                    variables = ftt_h.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y],
+                        self.domain
+                    )
 
-                    max_diff = 0.0
-                    max_diff_var = None
-                    for var in variables:
-                        if var not in legacy_out:
-                            continue
-                        if not (isinstance(variables[var], np.ndarray)
-                                and isinstance(legacy_out[var], np.ndarray)):
-                            continue
-                        if variables[var].shape != legacy_out[var].shape:
-                            continue
-                        diff = np.max(np.abs(variables[var] - legacy_out[var])) if variables[var].size else 0.0
-                        if np.isnan(diff):
-                            continue
-                        if diff > max_diff:
-                            max_diff = float(diff)
-                            max_diff_var = var
-
-                    if max_diff_var is not None and max_diff > 1e-12:
-                        print(f"[Heat compare] Year {tl[y]} max_abs_diff={max_diff:.6e} var={max_diff_var}")
+                    self._assert_model_outputs_match(
+                        "Heat", variables, legacy_out, tl[y]
+                    )
                 else:
                     variables = ftt_h.solve(variables, time_lags,
                                             self.titles, self.histend, tl[y],
@@ -371,9 +399,25 @@ class RunFTT:
 
             # 3. Run Power sector LAST
             if "FTT-P" in self.ftt_modules:
-                variables = ftt_p.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain, self.power_settings)
+                if self.compare_sector_versions:
+                    legacy_out = ftt_p_old.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y], self.domain,
+                        self.power_settings,
+                    )
+                    variables = ftt_p.solve(
+                        copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        self.titles, self.histend, tl[y], self.domain,
+                        self.power_settings,
+                    )
+                    self._assert_model_outputs_match(
+                        "Power", variables, legacy_out, tl[y]
+                    )
+                else:
+                    variables = ftt_p.solve(
+                        variables, time_lags, self.titles, self.histend, tl[y],
+                        self.domain, self.power_settings,
+                    )
 
             # 4. Electricity price feedback (updates costs for next timestep)
             if "FTT-P" in self.ftt_modules:
@@ -385,6 +429,43 @@ class RunFTT:
 
            
         return variables, time_lags
+
+    @staticmethod
+    def _assert_model_outputs_match(sector, current, legacy, year):
+        """Assert that new and legacy solvers produced equivalent variables."""
+        if current.keys() != legacy.keys():
+            missing_from_current = sorted(legacy.keys() - current.keys())
+            missing_from_legacy = sorted(current.keys() - legacy.keys())
+            raise AssertionError(
+                f"{sector} solver output keys differ in {year}: "
+                f"missing from current={missing_from_current}, "
+                f"missing from legacy={missing_from_legacy}"
+            )
+
+        for variable_name, current_value in current.items():
+            legacy_value = legacy[variable_name]
+            current_is_array = isinstance(current_value, np.ndarray)
+            legacy_is_array = isinstance(legacy_value, np.ndarray)
+            if current_is_array != legacy_is_array:
+                raise AssertionError(
+                    f"{sector} solver output types differ for {variable_name} in {year}"
+                )
+            if current_is_array:
+                np.testing.assert_allclose(
+                    current_value,
+                    legacy_value,
+                    rtol=1e-12,
+                    atol=1e-12,
+                    equal_nan=True,
+                    err_msg=(
+                        f"{sector} solver outputs differ for {variable_name} "
+                        f"in {year}"
+                    ),
+                )
+            elif current_value != legacy_value:
+                raise AssertionError(
+                    f"{sector} solver outputs differ for {variable_name} in {year}"
+                )
 
     def update(self, year, y, scenario):
         """ Update model variables for a new year of solution """

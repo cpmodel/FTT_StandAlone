@@ -41,25 +41,16 @@ import numpy as np
 
 # Local library imports
 from ftt_source.support.divide import divide
+from ftt_source.support.singleton_dimension import (
+    squeeze_singleton_third_axis,
+    unsqueeze_singleton_third_axis,
+)
 
 
-def _view2d(arr):
-    """Return a 2D view for either 2D or (..., ..., 1) arrays."""
-    if arr.ndim == 2:
-        return arr
-    if arr.ndim == 3 and arr.shape[2] == 1:
-        return arr[:, :, 0]
-    raise ValueError(f"Expected 2D or 3D singleton-last-axis array, got shape {arr.shape}")
-
-
-def _assign2d(target, values):
-    """Assign 2D values back to a 2D or (..., ..., 1) target array."""
-    if target.ndim == 2:
-        target[:, :] = values
-    elif target.ndim == 3 and target.shape[2] == 1:
-        target[:, :, 0] = values
-    else:
-        raise ValueError(f"Expected 2D or 3D singleton-last-axis target, got shape {target.shape}")
+LCOH_VARIABLES = {
+    'HEFI', 'HEWC', 'HEWP', 'HETC', 'HGC1', 'HGC2', 'HGC3', 'HGD2',
+    'HGD3', 'HTRT', 'HTVS', 'HWCD',
+}
 
 def set_carbon_tax(data, c4ti):
     '''
@@ -70,8 +61,8 @@ def set_carbon_tax(data, c4ti):
         Carbon costs per country and technology (2D)
     '''
  
-    
-    co2_tax_h = _view2d(data["CO2taxH"])[:, 0]
+    squeezed_keys = squeeze_singleton_third_axis(data, {'CO2taxH'})
+    co2_tax_h = data["CO2taxH"][:, 0]
 
     carbon_costs = (co2_tax_h[:, np.newaxis]    # Carbon price in USD/tCO2
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
@@ -86,8 +77,10 @@ def set_carbon_tax(data, c4ti):
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
         print(f"Emissions intensity {data['BHTC'][:, :, c4ti['Emission factor']]}")
         
+        unsqueeze_singleton_third_axis(data, squeezed_keys)
         raise ValueError
-                       
+
+    unsqueeze_singleton_third_axis(data, squeezed_keys)
     return carbon_costs
 
 
@@ -104,6 +97,8 @@ def get_lcoh(data, titles, carbon_costs):
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
+    squeezed_keys = squeeze_singleton_third_axis(data, LCOH_VARIABLES)
+
     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     
@@ -143,10 +138,10 @@ def get_lcoh(data, titles, carbon_costs):
     domt = get_cost_component(bhtc[:, :, c4ti['4 O&M SD']], conv_cf, lt_mask)
     
     # Fuel costs and carbon costs
-    hewp = _view2d(data['HEWP'])
-    htvs = _view2d(data['HTVS'])
-    htrt = _view2d(data['HTRT'])
-    hefi = _view2d(data['HEFI'])
+    hewp = data['HEWP']
+    htvs = data['HTVS']
+    htrt = data['HTRT']
+    hefi = data['HEFI']
 
     ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * hewp, conv_ce, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
@@ -212,13 +207,14 @@ def get_lcoh(data, titles, carbon_costs):
     tpb = tpb * (1 + data['BHTC'][:, :, c4ti['12 Gamma value']])
     
     # Pass to variables that are stored outside.
-    _assign2d(data['HEWC'], lcoh)       # The real bare LCOH without taxes
-    _assign2d(data['HETC'], tlcoh)      # The real bare LCOH with taxes
-    _assign2d(data['HGC1'], tlcohg)     # As seen by consumer (generalised cost)
-    _assign2d(data['HWCD'], dlcoh)      # Variation on the LCOH distribution
-    _assign2d(data['HGC2'], tmc)        # Total marginal costs
-    _assign2d(data['HGD2'], dtmc)       # SD of Total marginal costs
-    _assign2d(data['HGC3'], tpb)        # Total payback costs
-    _assign2d(data['HGD3'], dtpb)       # SD of Total payback costs
+    data['HEWC'] = lcoh       # The real bare LCOH without taxes
+    data['HETC'] = tlcoh      # The real bare LCOH with taxes
+    data['HGC1'] = tlcohg     # As seen by consumer (generalised cost)
+    data['HWCD'] = dlcoh      # Variation on the LCOH distribution
+    data['HGC2'] = tmc        # Total marginal costs
+    data['HGD2'] = dtmc       # SD of Total marginal costs
+    data['HGC3'] = tpb        # Total payback costs
+    data['HGD3'] = dtpb       # SD of Total payback costs
 
+    unsqueeze_singleton_third_axis(data, squeezed_keys)
     return data

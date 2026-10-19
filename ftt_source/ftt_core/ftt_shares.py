@@ -17,7 +17,7 @@ from numba import njit
 # Parameter to approximate the cumulative distribution function of the cost comparison
 CDF_APPROX = 1.25 / sqrt(2) 
 
-def shares_change(
+def shares_change_old(
     dt, regions,
     shares_dt,
     costs, costs_sd,
@@ -37,7 +37,7 @@ def shares_change(
         upper_limit = np.empty((num_regions, num_techs, 1))
         lower_limit = np.empty((num_regions, num_techs, 1))
 
-    change_in_shares = shares_change_jitted(dt, regions, shares_dt, costs, costs_sd,
+    change_in_shares = shares_change_jitted_old(dt, regions, shares_dt, costs, costs_sd,
                subst, reg_constr, num_regions, num_techs,
                upper_limit, lower_limit, limits_active, T_Scal)
 
@@ -46,7 +46,7 @@ def shares_change(
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True, cache=True)
-def shares_change_jitted(
+def shares_change_jitted_old(
     dt, regions,
     shares_dt,
     costs, costs_sd,
@@ -215,7 +215,7 @@ def _rk4_integration(
 
 # Jit-in-time compilation. Comment this line out if you need to debug *in* the function
 @njit(fastmath=True, cache=True)
-def shares_change_premature(
+def shares_change_premature_old(
     dt, regions,
     shares_dt,
     costs_marg, costs_marg_sd,
@@ -305,3 +305,223 @@ def shares_change_premature(
     dSij_sum = np.sum(dSij_all, axis=2)
                 
     return dSij_sum
+
+
+def shares_change(
+    dt, regions,
+    shares_dt,
+    costs, costs_sd,
+    subst, reg_constr, num_regions, num_techs,
+    upper_limit=None, lower_limit=None, limits_active=False,
+    T_Scal=1.0, compare_with_old=False,
+):
+    """Calculate share changes from 2D technology arrays.
+
+    ``compare_with_old`` is a temporary migration check that verifies the
+    result against :func:`shares_change_old`.
+    """
+    if not limits_active:
+        upper_limit = np.empty((num_regions, num_techs))
+        lower_limit = np.empty((num_regions, num_techs))
+
+    change_in_shares = shares_change_jitted(
+        dt, regions, shares_dt, costs, costs_sd, subst, reg_constr,
+        num_regions, num_techs, upper_limit, lower_limit, limits_active, T_Scal,
+    )
+
+    if compare_with_old:
+        old_change_in_shares = shares_change_old(
+            dt, regions,
+            shares_dt[:, :, np.newaxis],
+            costs[:, :, np.newaxis],
+            costs_sd[:, :, np.newaxis],
+            subst, reg_constr, num_regions, num_techs,
+            upper_limit[:, :, np.newaxis],
+            lower_limit[:, :, np.newaxis],
+            limits_active, T_Scal,
+        )
+        np.testing.assert_allclose(
+            change_in_shares, old_change_in_shares, rtol=1e-12, atol=1e-12
+        )
+
+    return change_in_shares
+
+
+@njit(fastmath=True, cache=True)
+def shares_change_jitted(
+    dt, regions,
+    shares_dt,
+    costs, costs_sd,
+    subst, reg_constr,
+    num_regions, num_techs,
+    upper_limit, lower_limit, limits_active=False,
+    T_Scal=1.0,
+):
+    """2D implementation of the standard FTT shares equation."""
+    dSij_all = np.zeros((num_regions, num_techs, num_techs))
+
+    for r in regions:
+        dSij = np.zeros((num_techs, num_techs))
+        F = np.ones((num_techs, num_techs)) * 0.5
+        Gijmax = np.ones(num_techs)
+        Gijmin = np.ones(num_techs)
+
+        for tech_i in range(num_techs):
+            S_i = shares_dt[r, tech_i]
+            if not (S_i > 0.0 and costs[r, tech_i] != 0.0):
+                continue
+
+            if limits_active:
+                Gijmax[tech_i] = np.tanh(
+                    1.25 * (upper_limit[r, tech_i] - S_i) / 0.1
+                )
+                Gijmin[tech_i] = 0.5 + 0.5 * np.tanh(
+                    1.25 * (-lower_limit[r, tech_i] + S_i) / 0.1
+                )
+
+            for tech_j in range(tech_i):
+                S_j = shares_dt[r, tech_j]
+                if not (S_j > 0.0 and costs[r, tech_j] != 0.0):
+                    continue
+
+                dFij = np.sqrt(
+                    costs_sd[r, tech_i] * costs_sd[r, tech_i]
+                    + costs_sd[r, tech_j] * costs_sd[r, tech_j]
+                )
+                Fij = 0.5 * (
+                    1 + np.tanh(
+                        CDF_APPROX
+                        * (costs[r, tech_j] - costs[r, tech_i]) / dFij
+                    )
+                )
+                F[tech_i, tech_j], F[tech_j, tech_i] = (
+                    _apply_regulation_adjustment(
+                        Fij, 1.0 - Fij,
+                        reg_constr[r, tech_i], reg_constr[r, tech_j],
+                    )
+                )
+
+                if limits_active:
+                    delta_AFG = (
+                        subst[r, tech_i, tech_j] * F[tech_j, tech_i]
+                        * Gijmax[tech_i] * Gijmin[tech_j]
+                        - subst[r, tech_j, tech_i] * F[tech_i, tech_j]
+                        * Gijmax[tech_j] * Gijmin[tech_i]
+                    )
+                else:
+                    delta_AFG = (
+                        subst[r, tech_i, tech_j] * F[tech_j, tech_i]
+                        - subst[r, tech_j, tech_i] * F[tech_i, tech_j]
+                    )
+
+                dSij[tech_i, tech_j] = _rk4_integration(
+                    S_i, S_j, delta_AFG, dt, T_Scal
+                )
+                dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
+
+        dSij_all[r] = dSij
+
+    return np.sum(dSij_all, axis=2)
+
+
+def shares_change_premature(
+    dt, regions,
+    shares_dt,
+    costs_marg, costs_marg_sd,
+    costs_payb, costs_payb_sd,
+    subst, reg_constr,
+    num_regions, num_techs,
+    compare_with_old=False,
+):
+    """Calculate premature replacement share changes from 2D arrays."""
+    change_in_shares = shares_change_premature_jitted(
+        dt, regions, shares_dt, costs_marg, costs_marg_sd,
+        costs_payb, costs_payb_sd, subst, reg_constr,
+        num_regions, num_techs,
+    )
+
+    if compare_with_old:
+        old_change_in_shares = shares_change_premature_old(
+            dt, regions,
+            shares_dt[:, :, np.newaxis],
+            costs_marg[:, :, np.newaxis],
+            costs_marg_sd[:, :, np.newaxis],
+            costs_payb[:, :, np.newaxis],
+            costs_payb_sd[:, :, np.newaxis],
+            subst, reg_constr, num_regions, num_techs,
+        )
+        np.testing.assert_allclose(
+            change_in_shares, old_change_in_shares, rtol=1e-12, atol=1e-12
+        )
+
+    return change_in_shares
+
+
+@njit(fastmath=True, cache=True)
+def shares_change_premature_jitted(
+    dt, regions,
+    shares_dt,
+    costs_marg, costs_marg_sd,
+    costs_payb, costs_payb_sd,
+    subst, reg_constr,
+    num_regions, num_techs,
+):
+    """2D implementation of the premature replacement shares equation."""
+    dSij_all = np.zeros((num_regions, num_techs, num_techs))
+
+    for r in regions:
+        dSij = np.zeros((num_techs, num_techs))
+        F = np.ones((num_techs, num_techs)) * 0.5
+
+        for tech_i in range(num_techs):
+            if not (
+                shares_dt[r, tech_i] > 0.0
+                and costs_marg[r, tech_i] != 0.0
+                and costs_payb[r, tech_i] != 0.0
+            ):
+                continue
+
+            S_i = shares_dt[r, tech_i]
+            for tech_j in range(tech_i):
+                if not (
+                    shares_dt[r, tech_j] > 0.0
+                    and costs_marg[r, tech_j] != 0.0
+                    and costs_payb[r, tech_j] != 0.0
+                ):
+                    continue
+
+                S_j = shares_dt[r, tech_j]
+                dFij = sqrt(
+                    costs_payb_sd[r, tech_i] * costs_payb_sd[r, tech_i]
+                    + costs_marg_sd[r, tech_j] * costs_marg_sd[r, tech_j]
+                )
+                dFji = sqrt(
+                    costs_marg_sd[r, tech_i] * costs_marg_sd[r, tech_i]
+                    + costs_payb_sd[r, tech_j] * costs_payb_sd[r, tech_j]
+                )
+                Fij = 0.5 * (
+                    1 + np.tanh(
+                        CDF_APPROX
+                        * (costs_marg[r, tech_j] - costs_payb[r, tech_i]) / dFij
+                    )
+                )
+                Fji = 0.5 * (
+                    1 + np.tanh(
+                        CDF_APPROX
+                        * (costs_marg[r, tech_i] - costs_payb[r, tech_j]) / dFji
+                    )
+                )
+                F[tech_j, tech_i] = Fij * (1.0 - reg_constr[r, tech_i])
+                F[tech_i, tech_j] = Fji * (1.0 - reg_constr[r, tech_j])
+                delta_AFG = (
+                    subst[r, tech_i, tech_j] * F[tech_j, tech_i]
+                    - subst[r, tech_j, tech_i] * F[tech_i, tech_j]
+                )
+                dSij[tech_i, tech_j] = _rk4_integration(
+                    S_i, S_j, delta_AFG, dt
+                )
+                dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
+
+        dSij_all[r] = dSij
+
+    return np.sum(dSij_all, axis=2)

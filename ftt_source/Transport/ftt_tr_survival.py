@@ -15,6 +15,11 @@ This means the new car numbers can be quite volatile, especially historically
 import numpy as np
 
 
+def _singleton_2d(array):
+    """Return an internal singleton-axis variable as a 2D array."""
+    return array if array.ndim == 2 else array[:, :, 0]
+
+
 def get_survival_ratio(survival_function_array):
     """Transform survival function into a year-on-year ratio of survival.
     
@@ -35,8 +40,11 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     New car additions are set to zero if calculation is negative (f.i. with regulation)
     
     """
+    capacity = _singleton_2d(capacity)
+    lagged_capacity = _singleton_2d(lagged_capacity)
+    scrappage = _singleton_2d(scrappage)
     capacity_growth = capacity - lagged_capacity
-    new_cars = capacity_growth[:, :, 0] + scrappage[:, :, 0]
+    new_cars = capacity_growth + scrappage
     # Set new cars to zero
     new_cars = np.where(new_cars < 0, 0, new_cars)
     
@@ -53,7 +61,7 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
         print("NaN values found in age_matrix.")
     
     # Normalise age_matrix, so that in each country + car, it sums to overall capacity TEWK.
-    age_matrix = np.divide(age_matrix * capacity, sum_age_matrix, \
+    age_matrix = np.divide(age_matrix * capacity[:, :, np.newaxis], sum_age_matrix, \
                            where=sum_age_matrix!=0, out=np.zeros_like(age_matrix))
 
     return age_matrix
@@ -71,7 +79,7 @@ def initialise_age_matrix(data, titles):
     fraction_per_age = fraction_per_age / np.sum(fraction_per_age)
     
     # Split the capacity TEWK into different age brackets via broadcasting
-    data["RLTA"] = fraction_per_age[None, None, :] * data["TEWK"][:, :, 0][:, :, np.newaxis]
+    data["RLTA"] = fraction_per_age[None, None, :] * _singleton_2d(data["TEWK"])[:, :, np.newaxis]
 
     return data
     
@@ -107,10 +115,14 @@ def survival_function(data, time_lag, histend, year, titles):
         
         # Calculate survival and handle EoL vehicle scrappage
         survival = np.sum(data['RLTA'], axis=-1)
-        scrappage = time_lag['TEWK'][..., 0] - survival
+        scrappage = _singleton_2d(time_lag['TEWK']) - survival
         
         # Vectorized condition for scrappage
-        data['REVS'][..., 0] = np.where(scrappage > 0, scrappage, 0)
+        revs = np.where(scrappage > 0, scrappage, 0)
+        if data['REVS'].ndim == 2:
+            data['REVS'] = revs
+        else:
+            data['REVS'][:, :, 0] = revs
         
     
     data["RLTA"] = add_new_cars_age_matrix(

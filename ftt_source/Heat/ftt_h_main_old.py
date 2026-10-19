@@ -36,9 +36,18 @@ import numpy as np
 
 
 # Local library imports
-from ftt_source.ftt_core.ftt_shares import shares_change, shares_change_premature
-from ftt_source.ftt_core.ftt_mandate import implement_mandate, implement_seeding
-from ftt_source.ftt_core.ftt_sales_or_investments import get_sales, get_sales_yearly
+from ftt_source.ftt_core.ftt_shares import (
+    shares_change_old,
+    shares_change_premature_old,
+)
+from ftt_source.ftt_core.ftt_mandate import (
+    implement_mandate_old,
+    implement_seeding_old,
+)
+from ftt_source.ftt_core.ftt_sales_or_investments import (
+    get_sales_old,
+    get_sales_yearly_old,
+)
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
 from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
@@ -162,7 +171,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Investment (= capacity additions) by technology (in GW/y)
         if year > 2014:
-            data["HEWI"] = get_sales_yearly(data["HEWK"], time_lag["HEWK"],
+            data["HEWI"] = get_sales_yearly_old(data["HEWK"], time_lag["HEWK"],
                               data["HEWI"], time_lag['BHTC'][:, :, c4ti['6 Replacetime']])
             
             bi = np.zeros((num_regions, num_techs))
@@ -248,7 +257,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             regions = np.where(rhudt[:, 0, 0] > 0.0)[0]
                 
             # The core FTT equations, taking into account old shares, costs and regulations
-            change_in_shares = shares_change(
+            change_in_shares = shares_change_old(
                 dt=dt,
                 regions=regions,
                 shares_dt=data_dt["HEWS"],         # Shares at previous t
@@ -268,7 +277,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 SR_all[r, :] = np.where(SR<0.0, 0.0, SR)
             
             # Premature replacements, use scrappage rate time scales and amended costs
-            changes_in_shares_prem_repl = shares_change_premature(
+            changes_in_shares_prem_repl = shares_change_premature_old(
                 dt=dt,
                 regions=regions,
                 shares_dt=data_dt["HEWS"],          # Shares at previous t
@@ -318,18 +327,18 @@ def solve(data, time_lag, titles, histend, year, domain):
                                     data['BHTC'][:, :, c4ti["13 Capacity factor mean"]])/1000
 
             # New additions (HEWI)
-            data['HEWI'], hewi_t = get_sales(
+            data['HEWI'], hewi_t = get_sales_old(
                   data["HEWK"], data_dt["HEWK"], time_lag["HEWK"],
                   data["HEWI"], data_dt['BHTC'][:, :, c4ti['6 Replacetime']],
                   dt
                   )
 
             # Seed heat pumps in regions with low adoption (first five years simulation)
-            data['HEWI'], hewi_t, data["HEWK"] = implement_seeding(
+            data['HEWI'], hewi_t, data["HEWK"] = implement_seeding_old(
                 data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, histend['HEWF'])
 
             # Change capacity and sales after mandate (only runs if hp mandate != 0)
-            data['HEWI'], hewi_t, data["HEWK"] = implement_mandate(
+            data['HEWI'], hewi_t, data["HEWK"] = implement_mandate_old(
                 data['HEWK'], data['HEWI'], hewi_t, year, GREEN_INDICES_HP, data["HP mandate"])
             
             # Calculate HEWG, HEWS and HEWF after mandates  

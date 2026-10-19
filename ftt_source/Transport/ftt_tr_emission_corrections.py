@@ -7,6 +7,13 @@ Created on Fri Jun 20 15:20:24 2025
 
 import numpy as np
 
+
+def _singleton_2d(array):
+    """Return an internal singleton-axis variable as a 2D array."""
+    if array.ndim == 1:
+        return array[:, None]
+    return array if array.ndim == 2 else array[:, :, 0]
+
 def co2_corr(data, titles, regions=None):
     """
     Compute regional CO2 correction factors based on vehicle age and survival.
@@ -26,7 +33,7 @@ def co2_corr(data, titles, regions=None):
     TESH = data['TESH'][regions, :, 0]  # Vehicle sales history
     TESF = data['TESF'][regions, :, 0]  # Survival function
     TETH = data['TETH'][regions, :, 0]  # Efficiency correction by age
-    RFLT = data['RFLT'][regions, 0, 0]  # Fleet stocks in use
+    RFLT = _singleton_2d(data['RFLT'])[regions, 0]  # Fleet stocks in use
 
     numer = (TESH * TESF * TETH).sum(axis=1)
     total_fleet = (TESH * TESF).sum(axis=1)
@@ -66,7 +73,7 @@ def biofuel_corr(data, titles, region_has_fleet, regions=None):
     biofuel_ind = JTI.index('11 Biofuels')
     middle_dist_ind = JTI.index('5 Middle distillates')
 
-    biofuel_mand = data['RBFM'][regions, 0, 0]
+    biofuel_mand = _singleton_2d(data['RBFM'])[regions, 0]
     TJET_middle = data['TJET'][0, :, middle_dist_ind] != 0
 
     biofuel_corr[region_has_fleet, :] = 1.0 - biofuel_mand[region_has_fleet, None] * TJET_middle[None, :]
@@ -92,15 +99,26 @@ def compute_emissions_and_fuel_use(data, titles, CO2_corr, biofuel_corr, fuel_co
     if regions is None:
         regions = np.arange(len(titles['RTI']))
 
-    energy_use_per_tech = (data['TEWG'][regions, :, 0]
+    tewg = _singleton_2d(data['TEWG'])
+    energy_use_per_tech = (tewg[regions]
                           * data['BTTC'][regions, :, c3ti['9 energy use (MJ/km)']]
                           * CO2_corr[:, None] / 41.868)
     
-    data['TJEF'][regions, :, 0] = np.einsum('v f r, r v -> r f',
-                                           fuel_converter.transpose(1, 2, 0),
-                                           energy_use_per_tech)
+    tjef = _singleton_2d(data['TJEF'])
+    tjef[regions] = np.einsum('v f r, r v -> r f',
+                              fuel_converter.transpose(1, 2, 0),
+                              energy_use_per_tech)
+    if data['TJEF'].ndim == 2:
+        data['TJEF'] = tjef
+    else:
+        data['TJEF'][:, :, 0] = tjef
 
     # TODO: are we double counting electric emissions? They should likely be zero in this model.
-    data['TEWE'][regions, :, 0] = (data['TEWG'][regions, :, 0]
-                                   * data['BTTC'][regions, :, c3ti['14 CO2Emissions']]
-                                   * CO2_corr[:, None] * biofuel_corr / 1e6)
+    tewe = _singleton_2d(data['TEWE'])
+    tewe[regions] = (tewg[regions]
+                     * data['BTTC'][regions, :, c3ti['14 CO2Emissions']]
+                     * CO2_corr[:, None] * biofuel_corr / 1e6)
+    if data['TEWE'].ndim == 2:
+        data['TEWE'] = tewe
+    else:
+        data['TEWE'][:, :, 0] = tewe
