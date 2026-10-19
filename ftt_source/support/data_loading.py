@@ -39,6 +39,10 @@ from ftt_source.support.check_input_files import check_var_dims, check_vars_exis
 from ftt_source.paths import get_inputs_path, get_utilities_path
 
 
+# ---------------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------------
+
 def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
               progress_callback=None, log_callback=None):
     """
@@ -109,10 +113,12 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
 
     # Pre-build a timeline-index lookup once.
     tl_idx = {year: i for i, year in enumerate(timeline)}
+    region_codes = {str(r) for r in titles['RTI_short']}
 
     def _read_and_fill_module_folder(scen, model, directory):
         """Read all csv files in a model folder and fill scenario arrays."""
         loaded_vars = set()
+        legacy_vars = set()
         if not os.path.isdir(directory):
             return loaded_vars
 
@@ -120,6 +126,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
             if not filename.endswith('.csv'):
                 continue
             var = filename[:-4]  # strip '.csv'
+            base, _, suffix = var.rpartition('_')
+            if base in dimensions and suffix in region_codes:
+                legacy_vars.add(base)
+                continue
             if var not in dimensions or var not in data[scen]:
                 continue
 
@@ -131,9 +141,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
                     null_values=['', 'NA', 'nan'],
                 )
             except Exception as exc:
-                warnings.warn(
-                    f'Could not read {file_path}: {exc}'
-                )
+                _emit_warning(f'Could not read {file_path}: {exc}', log_callback)
                 continue
 
             if scen == 'S0':
@@ -141,9 +149,17 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
 
             _fill_from_input_df(
                 df, var, dimensions, titles, timeline, tl_idx, forstart,
-                data[scen][var],
+                data[scen][var], log_callback=log_callback,
             )
             loaded_vars.add(var)
+
+        if legacy_vars:
+            _emit_warning(
+                _legacy_files_message(
+                    os.path.join(scen, model), legacy_vars, sorted(region_codes)[0]
+                ),
+                log_callback,
+            )
 
         return loaded_vars
 
@@ -164,13 +180,10 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
 
     if empty_scenarios:
         msg = (
-            f"Warning: no input files found for scenario(s): {', '.join(empty_scenarios)}.\n "
+            f"No input files found for scenario(s): {', '.join(empty_scenarios)}.\n"
             "These scenarios will not be run."
         )
-        if log_callback is not None:
-            log_callback(msg)
-        else:
-            warnings.warn(msg)
+        _emit_warning(msg, log_callback)
         for scen in empty_scenarios:
             del data[scen]
         scenario_list = [s for s in scenario_list if s not in empty_scenarios]
@@ -196,7 +209,7 @@ def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers
+# Data loading helpers
 # ---------------------------------------------------------------------------
 
 def _wide_column_axis(variable_dims):
@@ -229,7 +242,8 @@ def _resolve_dim_index(raw_label, dim_name, idx_map, idx_map_casefold):
     return idx_map_casefold.get(label.strip().casefold())
 
 
-def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, target):
+def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, target,
+                        log_callback=None):
     """Fill *target* ndarray in-place from a polars DataFrame.
 
     Parameters
@@ -250,6 +264,8 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
         Forecast start year per variable.
     target : np.ndarray
         Array to fill in-place, shape ``(D0, D1, D2, D3)``.
+    log_callback : callable, optional
+        If given, warnings are sent here instead of ``warnings.warn``.
     """
     variable_dims = dims[var]  # list of 4 strings
     is_time = variable_dims[3] == 'TIME'
@@ -307,13 +323,6 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
         return  # nothing to fill
 
     expected_coord_headers = [dim_name for _, dim_name in coord_axes_info]
-    if list(coord_col_headers) != expected_coord_headers:
-        warnings.warn(
-            f"Variable '{var}': coordinate column headers {list(coord_col_headers)} "
-            f"do not match expected headers {expected_coord_headers}. "
-            "The file's columns may not match its variable's schema; "
-            "rows will likely fail to match and be skipped."
-        )
 
     # --- Build index maps: str(label) → array index for each coord dimension ---
     idx_maps = {}
@@ -401,7 +410,7 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
 
     # --- Fill target array row by row ---
     n_rows = coord_np.shape[0]
-    n_matched_rows = 0
+    skipped_rows = []  # (csv line number, dimension name, offending label)
     for row_i in range(n_rows):
         # Resolve coordinate labels → array indices.
         base_coords = [0, 0, 0, 0]
@@ -416,13 +425,12 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
             )
             if idx is None:
                 valid = False
+                skipped_rows.append((row_i + 2, dim_name, label))  # +2: header is line 1
                 break
             base_coords[axis] = idx
 
         if not valid:
             continue
-
-        n_matched_rows += 1
 
         if wide_axis is None:
             # Scalar variable: assign the single 'value' column.
@@ -437,36 +445,102 @@ def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, targe
                 coords[wide_axis] = w_idx
                 target[tuple(coords)] = row_vals[col_j]
 
-    # --- Warn if coordinate labels or wide columns mostly/entirely failed to match ---
-    if n_rows > 0 and n_matched_rows == 0:
-        warnings.warn(
-            f"Variable '{var}': none of the {n_rows} row(s) in the input file matched "
-            f"the expected classification labels for {[d for _, d in coord_axes_info]}. "
-            "The file is likely in the wrong format (wrong columns/labels) — "
-            "all values for this variable will remain zero."
-        )
-    elif n_rows > 0 and n_matched_rows < n_rows:
-        warnings.warn(
-            f"Variable '{var}': only {n_matched_rows} of {n_rows} row(s) matched the "
-            "expected classification labels; the rest were skipped. Check the input "
-            "file's coordinate columns against classification_titles.csv."
+    # --- Warn if coordinate labels or wide columns failed to match ---
+    if skipped_rows:
+        _emit_warning(
+            _row_mismatch_message(
+                var, n_rows, skipped_rows, expected_coord_headers, list(coord_col_headers)
+            ),
+            log_callback,
         )
 
     if wide_axis is not None and not is_time and col_indices is not None:
         n_matched_cols = sum(1 for w_idx in col_indices if w_idx is not None)
-        if len(col_indices) > 0 and n_matched_cols == 0:
-            warnings.warn(
-                f"Variable '{var}': none of the value column headers "
-                f"{list(value_col_headers)} matched the expected labels for "
-                f"'{variable_dims[wide_axis]}'. The file is likely in the wrong "
-                "format — all values for this variable will remain zero."
+        if n_matched_cols < len(col_indices):
+            _emit_warning(
+                _column_mismatch_message(
+                    var, variable_dims[wide_axis], n_matched_cols, list(value_col_headers)
+                ),
+                log_callback,
             )
-        elif n_matched_cols < len(col_indices):
-            warnings.warn(
-                f"Variable '{var}': only {n_matched_cols} of {len(col_indices)} value "
-                f"column header(s) {list(value_col_headers)} matched the expected "
-                f"labels for '{variable_dims[wide_axis]}'."
-            )
+
+
+# ---------------------------------------------------------------------------
+# Warnings (messages shown in the GUI log, or via warnings.warn on the CLI)
+# ---------------------------------------------------------------------------
+
+def _emit_warning(msg, log_callback=None):
+    """Send *msg* to the GUI log if a callback is given, else to warnings."""
+    if log_callback is not None:
+        log_callback(f"WARNING: {msg}")
+    else:
+        warnings.warn(msg)
+
+
+def _row_mismatch_message(var, n_rows, skipped_rows, expected_headers, actual_headers,
+                          max_listed=5):
+    """Build the warning text for input rows skipped due to label mismatches."""
+    n_skipped = len(skipped_rows)
+    n_matched = n_rows - n_skipped
+    quantifier = "all" if n_matched == 0 else str(n_skipped)
+    row_word = "input row" if n_skipped == 1 else "input rows"
+    lines = [
+        f"{var}: {quantifier} {row_word} skipped due to classification mismatch "
+        f"against classification_titles.csv for {expected_headers} "
+        f"({n_matched}/{n_rows} rows matched)."
+    ]
+
+    listed = "; ".join(
+        f"line {line}: {dim}='{label}'" for line, dim, label in skipped_rows[:max_listed]
+    )
+    if n_skipped > max_listed:
+        listed += f"; ... and {n_skipped - max_listed} more"
+    lines.append(f"Unmatched labels ({listed}).")
+
+    if actual_headers != expected_headers:
+        lines.append(
+            f"Column headers {actual_headers} do not match expected headers "
+            f"{expected_headers}."
+        )
+    if n_matched == 0:
+        lines.append(
+            "The file is likely in the wrong format. "
+            "All values for this variable will remain zero."
+        )
+    return "\n".join(lines)
+
+
+def _column_mismatch_message(var, wide_dim, n_matched_cols, value_col_headers):
+    """Build the warning text for value-column headers that did not match."""
+    n_cols = len(value_col_headers)
+    msg = (
+        f"{var}: {n_matched_cols}/{n_cols} value column header(s) "
+        f"{value_col_headers} matched the expected labels for '{wide_dim}'."
+    )
+    if n_matched_cols == 0:
+        msg += (
+            "\nThe file is likely in the wrong format. "
+            "All values for this variable will remain zero."
+        )
+    return msg
+
+
+def _legacy_files_message(folder, legacy_vars, example_region):
+    """Build the warning text for old per-country input files (e.g. BZTC_BE.csv)."""
+    names = sorted(legacy_vars)
+    return (
+        f"{folder}: found old per-country input files "
+        f"(e.g. {names[0]}_{example_region}.csv) for {len(names)} variable(s): "
+        f"{', '.join(names)}.\n"
+        "These files are ignored. Inputs now use a single file per variable "
+        "with all countries (e.g. BZTC.csv).\n"
+        "Update or delete the old files and use the new format."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Model validation
+# ---------------------------------------------------------------------------
 
 def get_valid_ftt_models():
     """Return a list of valid FTT module names by checking the Models short 

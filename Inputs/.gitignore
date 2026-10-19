@@ -3,4 +3,6 @@
 *.db1
 *.mre
 !S0/**/*.csv
+# Old per-country files (e.g. BZTC_BE.csv) stay ignored
+**/*_[A-Z][A-Z].csv
 
