@@ -202,9 +202,11 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         relative_excess = divide(time_lag['HEWS'] - data['HREG'], data['HREG'])
         reg_constr = 0.5 + 0.5 * np.tanh(1.5 + 10 * relative_excess)
+
         reg_constr[data['HREG'] == 0.0] = 1.0
         reg_constr[data['HREG'] == -1.0] = 0.0
-
+        
+        # Factor used to create subannual data from annual figures
         no_it = int(data['noit'])
         dt = 1 / float(no_it)
 
