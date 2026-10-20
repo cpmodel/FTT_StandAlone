@@ -120,7 +120,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     shared_vars = {
         'CO2taxP', 'noit', 'Battery cap additions', 'MEPD', 'MERC', 'RERY',
         'MPTR', 'MRED', 'MRES',
-        'TEWK', 'ZEWK',
+        'TEWK', 'ZEWK', 'REVS',
         'MEWP',
     }
     squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-P'} | shared_vars
@@ -131,6 +131,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         'PMF', 'noit', 'MCRT', 'MLSG', 'MLSE', 'MSSE', 'MSSC', 'MSSG',
         'MSSR', 'MSCC', 'MLSC', 'MLSR', 'MLCC', 'MSAL', 'MCGA', 'MCNA',
         'MCTN', 'MADG', 'LAT', 'RLDCMAP', 'CO2taxP', 'Battery price',
+        'V2G battery stock', 'Second-hand battery stock',
     }
     data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
     time_lag_global_shapes = squeeze_all_singleton_axes(
