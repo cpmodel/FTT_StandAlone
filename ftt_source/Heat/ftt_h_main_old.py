@@ -57,7 +57,7 @@ GREEN_INDICES_HP = [9, 10, 11]
 
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 from ftt_source.support.divide import divide
-from ftt_source.support.check_market_shares import check_market_shares
+from ftt_source.support.check_market_shares_old import check_market_shares
 
 from ftt_source.Heat.ftt_h_lcoh_old import get_lcoh, set_carbon_tax
 

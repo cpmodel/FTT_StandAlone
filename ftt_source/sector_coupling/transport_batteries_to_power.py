@@ -106,7 +106,7 @@ def share_transport_batteries(data, titles):
         return np.zeros(data["MSSC"].shape[0])
 
     # Convert GW to GWh (estimate)
-    capacity_batteries_power = data["MSSC"].ravel()
+    capacity_batteries_power = data["MSSC"]
     capacity_batteries_power *= sector_coupling_assumps["GW to GWh"]
 
     # Share of either repurposed or V2G batteries

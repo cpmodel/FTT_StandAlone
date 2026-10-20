@@ -14,19 +14,8 @@ def check_market_shares(shares, titles, sector, year):
     
     Raises ValueErrors if there are problems'''
     
-    if shares.ndim == 2:
-        share_values = shares
-    elif shares.ndim == 3 and shares.shape[2] == 1:
-        share_values = shares[:, :, 0]
-    else:
-        raise ValueError(
-            "Market shares must have shape (region, technology) or "
-            "(region, technology, 1), "
-            f"got {shares.shape}"
-        )
-
     # Sum market shares for each region.
-    total_shares = share_values.sum(axis=1)
+    total_shares = shares.sum(axis=1)
     
     # Using a lax threshold (1e-4) because FTT:Tr pseudoshares in empty regions may not sum exactly to 1.
     if sector != 'freight':
@@ -47,7 +36,7 @@ def check_market_shares(shares, titles, sector, year):
         )
     
     # Check for negative shares and raise error if found
-    negatives = (share_values < 0.0).any(axis=1)
+    negatives = (shares < 0.0).any(axis=1)
     if np.any(negatives):
         regions = [titles['RTI'][r] for r in np.where(negatives)[0]]
         raise ValueError(

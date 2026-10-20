@@ -45,7 +45,7 @@ from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
 from ftt_source.ftt_core.ftt_exogenous_capacity_old import regulation_correction
 
 from ftt_source.support.divide import divide
-from ftt_source.support.check_market_shares import check_market_shares
+from ftt_source.support.check_market_shares_old import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
 from ftt_source.Transport.ftt_tr_lcot_old import (

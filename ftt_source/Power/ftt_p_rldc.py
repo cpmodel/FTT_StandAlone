@@ -55,8 +55,8 @@ def get_wind_solar_indices(titles):
 # -----------------------------------------------------------------------------
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
-def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-          wind_solar_indices, sector_coupling=True):
+def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
+         wind_solar_indices, sector_coupling=True):
     """
     Calculate RLDCs.
 
@@ -645,8 +645,6 @@ def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     if sector_coupling:
         data = vehicle_to_grid(data, time_lag, year, titles)
         storage_ratio = share_transport_batteries(data, titles)
-        if np.ndim(storage_ratio) == 0:
-            storage_ratio = np.full(data["MSSP"].shape[0], storage_ratio)
         data = update_costs_from_transport_batteries(
             data, storage_ratio, year, titles
         )
@@ -657,12 +655,3 @@ def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
         data['MLSC_histend'] = np.sum(data['MLSC']).copy()
 
     return data
-
-
-def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-         wind_solar_indices, sector_coupling=True):
-    """Calculate residual load duration curves using natural array shapes."""
-    return _rldc(
-        data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-        wind_solar_indices, sector_coupling,
-    )

@@ -20,8 +20,8 @@ def power_battery_additions_dt(no_it, data, data_dt, titles):
 
     battery_lifetime = 12  # Assuming 12 years
 
-    capacity_batteries_current_timestep = data["MSSC"].ravel() * sector_coupling_assumps["GW to GWh"]
-    capacity_batteries_last_timestep = data_dt["MSSC"].ravel() * sector_coupling_assumps["GW to GWh"]
+    capacity_batteries_current_timestep = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+    capacity_batteries_last_timestep = data_dt["MSSC"] * sector_coupling_assumps["GW to GWh"]
 
     capacity_additions_dt = capacity_batteries_current_timestep - capacity_batteries_last_timestep
 

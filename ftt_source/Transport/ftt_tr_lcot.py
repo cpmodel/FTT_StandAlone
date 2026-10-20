@@ -185,10 +185,11 @@ def get_lcot(data, titles, carbon_costs, year):
     dlogtlcot = np.sqrt(np.log(1.0 + dlcot * dlcot / (tlcot * tlcot)))
 
     # 6 - Pass to variables that are stored outside.
-    for variable, values in {
-        'TEWC': lcot, 'TETC': tlcot, 'TEGC': tlcotg,
-        'TELC': logtlcot, 'TECD': dlcot, 'TLCD': dlogtlcot,
-    }.items():
-        data[variable] = values
+    data['TEWC'] = lcot           # The real bare LCOT without taxes
+    data['TETC'] = tlcot          # The real bare LCOT with taxes
+    data['TEGC'] = tlcotg         # As seen by consumer (generalised cost)
+    data['TELC'] = logtlcot       # In lognormal space
+    data['TECD'] = dlcot          # Variation on the LCOT distribution
+    data['TLCD'] = dlogtlcot      # Log variation on the LCOT distribution
 
     return data
