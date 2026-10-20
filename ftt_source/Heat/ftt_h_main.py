@@ -104,7 +104,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
     # Temporarily squeeze singleton 3rd axis for Heat-internal calculations.
     # Shapes are restored before returning from solve.
-    shared_vars = {'HFFC', 'HJFC', 'RHUD', 'PRSC14', 'PRSCX', 'noit'}
+    shared_vars = {'HFFC', 'HJFC', 'RHUD', 'PRSC14', 'PRSCX', 'CO2taxH', 'noit'}
     squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-H'} | shared_vars
     singleton_third_axis_candidates = squeeze_candidates - {'HEWW', 'noit'}
     squeezed_data_keys = squeeze_singleton_third_axis(
@@ -113,9 +113,11 @@ def solve(data, time_lag, titles, histend, year, domain):
     squeezed_time_lag_keys = squeeze_singleton_third_axis(
         time_lag, singleton_third_axis_candidates
     )
-    data_global_shapes = squeeze_all_singleton_axes(data, {'HEWW', 'noit'})
+    data_global_shapes = squeeze_all_singleton_axes(
+        data, {'HEWW', 'RHUD', 'PRSC14', 'CO2taxH', 'noit'}
+    )
     time_lag_global_shapes = squeeze_all_singleton_axes(
-        time_lag, {'HEWW', 'noit'}
+        time_lag, {'HEWW', 'RHUD', 'PRSC14', 'CO2taxH', 'noit'}
     )
 
     # Calculate the LCOH for each heating technology
@@ -135,9 +137,9 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         for r in range(num_regions):
             # Total useful heat demand; this is the demand driver for FTT:Heat.
-            if data['RHUD'][r, 0] > 0.0:
+            if data['RHUD'][r] > 0.0:
                 # Market shares (based on useful energy demand).
-                data['HEWS'][r] = data['HEWG'][r] / data['RHUD'][r, 0]
+                data['HEWS'][r] = data['HEWG'][r] / data['RHUD'][r]
 
         # Correction to market shares: historical shares do not always add up
         # to 1.0.
@@ -146,7 +148,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         data['HEWS'][needs_correction] /= region_sums[needs_correction, None]
 
         # Normalise HEWG to RHUD.
-        data['HEWG'] = data['HEWS'] * data['RHUD']
+        data['HEWG'] = data['HEWS'] * data['RHUD'][:, None]
 
         # Recalculate HEWF based on RHUD
         data['HEWF'] = data['HEWG'] / data['BHTC'][:, :, c4ti["9 Conversion efficiency"]]
@@ -228,7 +230,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             demand_change = data['RHUD'] - time_lag['RHUD']
             rhudt = time_lag['RHUD'] + demand_change * t * dt
             rhudlt = time_lag['RHUD'] + demand_change * (t - 1) * dt
-            regions = np.flatnonzero(rhudt[:, 0] > 0.0)
+            regions = np.flatnonzero(rhudt > 0.0)
 
             ############## Computing new shares ##################
             # Start the computation of shares.
@@ -272,7 +274,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             )
 
             endo_shares = data_dt['HEWS'] + change_in_shares + changes_in_shares_prem_repl
-            endo_gen = endo_shares * rhudt
+            endo_gen = endo_shares * rhudt[:, None]
 
             # ---------------------------------------------------------------------
             # Regulatory policies
@@ -280,10 +282,10 @@ def solve(data, time_lag, titles, histend, year, domain):
             #################### Regulatory policies #################
             # Change in generation from exogenous sales, capped at maximum sales.
             dgen_exog_sales = exogenous_sales(
-                data['HWSA'][regions] * rhudt[regions],
-                rhudt[regions, 0],
+                data['HWSA'][regions] * rhudt[regions, None],
+                rhudt[regions],
                 endo_gen[regions],
-                data['HREG'][regions] * rhudt[regions],
+                data['HREG'][regions] * rhudt[regions, None],
                 no_it,
                 data['BHTC'][regions, :, c4ti['5 Lifetime']]
             )
@@ -309,7 +311,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # ---------------------------------------------------------------------
             ############## Update variables ##################
             # New additions (HEWI).
-            data['HEWG'] = data['HEWS'] * rhudt
+            data['HEWG'] = data['HEWS'] * rhudt[:, None]
             data['HEWK'] = divide(
                 data['HEWG'], data['BHTC'][:, :, c4ti["13 Capacity factor mean"]]
             ) / 1000
@@ -409,7 +411,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
-        price_levels = data['PRSC14'][:, 0]
+        price_levels = data['PRSC14']
         data['HWIY'] = (
             data['HEWI'] * data['BHTC'][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
             / price_levels[:, None]

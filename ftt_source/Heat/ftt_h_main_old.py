@@ -49,7 +49,7 @@ from ftt_source.ftt_core.ftt_sales_or_investments import (
     get_sales_yearly_old,
 )
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
-from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
+from ftt_source.ftt_core.ftt_exogenous_capacity_old import regulation_correction
 
 
 # Green technology indices for Heat (heat pumps: ground source, air-water, air-air)
@@ -59,7 +59,7 @@ from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 
-from ftt_source.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
+from ftt_source.Heat.ftt_h_lcoh_old import get_lcoh, set_carbon_tax
 
 
 # -----------------------------------------------------------------------------

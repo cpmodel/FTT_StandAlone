@@ -296,7 +296,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # Correction for regulation (phase-out) when demand is growing; main effect in shares equation
             dcap_reg_corr = regulation_correction(
-                endo_capacity[regions], endo_shares[regions], rfltt[regions, None], reg_constr[regions])
+                endo_capacity[regions], endo_shares[regions], rfltt[regions], reg_constr[regions])
 
             # New capacity and shares
             new_capacity = endo_capacity[regions] + dcap_exog_sales + dcap_reg_corr

@@ -101,7 +101,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     squeezed_time_lag_keys = squeeze_singleton_third_axis(
         time_lag, squeeze_candidates
     )
-    vector_variables = {'Battery price', 'noit', 'RZFT', 'RZCO'}
+    vector_variables = {'Battery price', 'noit', 'RZFT', 'RZCO', 'ZBFM'}
     data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
     time_lag_vector_shapes = squeeze_all_singleton_axes(
         time_lag, vector_variables
@@ -177,7 +177,7 @@ def solve(data, time_lag, titles, histend, year, domain):
         # Emissions 
         data['ZEWE'] = (data['ZEVV']
                         * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]
-                        * (1 - data['ZBFM']) / (1e6) )
+                        * (1 - data['ZBFM'])[:, None] / (1e6) )
         
         for r in range(num_regions):
         
@@ -263,7 +263,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 )
                 dcap_reg_corr[:, idx] = regulation_correction(
                     endo_capacity[:, idx], endo_shares[:, idx],
-                    Utot[:, veh_class, np.newaxis], reg_constr[:, idx]
+                    Utot[:, veh_class], reg_constr[:, idx]
                 )
 
             new_capacity = endo_capacity + dcap_exog_sales + dcap_reg_corr
@@ -371,7 +371,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             # Emissions
             data['ZEWE'] = ( data['ZEVV']
                             * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]
-                            * (1 - data['ZBFM']) / 1e6 )
+                            * (1 - data['ZBFM'])[:, None] / 1e6 )
             
             
             # Reopen country loop
@@ -386,14 +386,14 @@ def solve(data, time_lag, titles, histend, year, domain):
                         if titles['JTI'][fuel] == '5 Middle distillates' and data['ZJET'][0, veh, fuel]  == 1:  
 
                             #  Mix with biofuels if there's a biofuel mandate
-                            zjet[veh, fuel] = zjet[veh, fuel] * (1.0 - data['ZBFM'][r, 0])
+                            zjet[veh, fuel] = zjet[veh, fuel] * (1.0 - data['ZBFM'][r])
 
                             # Emission correction factor
-                            emis_corr[r, veh] = 1.0 - data['ZBFM'][r, 0]
+                            emis_corr[r, veh] = 1.0 - data['ZBFM'][r]
 
                         elif titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][0, veh, fuel] == 1:
 
-                            zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r, 0]
+                            zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r]
 
                 # Fuel use by fuel type - Convert TJ (BZTC * ZEVV) to ktoe, so divide by 41.868
                 data['ZJNJ'][r] = (np.matmul(np.transpose(zjet), data['ZEVV'][r] * \

@@ -8,7 +8,7 @@ Power LCOE FTT module.
 
 Functions included:
     - set carbon_tax
-        Determine carbon tax from REPP
+        Determine carbon tax from the regional CO2 tax input
     - get_lcoe
         Calculate levelized costs
 
@@ -38,9 +38,7 @@ def set_carbon_tax(data, c2ti, year):
     
     '''
 
-    co2_tax = data["CO2taxP"]
-    if co2_tax.ndim == 3:
-        co2_tax = co2_tax[:, :, 0]
+    co2_tax = data["CO2taxP"][:, None]
     carbon_costs = (
                     data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']]    # Emission per GWh
                     * co2_tax                                               # Carbon price in USD/tCO2
@@ -71,9 +69,8 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     Parameters
     -----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) for all
-        variables. Variable names are keys and the values are 3D NumPy arrays.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
     gamma_mode: string
@@ -81,12 +78,9 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     Returns
     ----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
+        The values are updated and returned to the main routine.
     """
 
     squeezed_shapes = squeeze_all_singleton_axes(data, LCOE_SINGLETON_VARIABLES)

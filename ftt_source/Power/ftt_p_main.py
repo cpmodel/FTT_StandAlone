@@ -129,7 +129,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     vector_variables = {
         'MEWW', 'noit', 'MCRT', 'MLSG', 'MLSE', 'MSSE', 'MSSC', 'MSSG',
         'MSSR', 'MSCC', 'MLSC', 'MLSR', 'MLCC', 'MSAL', 'MCGA', 'MCNA',
-        'MCTN', 'MADG', 'LAT', 'RLDCMAP', 'Battery price',
+        'MCTN', 'MADG', 'LAT', 'RLDCMAP', 'CO2taxP', 'Battery price',
     }
     data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
     time_lag_vector_shapes = squeeze_all_singleton_axes(time_lag, vector_variables)
@@ -425,7 +425,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # Correction for regulation when demand is growing; main effect in shares equation
             dcap_reg_corr = regulation_correction(
                 endo_capacity, endo_shares,
-                np.sum(data_dt['MEWK'], axis=1, keepdims=True), reg_constr)
+                np.sum(data_dt['MEWK'], axis=1), reg_constr)
             
             # Changes to capacity from exogenous capacity
             dcap_exog_cap = exogenous_capacity(

@@ -61,7 +61,10 @@ from ftt_source.ftt_core.ftt_sales_or_investments import (
     get_sales_yearly_old,
 )
 from ftt_source.ftt_core.ftt_shares import shares_change_old
-from ftt_source.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regulation_correction
+from ftt_source.ftt_core.ftt_exogenous_capacity_old import (
+    exogenous_capacity,
+    regulation_correction,
+)
 
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
@@ -73,7 +76,7 @@ from ftt_source.Power.ftt_p_dspch_old import (
     calculate_load_factors_from_dispatch as calculate_load_factors_from_dispatch,
     dspch as dspch,
 )
-from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
+from ftt_source.Power.ftt_p_lcoe_old import get_lcoe, set_carbon_tax
 from ftt_source.Power.ftt_p_fuel_price_old import get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
 from ftt_source.Power.ftt_p_costc_old import cost_curves

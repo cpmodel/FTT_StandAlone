@@ -27,7 +27,7 @@ import numpy as np
 
 def set_carbon_tax(data, c3ti, year):
     '''
-    Convert the carbon price in REPP from USD / tCO2 to 2022$/pkm
+    Convert the carbon price from USD / tCO2 to 2022$/pkm
     Apply the carbon price to transport sector technologies based on their emission factors
 
     Returns:

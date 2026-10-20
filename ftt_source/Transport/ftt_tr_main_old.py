@@ -42,7 +42,7 @@ from ftt_source.ftt_core.ftt_mandate import (
 )
 from ftt_source.sector_coupling.battery_lbd_old import battery_costs
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
-from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
+from ftt_source.ftt_core.ftt_exogenous_capacity_old import regulation_correction
 
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares

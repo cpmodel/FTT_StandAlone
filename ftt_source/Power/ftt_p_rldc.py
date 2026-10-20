@@ -66,12 +66,10 @@ def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
 
     Parameters
     -----------
-    data: dictionary
-        data is a dictionary with data of current year.
-        Variable names are keys and the values are 3D NumPy arrays.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
     time_lag: dictionary
         time_lag is the same, but with data for last year.
-        Variable names are keys and the values are 3D NumPy arrays.
     t: int
         Current iteration timestep within the year.
     titles: dictionary

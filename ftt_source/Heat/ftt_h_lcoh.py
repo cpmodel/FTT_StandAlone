@@ -54,15 +54,14 @@ LCOH_VARIABLES = {
 
 def set_carbon_tax(data, c4ti):
     '''
-    Convert the carbon price in REPP from euro / tC to 2020 euros / kWhUD. 
+    Convert the carbon price from USD / tCO2 to 2020 euros / kWhUD.
     Apply the carbon price to heat sector technologies based on their emission factors
 
     Returns:
         Carbon costs per country and technology (2D)
     '''
  
-    squeezed_keys = squeeze_singleton_third_axis(data, {'CO2taxH'})
-    co2_tax_h = data["CO2taxH"][:, 0]
+    co2_tax_h = data["CO2taxH"]
 
     carbon_costs = (co2_tax_h[:, np.newaxis]    # Carbon price in USD/tCO2
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
@@ -77,10 +76,8 @@ def set_carbon_tax(data, c4ti):
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
         print(f"Emissions intensity {data['BHTC'][:, :, c4ti['Emission factor']]}")
         
-        unsqueeze_singleton_third_axis(data, squeezed_keys)
         raise ValueError
 
-    unsqueeze_singleton_third_axis(data, squeezed_keys)
     return carbon_costs
 
 
@@ -171,7 +168,9 @@ def get_lcoh(data, titles, carbon_costs):
     # 2 – Standard deviation (propagation of error)
     variance_terms = dit**2 + dft**2 + domt**2
     summed_variance = np.sum(variance_terms / denominator**2, axis=2)
-    variance_plus_dcf = summed_variance + (np.sum(npv_expenses_all, axis=2)/cf[:, :, 0]*dcf[:, :, 0])**2
+    variance_plus_dcf = summed_variance + (
+        np.sum(npv_expenses_all, axis=2) / cf[:, :, 0] * dcf[:, :, 0]
+    )**2
     
     # 3 – Utility
     npv_utility = np.where(lt_mask, 1, 0) / denominator

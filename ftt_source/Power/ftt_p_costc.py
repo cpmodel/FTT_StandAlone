@@ -434,12 +434,6 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     FTT: Power cost-supply curves routine.
     This calculates the cost of resources given the available supply.
     '''
-    legacy_singleton_axes = MEPD.ndim == 3
-    if legacy_singleton_axes:
-        MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES = (
-            value[:, :, 0]
-            for value in (MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES)
-        )
     # Sum electricity generation for all regions, transform into PJ (resource histograms in PJ)
     # MEWD is the non-power demand for resources
     # RERY is set in FTTinvP for fossil fuels
@@ -521,10 +515,6 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Before 2017 do not overwrite RERY for fossil fuels, and no need to calculate CSCurves
     if year <= 2013:
-        if legacy_singleton_axes:
-            MEWL, MEPD, MERC, RERY, MRED, MRES = (
-                value[:, :, None] for value in (MEWL, MEPD, MERC, RERY, MRED, MRES)
-            )
         return BCET, BCSC, MEWL, MEPD, MERC, RERY, MRED, MRES
 
 
