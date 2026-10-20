@@ -250,11 +250,11 @@ def get_lcof(data, titles, carbon_costs, year):
     TLCOFG = TLCOF * (1 + bztc[:, :, c6ti['11 Gamma']])
     
     # Compute levelised cost in freight in $/tkm
-    data['ZTLC'] = LCOF
-    data['ZTLD'] = dLCOF
-    data['ZTTC'] = TLCOF
-    data['ZTTD'] = dLCOF
-    data['ZEGC'] = TLCOFG
+    data['ZTLC'] = LCOF       # LCOF without policy
+    data['ZTLD'] = dLCOF      # LCOF without policy SD
+    data['ZTTC'] = TLCOF      # LCOF with policy
+    data['ZTTD'] = dLCOF      # LCOF with policy SD
+    data['ZEGC'] = TLCOFG     # LCOF with policy and gamma
 
     
     # Vehicle price components for front end ($/veh)

@@ -315,7 +315,8 @@ def shares_change(
     upper_limit=None, lower_limit=None, limits_active=False,
     T_Scal=1.0,
 ):
-    """Calculate share changes from 2D technology arrays."""
+    """Calculate changes in market shares."""
+    # Substitution turnover rate is supplied through ``subst``.
     if not limits_active:
         upper_limit = np.empty((num_regions, num_techs))
         lower_limit = np.empty((num_regions, num_techs))
@@ -338,7 +339,11 @@ def shares_change_jitted(
     upper_limit, lower_limit, limits_active=False,
     T_Scal=1.0,
 ):
-    """2D implementation of the standard FTT shares equation."""
+    """
+    Calculate changes in market shares using the FTT shares equation.
+
+    Jit-in-time compilation is used for this inner loop.
+    """
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
 
     for r in regions:
@@ -413,7 +418,7 @@ def shares_change_premature(
     subst, reg_constr,
     num_regions, num_techs,
 ):
-    """Calculate premature replacement share changes from 2D arrays."""
+    """Calculate premature replacement share changes."""
     change_in_shares = shares_change_premature_jitted(
         dt, regions, shares_dt, costs_marg, costs_marg_sd,
         costs_payb, costs_payb_sd, subst, reg_constr,
@@ -432,7 +437,7 @@ def shares_change_premature_jitted(
     subst, reg_constr,
     num_regions, num_techs,
 ):
-    """2D implementation of the premature replacement shares equation."""
+    """Calculate premature replacement share changes."""
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
 
     for r in regions:

@@ -402,7 +402,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             
             # Cumulative investment, not in region loop as it is global
-            bi = np.einsum('rt,tf->rf', zewi_t, data['ZEWB'][0])
+            bi = np.matmul(zewi_t, data['ZEWB'][0])
             dw = np.sum(bi, axis=0)
             
             data['ZEWW'][0] = data_dt['ZEWW'][0] + dw

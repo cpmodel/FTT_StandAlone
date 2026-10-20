@@ -1,10 +1,21 @@
-"""Mandate and seeding functions shared by FTT sectors."""
+"""
+Centralized mandate functions for all FTT sectors.
+
+This module provides core mandate functionality used by Transport, Heat, and
+Freight. Sectors call these functions with their specific green technology
+indices.
+"""
 
 import numpy as np
 
 
 def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
-    """Return the region-specific mandate share for ``year``."""
+    """
+    Calculate the mandate share based on the year.
+
+    The share increases linearly between the start and end years and is zero
+    before the mandate starts or after it ends.
+    """
     if (year < mandate_start_year).all() or (year >= mandate_end_year).all():
         return np.zeros(mandate_start_year.shape[0])
     return (
@@ -15,28 +26,38 @@ def get_mandate_share(year, mandate_start_year, mandate_end_year, max_mandate):
 
 
 def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
-    """Redistribute 2D sales to meet active green-technology mandates."""
+    """
+    Apply mandates to the sales distribution.
+
+    Green sales are increased to reach the target share and non-green sales
+    are reduced proportionally to maintain total sales.
+    """
     sales_after_mandate = np.copy(sales_in)
     non_green_indices = [
         index for index in range(sales_in.shape[1]) if index not in green_indices
     ]
 
-    for region in np.flatnonzero(mandate_shares > 0):
+    regions = np.flatnonzero(mandate_shares > 0)
+    for region in regions:
         total_sales = np.sum(sales_in[region])
         mandate_share = mandate_shares[region]
+        # Skip region if there are no sales.
         if total_sales == 0:
             continue
 
         current_green = np.sum(sales_in[region, green_indices])
+        # Skip region if green share already meets mandate.
         if current_green / total_sales >= mandate_share:
             continue
 
         target_green = total_sales * mandate_share
         if current_green > 0:
+            # Scale up green sales using local proportions.
             sales_after_mandate[region, green_indices] *= (
                 target_green / current_green
             )
         else:
+            # Use global shares when the region has no green sales.
             global_green_sales = np.sum(sales_in[:, green_indices], axis=0)
             if np.sum(global_green_sales) > 0:
                 global_shares = global_green_sales / np.sum(global_green_sales)
@@ -44,10 +65,12 @@ def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
                     target_green * global_shares
                 )
             else:
+                # Equal distribution if there is no global data.
                 sales_after_mandate[region, green_indices] = (
                     target_green / len(green_indices)
                 )
 
+        # Scale down non-green sales to maintain total sales.
         remaining_sales = total_sales - target_green
         current_non_green = np.sum(sales_in[region, non_green_indices])
         if current_non_green > 0:
@@ -66,7 +89,13 @@ def implement_seeding(
     cap, cum_sales_in, sales_in, year, green_indices, histend,
     seeding_years=5, seed_fraction=0.15,
 ):
-    """Seed green technologies using 2D capacity and sales arrays."""
+    """
+    Seed green technologies in low-adoption regions.
+
+    Applies a small mandate based on the global green sales share to bootstrap
+    green technology adoption during the first years of the simulation.
+    """
+    # Calculate global green share.
     total_sales = np.sum(sales_in)
     if total_sales == 0:
         return cum_sales_in, sales_in, cap
@@ -91,16 +120,22 @@ def implement_seeding(
 def implement_mandate(
     cap, cum_sales_in, sales_in, year, green_indices, mandate_info,
 ):
-    """Apply a green-technology mandate to 2D capacity and sales arrays."""
+    """
+    Implement a full green-technology mandate.
+
+    The required green share increases linearly over the mandate period.
+    """
     start_years = mandate_info[:, 0]
     end_years = mandate_info[:, 1]
     max_mandate = mandate_info[:, 2]
+    # Return if no mandates are present in the scenario.
     if (max_mandate == 0).all():
         return cum_sales_in, sales_in, cap
 
     mandate_shares = get_mandate_share(
         year, start_years, end_years, max_mandate
     )
+    # Return if no mandates are active this year.
     if (mandate_shares == 0).all():
         return cum_sales_in, sales_in, cap
 
