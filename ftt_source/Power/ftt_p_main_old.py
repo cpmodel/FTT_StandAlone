@@ -67,21 +67,21 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from ftt_source.Power.ftt_p_rldc import rldc_old as rldc
-from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs_old as early_scrapping_costs
-from ftt_source.Power.ftt_p_dspch import (
-    calculate_load_factors_from_dispatch_old as calculate_load_factors_from_dispatch,
-    dspch_old as dspch,
+from ftt_source.Power.ftt_p_rldc_old import rldc
+from ftt_source.Power.ftt_p_early_scrapping_costs_old import early_scrapping_costs
+from ftt_source.Power.ftt_p_dspch_old import (
+    calculate_load_factors_from_dispatch as calculate_load_factors_from_dispatch,
+    dspch as dspch,
 )
 from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp_old as get_marginal_fuel_prices_mewp
+from ftt_source.Power.ftt_p_fuel_price_old import get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
-from ftt_source.Power.ftt_p_costc import cost_curves_old as cost_curves
+from ftt_source.Power.ftt_p_costc_old import cost_curves
 from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
 from ftt_source.Power.ftt_p_initialisation import build_power_settings
 
-from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries_old as second_hand_batteries
-from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt_old as power_battery_additions_dt
+from ftt_source.sector_coupling.transport_batteries_to_power_old import second_hand_batteries
+from ftt_source.sector_coupling.battery_lbd_old import power_battery_additions_dt
 
 
 # %% main function

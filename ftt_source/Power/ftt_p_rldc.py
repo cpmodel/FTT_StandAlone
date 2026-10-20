@@ -24,22 +24,12 @@ import pandas as pd
 
 # Local library imports
 from ftt_source.support.divide import divide
-from ftt_source.support.singleton_dimension import (
-    restore_all_singleton_axes,
-    squeeze_all_singleton_axes,
-)
 from ftt_source.sector_coupling.transport_batteries_to_power import (
     share_transport_batteries,
-    share_transport_batteries_old,
     update_costs_from_transport_batteries,
-    update_costs_from_transport_batteries_old,
     vehicle_to_grid,
-    vehicle_to_grid_old,
 )
-from ftt_source.sector_coupling.battery_lbd import (
-    battery_costs,
-    battery_costs_old,
-)
+from ftt_source.sector_coupling.battery_lbd import battery_costs
 from ftt_source.paths import get_utilities_path
 
 #%% FEQS
@@ -66,7 +56,7 @@ def get_wind_solar_indices(titles):
 # -------------------------- RLDC calcultion ------------------------------
 # -----------------------------------------------------------------------------
 def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-          wind_solar_indices, sector_coupling=True, legacy=False):
+          wind_solar_indices, sector_coupling=True):
     """
     Calculate RLDCs.
 
@@ -299,20 +289,7 @@ def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     # Sector coupling: update battery costs based on cumulative capacity
     # Only when FTT:Transport is coupled (SCA dimension present AND sector_coupling enabled)
     if 'SCA' in titles and sector_coupling:
-        if legacy:
-            data = battery_costs_old(data, time_lag, year, t, titles, histend)
-        else:
-            transport_capacity = data.get("TEWK")
-            freight_capacity = data.get("ZEWK")
-            if transport_capacity is not None and transport_capacity.ndim == 3:
-                data["TEWK"] = transport_capacity[:, :, 0]
-            if freight_capacity is not None and freight_capacity.ndim == 3:
-                data["ZEWK"] = freight_capacity[:, :, 0]
-            data = battery_costs(data, time_lag, year, t, titles, histend)
-            if transport_capacity is not None:
-                data["TEWK"] = transport_capacity
-            if freight_capacity is not None:
-                data["ZEWK"] = freight_capacity
+        data = battery_costs(data, time_lag, year, t, titles, histend)
 
     for r in range(len(titles['RTI'])):
 
@@ -668,22 +645,13 @@ def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
 
     # Sector coupling: V2G and second-hand battery integration
     if sector_coupling:
-        if legacy:
-            data = vehicle_to_grid_old(data, time_lag, year, titles)
-            storage_ratio = share_transport_batteries_old(data, titles)
-            if np.ndim(storage_ratio) == 0:
-                storage_ratio = np.full(data["MSSP"].shape[0], storage_ratio)
-            data = update_costs_from_transport_batteries_old(
-                data, storage_ratio, year, titles
-            )
-        else:
-            data = vehicle_to_grid(data, time_lag, year, titles)
-            storage_ratio = share_transport_batteries(data, titles)
-            if np.ndim(storage_ratio) == 0:
-                storage_ratio = np.full(data["MSSP"].shape[0], storage_ratio)
-            data = update_costs_from_transport_batteries(
-                data, storage_ratio, year, titles
-            )
+        data = vehicle_to_grid(data, time_lag, year, titles)
+        storage_ratio = share_transport_batteries(data, titles)
+        if np.ndim(storage_ratio) == 0:
+            storage_ratio = np.full(data["MSSP"].shape[0], storage_ratio)
+        data = update_costs_from_transport_batteries(
+            data, storage_ratio, year, titles
+        )
 
     # Store the storage capacities in last historical year
     if year <= histend["MSSC_histend"]:
@@ -698,28 +666,5 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     """Calculate residual load duration curves using natural array shapes."""
     return _rldc(
         data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-        wind_solar_indices, sector_coupling, legacy=False,
+        wind_solar_indices, sector_coupling,
     )
-
-
-def rldc_old(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-             wind_solar_indices, sector_coupling=True):
-    """Run the legacy RLDC solver with its original singleton-axis inputs."""
-    singleton_variables = {
-        'LAT', 'RLDCMAP', 'MEWG', 'MEWS', 'MEWL', 'MEWK', 'MCTN', 'MCRT',
-        'MCTG', 'MLB0', 'MLB1', 'MKLB', 'MGLB', 'MSAL', 'MLSC', 'MSSC',
-        'MSSG', 'MSSE', 'MSCC', 'MLCC', 'MLSR', 'MSSR', 'MLSP', 'MSSP',
-        'MLSM', 'MSSM', 'Battery price',
-    }
-    data_shapes = squeeze_all_singleton_axes(data, singleton_variables)
-    time_lag_shapes = squeeze_all_singleton_axes(time_lag, singleton_variables)
-    data_dt_shapes = squeeze_all_singleton_axes(data_dt, singleton_variables)
-    try:
-        return _rldc(
-            data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-            wind_solar_indices, sector_coupling, legacy=True,
-        )
-    finally:
-        restore_all_singleton_axes(data, data_shapes)
-        restore_all_singleton_axes(time_lag, time_lag_shapes)
-        restore_all_singleton_axes(data_dt, data_dt_shapes)

@@ -333,29 +333,3 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
 
 
     return data
-
-
-def get_marginal_fuel_prices_mewp_old(
-    data, titles, Svar, wind_solar_indices, fuel_price_indices
-):
-    """Legacy 3D wrapper for :func:`get_marginal_fuel_prices_mewp`."""
-    shapes = {
-        name: value.shape
-        for name, value in data.items()
-        if isinstance(value, np.ndarray) and value.ndim == 3 and value.shape[2] == 1
-    }
-    for name in shapes:
-        data[name] = data[name][:, :, 0]
-    if Svar.ndim == 2:
-        Svar_2d = Svar
-    elif Svar.ndim == 3 and Svar.shape[2] == 1:
-        Svar_2d = Svar[:, :, 0]
-    else:
-        raise ValueError("get_marginal_fuel_prices_mewp_old expects a 2D or singleton 3D Svar")
-    try:
-        return get_marginal_fuel_prices_mewp(
-            data, titles, Svar_2d, wind_solar_indices, fuel_price_indices
-        )
-    finally:
-        for name, shape in shapes.items():
-            data[name] = data[name].reshape(shape)

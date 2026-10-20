@@ -44,12 +44,10 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 
 
-from ftt_source.Freight.ftt_fr_lcof import get_lcof_old, set_carbon_tax_old
+from ftt_source.Freight.ftt_fr_lcof_old import get_lcof, set_carbon_tax
 from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation_old
 
-from ftt_source.sector_coupling.battery_lbd import (
-    battery_costs_old as battery_costs, get_start_cap_old as get_start_cap
-)
+from ftt_source.sector_coupling.battery_lbd_old import battery_costs, get_start_cap
 
 GREEN_INDICES_EV = [6]
 
@@ -162,8 +160,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             data['ZJNJ'][r, :, 0] = (np.matmul(np.transpose(zjet), data['ZEVV'][r, :, 0] * \
                                     data['BZTC'][r, :, c6ti['9 Energy use (MJ/vkm)']])) / 41.868
         
-        carbon_costs = set_carbon_tax_old(data, c6ti)
-        data = get_lcof_old(data, titles, carbon_costs, year)
+        carbon_costs = set_carbon_tax(data, c6ti)
+        data = get_lcof(data, titles, carbon_costs, year)
 
         
         if year == histend["RFLZ"]:
@@ -429,8 +427,8 @@ def solve(data, time_lag, titles, histend, year, domain):
                         
 
             # Calculate levelised cost
-            carbon_costs = set_carbon_tax_old(data, c6ti)
-            data = get_lcof_old(data, titles, carbon_costs, year)
+            carbon_costs = set_carbon_tax(data, c6ti)
+            data = get_lcof(data, titles, carbon_costs, year)
 
             # Set up data_dt for next timestep
             for var in time_lag.keys():

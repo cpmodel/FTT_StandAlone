@@ -38,8 +38,14 @@ import ftt_source.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import ftt_source.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import ftt_source.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import ftt_source.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
-from ftt_source.sector_coupling.electricity_price import electricity_price_feedback_old
-from ftt_source.sector_coupling.electricity_demand import electricity_demand_feedback_old
+from ftt_source.sector_coupling.electricity_price import electricity_price_feedback
+from ftt_source.sector_coupling.electricity_price_old import (
+    electricity_price_feedback as electricity_price_feedback_old,
+)
+from ftt_source.sector_coupling.electricity_demand import electricity_demand_feedback
+from ftt_source.sector_coupling.electricity_demand_old import (
+    electricity_demand_feedback as electricity_demand_feedback_old,
+)
 
 
 # Support modules
@@ -199,13 +205,10 @@ class RunFTT:
         self.ftt_modules = config.get('settings', 'enable_modules')
         self.scenarios = config.get('settings', 'scenarios')
 
-        self.compare_heat_versions = config.getboolean(
-            'settings', 'compare_heat_versions', fallback=True
-        )
         self.compare_sector_versions = config.getboolean(
             'settings',
             'compare_sector_versions',
-            fallback=self.compare_heat_versions,
+            fallback=True,
         )
 
         self.stop_callback = stop_callback
@@ -425,9 +428,32 @@ class RunFTT:
             # 2. Electricity demand feedback (aggregates demand from all sectors)
             if scenario != "S0":
                 if tl[y] > self.histend['MEWG']:
-                    variables = electricity_demand_feedback_old(variables,
-                                        self.output["S0"], y, self.titles,
-                                        self.unit)
+                    if self.compare_sector_versions:
+                        legacy_out = electricity_demand_feedback_old(
+                            copy.deepcopy(variables), self.output["S0"], y,
+                            self.titles, self.unit,
+                        )
+                        new_variables = copy.deepcopy(variables)
+                        new_variables["MEWDX"] = variables["MEWDX"][:, :, 0]
+                        new_variables = electricity_demand_feedback(
+                            new_variables, self.output["S0"], y,
+                            self.titles, self.unit,
+                        )
+                        new_variables["MEWDX"] = variables["MEWDX"]
+                        variables = new_variables
+                        self._assert_model_outputs_match(
+                            "Electricity demand feedback",
+                            variables, legacy_out, tl[y],
+                        )
+                    else:
+                        original_mewdx = variables["MEWDX"]
+                        new_variables = copy.deepcopy(variables)
+                        new_variables["MEWDX"] = original_mewdx[:, :, 0]
+                        variables = electricity_demand_feedback(
+                            new_variables, self.output["S0"], y,
+                            self.titles, self.unit,
+                        )
+                        variables["MEWDX"] = original_mewdx
 
             # 3. Run Power sector LAST
             if "FTT-P" in self.ftt_modules:
@@ -454,7 +480,33 @@ class RunFTT:
             # 4. Electricity price feedback (updates costs for next timestep)
             if "FTT-P" in self.ftt_modules:
                 if tl[y] > self.histend['MEWG']:
-                    variables = electricity_price_feedback_old(variables, time_lags)
+                    if self.compare_sector_versions:
+                        legacy_out = electricity_price_feedback_old(
+                            copy.deepcopy(variables), copy.deepcopy(time_lags),
+                        )
+                        new_variables = copy.deepcopy(variables)
+                        new_time_lags = copy.deepcopy(time_lags)
+                        new_variables["MEWP"] = variables["MEWP"][:, :, 0]
+                        new_time_lags["MEWP"] = time_lags["MEWP"][:, :, 0]
+                        new_variables = electricity_price_feedback(
+                            new_variables, new_time_lags,
+                        )
+                        new_variables["MEWP"] = variables["MEWP"]
+                        variables = new_variables
+                        self._assert_model_outputs_match(
+                            "Electricity price feedback",
+                            variables, legacy_out, tl[y],
+                        )
+                    else:
+                        original_mewp = variables["MEWP"]
+                        new_variables = copy.deepcopy(variables)
+                        new_time_lags = copy.deepcopy(time_lags)
+                        new_variables["MEWP"] = variables["MEWP"][:, :, 0]
+                        new_time_lags["MEWP"] = time_lags["MEWP"][:, :, 0]
+                        variables = electricity_price_feedback(
+                            new_variables, new_time_lags,
+                        )
+                        variables["MEWP"] = original_mewp
 
             if not any(True for x in modules_list if x in self.ftt_modules):
                 raise ValueError("Incorrect selection of models. Check settings.ini")

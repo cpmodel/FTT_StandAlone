@@ -156,15 +156,16 @@ def get_lcof(data, titles, carbon_costs, year):
     n_veh_classes = 5
 
     # Check if feebate system is active
-    if np.asarray(data.get('Feebate active', 0)).flat[0] == 1:
-        if np.asarray(data.get('iteration', 0)).flat[0] == 0:
+    if data.get('Feebate active', 0) == 1:
+        if data.get('iteration', 0) == 0:
             print("\nFeebate system is active")
             calculate_feebate_rates(data, titles, c6ti, n_veh_classes)
             print("\nVerifying revenue neutrality...")
             verify_revenue_neutrality(data, titles, c6ti)
 
     
-    taxable_fuels = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
+    taxable_fuels = np.ones([len(titles['RTI']), len(titles['FTTI'])])
+    taxable_fuels[:, 20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV exempt
     
     bztc = data['BZTC']
     ztvt = data['ZTVT']
@@ -183,18 +184,20 @@ def get_lcof(data, titles, carbon_costs, year):
         cost = np.multiply(base_cost[..., None], conversion_factor)
         return np.multiply(cost, mask)
     
-    It = get_cost_elem(bztc[:, :, c6ti['1 Purchase cost (USD/veh)']] / bztc[:, :, c6ti['15 Average mileage (km/y)']], 1, bt_mask)
+    purchase_cost_per_km = (
+        bztc[:, :, c6ti['1 Purchase cost (USD/veh)']]
+        / bztc[:, :, c6ti['15 Average mileage (km/y)']]
+    )
+    It = get_cost_elem(purchase_cost_per_km, 1, bt_mask)
     dIt = get_cost_elem(bztc[:, :, c6ti['2 Std of purchase cost']] / bztc[:, :, c6ti['15 Average mileage (km/y)']], 1, bt_mask)
     # Reg tax based on carbon price, RTCOt = ($/tCO2/km)/(tCO2/km)
     RZCOt = get_cost_elem(
         bztc[:, :, c6ti['12 CO2 emissions (gCO2/km)']]
-        * data['RZCO'], 1, bt_mask
+        * data['RZCO'][:, None], 1, bt_mask
     )
     # Registration taxes, ZTVT is vehicle tax or subsidy (in percentage)
     ItVT = get_cost_elem(
-        bztc[:, :, c6ti['1 Purchase cost (USD/veh)']]
-        / bztc[:, :, c6ti['15 Average mileage (km/y)']]
-        * ztvt,
+        purchase_cost_per_km * ztvt,
         1,
         bt_mask,
     )
@@ -203,7 +206,7 @@ def get_lcof(data, titles, carbon_costs, year):
     ct = get_cost_elem(carbon_costs, 1, lt_mask)
     # fuel tax/subsidies
     fft = get_cost_elem(
-        data['RZFT'] * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]]
+        data['RZFT'][:, None] * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]]
         * taxable_fuels, 1, lt_mask
     )
     OMt = get_cost_elem(bztc[:, :, c6ti['5 O&M costs (USD/km)']], 1, lt_mask)
@@ -250,9 +253,9 @@ def get_lcof(data, titles, carbon_costs, year):
     TLCOFG = TLCOF * (1 + bztc[:, :, c6ti['11 Gamma']])
     
     # Compute levelised cost in freight in $/tkm
-    data['ZTLC'] = LCOF       # LCOF without policy
-    data['ZTLD'] = dLCOF      # LCOF without policy SD
-    data['ZTTC'] = TLCOF      # LCOF with policy
+    data['ZTLC'] = LCOF        # LCOF without policy
+    data['ZTLD'] = dLCOF       # LCOF without policy SD
+    data['ZTTC'] = TLCOF       # LCOF with policy
     data['ZTTD'] = dLCOF      # LCOF with policy SD
     data['ZEGC'] = TLCOFG     # LCOF with policy and gamma
 
@@ -261,56 +264,14 @@ def get_lcof(data, titles, carbon_costs, year):
     data["ZWIC"] = (
         bztc[:, :, c6ti['1 Purchase cost (USD/veh)']] * (1 + ztvt)
         + bztc[:, :, c6ti["12 CO2 emissions (gCO2/km)"]]
-        * data["RZCO"]
+        * data["RZCO"][:, None]
     )
     
     # Vehicle fuel price components for front end ($/km)
     data["ZWFC"] = (
         bztc[:, :, c6ti["3 fuel cost (USD/km)"]]
-        + data['RZFT']
+        + data['RZFT'][:, None]
         * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]] * taxable_fuels
     )
     
-    return data
-
-
-def _legacy_2d_data(data):
-    """Create the 2D view used by the legacy adapter without changing storage."""
-    return {
-        key: value[:, :, 0]
-        if isinstance(value, np.ndarray) and value.ndim == 3 and value.shape[2] == 1
-        else value
-        for key, value in data.items()
-    }
-
-
-def set_carbon_tax_old(data, c6ti):
-    """Legacy 3D adapter for freight carbon-tax calculations."""
-    return set_carbon_tax(_legacy_2d_data(data), c6ti)
-
-
-def verify_revenue_neutrality_old(data, titles, c6ti):
-    """Legacy 3D adapter for feebate diagnostics."""
-    return verify_revenue_neutrality(_legacy_2d_data(data), titles, c6ti)
-
-
-def calculate_feebate_rates_old(data, titles, c6ti, n_veh_classes):
-    """Legacy 3D adapter for feebate-rate calculation."""
-    calculate_feebate_rates(_legacy_2d_data(data), titles, c6ti, n_veh_classes)
-
-
-def get_lcof_old(data, titles, carbon_costs, year):
-    """Legacy 3D adapter for levelised freight-cost calculation."""
-    data_2d = _legacy_2d_data(data)
-    get_lcof(data_2d, titles, carbon_costs, year)
-    for key, value in data_2d.items():
-        if (
-            key in data
-            and isinstance(data[key], np.ndarray)
-            and data[key].ndim == 3
-            and data[key].shape[2] == 1
-            and isinstance(value, np.ndarray)
-            and value.ndim == 2
-        ):
-            data[key][:, :, 0] = value
     return data

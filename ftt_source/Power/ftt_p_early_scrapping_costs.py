@@ -59,24 +59,3 @@ def early_scrapping_costs(data, lagged_data, c2ti):
     data['MELF'][~mask_short] = bcet_lifetime[~mask_short]
 
     return data['MESC'], data['MELF']
-
-
-def early_scrapping_costs_old(data, lagged_data, c2ti):
-    """Legacy 3D wrapper for :func:`early_scrapping_costs`."""
-    names = ('MEWK', 'MESC', 'MELF')
-    shapes = {name: data[name].shape for name in names}
-    lag_shape = lagged_data['MEWK'].shape
-    for name in names:
-        if data[name].ndim != 3 or data[name].shape[2] != 1:
-            raise ValueError("early_scrapping_costs_old expects singleton 3D storage arrays")
-        data[name] = data[name][:, :, 0]
-    if lagged_data['MEWK'].ndim != 3 or lagged_data['MEWK'].shape[2] != 1:
-        raise ValueError("early_scrapping_costs_old expects singleton 3D storage arrays")
-    lagged_data['MEWK'] = lagged_data['MEWK'][:, :, 0]
-    try:
-        mesc, melf = early_scrapping_costs(data, lagged_data, c2ti)
-        return mesc.reshape(shapes['MESC']), melf.reshape(shapes['MELF'])
-    finally:
-        for name, shape in shapes.items():
-            data[name] = data[name].reshape(shape)
-        lagged_data['MEWK'] = lagged_data['MEWK'].reshape(lag_shape)

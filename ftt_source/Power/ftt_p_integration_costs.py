@@ -107,18 +107,3 @@ def add_vre_integration_costs(data, titles, wind_solar_indices):
                     data['METC'][r, w_idx] += total_integration_cost
 
     return data
-
-
-def add_vre_integration_costs_old(data, titles, wind_solar_indices):
-    """Legacy 3D wrapper for :func:`add_vre_integration_costs`."""
-    names = ("MEWG", "METC")
-    shapes = {name: data[name].shape for name in names}
-    if any(data[name].ndim != 3 or data[name].shape[2] != 1 for name in names):
-        raise ValueError("add_vre_integration_costs_old expects singleton 3D storage arrays")
-    for name in names:
-        data[name] = data[name][:, :, 0]
-    try:
-        return add_vre_integration_costs(data, titles, wind_solar_indices)
-    finally:
-        for name, shape in shapes.items():
-            data[name] = data[name].reshape(shape)

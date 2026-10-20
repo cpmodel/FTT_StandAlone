@@ -42,13 +42,3 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
   
         
     return data
-
-
-def electricity_demand_feedback_old(data, data_baseline, y, titles, units):
-    """Legacy boundary wrapper for old 3D MEWDX data."""
-    converted = dict(data)
-    converted["MEWDX"] = data["MEWDX"][:, :, 0]
-    result = electricity_demand_feedback(converted, data_baseline, y, titles, units)
-    data["MEWDX"][:, :, 0] = result["MEWDX"]
-    return data
-

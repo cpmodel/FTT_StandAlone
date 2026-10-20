@@ -101,7 +101,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     squeezed_time_lag_keys = squeeze_singleton_third_axis(
         time_lag, squeeze_candidates
     )
-    vector_variables = {'Battery price', 'noit'}
+    vector_variables = {'Battery price', 'noit', 'RZFT', 'RZCO'}
     data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
     time_lag_vector_shapes = squeeze_all_singleton_axes(
         time_lag, vector_variables

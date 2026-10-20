@@ -227,21 +227,6 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
     return MSLB, MLLB, MES1, MES2
 
 
-def dspch_old(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, *args):
-    """3D compatibility adapter used only by the retained legacy Power solver."""
-    mslb, mllb, mes1, mes2 = dspch(
-        MWDD,
-        MEWS[:, :, 0],
-        MKLB[:, :, 0],
-        MCRT[:, :, 0],
-        MEWL[:, :, 0],
-        MWMC_lag[:, :, 0],
-        MMCD_lag[:, :, 0],
-        *args,
-    )
-    return mslb, mllb, mes1[:, :, None], mes2[:, :, None]
-
-
 def calculate_load_factors_from_dispatch(data, titles, elec_idx):
     """
     Calculate technology load factors from dispatch results across load bands.
@@ -288,18 +273,4 @@ def calculate_load_factors_from_dispatch(data, titles, elec_idx):
         data['MWLO'],
         data['MEWL']
     )
-
-
-def calculate_load_factors_from_dispatch_old(data, titles, elec_idx):
-    """3D compatibility adapter used only by the retained legacy Power solver."""
-    mewdx = data['MEWDX']
-    mewl = data['MEWL']
-    mwlo = data['MWLO']
-    data['MEWDX'] = mewdx[:, :, 0]
-    data['MEWL'] = mewl[:, :, 0]
-    data['MWLO'] = mwlo[:, :, 0]
-    calculate_load_factors_from_dispatch(data, titles, elec_idx)
-    data['MEWDX'] = data['MEWDX'][:, :, None]
-    data['MEWL'] = data['MEWL'][:, :, None]
-    data['MWLO'] = data['MWLO'][:, :, None]
     

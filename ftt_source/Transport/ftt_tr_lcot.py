@@ -106,8 +106,10 @@ def get_lcot(data, titles, carbon_costs, year):
     # Energy use
     en = bttc[:, :, c3ti['9 energy use (MJ/km)']]
 
-    conv_full = (1 / ns / ff / cf / 1000)[..., None]
-    conv_pkm = (1 / ns / ff)[..., None]
+    conv_full = 1 / ns / ff / cf / 1000
+    conv_pkm = 1 / ns / ff
+    conv_full_by_year = conv_full[..., None]
+    conv_pkm_by_year = conv_pkm[..., None]
 
     def get_cost_elem(base_cost, conversion_factor, mask):
         '''Mask costs during build or life time, and apply
@@ -115,21 +117,24 @@ def get_lcot(data, titles, carbon_costs, year):
         cost = np.multiply(base_cost[..., None], conversion_factor)
         return np.multiply(cost, mask)
 
-    it = get_cost_elem(bttc[:, :, c3ti['1 Prices cars (USD/veh)']], conv_full, bt_mask)
-    dit = get_cost_elem(bttc[:, :, c3ti['2 Std of price']], conv_full, bt_mask)
+    it = get_cost_elem(bttc[:, :, c3ti['1 Prices cars (USD/veh)']], conv_full_by_year, bt_mask)
+    dit = get_cost_elem(bttc[:, :, c3ti['2 Std of price']], conv_full_by_year, bt_mask)
     # Vehicle tax at purchase
     vehicle_tax = (
         data['TTVT']
         + data['RTCO'][:, None]
         * bttc[:, :, c3ti['14 CO2Emissions']]
-    ) * conv_full[:, :, 0] + data["Base registration rate"] * it[:, :, 0]
+    ) * conv_full + data["Base registration rate"] * (
+        bttc[:, :, c3ti['1 Prices cars (USD/veh)']]
+        * conv_full
+    )
     vtt = get_cost_elem(
         vehicle_tax,
         1,
         bt_mask,
     )
-    ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
-    dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
+    ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm_by_year, lt_mask)
+    dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm_by_year, lt_mask)
     ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
     # Fuel tax costs
     fft = get_cost_elem(
@@ -140,7 +145,7 @@ def get_lcot(data, titles, carbon_costs, year):
     omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], (1 / ns / ff)[..., None], lt_mask)
     domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], (1 / ns / ff)[..., None], lt_mask)
     # Yearly road tax cost
-    rtt = get_cost_elem(data['TTRT'], conv_full, lt_mask)
+    rtt = get_cost_elem(data['TTRT'], conv_full_by_year, lt_mask)
 
     # Discount rate
     dr = bttc[:, :, c3ti['7 Discount rate'], np.newaxis]

@@ -579,17 +579,3 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     MRES[:, 4:] = BCSC[:, 4:, 2] * 3.6 - MEPD[:, 4:]
 
     return BCET, BCSC, MEWL, MEPD, MERC, RERY, MRED, MRES
-
-
-def cost_curves_old(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED, MRES,
-                    *args):
-    """3D compatibility adapter used only by the retained legacy Power solver."""
-    bcet, bcsc, mewl, mepd, merc, rery, mred, mres = cost_curves(
-        BCET, BCSC, MEWD[:, :, 0], MEWG[:, :, 0], MEWL[:, :, 0],
-        MEPD[:, :, 0], MERC[:, :, 0], MRCL[:, :, 0], RERY[:, :, 0],
-        MPTR[:, :, 0], MRED[:, :, 0], MRES[:, :, 0], *args,
-    )
-    return (
-        bcet, bcsc, mewl[:, :, None], mepd[:, :, None], merc[:, :, None],
-        rery[:, :, None], mred[:, :, None], mres[:, :, None],
-    )
