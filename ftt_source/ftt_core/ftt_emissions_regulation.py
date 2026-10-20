@@ -352,16 +352,7 @@ def implement_emissions_regulation(cap, cum_sales_in, sales_in, year,
     if sector not in _SECTOR_CONFIG:
         raise ValueError(f"Unknown sector '{sector}'. "
                          f"Expected one of {list(_SECTOR_CONFIG)}.")
-    if any(array.ndim != 2 for array in (cap, cum_sales_in, sales_in,
-                                         emissions_intensity)):
-        raise ValueError(
-            "Emissions regulation requires 2D region-by-technology arrays."
-        )
-
-    info = np.asarray(regulation_info, dtype=float).reshape(
-        np.asarray(regulation_info).shape[0], -1
-    )[:, :3]
-    start_years, end_years, max_reductions = info.T
+    start_years, end_years, max_reductions = regulation_info.T
     active = ((max_reductions > 0) & (year >= start_years)
               & (end_years > start_years))
     if not np.any(active):

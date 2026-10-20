@@ -33,7 +33,7 @@ def test_2d_sales_functions_match_legacy_functions():
     timescales = np.array([[10.0, 20.0], [5.0, 4.0]])
 
     sales_2d, sales_dt_2d = get_sales(
-        cap, cap_dt, cap_lag, sales, timescales, 0.25, compare_with_old=True
+        cap, cap_dt, cap_lag, sales, timescales, 0.25
     )
     sales_3d, sales_dt_3d = get_sales_old(
         cap[:, :, None],
@@ -44,7 +44,7 @@ def test_2d_sales_functions_match_legacy_functions():
         0.25,
     )
     yearly_2d = get_sales_yearly(
-        cap, cap_lag, sales, timescales, compare_with_old=True
+        cap, cap_lag, sales, timescales
     )
     yearly_3d = get_sales_yearly_old(
         cap[:, :, None], cap_lag[:, :, None], sales[:, :, None], timescales
@@ -72,7 +72,7 @@ def test_2d_shares_functions_match_legacy_functions():
 
     standard_2d = shares_change(
         0.25, regions, shares, costs, costs_sd, subst, reg_constr, 2, 2,
-        upper_limit, lower_limit, True, 10.0, compare_with_old=True,
+        upper_limit, lower_limit, True, 10.0,
     )
     standard_3d = shares_change_old(
         0.25, regions, shares[:, :, None], costs[:, :, None],
@@ -81,7 +81,7 @@ def test_2d_shares_functions_match_legacy_functions():
     )
     premature_2d = shares_change_premature(
         0.25, regions, shares, costs, costs_sd, costs * 1.1,
-        costs_sd * 1.1, subst, reg_constr, 2, 2, compare_with_old=True,
+        costs_sd * 1.1, subst, reg_constr, 2, 2,
     )
     premature_3d = shares_change_premature_old(
         0.25, regions, shares[:, :, None], costs[:, :, None],
@@ -107,7 +107,6 @@ def test_2d_mandate_and_seeding_match_active_legacy_policy():
         2022,
         green_indices,
         mandate_info,
-        compare_with_old=True,
     )
     mandate_3d = implement_mandate_old(
         capacity[:, :, None],
@@ -124,7 +123,6 @@ def test_2d_mandate_and_seeding_match_active_legacy_policy():
         2021,
         green_indices,
         2020,
-        compare_with_old=True,
     )
     seeding_3d = implement_seeding_old(
         capacity[:, :, None],

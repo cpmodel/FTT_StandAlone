@@ -19,7 +19,7 @@ def electricity_price_feedback(data, time_lag):
     """
     
     mewp_growth = divide(data["MEWP"], time_lag["MEWP"])
-    elec_mewp_growth = mewp_growth[:, 7, 0][np.newaxis].T
+    elec_mewp_growth = mewp_growth[:, 7, np.newaxis]
 
 
     # Electricity mapping for each sector (find indices of cost matrix column and technology indices)
@@ -38,4 +38,11 @@ def electricity_price_feedback(data, time_lag):
     return data
 
 
+def electricity_price_feedback_old(data, time_lag):
+    """Legacy boundary wrapper for old 3D sector data."""
+    converted = dict(data)
+    lag = dict(time_lag)
+    converted["MEWP"] = np.asarray(data["MEWP"]).squeeze()
+    lag["MEWP"] = np.asarray(time_lag["MEWP"]).squeeze()
+    return electricity_price_feedback(converted, lag)
 

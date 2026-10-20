@@ -5,13 +5,8 @@ import numpy as np
 
 def get_sales(
     cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt,
-    compare_with_old=False,
 ):
-    """Calculate intra-year sales from 2D capacity and sales arrays.
-
-    Set ``compare_with_old`` while converting a module to assert equivalence
-    against :func:`get_sales_old`, which uses singleton-third-axis arrays.
-    """
+    """Calculate intra-year sales from 2D capacity and sales arrays."""
     cap_growth = cap - cap_lag
     cap_growth_dt = cap - cap_dt
     cap_depreciation = cap_lag * dt / timescales
@@ -32,27 +27,11 @@ def get_sales(
     )
     sales_or_investment = sales_or_investment_in + sales_dt
 
-    if compare_with_old:
-        old_sales, old_sales_dt = get_sales_old(
-            cap[:, :, np.newaxis],
-            cap_dt[:, :, np.newaxis],
-            cap_lag[:, :, np.newaxis],
-            sales_or_investment_in[:, :, np.newaxis],
-            timescales,
-            dt,
-        )
-        np.testing.assert_allclose(
-            sales_or_investment, old_sales[:, :, 0], rtol=1e-12, atol=1e-12
-        )
-        np.testing.assert_allclose(
-            sales_dt, old_sales_dt[:, :, 0], rtol=1e-12, atol=1e-12
-        )
-
     return sales_or_investment, sales_dt
 
 
 def get_sales_yearly(
-    cap, cap_lag, sales_or_investment_in, timescales, compare_with_old=False,
+    cap, cap_lag, sales_or_investment_in, timescales,
 ):
     """Calculate annual sales from 2D capacity and sales arrays."""
     cap_growth = cap - cap_lag
@@ -72,17 +51,6 @@ def get_sales_yearly(
         cap_growth + eol_replacements,
         eol_replacements,
     )
-
-    if compare_with_old:
-        old_sales = get_sales_yearly_old(
-            cap[:, :, np.newaxis],
-            cap_lag[:, :, np.newaxis],
-            sales_or_investment_in[:, :, np.newaxis],
-            timescales,
-        )
-        np.testing.assert_allclose(
-            sales_or_investment, old_sales[:, :, 0], rtol=1e-12, atol=1e-12
-        )
 
     return sales_or_investment
 

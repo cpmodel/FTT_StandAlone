@@ -20,8 +20,8 @@ def power_battery_additions_dt(no_it, data, data_dt, titles):
 
     battery_lifetime = 12  # Assuming 12 years
 
-    capacity_batteries_current_timestep = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
-    capacity_batteries_last_timestep = data_dt["MSSC"] * sector_coupling_assumps["GW to GWh"]
+    capacity_batteries_current_timestep = data["MSSC"].ravel() * sector_coupling_assumps["GW to GWh"]
+    capacity_batteries_last_timestep = data_dt["MSSC"].ravel() * sector_coupling_assumps["GW to GWh"]
 
     capacity_additions_dt = capacity_batteries_current_timestep - capacity_batteries_last_timestep
 
@@ -37,16 +37,6 @@ def power_battery_additions_dt(no_it, data, data_dt, titles):
 
     return np.sum(deployment_new_dt)
 
-def _transport_capacity(capacity):
-    """Return Transport capacity as a 2D region-by-technology array."""
-    return capacity if capacity.ndim == 2 else capacity[:, :, 0]
-
-
-def _freight_capacity(capacity):
-    """Return Freight capacity as a 2D region-by-technology array."""
-    return capacity if capacity.ndim == 2 else capacity[:, :, 0]
-
-
 def get_start_cap(data, titles):
     '''Get initial capacity. Note that this may overestimate capacity, as
     historical battery sizes are smaller than current ones in EVs'''
@@ -57,9 +47,9 @@ def get_start_cap(data, titles):
 
 
     start_cap = (
-        np.sum(_transport_capacity(data["TEWK"]) * data['BTTC'][:, :, c3ti['18 Battery cap (kWh)']] / 1e3)
+        np.sum(data["TEWK"] * data['BTTC'][:, :, c3ti['18 Battery cap (kWh)']] / 1e3)
         + np.sum(data["MSSC"] * sector_coupling_assumps["GW to GWh"])
-        + np.sum(_freight_capacity(data["ZEWK"])
+        + np.sum(data["ZEWK"]
                  * data["BZTC"][:, :, c6ti['16 Battery capacity (kWh)']] / 1e6)
         )
 
@@ -118,8 +108,8 @@ def guess_battery_additions(data, time_lag, t):
 
     # Share by sector
     if np.sum(time_lag["Battery cap additions"]) > 0:
-        share_by_sector = ( np.sum(time_lag["Battery cap additions"], axis=tuple(range(1, time_lag["Battery cap additions"].ndim)))
-                            / np.sum(time_lag["Battery cap additions"]) )
+        share_by_sector = (np.sum(time_lag["Battery cap additions"], axis=1)
+                            / np.sum(time_lag["Battery cap additions"]))
     else: # 45% for transport and power, 10% for freight if no former shares
         share_by_sector = np.array([0.45, 0.45, 0.1])
 
@@ -136,10 +126,12 @@ def guess_battery_additions(data, time_lag, t):
     complete = check_complete(data["Battery cap additions"], t)
 
     if complete:
-        total_cap_additions = np.sum(data["Battery cap additions"][:, :t+1] if data["Battery cap additions"].ndim == 2 else data["Battery cap additions"][:, :t+1, 0])
+        additions = data["Battery cap additions"]
+        total_cap_additions = np.sum(additions[:, :t+1])
 
     else:
-        cap_additions_latest = data["Battery cap additions"][:, t] if data["Battery cap additions"].ndim == 2 else data["Battery cap additions"][:, t, 0]
+        additions = data["Battery cap additions"]
+        cap_additions_latest = additions[:, t]
         # Calculate the total of non-zero elements
         total_non_zero = np.sum(cap_additions_latest)
         # Calculate the imputed total
@@ -149,8 +141,58 @@ def guess_battery_additions(data, time_lag, t):
         else:
             imputed_total = total_non_zero
 
-        total_cap_additions = (imputed_total
-                               + np.sum(data["Battery cap additions"][:, :t]) )
+        total_cap_additions = imputed_total + np.sum(additions[:, :t])
 
 
     return total_cap_additions
+
+
+def _legacy_2d(value):
+    value = np.asarray(value)
+    return value[:, :, 0] if value.ndim == 3 else value
+
+
+def power_battery_additions_dt_old(no_it, data, data_dt, titles):
+    """Legacy 3D boundary wrapper for the old Power solver."""
+    current = dict(data)
+    previous = dict(data_dt)
+    current["MSSC"] = np.asarray(data["MSSC"]).squeeze()
+    previous["MSSC"] = np.asarray(data_dt["MSSC"]).squeeze()
+    return power_battery_additions_dt(no_it, current, previous, titles)
+
+
+def get_start_cap_old(data, titles):
+    """Legacy 3D boundary wrapper for old sector solvers."""
+    converted = dict(data)
+    converted["TEWK"] = _legacy_2d(data["TEWK"])
+    converted["ZEWK"] = _legacy_2d(data["ZEWK"])
+    converted["MSSC"] = np.asarray(data["MSSC"]).squeeze()
+    return get_start_cap(converted, titles)
+
+
+def battery_costs_old(data, time_lag, year, t, titles, histend):
+    """Legacy 3D boundary wrapper for old sector solvers."""
+    converted = dict(data)
+    lag = dict(time_lag)
+    cumulative_template = data.get("Cumulative total batcap")
+    price_template = data.get("Battery price")
+    for key in ("TEWK", "ZEWK", "MSSC", "Battery price", "Cumulative total batcap"):
+        if key in converted:
+            converted[key] = np.asarray(converted[key]).squeeze()
+        if key in lag:
+            lag[key] = np.asarray(lag[key]).squeeze()
+    result = battery_costs(converted, lag, year, t, titles, histend)
+    if price_template is not None and np.asarray(price_template).ndim:
+        price = np.asarray(result["Battery price"])
+        template_ndim = np.asarray(price_template).ndim
+        if price.ndim < template_ndim:
+            price = price.reshape(price.shape + (1,) * (template_ndim - price.ndim))
+        data["Battery price"] = np.broadcast_to(
+            price, np.asarray(price_template).shape
+        ).copy()
+    if cumulative_template is not None and np.asarray(cumulative_template).ndim:
+        cumulative = np.asarray(result["Cumulative total batcap"])
+        data["Cumulative total batcap"] = cumulative.item() if cumulative.ndim == 0 else cumulative
+    else:
+        data["Cumulative total batcap"] = result["Cumulative total batcap"]
+    return data

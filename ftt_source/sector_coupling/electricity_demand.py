@@ -10,9 +10,7 @@ import os
 # Third-party imports
 import pandas as pd
 
-
 from ftt_source.paths import get_utilities_path
-
 
 def electricity_demand_feedback(data, data_baseline, y, titles, units):
     """
@@ -36,14 +34,21 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
         conversion_factor = unit_conversion.loc[unit, demand_unit]
         
         # Compute change from baseline
-        base_demand = data_baseline[demand_var][:, elec_index, 0, y]
-        new_demand = data[demand_var][:, elec_index, 0]
+        base_demand = data_baseline[demand_var][:, elec_index, :, y].ravel()
+        new_demand = data[demand_var][:, elec_index].ravel()
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
-        data["MEWDX"][:, elec_index, 0] += elec_change
+        data["MEWDX"][:, elec_index] += elec_change
   
         
     return data
 
 
+def electricity_demand_feedback_old(data, data_baseline, y, titles, units):
+    """Legacy boundary wrapper for old 3D MEWDX data."""
+    converted = dict(data)
+    converted["MEWDX"] = data["MEWDX"][:, :, 0]
+    result = electricity_demand_feedback(converted, data_baseline, y, titles, units)
+    data["MEWDX"][:, :, 0] = result["MEWDX"]
+    return data
 

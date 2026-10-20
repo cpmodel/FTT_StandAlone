@@ -38,8 +38,8 @@ import ftt_source.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import ftt_source.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import ftt_source.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import ftt_source.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
-from ftt_source.sector_coupling.electricity_price import electricity_price_feedback
-from ftt_source.sector_coupling.electricity_demand import electricity_demand_feedback
+from ftt_source.sector_coupling.electricity_price import electricity_price_feedback_old
+from ftt_source.sector_coupling.electricity_demand import electricity_demand_feedback_old
 
 
 # Support modules
@@ -264,7 +264,11 @@ class RunFTT:
                     # Populate output container
                     for var in self.variables:
                         if 'TIME' in self.dims[var]:
-                            self.output[scen][var][:, :, :, y] = self.variables[var]
+                            value = self.variables[var]
+                            target = self.output[scen][var][:, :, :, y]
+                            if value.ndim + 1 == target.ndim and target.shape[-1] == 1:
+                                value = value[..., np.newaxis]
+                            target[...] = value
                         else:
                             self.output[scen][var][:, :, :, 0] = self.variables[var]
             
@@ -393,7 +397,7 @@ class RunFTT:
             # 2. Electricity demand feedback (aggregates demand from all sectors)
             if scenario != "S0":
                 if tl[y] > self.histend['MEWG']:
-                    variables = electricity_demand_feedback(variables,
+                    variables = electricity_demand_feedback_old(variables,
                                         self.output["S0"], y, self.titles,
                                         self.unit)
 
@@ -422,7 +426,7 @@ class RunFTT:
             # 4. Electricity price feedback (updates costs for next timestep)
             if "FTT-P" in self.ftt_modules:
                 if tl[y] > self.histend['MEWG']:
-                    variables = electricity_price_feedback(variables, time_lags)
+                    variables = electricity_price_feedback_old(variables, time_lags)
 
             if not any(True for x in modules_list if x in self.ftt_modules):
                 raise ValueError("Incorrect selection of models. Check settings.ini")
@@ -451,9 +455,21 @@ class RunFTT:
                     f"{sector} solver output types differ for {variable_name} in {year}"
                 )
             if current_is_array:
+                # A migrated solver may keep a scalar regional variable as a
+                # 2D array while its legacy counterpart retains the loader's
+                # trailing singleton axis. Compare the shared values without
+                # treating that storage-only axis as a model difference.
+                current_compare = current_value
+                legacy_compare = legacy_value
+                while (current_compare.ndim > 2
+                       and current_compare.shape[-1] == 1):
+                    current_compare = current_compare[..., 0]
+                while (legacy_compare.ndim > 2
+                       and legacy_compare.shape[-1] == 1):
+                    legacy_compare = legacy_compare[..., 0]
                 np.testing.assert_allclose(
-                    current_value,
-                    legacy_value,
+                    current_compare,
+                    legacy_compare,
                     rtol=1e-12,
                     atol=1e-12,
                     equal_nan=True,

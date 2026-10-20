@@ -14,9 +14,12 @@ import numpy as np
 EV_INDICES = [18, 19, 20]
 
 def get_sector_coupling_dict(data, titles):
+    assumptions = np.asarray(data["SectorCouplingAssumps"])
+    # Assumptions have no meaningful singleton dimensions.
+    assumptions = np.squeeze(assumptions)
     sector_coupling_assumps = dict(zip(
                 list(titles['SCA']),
-                data["SectorCouplingAssumps"][0, :, 0]
+                assumptions.reshape(-1)
                 ))
     return sector_coupling_assumps
 
@@ -52,7 +55,10 @@ def second_hand_batteries(data, time_lag, year, titles):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
     # Units - REVS: 1000 cars, BTTC - kWh
-    battery_capacity_lag = time_lag["REVS"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    battery_capacity_lag = (
+        time_lag["REVS"]
+        * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)']]
+    )
     
     # Sum battery capacity in GWh
     battery_capacity_lag_sum = np.sum(battery_capacity_lag, axis=1) / 1000
@@ -64,17 +70,17 @@ def second_hand_batteries(data, time_lag, year, titles):
                             )
     
     # Move all batteries one year up
-    data['Second-hand batteries by age'][:, :-1, :] = (
-            np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) 
-            * sector_coupling_assumps["Yearly decay"] 
-            )
+    age = data['Second-hand batteries by age']
+    lag_age = time_lag['Second-hand batteries by age']
+    age[:, :-1] = lag_age[:, 1:] * sector_coupling_assumps["Yearly decay"]
     
     # Add newly scrapped vehicle batteries to tracking matrix
-    data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
+    age[:, -1] = used_battery_capacity
+    data['Second-hand batteries by age'] = age
     
     # All batteries together
-    data['Second-hand battery stock'] = \
-            np.sum(data['Second-hand batteries by age'], axis=1, keepdims=True)
+    stock = np.sum(age, axis=1)
+    data['Second-hand battery stock'] = stock
                         
     
     return data
@@ -99,15 +105,17 @@ def share_transport_batteries(data, titles):
 
     # Skip if V2G interaction is turned off
     if not sector_coupling_assumps["V2G interaction"]:
-        return 0
+        return np.zeros(data["MSSC"].shape[0])
 
     # Convert GW to GWh (estimate)
-    capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+    capacity_batteries_power = data["MSSC"].ravel()
+    capacity_batteries_power *= sector_coupling_assumps["GW to GWh"]
 
     # Share of either repurposed or V2G batteries
+    second_hand_stock = data["Second-hand battery stock"]
+    v2g_stock = data["V2G battery stock"]
     with np.errstate(divide='ignore', invalid='ignore'):
-        storage_ratio = ( (data["Second-hand battery stock"] + data["V2G battery stock"])
-                        / capacity_batteries_power )
+        storage_ratio = (second_hand_stock + v2g_stock) / capacity_batteries_power
 
     # Capture divide by zero and inf values - use 0 as safe default
     # (0 means no transport batteries contributing to storage)
@@ -136,8 +144,8 @@ def update_costs_from_transport_batteries(data, storage_ratio, year, titles):
                                 + share_repurposed 
                                 * (1-sector_coupling_assumps["Cost savings"]))
     
-    data["MSSP"] = data["MSSP"] * remaining_costs_fraction
-    data["MSSM"] = data["MSSM"] * remaining_costs_fraction
+    for key in ("MSSP", "MSSM"):
+        data[key] = data[key] * remaining_costs_fraction[:, np.newaxis]
     
     return data
 
@@ -163,11 +171,14 @@ def vehicle_to_grid(data, time_lag, year, titles):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
     # Units - TEWK: 1000 cars, BTTC - kWh
-    total_batteries = time_lag["TEWK"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    total_batteries = (
+        time_lag["TEWK"]
+        * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)']]
+    )
     
     
     # Sum over the EVs only (assume PHEV too small per Xu et al.)
-    batteries_EVs_only = np.sum(total_batteries[:, EV_INDICES, :], axis=1, keepdims=True)
+    batteries_EVs_only = np.sum(total_batteries[:, EV_INDICES], axis=1)
     
     # Available batteries
     available_batteries = ( batteries_EVs_only
@@ -179,5 +190,77 @@ def vehicle_to_grid(data, time_lag, year, titles):
     # All batteries together
     data['V2G battery stock'] = available_batteries
     
+    return data
+
+
+def _as_2d(value, name):
+    """Convert a legacy singleton-axis array for an old solver boundary."""
+    value = np.asarray(value)
+    if value.ndim == 2:
+        return value
+    if value.ndim == 3 and value.shape[2] == 1:
+        return value[:, :, 0]
+    raise ValueError(f"{name} must be 2D or have a singleton third axis")
+
+
+def _restore_layout(value, template):
+    template = np.asarray(template)
+    if template.ndim == 3:
+        return np.asarray(value)[:, :, np.newaxis]
+    return value
+
+
+def second_hand_batteries_old(data, time_lag, year, titles):
+    """Legacy 3D boundary wrapper for the old Power solver."""
+    for key in ("REVS", "Second-hand batteries by age"):
+        data[key] = _as_2d(data[key], key)
+        time_lag[key] = _as_2d(time_lag[key], key)
+    stock = data.get("Second-hand battery stock")
+    if stock is not None and np.asarray(stock).ndim > 1:
+        data["Second-hand battery stock"] = np.asarray(stock)[..., 0]
+    result = second_hand_batteries(data, time_lag, year, titles)
+    data["Second-hand batteries by age"] = _restore_layout(
+        data["Second-hand batteries by age"], time_lag["Second-hand batteries by age"]
+    )
+    data["Second-hand battery stock"] = _restore_layout(
+        data["Second-hand battery stock"], stock
+    )
+    return result
+
+
+def share_transport_batteries_old(data, titles):
+    """Legacy 3D boundary wrapper for the old solver."""
+    converted = dict(data)
+    for key in ("MSSC", "Second-hand battery stock", "V2G battery stock"):
+        converted[key] = np.asarray(data[key]).squeeze()
+    return share_transport_batteries(converted, titles)
+
+
+def update_costs_from_transport_batteries_old(data, storage_ratio, year, titles):
+    """Legacy 3D boundary wrapper for the old solver."""
+    converted = dict(data)
+    converted["MSSP"] = np.asarray(data["MSSP"]).squeeze()
+    converted["MSSM"] = np.asarray(data["MSSM"]).squeeze()
+    ratio = np.asarray(storage_ratio).squeeze()
+    if ratio.ndim == 0:
+        assumptions = get_sector_coupling_dict(data, titles)
+        fraction = 1 - min(ratio, 1) * assumptions["Cost savings"]
+        data["MSSP"] *= fraction
+        data["MSSM"] *= fraction
+        return data
+    result = update_costs_from_transport_batteries(converted, ratio, year, titles)
+    data["MSSP"] = result["MSSP"][..., np.newaxis]
+    data["MSSM"] = result["MSSM"][..., np.newaxis]
+    return data
+
+
+def vehicle_to_grid_old(data, time_lag, year, titles):
+    """Legacy 3D boundary wrapper for the old solver."""
+    converted = dict(data)
+    lag = dict(time_lag)
+    converted["V2G battery stock"] = np.asarray(data["V2G battery stock"]).squeeze()
+    lag["TEWK"] = _as_2d(time_lag["TEWK"], "TEWK")
+    result = vehicle_to_grid(converted, lag, year, titles)
+    data["V2G battery stock"] = result["V2G battery stock"][..., np.newaxis]
     return data
     

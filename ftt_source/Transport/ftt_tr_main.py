@@ -107,9 +107,10 @@ def solve(data, time_lag, titles, histend, year, domain):
     shared_vars = {
         'PFRM', 'PFRG', 'PFRE', 'PFRB', 'Battery price',
         'Cumulative total batcap', 'Battery cap additions', 'noit',
+        'TEWK', 'ZEWK',
     }
     squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-Tr'} | shared_vars
-    squeeze_candidates -= {'TESF', 'TESH', 'TETH'}
+    squeeze_candidates -= {'TESF', 'TESH', 'TETH', 'MSSC'}
     squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
     squeezed_time_lag_keys = squeeze_singleton_third_axis(time_lag, squeeze_candidates)
     vector_variables = {

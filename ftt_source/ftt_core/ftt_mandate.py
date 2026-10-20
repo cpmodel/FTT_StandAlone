@@ -64,7 +64,7 @@ def get_new_sales_under_mandate(sales_in, mandate_shares, green_indices):
 
 def implement_seeding(
     cap, cum_sales_in, sales_in, year, green_indices, histend,
-    seeding_years=5, seed_fraction=0.15, compare_with_old=False,
+    seeding_years=5, seed_fraction=0.15,
 ):
     """Seed green technologies using 2D capacity and sales arrays."""
     total_sales = np.sum(sales_in)
@@ -85,25 +85,11 @@ def implement_seeding(
         cap, cum_sales_in, sales_in, year, green_indices, mandate_info
     )
 
-    if compare_with_old:
-        old_result = implement_seeding_old(
-            cap[:, :, None],
-            cum_sales_in[:, :, None],
-            sales_in[:, :, None],
-            year,
-            green_indices,
-            histend,
-            seeding_years,
-            seed_fraction,
-        )
-        _assert_mandate_results_match(result, old_result)
-
     return result
 
 
 def implement_mandate(
     cap, cum_sales_in, sales_in, year, green_indices, mandate_info,
-    compare_with_old=False,
 ):
     """Apply a green-technology mandate to 2D capacity and sales arrays."""
     start_years = mandate_info[:, 0]
@@ -127,26 +113,7 @@ def implement_mandate(
     cum_sales_after_mandate += sales_difference
     result = cum_sales_after_mandate, sales_after_mandate, cap_after_mandate
 
-    if compare_with_old:
-        old_result = implement_mandate_old(
-            cap[:, :, None],
-            cum_sales_in[:, :, None],
-            sales_in[:, :, None],
-            year,
-            green_indices,
-            mandate_info,
-        )
-        _assert_mandate_results_match(result, old_result)
-
     return result
-
-
-def _assert_mandate_results_match(new_result, old_result):
-    """Assert equality between 2D and legacy singleton-third-axis results."""
-    for new_value, old_value in zip(new_result, old_result):
-        np.testing.assert_allclose(
-            new_value, old_value[:, :, 0], rtol=1e-12, atol=1e-12
-        )
 
 
 def get_new_sales_under_mandate_old(sales_in, mandate_shares, green_indices):

@@ -68,20 +68,20 @@ from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
 from ftt_source.Power.ftt_p_rldc import rldc
-from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
+from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs_old as early_scrapping_costs
 from ftt_source.Power.ftt_p_dspch import (
     calculate_load_factors_from_dispatch_old as calculate_load_factors_from_dispatch,
     dspch_old as dspch,
 )
 from ftt_source.Power.ftt_p_lcoe import get_lcoe, set_carbon_tax
-from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp
+from ftt_source.Power.ftt_p_fuel_price import get_marginal_fuel_prices_mewp_old as get_marginal_fuel_prices_mewp
 #from ftt_source.Power.ftt_p_integration_costs import add_vre_integration_costs
 from ftt_source.Power.ftt_p_costc import cost_curves_old as cost_curves
 from ftt_source.Power.ftt_p_phase_out import set_linear_coal_phase_out
 from ftt_source.Power.ftt_p_initialisation import build_power_settings
 
-from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries
-from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt
+from ftt_source.sector_coupling.transport_batteries_to_power import second_hand_batteries_old as second_hand_batteries
+from ftt_source.sector_coupling.battery_lbd import power_battery_additions_dt_old as power_battery_additions_dt
 
 
 # %% main function
@@ -194,7 +194,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         # Call RLDC function for capacity and load factor by LB, and storage costs
         # 1 and 2 -- Estimate RLDC and storage parameters
         data = rldc(data, data["MEWDX"][:, elec_idx, 0], time_lag, time_lag, year, 1, titles, histend,
-                wind_solar_indices, sector_coupling)
+                wind_solar_indices, sector_coupling, legacy=True)
 
         # 3--- Call dispatch routine to connect market shares to load bands
         # Call DSPCH function to dispatch flexible capacity based on MC
@@ -437,7 +437,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # =================================================================
             # Call RLDC function for capacity and load factor by LB, and storage costs
             data = rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
-                        wind_solar_indices, sector_coupling)
+                        wind_solar_indices, sector_coupling, legacy=True)
 
 
             # =================================================================

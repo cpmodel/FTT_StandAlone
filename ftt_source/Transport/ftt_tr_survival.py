@@ -15,11 +15,6 @@ This means the new car numbers can be quite volatile, especially historically
 import numpy as np
 
 
-def _singleton_2d(array):
-    """Return an internal singleton-axis variable as a 2D array."""
-    return array if array.ndim == 2 else array[:, :, 0]
-
-
 def get_survival_ratio(survival_function_array):
     """Transform survival function into a year-on-year ratio of survival.
     
@@ -40,9 +35,6 @@ def add_new_cars_age_matrix(age_matrix, capacity, lagged_capacity, scrappage):
     New car additions are set to zero if calculation is negative (f.i. with regulation)
     
     """
-    capacity = _singleton_2d(capacity)
-    lagged_capacity = _singleton_2d(lagged_capacity)
-    scrappage = _singleton_2d(scrappage)
     capacity_growth = capacity - lagged_capacity
     new_cars = capacity_growth + scrappage
     # Set new cars to zero
@@ -79,7 +71,7 @@ def initialise_age_matrix(data, titles):
     fraction_per_age = fraction_per_age / np.sum(fraction_per_age)
     
     # Split the capacity TEWK into different age brackets via broadcasting
-    data["RLTA"] = fraction_per_age[None, None, :] * _singleton_2d(data["TEWK"])[:, :, np.newaxis]
+    data["RLTA"] = fraction_per_age[None, None, :] * data["TEWK"][:, :, np.newaxis]
 
     return data
     
@@ -115,18 +107,48 @@ def survival_function(data, time_lag, histend, year, titles):
         
         # Calculate survival and handle EoL vehicle scrappage
         survival = np.sum(data['RLTA'], axis=-1)
-        scrappage = _singleton_2d(time_lag['TEWK']) - survival
+        scrappage = time_lag['TEWK'] - survival
         
         # Vectorized condition for scrappage
         revs = np.where(scrappage > 0, scrappage, 0)
-        if data['REVS'].ndim == 2:
-            data['REVS'] = revs
-        else:
-            data['REVS'][:, :, 0] = revs
+        data['REVS'] = revs
         
     
     data["RLTA"] = add_new_cars_age_matrix(
                 data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]
                 )
 
+    return data
+
+
+def add_new_cars_age_matrix_old(age_matrix, capacity, lagged_capacity, scrappage):
+    """Legacy 3D adapter for callers that still store singleton time axes."""
+    return add_new_cars_age_matrix(
+        age_matrix,
+        capacity[:, :, 0],
+        lagged_capacity[:, :, 0],
+        scrappage[:, :, 0],
+    )
+
+
+def initialise_age_matrix_old(data, titles):
+    """Legacy 3D adapter for :func:`initialise_age_matrix`."""
+    current = {'TEWK': data['TEWK'][:, :, 0]}
+    initialise_age_matrix(current, titles)
+    data['RLTA'] = current['RLTA']
+    return data
+
+
+def survival_function_old(data, time_lag, histend, year, titles):
+    """Legacy 3D adapter for the strict 2D survival implementation."""
+    current = dict(data)
+    previous = dict(time_lag)
+    for key in ('TEWK', 'REVS'):
+        current[key] = data[key][:, :, 0]
+    previous['TEWK'] = time_lag['TEWK'][:, :, 0]
+    current['RLTA'] = data['RLTA']
+    current['TESF'] = data['TESF']
+    survival_function(current, previous, histend, year, titles)
+    data['RLTA'] = current['RLTA']
+    data['REVS'][:, :, 0] = current['REVS']
     return data

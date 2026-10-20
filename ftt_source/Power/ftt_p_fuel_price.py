@@ -20,10 +20,6 @@ Created: Mon Nov 6 2023
 
 import numpy as np
 
-from ftt_source.support.singleton_dimension import (
-    squeeze_singleton_third_axis,
-    unsqueeze_singleton_third_axis,
-)
 from ftt_source.support.divide import divide
 
 
@@ -194,7 +190,12 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
     data : dict
         Updated with MEWP values
     """
-    squeezed_keys = squeeze_singleton_third_axis(data, data.keys())
+    storage_keys = (
+        "MEWP", "MERC", "MEWK", "MEWI", "MEWL", "MEWG",
+        "MECC incl CO2", "MECC only CO2", "MWMC", "MLBP", "MLB1",
+    )
+    if any(data[name].ndim != 2 for name in storage_keys) or Svar.ndim != 2:
+        raise ValueError("get_marginal_fuel_prices_mewp expects 2D storage arrays")
 
     hard_coal_fuel_idx = fuel_price_indices['hard_coal_fuel_idx']
     other_coal_fuel_idx = fuel_price_indices['other_coal_fuel_idx']
@@ -331,5 +332,30 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
             data["MEWP"][r, electricity_fuel_idx] = vre_weight * data["MLBP"][r, 5] + (1.0 - vre_weight) * non_vre_price
 
 
-    unsqueeze_singleton_third_axis(data, squeezed_keys)
     return data
+
+
+def get_marginal_fuel_prices_mewp_old(
+    data, titles, Svar, wind_solar_indices, fuel_price_indices
+):
+    """Legacy 3D wrapper for :func:`get_marginal_fuel_prices_mewp`."""
+    shapes = {
+        name: value.shape
+        for name, value in data.items()
+        if isinstance(value, np.ndarray) and value.ndim == 3 and value.shape[2] == 1
+    }
+    for name in shapes:
+        data[name] = data[name][:, :, 0]
+    if Svar.ndim == 2:
+        Svar_2d = Svar
+    elif Svar.ndim == 3 and Svar.shape[2] == 1:
+        Svar_2d = Svar[:, :, 0]
+    else:
+        raise ValueError("get_marginal_fuel_prices_mewp_old expects a 2D or singleton 3D Svar")
+    try:
+        return get_marginal_fuel_prices_mewp(
+            data, titles, Svar_2d, wind_solar_indices, fuel_price_indices
+        )
+    finally:
+        for name, shape in shapes.items():
+            data[name] = data[name].reshape(shape)

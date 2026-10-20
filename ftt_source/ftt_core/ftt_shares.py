@@ -313,13 +313,9 @@ def shares_change(
     costs, costs_sd,
     subst, reg_constr, num_regions, num_techs,
     upper_limit=None, lower_limit=None, limits_active=False,
-    T_Scal=1.0, compare_with_old=False,
+    T_Scal=1.0,
 ):
-    """Calculate share changes from 2D technology arrays.
-
-    ``compare_with_old`` is a temporary migration check that verifies the
-    result against :func:`shares_change_old`.
-    """
+    """Calculate share changes from 2D technology arrays."""
     if not limits_active:
         upper_limit = np.empty((num_regions, num_techs))
         lower_limit = np.empty((num_regions, num_techs))
@@ -328,21 +324,6 @@ def shares_change(
         dt, regions, shares_dt, costs, costs_sd, subst, reg_constr,
         num_regions, num_techs, upper_limit, lower_limit, limits_active, T_Scal,
     )
-
-    if compare_with_old:
-        old_change_in_shares = shares_change_old(
-            dt, regions,
-            shares_dt[:, :, np.newaxis],
-            costs[:, :, np.newaxis],
-            costs_sd[:, :, np.newaxis],
-            subst, reg_constr, num_regions, num_techs,
-            upper_limit[:, :, np.newaxis],
-            lower_limit[:, :, np.newaxis],
-            limits_active, T_Scal,
-        )
-        np.testing.assert_allclose(
-            change_in_shares, old_change_in_shares, rtol=1e-12, atol=1e-12
-        )
 
     return change_in_shares
 
@@ -431,7 +412,6 @@ def shares_change_premature(
     costs_payb, costs_payb_sd,
     subst, reg_constr,
     num_regions, num_techs,
-    compare_with_old=False,
 ):
     """Calculate premature replacement share changes from 2D arrays."""
     change_in_shares = shares_change_premature_jitted(
@@ -439,20 +419,6 @@ def shares_change_premature(
         costs_payb, costs_payb_sd, subst, reg_constr,
         num_regions, num_techs,
     )
-
-    if compare_with_old:
-        old_change_in_shares = shares_change_premature_old(
-            dt, regions,
-            shares_dt[:, :, np.newaxis],
-            costs_marg[:, :, np.newaxis],
-            costs_marg_sd[:, :, np.newaxis],
-            costs_payb[:, :, np.newaxis],
-            costs_payb_sd[:, :, np.newaxis],
-            subst, reg_constr, num_regions, num_techs,
-        )
-        np.testing.assert_allclose(
-            change_in_shares, old_change_in_shares, rtol=1e-12, atol=1e-12
-        )
 
     return change_in_shares
 

@@ -40,7 +40,7 @@ from ftt_source.ftt_core.ftt_mandate import (
     implement_mandate_old,
     implement_seeding_old,
 )
-from ftt_source.sector_coupling.battery_lbd import battery_costs
+from ftt_source.sector_coupling.battery_lbd import battery_costs_old as battery_costs
 from ftt_source.ftt_core.ftt_exogenous_sales import exogenous_sales
 from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
@@ -48,9 +48,11 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from ftt_source.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
-from ftt_source.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
-from ftt_source.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
+from ftt_source.Transport.ftt_tr_lcot import get_lcot_old, set_carbon_tax_old
+from ftt_source.Transport.ftt_tr_emission_corrections import (
+    co2_corr_old, biofuel_corr_old, compute_emissions_and_fuel_use_old,
+)
+from ftt_source.Transport.ftt_tr_survival import survival_function_old, add_new_cars_age_matrix_old
 from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation_old
 
 # Green technology indices for Transport (EVs)
@@ -195,20 +197,20 @@ def solve(data, time_lag, titles, histend, year, domain):
     
     regions = np.where(year <= data['TDA1'][:, 0, 0])[0]
     # First: correct for age effects, with older vehicles emitting more CO2
-    co2_corrct, has_fleet = co2_corr(data, titles, regions)
+    co2_corrct, has_fleet = co2_corr_old(data, titles, regions)
     # Then, correct for the biofuel mandate, reducing emissions
-    biofuel_corrct, fuel_converter = biofuel_corr(data, titles, has_fleet, regions)
+    biofuel_corrct, fuel_converter = biofuel_corr_old(data, titles, has_fleet, regions)
     # Finally, compute TEWE (emissions) and TJEF (fuel use) (TO BE FIXED to avoid double counting)
-    compute_emissions_and_fuel_use(data, titles, co2_corrct, biofuel_corrct, fuel_converter, c3ti, regions)
+    compute_emissions_and_fuel_use_old(data, titles, co2_corrct, biofuel_corrct, fuel_converter, c3ti, regions)
 
     
     # Call the survival function routine, updating scrappage and age matrix:
     if year <= np.max(data["TDA1"][:, 0, 0]):
-        data = survival_function(data, time_lag, histend, year, titles)
+        data = survival_function_old(data, time_lag, histend, year, titles)
 
     # Calculate the LCOT for each vehicle type.
-    carbon_costs = set_carbon_tax(data, c3ti, year)
-    data = get_lcot(data, titles, carbon_costs, year)
+    carbon_costs = set_carbon_tax_old(data, c3ti, year)
+    data = get_lcot_old(data, titles, carbon_costs, year)
 
     # %% Simulation of stock and energy specs
 
@@ -346,11 +348,11 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             # Fuel use and emissions
             # First: correct for age effects, with older vehicles emitting more CO2
-            co2_corrct, region_has_fleet = co2_corr(data, titles)
+            co2_corrct, region_has_fleet = co2_corr_old(data, titles)
             # Then, adjust fuel use and emissions factors for biofuel mandate
-            biofuel_corrct, fuel_converter = biofuel_corr(data, titles, region_has_fleet)
+            biofuel_corrct, fuel_converter = biofuel_corr_old(data, titles, region_has_fleet)
             # Finally, compute TEWE (emissions) and TJEF (fuel use)
-            compute_emissions_and_fuel_use(data, titles, co2_corrct, biofuel_corrct, fuel_converter, c3ti)
+            compute_emissions_and_fuel_use_old(data, titles, co2_corrct, biofuel_corrct, fuel_converter, c3ti)
             
             
             ############## Learning-by-doing ##################
@@ -429,8 +431,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             
 
             # Calculate levelised cost again
-            carbon_costs = set_carbon_tax(data, c3ti, year)
-            data = get_lcot(data, titles, carbon_costs, year)
+            carbon_costs = set_carbon_tax_old(data, c3ti, year)
+            data = get_lcot_old(data, titles, carbon_costs, year)
             
             # =================================================================
             # Update the time-loop variables
@@ -446,6 +448,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                                  * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33)
 
         # Call the survival function routine
-        data = survival_function(data, time_lag, histend, year, titles)
+        data = survival_function_old(data, time_lag, histend, year, titles)
 
     return data

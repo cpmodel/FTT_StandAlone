@@ -301,7 +301,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                 year,
                 GREEN_INDICES_HP,
                 histend['HEWF'],
-                compare_with_old=True,
             )
 
             data['HEWI'], hewi_t, data['HEWK'] = implement_mandate(
@@ -311,7 +310,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                 year,
                 GREEN_INDICES_HP,
                 data["HP mandate"],
-                compare_with_old=True,
             )
 
             # Recalculate energy, shares, fuel demand, and emissions after policy.

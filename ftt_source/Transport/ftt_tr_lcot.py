@@ -25,13 +25,6 @@ ns = number of seats
 import numpy as np
 
 
-def _singleton_2d(array):
-    """Return an internal singleton-axis variable as a 2D array."""
-    if array.ndim == 1:
-        return array[:, None]
-    return array if array.ndim == 2 else array[:, :, 0]
-
-
 def set_carbon_tax(data, c3ti, year):
     '''
     Convert the carbon price in REPP from USD / tCO2 to 2022$/pkm
@@ -48,7 +41,7 @@ def set_carbon_tax(data, c3ti, year):
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
 
 
-    carbon_costs = (_singleton_2d(data["CO2taxTr"])                                   # Carbon price in USD/tCO2
+    carbon_costs = (data["CO2taxTr"][:, None]                                    # Carbon price in USD/tCO2
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
                     / ns / ff                                                 # Conversion from per km to per pkm
                     / 10**6                                                  # Conversion from grams to tonnes.
@@ -125,20 +118,20 @@ def get_lcot(data, titles, carbon_costs, year):
     it = get_cost_elem(bttc[:, :, c3ti['1 Prices cars (USD/veh)']], conv_full, bt_mask)
     dit = get_cost_elem(bttc[:, :, c3ti['2 Std of price']], conv_full, bt_mask)
     # Vehicle tax at purchase
-    vtt = get_cost_elem( ( (_singleton_2d(data['TTVT'])
-                             + _singleton_2d(data['RTCO'])[:, 0, None] * bttc[:, :, c3ti['14 CO2Emissions']] )
+    vtt = get_cost_elem( ( (data['TTVT']
+                             + data['RTCO'][:, None] * bttc[:, :, c3ti['14 CO2Emissions']] )
                              * conv_full[:, :, 0]
-                             + _singleton_2d(data["Base registration rate"]) * it[:, :, 0]
+                             + data["Base registration rate"] * it[:, :, 0]
                             ), 1, bt_mask)
     ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
     ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
     # Fuel tax costs
-    fft = get_cost_elem(_singleton_2d(data['RTFT']), en / ns / ff * taxable_fuels, lt_mask)
+    fft = get_cost_elem(data['RTFT'], en / ns / ff * taxable_fuels, lt_mask)
     omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], 1 / ns / ff, lt_mask)
     domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], 1 / ns / ff, lt_mask)
     # Yearly road tax cost
-    rtt = get_cost_elem(_singleton_2d(data['TTRT']), conv_full, lt_mask)
+    rtt = get_cost_elem(data['TTRT'], conv_full, lt_mask)
 
     # Discount rate
     dr = bttc[:, :, c3ti['7 Discount rate'], np.newaxis]
@@ -187,4 +180,33 @@ def get_lcot(data, titles, carbon_costs, year):
         else:
             data[variable][:, :, 0] = values
 
+    return data
+
+
+def set_carbon_tax_old(data, c3ti, year):
+    """Legacy adapter for 3D singleton-axis transport inputs."""
+    current = dict(data)
+    for key in ('CO2taxTr', 'RTCO'):
+        current[key] = data[key].reshape(data[key].shape[0], -1)[:, 0]
+    return set_carbon_tax(current, c3ti, year)[:, :, None]
+
+
+def get_lcot_old(data, titles, carbon_costs, year):
+    """Legacy adapter for the strict 2D LCOT implementation."""
+    current = dict(data)
+    for key in ('TTVT', 'TTRT', 'Base registration rate'):
+        value = data[key]
+        current[key] = value.reshape(value.shape[0], value.shape[1], -1)[:, :, 0]
+    for key in ('RTCO',):
+        value = data[key]
+        current[key] = value.reshape(value.shape[0], -1)[:, 0]
+    value = data['RTFT']
+    current['RTFT'] = value.reshape(value.shape[0], -1)[:, :1]
+    current['CO2taxTr'] = data['CO2taxTr'].reshape(data['CO2taxTr'].shape[0], -1)[:, 0]
+    current['BTTC'] = data['BTTC']
+    for variable in ('TEWC', 'TETC', 'TEGC', 'TELC', 'TECD', 'TLCD'):
+        current[variable] = data[variable][:, :, 0]
+    result = get_lcot(current, titles, carbon_costs[:, :, 0], year)
+    for variable in ('TEWC', 'TETC', 'TEGC', 'TELC', 'TECD', 'TLCD'):
+        data[variable][:, :, 0] = result[variable]
     return data

@@ -15,24 +15,6 @@ Functions included:
 import numpy as np
 
 
-def _view2d(array):
-    """Return a 2D region-by-technology view for legacy or migrated callers."""
-    return array[:, :, 0] if array.ndim == 3 else array
-
-
-def _assign2d(data, variable, value):
-    """Assign a 2D result while preserving a legacy singleton storage axis."""
-    if data[variable].ndim == 3:
-        data[variable][:, :, 0] = value
-    else:
-        data[variable] = value
-
-
-def _regional_values(array):
-    """Return region values as a column in either storage layout."""
-    return array[:, :, 0] if array.ndim == 3 else array
-
-
 def set_carbon_tax(data, c6ti):
     '''
     Apply the carbon price to freight sector technologies based on their emission factors
@@ -40,7 +22,7 @@ def set_carbon_tax(data, c6ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    carbon_costs = (_view2d(data["CO2taxFr"])                                  # Carbon price in USD/tCO2
+    carbon_costs = (data["CO2taxFr"]                                      # Carbon price in USD/tCO2
                     * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]    # g CO2 / km
                     / 10**6                                                     # Conversion from g to tonne
                     )
@@ -65,8 +47,8 @@ def verify_revenue_neutrality(data, titles, c6ti):
         
         # Check if this region has any BEV subsidies
         bev_indices = [31, 32, 33]  # BEV indices
-        ztvt = _view2d(data['ZTVT'])
-        zewi = _view2d(data['ZEWI'])
+        ztvt = data['ZTVT']
+        zewi = data['ZEWI']
         has_subsidies = np.any(ztvt[r, bev_indices] < 0)
         
         if not has_subsidies:
@@ -122,8 +104,8 @@ def calculate_feebate_rates(data, titles, c6ti, n_veh_classes):
             
             # Calculate BEV subsidies for this class
             bev_costs = data['BZTC'][r, bev_indices_class, c6ti['1 Purchase cost (USD/veh)']]
-            zewi = _view2d(data['ZEWI'])
-            ztvt = _view2d(data['ZTVT'])
+            zewi = data['ZEWI']
+            ztvt = data['ZTVT']
             bev_numbers = zewi[r, bev_indices_class]
             total_subsidy = np.sum(
                 bev_costs * bev_numbers * abs(ztvt[r, bev_indices_class])
@@ -152,8 +134,7 @@ def get_lcof(data, titles, carbon_costs, year):
     -----------
     data: dictionary
         Dictionary with the data of the current year for all variables.
-        variables. Freight solver values use 2D region-by-technology arrays;
-        legacy singleton-third-axis arrays are accepted for baseline comparison.
+        variables. Freight solver values use 2D region-by-technology arrays.
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
 
@@ -161,7 +142,6 @@ def get_lcof(data, titles, carbon_costs, year):
     ----------
     data: dictionary
         Data is a dictionary with the data of the current year for all variables.
-        The caller's 2D or legacy storage layout is preserved.
         The values inside the container are updated and returned to the main
         routine.
 
@@ -187,8 +167,8 @@ def get_lcof(data, titles, carbon_costs, year):
     taxable_fuels = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
     
     bztc = data['BZTC']
-    ztvt = _view2d(data['ZTVT'])
-    ztrt = _view2d(data['ZTRT'])
+    ztvt = data['ZTVT']
+    ztrt = data['ZTRT']
     
     # Lifetimes and build years
     lt = bztc[:, :, c6ti['8 Lifetime (y)']]
@@ -208,16 +188,22 @@ def get_lcof(data, titles, carbon_costs, year):
     # Reg tax based on carbon price, RTCOt = ($/tCO2/km)/(tCO2/km)
     RZCOt = get_cost_elem(
         bztc[:, :, c6ti['12 CO2 emissions (gCO2/km)']]
-        * _regional_values(data['RZCO']), 1, bt_mask
+        * data['RZCO'], 1, bt_mask
     )
     # Registration taxes, ZTVT is vehicle tax or subsidy (in percentage)
-    ItVT = get_cost_elem(It[:, :, 0] * ztvt, 1, bt_mask)
+    ItVT = get_cost_elem(
+        bztc[:, :, c6ti['1 Purchase cost (USD/veh)']]
+        / bztc[:, :, c6ti['15 Average mileage (km/y)']]
+        * ztvt,
+        1,
+        bt_mask,
+    )
     Ft = get_cost_elem(bztc[:, :, c6ti['3 fuel cost (USD/km)']], 1, lt_mask)
     dFt = get_cost_elem(bztc[:, :, c6ti['4 std fuel cost']], 1, lt_mask)
     ct = get_cost_elem(carbon_costs, 1, lt_mask)
     # fuel tax/subsidies
     fft = get_cost_elem(
-        _regional_values(data['RZFT']) * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]]
+        data['RZFT'] * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]]
         * taxable_fuels, 1, lt_mask
     )
     OMt = get_cost_elem(bztc[:, :, c6ti['5 O&M costs (USD/km)']], 1, lt_mask)
@@ -264,27 +250,67 @@ def get_lcof(data, titles, carbon_costs, year):
     TLCOFG = TLCOF * (1 + bztc[:, :, c6ti['11 Gamma']])
     
     # Compute levelised cost in freight in $/tkm
-    _assign2d(data, 'ZTLC', LCOF)
-    _assign2d(data, 'ZTLD', dLCOF)
-    _assign2d(data, 'ZTTC', TLCOF)
-    _assign2d(data, 'ZTTD', dLCOF)
-    _assign2d(data, 'ZEGC', TLCOFG)
+    data['ZTLC'] = LCOF
+    data['ZTLD'] = dLCOF
+    data['ZTTC'] = TLCOF
+    data['ZTTD'] = dLCOF
+    data['ZEGC'] = TLCOFG
 
     
     # Vehicle price components for front end ($/veh)
-    _assign2d(
-        data, "ZWIC",
+    data["ZWIC"] = (
         bztc[:, :, c6ti['1 Purchase cost (USD/veh)']] * (1 + ztvt)
         + bztc[:, :, c6ti["12 CO2 emissions (gCO2/km)"]]
-        * _regional_values(data["RZCO"]),
+        * data["RZCO"]
     )
     
     # Vehicle fuel price components for front end ($/km)
-    _assign2d(
-        data, "ZWFC",
+    data["ZWFC"] = (
         bztc[:, :, c6ti["3 fuel cost (USD/km)"]]
-        + _regional_values(data['RZFT'])
-        * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]] * taxable_fuels,
+        + data['RZFT']
+        * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]] * taxable_fuels
     )
     
+    return data
+
+
+def _legacy_2d_data(data):
+    """Create the 2D view used by the legacy adapter without changing storage."""
+    return {
+        key: value[:, :, 0]
+        if isinstance(value, np.ndarray) and value.ndim == 3 and value.shape[2] == 1
+        else value
+        for key, value in data.items()
+    }
+
+
+def set_carbon_tax_old(data, c6ti):
+    """Legacy 3D adapter for freight carbon-tax calculations."""
+    return set_carbon_tax(_legacy_2d_data(data), c6ti)
+
+
+def verify_revenue_neutrality_old(data, titles, c6ti):
+    """Legacy 3D adapter for feebate diagnostics."""
+    return verify_revenue_neutrality(_legacy_2d_data(data), titles, c6ti)
+
+
+def calculate_feebate_rates_old(data, titles, c6ti, n_veh_classes):
+    """Legacy 3D adapter for feebate-rate calculation."""
+    calculate_feebate_rates(_legacy_2d_data(data), titles, c6ti, n_veh_classes)
+
+
+def get_lcof_old(data, titles, carbon_costs, year):
+    """Legacy 3D adapter for levelised freight-cost calculation."""
+    data_2d = _legacy_2d_data(data)
+    get_lcof(data_2d, titles, carbon_costs, year)
+    for key, value in data_2d.items():
+        if (
+            key in data
+            and isinstance(data[key], np.ndarray)
+            and data[key].ndim == 3
+            and data[key].shape[2] == 1
+            and isinstance(value, np.ndarray)
+            and value.ndim == 2
+        ):
+            data[key][:, :, 0] = value
     return data

@@ -91,6 +91,7 @@ def solve(data, time_lag, titles, histend, year, domain):
     shared_vars = {
         'Battery cap additions', 'Battery price', 'Cumulative total batcap',
         'CO2taxFr', 'noit',
+        'TEWK', 'ZEWK',
     }
     squeeze_candidates = (
         {var for var, value_domain in domain.items() if value_domain == 'FTT-Fr'}
