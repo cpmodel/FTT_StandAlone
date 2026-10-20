@@ -81,9 +81,9 @@ def get_lcot(data, titles, carbon_costs, year):
     taxable_fuels[:, 24:27] = 0   # Hydrogen
 
     # Taxable categories for carbon tax: only EVs and H2 exempt
-    tf_carbon = np.ones([len(titles['VTTI']), 1])
-    tf_carbon[18:21] = 0   # EVs
-    tf_carbon[24:27] = 0   # Hydrogen
+    tf_carbon = np.ones((1, len(titles['VTTI']), 1))
+    tf_carbon[:, 18:21, :] = 0   # EVs
+    tf_carbon[:, 24:27, :] = 0   # Hydrogen
 
     bttc = data['BTTC']
 
@@ -95,19 +95,19 @@ def get_lcot(data, titles, carbon_costs, year):
     bt_mask = full_lt_mat < np.ones_like(lt[..., None]) # Build time mask
 
     # Capacity factor
-    cf = bttc[:, :, c3ti['12 Cap_F (Mpkm/kseats-y)'], np.newaxis]
+    cf = bttc[:, :, c3ti['12 Cap_F (Mpkm/kseats-y)']]
 
     # Occupancy rates
-    ff = bttc[:, :, c3ti['11 occupancy rate p/sea'], np.newaxis]
+    ff = bttc[:, :, c3ti['11 occupancy rate p/sea']]
 
     # Number of seats
-    ns = bttc[:, :, c3ti['15 Seats/Veh'], np.newaxis]
+    ns = bttc[:, :, c3ti['15 Seats/Veh']]
 
     # Energy use
-    en = bttc[:, :, c3ti['9 energy use (MJ/km)'], np.newaxis]
+    en = bttc[:, :, c3ti['9 energy use (MJ/km)']]
 
-    conv_full = 1 / ns / ff / cf / 1000
-    conv_pkm = 1 / ns / ff
+    conv_full = (1 / ns / ff / cf / 1000)[..., None]
+    conv_pkm = (1 / ns / ff)[..., None]
 
     def get_cost_elem(base_cost, conversion_factor, mask):
         '''Mask costs during build or life time, and apply
@@ -118,18 +118,27 @@ def get_lcot(data, titles, carbon_costs, year):
     it = get_cost_elem(bttc[:, :, c3ti['1 Prices cars (USD/veh)']], conv_full, bt_mask)
     dit = get_cost_elem(bttc[:, :, c3ti['2 Std of price']], conv_full, bt_mask)
     # Vehicle tax at purchase
-    vtt = get_cost_elem( ( (data['TTVT']
-                             + data['RTCO'][:, None] * bttc[:, :, c3ti['14 CO2Emissions']] )
-                             * conv_full[:, :, 0]
-                             + data["Base registration rate"] * it[:, :, 0]
-                            ), 1, bt_mask)
+    vehicle_tax = (
+        data['TTVT']
+        + data['RTCO'][:, None]
+        * bttc[:, :, c3ti['14 CO2Emissions']]
+    ) * conv_full[:, :, 0] + data["Base registration rate"] * it[:, :, 0]
+    vtt = get_cost_elem(
+        vehicle_tax,
+        1,
+        bt_mask,
+    )
     ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
     ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
     # Fuel tax costs
-    fft = get_cost_elem(data['RTFT'], en / ns / ff * taxable_fuels, lt_mask)
-    omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], 1 / ns / ff, lt_mask)
-    domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], 1 / ns / ff, lt_mask)
+    fft = get_cost_elem(
+        data['RTFT'],
+        (en / ns / ff)[..., None] * taxable_fuels,
+        lt_mask,
+    )
+    omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], (1 / ns / ff)[..., None], lt_mask)
+    domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], (1 / ns / ff)[..., None], lt_mask)
     # Yearly road tax cost
     rtt = get_cost_elem(data['TTRT'], conv_full, lt_mask)
 
@@ -175,38 +184,6 @@ def get_lcot(data, titles, carbon_costs, year):
         'TEWC': lcot, 'TETC': tlcot, 'TEGC': tlcotg,
         'TELC': logtlcot, 'TECD': dlcot, 'TLCD': dlogtlcot,
     }.items():
-        if data[variable].ndim == 2:
-            data[variable] = values
-        else:
-            data[variable][:, :, 0] = values
+        data[variable] = values
 
-    return data
-
-
-def set_carbon_tax_old(data, c3ti, year):
-    """Legacy adapter for 3D singleton-axis transport inputs."""
-    current = dict(data)
-    for key in ('CO2taxTr', 'RTCO'):
-        current[key] = data[key].reshape(data[key].shape[0], -1)[:, 0]
-    return set_carbon_tax(current, c3ti, year)[:, :, None]
-
-
-def get_lcot_old(data, titles, carbon_costs, year):
-    """Legacy adapter for the strict 2D LCOT implementation."""
-    current = dict(data)
-    for key in ('TTVT', 'TTRT', 'Base registration rate'):
-        value = data[key]
-        current[key] = value.reshape(value.shape[0], value.shape[1], -1)[:, :, 0]
-    for key in ('RTCO',):
-        value = data[key]
-        current[key] = value.reshape(value.shape[0], -1)[:, 0]
-    value = data['RTFT']
-    current['RTFT'] = value.reshape(value.shape[0], -1)[:, :1]
-    current['CO2taxTr'] = data['CO2taxTr'].reshape(data['CO2taxTr'].shape[0], -1)[:, 0]
-    current['BTTC'] = data['BTTC']
-    for variable in ('TEWC', 'TETC', 'TEGC', 'TELC', 'TECD', 'TLCD'):
-        current[variable] = data[variable][:, :, 0]
-    result = get_lcot(current, titles, carbon_costs[:, :, 0], year)
-    for variable in ('TEWC', 'TETC', 'TEGC', 'TELC', 'TECD', 'TLCD'):
-        data[variable][:, :, 0] = result[variable]
     return data

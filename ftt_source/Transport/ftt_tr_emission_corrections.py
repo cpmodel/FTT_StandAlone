@@ -24,11 +24,10 @@ def co2_corr(data, titles, regions=None):
     if regions is None:
         regions = np.arange(len(titles['RTI']))
 
-    TESH = data['TESH'][regions, :, 0]  # Vehicle sales history
-    TESF = data['TESF'][regions, :, 0]  # Survival function
-    TETH = data['TETH'][regions, :, 0]  # Efficiency correction by age
+    TESH = data['TESH'][regions]  # Vehicle sales history
+    TESF = data['TESF'][regions]  # Survival function
+    TETH = data['TETH'][regions]  # Efficiency correction by age
     RFLT = data['RFLT'][regions]  # Fleet stocks in use
-
     numer = (TESH * TESF * TETH).sum(axis=1)
     total_fleet = (TESH * TESF).sum(axis=1)
 
@@ -93,55 +92,15 @@ def compute_emissions_and_fuel_use(data, titles, CO2_corr, biofuel_corr, fuel_co
     if regions is None:
         regions = np.arange(len(titles['RTI']))
 
-    tewg = data['TEWG']
-    energy_use_per_tech = (tewg[regions]
+    energy_use_per_tech = (data['TEWG'][regions]
                           * data['BTTC'][regions, :, c3ti['9 energy use (MJ/km)']]
                           * CO2_corr[:, None] / 41.868)
     
-    tjef = data['TJEF']
-    tjef[regions] = np.einsum('v f r, r v -> r f',
-                              fuel_converter.transpose(1, 2, 0),
-                              energy_use_per_tech)
-    if data['TJEF'].ndim == 2:
-        data['TJEF'] = tjef
-    else:
-        data['TJEF'][:, :, 0] = tjef
+    data['TJEF'][regions] = np.einsum('v f r, r v -> r f',
+                                      fuel_converter.transpose(1, 2, 0),
+                                      energy_use_per_tech)
 
     # TODO: are we double counting electric emissions? They should likely be zero in this model.
-    tewe = data['TEWE']
-    tewe[regions] = (tewg[regions]
-                     * data['BTTC'][regions, :, c3ti['14 CO2Emissions']]
-                     * CO2_corr[:, None] * biofuel_corr / 1e6)
-    if data['TEWE'].ndim == 2:
-        data['TEWE'] = tewe
-    else:
-        data['TEWE'][:, :, 0] = tewe
-
-
-def co2_corr_old(data, titles, regions=None):
-    """Legacy adapter for singleton-axis fleet data."""
-    current = dict(data)
-    current['RFLT'] = data['RFLT'][:, 0, 0]
-    return co2_corr(current, titles, regions)
-
-
-def biofuel_corr_old(data, titles, region_has_fleet, regions=None):
-    """Legacy adapter for singleton-axis biofuel mandates."""
-    current = dict(data)
-    current['RBFM'] = data['RBFM'][:, 0, 0]
-    return biofuel_corr(current, titles, region_has_fleet, regions)
-
-
-def compute_emissions_and_fuel_use_old(
-    data, titles, CO2_corr, biofuel_corr, fuel_converter, c3ti, regions=None
-):
-    """Legacy adapter for singleton-axis emissions outputs."""
-    current = dict(data)
-    current['TEWG'] = data['TEWG'][:, :, 0]
-    current['TJEF'] = data['TJEF'][:, :, 0]
-    current['TEWE'] = data['TEWE'][:, :, 0]
-    compute_emissions_and_fuel_use(
-        current, titles, CO2_corr, biofuel_corr, fuel_converter, c3ti, regions
-    )
-    data['TJEF'][:, :, 0] = current['TJEF']
-    data['TEWE'][:, :, 0] = current['TEWE']
+    data['TEWE'][regions] = (data['TEWG'][regions]
+                             * data['BTTC'][regions, :, c3ti['14 CO2Emissions']]
+                             * CO2_corr[:, None] * biofuel_corr / 1e6)

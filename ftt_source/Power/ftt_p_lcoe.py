@@ -18,8 +18,8 @@ Functions included:
 import numpy as np
 
 from ftt_source.support.singleton_dimension import (
-    squeeze_singleton_third_axis,
-    unsqueeze_singleton_third_axis,
+    restore_all_singleton_axes,
+    squeeze_all_singleton_axes,
 )
 
 
@@ -89,7 +89,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         routine.
     """
 
-    squeezed_keys = squeeze_singleton_third_axis(data, LCOE_SINGLETON_VARIABLES)
+    squeezed_shapes = squeeze_all_singleton_axes(data, LCOE_SINGLETON_VARIABLES)
 
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
@@ -140,7 +140,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     ct = get_cost_component(bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']], 1, lt_mask)
     
     # Who pays for storage, and total storage costs
-    msal_rounded = np.rint(data['MSAL'][:, 0])
+    msal_rounded = np.rint(data['MSAL'])
     storage_sum = (data['MSSP'] + data['MLSP']) / 1000
     marg_storage_sum = (data['MSSM'] + data['MLSM']) / 1000
     
@@ -252,5 +252,5 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
               
 
-    unsqueeze_singleton_third_axis(data, squeezed_keys)
+    restore_all_singleton_axes(data, squeezed_shapes)
     return data

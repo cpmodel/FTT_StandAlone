@@ -15,11 +15,9 @@ EV_INDICES = [18, 19, 20]
 
 def get_sector_coupling_dict(data, titles):
     assumptions = np.asarray(data["SectorCouplingAssumps"])
-    # Assumptions have no meaningful singleton dimensions.
-    assumptions = np.squeeze(assumptions)
     sector_coupling_assumps = dict(zip(
                 list(titles['SCA']),
-                assumptions.reshape(-1)
+                assumptions.squeeze().reshape(-1)
                 ))
     return sector_coupling_assumps
 
@@ -211,21 +209,44 @@ def _restore_layout(value, template):
 
 
 def second_hand_batteries_old(data, time_lag, year, titles):
-    """Legacy 3D boundary wrapper for the old Power solver."""
-    for key in ("REVS", "Second-hand batteries by age"):
-        data[key] = _as_2d(data[key], key)
-        time_lag[key] = _as_2d(time_lag[key], key)
-    stock = data.get("Second-hand battery stock")
-    if stock is not None and np.asarray(stock).ndim > 1:
-        data["Second-hand battery stock"] = np.asarray(stock)[..., 0]
-    result = second_hand_batteries(data, time_lag, year, titles)
-    data["Second-hand batteries by age"] = _restore_layout(
-        data["Second-hand batteries by age"], time_lag["Second-hand batteries by age"]
+    """
+    This function estimates the size of the second-hand battery market
+    based on scrappage of electric vehicles from FTT:Tr. We use batteries
+    from cars scrapped in the previous time step.
+
+    Numbers are taken from the Xu et al (2022) paper:
+    https://www.nature.com/articles/s41467-022-35393-0
+    """
+    sector_coupling_assumps = get_sector_coupling_dict(data, titles)
+
+    if not sector_coupling_assumps["V2G interaction"]:
+        return data
+
+    c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
+    battery_capacity_lag = (
+        time_lag["REVS"]
+        * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
     )
-    data["Second-hand battery stock"] = _restore_layout(
-        data["Second-hand battery stock"], stock
+    battery_capacity_lag_sum = np.sum(battery_capacity_lag, axis=1) / 1000
+    summed_battery_capacity = (
+        battery_capacity_lag_sum
+        * sector_coupling_assumps["Starting degradation"]
     )
-    return result
+    used_battery_capacity = (
+        summed_battery_capacity
+        * sector_coupling_assumps["Utilisation rate"]
+    )
+
+    data['Second-hand batteries by age'][:, :-1, :] = (
+        np.copy(time_lag['Second-hand batteries by age'][:, 1:, :])
+        * sector_coupling_assumps["Yearly decay"]
+    )
+    data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
+    data['Second-hand battery stock'] = np.sum(
+        data['Second-hand batteries by age'], axis=1, keepdims=True
+    )
+
+    return data
 
 
 def share_transport_batteries_old(data, titles):

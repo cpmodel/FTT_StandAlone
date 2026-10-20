@@ -48,11 +48,19 @@ from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 
-from ftt_source.Transport.ftt_tr_lcot import get_lcot_old, set_carbon_tax_old
-from ftt_source.Transport.ftt_tr_emission_corrections import (
-    co2_corr_old, biofuel_corr_old, compute_emissions_and_fuel_use_old,
+from ftt_source.Transport.ftt_tr_lcot_old import (
+    get_lcot as get_lcot_old,
+    set_carbon_tax as set_carbon_tax_old,
 )
-from ftt_source.Transport.ftt_tr_survival import survival_function_old, add_new_cars_age_matrix_old
+from ftt_source.Transport.ftt_tr_emission_corrections_old import (
+    co2_corr as co2_corr_old,
+    biofuel_corr as biofuel_corr_old,
+    compute_emissions_and_fuel_use as compute_emissions_and_fuel_use_old,
+)
+from ftt_source.Transport.ftt_tr_survival_old import (
+    survival_function as survival_function_old,
+    add_new_cars_age_matrix as add_new_cars_age_matrix_old,
+)
 from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation_old
 
 # Green technology indices for Transport (EVs)

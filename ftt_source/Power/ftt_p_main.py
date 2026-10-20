@@ -127,7 +127,11 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     squeeze_candidates -= {'MSSC'}
     squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
     squeezed_time_lag_keys = squeeze_singleton_third_axis(time_lag, squeeze_candidates)
-    vector_variables = {'MEWW', 'noit'}
+    vector_variables = {
+        'MEWW', 'noit', 'MCRT', 'MLSG', 'MLSE', 'MSSE', 'MSSC', 'MSSG',
+        'MSSR', 'MSCC', 'MLSC', 'MLSR', 'MLCC', 'MSAL', 'MCGA', 'MCNA',
+        'MCTN', 'MADG', 'LAT', 'RLDCMAP', 'Battery price',
+    }
     data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
     time_lag_vector_shapes = squeeze_all_singleton_axes(time_lag, vector_variables)
 
@@ -232,19 +236,19 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
-            data['MCGA'][r, 0] = data['MCRT'][r, 0] * np.sum(Svar[r, :] * data['MEWG'][r])
+            data['MCGA'][r] = data['MCRT'][r] * np.sum(Svar[r, :] * data['MEWG'][r])
 
             # Net curtailed generation
             # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
             # On average 45% of curtailed electricity can be reused for long-term storage:
             # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-            data['MCNA'][r, 0] = np.maximum(data['MCGA'][r, 0] - 0.45 * 2 * data['MLSG'][r, 0], 0.55 * data['MCGA'][r, 0])
+            data['MCNA'][r] = np.maximum(data['MCGA'][r] - 0.45 * 2 * data['MLSG'][r], 0.55 * data['MCGA'][r])
             # Impact of net curtailment on load factors for VRE technologies
             # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-            data['MCTN'][r] = data['MCTG'][r] * divide(data['MCNA'][r, 0], data['MCGA'][r, 0])
+            data['MCTN'][r] = data['MCTG'][r] * divide(data['MCNA'][r], data['MCGA'][r])
                             
             # Total additional electricity that needs to be generated
-            data['MADG'][r, 0] = data['MCGA'][r, 0] - data['MCNA'][r, 0] + data['MSSG'][r, 0]
+            data['MADG'][r] = data['MCGA'][r] - data['MCNA'][r] + data['MSSG'][r]
             
             
 
@@ -378,7 +382,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # Given that we know the demand at the end of the year, we can alternatively cheat for additional accuracy
             MEWDt = time_lag['MEWDX'][:, elec_idx] + (data['MEWDX'][:, elec_idx] - time_lag['MEWDX'][:, elec_idx]) * t/no_it
             
-            MEWDt += data_dt['MADG'][:, 0] * 0.0036
+            MEWDt += data_dt['MADG'] * 0.0036
             e_demand = MEWDt * 1000/3.6
 
             
@@ -485,7 +489,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
             
-            data['MCGA'][:, 0] = data['MCRT'][:, 0] * np.sum(Svar * data['MEWG'], axis=1)
+            data['MCGA'] = data['MCRT'] * np.sum(Svar * data['MEWG'], axis=1)
 
             # Net curtailed generation
             # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
@@ -494,7 +498,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             data['MCNA'] = np.maximum(data['MCGA'] - 0.45 * 2 * data['MLSG'], 0.55 * data['MCGA'])
             # Impact of net curtailment on load factors for VRE technologies
             # Scale down the curtailment rate by taking into account the curtailment used for long-term storage
-            data['MCTN'] = data['MCTG'] * divide(data['MCNA'], data['MCGA'])
+            data['MCTN'] = data['MCTG'] * divide(data['MCNA'], data['MCGA'])[:, None]
             
             
             # Total additional electricity that needs to be generated
@@ -502,9 +506,9 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             
             # Update generation
             denominator = np.sum(data['MEWS'] * data['MEWL'], axis=1)
-            updated_e_sup = e_demand[:, None] + data['MADG'] - data_dt['MADG']
+            updated_e_sup = e_demand + data['MADG'] - data_dt['MADG']
 
-            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup,
+            data['MEWG'] = divide(data['MEWS'] * data['MEWL'] * updated_e_sup[:, None],
                                   denominator[:, None])
 
             # Update capacities and emissions

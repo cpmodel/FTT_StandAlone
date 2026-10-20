@@ -23,8 +23,8 @@ def get_survival_ratio(survival_function_array):
     Returns:
         survival ratio with shape (country, None, age brackets)
     """
-    survival_ratio = survival_function_array[:, :-1, :] / survival_function_array[:, 1:, :]
-    survival_ratio = survival_ratio.reshape(71, 1, 22)
+    survival_ratio = survival_function_array[:, :-1] / survival_function_array[:, 1:]
+    survival_ratio = survival_ratio[:, None, :]
     
     return survival_ratio
 
@@ -118,37 +118,4 @@ def survival_function(data, time_lag, histend, year, titles):
                 data["RLTA"], data["TEWK"], time_lag["TEWK"], data["REVS"]
                 )
 
-    return data
-
-
-def add_new_cars_age_matrix_old(age_matrix, capacity, lagged_capacity, scrappage):
-    """Legacy 3D adapter for callers that still store singleton time axes."""
-    return add_new_cars_age_matrix(
-        age_matrix,
-        capacity[:, :, 0],
-        lagged_capacity[:, :, 0],
-        scrappage[:, :, 0],
-    )
-
-
-def initialise_age_matrix_old(data, titles):
-    """Legacy 3D adapter for :func:`initialise_age_matrix`."""
-    current = {'TEWK': data['TEWK'][:, :, 0]}
-    initialise_age_matrix(current, titles)
-    data['RLTA'] = current['RLTA']
-    return data
-
-
-def survival_function_old(data, time_lag, histend, year, titles):
-    """Legacy 3D adapter for the strict 2D survival implementation."""
-    current = dict(data)
-    previous = dict(time_lag)
-    for key in ('TEWK', 'REVS'):
-        current[key] = data[key][:, :, 0]
-    previous['TEWK'] = time_lag['TEWK'][:, :, 0]
-    current['RLTA'] = data['RLTA']
-    current['TESF'] = data['TESF']
-    survival_function(current, previous, histend, year, titles)
-    data['RLTA'] = current['RLTA']
-    data['REVS'][:, :, 0] = current['REVS']
     return data
