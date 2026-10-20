@@ -244,7 +244,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 shares_dt=data_dt["ZEWS"],  # Shares at previous t
                 costs=data_dt['ZEGC'],       # Costs
                 costs_sd=data_dt['ZTTD'],    # Standard deviation of costs
-                subst=data['ZEWA'] * data['BZTC'][:, :, c6ti['14 Turnover rate (1/y)'], None],
+                subst=data['ZEWA'] * data['BZTC'][:, :, c6ti['14 Turnover rate (1/y)'], None],  # Substitution turnover rate
                 reg_constr=reg_constr,          # Constraint due to regulation
                 num_regions=num_regions,        # Number of regions
                 num_techs=num_techs             # Number of techs

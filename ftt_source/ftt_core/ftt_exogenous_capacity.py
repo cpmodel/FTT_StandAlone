@@ -52,8 +52,6 @@ def regulation_correction(
     Demand growth raises capacities while shares stay the same (stretching).
     This extra capacity is not yet regulated. Correct for this underregulation.
 
-    ``cap_sum_demand_dt`` is a regional vector and ``reg_constr`` is a
-    regional-by-technology array.
     """
     # First term is with current demand, second with demand at previous t
     cap_growth_from_stretching = (

@@ -1,4 +1,12 @@
-"""Sales and investment calculations for all FTT models."""
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Feb 15 09:09:50 2024
+
+Sales and investment calculations for all FTT models, derived from changed in capacity
+
+@author: Cormac Lynch & Femke Nijsse
+"""
+
 
 import numpy as np
 
@@ -16,6 +24,28 @@ def get_sales(
 
     Capacity depreciation is based on the technology lifetime in the
     cost matrix. 1/lifetime is depreciated each year.
+    
+    Parameters
+    -----------
+    cap: np.array
+        Capacity (e.g. TEWK, MEWK)
+    cap_dt: np.array
+        Capacity at the previous timestep dt
+    cap_lag: np.array
+        Capacity at the previous year
+    timescales: np.array
+        Average lifetime of the various technologies
+    dt: float
+        dt is timestep: 1 / (number of timesteps).
+    
+    
+    Returns
+    ----------
+    investment_or_sales: np.array
+        investment or sales up to and including time t
+    investment_or_sales_t: np.array
+        investment or sales at time t
+
     """
     # Find capacity growth since last time step
     cap_growth = cap - cap_lag
@@ -26,6 +56,8 @@ def get_sales(
     # If there is growth, depreciation is fully replaced.
     # Where capacity has decreased, we only replace depreciated capacity
     # if the depreciation > capacity loss
+    
+    # Three end-of-life (eol) replacement options, depending on conditions
     eol_replacements = np.select(
         [
             cap_growth >= 0.0,
@@ -34,10 +66,10 @@ def get_sales(
         [cap_depreciation, cap_depreciation + cap_growth_dt],
         default=0,
     )
+    
+    # Ensure no negative values
     eol_replacements = np.maximum(eol_replacements, 0)
 
-    # Three end-of-life (eol) replacement options, depending on conditions
-    # Ensure no negative values
     # Find total additions at time t
     # If capacity has grown, additions equal the difference +
     # eol replacements from the previous year.
@@ -66,6 +98,22 @@ def get_sales_yearly(
 
     Capacity depreciation is based on the technology lifetime in the
     cost matrix. 1/lifetime is depreciated each year.
+    
+    
+    Parameters
+    -----------
+    cap: np.array
+        capacity (e.g. TEWK, MEWK)
+    cap_lag: np.array
+        capacity at the previous year
+    timescales: np.array
+        the average lifetime of the various technologies
+
+    Returns
+    ----------
+    investment_or_sales: np.array
+        investment or sales up to and including time t
+    
     """
     # Find capacity growth since last year
     cap_growth = cap - cap_lag
@@ -75,6 +123,8 @@ def get_sales_yearly(
     # If there is growth, end-of-life replacements take place fully
     # Where capacity has decreased, we only replace eol capacity
     # if the eol_replacement > capacity loss
+    
+    # Three end-of-life (eol) replacement options, depending on conditions
     eol_replacements = np.select(
         [
             cap_growth >= 0.0,
@@ -83,10 +133,10 @@ def get_sales_yearly(
         [cap_depreciation, cap_depreciation + cap_growth],
         default=0,
     )
+    
+    # Ensure no negative values
     eol_replacements = np.maximum(eol_replacements, 0)
 
-    # Three end-of-life (eol) replacement options, depending on conditions
-    # Ensure no negative values
     # If capacity has grown, additions equal the difference +
     # eol replacement from the previous year.
     # Otherwise, additions just equal eol replacement.
