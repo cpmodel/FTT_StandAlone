@@ -69,7 +69,7 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
     """
 
     # dd is shorthand for load band suitability of different technologies
-    dd = MWDD[0, :, :]
+    dd = MWDD
 
     # Technology logic identifiers
     s_not_var = 1.0 - dd[:, 5]
@@ -177,8 +177,8 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
             klb = klb - np.sum(d_slb, axis=0)
 
         # Capacity of renewables
-        for index in range(len(MWDD[0, :, 5])):
-            if MWDD[0, index, 5]:
+        for index in range(len(MWDD[:, 5])):
+            if MWDD[index, 5]:
                 MSLB[r, index, 5] = MEWS[r, index]
 
         # Capacity factors by load band (definitionally)
@@ -189,8 +189,8 @@ def dspch(MWDD, MEWS, MKLB, MCRT, MEWL, MWMC_lag, MMCD_lag, num_regions, num_tec
         cflb[:, 4] = 80 / 8766
         cflb[:, 5] = np.zeros((num_techs))
         
-        for index in range(len(MWDD[0,:,5])):
-            if MWDD[0,index,5]:
+        for index in range(len(MWDD[:, 5])):
+            if MWDD[index, 5]:
                 cflb[index, 5] = MEWL[r, index] # * (1 - MCRT[r,index])
         cflb = np.where(cflb==0, 1, cflb)
 

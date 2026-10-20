@@ -113,13 +113,14 @@ def solve(data, time_lag, titles, histend, year, domain):
     squeeze_candidates -= {'MSSC'}
     squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
     squeezed_time_lag_keys = squeeze_singleton_third_axis(time_lag, squeeze_candidates)
-    vector_variables = {
+    global_variables = {
         'Battery price', 'CO2taxTr', 'RBFM',
-        'RFLT', 'RTCO', 'RVKM', 'TDA1', 'TDA2', 'TEWW', 'TWWB', 'noit',
+        'RFLT', 'RTCO', 'RVKM', 'TDA1', 'TDA2', 'TEWA', 'TEWB', 'TEWW',
+        'TJET', 'TWWB', 'noit',
     }
-    data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
-    time_lag_vector_shapes = squeeze_all_singleton_axes(
-        time_lag, vector_variables
+    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
+    time_lag_global_shapes = squeeze_all_singleton_axes(
+        time_lag, global_variables
     )
 
     # Categories for the cost matrix (BTTC)
@@ -402,7 +403,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
                 # Investment spillover
-                bi[r, :] = np.matmul(data['TEWB'][0, :, :], tewi_t[r])
+                bi[r, :] = np.matmul(data['TEWB'], tewi_t[r])
 
             # Total new investment
             dw = np.sum(bi, axis=0)
@@ -482,8 +483,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         data = survival_function(data, time_lag, histend, year, titles)
 
     # Restore singleton third axes for compatibility with the rest of the model.
-    restore_all_singleton_axes(data, data_vector_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_vector_shapes)
+    restore_all_singleton_axes(data, data_global_shapes)
+    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
     unsqueeze_singleton_third_axis(data, squeezed_data_keys)
     unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
 

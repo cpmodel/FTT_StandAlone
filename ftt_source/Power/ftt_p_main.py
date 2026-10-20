@@ -126,13 +126,16 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
     squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-P'} | shared_vars
     squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
     squeezed_time_lag_keys = squeeze_singleton_third_axis(time_lag, squeeze_candidates)
-    vector_variables = {
-        'MEWW', 'noit', 'MCRT', 'MLSG', 'MLSE', 'MSSE', 'MSSC', 'MSSG',
+    global_variables = {
+        'MCCS', 'MEWB', 'MEWW', 'MJET', 'MWDD', 'MWDT',
+        'PMF', 'noit', 'MCRT', 'MLSG', 'MLSE', 'MSSE', 'MSSC', 'MSSG',
         'MSSR', 'MSCC', 'MLSC', 'MLSR', 'MLCC', 'MSAL', 'MCGA', 'MCNA',
         'MCTN', 'MADG', 'LAT', 'RLDCMAP', 'CO2taxP', 'Battery price',
     }
-    data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
-    time_lag_vector_shapes = squeeze_all_singleton_axes(time_lag, vector_variables)
+    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
+    time_lag_global_shapes = squeeze_all_singleton_axes(
+        time_lag, global_variables
+    )
 
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
@@ -286,7 +289,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             for i in range(num_techs):
                 dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
-                dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
+                dw[i] = np.dot(dw_temp, data['MEWB'][i])
     
             # Cumulative capacity incl. learning spill-over effects
             data["MEWW"] = time_lag['MEWW'] + dw
@@ -543,7 +546,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             for i in range(num_techs):
                 dw_temp = np.copy(mewi0)
                 dw_temp[dw_temp > dw_temp[i]] = dw_temp[i]
-                dw[i] = np.dot(dw_temp, data['MEWB'][0, i, :])
+                dw[i] = np.dot(dw_temp, data['MEWB'][i])
 
 
             # Cumulative capacity incl. learning spill-over effects
@@ -627,8 +630,8 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         if year == 2050:
             print(f"Total solar generation in 2050 is {data['MEWG'][:, 18].sum()/1e6:.3f} PWh")
         
-    restore_all_singleton_axes(data, data_vector_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_vector_shapes)
+    restore_all_singleton_axes(data, data_global_shapes)
+    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
     unsqueeze_singleton_third_axis(data, squeezed_data_keys)
     unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
     return data

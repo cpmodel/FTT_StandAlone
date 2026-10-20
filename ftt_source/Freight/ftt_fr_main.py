@@ -101,10 +101,13 @@ def solve(data, time_lag, titles, histend, year, domain):
     squeezed_time_lag_keys = squeeze_singleton_third_axis(
         time_lag, squeeze_candidates
     )
-    vector_variables = {'Battery price', 'noit', 'RZFT', 'RZCO', 'ZBFM'}
-    data_vector_shapes = squeeze_all_singleton_axes(data, vector_variables)
-    time_lag_vector_shapes = squeeze_all_singleton_axes(
-        time_lag, vector_variables
+    global_variables = {
+        'Battery price', 'noit', 'RZFT', 'RZCO', 'ZBFM',
+        'ZEWA', 'ZEWB', 'ZEWW', 'ZJET',
+    }
+    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
+    time_lag_global_shapes = squeeze_all_singleton_axes(
+        time_lag, global_variables
     )
 
     # Categories for the cost matrix
@@ -123,7 +126,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
     # Creating variables
     # Technology to fuel user conversion matrix
-    zjet = data['ZJET'][0, :, :]
+    zjet = data['ZJET']
     # Initialise the emission correction factor
     emis_corr = np.zeros([num_regions, num_techs])
     
@@ -383,7 +386,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 for veh in range(num_techs):
                     for fuel in range(num_fuels):
                         #  Middle distillates
-                        if titles['JTI'][fuel] == '5 Middle distillates' and data['ZJET'][0, veh, fuel]  == 1:  
+                        if titles['JTI'][fuel] == '5 Middle distillates' and data['ZJET'][veh, fuel] == 1:
 
                             #  Mix with biofuels if there's a biofuel mandate
                             zjet[veh, fuel] = zjet[veh, fuel] * (1.0 - data['ZBFM'][r])
@@ -391,9 +394,9 @@ def solve(data, time_lag, titles, histend, year, domain):
                             # Emission correction factor
                             emis_corr[r, veh] = 1.0 - data['ZBFM'][r]
 
-                        elif titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][0, veh, fuel] == 1:
+                        elif titles['JTI'][fuel] == '11 Biofuels' and data['ZJET'][veh, fuel] == 1:
 
-                            zjet[veh, fuel] = data['ZJET'][0, veh, fuel] * data['ZBFM'][r]
+                            zjet[veh, fuel] = data['ZJET'][veh, fuel] * data['ZBFM'][r]
 
                 # Fuel use by fuel type - Convert TJ (BZTC * ZEVV) to ktoe, so divide by 41.868
                 data['ZJNJ'][r] = (np.matmul(np.transpose(zjet), data['ZEVV'][r] * \
@@ -402,10 +405,10 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             
             # Cumulative investment, not in region loop as it is global
-            bi = np.matmul(zewi_t, data['ZEWB'][0])
+            bi = np.matmul(zewi_t, data['ZEWB'])
             dw = np.sum(bi, axis=0)
             
-            data['ZEWW'][0] = data_dt['ZEWW'][0] + dw
+            data['ZEWW'] = data_dt['ZEWW'] + dw
             
             
             # Learning-by-doing based on global battery learning
@@ -433,11 +436,11 @@ def solve(data, time_lag, titles, histend, year, domain):
                 # Learning-by-doing effects on investment
                 for tech in range(num_techs):
     
-                    if data['ZEWW'][0, tech] > 0.1:
+                    if data['ZEWW'][tech] > 0.1:
                         
                         # Wright's law approximation for discrete time
                         learning_factor = (1.0 + data["BZTC"][:, tech, c6ti['13 Learning exponent']]
-                                             * dw[tech] / data['ZEWW'][0, tech])
+                                             * dw[tech] / data['ZEWW'][tech])
                         
                         # For PHEV, BEV, and FCEVs, add the battery costs to the non-battery costs
                         if tech in range(25, 35) or tech in range(40, 45):
@@ -495,8 +498,8 @@ def solve(data, time_lag, titles, histend, year, domain):
         if year == 2050:
             print(f"Number of electric trucks globally: {np.sum(get_class(data['ZEWK'], 3)[:, 6])/1e6:.1f}M")
 
-    restore_all_singleton_axes(data, data_vector_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_vector_shapes)
+    restore_all_singleton_axes(data, data_global_shapes)
+    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
     unsqueeze_singleton_third_axis(data, squeezed_data_keys)
     unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
     return data

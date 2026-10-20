@@ -60,14 +60,14 @@ def biofuel_corr(data, titles, region_has_fleet, regions=None):
     n_vehicles = len(titles['VTTI'])
 
     biofuel_corr = np.ones((n_regions, n_vehicles))
-    fuel_converter = np.tile(data['TJET'][0, :, :], (n_regions, 1, 1))
+    fuel_converter = np.tile(data['TJET'], (n_regions, 1, 1))
 
     JTI = titles['JTI']
     biofuel_ind = JTI.index('11 Biofuels')
     middle_dist_ind = JTI.index('5 Middle distillates')
 
     biofuel_mand = data['RBFM'][regions]
-    TJET_middle = data['TJET'][0, :, middle_dist_ind] != 0
+    TJET_middle = data['TJET'][:, middle_dist_ind] != 0
 
     biofuel_corr[region_has_fleet, :] = 1.0 - biofuel_mand[region_has_fleet, None] * TJET_middle[None, :]
     fuel_converter[:, :, middle_dist_ind] *= (1.0 - biofuel_mand[:, None]) * TJET_middle

@@ -281,8 +281,8 @@ def _rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
     curt_s = np.zeros(len(titles["RTI"]))
 
     # Bool to indicate which tech is VRE and which is not
-    Svar = data['MWDD'][0, :, 5]
-    S_not_var = 1 - data['MWDD'][0, :, 5]
+    Svar = data['MWDD'][:, 5]
+    S_not_var = 1 - data['MWDD'][:, 5]
 
     # Sector coupling: update battery costs based on cumulative capacity
     # Only when FTT:Transport is coupled (SCA dimension present AND sector_coupling enabled)

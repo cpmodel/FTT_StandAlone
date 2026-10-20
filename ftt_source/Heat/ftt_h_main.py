@@ -113,11 +113,13 @@ def solve(data, time_lag, titles, histend, year, domain):
     squeezed_time_lag_keys = squeeze_singleton_third_axis(
         time_lag, singleton_third_axis_candidates
     )
-    data_global_shapes = squeeze_all_singleton_axes(
-        data, {'HEWW', 'RHUD', 'PRSC14', 'CO2taxH', 'noit'}
-    )
+    global_variables = {
+        'HEWA', 'HEWB', 'HEWW', 'HJET',
+        'RHUD', 'PRSC14', 'CO2taxH', 'noit',
+    }
+    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
     time_lag_global_shapes = squeeze_all_singleton_axes(
-        time_lag, {'HEWW', 'RHUD', 'PRSC14', 'CO2taxH', 'noit'}
+        time_lag, global_variables
     )
 
     # Calculate the LCOH for each heating technology
@@ -166,7 +168,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         for r in range(num_regions):
             for fuel in range(len(titles['JTI'])):
                 # Fuel use for heating.
-                data['HJHF'][r, fuel] = np.sum(data['HEWF'][r] * data['HJET'][0, :, fuel])
+                data['HJHF'][r, fuel] = np.sum(
+                    data['HEWF'][r] * data['HJET'][:, fuel]
+                )
                 if data['HJFC'][r, fuel] > 0.0:
                     # Fuel use for the total residential sector. 0.0859 is the
                     # conversion factor from GWh to ktoe.
@@ -183,7 +187,7 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
-                bi[r] = np.matmul(data['HEWB'][0], data['HEWI'][r])
+                bi[r] = np.matmul(data['HEWB'], data['HEWI'][r])
             dw = np.sum(bi, axis=0)
             data['HEWW'] = time_lag['HEWW'] + dw
 
@@ -192,7 +196,9 @@ def solve(data, time_lag, titles, histend, year, domain):
         for r in range(num_regions):
             # Final energy demand by energy carrier.
             for fuel in range(len(titles['JTI'])):
-                data['HJHF'][r, fuel] = np.sum(data['HEWF'][r] * data['HJET'][0, :, fuel])
+                data['HJHF'][r, fuel] = np.sum(
+                    data['HEWF'][r] * data['HJET'][:, fuel]
+                )
                 if data['HJFC'][r, fuel] > 0.0:
                     data['HJEF'][r, fuel] = data['HJHF'][r, fuel] / data['HJFC'][r, fuel]
 
@@ -374,11 +380,11 @@ def solve(data, time_lag, titles, histend, year, domain):
             # HFFC indices: 0=hard coal, 4=heavy fuel oil, 6=other gas,
             # 7=natural gas, 8=electricity, 10=combustible waste/biomass.
             # Final energy demand for heating purposes.
-            data['HJHF'] = np.matmul(data['HEWF'], data['HJET'][0])
+            data['HJHF'] = np.matmul(data['HEWF'], data['HJET'])
 
             bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
-                bi[r] = np.matmul(data['HEWB'][0], hewi_t[r])
+                bi[r] = np.matmul(data['HEWB'], hewi_t[r])
             dw = np.sum(bi, axis=0)
 
             # ---------------------------------------------------------------------
