@@ -395,7 +395,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             bi = np.zeros((num_regions, num_techs))
             for r in range(num_regions):
                 # Investment spillover
-                bi[r, :] = np.matmul(data['TEWB'], tewi_t[r])
+                bi[r] = np.matmul(data['TEWB'], tewi_t[r])
 
             # Total new investment
             dw = np.sum(bi, axis=0)

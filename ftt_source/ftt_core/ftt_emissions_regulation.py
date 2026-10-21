@@ -322,7 +322,7 @@ def _regulate_one_class_old(cap, cum_sales_in, sales_in, year,
         if max_red_r <= 0 or year < start_r or end_r <= start_r:
             continue
 
-        em_r = emissions_intensity[r, :]
+        em_r = emissions_intensity[r]
         sales_r = sales_in[r, :, 0]
 
         if np.isnan(baseline[r]):

@@ -239,7 +239,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             
             # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
             # Gross Curtailed electricity
-            data['MCGA'][r] = data['MCRT'][r] * np.sum(Svar[r, :] * data['MEWG'][r])
+            data['MCGA'][r] = data['MCRT'][r] * np.sum(Svar[r] * data['MEWG'][r])
 
             # Net curtailed generation
             # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
