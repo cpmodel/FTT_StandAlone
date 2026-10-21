@@ -162,8 +162,7 @@ def get_lcof(data, titles, carbon_costs, year):
             verify_revenue_neutrality(data, titles, c6ti)
 
     
-    taxable_fuels = np.ones([len(titles['RTI']), len(titles['FTTI'])])
-    taxable_fuels[:, 20:45] = 0   # CNG, PHEV, BEV, bio-ethanol, FCEV exempt
+    taxable_fuels = np.zeros([len(titles['RTI']), len(titles['FTTI'])])
     
     bztc = data['BZTC']
     ztvt = data['ZTVT']
