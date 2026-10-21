@@ -1,9 +1,16 @@
 """
 Centralized mandate functions for all FTT sectors.
 
-This module provides core mandate functionality used by Transport, Heat, and
-Freight. Sectors call these functions with their specific green technology
-indices.
+This module provides core mandate functionality used by Transport, Heat, and Freight.
+Sectors call these functions with their specific green technology indices.
+
+Functions:
+    get_mandate_share: Calculate year-based mandate share (linear progression)
+    get_new_sales_under_mandate: Apply mandate to sales distribution
+    implement_seeding: Small boost for low-adoption regions (first 5 years simulation)
+    implement_mandate: Full mandate with flexible end year
+
+@author: Amir Akther and Femke Nijsse
 """
 
 import numpy as np
