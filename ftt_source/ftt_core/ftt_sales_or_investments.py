@@ -2,7 +2,7 @@
 """
 Created on Thu Feb 15 09:09:50 2024
 
-Sales and investment calculations for all FTT models, derived from changed in capacity
+Sales and investment calculations for all FTT models, derived from changes in capacity
 
 @author: Cormac Lynch & Femke Nijsse
 """
