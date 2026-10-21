@@ -19,7 +19,7 @@ def electricity_price_feedback(data, time_lag):
     """
     
     mewp_growth = divide(data["MEWP"], time_lag["MEWP"])
-    elec_mewp_growth = mewp_growth[:, 7][:, np.newaxis]
+    elec_mewp_growth = mewp_growth[:, 7, np.newaxis]
 
 
     # Electricity mapping for each sector (find indices of cost matrix column and technology indices)

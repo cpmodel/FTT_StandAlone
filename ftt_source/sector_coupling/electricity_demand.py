@@ -35,7 +35,7 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
         
         # Compute change from baseline
         base_demand = data_baseline[demand_var][:, elec_index, 0, y] # To be changed when model_class fully converted
-        new_demand = data[demand_var][:, elec_index]
+        new_demand = data[demand_var][:, elec_index, 0]
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
         data["MEWDX"][:, elec_index] += elec_change
