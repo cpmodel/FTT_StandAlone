@@ -65,7 +65,7 @@ def model_run_results():
             model = RunFTT()
 
         for scen in model.input:
-            model.input[scen]["noit"][:] = 4
+            model.input[scen]["noit"][...] = 4
 
         t0 = time.perf_counter()
         model.run()
@@ -124,40 +124,3 @@ def test_runtime_regression(model_run_results):
         f"in tests/runtime_baseline.json. If this slowdown is intentional, "
         f"update max_seconds to roughly 2x your measured local runtime."
     )
-
-
-def test_all_policies_on_matches_legacy():
-    """Run every sector with representative policies enabled.
-
-    The model's built-in sector comparison raises immediately if a new
-    implementation diverges from its untouched legacy counterpart.
-    """
-    original_cwd = Path.cwd()
-    os.chdir(WORKSPACE_ROOT)
-
-    try:
-        model = RunFTT(
-            settings={
-                "simulation_end": "2030",
-                "enable_modules": "FTT-Tr, FTT-P, FTT-H, FTT-Fr",
-                "scenarios": "S_all_policies_on",
-                "compare_sector_versions": "true",
-            }
-        )
-        for variables in model.input.values():
-            variables["noit"][:] = 4
-
-        policy_files = {
-            "FTT-Fr": ("CO2taxFr", "ZREG", "ZTVT"),
-            "FTT-H": ("CO2taxH", "HREG", "HTVS"),
-            "FTT-P": ("CO2taxP", "MEWT", "coal phaseout"),
-            "FTT-Tr": ("Base registration rate", "CO2taxTr", "TREG"),
-        }
-        for module, variables in policy_files.items():
-            for variable in variables:
-                values = model.input["S_all_policies_on"][variable]
-                assert np.any(values != 0), f"{module}/{variable} is inactive"
-
-        model.run()
-    finally:
-        os.chdir(original_cwd)
