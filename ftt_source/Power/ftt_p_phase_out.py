@@ -19,7 +19,7 @@ def set_linear_coal_phase_out(coal_phaseout, mwka, mwka_lag, mewk_lag, year, tec
     there is more time and they get to 2045.'''
 
     # Return unchanged if the coal phase-out is turned off
-    if coal_phaseout[0,0,0] == 0:
+    if np.all(coal_phaseout == 0):
         return mwka
 
 

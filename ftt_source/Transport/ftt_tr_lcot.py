@@ -75,15 +75,15 @@ def get_lcot(data, titles, carbon_costs, year):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
     # Taxable categories for fuel tax, CNG, EVs and H2 exempt
-    taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI']), 1])
+    taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI'])])
     taxable_fuels[:, 12:15] = 0   # CNG
     taxable_fuels[:, 18:21] = 0   # EVs
     taxable_fuels[:, 24:27] = 0   # Hydrogen
 
     # Taxable categories for carbon tax: only EVs and H2 exempt
-    tf_carbon = np.ones((1, len(titles['VTTI']), 1))
-    tf_carbon[:, 18:21, :] = 0   # EVs
-    tf_carbon[:, 24:27, :] = 0   # Hydrogen
+    tf_carbon = np.ones((len(titles['RTI']), len(titles['VTTI'])))
+    tf_carbon[:, 18:21] = 0   # EVs
+    tf_carbon[:, 24:27] = 0   # Hydrogen
 
     bttc = data['BTTC']
 
@@ -135,11 +135,11 @@ def get_lcot(data, titles, carbon_costs, year):
     )
     ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm_by_year, lt_mask)
     dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm_by_year, lt_mask)
-    ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
+    ct = get_cost_elem(carbon_costs, tf_carbon[..., None], lt_mask)
     # Fuel tax costs
     fft = get_cost_elem(
-        data['RTFT'],
-        (en / ns / ff)[..., None] * taxable_fuels,
+        data['RTFT'][:, None],
+        ((en / ns / ff) * taxable_fuels)[..., None],
         lt_mask,
     )
     omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], (1 / ns / ff)[..., None], lt_mask)

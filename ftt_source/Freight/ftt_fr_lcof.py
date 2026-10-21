@@ -22,7 +22,7 @@ def set_carbon_tax(data, c6ti):
     Returns:
         Carbon costs per country and technology (2D)
     '''
-    carbon_costs = (data["CO2taxFr"]                                      # Carbon price in USD/tCO2
+    carbon_costs = (data["CO2taxFr"][:, None]                             # Carbon price in USD/tCO2
                     * data['BZTC'][:, :, c6ti['12 CO2 emissions (gCO2/km)']]    # g CO2 / km
                     / 10**6                                                     # Conversion from g to tonne
                     )

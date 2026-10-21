@@ -38,7 +38,10 @@ class ResultsEngine:
         self.classifications = self._parse_classifications()
         
         # Filter variables to only those with TIME dimension
-        self.time_variables = self.var_listing_df[self.var_listing_df['Dim4'] == 'TIME'].copy()
+        dimension_columns = [f'Dim{i}' for i in range(1, 5)]
+        self.time_variables = self.var_listing_df[
+            self.var_listing_df[dimension_columns].eq('TIME').any(axis=1)
+        ].copy()
         
         # Data containers
         self.loaded_pickles = {}  # {scenario_name: {var_name: np_array}}
@@ -181,7 +184,15 @@ class ResultsEngine:
         if matching.empty:
             return ['NA', 'NA', 'NA', 'TIME']
         var_row = matching.iloc[0]
-        return [var_row['Dim1'], var_row['Dim2'], var_row['Dim3'], var_row['Dim4']]
+        dimensions = [
+            var_row[f'Dim{i}']
+            for i in range(1, 5)
+            if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] != 'NA'
+        ]
+        if 'TIME' in dimensions:
+            dimensions.remove('TIME')
+            return dimensions + ['NA'] * (3 - len(dimensions)) + ['TIME']
+        return dimensions + ['NA'] * (4 - len(dimensions))
     
     def get_dimension_values(self, dim_code):
         """
@@ -247,20 +258,20 @@ class ResultsEngine:
             
             var_data = scenario_data[variable_name]  # Shape: (region, tech, cat, time)
             
-            # Ensure var_data has 4 dimensions by inserting size-1 dims where dims[i] == 'NA'
-            # Build the target 4D shape based on which dimensions are active
-            shape_4d = []
-            data_idx = 0
-            for dim_name in dims:
+            # Place TIME on the final plotting axis and pad unused dimensions.
+            metadata_dims = [
+                var_row[f'Dim{i}']
+                for i in range(1, 5)
+                if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] != 'NA'
+            ]
+            if 'TIME' in metadata_dims:
+                time_axis = metadata_dims.index('TIME')
+                var_data = np.moveaxis(var_data, time_axis, -1)
+                metadata_dims.remove('TIME')
+                metadata_dims.append('TIME')
+            for axis, dim_name in enumerate(dims):
                 if dim_name == 'NA':
-                    shape_4d.append(1)
-                else:
-                    if data_idx < var_data.ndim:
-                        shape_4d.append(var_data.shape[data_idx])
-                        data_idx += 1
-                    else:
-                        shape_4d.append(1)
-            var_data = var_data.reshape(shape_4d)
+                    var_data = np.expand_dims(var_data, axis)
             
             # Get selected indices for each dimension
             indices = []

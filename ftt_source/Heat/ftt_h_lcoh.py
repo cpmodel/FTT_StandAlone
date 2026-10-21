@@ -66,7 +66,7 @@ def set_carbon_tax(data, c4ti):
     carbon_costs = (co2_tax_h[:, np.newaxis]    # Carbon price in USD/tCO2
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
                      / 1000 / 1000              # Conversion from C to CO2 and MWh to kWh, kg to tonne 
-                     * data['REXX'][33, 0, 0, np.newaxis]  # USD to EUR exchange rate
+                     * data['REXX'][33]  # USD to EUR exchange rate
                      / 1.18                     # Hardcoded inflation from 2023 to 2020
                     )
     

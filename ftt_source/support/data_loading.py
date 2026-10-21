@@ -1,447 +1,283 @@
-# -*- coding: utf-8 -*-
 """
-=========================================
-input_functions.py
-=========================================
-Loader for per-variable CSV inputs stored in Inputs/.
-
-Functions included:
-    - load_data
-        Load all model data; uses polars-based reader for selected
-        modules and falls back to the legacy loader for all others.
+Load per-variable CSV inputs stored in ``Inputs/``.
 
 CSV schema
--------------------------------------------------------
-TIME variables (dim[3] == 'TIME'):
-    Coordinate columns (e.g. RTI, VTTI) followed by year columns (1990..2100).
-
-Non-TIME wide variables — Dim3 as columns (dim[2] != 'NA', dim[3] == 'NA'):
-    Coordinate columns followed by Dim3 label columns (e.g. C3TI labels).
-
-Non-TIME wide variables — Dim2 as columns (dim[1] != 'NA', dim[2] == 'NA', dim[3] == 'NA'):
-    Coordinate column (e.g. RTI) followed by Dim2 label columns (e.g. VYTI labels).
-
-Scalar / 1-D variables (all trailing dims == 'NA'):
-    Single coordinate column (e.g. RTI) followed by a 'value' column.
+----------
+Time-dependent variables use coordinate columns followed by year columns.
+Other table variables use coordinate columns followed by the final dimension's
+labels. Scalars use a single ``value`` column.
 """
 
-# Standard library imports
 import csv
 import os
 import warnings
 
-# Third party imports
 import numpy as np
 import polars as pl
 
-# Local imports
-from ftt_source.support.check_input_files import check_var_dims, check_vars_exist
 from ftt_source.paths import get_inputs_path, get_utilities_path
 
 
-def load_data(titles, dimensions, timeline, scenarios, ftt_modules, forstart,
-              progress_callback=None, log_callback=None):
+def load_data(
+    titles,
+    dimensions,
+    timeline,
+    scenarios,
+    ftt_modules,
+    forstart,
+    progress_callback=None,
+    log_callback=None,
+):
     """
-    Load all model data for all variables and all years.
+    Load all model data for all scenarios.
 
-    Behaviour
-    ---------
-    For each enabled module, look for scenario folders in Inputs/ (e.g. Inputs/S1/FTT-Tr).
-    If found, read all CSV files in those folders and fill the data object.
-    
-    Parameters
-    ----------
-    titles : dict of lists/tuples
-        Classification titles produced by ``load_titles()``.
-    dimensions : dict of lists
-        Per-variable dimension names, e.g. ``{'TEWS': ['RTI','VTTI','NA','TIME'], ...}``.
-    timeline : list of int
-        All years covered by the run.
-    scenarios : str
-        Comma-separated scenario names.
-    ftt_modules : str
-        Comma-separated module names (e.g. 'FTT-Tr,FTT-P').
-    forstart : dict
-        Forecast start year per variable.
-    progress_callback : callable, optional
-        ``progress_callback(current, total)`` for GUI progress bars.
-    log_callback : callable, optional
-        ``log_callback(message)`` for GUI log output.
-
-    Returns
-    -------
-    data : dict
-        ``data[scenario][variable]`` → ``np.ndarray`` with shape
-        ``(len(Dim1), len(Dim2), len(Dim3), len(Dim4))``.
+    Scenario input folders inherit values from their matching S0 module folder
+    before applying their own input files.
     """
-    titles['TIME'] = timeline
-
-    models_enabled = [m.strip() for m in ftt_modules.split(',') if m.strip()]
-    supported_models = get_valid_ftt_models()
-    # if any models enabled are not supported, show warning
-    if any(m not in supported_models for m in models_enabled):
-        unsupported = [m for m in models_enabled if m not in supported_models]
+    titles["TIME"] = timeline
+    enabled = [module.strip() for module in ftt_modules.split(",") if module.strip()]
+    supported = get_valid_ftt_models()
+    unsupported = [module for module in enabled if module not in supported]
+    if unsupported:
         raise ValueError(
             f"Unsupported FTT module(s) specified: {', '.join(unsupported)}. "
-            f"Supported modules are: {', '.join(supported_models)}."
+            f"Supported modules are: {', '.join(supported)}."
         )
-    
-    models_to_load = [m for m in models_enabled if m in supported_models]
-    models_to_load.append('General')  # Always load General
-    
 
-    scenario_list = [s.strip() for s in scenarios.split(',')]
-    scenario_list = ['S0'] + [s for s in scenario_list if s != 'S0']
+    # General inputs are required for every model configuration.
+    modules = enabled + ["General"]
+    scenario_list = ["S0"] + [
+        scenario.strip()
+        for scenario in scenarios.split(",")
+        if scenario.strip() and scenario.strip() != "S0"
+    ]
+    # Allocate each variable from the classifications it actually uses.
     data = {
-        scen: {
-            var: np.zeros([
-                len(titles[dimensions[var][0]]),
-                len(titles[dimensions[var][1]]),
-                len(titles[dimensions[var][2]]),
-                len(titles[dimensions[var][3]]),
-            ]) for var in dimensions
-        } for scen in scenario_list
-    }
-
-    # Overlay variables (FTT-Tr, General, etc.).
-    scenario_list = [s.strip() for s in scenarios.split(',')]
-    scenario_list = ['S0'] + [s for s in scenario_list if s != 'S0']
-
-    # Pre-build a timeline-index lookup once.
-    tl_idx = {year: i for i, year in enumerate(timeline)}
-
-    def _read_and_fill_module_folder(scen, model, directory):
-        """Read all csv files in a model folder and fill scenario arrays."""
-        loaded_vars = set()
-        if not os.path.isdir(directory):
-            return loaded_vars
-
-        for filename in os.listdir(directory):
-            if not filename.endswith('.csv'):
-                continue
-            var = filename[:-4]  # strip '.csv'
-            if var not in dimensions or var not in data[scen]:
-                continue
-
-            file_path = os.path.join(directory, filename)
-            try:
-                df = pl.read_csv(
-                    file_path,
-                    infer_schema_length=10000,
-                    null_values=['', 'NA', 'nan'],
-                )
-            except Exception as exc:
-                warnings.warn(
-                    f'Could not read {file_path}: {exc}'
-                )
-                continue
-
-            if scen == 'S0':
-                check_var_dims(var, df, titles, dimensions)
-
-            _fill_from_input_df(
-                df, var, dimensions, titles, timeline, tl_idx, forstart,
-                data[scen][var],
+        scenario: {
+            variable: np.zeros(
+                tuple(len(titles[dimension]) for dimension in dimensions[variable])
             )
-            loaded_vars.add(var)
-
-        return loaded_vars
-
+            for variable in dimensions
+        }
+        for scenario in scenario_list
+    }
+    timeline_indices = {year: index for index, year in enumerate(timeline)}
     inputs_root = str(get_inputs_path())
 
-    # Warn about scenarios that have no input files at all.
-    empty_scenarios = []
-    for scen in scenario_list:
-        if scen == 'S0':
-            continue
-        has_files = any(
-            os.path.isdir(os.path.join(inputs_root, scen, module))
-            and any(f.endswith('.csv') for f in os.listdir(os.path.join(inputs_root, scen, module)))
-            for module in models_to_load
-        )
-        if not has_files:
-            empty_scenarios.append(scen)
-
-    if empty_scenarios:
-        msg = (
-            f"Warning: no input files found for scenario(s): {', '.join(empty_scenarios)}.\n "
-            "These scenarios will not be run."
-        )
-        if log_callback is not None:
-            log_callback(msg)
-        else:
-            warnings.warn(msg)
-        for scen in empty_scenarios:
-            del data[scen]
-        scenario_list = [s for s in scenario_list if s not in empty_scenarios]
-
-    for module in models_to_load:
-        check_vars_exist(module)
-        s0_directory = os.path.join(inputs_root, 'S0', module)
-        module_vars = _read_and_fill_module_folder('S0', module, s0_directory)
-
-        for scen in scenario_list:
-            if scen == 'S0':
+    def read_folder(scenario, module, directory):
+        """Read all CSV files in one scenario/module input folder."""
+        loaded = set()
+        if not os.path.isdir(directory):
+            return loaded
+        for filename in os.listdir(directory):
+            if not filename.endswith(".csv"):
                 continue
+            variable = filename[:-4]
+            if variable not in dimensions:
+                continue
+            path = os.path.join(directory, filename)
+            try:
+                frame = pl.read_csv(
+                    path,
+                    infer_schema_length=10000,
+                    null_values=["", "NA", "nan"],
+                )
+                _fill_from_input_df(
+                    frame,
+                    variable,
+                    dimensions,
+                    titles,
+                    timeline,
+                    timeline_indices,
+                    forstart,
+                    data[scenario][variable],
+                )
+            except Exception as exc:
+                warnings.warn(f"Could not read {path}: {exc}")
+                continue
+            loaded.add(variable)
+        return loaded
 
-            # Scenario fallback: start from S0 values for variables in this module.
-            for var in module_vars:
-                data[scen][var] = data['S0'][var].copy()
-
-            # Overlay scenario-specific files where present (partial scenario folders).
-            scen_directory = os.path.join(inputs_root, scen, module)
-            _read_and_fill_module_folder(scen, module, scen_directory)
+    for module in modules:
+        # Load S0 first so scenario folders can override individual variables.
+        module_variables = read_folder(
+            "S0", module, os.path.join(inputs_root, "S0", module)
+        )
+        for scenario in scenario_list:
+            if scenario == "S0":
+                continue
+            for variable in module_variables:
+                data[scenario][variable] = data["S0"][variable].copy()
+            read_folder(
+                scenario,
+                module,
+                os.path.join(inputs_root, scenario, module),
+            )
 
     return data
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-def _wide_column_axis(variable_dims):
-    """Return the array axis (1, 2, or 3) used as the wide column axis.
-
-    Returns ``None`` for scalar variables that use a 'value' column.
-    Returns ``3`` for TIME variables.
-    Returns ``2`` when Dim3 is the wide axis (non-TIME, Dim3 != 'NA').
-    Returns ``1`` when Dim2 is the wide axis (non-TIME, Dim3 == 'NA', Dim2 != 'NA').
-    """
-    if variable_dims[3] == 'TIME':
-        return 3
-    if variable_dims[2] not in ('NA', 'TIME') and variable_dims[3] == 'NA':
-        return 2
-    if (variable_dims[1] not in ('NA', 'TIME')
-            and variable_dims[2] == 'NA'
-            and variable_dims[3] == 'NA'):
-        return 1
-    return None  # scalar / 'value' column
+def _wide_axis(variable_dims):
+    """Return the dimension represented by the value columns."""
+    if not variable_dims:
+        return None
+    if len(variable_dims) == 1 and variable_dims[0] == "RTI":
+        return None
+    if "TIME" in variable_dims:
+        return variable_dims.index("TIME")
+    return len(variable_dims) - 1
 
 
-def _resolve_dim_index(raw_label, dim_name, idx_map, idx_map_casefold):
-    """Resolve a CSV label to a dimension index with alias/casefold fallback."""
-    label = str(raw_label)
+def _resolve_index(label, dimension, titles):
+    """Resolve a CSV label against its classification titles."""
+    labels = {str(value): index for index, value in enumerate(titles[dimension])}
+    key = str(label)
+    if key in labels:
+        return labels[key]
+    folded = {key.strip().casefold(): index for key, index in labels.items()}
+    return folded.get(key.strip().casefold())
 
-    idx = idx_map.get(label)
-    if idx is not None:
-        return idx
 
-    return idx_map_casefold.get(label.strip().casefold())
-
-
-def _fill_from_input_df(df, var, dims, titles, timeline, tl_idx, forstart, target):
-    """Fill *target* ndarray in-place from a polars DataFrame.
-
-    Parameters
-    ----------
-    df : polars.DataFrame
-        Data read from the CSV file.
-    var : str
-        Variable name (used to look up dims and forstart).
-    dims : dict
-        ``dims[var]`` → list of 4 dimension name strings.
-    titles : dict
-        Classification titles dict.
-    timeline : list of int
-        All simulation years.
-    tl_idx : dict
-        Pre-built ``{year: timeline_index}`` lookup.
-    forstart : dict
-        Forecast start year per variable.
-    target : np.ndarray
-        Array to fill in-place, shape ``(D0, D1, D2, D3)``.
-    """
-    variable_dims = dims[var]  # list of 4 strings
-    is_time = variable_dims[3] == 'TIME'
-    wide_axis = _wide_column_axis(variable_dims)
-
-    # Coordinate axes: all non-NA, non-TIME axes that are not the wide axis.
-    coord_axes_info = [
-        (axis, variable_dims[axis])
-        for axis in range(4)
-        if variable_dims[axis] not in ('NA', 'TIME') and axis != wide_axis
+def _fill_from_input_df(
+    frame,
+    variable,
+    dimensions,
+    titles,
+    timeline,
+    timeline_indices,
+    forstart,
+    target,
+):
+    """Fill one variable array from its input table."""
+    variable_dims = dimensions[variable]
+    wide_axis = _wide_axis(variable_dims)
+    is_time = wide_axis is not None and variable_dims[wide_axis] == "TIME"
+    coordinate_dims = [
+        (axis, dimension)
+        for axis, dimension in enumerate(variable_dims)
+        if axis != wide_axis
     ]
+    columns = frame.columns
 
-    columns = df.columns
-    n_coord = len(coord_axes_info)
-    
-    # For scalar variables with no coordinate columns, 'value' is the only column
-    if n_coord == 0:
-        if wide_axis is not None:
-            # 1D non-time variable stored as label/value rows, e.g. SCA,Mean.
-            wide_dim = variable_dims[wide_axis]
-            if columns and columns[0] == wide_dim and len(columns) >= 2:
-                idx_map = {
-                    str(label): i for i, label in enumerate(titles[wide_dim])
-                }
-                labels = df.select(pl.col(columns[0]).cast(pl.Utf8)).to_numpy().reshape(-1)
-                values = (
-                    df.select(pl.col(columns[1]).cast(pl.Float64))
-                    .fill_null(0.0)
-                    .to_numpy()
-                    .reshape(-1)
-                )
-
-                for label, value in zip(labels, values):
-                    idx = idx_map.get(label)
-                    if idx is None:
-                        continue
-                    coords = [0, 0, 0, 0]
-                    coords[wide_axis] = idx
-                    target[tuple(coords)] = value
-                return
-
-        # Scalar: just fill target[0,0,0,0] with the value
-        try:
-            value = float(df.select(pl.col('value')).to_numpy()[0, 0])
-            target[0, 0, 0, 0] = value
-        except Exception:
-            # If value column doesn't exist or can't convert, leave as is
-            pass
+    # One-dimensional classification tables use label/value rows, for
+    # example SectorCouplingAssumps.csv.
+    if (
+        len(variable_dims) == 1
+        and wide_axis == 0
+        and columns
+        and columns[0] == variable_dims[0]
+        and len(columns) >= 2
+    ):
+        labels = frame.select(pl.col(columns[0]).cast(pl.Utf8)).to_numpy().reshape(-1)
+        values = (
+            frame.select(pl.col(columns[1]).cast(pl.Float64))
+            .fill_null(0.0)
+            .to_numpy()
+            .reshape(-1)
+        )
+        for label, value in zip(labels, values):
+            index = _resolve_index(label, variable_dims[0], titles)
+            if index is not None:
+                target[index] = value
         return
-    
-    coord_col_headers = columns[:n_coord]
-    value_col_headers = columns[n_coord:]
 
-    if not value_col_headers:
-        return  # nothing to fill
+    coordinate_columns = columns[: len(coordinate_dims)]
+    value_columns = columns[len(coordinate_dims):]
 
-    # --- Build index maps: str(label) → array index for each coord dimension ---
-    idx_maps = {}
-    idx_maps_casefold = {}
-    for _, dim_name in coord_axes_info:
-        if dim_name not in idx_maps:
-            idx_maps[dim_name] = {
-                str(label): i for i, label in enumerate(titles[dim_name])
-            }
-            idx_maps_casefold[dim_name] = {
-                str(label).strip().casefold(): i
-                for i, label in enumerate(titles[dim_name])
-            }
+    if not value_columns:
+        return
 
-    # --- Build column → array-index map for the value columns ---
+    # Scalar variables contain only a single value column.
+    if not variable_dims:
+        target[...] = (
+            frame.select(pl.col(value_columns[0]).cast(pl.Float64))
+            .to_numpy()[0, 0]
+        )
+        return
+
+    # Map each value column to its position in the target array.
     if is_time:
+        start = forstart.get(variable)
         try:
-            var_start = int(forstart[var])
-        except (KeyError, ValueError, TypeError):
-            var_start = timeline[0]
-        expected_years = set(range(var_start, timeline[-1] + 1))
-        col_to_idx = {
-            col: tl_idx[int(col)]
-            for col in value_col_headers
-            if col.lstrip('-').isdigit() and int(col) in tl_idx and int(col) in expected_years
+            start = int(start)
+        except (TypeError, ValueError):
+            start = timeline[0]
+        allowed = set(range(start, timeline[-1] + 1))
+        column_indices = {
+            column: timeline_indices[int(column)]
+            for column in value_columns
+            if str(column).lstrip("-").isdigit()
+            and int(column) in timeline_indices
+            and int(column) in allowed
         }
     elif wide_axis is not None:
-        wide_dim = variable_dims[wide_axis]
-        if wide_dim not in idx_maps:
-            idx_maps[wide_dim] = {
-                str(label): i for i, label in enumerate(titles[wide_dim])
-            }
-        col_to_idx = {
-            col: idx_maps[wide_dim][col]
-            for col in value_col_headers
-            if col in idx_maps[wide_dim]
+        wide_dimension = variable_dims[wide_axis]
+        labels = {
+            str(value): index for index, value in enumerate(titles[wide_dimension])
         }
-
-        # Fallback for legacy-exported wide tables that use numeric
-        # positional headers (e.g. 0..N-1) instead of title labels.
-        if len(col_to_idx) < len(value_col_headers):
-            parsed_ints = []
-            all_numeric = True
-            for col in value_col_headers:
-                text = str(col).strip()
-                if text.lstrip('-').isdigit():
-                    parsed_ints.append(int(text))
-                else:
-                    all_numeric = False
-                    break
-
-            if all_numeric and len(set(parsed_ints)) == len(parsed_ints):
-                if parsed_ints == list(range(len(parsed_ints))):
-                    col_to_idx = {
-                        col: idx for col, idx in zip(value_col_headers, parsed_ints)
-                        if 0 <= idx < len(titles[wide_dim])
-                    }
-                elif parsed_ints == list(range(1, len(parsed_ints) + 1)):
-                    col_to_idx = {
-                        col: idx - 1 for col, idx in zip(value_col_headers, parsed_ints)
-                        if 1 <= idx <= len(titles[wide_dim])
-                    }
+        column_indices = {
+            column: labels[column]
+            for column in value_columns
+            if str(column) in labels
+        }
+        # Some exported inputs use positional headers rather than titles.
+        if len(column_indices) != len(value_columns):
+            numeric = [str(column).strip() for column in value_columns]
+            if all(value.lstrip("-").isdigit() for value in numeric):
+                positions = [int(value) for value in numeric]
+                if positions == list(range(len(positions))):
+                    column_indices = dict(zip(value_columns, positions))
+                elif positions == list(range(1, len(positions) + 1)):
+                    column_indices = dict(
+                        zip(value_columns, [position - 1 for position in positions])
+                    )
     else:
-        # Scalar: single 'value' column — no index mapping needed.
-        col_to_idx = {}
+        column_indices = {}
 
-    # --- Extract data as numpy arrays for fast iteration ---
-    coord_np = (
-        df.select([pl.col(c).cast(pl.Utf8) for c in coord_col_headers])
-        .to_numpy()
-    )
-    value_np = (
-        df.select([pl.col(c).cast(pl.Float64) for c in value_col_headers])
+    coordinate_values = frame.select(
+        [pl.col(column).cast(pl.Utf8) for column in coordinate_columns]
+    ).to_numpy()
+    values = (
+        frame.select([pl.col(column).cast(pl.Float64) for column in value_columns])
         .fill_null(0.0)
         .to_numpy()
     )
 
-    # Precompute per-column wide indices to avoid repeated dict look-ups in loop.
-    if wide_axis is not None and not is_time:
-        col_indices = [col_to_idx.get(col) for col in value_col_headers]
-    elif is_time:
-        col_indices = [col_to_idx.get(col) for col in value_col_headers]
-    else:
-        col_indices = None  # scalar
-
-    # --- Fill target array row by row ---
-    for row_i in range(coord_np.shape[0]):
-        # Resolve coordinate labels → array indices.
-        base_coords = [0, 0, 0, 0]
+    # Resolve coordinates row by row, then assign each value column.
+    for row_index in range(coordinate_values.shape[0]):
+        coordinates = [0] * len(variable_dims)
         valid = True
-        for j, (axis, dim_name) in enumerate(coord_axes_info):
-            label = coord_np[row_i, j]
-            idx = _resolve_dim_index(
-                label,
-                dim_name,
-                idx_maps[dim_name],
-                idx_maps_casefold[dim_name],
+        for coordinate_index, (axis, dimension) in enumerate(coordinate_dims):
+            index = _resolve_index(
+                coordinate_values[row_index, coordinate_index],
+                dimension,
+                titles,
             )
-            if idx is None:
+            if index is None:
                 valid = False
                 break
-            base_coords[axis] = idx
-
+            coordinates[axis] = index
         if not valid:
             continue
 
         if wide_axis is None:
-            # Scalar variable: assign the single 'value' column.
-            target[tuple(base_coords)] = value_np[row_i, 0]
-        else:
-            # Wide variable: iterate over value columns.
-            row_vals = value_np[row_i]
-            for col_j, w_idx in enumerate(col_indices):
-                if w_idx is None:
-                    continue
-                coords = base_coords.copy()
-                coords[wide_axis] = w_idx
-                target[tuple(coords)] = row_vals[col_j]
+            target[tuple(coordinates)] = values[row_index, 0]
+            continue
+        for value_index, column in enumerate(value_columns):
+            index = column_indices.get(column)
+            if index is None:
+                continue
+            coordinates[wide_axis] = index
+            target[tuple(coordinates)] = values[row_index, value_index]
+
 
 def get_valid_ftt_models():
-    """Return a list of valid FTT module names by checking the Models short 
-    name row in classification_titles.csv
-    Returns
-    -------
-    list of str
-        A list of valid FTT module names.
-    """
-    class_titles_path = get_utilities_path() / 'titles' / 'classification_titles.csv'
-    if not class_titles_path.is_file():
-        raise FileNotFoundError(f"Classification titles file not found: {class_titles_path}")
-
-    with class_titles_path.open('r', encoding='utf-8-sig', newline='') as csv_file:
-        reader = csv.reader(csv_file)
-        for row in reader:
-            if row[0].strip() == 'Models' and row[4].strip() == 'Short name':
-                return [value.strip() for value in row[5:] if value and value.strip()]
-
-    raise ValueError(
-        "Could not find models short name row in classification_titles.csv"
-    )
+    """Return model names listed in ``classification_titles.csv``."""
+    path = get_utilities_path() / "titles" / "classification_titles.csv"
+    if not path.is_file():
+        raise FileNotFoundError(f"Classification titles file not found at: {path}")
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.reader(handle):
+            if row[0].strip() == "Models" and row[4].strip() == "Short name":
+                return [value.strip() for value in row[5:] if value.strip()]
+    return []

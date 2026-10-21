@@ -1,58 +1,42 @@
-# -*- coding: utf-8 -*-
 """
 =========================================
 model_class.py
 =========================================
 
-Model Class file for FTT Stand alone.
+Model class for operating the FTT family of models.
 
-
-ModelRun class: main class for operation of model.
-
+The :class:`RunFTT` class loads model inputs, solves each configured scenario
+over the simulation period, and stores the resulting variable arrays.  It is
+also the interface used by the GUI for progress reporting and cancellation.
 """
 
-# Standard library imports
 import configparser
-import copy
 import time
 
-# Third party imports
 import numpy as np
-from tqdm import tqdm
 
-# Local library imports
 # Separate FTT modules
-import ftt_source.Power.ftt_p_main as ftt_p
-import ftt_source.Power.ftt_p_main_old as ftt_p_old
-import ftt_source.Transport.ftt_tr_main as ftt_tr
-import ftt_source.Transport.ftt_tr_main_old as ftt_tr_old
-import ftt_source.Heat.ftt_h_main as ftt_h
-import ftt_source.Heat.ftt_h_main_old as ftt_h_old
-#import ftt_source.Steel.ftt_s_main as ftt_s
-#import ftt_source.Agri.ftt_agri_main as ftt_agri
 import ftt_source.Freight.ftt_fr_main as ftt_fr
-import ftt_source.Freight.ftt_fr_main_old as ftt_fr_old
-#import ftt_source.Hydrogen.ftt_h2_main as ftt_h2
+import ftt_source.Heat.ftt_h_main as ftt_h
+import ftt_source.Power.ftt_p_main as ftt_p
+import ftt_source.Transport.ftt_tr_main as ftt_tr
 import ftt_source.Industrial_Heat.ftt_chi_main as ftt_indhe_chi
 import ftt_source.Industrial_Heat.ftt_fbt_main as ftt_indhe_fbt
 import ftt_source.Industrial_Heat.ftt_mtm_main as ftt_indhe_mtm
 import ftt_source.Industrial_Heat.ftt_nmm_main as ftt_indhe_nmm
 import ftt_source.Industrial_Heat.ftt_ois_main as ftt_indhe_ois
-from ftt_source.sector_coupling.electricity_price import electricity_price_feedback
-from ftt_source.sector_coupling.electricity_price_old import (
-    electricity_price_feedback as electricity_price_feedback_old,
+# Sector coupling
+from ftt_source.sector_coupling.electricity_demand import (
+    electricity_demand_feedback,
 )
-from ftt_source.sector_coupling.electricity_demand import electricity_demand_feedback
-from ftt_source.sector_coupling.electricity_demand_old import (
-    electricity_demand_feedback as electricity_demand_feedback_old,
+from ftt_source.sector_coupling.electricity_price import (
+    electricity_price_feedback,
 )
-
-
 # Support modules
-import ftt_source.support.data_loading as data_loading
-import ftt_source.support.titles_functions as titles_f
-import ftt_source.support.dimensions_functions as dims_f
-from ftt_source.support.cross_section import cross_section as cs
+from ftt_source.support import dimensions_functions as dims_f
+from ftt_source.support import titles_functions as titles_f
+from ftt_source.support import data_loading
+from ftt_source.support.cross_section import cross_section
 
 
 class RunCancelledError(RuntimeError):
@@ -63,74 +47,30 @@ class RunFTT:
     """
     Class to run the FTT model.
 
-    Class object is a single run of the model.
-
-    Local library imports:
-
-        FTT modules:
-
-        - `FTT: Power <ftt_p_main.html>`__
-            Power generation FTT module
-        - `FTT: Transport <ftt_tr_main.html>`__
-            Transport FTT module
-        - `FTT: Freight <ftt_fr_main.html>`__
-            Freight FTT module
-        - `FTT: Heat <ftt_h_main.html>`__
-            Heat FTT module
-        - `FTT: IndHe CHI <ftt_chi_main.html>`__
-            Industrial heat - chemicals FTT module
-        - `FTT: IndHe FBT <ftt_fbt_main.html>`__
-            Industrial heat - food, beverages, and tobacco FTT module
-        - `FTT: IndHe MTM <ftt_mtm_main.html>`__
-            Industrial heat - non-ferrous metals, machinery, and transport equipment FTT module
-        - `FTT: IndHe NMM <ftt_nmm_main.html>`__
-            Industrial heat - non-metallic minerals FTT module
-        - `FTT: IndHe OIS <ftt_ois_main.html>`__
-            Industrial heat - other sectors FTT module
-
-
-        Support functions:
-
-        - `paths_append <paths_append.html>`__
-            Appends file path to sys path to enable import
-        - `divide <divide.html>`__
-            Bespoke element-wise divide which replaces divide-by-zeros with zeros
+    A class instance represents one model run and stores:
 
     Attributes
-    -----------
-    name: str
-        Name of model run, and specification file read
-    hist_start: int
-        Starting year of the historical data
-    model_start: int
-        First year of model timeline
-    model_end: int
-        Final year of model timeline
-    current: int
-        Curernt/active year of solution
-    years: tuple of (int, int)
-        Bookend years of model_timeline
-    timeline: list of int
-        Years of the model timeline
-    titles: dictionary of lists
-        Dictionary containing all title classifications
-    dims: dict of tuples (str, str, str, str)
-        Variable classifications by dimension
-    histend: dict of integers
-        Final year of histrorical data by variable
-    specs: dictionary of NumPy arrays
-        Function specifications for each region and module
-    input: dictionary of NumPy arrays
-        Dictionary containing all model input variables
-    variables: dictionary of NumPy arrays
-        Dictionary containing all model variables for a given year of solution
-    lags: dictionary of NumPy arrays
-        Dictionary containing lag variables
-    output: dictionary of NumPy arrays
-        Dictionary containing all model variables for output
-
-
-
+    ----------
+    titles : dict
+        Classification titles used by the sector modules.
+    dims : dict
+        Active dimensions for each model variable.
+    histend : dict
+        Last historical year for each variable.
+    domain : dict
+        FTT model domain associated with each variable.
+    forstart : dict
+        Forecast start year for each variable.
+    unit : dict
+        Units associated with each variable.
+    input : dict
+        Input arrays for each configured scenario.
+    variables : dict
+        Current-year arrays being solved.
+    lags : dict
+        Arrays from the preceding model year.
+    output : dict
+        Solved arrays for each configured scenario.
     """
 
     def __init__(
@@ -143,444 +83,221 @@ class RunFTT:
         log_callback=None,
         stop_callback=None,
     ):
-        """Instantiate model run object.
+        """Instantiate a model run from settings and input files.
 
         Parameters
         ----------
         inputs_path : str or Path, optional
-            Path to the *Inputs* directory.  When omitted the default from
-            :mod:`ftt_source.paths` is used (the repository's own ``Inputs/``
-            folder, or the current working directory as a last resort).
+            Path to the ``Inputs`` directory.  The configured repository path
+            is used when omitted.
         utilities_path : str or Path, optional
-            Path to the *Utilities* directory.  Same resolution order as
-            *inputs_path*.
+            Path to the ``Utilities`` directory.
         settings_path : str or Path, optional
-            Path to a ``settings.ini`` configuration file.  Defaults to the
-            ``settings.ini`` in the package root, then the current working
-            directory.
+            Path to a ``settings.ini`` file.
         settings : dict, optional
-            Key/value pairs that override individual ``[settings]`` entries in
-            the ini file, e.g. ``{"scenarios": "S0, S1",
-            "simulation_end": "2040"}``.  All values must be strings or be
-            convertible via ``str()``.
+            Values overriding entries in the ``[settings]`` section, such as
+            ``{"scenarios": "S0, S1", "simulation_end": "2040"}``.
         progress_callback : callable, optional
-            Optional callback ``progress_callback(current, total)`` used by GUI
-            wrappers with completed and total scenario-year steps while solving.
+            Called as ``progress_callback(completed, total)`` after each
+            scenario-year step.
         log_callback : callable, optional
-            Optional callback ``log_callback(message)`` used by GUI wrappers
-            for status messages.
+            Called with status messages during loading and solving.
         stop_callback : callable, optional
-            Optional callback returning ``True`` when a GUI run should stop.
+            Called before each solve step; returning ``True`` cancels the run.
         """
         self.progress_callback = progress_callback
         self.log_callback = log_callback
+        self.stop_callback = stop_callback
 
-        # Configure data paths before any data-loading calls.
-        from ftt_source.paths import set_paths, _PACKAGE_ROOT
+        from ftt_source.paths import set_paths
+
+        # Configure data paths before loading titles or input files.
         set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
-
-        # Locate settings.ini
-        if settings_path is None:
-            pkg_settings = _PACKAGE_ROOT / "settings.ini"
-            settings_path = str(pkg_settings) if pkg_settings.exists() else "settings.ini"
-
-        # Attributes given in settings.ini file
         config = configparser.ConfigParser()
-        config.read(str(settings_path))
-
-        # Apply any programmatic overrides
+        config.read(settings_path or "settings.ini")
         if settings:
             if not config.has_section("settings"):
                 config.add_section("settings")
             for key, value in settings.items():
                 config.set("settings", key, str(value))
-        self.name = config.get('settings', 'name')
-        self.model_start = int(config.get('settings', 'model_start'))
-        self.model_end = int(config.get('settings', 'model_end'))
-        self.simulation_start = int(config.get('settings', 'simulation_start'))
-        self.simulation_end = int(config.get('settings', 'simulation_end'))
+
+        section = config["settings"]
+        self.name = section["name"]
+        self.model_start = int(section["model_start"])
+        self.model_end = int(section["model_end"])
+        self.simulation_start = int(section["simulation_start"])
+        self.simulation_end = int(section["simulation_end"])
         self.current = self.model_start
         self.years = np.arange(self.model_start, self.model_end + 1)
         self.timeline = np.arange(self.simulation_start, self.simulation_end + 1)
-        self.ftt_modules = config.get('settings', 'enable_modules')
-        self.scenarios = config.get('settings', 'scenarios')
+        self.ftt_modules = section["enable_modules"]
+        self.scenarios = section["scenarios"]
 
-        self.compare_sector_versions = config.getboolean(
-            'settings',
-            'compare_sector_versions',
-            fallback=True,
-        )
-
-        self.stop_callback = stop_callback
-
-        # Load classification titles
+        # Load classification titles and variable metadata.
         self.titles = titles_f.load_titles()
-
-        # Pre-compute FTT:Power constants (CSV lookups + config values) once per run
-        if "FTT-P" in self.ftt_modules:
-            self.power_settings = ftt_p.build_power_settings(self.titles, config)
-
-        # Load variable dimensions
-        self.dims, self.histend, self.domain, self.forstart, self.unit = dims_f.load_dims()
-        
-        # Retrieve inputs
-        if log_callback:
-            log_callback("Loading model inputs...")
-        self.input = data_loading.load_data(self.titles, self.dims, self.timeline,
-                                    self.scenarios, self.ftt_modules,
-                                    self.forstart,
-                                    log_callback=log_callback)
-
-
-        # Initialize remaining attributes
+        self.dims, self.histend, self.domain, self.forstart, self.unit = (
+            dims_f.load_dims()
+        )
+        # Retrieve inputs for every configured scenario.
+        self.input = data_loading.load_data(
+            self.titles,
+            self.dims,
+            self.timeline,
+            self.scenarios,
+            self.ftt_modules,
+            self.forstart,
+            log_callback=log_callback,
+        )
         self.variables = {}
         self.lags = {}
         self.output = {}
 
+        # Pre-compute FTT:Power constants once per run.
+        if "FTT-P" in self.ftt_modules:
+            self.power_settings = ftt_p.build_power_settings(self.titles, config)
 
     def run(self):
-        """ Solve model run and save results """
-
-        # Run the solve all method (self.input contains all results)
+        """Solve all configured scenarios and retain their output arrays."""
         self.solve_all()
 
     def _check_stop_requested(self):
-        """Stop cleanly when the GUI has requested cancellation."""
+        """Raise :class:`RunCancelledError` when the frontend requests stop."""
         if self.stop_callback and self.stop_callback():
             raise RunCancelledError("Run cancelled by user")
 
     def solve_all(self):
-        """ Solve model for each year of the simulation period """
+        """Solve every configured scenario over the simulation timeline.
 
-        # Define output container
-        self.output = {scen: {var: np.full_like(self.input[scen][var], 0) 
-                              for var in self.input[scen]} for scen in self.input}
-
-        # Clear any previous instances of the progress bar
-        try:
-            tqdm._instances.clear()
-        except AttributeError:
-            pass
-        
-        years_per_scenario = len(self.timeline)
-        total_steps = len(self.input) * years_per_scenario
+        The output arrays are allocated from the loaded input arrays so that
+        every variable retains the dimensions declared in the variable
+        listing.  Progress callbacks receive the total number of
+        scenario-year steps and the number completed so far.
+        """
+        # Define the output container before solving any scenario.
+        self.output = {
+            scenario: {
+                variable: np.zeros_like(values)
+                for variable, values in scenario_data.items()
+            }
+            for scenario, scenario_data in self.input.items()
+        }
+        total_steps = len(self.input) * len(self.timeline)
         if self.progress_callback:
             self.progress_callback(0, total_steps)
 
-        run_start_time = time.time()
-        for scenario_index, scen in enumerate(self.input):
+        started = time.time()
+        for scenario_index, scenario in enumerate(self.input):
+            # Solve each year in the active scenario.
             self._check_stop_requested()
-            message = f'Running scenario {scen}'
-            tqdm.write(message)
             if self.log_callback:
-                self.log_callback(message)
+                self.log_callback(f"Running scenario {scenario}")
+            for y, year in enumerate(self.timeline):
+                self._check_stop_requested()
+                self.variables, self.lags = self.solve_year(year, y, scenario)
+                self._store_output(scenario, y)
+                if self.progress_callback:
+                    self.progress_callback(
+                        scenario_index * len(self.timeline) + y + 1,
+                        total_steps,
+                    )
 
-            # Create progress bar:
-            with tqdm(self.timeline) as pbar:
-
-            # Call solve_year method for each year of the simulation period
-                for y, year in enumerate(self.timeline):
-                    self._check_stop_requested()
-                    # Set the description to be the current year
-                    pbar.set_description(f'Running Scenario: {scen} - Solving year: {year}')
-
-                    self.variables, self.lags = self.solve_year(year, y, scen)
-
-                    # Populate output container
-                    for var in self.variables:
-                        if 'TIME' in self.dims[var]:
-                            value = self.variables[var]
-                            target = self.output[scen][var][:, :, :, y]
-                            if value.ndim + 1 == target.ndim and target.shape[-1] == 1:
-                                value = value[..., np.newaxis]
-                            target[...] = value
-                        else:
-                            self.output[scen][var][:, :, :, 0] = self.variables[var]
-
-                    pbar.update(1)
-                    if self.progress_callback:
-                        completed_steps = scenario_index * years_per_scenario + y + 1
-                        self.progress_callback(completed_steps, total_steps)
-
-        message = f'Total elapsed time is {time.time() - run_start_time:.2f} seconds'
-        tqdm.write(message)
+        message = f"Total elapsed time is {time.time() - started:.2f} seconds"
         if self.log_callback:
             self.log_callback(message)
 
-        if self.compare_sector_versions:
-            compared_sectors = [
-                sector
-                for sector, module in (
-                    ("Transport", "FTT-Tr"),
-                    ("Freight", "FTT-Fr"),
-                    ("Heat", "FTT-H"),
-                    ("Power", "FTT-P"),
-                )
-                if module in self.ftt_modules
-            ]
-            if compared_sectors:
-                print(
-                    "[Sector comparison] New and legacy solvers matched "
-                    f"throughout the model run: {', '.join(compared_sectors)}."
-                )
-    def solve_year(self, year, y, scenario, max_iter=1):
-        """ Solve model for a specific year """
+    def _store_output(self, scenario, year_index):
+        """Store one solved model year in the scenario output container.
 
-        # Run update
+        Variables with a ``TIME`` dimension are written at the corresponding
+        time-axis index.  Variables without ``TIME`` are static and are stored
+        once, after the first solved year.
+        """
+        for variable, values in self.variables.items():
+            if "TIME" in self.dims[variable]:
+                time_axis = self.dims[variable].index("TIME")
+                target = self.output[scenario][variable]
+                target_index = [slice(None)] * target.ndim
+                target_index[time_axis] = year_index
+                target[tuple(target_index)] = values
+            elif year_index == 0:
+                self.output[scenario][variable][...] = values
+
+    def solve_year(self, year, y, scenario, max_iteration=1):
+        """Solve one model year for a scenario.
+
+        Demand sectors are solved before the Power sector.  For non-baseline
+        scenarios, electricity demand and price feedback are applied around
+        the Power solve when the feedback conditions are active.
+        """
         variables, time_lags = self.update(year, y, scenario)
 
-        # Define whole period
-        tl = self.timeline
-
-        # define modules list in for possible setting.ini selection
-        modules_list = ["FTT-P","FTT-Fr","FTT-Tr","FTT-H","FTT-S","FTT-IH-CHI","FTT-IH-FBT",
-                    "FTT-IH-MTM","FTT-IH-NMM","FTT-IH-OIS"]
-        
-        # Iteration loop here
-        for itereration in range(max_iter):
-
-            # 1. Run demand sectors FIRST
+        for _ in range(max_iteration):
+            # 1. Run demand sectors before Power.
             if "FTT-Tr" in self.ftt_modules:
-                if self.compare_sector_versions:
-                    legacy_out = ftt_tr_old.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y], self.domain,
-                    )
-                    variables = ftt_tr.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y], self.domain,
-                    )
-                    self._assert_model_outputs_match(
-                        "Transport", variables, legacy_out, tl[y]
-                    )
-                else:
-                    variables = ftt_tr.solve(
-                        variables, time_lags, self.titles, self.histend, tl[y],
-                        self.domain,
-                    )
+                variables = ftt_tr.solve(
+                    variables, time_lags, self.titles, self.histend, year, self.domain
+                )
             if "FTT-Fr" in self.ftt_modules:
-                if self.compare_sector_versions:
-                    legacy_out = ftt_fr_old.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y], self.domain,
-                    )
-                    variables = ftt_fr.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y], self.domain,
-                    )
-                    self._assert_model_outputs_match(
-                        "Freight", variables, legacy_out, tl[y]
-                    )
-                else:
-                    variables = ftt_fr.solve(
-                        variables, time_lags, self.titles, self.histend, tl[y],
+                variables = ftt_fr.solve(
+                    variables, time_lags, self.titles, self.histend, year, self.domain
+                )
+            if "FTT-H" in self.ftt_modules:
+                variables = ftt_h.solve(
+                    variables, time_lags, self.titles, self.histend, year, self.domain
+                )
+
+            # Industrial heat modules use the same solver interface.
+            industrial_modules = {
+                "FTT-IH-CHI": ftt_indhe_chi,
+                "FTT-IH-FBT": ftt_indhe_fbt,
+                "FTT-IH-MTM": ftt_indhe_mtm,
+                "FTT-IH-NMM": ftt_indhe_nmm,
+                "FTT-IH-OIS": ftt_indhe_ois,
+            }
+            for module_name, module in industrial_modules.items():
+                if module_name in self.ftt_modules:
+                    variables = module.solve(
+                        variables,
+                        time_lags,
+                        self.titles,
+                        self.histend,
+                        year,
                         self.domain,
                     )
-            if "FTT-H" in self.ftt_modules:
-                if self.compare_sector_versions:
-                    legacy_out = ftt_h_old.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y],
-                        self.domain
-                    )
 
-                    variables = ftt_h.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y],
-                        self.domain
-                    )
+            # 2. Aggregate demand-sector electricity feedback.
+            if scenario != "S0" and year > self.histend["MEWG"]:
+                variables = electricity_demand_feedback(
+                    variables, self.output["S0"], y, self.titles, self.unit
+                )
 
-                    self._assert_model_outputs_match(
-                        "Heat", variables, legacy_out, tl[y]
-                    )
-                else:
-                    variables = ftt_h.solve(variables, time_lags,
-                                            self.titles, self.histend, tl[y],
-                                            self.domain)
-            if "FTT-S" in self.ftt_modules:
-                print("Module needs to be created")
-                
-            if "FTT-IH-CHI" in self.ftt_modules:
-                variables = ftt_indhe_chi.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-
-            if "FTT-IH-FBT" in self.ftt_modules:
-                variables = ftt_indhe_fbt.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-
-            if "FTT-IH-MTM" in self.ftt_modules:
-                variables = ftt_indhe_mtm.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-
-            if "FTT-IH-NMM" in self.ftt_modules:
-                variables = ftt_indhe_nmm.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-
-            if "FTT-IH-OIS" in self.ftt_modules:
-                variables = ftt_indhe_ois.solve(variables, time_lags,
-                                        self.titles, self.histend, tl[y],
-                                        self.domain)
-
-            # 2. Electricity demand feedback (aggregates demand from all sectors)
-            if scenario != "S0":
-                if tl[y] > self.histend['MEWG']:
-                    if self.compare_sector_versions:
-                        legacy_out = electricity_demand_feedback_old(
-                            copy.deepcopy(variables), self.output["S0"], y,
-                            self.titles, self.unit,
-                        )
-                        new_variables = copy.deepcopy(variables)
-                        new_variables["MEWDX"] = variables["MEWDX"][:, :, 0]
-                        new_variables = electricity_demand_feedback(
-                            new_variables, self.output["S0"], y,
-                            self.titles, self.unit,
-                        )
-                        new_variables["MEWDX"] = variables["MEWDX"]
-                        variables = new_variables
-                        self._assert_model_outputs_match(
-                            "Electricity demand feedback",
-                            variables, legacy_out, tl[y],
-                        )
-                    else:
-                        original_mewdx = variables["MEWDX"]
-                        new_variables = copy.deepcopy(variables)
-                        new_variables["MEWDX"] = original_mewdx[:, :, 0]
-                        variables = electricity_demand_feedback(
-                            new_variables, self.output["S0"], y,
-                            self.titles, self.unit,
-                        )
-                        variables["MEWDX"] = original_mewdx
-
-            # 3. Run Power sector LAST
+            # 3. Run Power after electricity demand has been updated.
             if "FTT-P" in self.ftt_modules:
-                if self.compare_sector_versions:
-                    legacy_out = ftt_p_old.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y], self.domain,
-                        self.power_settings,
-                    )
-                    variables = ftt_p.solve(
-                        copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        self.titles, self.histend, tl[y], self.domain,
-                        self.power_settings,
-                    )
-                    self._assert_model_outputs_match(
-                        "Power", variables, legacy_out, tl[y]
-                    )
-                else:
-                    variables = ftt_p.solve(
-                        variables, time_lags, self.titles, self.histend, tl[y],
-                        self.domain, self.power_settings,
-                    )
+                variables = ftt_p.solve(
+                    variables,
+                    time_lags,
+                    self.titles,
+                    self.histend,
+                    year,
+                    self.domain,
+                    self.power_settings,
+                )
+                # 4. Update electricity fuel costs for the following step.
+                if year > self.histend["MEWG"]:
+                    variables = electricity_price_feedback(variables, time_lags)
 
-            # 4. Electricity price feedback (updates costs for next timestep)
-            if "FTT-P" in self.ftt_modules:
-                if tl[y] > self.histend['MEWG']:
-                    if self.compare_sector_versions:
-                        legacy_out = electricity_price_feedback_old(
-                            copy.deepcopy(variables), copy.deepcopy(time_lags),
-                        )
-                        new_variables = copy.deepcopy(variables)
-                        new_time_lags = copy.deepcopy(time_lags)
-                        new_variables["MEWP"] = variables["MEWP"][:, :, 0]
-                        new_time_lags["MEWP"] = time_lags["MEWP"][:, :, 0]
-                        new_variables = electricity_price_feedback(
-                            new_variables, new_time_lags,
-                        )
-                        new_variables["MEWP"] = variables["MEWP"]
-                        variables = new_variables
-                        self._assert_model_outputs_match(
-                            "Electricity price feedback",
-                            variables, legacy_out, tl[y],
-                        )
-                    else:
-                        original_mewp = variables["MEWP"]
-                        new_variables = copy.deepcopy(variables)
-                        new_time_lags = copy.deepcopy(time_lags)
-                        new_variables["MEWP"] = variables["MEWP"][:, :, 0]
-                        new_time_lags["MEWP"] = time_lags["MEWP"][:, :, 0]
-                        variables = electricity_price_feedback(
-                            new_variables, new_time_lags,
-                        )
-                        variables["MEWP"] = original_mewp
-
-            if not any(True for x in modules_list if x in self.ftt_modules):
-                raise ValueError("Incorrect selection of models. Check settings.ini")
-
-           
         return variables, time_lags
 
-    @staticmethod
-    def _assert_model_outputs_match(sector, current, legacy, year):
-        """Assert that new and legacy solvers produced equivalent variables."""
-        if current.keys() != legacy.keys():
-            missing_from_current = sorted(legacy.keys() - current.keys())
-            missing_from_legacy = sorted(current.keys() - legacy.keys())
-            raise AssertionError(
-                f"{sector} solver output keys differ in {year}: "
-                f"missing from current={missing_from_current}, "
-                f"missing from legacy={missing_from_legacy}"
-            )
-
-        for variable_name, current_value in current.items():
-            legacy_value = legacy[variable_name]
-            current_is_array = isinstance(current_value, np.ndarray)
-            legacy_is_array = isinstance(legacy_value, np.ndarray)
-            if current_is_array != legacy_is_array:
-                raise AssertionError(
-                    f"{sector} solver output types differ for {variable_name} in {year}"
-                )
-            if current_is_array:
-                # A migrated solver may keep a scalar regional variable as a
-                # 2D array while its legacy counterpart retains the loader's
-                # trailing singleton axis. Compare the shared values without
-                # treating that storage-only axis as a model difference.
-                current_compare = current_value
-                legacy_compare = legacy_value
-                while (current_compare.ndim > 2
-                       and current_compare.shape[-1] == 1):
-                    current_compare = current_compare[..., 0]
-                while (legacy_compare.ndim > 2
-                       and legacy_compare.shape[-1] == 1):
-                    legacy_compare = legacy_compare[..., 0]
-                np.testing.assert_allclose(
-                    current_compare,
-                    legacy_compare,
-                    rtol=1e-12,
-                    atol=1e-12,
-                    equal_nan=True,
-                    err_msg=(
-                        f"{sector} solver outputs differ for {variable_name} "
-                        f"in {year}"
-                    ),
-                )
-            elif current_value != legacy_value:
-                raise AssertionError(
-                    f"{sector} solver outputs differ for {variable_name} in {year}"
-                )
-
     def update(self, year, y, scenario):
-        """ Update model variables for a new year of solution """
+        """Create current-year arrays and the lagged arrays used by solvers.
 
-        # Update the current year attribute
+        The first simulation year uses the corresponding input cross-section
+        as its lag.  Subsequent years use the variables solved in the
+        preceding year.
+        """
         self.current = year
-
-        # Set any required variables as equal to the previous year
-        # This is how E3ME solves a number of variables, return to this
-
-        # Read required variables from the cross section
-        # This is how E3ME solves a number of variables, return to this
-        data_to_model = cs(self.input, self.dims, year, y, scenario)
-
-        # LB TODO: to improve the treatment of lags to include also historical data
-        if y == 0: # If year is the first year, lags equal variables in starting year
-            lags = cs(self.input, self.dims, year, y, scenario)
-        else:
-            #lags = cs(self.variables, self.dims, year-1)
-            lags = self.variables
-
-        return data_to_model, lags
+        # Read the required variables for the current model year.
+        current = cross_section(self.input, self.dims, year, y, scenario)
+        # Use starting-year values as lags; later years use the prior solution.
+        lags = current if y == 0 else self.variables
+        return current, lags
