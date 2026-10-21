@@ -113,7 +113,6 @@ def implement_seeding(
     result = implement_mandate(
         cap, cum_sales_in, sales_in, year, green_indices, mandate_info
     )
-
     return result
 
 
@@ -147,31 +146,34 @@ def implement_mandate(
     cum_sales_after_mandate = np.copy(cum_sales_in)
     cum_sales_after_mandate += sales_difference
     result = cum_sales_after_mandate, sales_after_mandate, cap_after_mandate
-
     return result
 
 
 def get_new_sales_under_mandate_old(sales_in, mandate_shares, green_indices):
-    """Legacy singleton-third-axis sales redistribution."""
+    """Apply mandates to the legacy singleton-third-axis sales distribution."""
     sales_after_mandate = np.copy(sales_in)
     regions = np.where(mandate_shares > 0)[0]
 
     for region in regions:
         total_sales = np.sum(sales_in[region, :, 0])
         mandate_share = mandate_shares[region]
+        # Skip region if there are no sales.
         if total_sales == 0:
             continue
 
         current_green = np.sum(sales_in[region, green_indices, 0])
+        # Skip region if green share already meets mandate.
         if current_green / total_sales >= mandate_share:
             continue
 
         target_green = total_sales * mandate_share
         if current_green > 0:
+            # Scale up green sales using local proportions.
             sales_after_mandate[region, green_indices, 0] *= (
                 target_green / current_green
             )
         else:
+            # Use global shares when the region has no green sales.
             global_green_sales = np.sum(sales_in[:, green_indices, 0], axis=0)
             if np.sum(global_green_sales) > 0:
                 global_shares = global_green_sales / np.sum(global_green_sales)
@@ -179,10 +181,12 @@ def get_new_sales_under_mandate_old(sales_in, mandate_shares, green_indices):
                     target_green * global_shares
                 )
             else:
+                # Equal distribution if there is no global data.
                 sales_after_mandate[region, green_indices, 0] = (
                     target_green / len(green_indices)
                 )
 
+        # Scale down non-green sales to maintain total sales.
         non_green_indices = [
             index for index in range(sales_in.shape[1]) if index not in green_indices
         ]
@@ -204,7 +208,11 @@ def implement_seeding_old(
     cap, cum_sales_in, sales_in, year, green_indices, histend,
     seeding_years=5, seed_fraction=0.15,
 ):
-    """Legacy singleton-third-axis seeding implementation."""
+    """
+    Seed green technologies in low-adoption regions using the legacy shapes.
+
+    Seeding works the same as a weak mandate, so reuse the mandate function.
+    """
     total_sales = np.sum(sales_in)
     if total_sales == 0:
         return cum_sales_in, sales_in, cap
@@ -227,16 +235,18 @@ def implement_seeding_old(
 def implement_mandate_old(
     cap, cum_sales_in, sales_in, year, green_indices, mandate_info,
 ):
-    """Legacy singleton-third-axis mandate implementation."""
+    """Implement a full green-technology mandate using legacy array shapes."""
     start_years = mandate_info[:, 0]
     end_years = mandate_info[:, 1]
     max_mandate = mandate_info[:, 2]
+    # Return if no mandates are present in the scenario.
     if (max_mandate == 0).all():
         return cum_sales_in, sales_in, cap
 
     mandate_shares = get_mandate_share(
         year, start_years, end_years, max_mandate
     )
+    # Return if no mandates are active this year.
     if (mandate_shares == 0).all():
         return cum_sales_in, sales_in, cap
 

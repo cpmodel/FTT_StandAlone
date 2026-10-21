@@ -520,7 +520,7 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
             
             
             # Update investment (MEWI: up to timestep t, mewi_t is in timestep t)
-            mewi, mewi_t = get_sales(
+            data["MEWI"], mewi_t = get_sales(
                 data["MEWK"],
                 data_dt["MEWK"],
                 time_lag["MEWK"],
@@ -528,7 +528,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
                 data['BCET'][:, :, c2ti["9 Lifetime (years)"]],
                 dt,
             )
-            data["MEWI"] = mewi
 
             
             # TODO: review, compute cost of early scrapping

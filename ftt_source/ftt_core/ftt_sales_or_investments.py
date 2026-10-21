@@ -150,11 +150,23 @@ def get_sales_yearly(
 
 
 def get_sales_old(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
-    """Legacy singleton-third-axis implementation of :func:`get_sales`."""
+    """
+    Calculate new sales/investments for all FTT models (e.g. TEWI).
+
+    Capacity depreciation is based on the technology lifetime in the cost
+    matrix. 1/lifetime is depreciated each year.
+    """
+    # Find capacity growth since last time step
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
     cap_growth_dt = cap[:, :, 0] - cap_dt[:, :, 0]
+
+    # Calculate capacity depreciation
     cap_depreciation = cap_lag[:, :, 0] * dt / timescales
 
+    # If there is growth, depreciation is fully replaced.
+    # Where capacity has decreased, we only replace depreciated capacity
+    # if the depreciation > capacity loss
+    # Using cap_lag here to at least not depreciate brand-new assets
     eol_replacements = np.select(
         [
             cap_growth >= 0.0,
@@ -175,10 +187,21 @@ def get_sales_old(cap, cap_dt, cap_lag, sales_or_investment_in, timescales, dt):
 
 
 def get_sales_yearly_old(cap, cap_lag, sales_or_investment_in, timescales):
-    """Legacy singleton-third-axis implementation of :func:`get_sales_yearly`."""
+    """
+    Calculate new sales/investments for all FTT models before simulation starts.
+
+    Capacity depreciation is based on the technology lifetime in the cost
+    matrix. 1/lifetime is depreciated each year.
+    """
+    # Find capacity growth since last year
     cap_growth = cap[:, :, 0] - cap_lag[:, :, 0]
+
+    # Calculate capacity depreciation
     cap_depreciation = cap_lag[:, :, 0] / timescales
 
+    # If there is growth, end-of-life replacements take place fully.
+    # Where capacity has decreased, we only replace end-of-life capacity
+    # if the replacement is greater than the capacity loss.
     eol_replacements = np.select(
         [
             cap_growth >= 0.0,

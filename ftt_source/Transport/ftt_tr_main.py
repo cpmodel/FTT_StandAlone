@@ -320,7 +320,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 rvkmt[:, np.newaxis] * 1e-3
 
             # New additions (TEWI)
-            tewi, tewi_t = get_sales(
+            data["TEWI"], tewi_t = get_sales(
                 cap=data["TEWK"],
                 cap_dt=data_dt["TEWK"],
                 cap_lag=time_lag["TEWK"],
@@ -328,15 +328,12 @@ def solve(data, time_lag, titles, histend, year, domain):
                 timescales=data['BTTC'][:, :, c3ti['8 lifetime']],
                 dt=dt
             )
-            data["TEWI"] = tewi
 
             # Apply EV seeding (first 5 years) - small boost for low-adoption regions
-            tewi, tewi_t, tewk = implement_seeding(
-                data['TEWK'], tewi, tewi_t, year, GREEN_INDICES_EV,
+            data["TEWI"], tewi_t, data["TEWK"] = implement_seeding(
+                data['TEWK'], data["TEWI"], tewi_t, year, GREEN_INDICES_EV,
                 np.min(data["TDA1"]),
             )
-            data["TEWI"] = tewi
-            data["TEWK"] = tewk
 
 
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
@@ -346,7 +343,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                                     not np.all(data["EV CO2 regulation"][:, 2] == 0))
 
             if mandate_active:
-                tewi, tewi_t_2d, tewk = implement_mandate(
+                data["TEWI"], tewi_t, data["TEWK"] = implement_mandate(
                     data['TEWK'],
                     data['TEWI'],
                     tewi_t,
@@ -354,23 +351,18 @@ def solve(data, time_lag, titles, histend, year, domain):
                     GREEN_INDICES_EV,
                     data['EV mandate'],
                 )
-                data["TEWI"] = tewi
-                tewi_t = tewi_t_2d
-                data["TEWK"] = tewk
 
             elif emissions_reg_active:
                 # Do not hard-code a calendar threshold here: regulation timing
                 # should be driven by the policy input and handled inside the
                 # regulation implementation for inactive/pre-start years.
-                tewi, tewi_t, tewk = implement_emissions_regulation(
+                data["TEWI"], tewi_t, data["TEWK"] = implement_emissions_regulation(
                     data['TEWK'],
                     data['TEWI'],
                     tewi_t, year,
                     data['BTTC'][:, :, c3ti['14 CO2Emissions']],
                     data['EV CO2 regulation'], sector='transport',
                 )
-                data["TEWI"] = tewi
-                data["TEWK"] = tewk
 
             # Recalculate TEWS/TEWG after seeding. Do not touch regions with pseudoshares (>51)
             total_capacity = data['TEWK'].sum(axis=1, keepdims=True)

@@ -290,7 +290,7 @@ def solve(data, time_lag, titles, histend, year, domain):
            
             # Investment (sales) = new capacity created
             # zewi_t is new additions at current timestep/iteration
-            zewi, zewi_t = get_sales(
+            data["ZEWI"], zewi_t = get_sales(
                 cap=data["ZEWK"],
                 cap_dt=data_dt["ZEWK"],
                 cap_lag=time_lag["ZEWK"],
@@ -298,7 +298,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                 timescales=data['BZTC'][:, :, c6ti['8 Lifetime (y)']],
                 dt=dt,
             )
-            data["ZEWI"] = zewi
             
             # Policy levers are MUTUALLY EXCLUSIVE: mandate/kickstarter OR emissions regulation
             # Check which policies are active
@@ -313,7 +312,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 idx = slice(v_class, None, n_veh_classes)
                 
                 # Regions with very low EV numbers see some diffusion from other regions
-                zewi_class, zewi_t_class, zewk_class = implement_seeding(
+                data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_seeding(
                     data['ZEWK'][:, idx],
                     data['ZEWI'][:, idx],
                     zewi_t[:, idx],
@@ -321,13 +320,10 @@ def solve(data, time_lag, titles, histend, year, domain):
                     GREEN_INDICES_EV,
                     histend['RFLZ'],
                 )
-                data['ZEWI'][:, idx] = zewi_class
-                zewi_t[:, idx] = zewi_t_class
-                data['ZEWK'][:, idx] = zewk_class
 
                 if mandate_active:
                     # A policy of a minimum sales share
-                    zewi_class, zewi_t_class, zewk_class = implement_mandate(
+                    data['ZEWI'][:, idx], zewi_t[:, idx], data['ZEWK'][:, idx] = implement_mandate(
                         data['ZEWK'][:, idx],
                         data['ZEWI'][:, idx],
                         zewi_t[:, idx],
@@ -335,9 +331,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                         GREEN_INDICES_EV,
                         data['EV truck mandate'],
                     )
-                    data['ZEWI'][:, idx] = zewi_class
-                    zewi_t[:, idx] = zewi_t_class
-                    data['ZEWK'][:, idx] = zewk_class
                 
 
             if emissions_reg_active and not mandate_active:
