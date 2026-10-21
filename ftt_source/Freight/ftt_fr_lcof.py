@@ -133,17 +133,15 @@ def get_lcof(data, titles, carbon_costs, year):
     Parameters
     -----------
     data: dictionary
-        Dictionary with the data of the current year for all variables.
-        variables. Freight solver values use 2D region-by-technology arrays.
+        Model variables for the current year
     titles: dictionary
-        Titles is a container of all permissible dimension titles of the model.
+        Titles contains all permissible dimension titles of the model.
 
     Returns
     ----------
     data: dictionary
         Data is a dictionary with the data of the current year for all variables.
-        The values inside the container are updated and returned to the main
-        routine.
+        The values are updated and returned to the main routine.
 
     Notes
     ---------

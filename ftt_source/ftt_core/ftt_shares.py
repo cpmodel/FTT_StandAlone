@@ -315,7 +315,13 @@ def shares_change(
     upper_limit=None, lower_limit=None, limits_active=False,
     T_Scal=1.0,
 ):
-    """Calculate changes in market shares."""
+    '''
+    Wrapper for the jitted shares function. Ensures consistent input types
+    to enable faster compilation.
+
+    T_Scal: Time scaling factor. Default 1.0 (no scaling). Power uses 10.0.
+    Applied AFTER RK4 integration to match Cascading branch behavior.
+    '''
     # Substitution turnover rate is supplied through ``subst``.
     if not limits_active:
         upper_limit = np.empty((num_regions, num_techs))
@@ -340,15 +346,31 @@ def shares_change_jitted(
     T_Scal=1.0,
 ):
     """
-    Calculate changes in market shares using the FTT shares equation.
+    Calculates change in market shares from each technology pair.
 
-    Jit-in-time compilation is used for this inner loop.
+    Parameters
+    ----------
+    dt : float
+        Time step size
+    shares_dt, costs, costs_sd : ndarray
+        Shares, costs and standard deviation of costs at previous timestep
+    subst : ndarray
+        Substitution matrix (determines speed)
+    reg_constr : ndarray
+        Regulatory constraints: stops share changes to this technology
+    num_regions, num_techs : int
+        Number of regions and technologies
     """
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
 
     for r in regions:
+        # dSij contains the change in shares from each tech pair
         dSij = np.zeros((num_techs, num_techs))
+
+        # F contains the preferences
         F = np.ones((num_techs, num_techs)) * 0.5
+
+        # Market share constraints (if any)
         Gijmax = np.ones(num_techs)
         Gijmin = np.ones(num_techs)
 
@@ -370,16 +392,14 @@ def shares_change_jitted(
                 if not (S_j > 0.0 and costs[r, tech_j] != 0.0):
                     continue
 
-                dFij = np.sqrt(
-                    costs_sd[r, tech_i] * costs_sd[r, tech_i]
-                    + costs_sd[r, tech_j] * costs_sd[r, tech_j]
-                )
-                Fij = 0.5 * (
-                    1 + np.tanh(
-                        CDF_APPROX
-                        * (costs[r, tech_j] - costs[r, tech_i]) / dFij
-                    )
-                )
+                # Propagating width of variations in perceived costs
+                dFij = np.sqrt(costs_sd[r, tech_i] * costs_sd[r, tech_i] + costs_sd[r, tech_j] * costs_sd[r, tech_j])
+
+                # Consumer preference incl. uncertainty.
+                # ERF is approximated with tanh, using the CDF_APPROX of 1.25/sqrt(2)
+                Fij = 0.5 * (1 + np.tanh(CDF_APPROX * (costs[r, tech_j] - costs[r, tech_i]) / dFij))
+
+                # Adjust preferences for regulated constraints
                 F[tech_i, tech_j], F[tech_j, tech_i] = (
                     _apply_regulation_adjustment(
                         Fij, 1.0 - Fij,
@@ -388,21 +408,16 @@ def shares_change_jitted(
                 )
 
                 if limits_active:
+                    # Minimum or maximum limits on technology, for instance for grid stability
                     delta_AFG = (
-                        subst[r, tech_i, tech_j] * F[tech_j, tech_i]
-                        * Gijmax[tech_i] * Gijmin[tech_j]
-                        - subst[r, tech_j, tech_i] * F[tech_i, tech_j]
-                        * Gijmax[tech_j] * Gijmin[tech_i]
+                        subst[r, tech_i, tech_j] * F[tech_j, tech_i] * Gijmax[tech_i] * Gijmin[tech_j]
+                        - subst[r, tech_j, tech_i] * F[tech_i, tech_j] * Gijmax[tech_j] * Gijmin[tech_i]
                     )
                 else:
-                    delta_AFG = (
-                        subst[r, tech_i, tech_j] * F[tech_j, tech_i]
-                        - subst[r, tech_j, tech_i] * F[tech_i, tech_j]
-                    )
+                    delta_AFG = (subst[r, tech_i, tech_j] * F[tech_j, tech_i] - subst[r, tech_j, tech_i] * F[tech_i, tech_j])
 
-                dSij[tech_i, tech_j] = _rk4_integration(
-                    S_i, S_j, delta_AFG, dt, T_Scal
-                )
+                # Change in shares = S_i * S_j * delta_AFG
+                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt, T_Scal)
                 dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
 
         dSij_all[r] = dSij
@@ -418,7 +433,12 @@ def shares_change_premature(
     subst, reg_constr,
     num_regions, num_techs,
 ):
-    """Calculate premature replacement share changes."""
+    '''
+    Wrapper for the jitted premature replacement shares function.
+
+    Calculates change in market shares due to premature replacements, based on
+    marginal costs, payback costs, substitution rates and regulation.
+    '''
     change_in_shares = shares_change_premature_jitted(
         dt, regions, shares_dt, costs_marg, costs_marg_sd,
         costs_payb, costs_payb_sd, subst, reg_constr,
@@ -437,7 +457,10 @@ def shares_change_premature_jitted(
     subst, reg_constr,
     num_regions, num_techs,
 ):
-    """Calculate premature replacement share changes."""
+    """
+    Calculates change in market shares due to premature replacements, based on
+    previous timestep shares, substitution rates and various costs.
+    """
     dSij_all = np.zeros((num_regions, num_techs, num_techs))
 
     for r in regions:
@@ -462,6 +485,8 @@ def shares_change_premature_jitted(
                     continue
 
                 S_j = shares_dt[r, tech_j]
+
+                # Original premature replacement calculations
                 dFij = sqrt(
                     costs_payb_sd[r, tech_i] * costs_payb_sd[r, tech_i]
                     + costs_marg_sd[r, tech_j] * costs_marg_sd[r, tech_j]
@@ -470,6 +495,8 @@ def shares_change_premature_jitted(
                     costs_marg_sd[r, tech_i] * costs_marg_sd[r, tech_i]
                     + costs_payb_sd[r, tech_j] * costs_payb_sd[r, tech_j]
                 )
+
+                # ERF is approximated with tanh, using the CDF_APPROX of 1.25/sqrt(2)
                 Fij = 0.5 * (
                     1 + np.tanh(
                         CDF_APPROX
@@ -488,9 +515,7 @@ def shares_change_premature_jitted(
                     subst[r, tech_i, tech_j] * F[tech_j, tech_i]
                     - subst[r, tech_j, tech_i] * F[tech_i, tech_j]
                 )
-                dSij[tech_i, tech_j] = _rk4_integration(
-                    S_i, S_j, delta_AFG, dt
-                )
+                dSij[tech_i, tech_j] = _rk4_integration(S_i, S_j, delta_AFG, dt)
                 dSij[tech_j, tech_i] = -dSij[tech_i, tech_j]
 
         dSij_all[r] = dSij
