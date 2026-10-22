@@ -171,6 +171,143 @@ def _regulate_one_class(cap, cum_sales_in, sales_in, year,
                         start_years, end_years, max_reductions, baseline):
     """
     Apply regulation to one already-sliced class/segment.
+
+    The baseline is stored per region and class/segment. Sales are
+    redistributed from non-eligible technologies above the target to the
+    eligible technologies, and the resulting sales changes are applied to
+    cumulative sales and capacity.
+
+    Returns
+    -------
+    (cum_sales_after, sales_after, cap_after)
+        Updated arrays for the selected class or segment.
+    """
+    sales_after = np.copy(sales_in)
+    # Eligible technologies receive redistributed sales but are not donors.
+    eligible_mask = np.zeros(sales_in.shape[1], dtype=bool)
+    eligible_mask[eligible_indices] = True
+
+    for r in range(sales_in.shape[0]):
+        start_r = start_years[r]
+        end_r = end_years[r]
+        max_red_r = max_reductions[r]
+
+        # Skip regions where regulation is inactive or has no valid period.
+        if max_red_r <= 0 or year < start_r or end_r <= start_r:
+            continue
+
+        sales_r = sales_in[r]
+        # The baseline is captured once, at the start of regulation.
+        if np.isnan(baseline[r]):
+            baseline[r] = get_fleet_emissions(sales_r, emissions_intensity[r])
+
+        # Shift sales until the fleet average reaches the declining target.
+        target = _target_emissions(
+            baseline[r], year, start_r, end_r, max_red_r
+        )
+        sales_after[r] = _redistribute_proportionally(
+            sales_r, emissions_intensity[r], target, eligible_mask
+        )
+
+    sales_diff = sales_after - sales_in
+    cap_after = np.maximum(cap + sales_diff, 0)
+    return np.copy(cum_sales_in) + sales_diff, sales_after, cap_after
+
+
+def implement_emissions_regulation(cap, cum_sales_in, sales_in, year,
+                                   emissions_intensity, regulation_info,
+                                   sector):
+    """
+    Apply declining fleet-average CO2 regulation to a sector.
+
+    Parameters
+    ----------
+    cap : ndarray
+        Capacity array with shape ``(regions, technologies)``.
+    cum_sales_in, sales_in : ndarray
+        Cumulative and current-period sales arrays with shape
+        ``(regions, technologies)``.
+    year : int
+        Simulation year.
+    emissions_intensity : ndarray
+        CO2 intensity per technology with shape
+        ``(regions, technologies)``.
+    regulation_info : ndarray
+        Per-region policy information with shape ``(regions, 3)``.
+        Columns are ``[start_year, end_year, max_reduction]``.
+        ``max_reduction <= 0`` disables regulation for that region.
+    sector : str
+        ``"transport"`` or ``"freight"``. Selects the internal technology
+        grouping and eligibility configuration.
+
+    Returns
+    -------
+    (cum_sales_after, sales_after, cap_after)
+        Updated arrays.
+
+    Notes
+    -----
+    Baselines are cached independently for each region and transport segment
+    or freight vehicle class. This allows repeated sub-timestep calls within
+    a year to use the same start-of-regulation baseline.
+    """
+    if sector not in _SECTOR_CONFIG:
+        raise ValueError(f"Unknown sector '{sector}'. "
+                         f"Expected one of {list(_SECTOR_CONFIG)}.")
+    start_years, end_years, max_reductions = regulation_info.T
+    # Regulations only affect regions whose policy has started.
+    active = ((max_reductions > 0) & (year >= start_years)
+              & (end_years > start_years))
+    if not np.any(active):
+        return cum_sales_in, sales_in, cap
+
+    config = _SECTOR_CONFIG[sector]
+    n_regions = sales_in.shape[0]
+    cum_out, sales_out, cap_out = (
+        np.copy(cum_sales_in), np.copy(sales_in), np.copy(cap)
+    )
+
+    if config['layout'] == 'grouped':
+        segments = config['segments']
+        # Keep one cached baseline for each region and vehicle segment.
+        if (sector not in _baseline_cache
+                or _baseline_cache[sector].shape != (n_regions, len(segments))):
+            _baseline_cache[sector] = np.full((n_regions, len(segments)), np.nan)
+        for seg_idx, seg_cfg in enumerate(segments.values()):
+            indices = seg_cfg['indices']
+            eligible = [indices.index(item) for item in seg_cfg['eligible']]
+            result = _regulate_one_class(
+                cap_out[:, indices], cum_out[:, indices], sales_out[:, indices],
+                year, emissions_intensity[:, indices], eligible, start_years,
+                end_years, max_reductions, _baseline_cache[sector][:, seg_idx],
+            )
+            # Apply the updated slice while preserving all other technologies.
+            cum_out[:, indices], sales_out[:, indices], cap_out[:, indices] = result
+    else:
+        n_classes = config['n_classes']
+        # Keep one cached baseline for each region and vehicle class.
+        if (sector not in _baseline_cache
+                or _baseline_cache[sector].shape != (n_regions, n_classes)):
+            _baseline_cache[sector] = np.full((n_regions, n_classes), np.nan)
+        for vehicle_class in range(n_classes):
+            indices = slice(vehicle_class, None, n_classes)
+            result = _regulate_one_class(
+                cap_out[:, indices], cum_out[:, indices], sales_out[:, indices],
+                year, emissions_intensity[:, indices], config['eligible'],
+                start_years, end_years,
+                max_reductions, _baseline_cache[sector][:, vehicle_class],
+            )
+            # Apply the updated vehicle-class slice while preserving its shape.
+            cum_out[:, indices], sales_out[:, indices], cap_out[:, indices] = result
+
+    return cum_out, sales_out, cap_out
+
+
+def _regulate_one_class_old(cap, cum_sales_in, sales_in, year,
+                            emissions_intensity, eligible_indices,
+                            start_years, end_years, max_reductions, baseline):
+    """
+    Apply regulation to one already-sliced class/segment.
     Returns new (cum, sales, cap) triple for the slice.
     """
     sales_after = np.copy(sales_in)
@@ -185,7 +322,7 @@ def _regulate_one_class(cap, cum_sales_in, sales_in, year,
         if max_red_r <= 0 or year < start_r or end_r <= start_r:
             continue
 
-        em_r = emissions_intensity[r, :]
+        em_r = emissions_intensity[r]
         sales_r = sales_in[r, :, 0]
 
         if np.isnan(baseline[r]):
@@ -207,9 +344,9 @@ def _regulate_one_class(cap, cum_sales_in, sales_in, year,
 
 # --- Public entry point -----------------------------------------------------
 
-def implement_emissions_regulation(cap, cum_sales_in, sales_in, year,
-                                   emissions_intensity, regulation_info,
-                                   sector):
+def implement_emissions_regulation_old(cap, cum_sales_in, sales_in, year,
+                                       emissions_intensity, regulation_info,
+                                       sector):
     """
     Apply declining fleet-average CO2 regulation to a sector.
 
@@ -271,7 +408,7 @@ def implement_emissions_regulation(cap, cum_sales_in, sales_in, year,
             indices = seg_cfg['indices']
             eligible_local = [indices.index(e) for e in seg_cfg['eligible']]
 
-            cum_s, sales_s, cap_s = _regulate_one_class(
+            cum_s, sales_s, cap_s = _regulate_one_class_old(
                 cap_out[:, indices, :],
                 cum_out[:, indices, :],
                 sales_out[:, indices, :],
@@ -296,7 +433,7 @@ def implement_emissions_regulation(cap, cum_sales_in, sales_in, year,
         for v_class in range(n_classes):
             idx = slice(v_class, None, n_classes)
 
-            cum_s, sales_s, cap_s = _regulate_one_class(
+            cum_s, sales_s, cap_s = _regulate_one_class_old(
                 cap_out[:, idx, :],
                 cum_out[:, idx, :],
                 sales_out[:, idx, :],

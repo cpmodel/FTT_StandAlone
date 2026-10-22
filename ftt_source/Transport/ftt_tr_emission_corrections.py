@@ -7,6 +7,7 @@ Created on Fri Jun 20 15:20:24 2025
 
 import numpy as np
 
+
 def co2_corr(data, titles, regions=None):
     """
     Compute regional CO2 correction factors based on vehicle age and survival.
@@ -23,11 +24,10 @@ def co2_corr(data, titles, regions=None):
     if regions is None:
         regions = np.arange(len(titles['RTI']))
 
-    TESH = data['TESH'][regions, :, 0]  # Vehicle sales history
-    TESF = data['TESF'][regions, :, 0]  # Survival function
-    TETH = data['TETH'][regions, :, 0]  # Efficiency correction by age
-    RFLT = data['RFLT'][regions, 0, 0]  # Fleet stocks in use
-
+    TESH = data['TESH'][regions]  # Vehicle sales history
+    TESF = data['TESF'][regions]  # Survival function
+    TETH = data['TETH'][regions]  # Efficiency correction by age
+    RFLT = data['RFLT'][regions]  # Fleet stocks in use
     numer = (TESH * TESF * TETH).sum(axis=1)
     total_fleet = (TESH * TESF).sum(axis=1)
 
@@ -60,14 +60,14 @@ def biofuel_corr(data, titles, region_has_fleet, regions=None):
     n_vehicles = len(titles['VTTI'])
 
     biofuel_corr = np.ones((n_regions, n_vehicles))
-    fuel_converter = np.tile(data['TJET'][0, :, :], (n_regions, 1, 1))
+    fuel_converter = np.tile(data['TJET'], (n_regions, 1, 1))
 
     JTI = titles['JTI']
     biofuel_ind = JTI.index('11 Biofuels')
     middle_dist_ind = JTI.index('5 Middle distillates')
 
-    biofuel_mand = data['RBFM'][regions, 0, 0]
-    TJET_middle = data['TJET'][0, :, middle_dist_ind] != 0
+    biofuel_mand = data['RBFM'][regions]
+    TJET_middle = data['TJET'][:, middle_dist_ind] != 0
 
     biofuel_corr[region_has_fleet, :] = 1.0 - biofuel_mand[region_has_fleet, None] * TJET_middle[None, :]
     fuel_converter[:, :, middle_dist_ind] *= (1.0 - biofuel_mand[:, None]) * TJET_middle
@@ -92,15 +92,15 @@ def compute_emissions_and_fuel_use(data, titles, CO2_corr, biofuel_corr, fuel_co
     if regions is None:
         regions = np.arange(len(titles['RTI']))
 
-    energy_use_per_tech = (data['TEWG'][regions, :, 0]
+    energy_use_per_tech = (data['TEWG'][regions]
                           * data['BTTC'][regions, :, c3ti['9 energy use (MJ/km)']]
                           * CO2_corr[:, None] / 41.868)
     
-    data['TJEF'][regions, :, 0] = np.einsum('v f r, r v -> r f',
-                                           fuel_converter.transpose(1, 2, 0),
-                                           energy_use_per_tech)
+    data['TJEF'][regions] = np.einsum('v f r, r v -> r f',
+                                      fuel_converter.transpose(1, 2, 0),
+                                      energy_use_per_tech)
 
     # TODO: are we double counting electric emissions? They should likely be zero in this model.
-    data['TEWE'][regions, :, 0] = (data['TEWG'][regions, :, 0]
-                                   * data['BTTC'][regions, :, c3ti['14 CO2Emissions']]
-                                   * CO2_corr[:, None] * biofuel_corr / 1e6)
+    data['TEWE'][regions] = (data['TEWG'][regions]
+                             * data['BTTC'][regions, :, c3ti['14 CO2Emissions']]
+                             * CO2_corr[:, None] * biofuel_corr / 1e6)

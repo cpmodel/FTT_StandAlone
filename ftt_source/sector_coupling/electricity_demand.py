@@ -10,7 +10,7 @@ import os
 # Third-party imports
 import pandas as pd
 
-
+from ftt_source.paths import get_utilities_path
 
 def electricity_demand_feedback(data, data_baseline, y, titles, units):
     """
@@ -21,11 +21,9 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
     elec_index = jti.index("8 Electricity")
     
     # Electricity mapping for each model
-    elec_map = pd.read_csv(os.path.join('Utilities', 'mappings',
-                                        "Electricity_demand_mapping.csv"),
-                           index_col=0)
-    unit_conversion = pd.read_csv(os.path.join('Utilities', 'mappings', "Energy_unit_conversions.csv"),
-                                  index_col=0)
+    mappings_dir = get_utilities_path() / 'mappings'
+    elec_map = pd.read_csv(mappings_dir / "Electricity_demand_mapping.csv", index_col=0)
+    unit_conversion = pd.read_csv(mappings_dir / "Energy_unit_conversions.csv", index_col=0)
     demand_unit = units["MEWD"]
     for model in elec_map.index:
     
@@ -36,14 +34,11 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
         conversion_factor = unit_conversion.loc[unit, demand_unit]
         
         # Compute change from baseline
-        base_demand = data_baseline[demand_var][:, elec_index, 0, y]
+        base_demand = data_baseline[demand_var][:, elec_index, 0, y] # To be changed when model_class fully converted
         new_demand = data[demand_var][:, elec_index, 0]
         elec_change = new_demand - base_demand
         elec_change = elec_change * conversion_factor
-        data["MEWDX"][:, elec_index, 0] += elec_change
+        data["MEWDX"][:, elec_index] += elec_change
   
         
     return data
-
-
-

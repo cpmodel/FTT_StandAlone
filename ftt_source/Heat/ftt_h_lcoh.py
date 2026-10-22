@@ -41,18 +41,29 @@ import numpy as np
 
 # Local library imports
 from ftt_source.support.divide import divide
+from ftt_source.support.singleton_dimension import (
+    squeeze_singleton_third_axis,
+    unsqueeze_singleton_third_axis,
+)
+
+
+LCOH_VARIABLES = {
+    'HEFI', 'HEWC', 'HEWP', 'HETC', 'HGC1', 'HGC2', 'HGC3', 'HGD2',
+    'HGD3', 'HTRT', 'HTVS', 'HWCD',
+}
 
 def set_carbon_tax(data, c4ti):
     '''
-    Convert the carbon price in REPP from euro / tC to 2020 euros / kWhUD. 
+    Convert the carbon price from USD / tCO2 to 2020 euros / kWhUD.
     Apply the carbon price to heat sector technologies based on their emission factors
 
     Returns:
         Carbon costs per country and technology (2D)
     '''
  
-    
-    carbon_costs = (data["CO2taxH"][:, :, 0]    # Carbon price in USD/tCO2
+    co2_tax_h = data["CO2taxH"]
+
+    carbon_costs = (co2_tax_h[:, np.newaxis]    # Carbon price in USD/tCO2
                     * data['BHTC'][:, :, c4ti['15 Emission factor']]     # kg CO2 / MWh 
                      / 1000 / 1000              # Conversion from C to CO2 and MWh to kWh, kg to tonne 
                      * data['REXX'][33, 0, 0, np.newaxis]  # USD to EUR exchange rate
@@ -66,7 +77,7 @@ def set_carbon_tax(data, c4ti):
         print(f"Emissions intensity {data['BHTC'][:, :, c4ti['Emission factor']]}")
         
         raise ValueError
-                       
+
     return carbon_costs
 
 
@@ -83,6 +94,8 @@ def get_lcoh(data, titles, carbon_costs):
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
+    squeezed_keys = squeeze_singleton_third_axis(data, LCOH_VARIABLES)
+
     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     
@@ -122,18 +135,23 @@ def get_lcoh(data, titles, carbon_costs):
     domt = get_cost_component(bhtc[:, :, c4ti['4 O&M SD']], conv_cf, lt_mask)
     
     # Fuel costs and carbon costs
-    ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * data['HEWP'][:, :, 0], conv_ce, lt_mask)
+    hewp = data['HEWP']
+    htvs = data['HTVS']
+    htrt = data['HTRT']
+    hefi = data['HEFI']
+
+    ft = get_cost_component(bhtc[:, :, c4ti['10 Fuel cost  (EUR/kWh)']] * hewp, conv_ce, lt_mask)
     dft = get_cost_component(bhtc[:, :, c4ti['11 Fuel cost SD']] * ft[:, :, 0], 1, lt_mask)
     ct = get_cost_component(carbon_costs, 1, lt_mask)
     
     # Subsidies or tax on investment costs
-    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * data['HTVS'][:, :, 0], conv_cf, bt_mask)
+    st = get_cost_component(bhtc[:, :, c4ti['1 Inv cost mean (EUR/kW)']] * htvs, conv_cf, bt_mask)
     
     # Subsidy or tax on fuel use
-    fft = get_cost_component(data['HTRT'][:, :, 0], conv_ce, lt_mask)
+    fft = get_cost_component(htrt, conv_ce, lt_mask)
     
     # Feed-in tariffs
-    fit = get_cost_component(data['HEFI'][:, :, 0], 1, lt_mask)
+    fit = get_cost_component(hefi, 1, lt_mask)
     
     # Discount rate
     dr = data['BHTC'][:, :, c4ti['8 Discount rate'], np.newaxis]
@@ -150,7 +168,9 @@ def get_lcoh(data, titles, carbon_costs):
     # 2 – Standard deviation (propagation of error)
     variance_terms = dit**2 + dft**2 + domt**2
     summed_variance = np.sum(variance_terms / denominator**2, axis=2)
-    variance_plus_dcf = summed_variance + (np.sum(npv_expenses_all, axis=2)/cf[:, :, 0]*dcf[:, :, 0])**2
+    variance_plus_dcf = summed_variance + (
+        np.sum(npv_expenses_all, axis=2) / cf[:, :, 0] * dcf[:, :, 0]
+    )**2
     
     # 3 – Utility
     npv_utility = np.where(lt_mask, 1, 0) / denominator
@@ -186,13 +206,14 @@ def get_lcoh(data, titles, carbon_costs):
     tpb = tpb * (1 + data['BHTC'][:, :, c4ti['12 Gamma value']])
     
     # Pass to variables that are stored outside.
-    data['HEWC'][:, :, 0] = lcoh       # The real bare LCOH without taxes
-    data['HETC'][:, :, 0] = tlcoh      # The real bare LCOH with taxes
-    data['HGC1'][:, :, 0] = tlcohg     # As seen by consumer (generalised cost)
-    data['HWCD'][:, :, 0] = dlcoh      # Variation on the LCOH distribution
-    data['HGC2'][:, :, 0] = tmc        # Total marginal costs
-    data['HGD2'][:, :, 0] = dtmc       # SD of Total marginal costs
-    data['HGC3'][:, :, 0] = tpb        # Total payback costs
-    data['HGD3'][:, :, 0] = dtpb       # SD of Total payback costs
+    data['HEWC'] = lcoh       # The real bare LCOH without taxes
+    data['HETC'] = tlcoh      # The real bare LCOH with taxes
+    data['HGC1'] = tlcohg     # As seen by consumer (generalised cost)
+    data['HWCD'] = dlcoh      # Variation on the LCOH distribution
+    data['HGC2'] = tmc        # Total marginal costs
+    data['HGD2'] = dtmc       # SD of Total marginal costs
+    data['HGC3'] = tpb        # Total payback costs
+    data['HGD3'] = dtpb       # SD of Total payback costs
 
+    unsqueeze_singleton_third_axis(data, squeezed_keys)
     return data

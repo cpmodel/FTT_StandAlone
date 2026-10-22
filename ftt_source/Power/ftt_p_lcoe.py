@@ -8,7 +8,7 @@ Power LCOE FTT module.
 
 Functions included:
     - set carbon_tax
-        Determine carbon tax from REPP
+        Determine carbon tax from the regional CO2 tax input
     - get_lcoe
         Calculate levelized costs
 
@@ -16,6 +16,19 @@ Functions included:
 
 # Third party imports
 import numpy as np
+
+from ftt_source.support.singleton_dimension import (
+    restore_all_singleton_axes,
+    squeeze_all_singleton_axes,
+)
+
+
+LCOE_SINGLETON_VARIABLES = {
+    'MEWL', 'MEWT', 'FPIX', 'MTFT', 'MSAL', 'MSSP', 'MLSP', 'MSSM', 'MLSM',
+    'MEFI', 'MEWC', 'MECW', 'MECC', 'METC', 'MTCD', 'MECW battery only',
+    'MECC only CO2', 'MECC incl CO2', 'MLCO', 'MWIC', 'MWFC', 'MCOC',
+    'MCFC', 'MWMC', 'MMCD',
+}
 
 
 
@@ -25,9 +38,10 @@ def set_carbon_tax(data, c2ti, year):
     
     '''
 
+    co2_tax = data["CO2taxP"][:, None]
     carbon_costs = (
                     data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']]    # Emission per GWh
-                    * data["CO2taxP"][:, :, 0]                             # Carbon price in USD/tCO2
+                    * co2_tax                                               # Carbon price in USD/tCO2
                     / 1000                                                 # Conversion from GWh to MWh
                     )
     
@@ -55,9 +69,8 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     Parameters
     -----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) for all
-        variables. Variable names are keys and the values are 3D NumPy arrays.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
     titles: dictionary
         Titles is a container of all permissible dimension titles of the model.
     gamma_mode: string
@@ -65,13 +78,12 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     Returns
     ----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
+        The values are updated and returned to the main routine.
     """
+
+    squeezed_shapes = squeeze_all_singleton_axes(data, LCOE_SINGLETON_VARIABLES)
 
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
@@ -97,7 +109,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     conv_mu = 1 / (bt[..., None] * cf_mu[..., None] * 8766) * 1000
 
     # Average capacity factor (for electricity price)
-    cf_av = data['MEWL'][:, :, 0]
+    cf_av = data['MEWL']
     cf_av[cf_av < 0.000001] = 0.000001
     conv_av = 1 / (bt[..., None] * cf_av[..., None] * 8766) * 1000
         
@@ -110,36 +122,36 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     it_mu = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_mu, bt_mask)
     it_av = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']], conv_av, bt_mask)
     dit_mu = get_cost_component(bcet[:, :, c2ti['4 std ($/MWh)']], conv_mu, bt_mask)
-    st = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']] * data['MEWT'][:, :, 0], conv_mu, bt_mask)
+    st = get_cost_component(bcet[:, :, c2ti['3 Investment ($/kW)']] * data['MEWT'], conv_mu, bt_mask)
     # Scale fuel costs by FPIX when provided (MSET-coupled mode); otherwise FPIX=1 (standalone).
-    _fpix = data['FPIX'][:, :, 0] if 'FPIX' in data else 1.0
+    _fpix = data['FPIX'] if 'FPIX' in data else 1.0
     _fuel_base = bcet[:, :, c2ti['5 Fuel ($/MWh)']] * _fpix
     ft  = get_cost_component(_fuel_base, 1, lt_mask)
     dft = get_cost_component(bcet[:, :, c2ti['6 std ($/MWh)']], 1, lt_mask)
-    fft = get_cost_component(_fuel_base * data['MTFT'][:, :, 0], 1, lt_mask)
+    fft = get_cost_component(_fuel_base * data['MTFT'], 1, lt_mask)
     omt = get_cost_component(bcet[:, :, c2ti['7 O&M ($/MWh)']], 1, lt_mask)
     domt = get_cost_component(bcet[:, :, c2ti['8 std ($/MWh)']], 1, lt_mask)
     ct = get_cost_component(bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']], 1, lt_mask)
     
     # Who pays for storage, and total storage costs
-    msal_rounded = np.rint(data['MSAL'][:, 0, 0])
+    msal_rounded = np.rint(data['MSAL'])
     storage_sum = (data['MSSP'] + data['MLSP']) / 1000
     marg_storage_sum = (data['MSSM'] + data['MLSM']) / 1000
     
     # Storage cost
-    stor_mask = (msal_rounded >= 2)
+    stor_mask = (msal_rounded >= 2)[:, None]
     stor_cost = np.where(stor_mask, storage_sum, 0)
-    stor_cost = get_cost_component(stor_cost[:, :, 0], 1, lt_mask)
+    stor_cost = get_cost_component(stor_cost, 1, lt_mask)
     dstor_cost = 0.2 * stor_cost  # Assume standard deviation of 20%
 
     # Battery-only storage cost (short-term only, for MECW battery only variant)
     battery_cost = np.where(stor_mask, data['MSSP'] / 1000, 0)
-    battery_cost = get_cost_component(battery_cost[:, :, 0], 1, lt_mask)
+    battery_cost = get_cost_component(battery_cost, 1, lt_mask)
 
     # Marginal storage cost
-    marg_mask = (msal_rounded >= 3)
+    marg_mask = (msal_rounded >= 3)[:, None]
     marg_stor_cost = np.where(marg_mask, marg_storage_sum, 0)
-    marg_stor_cost = get_cost_component(marg_stor_cost[:, :, 0], 1, lt_mask)
+    marg_stor_cost = get_cost_component(marg_stor_cost, 1, lt_mask)
     
     
     # Net present value calculations
@@ -183,7 +195,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     # 1-levelised cost variants in $/MWh
     # Marginal unit costs (for investor decisions)
     lcoe_bare = np.sum(npv_expenses_mu_bare, axis=2) / utility_sum
-    lcoe_mu_all_policies = np.sum(npv_expenses_mu_policy, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+    lcoe_mu_all_policies = np.sum(npv_expenses_mu_policy, axis=2) / utility_sum - data['MEFI']
     lcoeco2 = np.sum(npv_expenses_mu_co2, axis=2) / utility_sum
     lcoe_battery_only = np.sum(npv_expenses_mu_battery_only, axis=2) / utility_sum
     dlcoe = np.sqrt(variance_plus_dcf) / utility_sum  # Updated std calculation
@@ -191,9 +203,9 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     # Average unit costs (for electricity pricing via MEWP)
     lcoe_av = np.sum(npv_expenses_av_all_policy, axis=2) / utility_sum
-    lcoe_only_co2 = np.sum(npv_expenses_av_only_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]
-    lcoe_incl_co2 = np.sum(npv_expenses_av_all, axis=2) / utility_sum - data['MEFI'][:, :, 0]
-    lcoe_all_but_co2 = np.sum(npv_expenses_av_all_but_co2, axis=2) / utility_sum - data['MEFI'][:, :, 0]
+    lcoe_only_co2 = np.sum(npv_expenses_av_only_co2, axis=2) / utility_sum - data['MEFI']
+    lcoe_incl_co2 = np.sum(npv_expenses_av_all, axis=2) / utility_sum - data['MEFI']
+    lcoe_all_but_co2 = np.sum(npv_expenses_av_all_but_co2, axis=2) / utility_sum - data['MEFI']
 
     # LCOE augmented with gamma values (and optionally value factor)
     gamma = bcet[:, :, c2ti['22 Gamma']]
@@ -205,27 +217,27 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factor
 
     # Pass to variables that are stored outside.
-    data['MEWC'][:, :, 0] = lcoe_bare       # The real bare LCOE without taxes
-    data['MECW'][:, :, 0] = lcoeco2         # The real bare LCOE with CO2 costs
-    data['MECC'][:, :, 0] = lcoe_all_but_co2  # LCOE with policy, without CO2 (matches cascading)
-    data['METC'][:, :, 0] = lcoe_mu_gamma   # As seen by consumer (generalised cost with value factor)
-    data['MTCD'][:, :, 0] = dlcoe           # Variation on the LCOE distribution
-    data['MECW battery only'][:, :, 0] = lcoe_battery_only  # LCOE with only short-term storage
+    data['MEWC'] = lcoe_bare       # The real bare LCOE without taxes
+    data['MECW'] = lcoeco2         # The real bare LCOE with CO2 costs
+    data['MECC'] = lcoe_all_but_co2  # LCOE with policy, without CO2 (matches cascading)
+    data['METC'] = lcoe_mu_gamma   # As seen by consumer (generalised cost with value factor)
+    data['MTCD'] = dlcoe           # Variation on the LCOE distribution
+    data['MECW battery only'] = lcoe_battery_only  # LCOE with only short-term storage
 
     # Additional LCOE variants for MEWP electricity pricing
-    data['MECC only CO2'][:, :, 0] = lcoe_only_co2   # Bare LCOE + CO2 costs only (for old capacity pricing)
-    data['MECC incl CO2'][:, :, 0] = lcoe_incl_co2   # LCOE with subsidies + CO2 (for new capacity pricing)
-    data['MLCO'][:, :, 0] = lcoo                     # Levelised cost of operation
+    data['MECC only CO2'] = lcoe_only_co2   # Bare LCOE + CO2 costs only (for old capacity pricing)
+    data['MECC incl CO2'] = lcoe_incl_co2   # LCOE with subsidies + CO2 (for new capacity pricing)
+    data['MLCO'] = lcoo                     # Levelised cost of operation
 
-    data['MWIC'][:, :, 0] = bcet[:, :, 2]
-    data['MWFC'][:, :, 0] = bcet[:, :, 4]
-    data['MCOC'][:, :, 0] = bcet[:, :, 0]
-    data['MCFC'][:, :, 0] = bcet[:, :, c2ti['11 Decision Load Factor']]  # Marginal capacity factor
+    data['MWIC'] = bcet[:, :, 2]
+    data['MWFC'] = bcet[:, :, 4]
+    data['MCOC'] = bcet[:, :, 0]
+    data['MCFC'] = bcet[:, :, c2ti['11 Decision Load Factor']]  # Marginal capacity factor
 
     # Marginal costs
-    data['MWMC'][:, :, 0] = bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6]
+    data['MWMC'] = bcet[:, :, 0] + bcet[:, :, 4] + bcet[:, :, 6]
 
-    data['MMCD'][:, :, 0] = np.sqrt(bcet[:, :, 1] ** 2 + bcet[:, :, 5] ** 2 + bcet[:, :, 7] ** 2)
+    data['MMCD'] = np.sqrt(bcet[:, :, 1] ** 2 + bcet[:, :, 5] ** 2 + bcet[:, :, 7] ** 2)
 
       
     # Check if METC is nan
@@ -234,4 +246,5 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
               
 
+    restore_all_singleton_axes(data, squeezed_shapes)
     return data
