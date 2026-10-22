@@ -187,12 +187,9 @@ class ResultsEngine:
         dimensions = [
             var_row[f'Dim{i}']
             for i in range(1, 5)
-            if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] != 'NA'
+            if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] not in ('NA', 'TIME')
         ]
-        if 'TIME' in dimensions:
-            dimensions.remove('TIME')
-            return dimensions + ['NA'] * (3 - len(dimensions)) + ['TIME']
-        return dimensions + ['NA'] * (4 - len(dimensions))
+        return dimensions + ['NA'] * (3 - len(dimensions)) + ['TIME']
     
     def get_dimension_values(self, dim_code):
         """
@@ -230,7 +227,6 @@ class ResultsEngine:
         
         # Get dimension info
         dims = self.get_variable_dimensions(variable_name)
-        var_row = self.time_variables[self.time_variables['Variable name'] == variable_name].iloc[0]
         
         # Build figure
         fig = go.Figure()
@@ -258,20 +254,16 @@ class ResultsEngine:
             
             var_data = scenario_data[variable_name]  # Shape: (region, tech, cat, time)
             
-            # Place TIME on the final plotting axis and pad unused dimensions.
-            metadata_dims = [
-                var_row[f'Dim{i}']
-                for i in range(1, 5)
-                if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] != 'NA'
-            ]
-            if 'TIME' in metadata_dims:
-                time_axis = metadata_dims.index('TIME')
-                var_data = np.moveaxis(var_data, time_axis, -1)
-                metadata_dims.remove('TIME')
-                metadata_dims.append('TIME')
-            for axis, dim_name in enumerate(dims):
+            # Pad unused dimensions for the existing four-axis plotting flow.
+            shape_4d = []
+            data_idx = 0
+            for dim_name in dims:
                 if dim_name == 'NA':
-                    var_data = np.expand_dims(var_data, axis)
+                    shape_4d.append(1)
+                else:
+                    shape_4d.append(var_data.shape[data_idx])
+                    data_idx += 1
+            var_data = var_data.reshape(shape_4d)
             
             # Get selected indices for each dimension
             indices = []
