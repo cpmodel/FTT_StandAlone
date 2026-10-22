@@ -44,13 +44,6 @@ from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
-from ftt_source.support.singleton_dimension import (
-    restore_all_singleton_axes,
-    squeeze_all_singleton_axes,
-    squeeze_singleton_third_axis,
-    unsqueeze_singleton_third_axis,
-)
-
 from ftt_source.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from ftt_source.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
 from ftt_source.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
@@ -102,27 +95,6 @@ def solve(data, time_lag, titles, histend, year, domain):
     ---------
     This function should be broken up into more elements in development.
     """
-    # Temporarily squeeze singleton third axes for Transport-internal calculations.
-    # Arrays whose third axis represents costs, ages, fuel, or substitutions remain 3D.
-    shared_vars = {
-        'PFRM', 'PFRG', 'PFRE', 'PFRB', 'Battery price',
-        'Cumulative total batcap', 'Battery cap additions', 'noit',
-        'TEWK', 'ZEWK',
-    }
-    squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-Tr'} | shared_vars
-    squeeze_candidates -= {'MSSC'}
-    squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
-    squeezed_time_lag_keys = squeeze_singleton_third_axis(time_lag, squeeze_candidates)
-    global_variables = {
-        'Battery price', 'CO2taxTr', 'RBFM',
-        'RFLT', 'RTCO', 'RVKM', 'TDA1', 'TDA2', 'TEWA', 'TEWB', 'TEWW',
-        'TJET', 'TWWB', 'noit',
-    }
-    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
-    time_lag_global_shapes = squeeze_all_singleton_axes(
-        time_lag, global_variables
-    )
-
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     jti = {category: index for index, category in enumerate(titles['JTI'])}
@@ -473,11 +445,5 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)
-
-    # Restore singleton third axes for compatibility with the rest of the model.
-    restore_all_singleton_axes(data, data_global_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
-    unsqueeze_singleton_third_axis(data, squeezed_data_keys)
-    unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
 
     return data

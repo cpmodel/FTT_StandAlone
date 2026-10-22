@@ -17,19 +17,6 @@ Functions included:
 # Third party imports
 import numpy as np
 
-from ftt_source.support.singleton_dimension import (
-    restore_all_singleton_axes,
-    squeeze_all_singleton_axes,
-)
-
-
-LCOE_SINGLETON_VARIABLES = {
-    'MEWL', 'MEWT', 'FPIX', 'MTFT', 'MSAL', 'MSSP', 'MLSP', 'MSSM', 'MLSM',
-    'MEFI', 'MEWC', 'MECW', 'MECC', 'METC', 'MTCD', 'MECW battery only',
-    'MECC only CO2', 'MECC incl CO2', 'MLCO', 'MWIC', 'MWFC', 'MCOC',
-    'MCFC', 'MWMC', 'MMCD',
-}
-
 
 
 def set_carbon_tax(data, c2ti, year):
@@ -82,8 +69,6 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         Model variables for the current year
         The values are updated and returned to the main routine.
     """
-
-    squeezed_shapes = squeeze_all_singleton_axes(data, LCOE_SINGLETON_VARIABLES)
 
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
@@ -246,5 +231,4 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
         raise ValueError(f"NaN values detected in lcoe ('metc') at indices: {nan_indices_metc}")
               
 
-    restore_all_singleton_axes(data, squeezed_shapes)
     return data

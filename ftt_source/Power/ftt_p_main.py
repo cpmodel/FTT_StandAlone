@@ -63,13 +63,6 @@ from ftt_source.ftt_core.ftt_exogenous_capacity import exogenous_capacity, regul
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
-from ftt_source.support.singleton_dimension import (
-    restore_all_singleton_axes,
-    squeeze_all_singleton_axes,
-    squeeze_singleton_third_axis,
-    unsqueeze_singleton_third_axis,
-)
-
 from ftt_source.Power.ftt_p_rldc import rldc
 from ftt_source.Power.ftt_p_early_scrapping_costs import early_scrapping_costs
 from ftt_source.Power.ftt_p_dspch import dspch, calculate_load_factors_from_dispatch
@@ -115,29 +108,6 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         Model variables for the given year of solution
 
     """
-    # Power-internal variables use their natural dimensionality. Cost categories,
-    # load bands, resources, and substitution matrices retain their third axes.
-    shared_vars = {
-        'CO2taxP', 'noit', 'Battery cap additions', 'MEPD', 'MERC', 'RERY',
-        'MPTR', 'MRED', 'MRES',
-        'TEWK', 'ZEWK', 'REVS',
-        'MEWP',
-    }
-    squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-P'} | shared_vars
-    squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
-    squeezed_time_lag_keys = squeeze_singleton_third_axis(time_lag, squeeze_candidates)
-    global_variables = {
-        'MCCS', 'MEWB', 'MEWW', 'MJET', 'MWDD', 'MWDT',
-        'PMF', 'noit', 'MCRT', 'MLSG', 'MLSE', 'MSSE', 'MSSC', 'MSSG',
-        'MSSR', 'MSCC', 'MLSC', 'MLSR', 'MLCC', 'MSAL', 'MCGA', 'MCNA',
-        'MCTN', 'MADG', 'LAT', 'RLDCMAP', 'CO2taxP', 'Battery price',
-        'V2G battery stock', 'Second-hand battery stock',
-    }
-    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
-    time_lag_global_shapes = squeeze_all_singleton_axes(
-        time_lag, global_variables
-    )
-
     # Categories for the cost matrix (BCET)
     c2ti = {category: index for index, category in enumerate(titles['C2TI'])}
     num_regions = len(titles['RTI'])
@@ -630,8 +600,4 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         if year == 2050:
             print(f"Total solar generation in 2050 is {data['MEWG'][:, 18].sum()/1e6:.3f} PWh")
         
-    restore_all_singleton_axes(data, data_global_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
-    unsqueeze_singleton_third_axis(data, squeezed_data_keys)
-    unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
     return data

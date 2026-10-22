@@ -39,13 +39,6 @@ from ftt_source.ftt_core.ftt_exogenous_capacity import regulation_correction
 
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
-from ftt_source.support.singleton_dimension import (
-    restore_all_singleton_axes,
-    squeeze_all_singleton_axes,
-    squeeze_singleton_third_axis,
-    unsqueeze_singleton_third_axis,
-)
-
 
 from ftt_source.Freight.ftt_fr_lcof import get_lcof, set_carbon_tax
 from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
@@ -85,30 +78,6 @@ def solve(data, time_lag, titles, histend, year, domain):
         Model variables for the given year of solution
 
     """
-
-    # Temporarily remove storage-only singleton axes. Cost, fuel, age, and
-    # substitution axes remain intact; original storage shapes are restored below.
-    shared_vars = {
-        'Battery cap additions', 'Battery price', 'Cumulative total batcap',
-        'CO2taxFr', 'noit',
-        'TEWK', 'ZEWK',
-    }
-    squeeze_candidates = (
-        {var for var, value_domain in domain.items() if value_domain == 'FTT-Fr'}
-        | shared_vars
-    )
-    squeezed_data_keys = squeeze_singleton_third_axis(data, squeeze_candidates)
-    squeezed_time_lag_keys = squeeze_singleton_third_axis(
-        time_lag, squeeze_candidates
-    )
-    global_variables = {
-        'Battery price', 'noit', 'RZFT', 'RZCO', 'ZBFM',
-        'ZEWA', 'ZEWB', 'ZEWW', 'ZJET',
-    }
-    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
-    time_lag_global_shapes = squeeze_all_singleton_axes(
-        time_lag, global_variables
-    )
 
     # Categories for the cost matrix
     c6ti = {category: index for index, category in enumerate(titles['C6TI'])}
@@ -491,8 +460,4 @@ def solve(data, time_lag, titles, histend, year, domain):
         if year == 2050:
             print(f"Number of electric trucks globally: {np.sum(get_class(data['ZEWK'], 3)[:, 6])/1e6:.1f}M")
 
-    restore_all_singleton_axes(data, data_global_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
-    unsqueeze_singleton_third_axis(data, squeezed_data_keys)
-    unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
     return data

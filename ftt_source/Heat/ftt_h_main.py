@@ -49,13 +49,6 @@ GREEN_INDICES_HP = [9, 10, 11]
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 from ftt_source.support.divide import divide
 from ftt_source.support.check_market_shares import check_market_shares
-from ftt_source.support.singleton_dimension import (
-    restore_all_singleton_axes,
-    squeeze_singleton_third_axis,
-    squeeze_all_singleton_axes,
-    unsqueeze_singleton_third_axis,
-)
-
 from ftt_source.Heat.ftt_h_lcoh import get_lcoh, set_carbon_tax
 
 
@@ -101,26 +94,6 @@ def solve(data, time_lag, titles, histend, year, domain):
     data['PRSC14'] = np.copy(time_lag['PRSC14'])
     if year == 2014:
         data['PRSC14'] = np.copy(data['PRSCX'])
-
-    # Temporarily squeeze singleton 3rd axis for Heat-internal calculations.
-    # Shapes are restored before returning from solve.
-    shared_vars = {'HFFC', 'HJFC', 'RHUD', 'PRSC14', 'PRSCX', 'CO2taxH', 'noit'}
-    squeeze_candidates = {var for var, dom in domain.items() if dom == 'FTT-H'} | shared_vars
-    singleton_third_axis_candidates = squeeze_candidates - {'HEWW', 'noit'}
-    squeezed_data_keys = squeeze_singleton_third_axis(
-        data, singleton_third_axis_candidates
-    )
-    squeezed_time_lag_keys = squeeze_singleton_third_axis(
-        time_lag, singleton_third_axis_candidates
-    )
-    global_variables = {
-        'HEWA', 'HEWB', 'HEWW', 'HJET',
-        'RHUD', 'PRSC14', 'CO2taxH', 'noit',
-    }
-    data_global_shapes = squeeze_all_singleton_axes(data, global_variables)
-    time_lag_global_shapes = squeeze_all_singleton_axes(
-        time_lag, global_variables
-    )
 
     # Calculate the LCOH for each heating technology
     carbon_costs = set_carbon_tax(data, c4ti)
@@ -436,11 +409,5 @@ def solve(data, time_lag, titles, histend, year, domain):
 
         if year == 2050 and t == no_it:
             print(f"Total heat pumps in 2050 is: {np.sum(data['HEWG'][:, 9:12]) / 10**6:.3f} M GWh")
-
-    # Restore singleton 3rd axis for compatibility with the rest of the model.
-    restore_all_singleton_axes(data, data_global_shapes)
-    restore_all_singleton_axes(time_lag, time_lag_global_shapes)
-    unsqueeze_singleton_third_axis(data, squeezed_data_keys)
-    unsqueeze_singleton_third_axis(time_lag, squeezed_time_lag_keys)
 
     return data

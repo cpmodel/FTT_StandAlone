@@ -41,17 +41,6 @@ import numpy as np
 
 # Local library imports
 from ftt_source.support.divide import divide
-from ftt_source.support.singleton_dimension import (
-    squeeze_singleton_third_axis,
-    unsqueeze_singleton_third_axis,
-)
-
-
-LCOH_VARIABLES = {
-    'HEFI', 'HEWC', 'HEWP', 'HETC', 'HGC1', 'HGC2', 'HGC3', 'HGD2',
-    'HGD3', 'HTRT', 'HTVS', 'HWCD',
-}
-
 def set_carbon_tax(data, c4ti):
     '''
     Convert the carbon price from USD / tCO2 to 2020 euros / kWhUD.
@@ -94,8 +83,6 @@ def get_lcoh(data, titles, carbon_costs):
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
-    squeezed_keys = squeeze_singleton_third_axis(data, LCOH_VARIABLES)
-
     # Categories for the cost matrix (BHTC)
     c4ti = {category: index for index, category in enumerate(titles['C4TI'])}
     
@@ -215,5 +202,4 @@ def get_lcoh(data, titles, carbon_costs):
     data['HGC3'] = tpb        # Total payback costs
     data['HGD3'] = dtpb       # SD of Total payback costs
 
-    unsqueeze_singleton_third_axis(data, squeezed_keys)
     return data
