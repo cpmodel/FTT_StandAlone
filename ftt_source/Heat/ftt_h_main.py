@@ -242,12 +242,10 @@ def solve(data, time_lag, titles, histend, year, domain):
             demand_change = data['RHUD'] - time_lag['RHUD']
             rhudt = time_lag['RHUD'] + demand_change * t * dt
             rhudlt = time_lag['RHUD'] + demand_change * (t - 1) * dt
+            
+            # Get regions with non-zero heat demand.
             regions = np.flatnonzero(rhudt > 0.0)
 
-            ############## Computing new shares ##################
-            # Start the computation of shares.
-            # Get regions with non-zero heat demand.
-            # The core FTT equations, taking into account old shares, costs and regulations.
             # ---------------------------------------------------------------------
             # Market-share dynamics
             # ---------------------------------------------------------------------
