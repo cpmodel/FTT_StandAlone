@@ -21,7 +21,9 @@ def cross_section(data_in, dimensions, year, y, scenario):
     for variable, values in data_in[scenario].items():
         if "TIME" in dimensions[variable]:
             time_axis = dimensions[variable].index("TIME")
-            data_out[variable] = np.take(values, y, axis=time_axis)
+            index = [slice(None)] * values.ndim
+            index[time_axis] = y
+            data_out[variable] = values[tuple(index)].copy()
         else:
             data_out[variable] = values.copy()
     return data_out

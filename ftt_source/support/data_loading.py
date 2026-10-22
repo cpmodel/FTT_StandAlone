@@ -136,9 +136,16 @@ def _wide_axis(variable_dims):
     return len(variable_dims) - 1
 
 
-def _resolve_index(label, dimension, title_indices):
-    """Resolve a CSV label against its classification titles."""
-    return title_indices[dimension].get(str(label).strip().casefold())
+def _resolve_indices(values, dimension, title_indices):
+    """Resolve input labels to classification indices, using -1 for unknown labels."""
+    return np.fromiter(
+        (
+            title_indices[dimension].get(str(value).strip().casefold(), -1)
+            for value in values
+        ),
+        dtype=int,
+        count=len(values),
+    )
 
 
 def _fill_from_input_df(
@@ -179,10 +186,9 @@ def _fill_from_input_df(
             .to_numpy()
             .reshape(-1)
         )
-        for label, value in zip(labels, values):
-            index = _resolve_index(label, variable_dims[0], title_indices)
-            if index is not None:
-                target[index] = value
+        indices = _resolve_indices(labels, variable_dims[0], title_indices)
+        valid = indices >= 0
+        target[indices[valid]] = values[valid]
         return
 
     coordinate_columns = columns[: len(coordinate_dims)]
@@ -247,32 +253,41 @@ def _fill_from_input_df(
         .to_numpy()
     )
 
-    # Resolve coordinates row by row, then assign each value column.
-    for row_index in range(coordinate_values.shape[0]):
-        coordinates = [0] * len(variable_dims)
-        valid = True
-        for coordinate_index, (axis, dimension) in enumerate(coordinate_dims):
-            index = _resolve_index(
-                coordinate_values[row_index, coordinate_index],
-                dimension,
-                title_indices,
-            )
-            if index is None:
-                valid = False
-                break
-            coordinates[axis] = index
-        if not valid:
-            continue
+    coordinate_indices = {}
+    valid_rows = np.ones(len(coordinate_values), dtype=bool)
+    for coordinate_index, (axis, dimension) in enumerate(coordinate_dims):
+        indices = _resolve_indices(
+            coordinate_values[:, coordinate_index], dimension, title_indices
+        )
+        valid_rows &= indices >= 0
+        coordinate_indices[axis] = indices
 
-        if wide_axis is None:
-            target[tuple(coordinates)] = values[row_index, 0]
-            continue
-        for value_index, column in enumerate(value_columns):
-            index = column_indices.get(column)
-            if index is None:
-                continue
-            coordinates[wide_axis] = index
-            target[tuple(coordinates)] = values[row_index, value_index]
+    if wide_axis is None:
+        target[tuple(
+            coordinate_indices[axis][valid_rows]
+            for axis in range(len(variable_dims))
+        )] = values[valid_rows, 0]
+        return
+
+    value_indices = [
+        (value_index, column_indices[column])
+        for value_index, column in enumerate(value_columns)
+        if column in column_indices
+    ]
+    if not value_indices:
+        return
+
+    value_positions, wide_indices = zip(*value_indices)
+    row_count = np.count_nonzero(valid_rows)
+    array_indices = []
+    for axis in range(len(variable_dims)):
+        if axis == wide_axis:
+            array_indices.append(np.tile(wide_indices, row_count))
+        else:
+            array_indices.append(
+                np.repeat(coordinate_indices[axis][valid_rows], len(wide_indices))
+            )
+    target[tuple(array_indices)] = values[valid_rows][:, value_positions].reshape(-1)
 
 
 def get_valid_ftt_models():
