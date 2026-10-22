@@ -204,26 +204,22 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
         # Calculate load factor (MEWL) and generation by load-band in place
         calculate_load_factors_from_dispatch(data, titles, elec_idx)
 
-        for r in range(len(titles['RTI'])):
+        # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
+        # Gross Curtailed electricity
+        data['MCGA'] = data['MCRT'] * np.sum(Svar * data['MEWG'], axis=1)
 
-            
-            # Adjust capacity factors for VRE due to curtailment, and to cover efficiency losses during
-            # Gross Curtailed electricity
-            data['MCGA'][r] = data['MCRT'][r] * np.sum(Svar[r] * data['MEWG'][r])
+        # Net curtailed generation
+        # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
+        # On average 45% of curtailed electricity can be reused for long-term storage:
+        # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
+        data['MCNA'] = np.maximum(data['MCGA'] - 0.45 * 2 * data['MLSG'], 0.55 * data['MCGA'])
 
-            # Net curtailed generation
-            # Remove long-term storage demand and assume that at least 45% of gross curtailment is retained.
-            # On average 45% of curtailed electricity can be reused for long-term storage:
-            # Source: https://www.frontiersin.org/articles/10.3389/fenrg.2020.527910/full
-            data['MCNA'][r] = np.maximum(data['MCGA'][r] - 0.45 * 2 * data['MLSG'][r], 0.55 * data['MCGA'][r])
-            # Impact of net curtailment on load factors for VRE technologies
-            # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
-            data['MCTN'][r] = data['MCTG'][r] * divide(data['MCNA'][r], data['MCGA'][r])
-                            
-            # Total additional electricity that needs to be generated
-            data['MADG'][r] = data['MCGA'][r] - data['MCNA'][r] + data['MSSG'][r]
-            
-            
+        # Impact of net curtailment on load factors for VRE technologies
+        # Scale down the curtailment rate by taking into account the electricity that is actually used for long-term storage
+        data['MCTN'] = data['MCTG'] * divide(data['MCNA'], data['MCGA'])[:, None]
+
+        # Total additional electricity that needs to be generated
+        data['MADG'] = data['MCGA'] - data['MCNA'] + data['MSSG']
 
         # C02 emissions for carbon costs (MtC02)
         data['MEWE'] = data['MEWG'] * data['BCET'][:, :, c2ti['15 Emissions (tCO2/GWh)']] / 1e6

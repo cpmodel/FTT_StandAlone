@@ -283,8 +283,6 @@ def solve(data, time_lag, titles, histend, year, domain):
 
             ############## Update variables ##################
 
-            # Update demand for driving (in km/ veh/ y) - exogenous atm
-            # data['TEWL'][:, :, 0] = rvkmt[:, 0, 0]
             # Vehicle composition
             data['TEWK'] = data['TEWS'] * rfltt[:, np.newaxis]
             # Total distance driven per vehicle type
