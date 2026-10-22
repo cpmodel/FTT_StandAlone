@@ -214,8 +214,8 @@ class RunFTT:
         """Store one solved model year in the scenario output container.
 
         Variables with a ``TIME`` dimension are written at the corresponding
-        time-axis index.  Variables without ``TIME`` are static and are stored
-        once, after the first solved year.
+        time-axis index.  Variables without ``TIME`` are overwritten with the
+        latest solved state because some cost matrices are updated in place.
         """
         for variable, values in self.variables.items():
             if "TIME" in self.dims[variable]:
@@ -224,7 +224,7 @@ class RunFTT:
                 target_index = [slice(None)] * target.ndim
                 target_index[time_axis] = year_index
                 target[tuple(target_index)] = values
-            elif year_index == 0:
+            else:
                 self.output[scenario][variable][...] = values
 
     def solve_year(self, year, y, scenario, max_iteration=1):
@@ -303,6 +303,10 @@ class RunFTT:
         self.current = year
         # Read the required variables for the current model year.
         current = cross_section(self.input, self.dims, year, y, scenario)
-        # Use starting-year values as lags; later years use the prior solution.
-        lags = current if y == 0 else self.variables
+        # Keep the starting-year lag independent because solvers mutate current.
+        lags = (
+            {variable: values.copy() for variable, values in current.items()}
+            if y == 0
+            else self.variables
+        )
         return current, lags
