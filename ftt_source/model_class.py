@@ -114,7 +114,12 @@ class RunFTT:
         # Configure data paths before loading titles or input files.
         set_paths(inputs_path=inputs_path, utilities_path=utilities_path)
         config = configparser.ConfigParser()
-        config.read(settings_path or "settings.ini")
+        if settings_path is None:
+            from ftt_source.paths import _PACKAGE_ROOT
+
+            package_settings = _PACKAGE_ROOT / "settings.ini"
+            settings_path = package_settings if package_settings.is_file() else "settings.ini"
+        config.read(str(settings_path))
         if settings:
             if not config.has_section("settings"):
                 config.add_section("settings")
