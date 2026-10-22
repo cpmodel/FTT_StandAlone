@@ -52,7 +52,7 @@ def get_gen_share(data, r, solar_tech_idx, wind_tech_indices):
     return solar_share, wind_share
 
 
-def add_balancing_costs(solar_share, wind_share, r):
+def add_balancing_costs(solar_share, wind_share):
     """Add balancing costs for VRE integration.
 
     Balancing costs range from 2 to 4 EUR/MWh (2013 values).
@@ -66,9 +66,6 @@ def add_balancing_costs(solar_share, wind_share, r):
         Solar generation as fraction of total
     wind_share : float
         Wind generation as fraction of total
-    r : int
-        Region index (unused, kept for consistency)
-
     Returns
     -------
     float
@@ -88,7 +85,7 @@ def add_balancing_costs(solar_share, wind_share, r):
     return balancing_costs
 
 
-def add_grid_integration_costs(solar_share, wind_share, r):
+def add_grid_integration_costs(solar_share, wind_share):
     """Add grid integration costs for VRE.
 
     Grid integration costs increase linearly to 7.5 EUR/MWh (2013 values).
@@ -102,9 +99,6 @@ def add_grid_integration_costs(solar_share, wind_share, r):
         Solar generation as fraction of total
     wind_share : float
         Wind generation as fraction of total
-    r : int
-        Region index (unused, kept for consistency)
-
     Returns
     -------
     float
@@ -190,13 +184,6 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
     data : dict
         Updated with MEWP values
     """
-    storage_keys = (
-        "MEWP", "MERC", "MEWK", "MEWI", "MEWL", "MEWG",
-        "MECC incl CO2", "MECC only CO2", "MWMC", "MLBP", "MLB1",
-    )
-    if any(data[name].ndim != 2 for name in storage_keys) or Svar.ndim != 2:
-        raise ValueError("get_marginal_fuel_prices_mewp expects 2D storage arrays")
-
     hard_coal_fuel_idx = fuel_price_indices['hard_coal_fuel_idx']
     other_coal_fuel_idx = fuel_price_indices['other_coal_fuel_idx']
     crude_oil_fuel_idx = fuel_price_indices['crude_oil_fuel_idx']
@@ -270,8 +257,8 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
 
             # Add grid and balancing costs based on VRE share
             solar_share, wind_share = get_gen_share(data, r, solar_tech_idx, wind_tech_indices)
-            data["MEWP"][r, electricity_fuel_idx] += add_balancing_costs(solar_share, wind_share, r)
-            data["MEWP"][r, electricity_fuel_idx] += add_grid_integration_costs(solar_share, wind_share, r)
+            data["MEWP"][r, electricity_fuel_idx] += add_balancing_costs(solar_share, wind_share)
+            data["MEWP"][r, electricity_fuel_idx] += add_grid_integration_costs(solar_share, wind_share)
 
 
         # MPRI == 2: Merit order approach (not used by default)

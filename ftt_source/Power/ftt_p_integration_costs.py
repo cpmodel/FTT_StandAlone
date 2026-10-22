@@ -84,9 +84,6 @@ def add_vre_integration_costs(data, titles, wind_solar_indices):
     data : dict
         Updated with integration costs added to METC (generalized costs)
     """
-    if data["MEWG"].ndim != 2 or data["METC"].ndim != 2:
-        raise ValueError("add_vre_integration_costs expects 2D storage arrays")
-
     solar_tech_idx = wind_solar_indices['solar']
     wind_tech_indices = wind_solar_indices['wind']
 

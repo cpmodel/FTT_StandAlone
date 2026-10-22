@@ -11,13 +11,8 @@ def early_scrapping_costs(data, lagged_data, c2ti):
     ''' Computes the cost of early scrappage. The values are nonzero for the
     baseline scenario, so take these values with a big grain of salt'''
     
-    required = ('MEWK', 'MESC', 'MELF')
-    if any(data[name].ndim != 2 for name in required) or lagged_data['MEWK'].ndim != 2:
-        raise ValueError("early_scrapping_costs expects 2D region-by-technology arrays")
-
-    rdim, tdim = data['MEWK'].shape[:2]
-    earlysc = np.zeros((rdim, tdim))
-    lifetsc = np.zeros_like(earlysc)
+    earlysc = np.empty_like(data['MEWK'])
+    lifetsc = np.empty_like(data['MEWK'])
 
     lifetime_idx = c2ti['9 Lifetime (years)']
     investment_idx = c2ti['3 Investment ($/kW)']
