@@ -62,6 +62,13 @@ def load_data(
         for scenario in scenario_list
     }
     timeline_indices = {year: index for index, year in enumerate(timeline)}
+    title_indices = {
+        dimension: {
+            str(value).strip().casefold(): index
+            for index, value in enumerate(values)
+        }
+        for dimension, values in titles.items()
+    }
     inputs_root = str(get_inputs_path())
 
     def read_folder(scenario, module, directory):
@@ -87,6 +94,7 @@ def load_data(
                     variable,
                     dimensions,
                     titles,
+                    title_indices,
                     timeline,
                     timeline_indices,
                     forstart,
@@ -128,14 +136,9 @@ def _wide_axis(variable_dims):
     return len(variable_dims) - 1
 
 
-def _resolve_index(label, dimension, titles):
+def _resolve_index(label, dimension, title_indices):
     """Resolve a CSV label against its classification titles."""
-    labels = {str(value): index for index, value in enumerate(titles[dimension])}
-    key = str(label)
-    if key in labels:
-        return labels[key]
-    folded = {key.strip().casefold(): index for key, index in labels.items()}
-    return folded.get(key.strip().casefold())
+    return title_indices[dimension].get(str(label).strip().casefold())
 
 
 def _fill_from_input_df(
@@ -143,6 +146,7 @@ def _fill_from_input_df(
     variable,
     dimensions,
     titles,
+    title_indices,
     timeline,
     timeline_indices,
     forstart,
@@ -176,7 +180,7 @@ def _fill_from_input_df(
             .reshape(-1)
         )
         for label, value in zip(labels, values):
-            index = _resolve_index(label, variable_dims[0], titles)
+            index = _resolve_index(label, variable_dims[0], title_indices)
             if index is not None:
                 target[index] = value
         return
@@ -251,7 +255,7 @@ def _fill_from_input_df(
             index = _resolve_index(
                 coordinate_values[row_index, coordinate_index],
                 dimension,
-                titles,
+                title_indices,
             )
             if index is None:
                 valid = False
