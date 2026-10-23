@@ -216,8 +216,8 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
 
     '''
     
-    MRED = np.zeros((num_regions, num_resources, 1))
-    MRES = np.zeros((num_regions, num_resources, 1))
+    MRED = np.zeros((num_regions, num_resources))
+    MRES = np.zeros((num_regions, num_resources))
     P = np.zeros((4))
 
     # See paper Mercure & Salas arXiv:1209.0708 for data (Energy Policy 2013)
@@ -231,8 +231,8 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
 
     # First 4 elements are the non-renewable resources
 
-    P[:4] = MRCL[0, :4, 0]     # Marginal costs of non-renewable resources are identical globally, use Belgium
-    MEPD_sum = np.sum(MEPD[:, :, 0], axis=0)   # Sum over regions
+    P[:4] = MRCL[0, :4]     # Marginal costs of non-renewable resources are identical globally, use Belgium
+    MEPD_sum = np.sum(MEPD[:, :], axis=0)   # Sum over regions
     demand_non_renewables = MEPD_sum[:4]       # Global demand for non-renewable resources
 
     # We search for the value of P that enables enough total production to supply demand
@@ -256,7 +256,7 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
             # the regional production-to-reserve ratio MPTR,
             # the BCSC contains (sparse) regional matrix of reserves at cost level
             # and where_costs_below_price selects costs hist under the currrent cost guess P, with smoothing
-            dFdt = np.sum(MPTR[:, j] * BCSC[: , j, 4:] * costs_below_price[np.newaxis, :] * dC)
+            dFdt = np.sum(MPTR[:, j, None] * BCSC[:, j, 4:] * costs_below_price[None, :] * dC)
 
             # Work out price
             # Difference between supply and demand.
@@ -271,18 +271,21 @@ def marginal_costs_nonrenewables(MEPD, RERY, MPTR, BCSC, HistC, MRCL, MERC, dt,
             count = count + 1
         
         # Remove used resources from the regional histograms (uranium, oil, coal and gas only)
-        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (MPTR[:, j] * BCSC[:, j, 4:] * (0.5 - 0.5 * np.tanh(const * (HistC[j, :] - P[j]) /  P[j]))) * dt
-        RERY[:, j, 0] = np.sum((MPTR[:, j] * BCSC[:, j, 4:]
+        BCSC[:, j, 4:] = BCSC[:, j, 4:] - (
+            MPTR[:, j, None] * BCSC[:, j, 4:]
+            * (0.5 - 0.5 * np.tanh(const * (HistC[j, :] - P[j]) / P[j]))
+        ) * dt
+        RERY[:, j] = np.sum((MPTR[:, j, None] * BCSC[:, j, 4:]
                                 * (0.5 - 0.5 * np.tanh(const * (HistC[j, :] - P[j]) /  P[j]))) * dC)
 
         # Write back new marginal cost values (same value for all regions)
-        MERC[:, j, 0] = P[j]
+        MERC[:, j] = P[j]
         
         # How much non-renewable resources are left in the cost curves
         HistCSUM = np.sum(HistC, axis=1)
-        MRED[:, j, 0] = MRED[:, j, 0] + np.sum(BCSC[:, j, 4:], axis=1) * (
+        MRED[:, j] = MRED[:, j] + np.sum(BCSC[:, j, 4:], axis=1) * (
                     BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1)
-        MRES[:, j, 0] = MRES[:, j, 0] + np.sum(BCSC[:, j, 4:], axis=1) * (
+        MRES[:, j] = MRES[:, j] + np.sum(BCSC[:, j, 4:], axis=1) * (
                     BCSC[:, j, 2] - BCSC[:, j, 1])/(BCSC[:, j, 3] - 1) * (0.5 - 0.5 * np.tanh(1.25 * 2 * (HistCSUM[j] - P[j]) / P[j]))
 
 
@@ -305,8 +308,8 @@ def update_fuel_costs(BCET, MERC, MRCL, tech_to_resource, fuel_type_mask):
     resource_idx = np.array([tech_to_resource[j] for j in techs])
     
     # Vectorized calculation for all fuel technologies at once
-    marginal_cost_changes = (MERC[regions, resource_idx, 0] - 
-                           MRCL[regions, resource_idx, 0])
+    marginal_cost_changes = (MERC[regions, resource_idx] -
+                           MRCL[regions, resource_idx])
     
     # Resource use efficiencies
     efficiencies = BCET[regions, techs, 13]
@@ -329,7 +332,7 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource,
     resource_idx = np.array([tech_to_resource[j] for j in techs])
 
     # How much generation in each region/tech combo in right units
-    X0s = MEPD[regions, resource_idx, 0] / 3.6  # PJ -> TWh
+    X0s = MEPD[regions, resource_idx] / 3.6  # PJ -> TWh
 
     # Share of technical potential used
     share_TP_used = X0s / (BCSC[regions, resource_idx, 2] + 1e-6)
@@ -337,25 +340,25 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource,
 
     # Initially, little effect of cost-supply curves. CFs go down close to technical potential
     BCET[regions, techs, 10] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
-    MERC[regions, resource_idx, 0] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
+    MERC[regions, resource_idx] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
     # Integrate to find the average capacity factor
-    MEWL[regions, techs, 0] = (starting_CF / share_TP_used
+    MEWL[regions, techs] = (starting_CF / share_TP_used
                                * (share_TP_used - (np.exp(k*share_TP_used) - 1) / (k*np.exp(k)) ) )
 
     # Catch extreme values
     BCET[regions, techs, 10] = np.where(share_TP_used > 0.98,
                                         starting_CF * 0.1,
                                         BCET[regions, techs, 10])
-    MEWL[regions, techs, 0] = np.where(share_TP_used > 0.98,
+    MEWL[regions, techs] = np.where(share_TP_used > 0.98,
                                        starting_CF * 0.8,
-                                       MEWL[regions, techs, 0])
+                                       MEWL[regions, techs])
 
     # Apply per-technology CF multipliers (e.g. CSP is more efficient than Solar PV).
     # Derived from the source tech's value, not the target's own prior value, so
     # repeated calls within the same year don't compound the multiplier.
     for j, (source_idx, multiplier) in cf_multipliers.items():
         BCET[:, j, 10] = BCET[:, source_idx, 10] * multiplier
-        MEWL[:, j, 0] = MEWL[:, source_idx, 0] * multiplier
+        MEWL[:, j] = MEWL[:, source_idx] * multiplier
 
     return BCET, MEWL, MERC
 
@@ -388,17 +391,17 @@ def update_capacity_factors_original(BCET, MEWG, MEWL, BCSC, CSC_Q, MEPD, MERC,
                         source_idx, multiplier = cf_multipliers[j]
                         BCET[r, j, 10] = BCET[r, source_idx, 10] * multiplier
 
-                    if(MEWG[r, j, 0] > 0.01 and X0 > 0):
+                    if(MEWG[r, j] > 0.01 and X0 > 0):
 
                         # Average capacity factor costs up to the point of use (integrate CSCurve divided by total use)
                         CFvar = np.sum(1.0 / (Y[:ind + 1] + 1e-6) / (ind + 1))
 
                         if CFvar > 0:
-                            MEWL[r, j, 0] = CFvar
+                            MEWL[r, j] = CFvar
 
                         if j in cf_multipliers:
                             source_idx, multiplier = cf_multipliers[j]
-                            MEWL[r, j, 0] = MEWL[r, source_idx, 0] * multiplier
+                            MEWL[r, j] = MEWL[r, source_idx] * multiplier
 
         return BCET, MEWL, MERC
 
@@ -409,7 +412,7 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
     
     regions, techs = np.where(investment_type_mask)
     resource_idx = np.array([tech_to_resource[j] for j in techs])
-    X0s = MEPD[regions, resource_idx, 0] / 3.6  # PJ -> TWh
+    X0s = MEPD[regions, resource_idx] / 3.6  # PJ -> TWh
     
     X = CSC_Q[regions, resource_idx, :]
     Y = BCSC[regions, resource_idx, 4:]
@@ -418,7 +421,7 @@ def update_investment_cost(BCET, BCSC, CSC_Q, MEPD, MERC, tech_to_resource, inve
     for ri, r in enumerate(regions):
         Y0s[ri] = np.interp(X0s[ri], X[ri], Y[ri])
     
-    MERC[regions, resource_idx, 0] = Y0s
+    MERC[regions, resource_idx] = Y0s
     BCET[regions, techs, 2] = Y0s
     
     return MERC, BCET
@@ -437,55 +440,55 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
 
     # Uranium
     nuclear_tech_idx, uranium_res_idx = gen_tech_indices['nuclear']
-    MEPD[:, uranium_res_idx, 0] = MEWG[:, nuclear_tech_idx, 0] / BCET[:, nuclear_tech_idx, 13] * 3.6e-3
+    MEPD[:, uranium_res_idx] = MEWG[:, nuclear_tech_idx] / BCET[:, nuclear_tech_idx, 13] * 3.6e-3
     # Fossil fuels: sum MEWD carrier demands into resource demand using CSV-driven mapping
     # resource_to_fuel_map maps an ERTI resource index to its list of JTI fuel-carrier indices
     for erti_idx, jti_indices in resource_to_fuel_map.items():
-        MEPD[:, erti_idx, 0] = sum(MEWD[:, j, 0] for j in jti_indices)
+        MEPD[:, erti_idx] = sum(MEWD[:, j] for j in jti_indices)
 
     # Renewable resource use is local, so equal to total resource demand MEPD
     # We assume RERY equal to MEPD regionally, although it is globally
     # Biomass (the cost curve is in PJ)
     biomass_tech_idxs, biomass_res_idx = gen_tech_indices['biomass']
-    MEPD[:, biomass_res_idx, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in biomass_tech_idxs) * 3.6e-3
-    RERY[:, biomass_res_idx, 0] = MEPD[:, biomass_res_idx, 0]
+    MEPD[:, biomass_res_idx] = sum(MEWG[:, t] / BCET[:, t, 13] for t in biomass_tech_idxs) * 3.6e-3
+    RERY[:, biomass_res_idx] = MEPD[:, biomass_res_idx]
     # Biogas (which comes mostly from waste) (From here onwards cost curves are in TWh)
     biogas_tech_idxs, biogas_res_idx = gen_tech_indices['biogas']
-    MEPD[:, biogas_res_idx, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in biogas_tech_idxs) * 3.6e-3
-    RERY[:, biogas_res_idx, 0] = MEPD[:, biogas_res_idx, 0]
+    MEPD[:, biogas_res_idx] = sum(MEWG[:, t] / BCET[:, t, 13] for t in biogas_tech_idxs) * 3.6e-3
+    RERY[:, biogas_res_idx] = MEPD[:, biogas_res_idx]
 
     # Tidal
     tidal_tech_idx, tidal_res_idx = gen_tech_indices['tidal']
-    MEPD[:, tidal_res_idx, 0] = MEWG[:, tidal_tech_idx, 0] * 3.6e-3
-    RERY[:, tidal_res_idx, 0] = MEPD[:, tidal_res_idx, 0]
+    MEPD[:, tidal_res_idx] = MEWG[:, tidal_tech_idx] * 3.6e-3
+    RERY[:, tidal_res_idx] = MEPD[:, tidal_res_idx]
     # Hydro
     hydro_tech_idxs, hydro_res_idx = gen_tech_indices['hydro']
-    MEPD[:, hydro_res_idx, 0] = sum(MEWG[:, t, 0] for t in hydro_tech_idxs) * 3.6e-3
-    RERY[:, hydro_res_idx, 0] = MEPD[:, hydro_res_idx, 0]
+    MEPD[:, hydro_res_idx] = sum(MEWG[:, t] for t in hydro_tech_idxs) * 3.6e-3
+    RERY[:, hydro_res_idx] = MEPD[:, hydro_res_idx]
     # Onshore
     onshore_tech_idx, onshore_res_idx = gen_tech_indices['onshore']
-    MEPD[:, onshore_res_idx, 0] = MEWG[:, onshore_tech_idx, 0] * 3.6e-3
-    RERY[:, onshore_res_idx, 0] = MEPD[:, onshore_res_idx, 0]
+    MEPD[:, onshore_res_idx] = MEWG[:, onshore_tech_idx] * 3.6e-3
+    RERY[:, onshore_res_idx] = MEPD[:, onshore_res_idx]
     # Offshore
     offshore_tech_idx, offshore_res_idx = gen_tech_indices['offshore']
-    MEPD[:, offshore_res_idx, 0] = MEWG[:, offshore_tech_idx, 0] * 3.6e-3
-    RERY[:, offshore_res_idx, 0] = MEPD[:, offshore_res_idx, 0]
+    MEPD[:, offshore_res_idx] = MEWG[:, offshore_tech_idx] * 3.6e-3
+    RERY[:, offshore_res_idx] = MEPD[:, offshore_res_idx]
     # Solar (PV + CSP)
     solar_tech_idxs, solar_res_idx = gen_tech_indices['solar']
-    MEPD[:, solar_res_idx, 0] = sum(MEWG[:, t, 0] / BCET[:, t, 13] for t in solar_tech_idxs) * 3.6e-3
-    RERY[:, solar_res_idx, 0] = MEPD[:, solar_res_idx, 0]
+    MEPD[:, solar_res_idx] = sum(MEWG[:, t] / BCET[:, t, 13] for t in solar_tech_idxs) * 3.6e-3
+    RERY[:, solar_res_idx] = MEPD[:, solar_res_idx]
     # Geothermal
     geothermal_tech_idx, geothermal_res_idx = gen_tech_indices['geothermal']
-    MEPD[:, geothermal_res_idx, 0] = MEWG[:, geothermal_tech_idx, 0] * 3.6e-3
-    RERY[:, geothermal_res_idx, 0] = MEPD[:, geothermal_res_idx, 0]
+    MEPD[:, geothermal_res_idx] = MEWG[:, geothermal_tech_idx] * 3.6e-3
+    RERY[:, geothermal_res_idx] = MEPD[:, geothermal_res_idx]
 
 
     # All regions have the same information
-    MERC[:, 0, 0] = MRCL[:, 0, 0]
-    MERC[:, 1, 0] = MRCL[:, 1, 0]
-    MERC[:, 2, 0] = MRCL[:, 2, 0]
-    MERC[:, 3, 0] = MRCL[:, 3, 0]
-    MERC[:, 4, 0] = MRCL[:, 4, 0]
+    MERC[:, 0] = MRCL[:, 0]
+    MERC[:, 1] = MRCL[:, 1]
+    MERC[:, 2] = MRCL[:, 2]
+    MERC[:, 3] = MRCL[:, 3]
+    MERC[:, 4] = MRCL[:, 4]
 
     
     # ========================================================================
@@ -514,7 +517,8 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     if year <= 2013:
         return BCET, BCSC, MEWL, MEPD, MERC, RERY, MRED, MRES
 
-    # Calculate the marginal cost of production of non-renewable resources
+
+        # Calculate the marginal cost of production of non-renewable resources
     
     # Non renewable resource use (treated global <=> identical for all regions)
     if year >= 2017:
@@ -526,7 +530,7 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
        
     # Select the Update fuel costs (type 1), capacity factors (type 0) or investment costs (type 3)
     
-    resource_in_use_mask = (MEPD[:, tech_to_resource, 0] > 0.0)
+    resource_in_use_mask = (MEPD[:, tech_to_resource] > 0.0)
     fuel_type_mask = (BCET[:, :, 11] == 1) & resource_in_use_mask  # Type 1: Fuel type resource
     loadfactor_type_mask = (BCET[:, :, 11] == 0) & resource_in_use_mask
     # investment_type_mask = (BCET[:, :, 11] == 3) & resource_in_use_mask
@@ -559,9 +563,9 @@ def cost_curves(BCET, BCSC, MEWD, MEWG, MEWL, MEPD, MERC, MRCL, RERY, MPTR, MRED
     
 # %%    
     # Add REN resources (resource # >4) in MRED, and remaining resources in MRES    
-    MRED[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6
+    MRED[:, 4:] = BCSC[:, 4:, 2] * 3.6
 
     # Remaining technical potential
-    MRES[:, 4:, 0] = BCSC[:, 4:, 2] * 3.6 - MEPD[:, 4:, 0]
+    MRES[:, 4:] = BCSC[:, 4:, 2] * 3.6 - MEPD[:, 4:]
 
     return BCET, BCSC, MEWL, MEPD, MERC, RERY, MRED, MRES

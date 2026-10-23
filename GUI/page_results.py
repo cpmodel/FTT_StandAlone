@@ -363,8 +363,8 @@ def render_results_page():
         dims = engine.get_variable_dimensions(state.selected_variable)
 
         for i, dim_name in enumerate(dims):
-            # Skip NA and TIME (dim 4) selectors
-            if dim_name == 'NA' or i == 3 or isinstance(dim_name, float):
+            # TIME is the plot x-axis and does not need a selector.
+            if dim_name == 'TIME' or isinstance(dim_name, float):
                 continue
 
             # Get available values for this dimension

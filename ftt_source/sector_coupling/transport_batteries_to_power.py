@@ -14,9 +14,10 @@ import numpy as np
 EV_INDICES = [18, 19, 20]
 
 def get_sector_coupling_dict(data, titles):
+    assumptions = np.asarray(data["SectorCouplingAssumps"])
     sector_coupling_assumps = dict(zip(
                 list(titles['SCA']),
-                data["SectorCouplingAssumps"][0, :, 0]
+                assumptions.squeeze().reshape(-1)
                 ))
     return sector_coupling_assumps
 
@@ -52,7 +53,10 @@ def second_hand_batteries(data, time_lag, year, titles):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
     # Units - REVS: 1000 cars, BTTC - kWh
-    battery_capacity_lag = time_lag["REVS"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    battery_capacity_lag = (
+        time_lag["REVS"]
+        * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)']]
+    )
     
     # Sum battery capacity in GWh
     battery_capacity_lag_sum = np.sum(battery_capacity_lag, axis=1) / 1000
@@ -64,17 +68,17 @@ def second_hand_batteries(data, time_lag, year, titles):
                             )
     
     # Move all batteries one year up
-    data['Second-hand batteries by age'][:, :-1, :] = (
-            np.copy(time_lag['Second-hand batteries by age'][:, 1:, :]) 
-            * sector_coupling_assumps["Yearly decay"] 
-            )
+    age = data['Second-hand batteries by age']
+    lag_age = time_lag['Second-hand batteries by age']
+    age[:, :-1] = lag_age[:, 1:] * sector_coupling_assumps["Yearly decay"]
     
     # Add newly scrapped vehicle batteries to tracking matrix
-    data['Second-hand batteries by age'][:, -1, :] = used_battery_capacity
+    age[:, -1] = used_battery_capacity
+    data['Second-hand batteries by age'] = age
     
     # All batteries together
-    data['Second-hand battery stock'] = \
-            np.sum(data['Second-hand batteries by age'], axis=1, keepdims=True)
+    stock = np.sum(age, axis=1)
+    data['Second-hand battery stock'] = stock
                         
     
     return data
@@ -99,15 +103,18 @@ def share_transport_batteries(data, titles):
 
     # Skip if V2G interaction is turned off
     if not sector_coupling_assumps["V2G interaction"]:
-        return 0
+        return np.zeros(data["MSSC"].shape[0])
 
     # Convert GW to GWh (estimate)
-    capacity_batteries_power = data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+    capacity_batteries_power = (
+        data["MSSC"] * sector_coupling_assumps["GW to GWh"]
+    )
 
     # Share of either repurposed or V2G batteries
+    second_hand_stock = data["Second-hand battery stock"]
+    v2g_stock = data["V2G battery stock"]
     with np.errstate(divide='ignore', invalid='ignore'):
-        storage_ratio = ( (data["Second-hand battery stock"] + data["V2G battery stock"])
-                        / capacity_batteries_power )
+        storage_ratio = (second_hand_stock + v2g_stock) / capacity_batteries_power
 
     # Capture divide by zero and inf values - use 0 as safe default
     # (0 means no transport batteries contributing to storage)
@@ -136,8 +143,8 @@ def update_costs_from_transport_batteries(data, storage_ratio, year, titles):
                                 + share_repurposed 
                                 * (1-sector_coupling_assumps["Cost savings"]))
     
-    data["MSSP"] = data["MSSP"] * remaining_costs_fraction
-    data["MSSM"] = data["MSSM"] * remaining_costs_fraction
+    for key in ("MSSP", "MSSM"):
+        data[key] = data[key] * remaining_costs_fraction[:, np.newaxis]
     
     return data
 
@@ -163,11 +170,14 @@ def vehicle_to_grid(data, time_lag, year, titles):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
     
     # Units - TEWK: 1000 cars, BTTC - kWh
-    total_batteries = time_lag["TEWK"] * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)'], None]
+    total_batteries = (
+        time_lag["TEWK"]
+        * data["BTTC"][:, :, c3ti['18 Battery cap (kWh)']]
+    )
     
     
     # Sum over the EVs only (assume PHEV too small per Xu et al.)
-    batteries_EVs_only = np.sum(total_batteries[:, EV_INDICES, :], axis=1, keepdims=True)
+    batteries_EVs_only = np.sum(total_batteries[:, EV_INDICES], axis=1)
     
     # Available batteries
     available_batteries = ( batteries_EVs_only
@@ -180,4 +190,3 @@ def vehicle_to_grid(data, time_lag, year, titles):
     data['V2G battery stock'] = available_batteries
     
     return data
-    

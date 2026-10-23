@@ -14,20 +14,20 @@ Functions included:
         Main solution function for the module
     - get_lcot
         Calculate levelised cost of transport
-        
-variables: 
+
+variables:
 cf = capacity factor
 ff = filling factors
 ns = number of seats
-      
-        
+
+
 """
 import numpy as np
 
 
 def set_carbon_tax(data, c3ti, year):
     '''
-    Convert the carbon price in REPP from USD / tCO2 to 2022$/pkm
+    Convert the carbon price from USD / tCO2 to 2022$/pkm
     Apply the carbon price to transport sector technologies based on their emission factors
 
     Returns:
@@ -41,12 +41,12 @@ def set_carbon_tax(data, c3ti, year):
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
 
 
-    carbon_costs = (data["CO2taxTr"][:, :, 0]                                   # Carbon price in USD/tCO2
+    carbon_costs = (data["CO2taxTr"][:, None]                                    # Carbon price in USD/tCO2
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
                     / ns / ff                                                 # Conversion from per km to per pkm
                     / 10**6                                                  # Conversion from grams to tonnes.
                     )
-    
+
 
     if np.isnan(carbon_costs).any():
         print(f"Carbon price is nan in year {year}")
@@ -75,80 +75,94 @@ def get_lcot(data, titles, carbon_costs, year):
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
 
     # Taxable categories for fuel tax, CNG, EVs and H2 exempt
-    taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI']), 1])
+    taxable_fuels = np.ones([len(titles['RTI']), len(titles['VTTI'])])
     taxable_fuels[:, 12:15] = 0   # CNG
     taxable_fuels[:, 18:21] = 0   # EVs
     taxable_fuels[:, 24:27] = 0   # Hydrogen
-    
+
     # Taxable categories for carbon tax: only EVs and H2 exempt
-    tf_carbon = np.ones([len(titles['VTTI']), 1])
-    tf_carbon[18:21] = 0   # EVs
-    tf_carbon[24:27] = 0   # Hydrogen
-    
+    tf_carbon = np.ones((len(titles['RTI']), len(titles['VTTI'])))
+    tf_carbon[:, 18:21] = 0   # EVs
+    tf_carbon[:, 24:27] = 0   # Hydrogen
+
     bttc = data['BTTC']
-    
+
     # Lifetimes and build years
     lt = bttc[:, :, c3ti['8 lifetime']]
     max_lt = int(np.max(lt))
     full_lt_mat = np.arange(max_lt)
     lt_mask = full_lt_mat <= (lt[..., None] - 1)        # Life time mask
     bt_mask = full_lt_mat < np.ones_like(lt[..., None]) # Build time mask
-    
+
     # Capacity factor
-    cf = bttc[:, :, c3ti['12 Cap_F (Mpkm/kseats-y)'], np.newaxis]
+    cf = bttc[:, :, c3ti['12 Cap_F (Mpkm/kseats-y)']]
 
     # Occupancy rates
-    ff = bttc[:, :, c3ti['11 occupancy rate p/sea'], np.newaxis]
+    ff = bttc[:, :, c3ti['11 occupancy rate p/sea']]
 
     # Number of seats
-    ns = bttc[:, :, c3ti['15 Seats/Veh'], np.newaxis]
+    ns = bttc[:, :, c3ti['15 Seats/Veh']]
 
     # Energy use
-    en = bttc[:, :, c3ti['9 energy use (MJ/km)'], np.newaxis]
-    
+    en = bttc[:, :, c3ti['9 energy use (MJ/km)']]
+
     conv_full = 1 / ns / ff / cf / 1000
     conv_pkm = 1 / ns / ff
-    
+    conv_full_by_year = conv_full[..., None]
+    conv_pkm_by_year = conv_pkm[..., None]
+
     def get_cost_elem(base_cost, conversion_factor, mask):
         '''Mask costs during build or life time, and apply
         conversion to generation where appropriate'''
         cost = np.multiply(base_cost[..., None], conversion_factor)
         return np.multiply(cost, mask)
-    
-    it = get_cost_elem(bttc[:, :, c3ti['1 Prices cars (USD/veh)']], conv_full, bt_mask)
-    dit = get_cost_elem(bttc[:, :, c3ti['2 Std of price']], conv_full, bt_mask)
+
+    it = get_cost_elem(bttc[:, :, c3ti['1 Prices cars (USD/veh)']], conv_full_by_year, bt_mask)
+    dit = get_cost_elem(bttc[:, :, c3ti['2 Std of price']], conv_full_by_year, bt_mask)
     # Vehicle tax at purchase
-    vtt = get_cost_elem( ( (data['TTVT'][:, :, 0] 
-                             + data['RTCO'][:, 0] * bttc[:, :, c3ti['14 CO2Emissions']] )
-                             * conv_full[:, :, 0]
-                             + data["Base registration rate"][:, :, 0] * it[:, :, 0]
-                            ), 1, bt_mask)
-    ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm, lt_mask)
-    dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm, lt_mask)
-    ct = get_cost_elem(carbon_costs, tf_carbon, lt_mask)
+    vehicle_tax = (
+        data['TTVT']
+        + data['RTCO'][:, None]
+        * bttc[:, :, c3ti['14 CO2Emissions']]
+    ) * conv_full + data["Base registration rate"] * (
+        bttc[:, :, c3ti['1 Prices cars (USD/veh)']]
+        * conv_full
+    )
+    vtt = get_cost_elem(
+        vehicle_tax,
+        1,
+        bt_mask,
+    )
+    ft = get_cost_elem(bttc[:, :, c3ti['3 fuel cost (USD/km)']], conv_pkm_by_year, lt_mask)
+    dft = get_cost_elem(bttc[:, :, c3ti['4 std fuel cost']], conv_pkm_by_year, lt_mask)
+    ct = get_cost_elem(carbon_costs, tf_carbon[..., None], lt_mask)
     # Fuel tax costs
-    fft = get_cost_elem(data['RTFT'][:, :, 0], en / ns / ff * taxable_fuels, lt_mask)
-    omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], 1 / ns / ff, lt_mask)
-    domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], 1 / ns / ff, lt_mask)
+    fft = get_cost_elem(
+        data['RTFT'][:, None],
+        ((en / ns / ff) * taxable_fuels)[..., None],
+        lt_mask,
+    )
+    omt = get_cost_elem(bttc[:, :, c3ti['5 O&M costs (USD/km)']], (1 / ns / ff)[..., None], lt_mask)
+    domt = get_cost_elem(bttc[:, :, c3ti['6 std O&M']], (1 / ns / ff)[..., None], lt_mask)
     # Yearly road tax cost
-    rtt = get_cost_elem(data['TTRT'][:, :, 0], conv_full, lt_mask)
-    
+    rtt = get_cost_elem(data['TTRT'], conv_full_by_year, lt_mask)
+
     # Discount rate
     dr = bttc[:, :, c3ti['7 Discount rate'], np.newaxis]
     denominator = (1+dr)**full_lt_mat
-    
+
     # 1 – Expenses
     # 1.1 – Without policy costs
     npv_expenses_bare = (it + ft + omt) / denominator
     # 1.2 – With policy costs
     npv_expenses_policy = (it + ct + vtt + ft + fft + omt + rtt) / denominator
-   
+
     # 2 – Utility
     npv_utility = 1 / denominator
     # Remove utility after end lifetime
     npv_utility = np.where(lt_mask, 1, 0) / denominator
     utility_sum = np.sum(npv_utility, axis=2)
-    
+
     # 3 – Standard deviation (propagation of error)
     # Calculate variance terms and apply discounting
     variance_terms = dit**2 + dft**2 + domt**2
@@ -166,16 +180,16 @@ def get_lcot(data, titles, carbon_costs, year):
     tlcotg = tlcot * (1 + bttc[:, :, c3ti['13 Gamma']])
 
     # 5 - Transform into lognormal space
-    logtlcot = ( np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot)) 
+    logtlcot = ( np.log(tlcot * tlcot / np.sqrt(dlcot * dlcot + tlcot * tlcot))
                 + bttc[:, :, c3ti['13 Gamma']])
     dlogtlcot = np.sqrt(np.log(1.0 + dlcot * dlcot / (tlcot * tlcot)))
-    
+
     # 6 - Pass to variables that are stored outside.
-    data['TEWC'][:, :, 0] = lcot           # The real bare LCOT without taxes
-    data['TETC'][:, :, 0] = tlcot          # The real bare LCOT with taxes
-    data['TEGC'][:, :, 0] = tlcotg         # As seen by consumer (generalised cost)
-    data['TELC'][:, :, 0] = logtlcot       # In lognormal space
-    data['TECD'][:, :, 0] = dlcot          # Variation on the LCOT distribution
-    data['TLCD'][:, :, 0] = dlogtlcot      # Log variation on the LCOT distribution
+    data['TEWC'] = lcot           # The real bare LCOT without taxes
+    data['TETC'] = tlcot          # The real bare LCOT with taxes
+    data['TEGC'] = tlcotg         # As seen by consumer (generalised cost)
+    data['TELC'] = logtlcot       # In lognormal space
+    data['TECD'] = dlcot          # Variation on the LCOT distribution
+    data['TLCD'] = dlogtlcot      # Log variation on the LCOT distribution
 
     return data

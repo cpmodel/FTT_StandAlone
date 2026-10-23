@@ -90,10 +90,11 @@ def initialise_state(model):
         # Initialise state variable dict per model
         state[mod] = {}
             
-        state[mod][share_vars[mod]] = (
-                        np.zeros_like(model.input[scenario][share_vars[mod]][:, :, :, :len(model.timeline)]) )
-        
-        state[mod]['gamma'] = np.zeros((N_regions, N_techs, 1))
+        state[mod][share_vars[mod]] = np.zeros(
+            (N_regions, N_techs, len(model.timeline))
+        )
+
+        state[mod]['gamma'] = np.zeros((N_regions, N_techs))
         state[mod]['gamma_lag'] = np.zeros_like(state[mod]['gamma'])
 
         # Create container for rate of change (roc) vars
@@ -106,7 +107,7 @@ def initialise_state(model):
     # Set all gamma values to zero
     for mod in modules_to_assess:
         
-        model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :] = 0
+        model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod]] = 0
 
     # Disable exogenous capacity for FTT-P: -1 means the constraint is inactive.
     # Without this, MWKA (e.g. exogenous capacity in the simulation period from incomplete data) 
@@ -126,7 +127,7 @@ def initialise_state(model):
         
             # Read in the historical and simulated shares
             var = share_vars[mod]
-            state[mod][var][:, :, :, year_index] =  model.variables[var]
+            state[mod][var][:, :, year_index] = model.variables[var]
         
             # Compute the rate of change and score from the shares variable
             state[mod]["rate of change"] = compute_roc(state, share_vars, mod)            
@@ -150,8 +151,9 @@ def run_model(state, model):
     # Loop through all FTT mods to update gamma values
     for mod in modules_to_assess:
             
-        model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod], :] = (
-            state[mod]['gamma'][:, :, :])
+        model.input[scenario][cost_vars[mod]][:, :, gamma_inds[mod]] = (
+            state[mod]['gamma']
+        )
 
     # Loop through timeline
     for year_index, year in enumerate(model.timeline):
@@ -162,7 +164,7 @@ def run_model(state, model):
         for mod in modules_to_assess:
             
             # Save share vars for each mod
-            state[mod][share_vars[mod]][:, :, :, year_index] = (
+            state[mod][share_vars[mod]][:, :, year_index] = (
                  model.variables[share_vars[mod]] )
     
     for mod in modules_to_assess:
@@ -177,8 +179,7 @@ def run_model(state, model):
 
 def compute_roc(state, share_vars, mod):
     '''Compute the first differences (rate of change)'''
-    roc =   (state[mod][share_vars[mod]][:, :, :, 1:]
-           - state[mod][share_vars[mod]][:, :, :, :-1])
+    roc = state[mod][share_vars[mod]][:, :, 1:] - state[mod][share_vars[mod]][:, :, :-1]
     
     return roc
 
@@ -211,7 +212,7 @@ def compute_roc_logit(state, model, mod, epsilon=1e-6, sim_window=5, max_hist_wi
     histend_vars = maps['histend']
 
     # Shape: (regions, techs, years)
-    shares = state[mod][share_vars[mod]][:, :, 0, :]
+    shares = state[mod][share_vars[mod]]
     s_safe = np.clip(shares, epsilon, 1 - epsilon)
     logit_shares = np.log(s_safe / (1 - s_safe))
 
@@ -250,7 +251,7 @@ def compute_roc_logit(state, model, mod, epsilon=1e-6, sim_window=5, max_hist_wi
 
     if mod == 'FTT-Tr':
         # Per-country boundary: TDA1 records the last historical year per region
-        hist_end_years = model.input['S0']['TDA1'][:, 0, 0].astype(int)
+        hist_end_years = model.input['S0']['TDA1'].astype(int)
         slope_hist     = np.zeros((N_regions, N_techs))
         slope_sim      = np.zeros((N_regions, N_techs))
         avg_share_hist = np.zeros((N_regions, N_techs))
@@ -284,7 +285,7 @@ def adjust_gamma_values_simulated_annealing(state, mod, it):
     an adjustable standard deviation."""
        
     # Get model vars needed, this needs doing for every iter so not great
-    gamma = state[mod]['gamma'][:, :, 0]
+    gamma = state[mod]['gamma']
     
     roc_diff = state[mod]["roc_diff"]
     
@@ -308,7 +309,7 @@ def adjust_gamma_values_simulated_annealing(state, mod, it):
                                  where=non_zero_total !=0)[:, np.newaxis] * np.ones_like(gamma)
     
     gamma = np.where(roc_diff !=0, gamma - 0.05 * country_averages, 0)  
-    state[mod]['gamma'] = gamma[:, :, np.newaxis]
+    state[mod]['gamma'] = gamma
 
     return state
 
@@ -318,7 +319,7 @@ def compute_scores(state, mod):
     weighted by the importance (sqrt of share) of each technology.
     """
     roc_diff = state[mod]['roc_diff']
-    gamma = state[mod]['gamma'][:, :, 0]
+    gamma = state[mod]['gamma']
     shares = state[mod]['hist_share_avg']
     
     # 1. Importance Weighting (Square Root)
@@ -355,8 +356,8 @@ def accept_or_reject_gamma_changes(state, mod, it, T0):
     # Cool down the temperature
     T = T0 * cooling_rate**it
     
-    gamma = state[mod]['gamma'][:, :, 0]
-    gamma_lag = state[mod]['gamma_lag'][:, :, 0]
+    gamma = state[mod]['gamma']
+    gamma_lag = state[mod]['gamma_lag']
     score = state[mod]['score']
     score_lag = state[mod]['score_lag']
 
@@ -367,7 +368,7 @@ def accept_or_reject_gamma_changes(state, mod, it, T0):
 
     # Go back to old gamma/score values when values not accepted
     gamma[~acceptance_mask] = gamma_lag[~acceptance_mask]
-    state[mod]['gamma'] = gamma[:, :, np.newaxis]
+    state[mod]['gamma'] = gamma
     nonzero_mask = (score != 0) & (score_lag != 0)
     state[mod]['acceptance_rate'] = np.sum(acceptance_mask[nonzero_mask]) / acceptance_mask[nonzero_mask].size
     
@@ -462,7 +463,7 @@ def gamma_auto(model):
 
                 
                 # Save previous gamma and roc values
-                state[mod]['gamma_lag'][:, :, 0] = state[mod]['gamma'][:, :, 0]
+                state[mod]['gamma_lag'][:, :] = state[mod]['gamma'][:, :]
                 state[mod]["score_lag"][:, :] = state[mod]["score"][:, :]
                 
                 # Update gamma values semi-randomly
@@ -486,8 +487,8 @@ def gamma_auto(model):
                     T0[n_mod] = set_initial_temperature(state, model, mod)
                 
                 # Check for convergence each iteration and module loop
-                gamma = state[mod]['gamma'][:, :, 0]
-                gamma_lag = state[mod]['gamma_lag'][:, :, 0]
+                gamma = state[mod]['gamma']
+                gamma_lag = state[mod]['gamma_lag']
                 
                 convergence[n_mod] = check_convergence(gamma, gamma_lag, mod, it, max_it, convergence[n_mod])
                 
