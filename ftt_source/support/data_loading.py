@@ -16,6 +16,7 @@ import numpy as np
 import polars as pl
 
 from ftt_source.paths import get_inputs_path, get_utilities_path
+from ftt_source.support.check_input_files import check_var_dims, check_vars_exist
 
 
 def load_data(
@@ -70,16 +71,55 @@ def load_data(
         for dimension, values in titles.items()
     }
     inputs_root = str(get_inputs_path())
+    region_codes = {str(region) for region in titles.get("RTI_short", [])}
+
+    empty_scenarios = []
+    for scenario in scenario_list:
+        if scenario == "S0":
+            continue
+        has_files = any(
+            os.path.isdir(os.path.join(inputs_root, scenario, module))
+            and any(
+                filename.endswith(".csv")
+                for filename in os.listdir(
+                    os.path.join(inputs_root, scenario, module)
+                )
+            )
+            for module in modules
+        )
+        if not has_files:
+            empty_scenarios.append(scenario)
+
+    if empty_scenarios:
+        _emit_warning(
+            f"No input files found for scenario(s): {', '.join(empty_scenarios)}.\n"
+            "These scenarios will not be run.",
+            log_callback,
+        )
+        for scenario in empty_scenarios:
+            del data[scenario]
+        scenario_list = [
+            scenario for scenario in scenario_list if scenario not in empty_scenarios
+        ]
 
     def read_folder(scenario, module, directory):
         """Read all CSV files in one scenario/module input folder."""
         loaded = set()
+        legacy_variables = set()
         if not os.path.isdir(directory):
             return loaded
         for filename in os.listdir(directory):
             if not filename.endswith(".csv"):
                 continue
             variable = filename[:-4]
+            base, separator, suffix = variable.rpartition("_")
+            if (
+                separator
+                and base in dimensions
+                and suffix in region_codes
+            ):
+                legacy_variables.add(base)
+                continue
             if variable not in dimensions:
                 continue
             path = os.path.join(directory, filename)
@@ -89,25 +129,38 @@ def load_data(
                     infer_schema_length=10000,
                     null_values=["", "NA", "nan"],
                 )
-                _fill_from_input_df(
-                    frame,
-                    variable,
-                    dimensions,
-                    titles,
-                    title_indices,
-                    timeline,
-                    timeline_indices,
-                    forstart,
-                    data[scenario][variable],
-                )
             except Exception as exc:
-                warnings.warn(f"Could not read {path}: {exc}")
+                _emit_warning(f"Could not read {path}: {exc}", log_callback)
                 continue
+            if scenario == "S0":
+                check_var_dims(variable, frame, titles, dimensions)
+            _fill_from_input_df(
+                frame,
+                variable,
+                dimensions,
+                titles,
+                title_indices,
+                timeline,
+                timeline_indices,
+                forstart,
+                data[scenario][variable],
+                log_callback=log_callback,
+            )
             loaded.add(variable)
+        if legacy_variables:
+            _emit_warning(
+                _legacy_files_message(
+                    os.path.join(scenario, module),
+                    legacy_variables,
+                    sorted(region_codes)[0] if region_codes else "XX",
+                ),
+                log_callback,
+            )
         return loaded
 
     for module in modules:
         # Load S0 first so scenario folders can override individual variables.
+        check_vars_exist(module)
         module_variables = read_folder(
             "S0", module, os.path.join(inputs_root, "S0", module)
         )
@@ -158,6 +211,7 @@ def _fill_from_input_df(
     timeline_indices,
     forstart,
     target,
+    log_callback=None,
 ):
     """Fill one variable array from its input table."""
     variable_dims = dimensions[variable]
@@ -189,6 +243,22 @@ def _fill_from_input_df(
         indices = _resolve_indices(labels, variable_dims[0], title_indices)
         valid = indices >= 0
         target[indices[valid]] = values[valid]
+        skipped_rows = [
+            (row_index + 2, variable_dims[0], label)
+            for row_index, (label, is_valid) in enumerate(zip(labels, valid))
+            if not is_valid
+        ]
+        if skipped_rows:
+            _emit_warning(
+                _row_mismatch_message(
+                    variable,
+                    len(labels),
+                    skipped_rows,
+                    [variable_dims[0]],
+                    [columns[0]],
+                ),
+                log_callback,
+            )
         return
 
     coordinate_columns = columns[: len(coordinate_dims)]
@@ -226,9 +296,17 @@ def _fill_from_input_df(
             str(value): index for index, value in enumerate(titles[wide_dimension])
         }
         column_indices = {
-            column: labels[column]
+            column: labels.get(
+                str(column),
+                title_indices[wide_dimension].get(
+                    str(column).strip().casefold()
+                ),
+            )
             for column in value_columns
-            if str(column) in labels
+            if (
+                str(column) in labels
+                or str(column).strip().casefold() in title_indices[wide_dimension]
+            )
         }
         # Some exported inputs use positional headers rather than titles.
         if len(column_indices) != len(value_columns):
@@ -236,17 +314,26 @@ def _fill_from_input_df(
             if all(value.lstrip("-").isdigit() for value in numeric):
                 positions = [int(value) for value in numeric]
                 if positions == list(range(len(positions))):
-                    column_indices = dict(zip(value_columns, positions))
+                    column_indices = {
+                        column: position
+                        for column, position in zip(value_columns, positions)
+                        if position < len(titles[wide_dimension])
+                    }
                 elif positions == list(range(1, len(positions) + 1)):
                     column_indices = dict(
-                        zip(value_columns, [position - 1 for position in positions])
+                        (column, position - 1)
+                        for column, position in zip(value_columns, positions)
+                        if position <= len(titles[wide_dimension])
                     )
     else:
         column_indices = {}
 
-    coordinate_values = frame.select(
-        [pl.col(column).cast(pl.Utf8) for column in coordinate_columns]
-    ).to_numpy()
+    if coordinate_columns:
+        coordinate_values = frame.select(
+            [pl.col(column).cast(pl.Utf8) for column in coordinate_columns]
+        ).to_numpy()
+    else:
+        coordinate_values = np.empty((frame.height, 0), dtype=object)
     values = (
         frame.select([pl.col(column).cast(pl.Float64) for column in value_columns])
         .fill_null(0.0)
@@ -255,12 +342,50 @@ def _fill_from_input_df(
 
     coordinate_indices = {}
     valid_rows = np.ones(len(coordinate_values), dtype=bool)
+    skipped_rows = []
+    skipped_row_indices = set()
     for coordinate_index, (axis, dimension) in enumerate(coordinate_dims):
         indices = _resolve_indices(
             coordinate_values[:, coordinate_index], dimension, title_indices
         )
+        for row_index in np.flatnonzero(indices < 0):
+            row_index = int(row_index)
+            if row_index not in skipped_row_indices:
+                skipped_rows.append(
+                    (
+                        row_index + 2,
+                        dimension,
+                        coordinate_values[row_index, coordinate_index],
+                    )
+                )
+                skipped_row_indices.add(row_index)
         valid_rows &= indices >= 0
         coordinate_indices[axis] = indices
+
+    if skipped_rows:
+        _emit_warning(
+            _row_mismatch_message(
+                variable,
+                len(coordinate_values),
+                skipped_rows,
+                [dimension for _, dimension in coordinate_dims],
+                list(coordinate_columns),
+            ),
+            log_callback,
+        )
+
+    if wide_axis is not None and not is_time:
+        matched_columns = sum(column in column_indices for column in value_columns)
+        if matched_columns < len(value_columns):
+            _emit_warning(
+                _column_mismatch_message(
+                    variable,
+                    variable_dims[wide_axis],
+                    matched_columns,
+                    list(value_columns),
+                ),
+                log_callback,
+            )
 
     if wide_axis is None:
         target[tuple(
@@ -288,6 +413,71 @@ def _fill_from_input_df(
                 np.repeat(coordinate_indices[axis][valid_rows], len(wide_indices))
             )
     target[tuple(array_indices)] = values[valid_rows][:, value_positions].reshape(-1)
+
+
+def _emit_warning(message, log_callback=None):
+    """Send warnings to the GUI log when available, or to the CLI otherwise."""
+    if log_callback is not None:
+        log_callback(f"WARNING: {message}")
+    else:
+        warnings.warn(message)
+
+
+def _row_mismatch_message(
+    variable, row_count, skipped_rows, expected_headers, actual_headers, max_listed=5
+):
+    skipped_count = len(skipped_rows)
+    matched_count = row_count - skipped_count
+    quantifier = "all" if matched_count == 0 else str(skipped_count)
+    row_word = "input row" if skipped_count == 1 else "input rows"
+    lines = [
+        f"{variable}: {quantifier} {row_word} skipped due to classification mismatch "
+        f"against classification_titles.csv for {expected_headers} "
+        f"({matched_count}/{row_count} rows matched)."
+    ]
+    listed = "; ".join(
+        f"line {line}: {dimension}='{label}'"
+        for line, dimension, label in skipped_rows[:max_listed]
+    )
+    if skipped_count > max_listed:
+        listed += f"; ... and {skipped_count - max_listed} more"
+    lines.append(f"Unmatched labels ({listed}).")
+    if actual_headers != expected_headers:
+        lines.append(
+            f"Column headers {actual_headers} do not match expected headers "
+            f"{expected_headers}."
+        )
+    if matched_count == 0:
+        lines.append(
+            "The file is likely in the wrong format. "
+            "All values for this variable will remain zero."
+        )
+    return "\n".join(lines)
+
+
+def _column_mismatch_message(variable, wide_dimension, matched_count, headers):
+    message = (
+        f"{variable}: {matched_count}/{len(headers)} value column header(s) "
+        f"{headers} matched the expected labels for '{wide_dimension}'."
+    )
+    if matched_count == 0:
+        message += (
+            "\nThe file is likely in the wrong format. "
+            "All values for this variable will remain zero."
+        )
+    return message
+
+
+def _legacy_files_message(folder, legacy_variables, example_region):
+    names = sorted(legacy_variables)
+    return (
+        f"{folder}: found old per-country input files "
+        f"(e.g. {names[0]}_{example_region}.csv) for {len(names)} variable(s): "
+        f"{', '.join(names)}.\n"
+        "These files are ignored. Inputs now use a single file per variable "
+        "(e.g. BZTC.csv).\n"
+        "Update or delete the old files and use the new format."
+    )
 
 
 def get_valid_ftt_models():
