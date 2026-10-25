@@ -11,3 +11,10 @@
 !RLDCMAP.csv
 !S_all_policies_on/
 !S_all_policies_on/**/*.csv
+!S0/**/*.csv
+!S_ev_mandate_test/
+!S_ev_mandate_test/**/*.csv
+!S_emissions_regulation_test/
+!S_emissions_regulation_test/**/*.csv
+# Old per-country files (e.g. BZTC_BE.csv) stay ignored
+**/*_[A-Z][A-Z].csv

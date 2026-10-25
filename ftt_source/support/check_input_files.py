@@ -190,7 +190,16 @@ def check_vars_exist(model):
     ]
 
     if missing_vars:
-        raise ValueError(
+        message = (
             f"The following required input files are missing from\n "
             f"'{s0_model_dir}':\n  " + ", ".join(missing_vars)
         )
+        if (
+            'EV CO2 regulation' in missing_vars
+            and (s0_model_dir / 'EV regulation.csv').is_file()
+        ):
+            message += (
+                "\n  Found the previous filename 'EV regulation.csv'; "
+                "rename it to 'EV CO2 regulation.csv'."
+            )
+        raise ValueError(message)

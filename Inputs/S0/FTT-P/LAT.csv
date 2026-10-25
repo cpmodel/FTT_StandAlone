@@ -1,8 +1,8 @@
-,latitude
+RTI,latitude
 1 Belgium (BE),50.6
-2 Denmark (DK),64.0
-3 Germany (DE),51.0
-4 Greece (EL),39.0
+2 Denmark (DK),64
+3 Germany (DE),51
+4 Greece (EL),39
 5 Spain (ES),40.3
 6 France (FR),39.6
 7 Ireland (IE),53.2
@@ -28,9 +28,9 @@
 27 Romania (RO),45.8
 28 Norway (NO),65.6
 29 Switzerland (CH),46.8
-30 Iceland (IS),65.0
-31 Croatia (HR),45.0
-32 Turkey (TR),39.0
+30 Iceland (IS),65
+31 Croatia (HR),45
+32 Turkey (TR),39
 33 Macedonia (MK),41.6
 34 USA (US),42.1
 35 Japan (JA),37.4
@@ -53,7 +53,7 @@
 52 Rest of OPEC ex Venez,24.5
 53 Rest of World (RW),32.3
 54 Ukraine (UE),49.1
-55 Saudi Arabia (SD),24.0
+55 Saudi Arabia (SD),24
 56 Nigeria (NG),9.5
 57 South Africa (SA),28.8
 58 NorthAfrica OPEC (ON),27.4
@@ -63,7 +63,7 @@
 62 Rest NorthAfrica (AN),24.8
 63 RestCentralAfrica(AC),9.1
 64 Rest West Africa (AW),11.2
-65 Rest East Africa (AE),9.0
+65 Rest East Africa (AE),9
 66 Rest SouthAfrica (ZA),20.6
 67 Egypt (EG),26.4
 68 Dem. Rep. Congo (DC),2.8
