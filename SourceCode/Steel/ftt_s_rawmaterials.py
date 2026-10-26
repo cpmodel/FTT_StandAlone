@@ -180,9 +180,9 @@ def raw_material_distr(data, titles, year, t,spsa_dt):
             data['STEI'][r,a,0]= data['BSTC'][r,a,15]
             data['STSC'][r,a,0]= inventory[a,4]
 
-            ## change : why are we using this loop
+            #Material use per tonne of steel, from column 22 ('Crude Steel') of the CostMatrix onwards
             for mat in range(len(titles['SMTI'])-4):
-                data['BSTC'][r,a,21+mat]= inventory[a,mat] 
+                data['BSTC'][r,a,22+mat]= inventory[a,mat]
 
         
             #Select CCS technologies
