@@ -210,7 +210,6 @@ class RunFTT:
             'compare_sector_versions',
             fallback=True,
         )
-
         self.stop_callback = stop_callback
 
         # Load classification titles
@@ -307,7 +306,7 @@ class RunFTT:
         if self.log_callback:
             self.log_callback(message)
 
-        if self.compare_sector_versions:
+        if getattr(self, 'compare_sector_versions', False):
             compared_sectors = [
                 sector
                 for sector, module in (
@@ -319,10 +318,16 @@ class RunFTT:
                 if module in self.ftt_modules
             ]
             if compared_sectors:
-                print(
-                    "[Sector comparison] New and legacy solvers matched "
-                    f"throughout the model run: {', '.join(compared_sectors)}."
+                comparison_message = (
+                    "[Implementation comparison] New and legacy implementations "
+                    "are the same for scenarios "
+                    f"{', '.join(self.input)}; sectors: "
+                    f"{', '.join(compared_sectors)}."
                 )
+                print(comparison_message)
+                if self.log_callback:
+                    self.log_callback(comparison_message)
+
     def solve_year(self, year, y, scenario, max_iter=1):
         """ Solve model for a specific year """
 
@@ -514,13 +519,22 @@ class RunFTT:
            
         return variables, time_lags
 
-    @staticmethod
-    def _assert_model_outputs_match(sector, current, legacy, year):
+    def _assert_model_outputs_match(self, sector, current, legacy, year):
         """Assert that new and legacy solvers produced equivalent variables."""
+
+        def raise_mismatch(message):
+            comparison_message = (
+                "[Implementation comparison] New and legacy implementations "
+                f"are different: {message}"
+            )
+            if self.log_callback:
+                self.log_callback(comparison_message)
+            raise AssertionError(comparison_message)
+
         if current.keys() != legacy.keys():
             missing_from_current = sorted(legacy.keys() - current.keys())
             missing_from_legacy = sorted(current.keys() - legacy.keys())
-            raise AssertionError(
+            raise_mismatch(
                 f"{sector} solver output keys differ in {year}: "
                 f"missing from current={missing_from_current}, "
                 f"missing from legacy={missing_from_legacy}"
@@ -531,7 +545,7 @@ class RunFTT:
             current_is_array = isinstance(current_value, np.ndarray)
             legacy_is_array = isinstance(legacy_value, np.ndarray)
             if current_is_array != legacy_is_array:
-                raise AssertionError(
+                raise_mismatch(
                     f"{sector} solver output types differ for {variable_name} in {year}"
                 )
             if current_is_array:
@@ -547,19 +561,22 @@ class RunFTT:
                 while (legacy_compare.ndim > 2
                        and legacy_compare.shape[-1] == 1):
                     legacy_compare = legacy_compare[..., 0]
-                np.testing.assert_allclose(
-                    current_compare,
-                    legacy_compare,
-                    rtol=1e-12,
-                    atol=1e-12,
-                    equal_nan=True,
-                    err_msg=(
-                        f"{sector} solver outputs differ for {variable_name} "
-                        f"in {year}"
-                    ),
-                )
+                try:
+                    np.testing.assert_allclose(
+                        current_compare,
+                        legacy_compare,
+                        rtol=1e-12,
+                        atol=1e-12,
+                        equal_nan=True,
+                        err_msg=(
+                            f"{sector} solver outputs differ for {variable_name} "
+                            f"in {year}"
+                        ),
+                    )
+                except AssertionError as exc:
+                    raise_mismatch(str(exc))
             elif current_value != legacy_value:
-                raise AssertionError(
+                raise_mismatch(
                     f"{sector} solver outputs differ for {variable_name} in {year}"
                 )
 
