@@ -194,11 +194,11 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     # LCOE augmented with gamma values (and optionally value factor)
     gamma = bcet[:, :, c2ti['22 Gamma']]
+    value_factor = bcet[:, :, c2ti['23 Value factor']]
+    value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
     if gamma_mode == 'additive':
-        lcoe_mu_gamma = lcoe_mu_all_policies + gamma
+        lcoe_mu_gamma = (lcoe_mu_all_policies + gamma) / value_factor
     else:
-        value_factor = bcet[:, :, c2ti['23 Value factor']]
-        value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
         lcoe_mu_gamma = lcoe_mu_all_policies * (1 + gamma) / value_factor
 
     # Pass to variables that are stored outside.
