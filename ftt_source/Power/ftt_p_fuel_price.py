@@ -19,6 +19,7 @@ Created: Mon Nov 6 2023
 """
 
 import numpy as np
+
 from ftt_source.support.divide import divide
 
 
@@ -51,7 +52,7 @@ def get_gen_share(data, r, solar_tech_idx, wind_tech_indices):
     return solar_share, wind_share
 
 
-def add_balancing_costs(solar_share, wind_share, r):
+def add_balancing_costs(solar_share, wind_share):
     """Add balancing costs for VRE integration.
 
     Balancing costs range from 2 to 4 EUR/MWh (2013 values).
@@ -65,9 +66,6 @@ def add_balancing_costs(solar_share, wind_share, r):
         Solar generation as fraction of total
     wind_share : float
         Wind generation as fraction of total
-    r : int
-        Region index (unused, kept for consistency)
-
     Returns
     -------
     float
@@ -87,7 +85,7 @@ def add_balancing_costs(solar_share, wind_share, r):
     return balancing_costs
 
 
-def add_grid_integration_costs(solar_share, wind_share, r):
+def add_grid_integration_costs(solar_share, wind_share):
     """Add grid integration costs for VRE.
 
     Grid integration costs increase linearly to 7.5 EUR/MWh (2013 values).
@@ -101,9 +99,6 @@ def add_grid_integration_costs(solar_share, wind_share, r):
         Solar generation as fraction of total
     wind_share : float
         Wind generation as fraction of total
-    r : int
-        Region index (unused, kept for consistency)
-
     Returns
     -------
     float
@@ -208,14 +203,14 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
     data["MPRI"][:] = 1
 
     # Set fuel prices for specific fuels
-    data["MEWP"][:, hard_coal_fuel_idx, 0] = data["MERC"][:, coal_res_idx, 0]
-    data["MEWP"][:, other_coal_fuel_idx, 0] = data["MERC"][:, coal_res_idx, 0]
-    data["MEWP"][:, crude_oil_fuel_idx, 0] = data["MERC"][:, oil_res_idx, 0]
+    data["MEWP"][:, hard_coal_fuel_idx] = data["MERC"][:, coal_res_idx]
+    data["MEWP"][:, other_coal_fuel_idx] = data["MERC"][:, coal_res_idx]
+    data["MEWP"][:, crude_oil_fuel_idx] = data["MERC"][:, oil_res_idx]
     # NOTE: heavy fuel oil is priced at the gas resource rate. This preserves the
     # original hardcoded mapping (MEWP[:,3,0] = MERC[:,3,0]) where JTI[3] was
     # labelled "Natural gas". Flag for future review.
-    data["MEWP"][:, heavy_fuel_oil_fuel_idx, 0] = data["MERC"][:, gas_res_idx, 0]
-    data["MEWP"][:, biofuels_fuel_idx, 0] = data["MERC"][:, biomass_res_idx, 0]
+    data["MEWP"][:, heavy_fuel_oil_fuel_idx] = data["MERC"][:, gas_res_idx]
+    data["MEWP"][:, biofuels_fuel_idx] = data["MERC"][:, biomass_res_idx]
 
     # For each region
     for r in range(len(titles['RTI'])):
@@ -224,21 +219,21 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
         if data["MPRI"][r] == 1:
             # Calculate weight for new vs old capacity
             weight_new = 0.0
-            total_capacity = np.sum(data["MEWK"][r, :, 0])
+            total_capacity = np.sum(data["MEWK"][r])
             if total_capacity > 0.0:
-                weight_new = np.sum(data["MEWI"][r, :, 0]) / total_capacity
+                weight_new = np.sum(data["MEWI"][r]) / total_capacity
             weight_new = min(weight_new, 1.0)
             weight_old = 1.0 - weight_new
 
             # Shares of new capacity by technology
-            total_new = np.sum(data["MEWI"][r, :, 0])
+            total_new = np.sum(data["MEWI"][r])
             if total_new > 0:
-                shares_new = data["MEWI"][r, :, 0] / total_new
+                shares_new = data["MEWI"][r] / total_new
             else:
-                shares_new = np.zeros(data["MEWI"][r, :, 0].shape)
+                shares_new = np.zeros(data["MEWI"][r].shape)
 
             # Shares of old capacity by technology
-            shares_old = (data["MEWK"][r, :, 0] - data["MEWI"][r, :, 0]) / max(total_capacity, 1e-10)
+            shares_old = (data["MEWK"][r] - data["MEWI"][r]) / max(total_capacity, 1e-10)
             shares_old[shares_old < 0.0] = 0.0
             shares_old_sum = np.sum(shares_old)
             if shares_old_sum > 0:
@@ -246,24 +241,24 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
 
             # Weighted LCOE for new capacity (includes all policies)
             weighted_lcoe_new = divide(
-                np.sum(shares_new * data["MEWL"][r, :, 0] * data["MECC incl CO2"][r, :, 0]),
-                np.sum(shares_new * data["MEWL"][r, :, 0])
+                np.sum(shares_new * data["MEWL"][r] * data["MECC incl CO2"][r]),
+                np.sum(shares_new * data["MEWL"][r])
             )
 
             # Weighted LCOE for old capacity (CO2 costs only)
-            denom_old = np.sum(shares_old * data["MEWL"][r, :, 0])
+            denom_old = np.sum(shares_old * data["MEWL"][r])
             if denom_old > 0:
-                weighted_lcoe_old = np.sum(shares_old * data["MEWL"][r, :, 0] * data["MECC only CO2"][r, :, 0]) / denom_old
+                weighted_lcoe_old = np.sum(shares_old * data["MEWL"][r] * data["MECC only CO2"][r]) / denom_old
             else:
                 weighted_lcoe_old = 0.0
 
             # Combined electricity price
-            data["MEWP"][r, electricity_fuel_idx, 0] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
+            data["MEWP"][r, electricity_fuel_idx] = weight_new * weighted_lcoe_new + weight_old * weighted_lcoe_old
 
             # Add grid and balancing costs based on VRE share
             solar_share, wind_share = get_gen_share(data, r, solar_tech_idx, wind_tech_indices)
-            data["MEWP"][r, electricity_fuel_idx, 0] += add_balancing_costs(solar_share, wind_share, r)
-            data["MEWP"][r, electricity_fuel_idx, 0] += add_grid_integration_costs(solar_share, wind_share, r)
+            data["MEWP"][r, electricity_fuel_idx] += add_balancing_costs(solar_share, wind_share)
+            data["MEWP"][r, electricity_fuel_idx] += add_grid_integration_costs(solar_share, wind_share)
 
 
         # MPRI == 2: Merit order approach (not used by default)
@@ -282,46 +277,46 @@ def get_marginal_fuel_prices_mewp(data, titles, Svar, wind_solar_indices, fuel_p
 
             # Loop over load bands
             for LB in range(n_loadbands):
-                mc_tech_by_lb = np.zeros_like(data["MWMC"][r, :, 0])
+                mc_tech_by_lb = np.zeros_like(data["MWMC"][r])
 
                 # Only select technologies with non-zero generation
                 where_condition = gen_by_lb[:, LB] > 0.0
-                mc_tech_by_lb[where_condition] = data["MWMC"][r, :, 0][where_condition]
+                mc_tech_by_lb[where_condition] = data["MWMC"][r][where_condition]
 
                 # Weighted average marginal cost
                 if np.sum(gen_by_lb[:, LB]) > 0.0:
-                    data["MLBP"][r, LB, 0] = np.sum(mc_tech_by_lb * gen_by_lb[:, LB]) / np.sum(gen_by_lb[:, LB])
+                    data["MLBP"][r, LB] = np.sum(mc_tech_by_lb * gen_by_lb[:, LB]) / np.sum(gen_by_lb[:, LB])
                 # If the load band is now empty, set the price to variable renewables
                 else:
-                    data["MLBP"][r, LB, 0] = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
+                    data["MLBP"][r, LB] = np.max(data["MWMC"][r] * Svar[r])
                     # Adjust prices for higher transmission costs
-                    data["MLBP"][r, LB, 0] *= 1.3
+                    data["MLBP"][r, LB] *= 1.3
                 
             # Smooth the baseload price trajectory towards VRE when baseload under 5% height
-            if data["MLB1"][r, 0, 0] < 0.05:
-                baseload_weight = np.clip(data["MLB1"][r, 0, 0] / 0.05, 0.0, 1.0)
+            if data["MLB1"][r, 0] < 0.05:
+                baseload_weight = np.clip(data["MLB1"][r, 0] / 0.05, 0.0, 1.0)
                 vre_weight = 1.0 - baseload_weight
-                vre_price = np.max(data["MWMC"][r, :, 0] * Svar[r, :])
-                data["MLBP"][r, 0, 0] = data["MLBP"][r, 0, 0] * baseload_weight + vre_price * vre_weight
+                vre_price = np.max(data["MWMC"][r] * Svar[r])
+                data["MLBP"][r, 0] = data["MLBP"][r, 0] * baseload_weight + vre_price * vre_weight
 
             # Adjust load band prices for start-up costs, and low efficiency in peak load bands
-            data["MLBP"][r, 4, 0] *= 1.35  # Back-up reserves - highest start-up costs
-            data["MLBP"][r, 3, 0] *= 1.2
-            data["MLBP"][r, 2, 0] *= 1.05
-            data["MLBP"][r, 5, 0] *= 1.3   # VRE - higher transmission costs
+            data["MLBP"][r, 4] *= 1.35  # Back-up reserves - highest start-up costs
+            data["MLBP"][r, 3] *= 1.2
+            data["MLBP"][r, 2] *= 1.05
+            data["MLBP"][r, 5] *= 1.3   # VRE - higher transmission costs
 
             vre_weight = 0.0
             non_vre_price = 0.0
 
             # VRE weight increases above 40% penetration
-            share_VRE = np.sum(data["MEWG"][r, :, 0] * Svar[r, :]) / max(np.sum(data["MEWG"][r, :]), 1e-10)
+            share_VRE = np.sum(data["MEWG"][r] * Svar[r]) / max(np.sum(data["MEWG"][r]), 1e-10)
             if share_VRE > 0.40:
                 vre_weight = (1.0 / 0.6) * share_VRE - 2.0 / 3.0
 
             if np.sum(np.array([gen_by_lb[:, LB] for LB in range(n_loadbands - 1)])) > 0.0:
-                non_vre_price = np.sum(data["MLBP"][r, :n_loadbands-1, 0] * non_vre_lb_weight)
+                non_vre_price = np.sum(data["MLBP"][r, :n_loadbands-1] * non_vre_lb_weight)
 
-            data["MEWP"][r, electricity_fuel_idx, 0] = vre_weight * data["MLBP"][r, 5, 0] + (1.0 - vre_weight) * non_vre_price
+            data["MEWP"][r, electricity_fuel_idx] = vre_weight * data["MLBP"][r, 5] + (1.0 - vre_weight) * non_vre_price
 
 
     return data

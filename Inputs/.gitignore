@@ -9,3 +9,6 @@
 !S0/*/CO2tax**.csv
 !LAT.csv
 !RLDCMAP.csv
+!S0/**/*.csv
+# Old per-country files (e.g. BZTC_BE.csv) stay ignored
+**/*_[A-Z][A-Z].csv

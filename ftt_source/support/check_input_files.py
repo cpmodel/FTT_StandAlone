@@ -58,24 +58,36 @@ def check_var_dims(var_name, df, titles, dimensions):
 
     var_dims = dimensions[var_name]
 
-    # Determine the wide axis (mirrors _wide_column_axis in data_loading).
-    if var_dims[3] == 'TIME':
-        wide_axis = 3
-    elif var_dims[2] not in ('NA', 'TIME') and var_dims[3] == 'NA':
-        wide_axis = 2
-    elif (var_dims[1] not in ('NA', 'TIME')
-          and var_dims[2] == 'NA'
-          and var_dims[3] == 'NA'):
-        wide_axis = 1
+    # Accept both the original four-slot metadata and the compact dimensions
+    # used by the standalone loader.
+    if len(var_dims) == 4:
+        if var_dims[3] == 'TIME':
+            wide_axis = 3
+        elif var_dims[2] not in ('NA', 'TIME') and var_dims[3] == 'NA':
+            wide_axis = 2
+        elif (var_dims[1] not in ('NA', 'TIME')
+              and var_dims[2] == 'NA'
+              and var_dims[3] == 'NA'):
+            wide_axis = 1
+        else:
+            wide_axis = None
+        coord_axes = [
+            (ax, var_dims[ax])
+            for ax in range(4)
+            if var_dims[ax] not in ('NA', 'TIME') and ax != wide_axis
+        ]
     else:
-        wide_axis = None  # scalar
-
-    # Coordinate axes: non-NA, non-TIME, and not the wide axis.
-    coord_axes = [
-        (ax, var_dims[ax])
-        for ax in range(4)
-        if var_dims[ax] not in ('NA', 'TIME') and ax != wide_axis
-    ]
+        if 'TIME' in var_dims:
+            wide_axis = var_dims.index('TIME')
+        elif len(var_dims) > 1 or (var_dims and var_dims[0] != 'RTI'):
+            wide_axis = len(var_dims) - 1
+        else:
+            wide_axis = None
+        coord_axes = [
+            (ax, dim)
+            for ax, dim in enumerate(var_dims)
+            if dim != 'TIME' and ax != wide_axis
+        ]
     n_coord = len(coord_axes)
 
     errors = []
@@ -190,7 +202,16 @@ def check_vars_exist(model):
     ]
 
     if missing_vars:
-        raise ValueError(
+        message = (
             f"The following required input files are missing from\n "
             f"'{s0_model_dir}':\n  " + ", ".join(missing_vars)
         )
+        if (
+            'EV CO2 regulation' in missing_vars
+            and (s0_model_dir / 'EV regulation.csv').is_file()
+        ):
+            message += (
+                "\n  Found the previous filename 'EV regulation.csv'; "
+                "rename it to 'EV CO2 regulation.csv'."
+            )
+        raise ValueError(message)

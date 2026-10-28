@@ -38,7 +38,10 @@ class ResultsEngine:
         self.classifications = self._parse_classifications()
         
         # Filter variables to only those with TIME dimension
-        self.time_variables = self.var_listing_df[self.var_listing_df['Dim4'] == 'TIME'].copy()
+        dimension_columns = [f'Dim{i}' for i in range(1, 5)]
+        self.time_variables = self.var_listing_df[
+            self.var_listing_df[dimension_columns].eq('TIME').any(axis=1)
+        ].copy()
         
         # Data containers
         self.loaded_pickles = {}  # {scenario_name: {var_name: np_array}}
@@ -175,13 +178,17 @@ class ResultsEngine:
             variable_name: Name of variable (e.g., 'MWSY')
         
         Returns:
-            List of dimension codes: [Dim1, Dim2, Dim3, Dim4]
+            Active dimension codes in array-axis order.
         """
         matching = self.time_variables[self.time_variables['Variable name'] == variable_name]
         if matching.empty:
-            return ['NA', 'NA', 'NA', 'TIME']
+            return []
         var_row = matching.iloc[0]
-        return [var_row['Dim1'], var_row['Dim2'], var_row['Dim3'], var_row['Dim4']]
+        return [
+            var_row[f'Dim{i}']
+            for i in range(1, 5)
+            if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] not in ('', 'NA')
+        ]
     
     def get_dimension_values(self, dim_code):
         """
@@ -219,18 +226,25 @@ class ResultsEngine:
         
         # Get dimension info
         dims = self.get_variable_dimensions(variable_name)
-        var_row = self.time_variables[self.time_variables['Variable name'] == variable_name].iloc[0]
+        var_row = self.time_variables[
+            self.time_variables['Variable name'] == variable_name
+        ].iloc[0]
+        time_axis = dims.index('TIME')
+        non_time_dims = dims[:time_axis]
         
         # Build figure
         fig = go.Figure()
 
-        style_dims = self._get_multidimensional_style_dims(dims, dim_selections, dim_aggregates)
+        style_dims = self._get_multidimensional_style_dims(
+            non_time_dims, dim_selections, dim_aggregates
+        )
         
         # Extract baseline data if needed
         baseline_data = None
         if result_type != "levels" and baseline_scenario and baseline_scenario in self.loaded_pickles:
-            baseline_data = self._extract_scenario_data(baseline_scenario, variable_name, dims, 
-                                                        dim_selections, dim_aggregates)
+            baseline_data = self._extract_scenario_data(
+                baseline_scenario, variable_name, dims, dim_selections, dim_aggregates
+            )
         
         for idx_scenario, scenario in enumerate(scenarios):
             # Skip baseline scenario when plotting differences (it would show all zeros)
@@ -245,32 +259,13 @@ class ResultsEngine:
             if variable_name not in scenario_data:
                 continue
             
-            var_data = scenario_data[variable_name]  # Shape: (region, tech, cat, time)
-            
-            # Ensure var_data has 4 dimensions by inserting size-1 dims where dims[i] == 'NA'
-            # Build the target 4D shape based on which dimensions are active
-            shape_4d = []
-            data_idx = 0
-            for dim_name in dims:
-                if dim_name == 'NA':
-                    shape_4d.append(1)
-                else:
-                    if data_idx < var_data.ndim:
-                        shape_4d.append(var_data.shape[data_idx])
-                        data_idx += 1
-                    else:
-                        shape_4d.append(1)
-            var_data = var_data.reshape(shape_4d)
+            var_data = scenario_data[variable_name]
             
             # Get selected indices for each dimension
             indices = []
             for i, dim_name in enumerate(dims):
-                if dim_name == 'NA':
-                    indices.append([0])
-                elif i == 3:
-                    # TIME dimension - always use ALL time points (it's the x-axis)
-                    max_time = var_data.shape[3] if var_data.ndim > 3 else 1
-                    indices.append(list(range(max_time)))
+                if dim_name == 'TIME':
+                    indices.append(list(range(var_data.shape[time_axis])))
                 else:
                     selected_vals = dim_selections.get(i, [])
                     if not selected_vals:
@@ -283,32 +278,29 @@ class ResultsEngine:
                         indices.append(selected_idx if selected_idx else [0])
             
             # Generate combinations for plotting
-            combinations = self._generate_combinations(indices, dim_aggregates)
+            combinations = self._generate_combinations(
+                indices[:time_axis], dim_aggregates[:time_axis]
+            )
             
             for combo in combinations:
                 # Extract and aggregate data
                 try:
                     data_slice = var_data
                     
-                    # Apply slicing/aggregation for dims 0-2
-                    for dim_idx in range(min(3, len(combo))):
+                    # Apply selections and aggregation to real non-time axes.
+                    for dim_idx, selected in enumerate(combo):
                         # Select specific indices for this dimension first
-                        if isinstance(combo[dim_idx], list):
-                            idx_list = combo[dim_idx]
+                        if isinstance(selected, list):
+                            idx_list = selected
                         else:
-                            idx_list = [combo[dim_idx]]
+                            idx_list = [selected]
 
-                        if dim_idx < data_slice.ndim:
-                            data_slice = np.take(data_slice, idx_list, axis=dim_idx)
+                        data_slice = np.take(data_slice, idx_list, axis=dim_idx)
 
-                            # If aggregating, sum only across the selected indices
-                            if dim_idx < len(dim_aggregates) and dim_aggregates[dim_idx]:
-                                data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
+                        if dim_aggregates[dim_idx]:
+                            data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
                     
-                    # Extract time series (dim 3) - take all time indices or selected ones
-                    if data_slice.ndim > 3:
-                        time_indices = indices[3] if len(indices) > 3 else range(data_slice.shape[3])
-                        data_slice = np.take(data_slice, time_indices, axis=3)
+                    data_slice = np.take(data_slice, indices[time_axis], axis=time_axis)
                     
                     # Flatten to get 1D array
                     y_values = data_slice.flatten()
@@ -321,14 +313,12 @@ class ResultsEngine:
                     
                     # Generate label
                     label_parts = [scenario]
-                    for i in range(3):
+                    for i, dim_name in enumerate(non_time_dims):
                         if not dim_aggregates[i]:
-                            dim_name = dims[i]
-                            if dim_name != 'NA':
-                                val_idx = combo[i][0] if isinstance(combo[i], list) else combo[i]
-                                dim_vals = self.get_dimension_values(dim_name)
-                                if val_idx < len(dim_vals):
-                                    label_parts.append(dim_vals[val_idx][:15])
+                            val_idx = combo[i][0] if isinstance(combo[i], list) else combo[i]
+                            dim_vals = self.get_dimension_values(dim_name)
+                            if val_idx < len(dim_vals):
+                                label_parts.append(dim_vals[val_idx][:15])
                     
                     trace_label = ' '.join(label_parts)
                     
@@ -399,9 +389,8 @@ class ResultsEngine:
         controls line style.
         """
         multi_dims = [
-            i for i in range(3)
-            if dims[i] != 'NA'
-            and not dim_aggregates[i]
+            i for i in range(len(dims))
+            if not dim_aggregates[i]
             and len(dim_selections.get(i, [])) > 1
         ]
         return multi_dims[:2] if len(multi_dims) >= 2 else []
@@ -446,7 +435,7 @@ class ResultsEngine:
         For non-aggregated dimensions, each index is separate (one line per combo).
         """
         combos = []
-        for i, (idx_list, agg) in enumerate(zip(indices_list[:3], aggregate_flags[:3])):
+        for idx_list, agg in zip(indices_list, aggregate_flags):
             if agg:
                 # Single combo that includes all selected indices for aggregation
                 combos.append([idx_list])
@@ -470,30 +459,13 @@ class ResultsEngine:
             return {}
         
         var_data = scenario_data[variable_name]
-        
-        # Ensure var_data has 4 dimensions by inserting size-1 dims where dims[i] == 'NA'
-        # Build the target 4D shape based on which dimensions are active
-        shape_4d = []
-        data_idx = 0
-        for dim_name in dims:
-            if dim_name == 'NA':
-                shape_4d.append(1)
-            else:
-                if data_idx < var_data.ndim:
-                    shape_4d.append(var_data.shape[data_idx])
-                    data_idx += 1
-                else:
-                    shape_4d.append(1)
-        var_data = var_data.reshape(shape_4d)
+        time_axis = dims.index('TIME')
         
         # Get selected indices for each dimension
         indices = []
         for i, dim_name in enumerate(dims):
-            if dim_name == 'NA':
-                indices.append([0])
-            elif i == 3:
-                max_time = var_data.shape[3] if var_data.ndim > 3 else 1
-                indices.append(list(range(max_time)))
+            if dim_name == 'TIME':
+                indices.append(list(range(var_data.shape[time_axis])))
             else:
                 selected_vals = dim_selections.get(i, [])
                 if not selected_vals:
@@ -501,33 +473,36 @@ class ResultsEngine:
                     indices.append([0])
                 else:
                     dim_values = self.get_dimension_values(dim_name)
-                    indices.append([dim_values.index(v) for v in selected_vals if v in dim_values])
+                    selected_indices = [
+                        dim_values.index(value)
+                        for value in selected_vals
+                        if value in dim_values
+                    ]
+                    indices.append(selected_indices or [0])
         
         # Generate combinations and extract data
-        combinations = self._generate_combinations(indices, dim_aggregates)
+        combinations = self._generate_combinations(
+            indices[:time_axis], dim_aggregates[:time_axis]
+        )
         baseline_dict = {}
         
         for combo in combinations:
             try:
                 data_slice = var_data.copy()
                 
-                # Apply slicing/aggregation for dims 0-2
-                for dim_idx in range(min(3, len(combo))):
-                    if isinstance(combo[dim_idx], list):
-                        idx_list = combo[dim_idx]
+                # Apply selections and aggregation to real non-time axes.
+                for dim_idx, selected in enumerate(combo):
+                    if isinstance(selected, list):
+                        idx_list = selected
                     else:
-                        idx_list = [combo[dim_idx]]
+                        idx_list = [selected]
 
-                    if dim_idx < data_slice.ndim:
-                        data_slice = np.take(data_slice, idx_list, axis=dim_idx)
+                    data_slice = np.take(data_slice, idx_list, axis=dim_idx)
 
-                        if dim_idx < len(dim_aggregates) and dim_aggregates[dim_idx]:
-                            data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
+                    if dim_aggregates[dim_idx]:
+                        data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
                 
-                # Extract time series
-                if data_slice.ndim > 3:
-                    time_indices = indices[3] if len(indices) > 3 else range(data_slice.shape[3])
-                    data_slice = np.take(data_slice, time_indices, axis=3)
+                data_slice = np.take(data_slice, indices[time_axis], axis=time_axis)
                 
                 y_values = data_slice.flatten()
                 baseline_dict[str(combo)] = y_values

@@ -65,7 +65,7 @@ def model_run_results():
             model = RunFTT()
 
         for scen in model.input:
-            model.input[scen]["noit"][:] = 4
+            model.input[scen]["noit"][...] = 4
 
         t0 = time.perf_counter()
         model.run()

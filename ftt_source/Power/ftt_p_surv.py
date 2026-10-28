@@ -37,14 +37,10 @@ def survival_function(data, time_lag, histend, year, titles, c2ti):
 
     Parameters
     -----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
     time_lag: dictionary
-        Time_lag is a container that holds all cross-sectional (of time) data
-        for all variables of the previous year.
-        Variable names are keys and the values are 3D NumPy arrays.
+        time_lag is the same, but with data for last year.
     histend: dict of integers
         Final year of histrorical data by variable
     year: int
@@ -56,12 +52,9 @@ def survival_function(data, time_lag, histend, year, titles, c2ti):
 
     Returns
     ----------
-    data: dictionary
-        Data is a container that holds all cross-sectional (of time) data for
-        all variables.
-        Variable names are keys and the values are 3D NumPy arrays.
-        The values inside the container are updated and returned to the main
-        routine.
+    data: dictionary of NumPy arrays
+        Model variables for the current year
+        The values are updated and returned to the main routine.
 
     Notes
     ---------
