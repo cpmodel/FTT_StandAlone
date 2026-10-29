@@ -8,7 +8,7 @@ import datetime
 # -- Path setup --------------------------------------------------------------
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-source_dir = os.path.join(project_root, 'SourceCode')
+source_dir = os.path.join(project_root, 'ftt_source')
 
 sys.path.insert(0, project_root)
 sys.path.insert(0, source_dir)
@@ -38,7 +38,7 @@ exclude_patterns = []
 api_dir = os.path.join(os.path.dirname(__file__), 'source', 'api')
 os.makedirs(api_dir, exist_ok=True)
 
-# Generate .rst files for all subfolders in SourceCode
+# Generate .rst files for all subfolders in ftt_source
 for entry in os.listdir(source_dir):
     full_path = os.path.join(source_dir, entry)
     if os.path.isdir(full_path) and not entry.startswith('__'):

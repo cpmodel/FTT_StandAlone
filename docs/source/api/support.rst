@@ -11,11 +11,11 @@ Submodules
    support.convert_masterfiles_to_csv
    support.cross_section
    support.debug_messages
+   support.data_loading
    support.dimensions_functions
    support.divide
    support.docstring_templates
    support.get_vars_to_copy
-   support.input_functions
    support.output_functions
    support.paths_append
    support.read_support

@@ -1,7 +1,7 @@
-support.input\_functions module
-===============================
+support.data\_loading module
+============================
 
-.. automodule:: support.input_functions
+.. automodule:: support.data_loading
    :members:
    :show-inheritance:
    :undoc-members:

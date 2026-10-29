@@ -1,0 +1,562 @@
+# -*- coding: utf-8 -*-
+"""
+Results analysis and plotting engine for FTT results visualization.
+
+Handles:
+- Loading pickle files
+- Parsing variable metadata
+- Extracting and aggregating data
+- Generating plotly figures
+"""
+
+from pathlib import Path
+import configparser
+import pickle
+import pandas as pd
+import numpy as np
+from plotly import graph_objects as go
+import itertools
+
+
+class ResultsEngine:
+    """Engine for loading and analyzing FTT model results."""
+
+    LINE_COLORS = [
+        '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+        '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'
+    ]
+    LINE_DASHES = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot']
+    
+    def __init__(self):
+        """Initialize the engine with metadata from CSV files."""
+        # Load metadata from CSV files
+        self.var_listing_df = pd.read_csv('Utilities/titles/VariableListing.csv')
+        self.classification_df = pd.read_csv('Utilities/titles/classification_titles.csv', 
+                                             header=None, keep_default_na=False, dtype=str)
+        
+        # Parse classification data into dictionary
+        self.classifications = self._parse_classifications()
+        
+        # Filter variables to only those with TIME dimension
+        dimension_columns = [f'Dim{i}' for i in range(1, 5)]
+        self.time_variables = self.var_listing_df[
+            self.var_listing_df[dimension_columns].eq('TIME').any(axis=1)
+        ].copy()
+        
+        # Data containers
+        self.loaded_pickles = {}  # {scenario_name: {var_name: np_array}}
+        
+        # Read simulation_start from settings.ini (fall back to 2010 if unavailable)
+        config = configparser.ConfigParser()
+        config.read('settings.ini')
+        try:
+            self.simulation_start = int(config.get('settings', 'simulation_start'))
+        except (configparser.NoSectionError, configparser.NoOptionError, ValueError):
+            self.simulation_start = 2010
+        
+    def _parse_classifications(self):
+        """Parse classification titles CSV into a dictionary."""
+        classifications = {}
+        self.classification_labels = {}
+        for _, row in self.classification_df.iterrows():
+            class_code = row[0]
+            if class_code and class_code not in ['Models', 'CSCTI']:
+                # Get full names (row with "Full name" at index 4)
+                if len(row) > 4 and row[4] == 'Full name':
+                    # Column 1 holds the human-readable classification name.
+                    label = str(row[1]).strip()
+                    if label and label != 'nan':
+                        self.classification_labels[class_code] = label
+                    values = [v.strip() for v in row[5:] if v and isinstance(v, str) and v.strip()]
+                    if values:
+                        classifications[class_code] = values
+        
+        return classifications
+
+    def get_classification_label(self, dim_code):
+        """Get human-readable label for a classification code."""
+        return self.classification_labels.get(dim_code, dim_code)
+    
+    def get_available_pickle_files(self):
+        """Get list of available pickle files in Output directory."""
+        output_dir = Path('Output')
+        if output_dir.exists():
+            # Return dict mapping display names (without .pickle) to full filenames
+            files = sorted([f.name for f in output_dir.glob('*.pickle')])
+            return {f.replace('.pickle', ''): f for f in files}
+        return {}
+
+    def get_latest_pickle_file(self):
+        """Get the display name of the most recently modified pickle file."""
+        output_dir = Path('Output')
+        if not output_dir.exists():
+            return None
+
+        latest_file = None
+        latest_mtime = None
+
+        for file in output_dir.glob('*.pickle'):
+            try:
+                mtime = file.stat().st_mtime
+            except OSError:
+                continue
+
+            if latest_mtime is None or mtime > latest_mtime:
+                latest_file = file
+                latest_mtime = mtime
+
+        return latest_file.stem if latest_file else None
+    
+    def load_pickle_files(self, filenames):
+        """
+        Load multiple pickle files with optional suffix for scenario names.
+        
+        Args:
+            filenames: List of pickle filenames to load
+        
+        Returns:
+            Dictionary of {scenario_name: {var_name: np_array}}
+        """
+        self.loaded_pickles = {}
+        output_dir = Path('Output')
+        
+        for filename in filenames:
+            filepath = output_dir / filename
+            with open(filepath, 'rb') as f:
+                data = pickle.load(f)
+                
+                # Add filename suffix to scenario names if multiple files loaded
+                if len(filenames) > 1:
+                    suffix = f"_{filename.replace('.pickle', '')}"
+                    data = {f"{scen}{suffix}": vars_dict for scen, vars_dict in data.items()}
+                
+                self.loaded_pickles.update(data)
+        
+        return self.loaded_pickles
+    
+    def get_scenario_names(self):
+        """Get list of loaded scenario names."""
+        return list(self.loaded_pickles.keys())
+    
+    def get_models_run(self):
+        """
+        Detect which FTT models were run based on shares variables.
+        
+        Returns:
+            dict: {scenario_name: list of model names that were run}
+        """
+        model_vars = {
+            'FTT-H': 'HEWS',   # Heat
+            'FTT-P': 'MEWS',   # Power
+            'FTT-Tr': 'TEWS',  # Transport
+            'FTT-Fr': 'ZEWS'   # Freight
+        }
+        
+        results = {}
+        for scenario, vars_dict in self.loaded_pickles.items():
+            models_run = []
+            for model_name, var_name in model_vars.items():
+                if var_name in vars_dict:
+                    # Check if sum is non-zero (model was run)
+                    total = np.sum(np.abs(vars_dict[var_name]))
+                    if total > 0:
+                        models_run.append(model_name)
+            results[scenario] = models_run
+        
+        return results
+    
+    def get_variable_options(self):
+        """Get dictionary of {var_code: var_description}."""
+        return {row['Variable name']: f"{row['Variable name']} \u2013 {row['Variable description']}" 
+                for _, row in self.time_variables.iterrows()}
+    
+    def get_variable_dimensions(self, variable_name):
+        """
+        Get dimension info for a variable.
+        
+        Args:
+            variable_name: Name of variable (e.g., 'MWSY')
+        
+        Returns:
+            Active dimension codes in array-axis order.
+        """
+        matching = self.time_variables[self.time_variables['Variable name'] == variable_name]
+        if matching.empty:
+            return []
+        var_row = matching.iloc[0]
+        return [
+            var_row[f'Dim{i}']
+            for i in range(1, 5)
+            if pd.notna(var_row[f'Dim{i}']) and var_row[f'Dim{i}'] not in ('', 'NA')
+        ]
+    
+    def get_dimension_values(self, dim_code):
+        """
+        Get list of available values for a dimension.
+        
+        Args:
+            dim_code: Dimension code (e.g., 'RTI', 'T2TI')
+        
+        Returns:
+            List of dimension values
+        """
+        return self.classifications.get(dim_code, [])
+    
+    def extract_and_aggregate(self, variable_name, scenarios, dim_selections, dim_aggregates, 
+                             year_range=None, dark_mode=False, result_type="levels", baseline_scenario=None):
+        """
+        Extract data from loaded pickles and generate plotly figure.
+        
+        Args:
+            variable_name: Name of variable to plot
+            scenarios: List of scenario names to include
+            dim_selections: Dict mapping dim_index -> selected values
+                          e.g., {0: ['Belgium', 'France'], 1: ['Tech1']}
+            dim_aggregates: List of booleans indicating which dims to sum over
+            year_range: Tuple of (start_year, end_year) or None for all
+            dark_mode: Boolean for plotly template
+            result_type: "levels" (default), "absolute_diff", or "relative_diff"
+            baseline_scenario: Name of baseline scenario (required if result_type != "levels")
+        
+        Returns:
+            plotly Figure object
+        """
+        if not variable_name or not scenarios or not self.loaded_pickles:
+            return go.Figure()
+        
+        # Get dimension info
+        dims = self.get_variable_dimensions(variable_name)
+        var_row = self.time_variables[
+            self.time_variables['Variable name'] == variable_name
+        ].iloc[0]
+        time_axis = dims.index('TIME')
+        non_time_dims = dims[:time_axis]
+        
+        # Build figure
+        fig = go.Figure()
+
+        style_dims = self._get_multidimensional_style_dims(
+            non_time_dims, dim_selections, dim_aggregates
+        )
+        
+        # Extract baseline data if needed
+        baseline_data = None
+        if result_type != "levels" and baseline_scenario and baseline_scenario in self.loaded_pickles:
+            baseline_data = self._extract_scenario_data(
+                baseline_scenario, variable_name, dims, dim_selections, dim_aggregates
+            )
+        
+        for idx_scenario, scenario in enumerate(scenarios):
+            # Skip baseline scenario when plotting differences (it would show all zeros)
+            if result_type != "levels" and scenario == baseline_scenario:
+                continue
+                
+            if scenario not in self.loaded_pickles:
+                continue
+            
+            # Extract scenario data
+            scenario_data = self.loaded_pickles[scenario]
+            if variable_name not in scenario_data:
+                continue
+            
+            var_data = scenario_data[variable_name]
+            
+            # Get selected indices for each dimension
+            indices = []
+            for i, dim_name in enumerate(dims):
+                if dim_name == 'TIME':
+                    indices.append(list(range(var_data.shape[time_axis])))
+                else:
+                    selected_vals = dim_selections.get(i, [])
+                    if not selected_vals:
+                        # Default to first value
+                        indices.append([0])
+                    else:
+                        dim_values = self.get_dimension_values(dim_name)
+                        selected_idx = [dim_values.index(v) for v in selected_vals if v in dim_values]
+                        # Fallback to first entry if a stale selection no longer exists.
+                        indices.append(selected_idx if selected_idx else [0])
+            
+            # Generate combinations for plotting
+            combinations = self._generate_combinations(
+                indices[:time_axis], dim_aggregates[:time_axis]
+            )
+            
+            for combo in combinations:
+                # Extract and aggregate data
+                try:
+                    data_slice = var_data
+                    
+                    # Apply selections and aggregation to real non-time axes.
+                    for dim_idx, selected in enumerate(combo):
+                        # Select specific indices for this dimension first
+                        if isinstance(selected, list):
+                            idx_list = selected
+                        else:
+                            idx_list = [selected]
+
+                        data_slice = np.take(data_slice, idx_list, axis=dim_idx)
+
+                        if dim_aggregates[dim_idx]:
+                            data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
+                    
+                    data_slice = np.take(data_slice, indices[time_axis], axis=time_axis)
+                    
+                    # Flatten to get 1D array
+                    y_values = data_slice.flatten()
+                    
+                    # Apply result type transformations
+                    if result_type == "absolute_diff" and baseline_data is not None:
+                        y_values = self._calculate_absolute_diff(y_values, baseline_data, idx_scenario, combo)
+                    elif result_type == "relative_diff" and baseline_data is not None:
+                        y_values = self._calculate_relative_diff(y_values, baseline_data, idx_scenario, combo)
+                    
+                    # Generate label
+                    label_parts = [scenario]
+                    for i, dim_name in enumerate(non_time_dims):
+                        if not dim_aggregates[i]:
+                            val_idx = combo[i][0] if isinstance(combo[i], list) else combo[i]
+                            dim_vals = self.get_dimension_values(dim_name)
+                            if val_idx < len(dim_vals):
+                                label_parts.append(dim_vals[val_idx][:15])
+                    
+                    trace_label = ' '.join(label_parts)
+                    
+                    # Generate x-axis (years) from simulation_start in settings.ini
+                    x_values = list(range(self.simulation_start, self.simulation_start + len(y_values)))
+                    
+                    trace_kwargs = {}
+                    line_style = self._get_trace_line_style(combo, style_dims, indices)
+                    legend_group = self._get_trace_legend_group(scenario, combo, style_dims)
+                    if line_style:
+                        trace_kwargs['line'] = line_style
+                    if legend_group:
+                        trace_kwargs['legendgroup'] = legend_group
+
+                    fig.add_trace(go.Scatter(
+                        x=x_values,
+                        y=y_values,
+                        mode='lines',
+                        name=trace_label,
+                        **trace_kwargs
+                    ))
+                except Exception as e:
+                    print(f"ERROR processing combo {combo}: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
+        
+        # Update layout with appropriate y-axis title
+        template = 'plotly_dark' if dark_mode else 'simple_white'
+        
+        if result_type == "absolute_diff":
+            y_title = f"Abs. diff from baseline ({var_row['Unit']})"
+        elif result_type == "relative_diff":
+            y_title = "Rel. diff from baseline (%)"
+        else:
+            y_title = f"{var_row['Unit']}"
+        
+        xaxis_cfg = dict(title='Year')
+        if year_range is not None:
+            xaxis_cfg['range'] = [year_range[0], year_range[1]]
+
+        fig.update_layout(
+            margin=dict(l=10, r=10, t=40, b=40),
+            template=template,
+            showlegend=True,
+            xaxis=xaxis_cfg,
+            yaxis_title=y_title,
+            yaxis=dict(title=dict(text=y_title, standoff=10, font=dict(size=14))),
+            title=dict(text=f"{variable_name} - {var_row['Variable description']}", font=dict(size=18))
+        )
+        
+        # Add hover template with 3 decimal places
+        # For relative differences, append % sign to the value
+        for trace in fig.data:
+            if result_type == "relative_diff":
+                trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}%<extra></extra>'
+            else:
+                trace.hovertemplate = '<b>%{x}</b><br><b>%{fullData.name}</b><br>Value: %{y:.3f}<extra></extra>'
+    
+        return fig
+
+    def _get_multidimensional_style_dims(self, dims, dim_selections, dim_aggregates):
+        """
+        Choose dimensions for grouped line styling.
+
+        Only applies when at least two non-aggregated dimensions have multiple
+        selected values. The first such dimension controls colour and the second
+        controls line style.
+        """
+        multi_dims = [
+            i for i in range(len(dims))
+            if not dim_aggregates[i]
+            and len(dim_selections.get(i, [])) > 1
+        ]
+        return multi_dims[:2] if len(multi_dims) >= 2 else []
+
+    def _style_position(self, selected_indices, dim_idx, value_idx):
+        """Map a dimension value index to its position in current selection order."""
+        try:
+            return selected_indices[dim_idx].index(value_idx)
+        except ValueError:
+            return value_idx
+
+    def _get_trace_line_style(self, combo, style_dims, selected_indices):
+        """Return Plotly line styling for grouped multidimensional selections."""
+        if len(style_dims) < 2:
+            return None
+
+        color_dim, dash_dim = style_dims
+        color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
+        dash_idx = combo[dash_dim][0] if isinstance(combo[dash_dim], list) else combo[dash_dim]
+        color_pos = self._style_position(selected_indices, color_dim, color_idx)
+        dash_pos = self._style_position(selected_indices, dash_dim, dash_idx)
+
+        return {
+            'color': self.LINE_COLORS[color_pos % len(self.LINE_COLORS)],
+            'dash': self.LINE_DASHES[dash_pos % len(self.LINE_DASHES)]
+        }
+
+    def _get_trace_legend_group(self, scenario, combo, style_dims):
+        """Group legend entries by the colour dimension when grouped styling is active."""
+        if len(style_dims) < 2:
+            return None
+
+        color_dim = style_dims[0]
+        color_idx = combo[color_dim][0] if isinstance(combo[color_dim], list) else combo[color_dim]
+        return f'scenario-{scenario}-dim-{color_dim}-value-{color_idx}'
+    
+    def _generate_combinations(self, indices_list, aggregate_flags):
+        """
+        Generate all combinations of dimension indices for plotting.
+        
+        For aggregated dimensions, all indices are included (to be summed).
+        For non-aggregated dimensions, each index is separate (one line per combo).
+        """
+        combos = []
+        for idx_list, agg in zip(indices_list, aggregate_flags):
+            if agg:
+                # Single combo that includes all selected indices for aggregation
+                combos.append([idx_list])
+            else:
+                combos.append([[idx] for idx in idx_list])  # Individual values
+        
+        # Generate all combinations
+        results = []
+        for combo in itertools.product(*combos):
+            results.append(combo)
+        return results
+    
+    def _extract_scenario_data(self, scenario, variable_name, dims, dim_selections, dim_aggregates):
+        """
+        Extract all data combinations for a scenario to serve as baseline.
+        
+        Returns a dictionary mapping combo -> y_values for efficient lookup.
+        """
+        scenario_data = self.loaded_pickles[scenario]
+        if variable_name not in scenario_data:
+            return {}
+        
+        var_data = scenario_data[variable_name]
+        time_axis = dims.index('TIME')
+        
+        # Get selected indices for each dimension
+        indices = []
+        for i, dim_name in enumerate(dims):
+            if dim_name == 'TIME':
+                indices.append(list(range(var_data.shape[time_axis])))
+            else:
+                selected_vals = dim_selections.get(i, [])
+                if not selected_vals:
+                    dim_values = self.get_dimension_values(dim_name)
+                    indices.append([0])
+                else:
+                    dim_values = self.get_dimension_values(dim_name)
+                    selected_indices = [
+                        dim_values.index(value)
+                        for value in selected_vals
+                        if value in dim_values
+                    ]
+                    indices.append(selected_indices or [0])
+        
+        # Generate combinations and extract data
+        combinations = self._generate_combinations(
+            indices[:time_axis], dim_aggregates[:time_axis]
+        )
+        baseline_dict = {}
+        
+        for combo in combinations:
+            try:
+                data_slice = var_data.copy()
+                
+                # Apply selections and aggregation to real non-time axes.
+                for dim_idx, selected in enumerate(combo):
+                    if isinstance(selected, list):
+                        idx_list = selected
+                    else:
+                        idx_list = [selected]
+
+                    data_slice = np.take(data_slice, idx_list, axis=dim_idx)
+
+                    if dim_aggregates[dim_idx]:
+                        data_slice = np.sum(data_slice, axis=dim_idx, keepdims=True)
+                
+                data_slice = np.take(data_slice, indices[time_axis], axis=time_axis)
+                
+                y_values = data_slice.flatten()
+                baseline_dict[str(combo)] = y_values
+            except Exception as e:
+                print(f"ERROR extracting baseline combo {combo}: {str(e)}")
+                continue
+        
+        return baseline_dict
+    
+    def _calculate_absolute_diff(self, scenario_values, baseline_dict, scenario_idx, combo):
+        """
+        Calculate absolute difference (scenario - baseline).
+        
+        Args:
+            scenario_values: 1D array of scenario data
+            baseline_dict: Dictionary of baseline data from _extract_scenario_data
+            scenario_idx: Index of current scenario (used to identify which combo)
+            combo: Current combo tuple
+        
+        Returns:
+            1D array of absolute differences
+        """
+        combo_key = str(combo)
+        if combo_key in baseline_dict:
+            baseline_values = baseline_dict[combo_key]
+            if len(scenario_values) == len(baseline_values):
+                return scenario_values - baseline_values
+        
+        return scenario_values
+    
+    def _calculate_relative_diff(self, scenario_values, baseline_dict, scenario_idx, combo):
+        """
+        Calculate relative difference as percentage: ((scenario - baseline) / |baseline|) * 100
+        
+        Handles division by zero by returning 0 when baseline is 0.
+        
+        Args:
+            scenario_values: 1D array of scenario data
+            baseline_dict: Dictionary of baseline data from _extract_scenario_data
+            scenario_idx: Index of current scenario (used to identify which combo)
+            combo: Current combo tuple
+        
+        Returns:
+            1D array of relative differences (in percentage)
+        """
+        combo_key = str(combo)
+        if combo_key in baseline_dict:
+            baseline_values = baseline_dict[combo_key]
+            if len(scenario_values) == len(baseline_values):
+                # Handle division by zero
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    rel_diff = ((scenario_values - baseline_values) / np.abs(baseline_values)) * 100
+                    # Replace NaN and Inf with 0 where baseline is 0
+                    rel_diff = np.where(np.isfinite(rel_diff), rel_diff, 0)
+                return rel_diff
+        
+        return scenario_values
