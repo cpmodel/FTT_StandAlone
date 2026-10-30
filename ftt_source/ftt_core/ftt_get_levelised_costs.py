@@ -78,8 +78,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     discount_factor_annual = (1 - (1 + r)**(-lifetimes)) / r
     discount_factor_annual_var = (1 - (1 + r)**(-2 * lifetimes)) / (1 - (1 + r)**-2)
     
-    # NPV of costs and variance
-    npv_total_cost = upfront + annual * discount_factor_annual
+    # Variance of NPV of costs
     var_npv_total_cost = upfront_sd**2 + annual_sd**2 * discount_factor_annual_var
     
     # Discounted service delivered
@@ -167,15 +166,14 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     annuity_factor = (1 - (1 + r) ** (-lifetimes)) / r
     annuity_factor_var = (1 - (1 + r) ** (-2 * lifetimes)) / (1 - (1 + r) ** -2)
 
-    # NPV of costs and service (operations start after leadtimes)
-    npv_total_cost = pv_upfront + annual * leadtimes_df * annuity_factor
+    # NPV of variance costs and service (operations start after leadtimes)
     var_npv_total_cost = var_pv_upfront + (annual_sd ** 2) * (leadtimes_df ** 2) * annuity_factor_var
     npv_service = service_delivered * leadtimes_df * annuity_factor
 
     # Taylor approximation for SD of the ratio A/B
     lco_sd = np.sqrt(
         var_npv_total_cost / npv_service ** 2
-        + (npv_total_cost / npv_service ** 2) ** 2 * service_sd ** 2
+        + (lco / service_delivered)**2 * service_sd**2
     )
 
     return lco, lco_with_policies, lco_sd
