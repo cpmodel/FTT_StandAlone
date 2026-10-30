@@ -11,13 +11,19 @@ top-level package which provides the stable public API::
 """
 
 from ftt_source.model_class import RunFTT
-from ftt_source.paths import set_paths, get_inputs_path, get_utilities_path, reset_paths
+from ftt_source.paths import (
+    set_paths,
+    get_inputs_path,
+    get_utilities_path,
+    get_utility_path,
+    reset_paths,
+)
 
 __all__ = [
     "RunFTT",
     "set_paths",
     "get_inputs_path",
     "get_utilities_path",
+    "get_utility_path",
     "reset_paths",
 ]
-

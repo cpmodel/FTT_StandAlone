@@ -39,7 +39,11 @@ def test_check_vars_exist_explains_previous_ev_regulation_filename(
     model_path.mkdir(parents=True)
     (model_path / 'EV regulation.csv').touch()
 
-    monkeypatch.setattr(check_input_files, 'get_utilities_path', lambda: utilities_path)
+    monkeypatch.setattr(
+        check_input_files,
+        'get_utility_path',
+        lambda relative_path: utilities_path / relative_path,
+    )
     monkeypatch.setattr(check_input_files, 'get_inputs_path', lambda: inputs_path)
 
     with pytest.raises(ValueError, match="rename it to 'EV CO2 regulation.csv'"):
