@@ -32,6 +32,22 @@ import numpy as np
 # -----------------------------------------------------------------------------
 
 
+def _annuity_factor(r, n):
+    """
+    Today's value of receiving 1 every year for n years.
+
+    Money received later is worth less today, so this is a bit less than n.
+    Example: r = 5%, n = 3  ->  1/1.05 + 1/1.05^2 + 1/1.05^3 = 2.72
+
+    Formula: (1 - (1+r)^-n) / r
+    At r = 0 nothing is discounted, so the answer is simply n
+    (the formula would be 0/0 there, hence the special case).
+    """
+    is_zero = (r == 0)
+    safe_r = np.where(is_zero, 1.0, r)   # avoids dividing by zero
+    return np.where(is_zero, n, (1 - (1 + safe_r) ** -n) / safe_r)
+
+
 # =============================================================================
 # 1. Technologies WITHOUT a lead time
 # =============================================================================
@@ -56,7 +72,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     service_delivered : np.ndarray  Service delivered per year (mid-year).
     service_sd : np.ndarray         Standard deviation of the yearly service.
     lifetimes : np.ndarray          Lifetime in years.
-    r : np.ndarray                  Discount rate as a decimal (must be > 0).
+    r : np.ndarray                  Discount rate as a decimal (0 is allowed).
 
     Returns
     -------
@@ -65,12 +81,19 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     lco_sd : standard deviation of lco (no policies)
     """
 
+    # Today's value of 1 per year over the lifetime (end-of-year payments).
+    annuity_factor = _annuity_factor(r, lifetimes)
+    # Same sum, but of SQUARED discount factors (1+r)^(-2t). That is just an
+    # ordinary annuity at the rate (1+r)^2 - 1. Used for the SD.
+    annuity_factor_var = _annuity_factor((1 + r) ** 2 - 1, lifetimes)
+
     # ---------------------------------------------------------------------
     # MEAN COST
     # ---------------------------------------------------------------------
     # Capital recovery factor (CRF): turns a one-off cost into an equal cost
     # per year over the lifetime (assuming end-of-year payments).
-    crf = r / (1 - (1 + r) ** -lifetimes)
+    # It is simply 1 / annuity factor. (At r = 0 this is 1 / lifetimes.)
+    crf = 1 / annuity_factor
 
     # Mid-year correction: yearly costs and service happen half a year
     # earlier than the CRF assumes. This shrinks the upfront term (see top).
@@ -89,24 +112,19 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     # STANDARD DEVIATION (approximate, "first-order")
     # ---------------------------------------------------------------------
     # Idea: LCO = (total cost) / (total service), both in today's money.
-    # For a ratio, the *relative* errors of top and bottom add up
-    # "in quadrature":
+    # Each uncertain input shifts the LCO by: its SD x how strongly LCO reacts.
+    #   - cost:    1 extra unit of cost raises the LCO by 1 / service
+    #   - service: 1 extra unit of service lowers the LCO by lco / service
+    # The two effects are independent, so they add as squares:
     #
-    #   rel. error of LCO = sqrt( (rel. error of cost)^2 + (rel. error of service)^2 )
+    #   lco_sd = sqrt( (cost_sd / service)^2 + (lco * service_sd / service)^2 )
     #
-    # Cost and service are treated in exactly the same way.
+    # Cost and service are treated in the same way, and this also works when
+    # the cost is exactly 0 (no division by the cost).
 
-    # Annuity factor: "how many years' worth" a yearly amount is worth today.
-    # The mid-year shift makes yearly amounts worth (1 + r) ** 0.5 more.
-    annuity_factor = (1 - (1 + r) ** -lifetimes) / r
+    # Mid-year shift: yearly amounts are worth (1 + r) ** 0.5 more.
+    # Squared, the shift becomes (1 + r) ** 1.
     annuity_factor_mid = annuity_factor * (1 + r) ** 0.5
-
-    # Same idea for uncertainties that are independent each year.
-    # (Independent errors add as squares, so we sum discount factors squared.
-    # Squared, the mid-year shift becomes (1 + r) ** 1.)
-    annuity_factor_var = ((1 + r) ** -2
-                          * (1 - (1 + r) ** (-2 * lifetimes))
-                          / (1 - (1 + r) ** -2))
     annuity_factor_var_mid = annuity_factor_var * (1 + r)
 
     # Total cost in today's money, and its SD
@@ -120,10 +138,10 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     npv_service = service_delivered * annuity_factor_mid
     npv_service_sd = service_sd * annuity_factor_mid
 
-    # Combine: relative errors of cost and service, times the LCO itself.
+    # Combine the two effects.
     # (With the mid-year correction, lco == npv_cost / npv_service exactly.)
-    lco_sd = lco * np.sqrt((npv_cost_sd / npv_cost) ** 2
-                           + (npv_service_sd / npv_service) ** 2)
+    lco_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
+                     + (lco * npv_service_sd / npv_service) ** 2)
 
     return lco, lco_with_policies, lco_sd
 
@@ -143,7 +161,7 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     leadtimes : np.ndarray
         Construction time in years. Must be > 0 (use get_levelised_costs
         for technologies without a lead time).
-    All other parameters are as in get_levelised_costs.
+    All other parameters are as in get_levelised_costs (r = 0 is allowed).
 
     Assumptions
     -----------
@@ -169,15 +187,10 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     # ---------------------------------------------------------------------
     # CONSTRUCTION PHASE: value of the upfront cost in today's money
     # ---------------------------------------------------------------------
-    q = (1 + r) ** -1      # discount factor for one year
-    q2 = q ** 2            # same, but for squared amounts (used for the SD)
-
-    # Shortcuts for adding up discount factors over the build years
-    # (geometric series):
-    #   q + q^2 + ... + q^B       = q  * (1 - q^B)  / (1 - q)
-    #   q^2 + q^4 + ... + q^(2B)  = q2 * (1 - q2^B) / (1 - q2)
-    sum_disc = q * (1 - q ** leadtimes) / (1 - q)
-    sum_disc_sq = q2 * (1 - q2 ** leadtimes) / (1 - q2)
+    # Add up the discount factors over the build years (and the squared ones
+    # for the SD). With no discounting (r = 0) these are simply 'leadtimes'.
+    sum_disc = _annuity_factor(r, leadtimes)
+    sum_disc_sq = _annuity_factor((1 + r) ** 2 - 1, leadtimes)   # squared factors, for the SD
 
     # Each build year pays upfront / leadtimes. Add up their present values.
     pv_upfront = (upfront / leadtimes) * sum_disc
@@ -190,8 +203,14 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     # ---------------------------------------------------------------------
     # MEAN COST
     # ---------------------------------------------------------------------
+    # Today's value of 1 per year over the operating lifetime.
+    annuity_factor = _annuity_factor(r, lifetimes)
+    # Same sum, but of SQUARED discount factors (1+r)^(-2t). That is just an
+    # ordinary annuity at the rate (1+r)^2 - 1. Used for the SD.
+    annuity_factor_var = _annuity_factor((1 + r) ** 2 - 1, lifetimes)
+
     # Capital recovery factor: turns a one-off cost into an equal cost per year.
-    crf = r / (1 - (1 + r) ** -lifetimes)
+    crf = 1 / annuity_factor
 
     # Yearly costs and service start after construction, so we discount them
     # back by the number of construction years.
@@ -212,15 +231,7 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     # STANDARD DEVIATION (approximate, "first-order")
     # ---------------------------------------------------------------------
     # Same idea as in the function above:
-    #   rel. error of LCO = sqrt( (rel. error of cost)^2 + (rel. error of service)^2 )
-
-    # "How many years' worth" a yearly amount is worth (annuity factor),
-    # and the version for independent yearly errors.
-    annuity_factor = (1 - (1 + r) ** -lifetimes) / r
-
-    annuity_factor_var = ((1 + r) ** -2
-                          * (1 - (1 + r) ** (-2 * lifetimes))
-                          / (1 - (1 + r) ** -2))
+    #   lco_sd = sqrt( (cost_sd / service)^2 + (lco * service_sd / service)^2 )
 
     # Total cost in today's money, and its SD.
     # Yearly costs start after construction, so they get the extra leadtimes_df.
@@ -233,8 +244,8 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     npv_service = service_delivered * leadtimes_df * annuity_factor
     npv_service_sd = service_sd * leadtimes_df * annuity_factor
 
-    # Combine: relative errors of cost and service, times the LCO itself
-    lco_sd = lco * np.sqrt((npv_cost_sd / npv_cost) ** 2
-                           + (npv_service_sd / npv_service) ** 2)
+    # Combine the two effects (here too, lco == npv_cost / npv_service)
+    lco_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
+                     + (lco * npv_service_sd / npv_service) ** 2)
 
     return lco, lco_with_policies, lco_sd
