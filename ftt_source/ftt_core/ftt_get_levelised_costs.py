@@ -122,8 +122,8 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
 
     # Combine: relative errors of cost and service, times the LCO itself.
     # (With the mid-year correction, lco == npv_cost / npv_service exactly.)
-    lco_sd = lco * np.sqrt((npv_cost_sd / npv_cost) ** 2
-                           + (npv_service_sd / npv_service) ** 2)
+    lco_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
+                     + (lco * npv_service_sd / npv_service) ** 2)
 
     return lco, lco_with_policies, lco_sd
 
