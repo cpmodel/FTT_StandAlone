@@ -66,7 +66,7 @@ def set_carbon_tax(data, c4ti):
     if np.isnan(carbon_costs).any():
         #print(f"Carbon price is nan in year {year}")
         print(f"The arguments of the nans are {np.argwhere(np.isnan(carbon_costs))}")
-        print(f"Emissions intensity {data['BHTC'][:, :, c4ti['Emission factor']]}")
+        print(f"Emissions intensity {data['BHTC'][:, :, c4ti['15 Emission factor']]}")
         
         raise ValueError
 
