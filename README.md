@@ -40,23 +40,6 @@ Alternatively, you can download ftt by clicking the green `Code` button in the t
 2. Alternatively, you can run the model from the run_file.py script. Output is saved to a pickle file in the Output folder. Select the models and scenarios from the settings.ini file.
 3. Create new scenarios by adding a new folder in the Inputs folder. Data is read in first from this folder, and missing data is read from the S0 baseline folder.
 
-When FTT is used as a package, its default metadata and mapping files are included in
-the distribution. An integration can provide compatible alternatives without
-modifying the installed package:
-
-```python
-from future_technology_transformation import RunFTT
-
-model = RunFTT(
-    inputs_path="/path/to/Inputs",
-    utilities_path="/path/to/Utilities",
-)
-```
-
-The supplied `Utilities` directory should contain the same `titles` and
-`mappings` structure as the bundled defaults. This allows integrations such as
-MSET to run FTT with their selected data version.
-
 ## How to contribute
 We welcome contributions from everyone. You can report issues, fix bugs, improve the documentation, or write and propose model changes and provide updated data. 
 1. New contributors can fork the repository to open pull requests with suggested code improvements

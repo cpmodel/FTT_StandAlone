@@ -27,15 +27,4 @@ ftt-run = "future_technology_transformation:run_cli"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = [
-    "future_technology_transformation*",
-    "ftt_source*",
-    "Utilities*",
-]
-
-[tool.setuptools.package-data]
-Utilities = [
-    "titles/*.csv",
-    "titles/*.xlsx",
-    "mappings/*.csv",
-]
+include = ["SourceCode*", "future_technology_transformation*", "ftt_source*"]
