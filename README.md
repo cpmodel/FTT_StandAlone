@@ -53,9 +53,10 @@ model = RunFTT(
 )
 ```
 
-The supplied `Utilities` directory should contain the same `titles` and
-`mappings` structure as the bundled defaults. This allows integrations such as
-MSET to run FTT with their selected data version.
+Files in the supplied `Utilities` directory override matching bundled files;
+missing files continue to use the FTT defaults. This allows integrations such
+as MSET to provide only the metadata or mappings that differ for their
+selected data version.
 
 ## How to contribute
 We welcome contributions from everyone. You can report issues, fix bugs, improve the documentation, or write and propose model changes and provide updated data. 

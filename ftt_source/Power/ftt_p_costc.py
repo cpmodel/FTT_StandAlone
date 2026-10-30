@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 # Local library imports
-from ftt_source.paths import get_utilities_path
+from ftt_source.paths import get_utility_path
 
 
 # %% tech-to-resource mapping and related lookups
@@ -39,7 +39,7 @@ def get_tech_to_resource(titles):
     resource used by technology j in titles['T2TI'].  Adding or removing rows in
     converters.csv automatically updates the mapping.
     """
-    csv_path = get_utilities_path() / 'titles' / 'converters.csv'
+    csv_path = get_utility_path('titles/converters.csv')
     df = pd.read_csv(csv_path, keep_default_na=False)
 
     t2ti = list(titles['T2TI'])
@@ -55,7 +55,7 @@ def get_resource_to_fuel_map(titles):
     Used to sum non-power fuel demand (MEWD) into resource demand (MEPD) for
     fossil-fuel ERTI entries without hardcoding JTI integer indices.
     """
-    csv_path = get_utilities_path() / 'titles' / 'ERTI_JTI_map.csv'
+    csv_path = get_utility_path('titles/ERTI_JTI_map.csv')
     df = pd.read_csv(csv_path, keep_default_na=False)
 
     erti = list(titles['ERTI'])
@@ -77,7 +77,7 @@ def get_cf_multipliers(titles):
     is always set from the source's value, never from its own prior value, so
     repeated calls within the same year stay idempotent rather than compounding.
     """
-    csv_path = get_utilities_path() / 'titles' / 'T2TI_CF_multiplier.csv'
+    csv_path = get_utility_path('titles/T2TI_CF_multiplier.csv')
     df = pd.read_csv(csv_path, keep_default_na=False)
 
     t2ti = list(titles['T2TI'])
