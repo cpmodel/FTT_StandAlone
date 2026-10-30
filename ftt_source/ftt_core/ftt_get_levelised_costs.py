@@ -88,7 +88,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     # LCO standard deviation
     lco_sd = np.sqrt(
         var_npv_total_cost / discounted_service**2
-        + (npv_total_cost / discounted_service**2)**2 * service_sd**2
+        + (lco / service_delivered)**2 * service_sd**2
     )
     
     return lco, lco_with_policies, lco_sd
