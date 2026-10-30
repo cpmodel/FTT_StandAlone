@@ -7,7 +7,7 @@ This feedback was developed for the REFEREE and EEIST II projects.
 import numpy as np
 import pandas as pd
 
-from ftt_source.paths import get_utilities_path
+from ftt_source.paths import get_utility_path
 from ftt_source.support.divide import divide
 
 
@@ -21,7 +21,7 @@ def electricity_price_feedback(data, time_lag):
     electricity_growth = price_growth[:, 7, np.newaxis]
 
     # Electricity mapping for each sector: cost variable, column, and fuels.
-    mapping_path = get_utilities_path() / "mappings" / "Electricity_cost_mapping.csv"
+    mapping_path = get_utility_path("mappings/Electricity_cost_mapping.csv")
     mappings = pd.read_csv(mapping_path, index_col=0)
 
     # Update each fuel cost variable.
