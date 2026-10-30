@@ -117,7 +117,7 @@ def get_lcot(data, titles, carbon_costs, year):
 
     # The upfront and annual costs have already been converted to the service
     # provided, so the service delivered is 1
-    lcot, lcot_pol, lcot_sd = get_levelised_costs(
+    lcot, lcot_pol, _, lcot_sd = get_levelised_costs(
         upfront=upfront,
         upfront_policies=upfront_pol,
         upfront_sd=upfront_sd,

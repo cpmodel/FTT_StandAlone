@@ -32,7 +32,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
                         lifetimes, r):
     """
     Levelised cost per unit of service (e.g. Eur/kWh), without and with
-    policies, plus the standard deviation (SD) of the cost with policies.
+    policies, plus the     standard deviation (SD) of the cost without and with policies.
 
     See https://www.wikiwand.com/en/articles/Annuity_(finance_theory)
 
@@ -53,6 +53,7 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     -------
     lco : levelised cost without policies
     lco_with_policies : levelised cost including policies
+    lco_sd : standard deviation of lco
     lco_with_policies_sd : standard deviation of lco_with_policies
     """
 
@@ -90,8 +91,8 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     #
     #   sd = sqrt( (cost_sd / service)^2 + (lco * service_sd / service)^2 )
     #
-    # We use the LCO including policies, as that is the cost the model compares.
-    # Policies change the mean cost, not the cost uncertainty.
+    # Policies change the mean cost, not the cost uncertainty. The resulting
+    # SD therefore differs only through the mean cost used for service risk.
 
     # Mid-year shift: yearly amounts are worth (1+r)^0.5 more (squared: 1+r)
     annuity_factor_mid = annuity_factor * (1 + r) ** 0.5
@@ -106,10 +107,12 @@ def get_levelised_costs(upfront, upfront_policies, upfront_sd,
     npv_service = service_delivered * annuity_factor_mid
     npv_service_sd = service_sd * annuity_factor_mid
 
+    lco_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
+                     + (lco * npv_service_sd / npv_service) ** 2)
     lco_with_policies_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
                                    + (lco_with_policies * npv_service_sd / npv_service) ** 2)
 
-    return lco, lco_with_policies, lco_with_policies_sd
+    return lco, lco_with_policies, lco_sd, lco_with_policies_sd
 
 
 # =============================================================================
@@ -207,7 +210,9 @@ def get_levelised_costs_with_build(upfront, upfront_policies, upfront_sd,
     npv_service = service_delivered * leadtimes_df * annuity_factor
     npv_service_sd = service_sd * leadtimes_df * annuity_factor
 
+    lco_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
+                     + (lco * npv_service_sd / npv_service) ** 2)
     lco_with_policies_sd = np.sqrt((npv_cost_sd / npv_service) ** 2
                                    + (lco_with_policies * npv_service_sd / npv_service) ** 2)
 
-    return lco, lco_with_policies, lco_with_policies_sd
+    return lco, lco_with_policies, lco_sd, lco_with_policies_sd

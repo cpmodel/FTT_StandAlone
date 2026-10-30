@@ -199,7 +199,7 @@ def get_lcof(data, titles, carbon_costs, year):
 
     # The upfront and annual costs have already been converted to the service
     # provided, so the service delivered is 1
-    LCOF, TLCOF, dLCOF = get_levelised_costs(
+    LCOF, TLCOF, dLCOF, dTLCOF = get_levelised_costs(
         upfront=upfront,
         upfront_policies=upfront_pol,
         upfront_sd=upfront_sd,
@@ -218,7 +218,7 @@ def get_lcof(data, titles, carbon_costs, year):
     data['ZTLC'] = LCOF        # LCOF without policy
     data['ZTLD'] = dLCOF       # LCOF without policy SD
     data['ZTTC'] = TLCOF       # LCOF with policy
-    data['ZTTD'] = dLCOF       # LCOF with policy SD
+    data['ZTTD'] = dTLCOF      # LCOF with policy SD
     data['ZEGC'] = TLCOFG      # LCOF with policy and gamma
 
     

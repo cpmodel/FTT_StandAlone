@@ -141,7 +141,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
 
     def levelised_cost(annual, annual_policies, upfront_policies, service,
                        annual_sd=0.0):
-        '''Levelised cost per MWh without and with policies, and its standard deviation'''
+        '''Levelised cost per MWh without and with policies and both SDs'''
         return get_levelised_costs_with_build(
             upfront=investment, upfront_policies=upfront_policies,
             upfront_sd=investment_sd,
@@ -150,20 +150,21 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
             lifetimes=lt, leadtimes=bt, r=dr)
 
     # Marginal unit costs (for investor decisions)
-    lcoe_bare, lcoe_policy, _ = levelised_cost(
+    lcoe_bare, lcoe_policy, _, _ = levelised_cost(
         annual_mu, annual_policy_mu, investment_policy, service_mu)
     lcoe_mu_all_policies = lcoe_policy - data['MEFI']
-    _, lcoeco2, _ = levelised_cost(annual_mu, annual_carbon_mu, 0.0, service_mu)
-    lcoe_battery_only, _, _ = levelised_cost(annual_battery_only, 0.0, 0.0, service_mu)
-    _, _, lcoe_sd = levelised_cost(annual_mu, 0.0, 0.0, service_mu, annual_sd_mu)
+    _, lcoeco2, _, _ = levelised_cost(annual_mu, annual_carbon_mu, 0.0, service_mu)
+    lcoe_battery_only, _, _, _ = levelised_cost(annual_battery_only, 0.0, 0.0, service_mu)
+    _, _, _, lcoe_sd = levelised_cost(annual_mu, 0.0, 0.0, service_mu, annual_sd_mu)
 
     # Levelised cost of operation: constant over the lifetime, so no discounting needed
     lcoo = fuel + om + stor_cost + marg_stor_cost
 
     # Average unit costs (for electricity pricing via MEWP)
-    lcoe_av_bare, lcoe_av_incl_co2_gross, _ = levelised_cost(
+    lcoe_av_bare, lcoe_av_incl_co2_gross, _, _ = levelised_cost(
         annual_av, annual_carbon_av, investment_policy_av, service_av)
-    _, lcoe_av_only_co2_gross, _ = levelised_cost(annual_av, annual_carbon_av, 0.0, service_av)
+    _, lcoe_av_only_co2_gross, _, _ = levelised_cost(
+        annual_av, annual_carbon_av, 0.0, service_av)
     lcoe_only_co2 = lcoe_av_only_co2_gross - data['MEFI']
     lcoe_incl_co2 = lcoe_av_incl_co2_gross - data['MEFI']
     # Subsidies without the CO2 cost: removing the CO2 effect, which is additive
