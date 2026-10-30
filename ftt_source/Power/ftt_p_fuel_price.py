@@ -71,8 +71,8 @@ def add_balancing_costs(solar_share, wind_share):
     float
         Balancing costs in $/MWh
     """
-    min_costs = 2 * 1.36  # Conversion 2013 EUR to 2013 USD
-    max_costs = 4 * 1.36
+    min_costs = 2 * 1.36  # Conversion 2013 EUR to 2023 USD
+    max_costs = 4 * 1.36  # Conversion 2013 EUR to 2023 USD
 
     solar_share_scaled = np.clip((solar_share - 0.05) / (0.3 - 0.05), 0, 1)
     wind_share_scaled = np.clip((wind_share - 0.05) / (0.3 - 0.05), 0, 1)
@@ -107,7 +107,7 @@ def add_grid_integration_costs(solar_share, wind_share):
     solar_share_scaled = np.clip(solar_share / 0.4, 0, 1)
     wind_share_scaled = np.clip(wind_share / 0.4, 0, 1)
 
-    max_costs = 7.5 * 1.36  # Conversion 2013 EUR to 2013 USD
+    max_costs = 7.5 * 1.36  # Conversion 2013 EUR to 2023 USD
 
     grid_costs_solar = max_costs * solar_share_scaled
     grid_costs_wind = max_costs * wind_share_scaled
