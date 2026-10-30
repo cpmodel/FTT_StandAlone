@@ -51,7 +51,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     """
     Calculate levelized costs.
 
-    The function calculates the levelised cost of electricity in $2013/MWh. It includes
+    The function calculates the levelised cost of electricity in USD/MWh. It includes
     intangible costs (gamma values) and determines the investor preferences.
 
     Parameters

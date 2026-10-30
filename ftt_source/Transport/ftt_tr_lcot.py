@@ -27,7 +27,7 @@ import numpy as np
 
 def set_carbon_tax(data, c3ti, year):
     '''
-    Convert the carbon price from USD / tCO2 to 2022$/pkm
+    Convert the carbon price from USD / tCO2 to USD/p-km
     Apply the carbon price to transport sector technologies based on their emission factors
 
     Returns:
@@ -66,7 +66,7 @@ def get_lcot(data, titles, carbon_costs, year):
     """
     Calculate levelized costs.
 
-    The function calculates the levelised cost of transport in 2012$/p-km per
+    The function calculates the levelised cost of transport in USD/p-km per
     vehicle type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
