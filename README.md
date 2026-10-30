@@ -50,6 +50,7 @@ from future_technology_transformation import RunFTT
 model = RunFTT(
     inputs_path="/path/to/Inputs",
     utilities_path="/path/to/Utilities",
+    settings_path="/path/to/settings.ini",
 )
 ```
 
