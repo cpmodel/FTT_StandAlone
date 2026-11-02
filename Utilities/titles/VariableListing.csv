@@ -294,7 +294,7 @@ RFLZ,FTT-Fr Number in Fleet,,veh,,RTI,FSTI,TIME,,FTT-Fr,,2023,2001,Y
 ZEWS,FTT-Fr Market Shares,,%,,RTI,FTTI,TIME,,FTT-Fr,,2023,2001,
 ZREG,FTT-Fr regulations,,,,RTI,FTTI,TIME,,FTT-Fr,,,2018,Y
 ZWSA,FTT-Fr Exogenous market share,,%,,RTI,FTTI,TIME,,FTT-Fr,,,2018,
-ZTVT,FTT-Fr vehicle tax,,USD(2023),,RTI,FTTI,TIME,,FTT-Fr,,,2018,
+ZTVT,FTT-Fr vehicle tax,,fraction of purchase cost,,RTI,FTTI,TIME,,FTT-Fr,,,2018,
 ZTRT,FTT-Fr Annual road tax,,USD(2023)/vehicle-y,,RTI,FTTI,TIME,,FTT-Fr,,,2018,
 ZBFM,FTT-Fr Biofuel blending mandate,,%,,RTI,TIME,,,FTT-Fr,,,2018,Y
 RZCO,FTT-Fr Registration carbon tax,,USD(2023)/(gCO2/km),,RTI,TIME,,,FTT-Fr,,,2018,
