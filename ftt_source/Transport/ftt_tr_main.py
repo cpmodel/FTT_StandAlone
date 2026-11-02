@@ -437,7 +437,8 @@ def solve(data, time_lag, titles, histend, year, domain):
 
                 data_dt[var] = np.copy(data[var])
 
-        # Investment in terms of car purchases (cumulative within year):
+        # Investment in terms of car purchases (cumulative within year).
+        # The deflator converts current vehicle prices to the model's 2013-dollar basis.
         data['TWIY'] = (data['TEWI']
                                  * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33)
 

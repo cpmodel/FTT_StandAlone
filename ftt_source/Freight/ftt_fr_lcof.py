@@ -125,9 +125,8 @@ def get_lcof(data, titles, carbon_costs, year):
     """
     Calculate levelized costs.
 
-    Calculates the levelised cost of freight transport in 2012$/t-km per
-    vehicle type. These costs are then converted into 2010 Euros/t-km per vehicle type.
-    It includes intangible costs (gamma values) and together
+    Calculates the levelised cost of freight transport in USD/t-km per
+    vehicle type. The calculation includes intangible costs (gamma values) and
     determines the investor preferences.
 
     Parameters
