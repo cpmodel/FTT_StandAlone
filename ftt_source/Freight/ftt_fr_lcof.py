@@ -14,6 +14,8 @@ Functions included:
 
 import numpy as np
 
+from ftt_source.ftt_core.ftt_get_levelised_costs import get_levelised_costs
+
 
 def set_carbon_tax(data, c6ti):
     '''
@@ -168,94 +170,56 @@ def get_lcof(data, titles, carbon_costs, year):
     bztc = data['BZTC']
     ztvt = data['ZTVT']
     ztrt = data['ZTRT']
-    
-    # Lifetimes and build years
+
+    # Vehicle and usage parameters
     lt = bztc[:, :, c6ti['8 Lifetime (y)']]
-    max_lt = int(np.max(lt))
-    full_lt_mat = np.arange(max_lt)
-    lt_mask = full_lt_mat <= (lt[..., None] - 1)        # Life time mask
-    bt_mask = full_lt_mat < np.ones_like(lt[..., None]) # Build time mask
-    
-    def get_cost_elem(base_cost, conversion_factor, mask):
-        '''Mask costs during build or life time, and apply
-        conversion to generation where appropriate'''
-        cost = np.multiply(base_cost[..., None], conversion_factor)
-        return np.multiply(cost, mask)
-    
-    purchase_cost_per_km = (
-        bztc[:, :, c6ti['1 Purchase cost (USD/veh)']]
-        / bztc[:, :, c6ti['15 Average mileage (km/y)']]
-    )
-    It = get_cost_elem(purchase_cost_per_km, 1, bt_mask)
-    dIt = get_cost_elem(bztc[:, :, c6ti['2 Std of purchase cost']] / bztc[:, :, c6ti['15 Average mileage (km/y)']], 1, bt_mask)
-    # Reg tax based on carbon price, RTCOt = ($/tCO2/km)/(tCO2/km)
-    RZCOt = get_cost_elem(
-        bztc[:, :, c6ti['12 CO2 emissions (gCO2/km)']]
-        * data['RZCO'][:, None], 1, bt_mask
-    )
-    # Registration taxes, ZTVT is vehicle tax or subsidy (in percentage)
-    ItVT = get_cost_elem(
-        purchase_cost_per_km * ztvt,
-        1,
-        bt_mask,
-    )
-    Ft = get_cost_elem(bztc[:, :, c6ti['3 fuel cost (USD/km)']], 1, lt_mask)
-    dFt = get_cost_elem(bztc[:, :, c6ti['4 std fuel cost']], 1, lt_mask)
-    ct = get_cost_elem(carbon_costs, 1, lt_mask)
-    # fuel tax/subsidies
-    fft = get_cost_elem(
-        data['RZFT'][:, None] * bztc[:, :, c6ti["9 Energy use (MJ/vkm)"]]
-        * taxable_fuels, 1, lt_mask
-    )
-    OMt = get_cost_elem(bztc[:, :, c6ti['5 O&M costs (USD/km)']], 1, lt_mask)
-    dOMt = get_cost_elem(bztc[:, :, c6ti['6 std O&M']], 1, lt_mask)
-    RT = get_cost_elem(ztrt, 1, lt_mask)
-    
-    Lfactor = bztc[:, :, c6ti['10 Loads (t or passengers/veh)'], np.newaxis]
-    
-    # Discount rate
-    dr = bztc[:,:,c6ti['7 Discount rate'], np.newaxis]
-    denominator = (1+dr)**full_lt_mat
-    
-    
-    # Calculate LCOF without policy, and find standard deviation
-    npv_expenses_bare = (It + Ft + OMt) / Lfactor
-    npv_expenses_bare = npv_expenses_bare / denominator
-    
-    # Calculate LCOF with policy, and find standard deviation
-    npv_expenses_policy = (It + ct + RZCOt + ItVT + Ft + fft + OMt + RT) / Lfactor
-    npv_expenses_policy = npv_expenses_policy / denominator
-    
-    # 3 – Utility
-    npv_utility = np.where(lt_mask, 1, 0) / denominator
-    utility_sum = np.sum(npv_utility, axis=2)
-    
-    
-    # Standard deviation calculation
-    # First sum the variances
-    variance_terms = dIt**2 + dFt**2 + dOMt**2
-    # Scale variances by load factor
-    scaled_variance = variance_terms/(Lfactor**2)
-    # Apply proper discounting (squared) and sum
-    summed_variance = np.sum(scaled_variance/(denominator**2), axis=2)
-    # TODO, softcode. Hardcoded uncertainty  With uncertainty in load factors ()
-    variance_plus_dcf = summed_variance + (np.sum(npv_expenses_bare, axis=2) * 0.15)**2
-    # Calculate final standard deviation
-    
-    LCOF = np.sum(npv_expenses_bare, axis=2) / utility_sum
-    dLCOF = np.sqrt(variance_plus_dcf) / utility_sum
-    
-    TLCOF = np.sum(npv_expenses_policy, axis=2) / utility_sum
-    
+    mileage = bztc[:, :, c6ti['15 Average mileage (km/y)']]
+    load = bztc[:, :, c6ti['10 Loads (t or passengers/veh)']]
+    energy_use = bztc[:, :, c6ti['9 Energy use (MJ/vkm)']]
+
+    # Costs are converted from per vehicle-km to per tonne-km (or passenger-km)
+    purchase_cost_per_km = bztc[:, :, c6ti['1 Purchase cost (USD/veh)']] / mileage
+
+    # Upfront cost (base, policy, standard deviation)
+    upfront = purchase_cost_per_km / load
+    upfront_pol = (bztc[:, :, c6ti['12 CO2 emissions (gCO2/km)']] * data['RZCO'][:, None]  # CO2-dependent tax
+                   + purchase_cost_per_km * ztvt                                          # Registration tax or subsidy
+                   ) / load
+    upfront_sd = bztc[:, :, c6ti['2 Std of purchase cost']] / mileage / load
+
+    # Annual variable cost (base, policy, standard deviation)
+    annual = (bztc[:, :, c6ti['3 fuel cost (USD/km)']]
+              + bztc[:, :, c6ti['5 O&M costs (USD/km)']]) / load
+    annual_pol = (carbon_costs                                  # Carbon tax
+                  + data['RZFT'][:, None] * energy_use * taxable_fuels   # Fuel tax or subsidy
+                  + ztrt                                        # Yearly road tax
+                  ) / load
+    annual_sd = np.sqrt(bztc[:, :, c6ti['4 std fuel cost']]**2
+                        + bztc[:, :, c6ti['6 std O&M']]**2) / load
+
+    # The upfront and annual costs have already been converted to the service
+    # provided, so the service delivered is 1
+    LCOF, TLCOF, dLCOF, dTLCOF = get_levelised_costs(
+        upfront=upfront,
+        upfront_policies=upfront_pol,
+        upfront_sd=upfront_sd,
+        annual=annual,
+        annual_policies=annual_pol,
+        annual_sd=annual_sd,
+        service_delivered=1,
+        service_sd=0.15,    # Assume a 15% variation in load factors
+        lifetimes=lt,
+        r=bztc[:, :, c6ti['7 Discount rate']])
+
     # Introduce Gamma Values
     TLCOFG = TLCOF * (1 + bztc[:, :, c6ti['11 Gamma']])
-    
+
     # Compute levelised cost in freight in $/tkm
     data['ZTLC'] = LCOF        # LCOF without policy
     data['ZTLD'] = dLCOF       # LCOF without policy SD
     data['ZTTC'] = TLCOF       # LCOF with policy
-    data['ZTTD'] = dLCOF      # LCOF with policy SD
-    data['ZEGC'] = TLCOFG     # LCOF with policy and gamma
+    data['ZTTD'] = dTLCOF      # LCOF with policy SD
+    data['ZEGC'] = TLCOFG      # LCOF with policy and gamma
 
     
     # Vehicle price components for front end ($/veh)
