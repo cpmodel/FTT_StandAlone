@@ -18,14 +18,14 @@ import os
 import pandas as pd
 from pathlib import Path
 
-from ftt_source.paths import get_utilities_path
+from ftt_source.paths import get_utility_path
 
 
 def load_titles():
     """Load model classifications and titles from new wide-format CSV."""
 
     titles_file = 'classification_titles.csv'
-    titles_path = get_utilities_path() / 'titles' / titles_file
+    titles_path = get_utility_path(Path("titles") / titles_file)
 
     if not titles_path.is_file():
         raise FileNotFoundError(f"Classification titles file not found at: {titles_path}")

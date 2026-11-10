@@ -30,7 +30,7 @@ from ftt_source.sector_coupling.transport_batteries_to_power import (
     vehicle_to_grid,
 )
 from ftt_source.sector_coupling.battery_lbd import battery_costs
-from ftt_source.paths import get_utilities_path
+from ftt_source.paths import get_utility_path
 
 #%% FEQS
 def feqs(a):
@@ -43,7 +43,7 @@ def get_wind_solar_indices(titles):
     'csp' is optional — if absent from the CSV (e.g. 12-tech schema where CSP is
     merged into Solar), csp_idx is set to None and the RLDC skips the CSP addend.
     """
-    csv_path = get_utilities_path() / 'titles' / 'T2TI_roles.csv'
+    csv_path = get_utility_path('titles/T2TI_roles.csv')
     df = pd.read_csv(csv_path, index_col='role', keep_default_na=False)
     t2ti = list(titles['T2TI'])
     wind_indices = [t2ti.index(label.strip()) for label in df.loc['wind', 'T2TI'].split(',')]

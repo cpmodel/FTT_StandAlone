@@ -16,7 +16,7 @@ Functions included in the file:
 import polars as pl
 
 # Local imports
-from ftt_source.paths import get_inputs_path, get_utilities_path
+from ftt_source.paths import get_inputs_path, get_utility_path
 
 
 def _dim_len(titles, dim):
@@ -175,7 +175,7 @@ def check_vars_exist(model):
         If any required input variable file is missing from
         ``Inputs/S0/<model>/``.
     """
-    var_list_path = get_utilities_path() / 'titles' / 'VariableListing.csv'
+    var_list_path = get_utility_path("titles/VariableListing.csv")
     if not var_list_path.is_file():
         raise FileNotFoundError(f"VariableListing.csv not found: {var_list_path}")
 

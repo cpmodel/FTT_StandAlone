@@ -15,7 +15,7 @@ import warnings
 import numpy as np
 import polars as pl
 
-from ftt_source.paths import get_inputs_path, get_utilities_path
+from ftt_source.paths import get_inputs_path, get_utility_path
 from ftt_source.support.check_input_files import check_var_dims, check_vars_exist
 
 
@@ -482,7 +482,7 @@ def _legacy_files_message(folder, legacy_variables, example_region):
 
 def get_valid_ftt_models():
     """Return model names listed in ``classification_titles.csv``."""
-    path = get_utilities_path() / "titles" / "classification_titles.csv"
+    path = get_utility_path("titles/classification_titles.csv")
     if not path.is_file():
         raise FileNotFoundError(f"Classification titles file not found at: {path}")
     with path.open("r", encoding="utf-8-sig", newline="") as handle:

@@ -6,7 +6,7 @@ This feedback was developed for the REFEREE and EEIST II projects.
 
 import pandas as pd
 
-from ftt_source.paths import get_utilities_path
+from ftt_source.paths import get_utility_path
 
 
 def electricity_demand_feedback(data, data_baseline, y, titles, units):
@@ -15,11 +15,11 @@ def electricity_demand_feedback(data, data_baseline, y, titles, units):
     electricity_index = titles["JTI"].index("8 Electricity")
     # Electricity mapping for each model
     mappings = pd.read_csv(
-        get_utilities_path() / "mappings" / "Electricity_demand_mapping.csv",
+        get_utility_path("mappings/Electricity_demand_mapping.csv"),
         index_col=0,
     )
     conversions = pd.read_csv(
-        get_utilities_path() / "mappings" / "Energy_unit_conversions.csv",
+        get_utility_path("mappings/Energy_unit_conversions.csv"),
         index_col=0,
     )
     demand_unit = units["MEWD"]

@@ -8,12 +8,12 @@ Functions included:
 
 import pandas as pd
 
-from ftt_source.paths import get_utilities_path
+from ftt_source.paths import get_utility_path
 
 
 def load_dims():
     """Load variable dimensions and related metadata."""
-    dims_path = get_utilities_path() / "titles" / "VariableListing.csv"
+    dims_path = get_utility_path("titles/VariableListing.csv")
     if not dims_path.is_file():
         raise FileNotFoundError(f"Dimensions name file not found: {dims_path}")
 

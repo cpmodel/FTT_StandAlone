@@ -59,8 +59,8 @@ def set_paths(
         Path to the *Inputs* directory.  When ``None`` the value is left
         unchanged (defaults are kept).
     utilities_path:
-        Path to the *Utilities* directory.  When ``None`` the value is left
-        unchanged.
+        Optional directory containing per-file overrides for the bundled
+        *Utilities* data. Missing files fall back to the bundled defaults.
     """
     global _inputs_path, _utilities_path
     if inputs_path is not None:
@@ -90,16 +90,41 @@ def get_inputs_path() -> Path:
 
 
 def get_utilities_path() -> Path:
-    """Return the active *Utilities* directory as a :class:`~pathlib.Path`.
+    """Return the configured *Utilities* override directory.
 
-    Resolution order mirrors :func:`get_inputs_path`.
+    When no override is configured, this returns the bundled default directory
+    or the legacy working-directory fallback.
     """
     if _utilities_path is not None:
         return _utilities_path
+    return _get_default_utilities_path()
+
+
+def _get_default_utilities_path() -> Path:
+    """Return the bundled Utilities directory or its legacy fallback."""
     pkg_utilities = _PACKAGE_ROOT / "Utilities"
     if pkg_utilities.exists():
         return pkg_utilities
     return Path.cwd() / "Utilities"
+
+
+def get_utility_path(relative_path: "str | Path") -> Path:
+    """Resolve one utility file with optional per-file override support.
+
+    Files present below the configured ``utilities_path`` take precedence.
+    Missing files fall back to the bundled FTT defaults, allowing an
+    integration to override only selected metadata or mappings.
+    """
+    relative_path = Path(relative_path)
+    if relative_path.is_absolute():
+        raise ValueError("Utility paths must be relative to a Utilities directory")
+
+    if _utilities_path is not None:
+        override_path = _utilities_path / relative_path
+        if override_path.is_file():
+            return override_path
+
+    return _get_default_utilities_path() / relative_path
 
 
 def reset_paths() -> None:
