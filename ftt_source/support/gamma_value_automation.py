@@ -508,25 +508,26 @@ def gamma_auto(model):
 
     return state, run_history
 #%%
-model = model_class.RunFTT()
+if __name__ == "__main__":
+    model = model_class.RunFTT()
 
-# Compute gamma values for models turned on in settings.ini
-modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
+    # Compute gamma values for models turned on in settings.ini
+    modules_to_assess = [x.strip() for x in model.ftt_modules.split(',')]
 
 
-# %% Run combined function
+    # %% Run combined function
 
-# Little difference between runs typically: 2 runs to be safe. 
-total_runs = 2
-max_it = 200
-lambda_reg = 0.05  # Regularisation strength
-starting_step_size = 0.3
-decay_rate_steps = 0.96 
-cooling_rate = 0.94 # Quite substantial cooling
-convergence_threshold = 0.0010
-global_weight = 0.5
+    # Little difference between runs typically: 2 runs to be safe. 
+    total_runs = 2
+    max_it = 200
+    lambda_reg = 0.05  # Regularisation strength
+    starting_step_size = 0.3
+    decay_rate_steps = 0.96 
+    cooling_rate = 0.94 # Quite substantial cooling
+    convergence_threshold = 0.0010
+    global_weight = 0.5
 
-state, run_history = gamma_auto(model)
+    state, run_history = gamma_auto(model)
 
 def select_best_gamma_values(run_history, modules_to_assess):
     '''For each country and mod, select the run with the best average score'''
@@ -544,33 +545,34 @@ def select_best_gamma_values(run_history, modules_to_assess):
     return run_history
 
 
-run_history = select_best_gamma_values(run_history, modules_to_assess)
+if __name__ == "__main__":
+    run_history = select_best_gamma_values(run_history, modules_to_assess)
 
-for mod in modules_to_assess:
-    print(f"Median best score {mod}: {get_median_score(run_history[mod]['best score']):.3f}")   
+    for mod in modules_to_assess:
+        print(f"Median best score {mod}: {get_median_score(run_history[mod]['best score']):.3f}")   
 
 
 
-# %% Save almost to the right format (I'm naming the gamma row the same for each model.. )
-import csv
+    # %% Save almost to the right format (I'm naming the gamma row the same for each model.. )
+    import csv
 
-# How many empty placeholders are in the masterfiles?
-n_placeholders = {"FTT-P": 11, "FTT-Tr": 4, "FTT-Fr": 0, "FTT-H": 7}
-for mod in modules_to_assess:
-    data = run_history[mod]['best gamma'].T
-    zeros = np.zeros((n_placeholders[mod], data.shape[1]))
-    expanded_data = np.vstack([data, zeros])
-    rounded_data = np.round(expanded_data, 2)
-    
-    # Save to CSV with mixed types
-    with open(f"Inputs/{mod}_gamma.csv", "w", newline="") as f:
-        writer = csv.writer(f)
+    # How many empty placeholders are in the masterfiles?
+    n_placeholders = {"FTT-P": 11, "FTT-Tr": 4, "FTT-Fr": 0, "FTT-H": 7}
+    for mod in modules_to_assess:
+        data = run_history[mod]['best gamma'].T
+        zeros = np.zeros((n_placeholders[mod], data.shape[1]))
+        expanded_data = np.vstack([data, zeros])
+        rounded_data = np.round(expanded_data, 2)
         
-        # Write four empty lines for easier copy-paste
-        for _ in range(4):
-            writer.writerow([])
-        
-        for region in range(data.shape[1]):
-            writer.writerow(["Gamma"])       # Write string row separately
-            writer.writerows(rounded_data[:, region, np.newaxis])  # Write numerical data
+        # Save to CSV with mixed types
+        with open(f"Inputs/{mod}_gamma.csv", "w", newline="") as f:
+            writer = csv.writer(f)
+            
+            # Write four empty lines for easier copy-paste
+            for _ in range(4):
+                writer.writerow([])
+            
+            for region in range(data.shape[1]):
+                writer.writerow(["Gamma"])       # Write string row separately
+                writer.writerows(rounded_data[:, region, np.newaxis])  # Write numerical data
  
