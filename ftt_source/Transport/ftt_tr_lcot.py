@@ -40,8 +40,11 @@ def set_carbon_tax(data, c3ti, year):
     # Occupancy rates
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
 
+    # Convert carbon tax from 2023 USD to 2022 USD
+    # US CPI 2022/2023 ≈ 0.96
+    carbon_tax_2022 = data["CO2taxTr"] * 0.96
 
-    carbon_costs = (data["CO2taxTr"][:, None]                                    # Carbon price in USD/tCO2
+    carbon_costs = (carbon_tax_2022[:, None]                                    # Carbon price in USD/tCO2
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
                     / ns / ff                                                 # Conversion from per km to per pkm
                     / 10**6                                                  # Conversion from grams to tonnes.
