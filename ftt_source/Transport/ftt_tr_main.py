@@ -97,23 +97,11 @@ def solve(data, time_lag, titles, histend, year, domain):
     """
     # Categories for the cost matrix (BTTC)
     c3ti = {category: index for index, category in enumerate(titles['C3TI'])}
-    jti = {category: index for index, category in enumerate(titles['JTI'])}
 
     sector = "tr_road_pass"
-    sector_index = 0
-    sector_index = 15  #titles['FUTI'].index('16 Road Transport')
 
     num_regions = len(titles['RTI'])
     num_techs = len(titles['VTTI'])
-
-    # Store fuel prices and convert to $2013/toe
-    # It's actually in current$/toe
-    # TODO: Temporary deflator values
-    data['TE3P'][:, jti["5 Middle distillates"]] = time_lag['PFRM'][:, sector_index] / 1.33
-    data['TE3P'][:, jti["7 Natural gas"]] = time_lag['PFRG'][:, sector_index] / 1.33
-    data['TE3P'][:, jti["8 Electricity"]] = time_lag['PFRE'][:, sector_index] / 1.33
-    data['TE3P'][:, jti["11 Biofuels"]] = time_lag['PFRB'][:, sector_index] / 1.33
-#    data['TE3P'][:, "12 Hydrogen", 0] = data['PFRE'][:, sector_index, 0] * 2.0
 
     # Use data-driven timing based on TDA2 (last year of cost data)
     if year == np.min(data["TDA2"]):
@@ -129,7 +117,6 @@ def solve(data, time_lag, titles, histend, year, domain):
                                            - data['BTTC'][:, veh, c3ti['1 Prices cars (USD/veh)']] * 0.15)
             else:
                 start_i_cost[:, veh] = 0
-        # TEVC is 'Start_ICost' in the Fortran model
         data["TEVC"] = start_i_cost
         data["BTCI"] = np.copy(data["BTTC"])  # Save start cost matrix
         time_lag['BTCI'] = np.copy(data["BTTC"])  # Save to lagged data too
@@ -437,9 +424,9 @@ def solve(data, time_lag, titles, histend, year, domain):
 
                 data_dt[var] = np.copy(data[var])
 
-        # Investment in terms of car purchases (cumulative within year):
+        # Investment in terms of car purchases (cumulative within year).
         data['TWIY'] = (data['TEWI']
-                                 * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']] / 1.33)
+                                 * data['BTTC'][:, :, c3ti['1 Prices cars (USD/veh)']])
 
         # Call the survival function routine
         data = survival_function(data, time_lag, histend, year, titles)

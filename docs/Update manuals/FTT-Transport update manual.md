@@ -15,7 +15,11 @@ Same process as the FTT-Power model.
 1. Price data are updated annually (but can be done every two years) for the major regions, including Europe, the US, China, India, Brazil and Japan. For other regions, if not specifically requested, prices are first mapped from a proxy region (e.g. assume that Canada and the US share the same vehicle prices) (see proxy regions in Excel sheet x), then the weighted averages and standard deviation are calculated based on the mapped prices. The mapping processes are currently all done in Excel. Note that price data are collected and processed alongside the engine and technological specification data. Currently, the calculation is carried out in Excel (could be coded in the long run). 
 2. Fuel cost: collected from GlobalPetrolPrices (https://www.globalpetrolprices.com/); World Bank/IMF prices. 
 3. Rare mineral prices: Go to https://www.usgs.gov/centers/national-minerals-information-center/commodity-statistics-and-information and select a mineral (e.g., aluminium at https://www.usgs.gov/centers/national-minerals-information-center/aluminum-statistics-and-information). Then, open the prices and production cost for aluminium at: https://pubs.usgs.gov/periodicals/mcs2023/mcs2023-aluminum.pdf.
-   
+
+### Currency base year
+All monetary values in FTT-Transport inputs and outputs are expressed in constant 2022 US dollars (USD(2022)), except:
+- `CO2taxTr` (regional emission price) is provided in USD(2023)/tCO2, consistent with the CO2 taxes used in the other models. It is deflated to USD(2022) internally in the model (US CPI 2022/2023 ≈ 0.96).
+
 ### Update other technological specification
 This is only carried out in countries where cost data are collected because the technological specification is collected alongside prices. 
 1. Battery sizes: collected from manufacturers’ websites alongside the prices 
