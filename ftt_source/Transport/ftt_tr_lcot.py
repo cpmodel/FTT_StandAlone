@@ -29,7 +29,7 @@ from ftt_source.ftt_core.ftt_get_levelised_costs import get_levelised_costs
 
 def set_carbon_tax(data, c3ti, year):
     '''
-    Convert the carbon price from USD / tCO2 to 2022$/pkm
+    Convert the carbon price from USD / tCO2 to USD/p-km
     Apply the carbon price to transport sector technologies based on their emission factors
 
     Returns:
@@ -42,8 +42,11 @@ def set_carbon_tax(data, c3ti, year):
     # Occupancy rates
     ff = data['BTTC'][:, :, c3ti['11 occupancy rate p/sea']]
 
+    # Convert carbon tax from 2023 USD to 2022 USD
+    # US CPI 2022/2023 ≈ 0.96
+    carbon_tax_2022 = data["CO2taxTr"] * 0.96
 
-    carbon_costs = (data["CO2taxTr"][:, None]                                    # Carbon price in USD/tCO2
+    carbon_costs = (carbon_tax_2022[:, None]                                    # Carbon price in USD/tCO2
                     * data['BTTC'][:, :, c3ti['14 CO2Emissions']]             # g CO2 / km
                     / ns / ff                                                 # Conversion from per km to per pkm
                     / 10**6                                                  # Conversion from grams to tonnes.
@@ -68,7 +71,7 @@ def get_lcot(data, titles, carbon_costs, year):
     """
     Calculate levelized costs.
 
-    The function calculates the levelised cost of transport in 2012$/p-km per
+    The function calculates the levelised cost of transport in USD/p-km per
     vehicle type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """

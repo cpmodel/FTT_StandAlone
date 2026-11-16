@@ -46,7 +46,7 @@ from ftt_source.ftt_core.ftt_get_levelised_costs import get_levelised_costs
 
 def set_carbon_tax(data, c4ti):
     '''
-    Convert the carbon price from USD / tCO2 to 2020 euros / kWhUD.
+    Convert the carbon price from USD / tCO2 to euros / kWhUD.
     Apply the carbon price to heat sector technologies based on their emission factors
 
     Returns:
@@ -82,7 +82,7 @@ def get_lcoh(data, titles, carbon_costs):
     """
     Calculate levelized costs.
 
-    The function calculates the levelised cost of heat in 2020 Euros/kWh per
+    The function calculates the levelised cost of heat in Euros/kWh per
     boiler type. It includes intangible costs (gamma values) and together
     determines the investor preferences.
     """
