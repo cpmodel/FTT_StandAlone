@@ -399,10 +399,8 @@ def solve(data, time_lag, titles, histend, year, domain):
             for var in vars_to_copy:
                 data_dt[var] = np.copy(data[var])
 
-        price_levels = data['PRSC14']
         data['HWIY'] = (
             data['HEWI'] * data['BHTC'][:, :, c4ti['1 Inv cost mean (EUR/kW)']]
-            / price_levels[:, None]
         )
 
         if year == 2050 and t == no_it:

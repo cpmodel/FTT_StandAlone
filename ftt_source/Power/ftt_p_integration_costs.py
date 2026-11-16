@@ -30,7 +30,7 @@ def get_balancing_costs(solar_share, wind_share):
     After 30% of generation, it is set at the maximum.
     """
     min_costs = 2 * 1.36  # Convert 2013 EUR to 2023 USD
-    max_costs = 4 * 1.36
+    max_costs = 4 * 1.36  # Convert 2013 EUR to 2023 USD
 
     solar_share_scaled = np.clip((solar_share - 0.05) / (0.30 - 0.05), 0, 1)
     wind_share_scaled = np.clip((wind_share - 0.05) / (0.30 - 0.05), 0, 1)
