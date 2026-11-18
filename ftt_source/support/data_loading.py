@@ -62,6 +62,11 @@ def load_data(
         }
         for scenario in scenario_list
     }
+    
+    # The fuel price index (FPI) can be set from MSET, 1 if FTT is run uncoupled.
+    if "FPIX" in dimensions:
+        for scenario_data in data.values():
+            scenario_data["FPIX"].fill(1.0)
     timeline_indices = {year: index for index, year in enumerate(timeline)}
     title_indices = {
         dimension: {
