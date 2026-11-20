@@ -1,4 +1,4 @@
-,latitude
+RTI,latitude
 1 Belgium (BE),50.6
 2 Denmark (DK),64.0
 3 Germany (DE),51.0
@@ -70,164 +70,164 @@
 69 Kenya (KE),0.6
 70 UAE (UA),23.9
 71 Pakistan,29.8
-72 Afghanistan,33.9
-73 Albania,41.2
-74 Algeria,28.0
-75 American Samoa,-14.3
-76 Andorra,42.5
-77 Angola,-11.2
-78 Anguilla,18.2
-79 Antigua and Barbuda,17.1
-80 Armenia,40.1
-81 Aruba,12.5
-82 Azerbaijan,40.1
-83 Bahamas The,25.0
-84 Bahrain,26.0
-85 Bangladesh,23.7
-86 Barbados,13.2
-87 Belarus,53.7
-88 Belize,17.2
-89 Benin,9.3
+72 Afghanistan,32.3
+73 Albania,32.3
+74 Algeria,27.4
+75 American Samoa,32.3
+76 Andorra,32.3
+77 Angola,3.8
+78 Anguilla,32.3
+79 Antigua and Barbuda,32.3
+80 Armenia,32.3
+81 Aruba,15.6
+82 Azerbaijan,32.3
+83 Bahamas The,32.3
+84 Bahrain,24.5
+85 Bangladesh,32.3
+86 Barbados,15.6
+87 Belarus,53.5
+88 Belize,15.6
+89 Benin,11.2
 90 Bermuda,32.3
-91 Bhutan,27.5
-92 Bolivia,-16.3
-93 Bosnia and Herzegovina,43.9
-94 Botswana,-22.3
-95 British Virgin Islands,18.4
-96 Brunei Darussalam,4.5
-97 Burkina Faso,12.2
-98 Burundi,-3.4
-99 Cabo Verde,16.0
-100 Cambodia,12.6
-101 Cameroon,7.4
-102 Cayman Islands,19.3
-103 Central African Republic,6.6
-104 Chad,15.5
-105 Channel Islands,49.4
-106 Chile,-35.7
-107 Comoros,-11.9
-108 Congo Republic of,-0.2
-109 Costa Rica,9.7
-110 Cote d'Ivoire,7.5
-111 Cuba,21.5
-112 Curacao,12.2
-113 Djibouti,11.8
-114 Dominica,15.4
-115 Dominican Republic,18.7
-116 Ecuador,-1.8
-117 El Salvador,13.8
-118 Equatorial Guinea,1.7
-119 Eritrea,15.2
-120 Eswatini,-26.5
-121 Ethiopia,9.1
-122 Faroe Islands,61.9
-123 Fiji,-17.7
-124 French Polynesia,-17.7
-125 Gabon,-0.8
-126 Gambia The,13.4
-127 Georgia,42.3
-128 Ghana,7.9
-129 Gibraltar,36.1
-130 Greenland,71.7
-131 Grenada,12.3
-132 Guam,13.4
-133 Guatemala,15.8
-134 Guinea,9.9
-135 Guinea-Bissau,12.0
-136 Guyana,5.0
-137 Haiti,19.0
-138 Honduras,15.2
-139 Hong Kong SAR,22.3
-140 Iran,32.4
-141 Iraq,33.2
-142 Isle of Man,54.2
-143 Israel,31.0
-144 Jamaica,18.1
-145 Jordan,31.2
-146 Kiribati,1.9
-147 Korea Dem. People's Rep.,40.3
-148 Kosovo,42.6
-149 Kuwait,29.3
-150 Kyrgyz Republic,41.2
-151 Lao P.D.R.,19.9
-152 Lebanon,33.9
-153 Lesotho,-29.6
-154 Liberia,6.4
-155 Libya,26.3
-156 Liechtenstein,47.2
-157 Macao SAR,22.2
-158 Madagascar,-18.8
-159 Malawi,-13.3
-160 Maldives,3.2
-161 Mali,17.6
-162 Marshall Islands,7.1
-163 Mauritania,21.0
-164 Mauritius,-20.3
-165 Micronesia,7.4
-166 Moldova,47.4
-167 Monaco,43.7
-168 Mongolia,46.9
-169 Montenegro Rep. of,42.7
-170 Montserrat,16.7
-171 Morocco,31.8
-172 Mozambique,-18.7
-173 Myanmar,21.9
-174 Namibia,-22.0
-175 Nauru,-0.5
-176 Nepal,28.4
-177 New Caledonia,-21.3
-178 Nicaragua,12.9
-179 Niger,17.6
-180 Northern Mariana Islands,15.1
-181 Oman,21.5
-182 Palau,7.5
-183 Panama,8.5
-184 Papua New Guinea,-6.3
-185 Paraguay,-23.4
-186 Peru,-9.2
-187 Philippines,12.9
-188 Puerto Rico,18.2
-189 Qatar,25.4
-190 Rwanda,-1.9
-191 Samoa,-13.8
-192 San Marino,43.9
-193 Sao Tome and Principe,0.2
-194 Senegal,14.5
-195 Serbia,44.0
-196 Seychelles,-4.7
-197 Sierra Leone,8.5
-198 Singapore,1.4
-199 Sint Maarten (Dutch part),18.0
-200 Solomon Islands,-9.6
-201 Somalia,5.2
-202 South Sudan,6.9
-203 Sri Lanka,7.9
-204 St. Kitts and Nevis,17.3
-205 St. Lucia,13.9
-206 St. Martin (French part),18.1
-207 St. Vincent and the Grenadines,13.3
-208 Sudan,12.9
-209 Suriname,4.0
-210 Syria,35.0
-211 Tajikistan,38.9
-212 Tanzania,-6.4
-213 Thailand,15.9
-214 Timor-Leste,-8.9
-215 Togo,8.6
-216 Tonga,-21.2
-217 Trinidad and Tobago,10.7
-218 Tunisia,34.0
-219 Turkmenistan,39.1
-220 Turks and Caicos Islands,21.7
-221 Tuvalu,-7.1
-222 Uganda,1.4
-223 Uruguay,-32.5
-224 Uzbekistan,41.4
-225 Vanuatu,-15.4
-226 Venezuela,6.4
-227 Vietnam,14.1
-228 Virgin Islands (U.S.),18.3
-229 West Bank and Gaza,31.9
-230 Yemen,15.6
-231 Zambia,-13.1
-232 Zimbabwe,-19.0
+91 Bhutan,32.3
+92 Bolivia,15.6
+93 Bosnia and Herzegovina,32.3
+94 Botswana,20.6
+95 British Virgin Islands,15.6
+96 Brunei Darussalam,14.3
+97 Burkina Faso,11.2
+98 Burundi,9.0
+99 Cabo Verde,24.8
+100 Cambodia,14.3
+101 Cameroon,9.1
+102 Cayman Islands,32.3
+103 Central African Republic,9.1
+104 Chad,9.1
+105 Channel Islands,53.7
+106 Chile,15.6
+107 Comoros,32.3
+108 Congo Republic of,3.8
+109 Costa Rica,15.6
+110 Cote d'Ivoire,11.2
+111 Cuba,15.6
+112 Curacao,15.6
+113 Djibouti,9.0
+114 Dominica,15.6
+115 Dominican Republic,15.6
+116 Ecuador,15.6
+117 El Salvador,15.6
+118 Equatorial Guinea,3.8
+119 Eritrea,9.0
+120 Eswatini,20.6
+121 Ethiopia,9.0
+122 Faroe Islands,53.7
+123 Fiji,32.3
+124 French Polynesia,32.3
+125 Gabon,3.8
+126 Gambia The,11.2
+127 Georgia,32.3
+128 Ghana,11.2
+129 Gibraltar,32.3
+130 Greenland,64.0
+131 Grenada,15.6
+132 Guam,42.1
+133 Guatemala,15.6
+134 Guinea,11.2
+135 Guinea-Bissau,11.2
+136 Guyana,15.6
+137 Haiti,15.6
+138 Honduras,15.6
+139 Hong Kong SAR,35.6
+140 Iran,24.5
+141 Iraq,24.5
+142 Isle of Man,53.7
+143 Israel,32.3
+144 Jamaica,15.6
+145 Jordan,32.3
+146 Kiribati,32.3
+147 Korea Dem. People's Rep.,32.3
+148 Kosovo,32.3
+149 Kuwait,24.5
+150 Kyrgyz Republic,32.3
+151 Lao P.D.R.,14.3
+152 Lebanon,32.3
+153 Lesotho,20.6
+154 Liberia,11.2
+155 Libya,27.4
+156 Liechtenstein,32.3
+157 Macao SAR,35.6
+158 Madagascar,20.6
+159 Malawi,9.0
+160 Maldives,32.3
+161 Mali,11.2
+162 Marshall Islands,32.3
+163 Mauritania,24.8
+164 Mauritius,20.6
+165 Micronesia,32.3
+166 Moldova,32.3
+167 Monaco,32.3
+168 Mongolia,32.3
+169 Montenegro Rep. of,32.3
+170 Montserrat,32.3
+171 Morocco,24.8
+172 Mozambique,9.0
+173 Myanmar,14.3
+174 Namibia,20.6
+175 Nauru,32.3
+176 Nepal,32.3
+177 New Caledonia,39.6
+178 Nicaragua,15.6
+179 Niger,11.2
+180 Northern Mariana Islands,42.1
+181 Oman,24.5
+182 Palau,32.3
+183 Panama,15.6
+184 Papua New Guinea,32.3
+185 Paraguay,15.6
+186 Peru,15.6
+187 Philippines,14.3
+188 Puerto Rico,15.6
+189 Qatar,32.3
+190 Rwanda,9.0
+191 Samoa,32.3
+192 San Marino,32.3
+193 Sao Tome and Principe,9.1
+194 Senegal,32.3
+195 Serbia,32.3
+196 Seychelles,20.6
+197 Sierra Leone,32.3
+198 Singapore,14.3
+199 Sint Maarten (Dutch part),32.3
+200 Solomon Islands,32.3
+201 Somalia,9.0
+202 South Sudan,9.0
+203 Sri Lanka,32.3
+204 St. Kitts and Nevis,15.6
+205 St. Lucia,32.3
+206 St. Martin (French part),32.3
+207 St. Vincent and the Grenadines,32.3
+208 Sudan,24.8
+209 Suriname,15.6
+210 Syria,32.3
+211 Tajikistan,32.3
+212 Tanzania,20.6
+213 Thailand,14.3
+214 Timor-Leste,32.3
+215 Togo,32.3
+216 Tonga,32.3
+217 Trinidad and Tobago,15.6
+218 Tunisia,24.8
+219 Turkmenistan,32.3
+220 Turks and Caicos Islands,32.3
+221 Tuvalu,32.3
+222 Uganda,9.0
+223 Uruguay,15.6
+224 Uzbekistan,32.3
+225 Vanuatu,32.3
+226 Venezuela,32.3
+227 Vietnam,14.3
+228 Virgin Islands (U.S.),42.1
+229 West Bank and Gaza,32.3
+230 Yemen,32.3
+231 Zambia,9.0
+232 Zimbabwe,20.6
