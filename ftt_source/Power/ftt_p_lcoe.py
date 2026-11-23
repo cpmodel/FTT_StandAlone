@@ -104,7 +104,9 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     investment_policy_av = investment_policy * service_av / service_mu
 
     # Per-MWh costs.
-    fuel_price_index = data['FPIX']   # Exogenous price changes (set to 1 in data_loading)
+    # FPIX is exogenous fuel price changes (defaults to 1 in data_loading.py - i.e., no additional change).
+    # FPIX can be overwritten by MSET to pass fuel costs on to FTT.
+    fuel_price_index = data['FPIX']
     fuel = bcet[:, :, c2ti['5 Fuel ($/MWh)']] * fuel_price_index
     fuel_tax = fuel * data['MTFT']
     fuel_sd = bcet[:, :, c2ti['6 std ($/MWh)']] * fuel_price_index
