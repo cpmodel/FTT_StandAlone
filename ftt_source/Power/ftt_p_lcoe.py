@@ -103,11 +103,13 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     investment_policy = investment * data['MEWT']
     investment_policy_av = investment_policy * service_av / service_mu
 
-    # Per-MWh costs. Fuel costs are scaled by FPIX when provided.
-    fpix = data['FPIX'] if 'FPIX' in data else 1.0
-    fuel = bcet[:, :, c2ti['5 Fuel ($/MWh)']] * fpix
+    # Per-MWh costs.
+    # FPIX is exogenous fuel price changes (defaults to 1 in data_loading.py - i.e., no additional change).
+    # FPIX can be overwritten by MSET to pass fuel costs on to FTT.
+    fuel_price_index = data['FPIX']
+    fuel = bcet[:, :, c2ti['5 Fuel ($/MWh)']] * fuel_price_index
     fuel_tax = fuel * data['MTFT']
-    fuel_sd = bcet[:, :, c2ti['6 std ($/MWh)']]
+    fuel_sd = bcet[:, :, c2ti['6 std ($/MWh)']] * fuel_price_index
     om = bcet[:, :, c2ti['7 O&M ($/MWh)']]
     om_sd = bcet[:, :, c2ti['8 std ($/MWh)']]
     carbon = bcet[:, :, c2ti['1 Carbon Costs ($/MWh)']]
