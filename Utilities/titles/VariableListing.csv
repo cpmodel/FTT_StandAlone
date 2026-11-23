@@ -1,4 +1,4 @@
-Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History starHistory end,Forecast start,Is input variable
+Variable name,Variable description,Unit,Dim1,Dim2,Dim3,Dim4,Domain,History start,History end,Forecast start,Is input variable
 PRSCX,Price levels (2010=100) from E3ME,index,RTI,NA,NA,TIME,FTT-P,-,-,2010,Y
 PRSC15,Price levels in 2015 (2010=100),index,RTI,NA,NA,TIME,FTT-P,-,-,2001,
 RPOP,Population by age and gender,Thousands,RTI,NA,NA,TIME,General,1970,-,2001,
