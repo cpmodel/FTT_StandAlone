@@ -593,7 +593,5 @@ def solve(data, time_lag, titles, histend, year, domain, power_settings):
 
         # Investment
         data['MWIY'] = data['MEWI'] * data['BCET'][:, :, c2ti['3 Investment ($/kW)']]
-        if year == 2050:
-            print(f"Total solar generation in 2050 is {data['MEWG'][:, 18].sum()/1e6:.3f} PWh")
         
     return data
