@@ -82,8 +82,7 @@ FR08,Exogenous electricity demand,,ktoe,,RTI,FUTI,TIME,,General,-,-,2003,
 MEWC,"LCOE bare, no policies, no carbon cost",,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MEWB,Spillover learning matrix,,%,,T2TI,T2TI,,,FTT-P,-,-,2001,Y
 MEWA,Substitution matrix,,rate,,RTI,T2TI,T2TI,,FTT-P,-,-,2001,Y
-PMF,Prices of import groups (2010=1),,index,,MTI,TIME,,,FTT-P,-,-,2010,Y
-RERY,Primary energy supply before trade,,PJ,,RTI,ERTI,TIME,,FTT-P,-,-,2010,Y
+RERY,Primary energy supply before trade,,PJ,,RTI,ERTI,TIME,,General,-,-,2010,Y
 DPAR,Forecast of population groups,,th person,,RTI,DPTI,TIME,,General,-,-,2010,
 METC,"LCOE (as seen by investors) incl carbon price, subsidies, FiT",,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MLCO,Levelised costs of operation,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
@@ -338,8 +337,6 @@ IJT5,FTT-IH-OIS Tech to fuel conversion matrix (fuel x technology),,,,JTI,ITTI,,
 HWIY,FTT-H Investment by technology,,mEUR(2020),,RTI,HTTI,TIME,,FTT-H,,,2014,
 PRSC14,Price levels in 2014 (2010=100),,index,,RTI,TIME,,,FTT-H,-,-,2001,
 MCTG,FTT:Power Gross curtailment rate by technology,,%,,RTI,T2TI,TIME,,FTT-P,,,2001,
-FU14A,Fuel demand for heating in 2014,,GWh,,RTI,JTI,,,FTT-H,-,-,,
-FU14B,Fuel demand for heating in 2014,,ktoe,,RTI,JTI,,,FTT-H,-,-,,
 MCSC,FTT:Power cost-supply curves,,na,,RTI,ERTI,CSCTI,,FTT-P,-,-,2001,
 MCRT,FTT:Power curtailment of VRE,,%,,RTI,TIME,,,FTT-P,-,-,2001,
 MCRG,Curtailment,,GWh,,RTI,TIME,,,FTT-P,-,-,2001,
