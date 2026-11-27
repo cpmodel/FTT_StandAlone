@@ -338,20 +338,18 @@ def update_capacity_factors(BCET, BCSC, MEWL, MERC, MEPD, tech_to_resource,
     share_TP_used = X0s / (BCSC[regions, resource_idx, 2] + 1e-6)
     starting_CF = 1.0 / BCSC[regions, resource_idx, 4]
 
-    # Initially, little effect of cost-supply curves. CFs go down close to technical potential
-    BCET[regions, techs, 10] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
-    MERC[regions, resource_idx] = starting_CF * (1 - np.exp(-k*(1-share_TP_used)))
-    # Integrate to find the average capacity factor
+    # Initially, little effect of cost-supply curves. The marginal CF goes down
+    # close to the technical potential and is zero beyond it
+    share_capped = np.minimum(share_TP_used, 1.0)
+    marginal_CF = starting_CF * (1 - np.exp(-k*(1-share_capped)))
+    MERC[regions, resource_idx] = marginal_CF
+    # Floor on the decision load factor to keep levelised costs finite
+    BCET[regions, techs, 10] = np.maximum(marginal_CF, 0.1 * starting_CF)
+    # Integrate the marginal CF to find the average capacity factor. Beyond the
+    # technical potential, extra capacity adds no generation, so the average
+    # declines as 1/share (continuous in level and slope at the potential)
     MEWL[regions, techs] = (starting_CF / share_TP_used
-                               * (share_TP_used - (np.exp(k*share_TP_used) - 1) / (k*np.exp(k)) ) )
-
-    # Catch extreme values
-    BCET[regions, techs, 10] = np.where(share_TP_used > 0.98,
-                                        starting_CF * 0.1,
-                                        BCET[regions, techs, 10])
-    MEWL[regions, techs] = np.where(share_TP_used > 0.98,
-                                       starting_CF * 0.8,
-                                       MEWL[regions, techs])
+                               * (share_capped - (np.exp(k*share_capped) - 1) / (k*np.exp(k)) ) )
 
     # Apply per-technology CF multipliers (e.g. CSP is more efficient than Solar PV).
     # Derived from the source tech's value, not the target's own prior value, so
