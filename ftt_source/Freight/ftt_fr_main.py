@@ -201,6 +201,7 @@ def solve(data, time_lag, titles, histend, year, domain):
             
             # Interpolations to avoid staircase profile
             D = time_lag['RVKZ'] + (data['RVKZ'] - time_lag['RVKZ']) * t * dt
+            Utot_prev = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * (t - 1) * dt
             Utot = time_lag['RFLZ'] + (data['RFLZ'] - time_lag['RFLZ']) * t * dt
             Utot_reshaped = np.tile(
                 Utot, (1, data['ZEWS'].shape[1] // Utot.shape[1])
@@ -235,7 +236,7 @@ def solve(data, time_lag, titles, histend, year, domain):
                 )
                 dcap_reg_corr[:, idx] = regulation_correction(
                     endo_capacity[:, idx], endo_shares[:, idx],
-                    Utot[:, veh_class], reg_constr[:, idx]
+                    Utot_prev[:, veh_class], reg_constr[:, idx]
                 )
 
             new_capacity = endo_capacity + dcap_exog_sales + dcap_reg_corr
