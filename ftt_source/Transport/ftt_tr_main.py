@@ -46,7 +46,7 @@ from ftt_source.support.check_market_shares import check_market_shares
 from ftt_source.support.get_vars_to_copy import get_domain_vars_to_copy
 from ftt_source.Transport.ftt_tr_lcot import get_lcot, set_carbon_tax
 from ftt_source.Transport.ftt_tr_emission_corrections import co2_corr, biofuel_corr, compute_emissions_and_fuel_use
-from ftt_source.Transport.ftt_tr_survival import survival_function, add_new_cars_age_matrix
+from ftt_source.Transport.ftt_tr_survival import survival_function
 from ftt_source.ftt_core.ftt_emissions_regulation import implement_emissions_regulation
 
 # Green technology indices for Transport (EVs)

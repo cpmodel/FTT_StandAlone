@@ -16,9 +16,6 @@ Submodules
    support.divide
    support.docstring_templates
    support.get_vars_to_copy
-   support.output_functions
-   support.paths_append
-   support.read_support
    support.titles_functions
 
 Module contents

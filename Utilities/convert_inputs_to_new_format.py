@@ -23,7 +23,6 @@ Examples:
 """
 
 import argparse
-import configparser
 import itertools
 import os
 import sys

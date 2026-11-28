@@ -14,7 +14,6 @@ Submodules
    Power.ftt_p_lcoe
    Power.ftt_p_main
    Power.ftt_p_rldc
-   Power.ftt_p_surv
 
 Module contents
 ---------------

@@ -11,12 +11,10 @@ Functions included in the file:
 """
 
 # Standard library imports
-import os
-
+from pathlib import Path
 
 # Third party imports
 import pandas as pd
-from pathlib import Path
 
 from ftt_source.paths import get_utility_path
 
