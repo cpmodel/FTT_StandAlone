@@ -82,22 +82,22 @@ Action or publish a new version.
 Add a new variable
 ------------------
 
-Adding a variable is not too difficult. The steps depend on whether the variable uses a new classification and whether it has historical data.
+1. Add the variable to ``Utilities/titles/VariableListing.csv``. Specify its
+   unit, domain and dimensions in order in ``Dim1`` through ``Dim4``. For
+   example, a regional transport variable over time can use ``RTI``, ``VTTI``
+   and ``TIME``. Leave unused dimension columns blank.
 
-1. **Add the variable to `Utilities/VariableListing.csv`.**  
-   Choose the right dimension, as described in `classification_titles`:  
+2. If a new classification is needed, add its labels to
+   ``Utilities/titles/classification_titles.csv``. ``TIME`` is supplied by the
+   simulation timeline rather than this file.
 
-   - `Dim1` is only used for 3D variables, for the regions.  
-   - `Dim2` refers to the rows.  
-   - `Dim3` refers to the columns.  
-
-2. **Add new dimensions (if needed).**  
-   If your variable uses a new dimension, add it to `classification_titles`.
-
-3. **Add historical data (if any).**  
-   Historical data can be added by creating a CSV file in the correct model folder in `Inputs/S0`. For example, if the 'domain' field in `VariableListing.csv` is 'FTT-Tr', the file should be placed in `Inputs/S0/FTT-Tr`. 
-   The file name should match the variable name and the dimensions should match those in `VariableListing.csv`.
-   If your new variable is critical to the model, you may want to specify 'Y' under the 'Is input variable' column in `VariableListing.csv`. This will ensure that the model will not run if the variable is missing.
+3. If the variable has input data, add a CSV named after the variable in the
+   corresponding ``Inputs/S0`` domain folder. For example, an ``FTT-Tr``
+   variable belongs in ``Inputs/S0/FTT-Tr``. Match its coordinates and labels
+   to the declared dimensions; time-dependent inputs have coordinate columns
+   followed by year columns, while scalar inputs use a ``value`` column.
+   Set ``Is input variable`` to ``Y`` for a required input so the loader
+   checks that it exists.
 
 Review pull requests
 --------------------

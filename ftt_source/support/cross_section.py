@@ -6,9 +6,6 @@ Functions included:
         Select one simulation year from the data dictionary
 """
 
-import numpy as np
-
-
 def cross_section(data_in, dimensions, year, y, scenario):
     """
     Construct the input dictionary for one model year.

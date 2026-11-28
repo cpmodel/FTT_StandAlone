@@ -4,10 +4,8 @@ Running FTT
 Running FTT from the command line
 #############################################
 
-**FTT** can be run from the command line or terminal by calling the run file, run_file.py,
-which is located in the main project folder **FTT_Stand_Alone**. In order for the model to run correctly, 
-the correct initialisation settings must be input into settings.ini, which is also in the main project 
-folder:
+Run ``python run_file.py`` from the project folder. Configure the run in
+``settings.ini`` in the same folder:
 
 .. image:: settings.jpg
     :width: 400px
@@ -21,17 +19,15 @@ multiple different modules at the same time by using commas to separate, e.g.
   enable_modules = FTT-P, FTT-Fr
 
 S0 is FTT's baseline scenario, which incorporates current policies and projections 
-into the model's simulation. Scenarios which differ from the baseline due to changes in policy inputs 
-can be run alongside the baseline. Two additional scenarios for FTT: Power already exist, S1 and S2.
+into the model's simulation. Scenarios which differ from the baseline due to changes in policy inputs
+can be run alongside the baseline. See :doc:`howto` for creating scenarios.
 
 It is recommended that **model_start** and **simulation_start** are left unchanged, as the model will be 
 unable to run if there is a gap between the start year of the simulation and the last year of historical data. 
-However, **model_end** and **simulation_end** can be changed to any date after the start date. This allows the
-model to be run for shorter periods of time when necessary. 2050 is currently the maximum end year of the 
-simulation period.
+The simulation can be shortened by changing **simulation_end**. If extending
+it, check that the required input data covers the chosen years.
 
-The model will tell you which module is running. If an incorrect selection of modules is made, this will be printed 
-in the command window.
+Errors and warnings are shown in the command window.
 
 .. image:: command.jpg
     :width: 600px
@@ -44,15 +40,15 @@ in the command window.
     :align: center
     :alt: frontend
 
-Running the model this way will allow it to easily be tested, with errors or warnings appearing in the command window. 
-However, the results of the model cannot be viewed when running this way.
+The results are saved to ``Output/Results.pickle``. They can be loaded in Python
+or viewed in the frontend.
 
 Running FTT from the front end
 ##########################################
 
-The model's front end environment can be launched by clicking on launch_frontend.cmd, or running
-run_frontend.py from the command line. The front end will allow you to visualise the results of
-the simulation. 
+The frontend can be launched with ``launch_frontend.bat`` on Windows, or by
+running ``python run_frontend.py`` from the command line. It can visualise the
+simulation results.
 
 .. image:: frontend.jpg
     :width: 600px

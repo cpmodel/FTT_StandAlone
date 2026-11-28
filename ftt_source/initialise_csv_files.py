@@ -8,7 +8,6 @@ This script makes preperation to extract data from FTT masterfiles in the
 """
     
 
-from pathlib import Path
 import os
 
 # Local library imports

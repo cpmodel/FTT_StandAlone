@@ -230,25 +230,21 @@ def rldc(data, MEWDt, time_lag, data_dt, year, t, titles, histend,
 
     # Different configurations of vre_powers to estimate splits between solar
     # and wind
-    vre_gr_sol = 0.005 * np.ones(len(titles['RTI']))
     vre_gr_sol = np.maximum((divide(data['MEWS'][:, solar_idx] * data['MEWL'][:, solar_idx],
                                time_lag['MEWS'][:, solar_idx] * time_lag['MEWL'][:, solar_idx])
                                - 1.0) * data['MEWS'][:, solar_idx],
                                 0.005)
 
-    vre_ggr_sol = 0.002 * data['MEWG'][:, solar_idx]
     vre_ggr_sol = np.maximum((divide(data['MEWS'][:, solar_idx] * data['MEWL'][:, solar_idx],
                                  time_lag['MEWS'][:, solar_idx] * time_lag['MEWL'][:, solar_idx])
                                  -1.0)*data['MEWG'][:, solar_idx],
                                  0.002 * data['MEWG'][:, solar_idx])
 
-    vre_gr_wind = 0.005 * np.ones(len(titles['RTI']))
     vre_gr_wind = np.maximum((divide(np.sum(data['MEWS'][:, wind_indices] * data['MEWL'][:, wind_indices], axis=1),
                                  np.sum(time_lag['MEWS'][:, wind_indices] * time_lag['MEWL'][:, wind_indices], axis=1))
                                  -1.0)*np.sum(data['MEWS'][:, wind_indices], axis=1),
                                  0.005)
 
-    vre_ggr_wind = 0.002 * np.sum(data['MEWG'][:, wind_indices], axis=1)
     vre_ggr_wind = np.maximum((divide(np.sum(data['MEWS'][:, wind_indices] * data['MEWL'][:, wind_indices], axis=1),
                                  np.sum(time_lag['MEWS'][:, wind_indices] * time_lag['MEWL'][:, wind_indices], axis=1))
                                  -1.0)*np.sum(data['MEWG'][:, wind_indices], axis=1),

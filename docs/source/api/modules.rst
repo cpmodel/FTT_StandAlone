@@ -26,7 +26,6 @@ API Documentation
    Power.ftt_p_lcoe
    Power.ftt_p_main
    Power.ftt_p_rldc
-   Power.ftt_p_surv
    Power
    Power_modules
    Transport.ftt_tr_emission_corrections
@@ -65,7 +64,6 @@ API Documentation
    ftt_p_lcoe
    ftt_p_main
    ftt_p_rldc
-   ftt_p_surv
    ftt_sales_or_investments
    ftt_shares
    ftt_tr_emission_corrections
@@ -74,9 +72,6 @@ API Documentation
    ftt_tr_survival
    get_vars_to_copy
    data_loading
-   output_functions
-   paths_append
-   read_support
    sector_coupling_modules
    support.check_market_shares
    support.convert_masterfiles_to_csv
@@ -87,9 +82,6 @@ API Documentation
    support.docstring_templates
    support.get_vars_to_copy
    support.data_loading
-   support.output_functions
-   support.paths_append
-   support.read_support
    support
    support.titles_functions
    support_modules

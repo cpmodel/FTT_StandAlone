@@ -3,11 +3,6 @@ PRSCX,Price levels (2010=100) from E3ME,,index,,RTI,TIME,,,FTT-P,-,-,2010,Y
 FPIX,FTT:Power cumulative fuel price index,,index,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 PRSC15,Price levels in 2015 (2010=100),,index,,RTI,TIME,,,FTT-P,-,-,2001,
 RPOP,Population by age and gender,,Thousands,,RTI,TIME,,,General,1970,-,2001,
-PFRE,Price of electricity use [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,-,2016,2010,
-PFRC,Price of coal use [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,-,2016,2010,
-PFRO,Price of heavy oil use [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,1970,2016,2010,
-PFRM,Price of middle distillates [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,-,2016,2010,
-PFRB,Price of biofuel use (incl taxes) [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,-,2016,2010,
 PFRH,Endogenous energy price with tax [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,1970,2016,2010,
 PRSC13,Price levels in 2013 (2010=100),,index,,RTI,TIME,,,FTT-P,-,-,2001,
 MWMC,FTT:Power marginal costs,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
@@ -19,7 +14,6 @@ MWICX,Exogenous FTT:Power investment cost component,,USD(2023)/MWh,,RTI,T2TI,TIM
 MWIC,FTT:Power investment cost component,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MWFCX,Exogenous FTT:Power fuel cost component,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2010,
 MWFC,FTT:Power fuel cost component,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MWDT,Matrix of tech top load band NETxNLB,,na,,T2TI,LBTI,,,FTT-P,-,-,2001,Y
 MWDD,Matrix of load band tech suitability NETxNLB,,na,,T2TI,LBTI,,,FTT-P,-,-,2001,Y
 MTCD,METC standard deviation,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MSSR,FTT:Power short-term storage raw costs,,USD(2023)/GWh,,RTI,TIME,,,FTT-P,,,2001,
@@ -33,7 +27,6 @@ MSSF,FTT:Power short-term storage load factor,,%,,RTI,TIME,,,FTT-P,-,-,2001,
 MSSE,Short-term storage round-trop efficiency,,%,,RTI,TIME,,,FTT-P,,,2011,Y
 MSSC_histend,FTT:Power short-term storage capacity in 2020,,GW,,RTI,TIME,,,FTT-P,-,2023,2001,
 MSSC,FTT:Power short-term storage capacity,,GW,,RTI,TIME,,,FTT-P,-,-,2001,
-MSRV,FTT:Power survival function (Created inside code),,%,,RTI,T2TI,TYTI,,FTT-P,-,-,2001,
 MSLB,FTT:Power shares of capacity by tech x load band,,na,,RTI,T2TI,LBTI,TIME,FTT-P,-,-,2001,
 MSCC,Short-term storage levelised cost estimate,,USD(2023)/GWh,,RTI,TIME,,,FTT-P,,,2013,Y
 MSAL,"Switch for storage cost and investment allocation (0=No, 1=G, 2=C, 3=M)",,na,,RTI,TIME,,,FTT-P,-,-,2001,Y
@@ -93,7 +86,6 @@ MERC,FTT Resource prices or costs,,USD(2023)/GJ or USD(2023)/MWh,,RTI,ERTI,TIME,
 MEPD,FTT:Power total primary energy demand by resource type,,PJ,,RTI,ERTI,TIME,,FTT-P,-,-,2001,
 MELO,"Electricity demand residual (due to imports, losses, ets.)",,GWh,,RTI,TIME,,,FTT-P,-,-,2001,
 MELF,FTT:Power lifetime of power equipment,,y,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEKA,FTT:Power age-tracking matrix of existing capacity,,GW,,RTI,T2TI,TYTI,TIME,FTT-P,-,-,2001,
 MEFI,FTT:Power feed-in-tariffs,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MECW,"LCOE bare, no policies, with carbon cost",,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MECW battery only,"LCOE bare, no policies, only battery costs",,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
@@ -102,12 +94,6 @@ MECD,MEWC standard deviation,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MECC,LCOE (for price) no carbon price incl subsidies incl CF,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MECC incl CO2,LCOE (for price) including all policies,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MECC only CO2,LCOE (for price) including all policies,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEC6,TLCOE load band 6,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEC5,TLCOE load band 5,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEC4,TLCOE load band 4,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEC3,TLCOE load band 3,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEC2,TLCOE load band 2,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
-MEC1,TLCOE load band 1,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MCTN,FTT:Power Net curtailment rate by technology,,%,,RTI,T2TI,TIME,,FTT-P,,,2001,
 HJET,FTT-Heat Tech to fuel conversion matrix,,,,HTTI,JTI,,,FTT-H,,,,Y
 HJFC,FTT-Heat Fraction of energy use for heating in households,,,,RTI,JTI,,,FTT-H,,,,Y
@@ -166,14 +152,12 @@ TEWE,FTT-Transport emissions,,Mt,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
 TEWC,FTT-Transport levelised costs (no taxes),,USD(2022)/pkm,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
 TEWB,FTT-Transport Technology spill-over matrix,,,,VTTI,VTTI,,,FTT-Tr,,,,Y
 TEWA,FTT-Transport Technology substitution matrix,,,,VTTI,VTTI,,,FTT-Tr,,,,Y
-PFRG,Price of gas [E3ME],,euros/toe,,RTI,FUTI,TIME,,General,-,2016,2010,
 TETH,FTT-Transport Efficiency correction,,,,RTI,VYTI,,,FTT-Tr,,,,Y
 TETC,FTT-Transport levelised costs with taxes,,USD(2022)/pkm,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
 TESH,FTT-Transport Vehicle sales,,th-veh,,RTI,VYTI,,,FTT-Tr,,,,Y
 TESF,FTT-Transport Survival function,,th-veh,,RTI,VYTI,,,FTT-Tr,,,,Y
 TELC,"FTT-Transport Generalised cost of transport, with tax + non-pecuniary, lognormal space",,USD(2022)/pkm,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
 TEGC,FTT-Transport Levelised cost of transport with tax + non-pecuniary,,USD(2022)/pkm,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
-TEFF,FTT-Transport ,,,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
 TECD,FTT-Transport Levelised cost of transport variations,,USD(2022)/pkm,,RTI,VTTI,TIME,,FTT-Tr,,,2017,
 TEVC,FTT-Tr cost of EV without battery,,USD(2022)/veh,,RTI,VTTI,TIME,,FTT-Tr,,,2001,
 TWWB,FTT-Tr starting cumulative battery capacity,,MWh,,VTTI,TIME,,,FTT-Tr,,,2012,
@@ -306,8 +290,6 @@ ZTLC,FTT-Fr LCOF without policy,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
 ZTLD,FTT-Fr LCOF sd,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
 ZTTC,FTT-Fr LCOF with policy,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
 ZTTD,FTT-Fr LCOF with policy sd,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
-ZTLL,FTT-Fr LCOF logarithmic space with gamma,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
-ZTDD,FTT-Fr log space with gamma sd,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
 ZEGC,FTT-Fr LCOF with policy and gamma,,USD(2023)/tkm,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
 ZEWK,FTT-Fr Capacity by technology (number of vehicles),,No. vehicles,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
 ZEWI,FTT-Fr New sales,,No. vehicles,,RTI,FTTI,TIME,,FTT-Fr,,,2001,
@@ -350,7 +332,6 @@ MCGA,FTT:Power Gross curtailed electricity by technology,,GWh,,RTI,TIME,,,FTT-P,
 MCFC,FTT:Power load factor scaling cost component,,USD(2023)/MWh,,RTI,T2TI,TIME,,FTT-P,-,-,2001,
 MCCS,FTT:Power technology to fuel use conversion matrix incl CCS,,na,,T2TI,JTI,,,FTT-P,-,-,2001,Y
 MADG,Additional generation due storage losses and curtailment,,GWh,,RTI,TIME,,,FTT-P,-,-,2001,
-FRETX,Exogenous FRET (from E3ME run),,ktoe,,RTI,FUTI,TIME,,General,-,-,2010,
 EXX,Exchange rate (2010=100) from E3ME,,index,,RTI,TIME,,,FTT-P,-,-,2010,Y
 EX13,Exchange rate in 2013 (2010=100),,index,,RTI,TIME,,,FTT-P,-,-,2001,
 REXX,EU local currency per euro rates from E3ME,,index,,RTI,TIME,,,FTT-P,-,-,2010,
