@@ -180,6 +180,14 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     # LCOE augmented with gamma values (and optionally value factor)
     gamma = bcet[:, :, c2ti['22 Gamma']]
     value_factor = bcet[:, :, c2ti['23 Value factor']]
+    # Cannibalisation: value factor declines linearly with the generation share
+    cannibalisation = bcet[:, :, c2ti['24 Cannibalisation factor']]
+    mewg = data['MEWG'].reshape(bcet.shape[0], bcet.shape[1])
+    gen_share = np.divide(mewg, mewg.sum(axis=1, keepdims=True),
+                          out=np.zeros_like(mewg), where=mewg.sum(axis=1, keepdims=True) > 0)
+    value_factor = np.where(cannibalisation != 0,
+                            np.maximum(0.5, value_factor * (1 + gen_share * cannibalisation)),
+                            value_factor)
     value_factor = np.where(value_factor < 0.01, 1.0, value_factor)
     if gamma_mode == 'additive':
         lcoe_mu_gamma = (lcoe_mu_all_policies + gamma) / value_factor
@@ -191,7 +199,7 @@ def get_lcoe(data, titles, gamma_mode='multiplicative'):
     data['MECW'] = lcoeco2         # The real bare LCOE with CO2 costs
     data['MECC'] = lcoe_all_but_co2  # LCOE with policy, without CO2 (matches cascading)
     data['METC'] = lcoe_mu_gamma   # As seen by consumer (generalised cost with value factor)
-    data['MTCD'] = dlcoe           # Variation on the LCOE distribution
+    data['MTCD'] = dlcoe / value_factor  # Variation on the LCOE distribution
     data['MECW battery only'] = lcoe_battery_only  # LCOE with only short-term storage
 
     # Additional LCOE variants for MEWP electricity pricing
